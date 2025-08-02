@@ -34,54 +34,6 @@ WebsiteHost websiteHost(ssid, password);
 WebSocketManager wsManager("/ws");
 Led ledController(2, "STATUS_LED", "System Status LED");
 
-// WebSocket event handlers
-void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
-{
-  AwsFrameInfo *info = (AwsFrameInfo *)arg;
-  if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
-  {
-    data[len] = 0;
-    String message = (char *)data;
-    Serial.println("WebSocket: Received message: " + message);
-
-    // Use the JSON message handler to process the message
-    String response = handleJsonMessage(message);
-    wsManager.notifyClients(response);
-    
-    // Handle special commands that need additional processing
-    JsonDocument doc;
-    if (deserializeJson(doc, message) == DeserializationError::Ok) {
-      String action = doc["action"] | "";
-      if (action == "restart") {
-        Serial.println("Restarting device in 2 seconds...");
-        delay(2000);
-        ESP.restart();
-      }
-    }
-  }
-}
-
-void onWebSocketEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
-{
-  switch (type)
-  {
-  case WS_EVT_CONNECT:
-    Serial.printf("WebSocket: Client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
-    updateConnectedClients(server->count());
-    break;
-  case WS_EVT_DISCONNECT:
-    Serial.printf("WebSocket: Client #%u disconnected\n", client->id());
-    updateConnectedClients(server->count());
-    break;
-  case WS_EVT_DATA:
-    handleWebSocketMessage(arg, data, len);
-    break;
-  case WS_EVT_PONG:
-  case WS_EVT_ERROR:
-    break;
-  }
-}
-
 void setup()
 {
   // Initialize serial communication
@@ -103,8 +55,7 @@ void setup()
   // Initialize WebsiteHost
   websiteHost.setup(server);
 
-  // Setup WebSocket
-  wsManager.onMessageReceived = handleWebSocketMessage;
+  // Setup WebSocket with message handler
   wsManager.setup(server);
 
   // Start server

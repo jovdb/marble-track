@@ -1,4 +1,5 @@
 #include "WebSocketManager.h"
+#include "WebSocketMessageHandler.h"
 
 // Static instance pointer for callback access
 WebSocketManager* WebSocketManager_instance = nullptr;
@@ -38,6 +39,8 @@ void WebSocketManager::setup(AsyncWebServer& server) {
     ws.onEvent(onEvent);
     server.addHandler(&ws);
     Serial.println("WebSocket manager: OK");
+
+    initializeWebSocketHandler(*this);
 }
 
 void WebSocketManager::loop() {

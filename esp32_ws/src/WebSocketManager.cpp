@@ -37,7 +37,7 @@ void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
 void WebSocketManager::setup(AsyncWebServer& server) {
     ws.onEvent(onEvent);
     server.addHandler(&ws);
-    Serial.println("WebSocket manager setup complete");
+    Serial.println("WebSocket manager: OK");
 }
 
 void WebSocketManager::loop() {

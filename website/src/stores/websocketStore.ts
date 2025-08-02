@@ -11,12 +11,17 @@ import { createLogger } from "./logger";
 
 const logger = createLogger('WebSocketStore');
 
+export interface TimestampedMessage {
+  message: WebSocketReceiveMessage;
+  timestamp: number;
+}
+
 export interface WebSocketState {
   status: ConnectionStatus;
   lastMessage: WebSocketReceiveMessage | null;
   lastError: Event | null;
   isConnected: boolean;
-  messages: WebSocketReceiveMessage[];
+  messages: TimestampedMessage[];
   reconnectAttempts: number;
 }
 
@@ -50,8 +55,7 @@ export function createWebSocketStore(): WebSocketStore {
   const marbleIp = import.meta.env.VITE_MARBLE_IP || window.location.hostname;
   const wsUrl = `ws://${marbleIp}/ws`;
 
-  logger.info("Resolved marbleIp:", marbleIp);
-  logger.info("Final wsUrl:", wsUrl);
+  logger.info("MarbleIp:", marbleIp);
 
   // Setup WebSocket event handlers
   const setupWebSocketHandlers = (manager: WebSocketManager) => {
@@ -67,9 +71,13 @@ export function createWebSocketStore(): WebSocketStore {
     });
 
     manager.onMessage((message: WebSocketReceiveMessage) => {
+      const timestampedMessage: TimestampedMessage = {
+        message,
+        timestamp: Date.now()
+      };
       setState({
         lastMessage: message,
-        messages: [...state.messages, message].slice(-100), // Keep last 100 messages
+        messages: [...state.messages, timestampedMessage].slice(-100), // Keep last 100 messages
       });
     });
 

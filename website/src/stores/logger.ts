@@ -14,4 +14,4 @@ if (import.meta.env.MODE === 'development') {
 // Export logger factory for component-specific loggers
 export const createLogger = (context: string) => logger.createChild(context);
 
-export { LogLevel };
+export type { LogLevel };

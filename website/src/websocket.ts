@@ -1,6 +1,6 @@
 import { createLogger } from "./stores/logger";
 
-const logger = createLogger('WebSocket');
+const logger = createLogger("WebSocket");
 
 export type ConnectionStatus =
   | "disconnected"
@@ -8,10 +8,11 @@ export type ConnectionStatus =
   | "connected"
   | "error";
 
-export interface WebSocketMessage {
+export interface WebSocketSendMessage {
+  /* action */
   type: string;
+  /* payload */
   data: any;
-  timestamp?: number;
 }
 
 export type WebSocketReceiveMessage = string;
@@ -77,7 +78,7 @@ export class WebSocketManager {
     this.updateStatus("disconnected");
   }
 
-  send(message: WebSocketMessage): boolean {
+  send(message: WebSocketSendMessage): boolean {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       logger?.warn("WebSocket is not connected, cannot send message:", message);
       return false;
@@ -85,8 +86,8 @@ export class WebSocketManager {
 
     try {
       const messageWithTimestamp = {
-        ...message,
-        timestamp: Date.now(),
+        ...message, 
+        timestamp: Date.now(), // for order on client ?
       };
       logger?.debug("Sending WebSocket message:", messageWithTimestamp);
       this.ws.send(JSON.stringify(messageWithTimestamp));
@@ -166,7 +167,7 @@ export class WebSocketManager {
 
     this.ws.onmessage = (event) => {
       logger?.debug("Received WebSocket message:", event.data);
-
+debugger;
       if (typeof event.data === "string") {
         this.messageCallback?.(event.data);
       } else {

@@ -40,7 +40,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 void handleClientConnected(AsyncWebSocketClient *client)
 {
   // Notify client of motor current state when it first connects
-  wsManager.notifyClients(direction);
+  wsManager.notifyClients("WELCOME");
 }
 
 void handleClientDisconnected(AsyncWebSocketClient *client)

@@ -1,6 +1,7 @@
 import { type Component, For } from "solid-js";
 import { webSocketStore } from "../stores/websocketStore";
-import type { TimestampedMessage } from "../stores/websocketStore";
+import type { WebSocketMessageEntry } from "../stores/websocketStore";
+import type { WebSocketSendMessage } from "../websocket";
 
 const WebSocketMessages: Component = () => {
   const parseMessage = (msg: string) => {
@@ -15,6 +16,17 @@ const WebSocketMessages: Component = () => {
     }
   };
 
+  const formatMessage = (entry: WebSocketMessageEntry) => {
+    if (entry.direction === 'sent') {
+      // For sent messages, we have the structured object
+      const sendMsg = entry.message as WebSocketSendMessage;
+      return { type: sendMsg.type, data: sendMsg.data };
+    } else {
+      // For received messages, parse the string
+      return parseMessage(entry.message as string);
+    }
+  };
+
   const formatTimestamp = (timestamp: number) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString("en-US", {
@@ -26,6 +38,18 @@ const WebSocketMessages: Component = () => {
     });
   };
 
+  const getDirectionStyle = (direction: 'sent' | 'received') => {
+    return {
+      color: direction === 'sent' ? '#2563eb' : '#16a34a', // Blue for sent, green for received
+      'font-weight': 'bold' as const,
+      'margin-right': '8px'
+    };
+  };
+
+  const getDirectionIcon = (direction: 'sent' | 'received') => {
+    return direction === 'sent' ? '↗️' : '↙️';
+  };
+
   return (
     <>
       {webSocketStore.state.messages.length > 0 && (
@@ -33,9 +57,9 @@ const WebSocketMessages: Component = () => {
           <legend>Recent Messages</legend>
           <div style={{ "max-height": "200px", overflow: "auto" }}>
             <For each={webSocketStore.state.messages.slice(-5)}>
-              {(timestampedMsg: TimestampedMessage) => {
-                const parsedMsg = parseMessage(timestampedMsg.message);
-                const timestamp = formatTimestamp(timestampedMsg.timestamp);
+              {(messageEntry: WebSocketMessageEntry) => {
+                const parsedMsg = formatMessage(messageEntry);
+                const timestamp = formatTimestamp(messageEntry.timestamp);
                 return (
                   <div
                     style={{
@@ -46,6 +70,9 @@ const WebSocketMessages: Component = () => {
                   >
                     <span style={{ color: "#666", "margin-right": "8px" }}>
                       [{timestamp}]
+                    </span>
+                    <span style={getDirectionStyle(messageEntry.direction)}>
+                      {getDirectionIcon(messageEntry.direction)} {messageEntry.direction.toUpperCase()}
                     </span>
                     <strong>{parsedMsg.type}:</strong>{" "}
                     {JSON.stringify(parsedMsg.data)}

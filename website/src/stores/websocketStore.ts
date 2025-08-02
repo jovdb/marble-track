@@ -3,7 +3,7 @@ import { createEffect, onCleanup } from "solid-js";
 import {
   WebSocketManager,
   ConnectionStatus,
-  WebSocketMessage,
+  WebSocketSendMessage,
   createWebSocket,
   WebSocketReceiveMessage,
 } from "../websocket";
@@ -11,9 +11,13 @@ import { createLogger } from "./logger";
 
 const logger = createLogger('WebSocketStore');
 
-export interface TimestampedMessage {
-  message: WebSocketReceiveMessage;
+export type MessageDirection = 'sent' | 'received';
+
+export interface WebSocketMessageEntry {
+  direction: MessageDirection;
+  message: WebSocketSendMessage | WebSocketReceiveMessage;
   timestamp: number;
+  rawData?: string; // For received messages, store the raw string
 }
 
 export interface WebSocketState {
@@ -21,7 +25,7 @@ export interface WebSocketState {
   lastMessage: WebSocketReceiveMessage | null;
   lastError: Event | null;
   isConnected: boolean;
-  messages: TimestampedMessage[];
+  messages: WebSocketMessageEntry[];
   reconnectAttempts: number;
 }
 
@@ -29,7 +33,7 @@ export interface WebSocketStore {
   state: WebSocketState;
   connect: (url: string) => void;
   disconnect: () => void;
-  send: (message: WebSocketMessage) => boolean;
+  send: (message: WebSocketSendMessage) => boolean;
   clearMessages: () => void;
   clearError: () => void;
 }
@@ -71,13 +75,16 @@ export function createWebSocketStore(): WebSocketStore {
     });
 
     manager.onMessage((message: WebSocketReceiveMessage) => {
-      const timestampedMessage: TimestampedMessage = {
-        message,
-        timestamp: Date.now()
+      debugger;
+      const messageEntry: WebSocketMessageEntry = {
+        direction: 'received',
+        message: message,
+        timestamp: Date.now(),
+        rawData: message
       };
       setState({
         lastMessage: message,
-        messages: [...state.messages, timestampedMessage].slice(-100), // Keep last 100 messages
+        messages: [...state.messages, messageEntry].slice(-100), // Keep last 100 messages
       });
     });
 
@@ -113,11 +120,23 @@ export function createWebSocketStore(): WebSocketStore {
     }
   };
 
-  const send = (message: WebSocketMessage): boolean => {
+  const send = (message: WebSocketSendMessage): boolean => {
     if (wsManager) {
-      return wsManager.send(message);
+      const success = wsManager.send(message);
+      if (success) {
+        // Track sent messages
+        const messageEntry: WebSocketMessageEntry = {
+          direction: 'sent',
+          message: message,
+          timestamp: Date.now()
+        };
+        setState({
+          messages: [...state.messages, messageEntry].slice(-100), // Keep last 100 messages
+        });
+      }
+      return success;
     }
-    logger.warn("WebSocket not connected");
+    logger?.warn("WebSocket not connected");
     return false;
   };
 

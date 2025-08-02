@@ -6,6 +6,7 @@
     "start": "vite",
     "dev": "vite",
     "build": "vite build --outDir=../esp32_ws/data",
+    "tsc": "npx tsc --noEmit",
     "serve": "vite preview"
   },
   "license": "MIT",

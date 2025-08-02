@@ -1,9 +1,9 @@
 import { createSignal, createEffect, type Component } from "solid-js";
 
 import styles from "./App.module.css";
-import Header from "./Header";
-import WebSocketMessages from "./WebSocketMessages";
-import { webSocketStore } from "./websocketStore";
+import Header from "./components/Header";
+import WebSocketMessages from "./components/WebSocketMessages";
+import { webSocketStore } from "./stores/websocketStore";
 
 const App: Component = () => {
   let myCanvas: HTMLCanvasElement;

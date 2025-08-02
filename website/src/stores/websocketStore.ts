@@ -6,8 +6,8 @@ import {
   WebSocketMessage,
   createWebSocket,
   WebSocketReceiveMessage,
-} from "./websocket";
-import { createLogger } from "./stores/logger";
+} from "../websocket";
+import { createLogger } from "./logger";
 
 const logger = createLogger('WebSocketStore');
 

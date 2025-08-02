@@ -1,5 +1,5 @@
 import { type Component, For } from "solid-js";
-import { webSocketStore } from "./stores/websocketStore";
+import { webSocketStore } from "../stores/websocketStore";
 
 const WebSocketMessages: Component = () => {
   return (
@@ -17,7 +17,7 @@ const WebSocketMessages: Component = () => {
                     "font-size": "12px",
                   }}
                 >
-                  {msg}
+                  <strong>{msg.type}:</strong> {JSON.stringify(msg.data)}
                 </div>
               )}
             </For>

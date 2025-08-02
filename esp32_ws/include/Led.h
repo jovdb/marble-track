@@ -14,6 +14,7 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include "IControllable.h"
 
 /**
  * @class Led
@@ -21,8 +22,9 @@
  * 
  * Provides functionality to control LEDs with setup initialization,
  * continuous loop operations, and state control.
+ * Implements IControllable interface for unified device control.
  */
-class Led {
+class Led : public IControllable {
 public:
     /**
      * @brief Constructor for Led class
@@ -35,8 +37,24 @@ public:
     /**
      * @brief Destructor for Led class
      */
-    ~Led();
+    ~Led() override;
     
+    // IControllable interface implementation
+    /**
+     * @brief Dynamic control function for LED operations
+     * @param action The action to perform (e.g., "set")
+     * @param payload JSON object containing action parameters
+     * @return true if action was successful, false otherwise
+     */
+    bool control(const String& action, JsonObject& payload) override;
+    
+    /**
+     * @brief Get device identifier
+     * @return String identifier of the LED
+     */
+    String getId() const override;
+    
+    // Led-specific public methods
     /**
      * @brief Setup function to initialize LED hardware and configurations
      * 
@@ -58,14 +76,6 @@ public:
      * @param state true to turn LED on, false to turn LED off
      */
     void set(bool state);
-    
-    /**
-     * @brief Dynamic control function for LED operations
-     * @param action The action to perform (e.g., "set")
-     * @param payload JSON object containing action parameters
-     * @return true if action was successful, false otherwise
-     */
-    bool control(const String& action, JsonObject& payload);
 
 private:
     int pin;           ///< GPIO pin number for the LED

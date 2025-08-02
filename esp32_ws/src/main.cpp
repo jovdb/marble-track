@@ -32,7 +32,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     direction = message.substring(message.indexOf("&") + 1, message.length());
     Serial.print("direction: ");
     Serial.println(direction);
-    wsManager.notifyClients(direction);
+    // wsManager.notifyClients(direction);
     newRequest = true;
   }
 }
@@ -67,11 +67,10 @@ void setup()
 
   // Start the server
   server.begin();
-  Serial.println("Server started on port 80");
+  Serial.println("Server started");
 
   pinMode(1, OUTPUT);
 }
-
 void loop()
 {
   // Handle WebSocket operations

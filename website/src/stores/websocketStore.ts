@@ -11,13 +11,9 @@ import { createLogger } from "./logger";
 
 const logger = createLogger('WebSocketStore');
 
-export type MessageDirection = 'sent' | 'received';
-
-export interface WebSocketMessageEntry {
-  direction: MessageDirection;
-  message: WebSocketSendMessage | WebSocketReceiveMessage;
+export interface TimestampedMessage {
+  message: WebSocketReceiveMessage;
   timestamp: number;
-  rawData?: string; // For received messages, store the raw string
 }
 
 export interface WebSocketState {
@@ -25,7 +21,7 @@ export interface WebSocketState {
   lastMessage: WebSocketReceiveMessage | null;
   lastError: Event | null;
   isConnected: boolean;
-  messages: WebSocketMessageEntry[];
+  messages: TimestampedMessage[];
   reconnectAttempts: number;
 }
 
@@ -76,15 +72,13 @@ export function createWebSocketStore(): WebSocketStore {
 
     manager.onMessage((message: WebSocketReceiveMessage) => {
       debugger;
-      const messageEntry: WebSocketMessageEntry = {
-        direction: 'received',
-        message: message,
-        timestamp: Date.now(),
-        rawData: message
+      const timestampedMessage: TimestampedMessage = {
+        message,
+        timestamp: Date.now()
       };
       setState({
         lastMessage: message,
-        messages: [...state.messages, messageEntry].slice(-100), // Keep last 100 messages
+        messages: [...state.messages, timestampedMessage].slice(-100), // Keep last 100 messages
       });
     });
 
@@ -122,21 +116,9 @@ export function createWebSocketStore(): WebSocketStore {
 
   const send = (message: WebSocketSendMessage): boolean => {
     if (wsManager) {
-      const success = wsManager.send(message);
-      if (success) {
-        // Track sent messages
-        const messageEntry: WebSocketMessageEntry = {
-          direction: 'sent',
-          message: message,
-          timestamp: Date.now()
-        };
-        setState({
-          messages: [...state.messages, messageEntry].slice(-100), // Keep last 100 messages
-        });
-      }
-      return success;
+      return wsManager.send(message);
     }
-    logger?.warn("WebSocket not connected");
+    logger.warn("WebSocket not connected");
     return false;
   };
 

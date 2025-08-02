@@ -36,7 +36,7 @@ export class WebSocketManager {
       maxReconnectAttempts: config.maxReconnectAttempts || 5,
       heartbeatInterval: config.heartbeatInterval || 30000,
     };
-    console.log('WebSocketManager created with config:', this.config);
+    console.log("WebSocketManager created with config:", this.config);
   }
 
   connect(): void {
@@ -58,7 +58,7 @@ export class WebSocketManager {
   }
 
   disconnect(): void {
-    console.log('Manually disconnecting WebSocket');
+    console.log("Manually disconnecting WebSocket");
     this.clearTimers();
     this.reconnectAttempts = 0;
 
@@ -81,7 +81,7 @@ export class WebSocketManager {
         ...message,
         timestamp: Date.now(),
       };
-      console.log('Sending WebSocket message:', messageWithTimestamp);
+      console.log("Sending WebSocket message:", messageWithTimestamp);
       this.ws.send(JSON.stringify(messageWithTimestamp));
       return true;
     } catch (error) {
@@ -129,7 +129,12 @@ export class WebSocketManager {
     };
 
     this.ws.onclose = (event) => {
-      console.log("WebSocket disconnected - Code:", event.code, "Reason:", event.reason || "No reason provided");
+      console.log(
+        "WebSocket disconnected - Code:",
+        event.code,
+        "Reason:",
+        event.reason || "No reason provided"
+      );
       this.clearTimers();
 
       if (
@@ -153,12 +158,18 @@ export class WebSocketManager {
     };
 
     this.ws.onmessage = (event) => {
+      console.log("Received WebSocket message:", event.data);
       try {
         const message: WebSocketMessage = JSON.parse(event.data);
-        console.log('Received WebSocket message:', message);
+        console.log("Received WebSocket message:", message);
         this.messageCallback?.(message);
       } catch (error) {
-        console.error("Failed to parse WebSocket message:", error, "Raw data:", event.data);
+        console.error(
+          "Failed to parse WebSocket message:",
+          error,
+          "Raw data:",
+          event.data
+        );
       }
     };
   }
@@ -178,13 +189,17 @@ export class WebSocketManager {
   }
 
   private startHeartbeat(): void {
-    console.log(`Starting heartbeat with interval: ${this.config.heartbeatInterval}ms`);
+    console.log(
+      `Starting heartbeat with interval: ${this.config.heartbeatInterval}ms`
+    );
     this.heartbeatTimer = window.setInterval(() => {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        console.log('Sending heartbeat ping');
+        console.log("Sending heartbeat ping");
         this.send({ type: "ping", data: null });
       } else {
-        console.warn('Heartbeat attempted but WebSocket not open, clearing heartbeat timer');
+        console.warn(
+          "Heartbeat attempted but WebSocket not open, clearing heartbeat timer"
+        );
         this.clearTimers();
       }
     }, this.config.heartbeatInterval);
@@ -192,13 +207,13 @@ export class WebSocketManager {
 
   private clearTimers(): void {
     if (this.reconnectTimer) {
-      console.log('Clearing reconnection timer');
+      console.log("Clearing reconnection timer");
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
 
     if (this.heartbeatTimer) {
-      console.log('Clearing heartbeat timer');
+      console.log("Clearing heartbeat timer");
       clearInterval(this.heartbeatTimer);
       this.heartbeatTimer = null;
     }
@@ -212,6 +227,6 @@ export class WebSocketManager {
 
 // Factory function for creating WebSocket instances
 export function createWebSocket(config: WebSocketConfig): WebSocketManager {
-  console.log('Creating new WebSocket instance with config:', config);
+  console.log("Creating new WebSocket instance with config:", config);
   return new WebSocketManager(config);
 }

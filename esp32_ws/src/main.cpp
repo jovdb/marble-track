@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include <WiFi.h>
+#include <time.h>
 #include "WebsiteHost.h"
 #include "WebSocketManager.h"
 
@@ -19,6 +21,13 @@ WebSocketManager wsManager("/ws");
 String message = "";
 String direction = "STOP";
 bool newRequest = false;
+
+// Function to get current Unix timestamp in milliseconds (like JavaScript Date.now())
+unsigned long long getCurrentTimestamp() {
+  time_t now;
+  time(&now);
+  return (unsigned long long)now * 1000ULL;  // Convert seconds to milliseconds
+}
 
 // WebSocket event handlers
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
@@ -55,6 +64,20 @@ void setup()
   // Initialize website hosting with server reference
   websiteHost.setup(server);
 
+  // Configure NTP time synchronization
+  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+  Serial.println("Waiting for time synchronization...");
+  
+  // Wait for time to be set
+  time_t now = 0;
+  while (now < 8 * 3600 * 2) {
+    delay(500);
+    time(&now);
+    Serial.print(".");
+  }
+  Serial.println();
+  Serial.println("Time synchronized!");
+
   // Setup WebSocket manager with server reference and assign event handlers
   wsManager.onMessageReceived = handleWebSocketMessage;
   wsManager.onClientConnected = handleClientConnected;
@@ -87,6 +110,9 @@ void loop()
       Serial.println("On");
     }
     newRequest = false;
-    wsManager.notifyClients("stop");
+    
+    // Send response with JavaScript-compatible timestamp (milliseconds since Unix epoch)
+    unsigned long long jsTimestamp = getCurrentTimestamp();
+    wsManager.notifyClients("{ \"type\": \"pong\", \"timestamp\": " + String(jsTimestamp) + " }");
   }
 }

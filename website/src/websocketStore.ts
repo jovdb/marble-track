@@ -34,7 +34,15 @@ export function createWebSocketStore(): WebSocketStore {
   let wsManager: WebSocketManager | null = null;
 
   // Auto-connect on store creation
-  const wsUrl = `ws://${window.location.hostname}/ws`;
+  console.log('Environment variables:', import.meta.env);
+  console.log('VITE_MARBLE_IP from env:', import.meta.env.VITE_MARBLE_IP);
+  console.log('window.location.hostname:', window.location.hostname);
+  
+  const marbleIp = import.meta.env.VITE_MARBLE_IP || window.location.hostname;
+  const wsUrl = `ws://${marbleIp}/ws`;
+  
+  console.log('Resolved marbleIp:', marbleIp);
+  console.log('Final wsUrl:', wsUrl);
 
   // Setup WebSocket event handlers
   const setupWebSocketHandlers = (manager: WebSocketManager) => {

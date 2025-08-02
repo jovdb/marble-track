@@ -1,11 +1,11 @@
 /**
  * @file main.cpp
  * @brief Main application file for Marble Track Controller ESP32
- * 
+ *
  * This file contains the main application logic, WebSocket event handling,
  * and system initialization for the ESP32-based marble track control system.
  * JSON message processing and hardware control are handled by separate modules.
- * 
+ *
  * @author Generated for Marble Track Project
  * @date 2025
  */
@@ -32,7 +32,7 @@ const char *password = "cPQdRWmFx1eM";
 AsyncWebServer server(80);
 WebsiteHost websiteHost(ssid, password);
 WebSocketManager wsManager("/ws");
-Led ledController(1, "STATUS_LED", "Test LED");
+Led testLed(1, "STATUS_LED", "Test LED");
 
 void setup()
 {
@@ -42,10 +42,10 @@ void setup()
 
   // Initialize hardware components
   initializeHardware();
-  
+
   // Initialize LED controller
-  ledController.setup();
-  
+  testLed.setup();
+
   // Initialize JSON message handler
   initializeJsonHandler();
 
@@ -67,32 +67,23 @@ void setup()
   Serial.println("- GPIO: {\"action\": \"set_gpio\", \"pin\": 2, \"state\": true}");
   Serial.println("- Info: {\"action\": \"get_info\"}");
   Serial.println("Connect via WebSocket to receive full command examples");
-  
+
   // Print current hardware status
   Serial.println(getHardwareStatus());
+
+  testLed.set(true); // Turn on the LED to indicate system is ready
+  delay(1000);
+  testLed.set(false);
 }
 
 void loop()
 {
   // Keep the WebSocket alive
   wsManager.loop();
-  
+
   // Run LED controller loop
-  ledController.loop();
-  
-  // Optional: Send periodic status updates (simplified)
-  static unsigned long lastStatusUpdate = 0;
-  const unsigned long statusUpdateInterval = 30000; // 30 seconds
-  
-  if (millis() - lastStatusUpdate > statusUpdateInterval) {
-    // Only send status if we have some indication of connected clients
-    // Note: We'll need to track this ourselves since WebSocketManager doesn't expose count
-    String status = createDeviceStatusJson();
-    wsManager.notifyClients(status);
-    Serial.println("Sent periodic status update");
-    lastStatusUpdate = millis();
-  }
-  
+  testLed.loop();
+
   // Small delay to prevent watchdog issues
   delay(10);
 }

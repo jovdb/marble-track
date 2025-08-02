@@ -13,6 +13,7 @@
 #define LED_H
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
 
 /**
  * @class Led
@@ -57,6 +58,14 @@ public:
      * @param state true to turn LED on, false to turn LED off
      */
     void set(bool state);
+    
+    /**
+     * @brief Dynamic control function for LED operations
+     * @param action The action to perform (e.g., "set")
+     * @param payload JSON object containing action parameters
+     * @return true if action was successful, false otherwise
+     */
+    bool control(const String& action, JsonObject& payload);
 
 private:
     int pin;           ///< GPIO pin number for the LED

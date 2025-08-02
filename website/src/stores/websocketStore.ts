@@ -71,7 +71,6 @@ export function createWebSocketStore(): WebSocketStore {
     });
 
     manager.onMessage((message: WebSocketReceiveMessage) => {
-      debugger;
       const timestampedMessage: TimestampedMessage = {
         message,
         timestamp: Date.now()

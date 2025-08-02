@@ -3,6 +3,7 @@ import { createSignal, createEffect, type Component } from "solid-js";
 import styles from "./App.module.css";
 import Header from "./components/Header";
 import WebSocketMessages from "./components/WebSocketMessages";
+import WebSocketSender from "./components/WebSocketSender";
 import { webSocketStore } from "./stores/websocketStore";
 
 const App: Component = () => {
@@ -46,6 +47,8 @@ const App: Component = () => {
             </button>
         </fieldset>
 
+        <WebSocketSender />
+        
         <WebSocketMessages />
       </div>
     </div>

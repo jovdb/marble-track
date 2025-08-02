@@ -86,7 +86,7 @@ export class WebSocketManager {
 
     try {
       const messageWithTimestamp = {
-        ...message, 
+        ...message,
         timestamp: Date.now(), // for order on client ?
       };
       logger?.debug("Sending WebSocket message:", messageWithTimestamp);
@@ -166,8 +166,7 @@ export class WebSocketManager {
     };
 
     this.ws.onmessage = (event) => {
-      logger?.debug("Received WebSocket message:", event.data);
-debugger;
+      logger?.debug("Received WebSocket message:", event.data); 
       if (typeof event.data === "string") {
         this.messageCallback?.(event.data);
       } else {

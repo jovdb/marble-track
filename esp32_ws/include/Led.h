@@ -3,7 +3,7 @@
  * @brief LED control class for marble track system
  * 
  * This class provides LED control functionality with setup and loop operations
- * for managing LED states, patterns, and animations in the marble track system.
+ * for managing LED states in the marble track system.
  * 
  * @author Generated for Marble Track Project
  * @date 2025
@@ -18,21 +18,16 @@
  * @class Led
  * @brief LED control and management class
  * 
- * Provides functionality to control LEDs with setup initialization
- * and continuous loop operations for patterns and animations.
+ * Provides functionality to control LEDs with setup initialization,
+ * continuous loop operations, and state control.
  */
 class Led {
 public:
-    // Readonly public members
-    const int pin;        ///< GPIO pin number for the LED
-    const String id;      ///< Unique string identifier for the LED
-    const String name;    ///< Human-readable name for the LED
-
     /**
      * @brief Constructor for Led class
      * @param pin GPIO pin number for the LED
-     * @param id Unique string identifier for the LED
-     * @param name Human-readable name for the LED
+     * @param id Unique identifier string for the LED
+     * @param name Human-readable name string for the LED
      */
     Led(int pin, const String& id, const String& name);
     
@@ -45,22 +40,29 @@ public:
      * @brief Setup function to initialize LED hardware and configurations
      * 
      * This function should be called once during system initialization
-     * to configure LED pins, initial states, and any required settings.
+     * to configure LED pins and initial states.
      */
     void setup();
     
     /**
      * @brief Loop function for continuous LED operations
      * 
-     * This function should be called repeatedly in the main loop
-     * to handle LED animations, patterns, and state updates.
+     * This function should be called repeatedly in the main loop.
+     * Currently empty but ready for future LED operations.
      */
     void loop();
+    
+    /**
+     * @brief Set LED state
+     * @param state true to turn LED on, false to turn LED off
+     */
+    void set(bool state);
 
 private:
-    // LED state management
-    bool currentState;     ///< Current LED state (on/off)
-    unsigned long lastBlink; ///< Last blink timestamp for timing
+    int pin;           ///< GPIO pin number for the LED
+    String id;         ///< Unique identifier string for the LED
+    String name;       ///< Human-readable name string for the LED
+    bool currentState; ///< Current LED state (on/off)
 };
 
 #endif // LED_H

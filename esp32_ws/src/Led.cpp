@@ -16,14 +16,13 @@
  * 
  * Initializes the Led object with pin, id, and name parameters.
  * @param pin GPIO pin number for the LED
- * @param id Unique string identifier for the LED
- * @param name Human-readable name for the LED
+ * @param id Unique identifier string for the LED
+ * @param name Human-readable name string for the LED
  */
 Led::Led(int pin, const String& id, const String& name) 
-    : pin(pin), id(id), name(name), currentState(false), lastBlink(0) {
-    // Initialize LED pin as output
-    pinMode(pin, OUTPUT);
-    digitalWrite(pin, LOW);  // Start with LED off
+    : pin(pin), id(id), name(name), currentState(false) {
+    // Constructor initializes member variables
+    // Pin setup is done in setup() function
 }
 
 /**
@@ -39,39 +38,42 @@ Led::~Led() {
 /**
  * @brief Setup function to initialize LED hardware and configurations
  * 
- * Configures LED pins as outputs and sets initial states.
+ * Configures LED pin as output and sets initial state.
  * This function should be called once during system initialization.
  */
 void Led::setup() {
-    Serial.println("Led: Initializing LED system");
-    Serial.println("Led ID: " + id + ", Name: " + name + ", Pin: " + String(pin));
+    Serial.println("Led: Initializing LED [" + id + "] - " + name + " on pin " + String(pin));
     
-    // Pin is already configured in constructor, but we can add additional setup here
-    digitalWrite(pin, LOW);  // Ensure LED starts in OFF state
+    // Initialize the pin as output
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, LOW);  // Start with LED off
+    currentState = false;
     
-    Serial.println("Led: LED system initialized successfully");
+    Serial.println("Led: LED [" + id + "] initialized successfully");
 }
 
 /**
  * @brief Loop function for continuous LED operations
  * 
- * Handles LED animations, patterns, and state updates.
  * This function should be called repeatedly in the main loop.
+ * Currently empty but ready for future LED operations like blinking patterns.
  */
 void Led::loop() {
-    // Implement LED loop logic here
-    // Examples:
-    // - Handle blinking patterns
-    // - Update LED animations
-    // - Process LED state changes
-    // - Handle timing for LED effects
+    // Loop function is empty as requested
+    // Ready for future LED operations like:
+    // - Blinking patterns
+    // - Breathing effects
+    // - Status indicators
+}
+
+/**
+ * @brief Set LED state
+ * @param state true to turn LED on, false to turn LED off
+ */
+void Led::set(bool state) {
+    digitalWrite(pin, state ? HIGH : LOW);
+    currentState = state;
     
-    // Basic example (commented out):
-    // static unsigned long lastBlink = 0;
-    // const unsigned long blinkInterval = 1000;
-    // 
-    // if (millis() - lastBlink > blinkInterval) {
-    //     // Toggle LED state
-    //     lastBlink = millis();
-    // }
+    // Log the state change with LED ID
+    Serial.println("Led [" + id + "]: Set to " + (state ? "ON" : "OFF"));
 }

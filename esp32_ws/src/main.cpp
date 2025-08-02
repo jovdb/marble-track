@@ -32,7 +32,7 @@ const char *password = "cPQdRWmFx1eM";
 AsyncWebServer server(80);
 WebsiteHost websiteHost(ssid, password);
 WebSocketManager wsManager("/ws");
-Led ledController(2, "status_led", "Status LED");  // Pin 2, ID "status_led", Name "Status LED"
+Led ledController(2, "STATUS_LED", "System Status LED");
 
 // WebSocket event handlers
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
@@ -128,6 +128,17 @@ void loop()
   
   // Run LED controller loop
   ledController.loop();
+  
+  // LED test: Blink every 5 seconds to demonstrate set() function
+  static unsigned long lastLedToggle = 0;
+  static bool ledState = false;
+  const unsigned long ledToggleInterval = 5000; // 5 seconds
+  
+  if (millis() - lastLedToggle > ledToggleInterval) {
+    ledState = !ledState;
+    ledController.set(ledState);
+    lastLedToggle = millis();
+  }
   
   // Optional: Send periodic status updates (simplified)
   static unsigned long lastStatusUpdate = 0;

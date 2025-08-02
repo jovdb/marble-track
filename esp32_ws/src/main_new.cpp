@@ -65,11 +65,11 @@ void onWebSocketEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsE
   {
   case WS_EVT_CONNECT:
     Serial.printf("WebSocket: Client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
-    updateConnectedClients(server->count());
+    updateConnectedClients(wsManager.getClientCount() + 1);
     break;
   case WS_EVT_DISCONNECT:
     Serial.printf("WebSocket: Client #%u disconnected\n", client->id());
-    updateConnectedClients(server->count());
+    updateConnectedClients(wsManager.getClientCount() - 1);
     break;
   case WS_EVT_DATA:
     handleWebSocketMessage(arg, data, len);
@@ -93,14 +93,18 @@ void setup()
   initializeJsonHandler();
 
   // Initialize TimeManager
-  TimeManager::initialize();
+  TimeManager::begin();
 
   // Initialize WebsiteHost
-  websiteHost.setup(server);
+  if (!websiteHost.initialize(&server)) {
+    Serial.println("Failed to initialize WebsiteHost");
+    return;
+  }
 
   // Setup WebSocket
   wsManager.onMessageReceived = handleWebSocketMessage;
-  wsManager.setup(server);
+  wsManager.onEvent = onWebSocketEvent;
+  wsManager.setupWebSocket(&server);
 
   // Start server
   server.begin();
@@ -119,18 +123,21 @@ void setup()
 void loop()
 {
   // Keep the WebSocket alive
-  wsManager.loop();
+  wsManager.cleanupClients();
   
-  // Optional: Send periodic status updates (simplified)
+  // Update TimeManager
+  TimeManager::update();
+  
+  // Optional: Send periodic status updates
   static unsigned long lastStatusUpdate = 0;
   const unsigned long statusUpdateInterval = 30000; // 30 seconds
   
   if (millis() - lastStatusUpdate > statusUpdateInterval) {
-    // Only send status if we have some indication of connected clients
-    // Note: We'll need to track this ourselves since WebSocketManager doesn't expose count
-    String status = createDeviceStatusJson();
-    wsManager.notifyClients(status);
-    Serial.println("Sent periodic status update");
+    if (wsManager.getClientCount() > 0) {
+      String status = createDeviceStatusJson();
+      wsManager.notifyClients(status);
+      Serial.println("Sent periodic status update to " + String(wsManager.getClientCount()) + " clients");
+    }
     lastStatusUpdate = millis();
   }
   

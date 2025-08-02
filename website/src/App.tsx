@@ -1,7 +1,8 @@
-import { createSignal, createEffect, type Component, For } from "solid-js";
+import { createSignal, createEffect, type Component } from "solid-js";
 
 import styles from "./App.module.css";
 import Header from "./Header";
+import WebSocketMessages from "./WebSocketMessages";
 import { webSocketStore } from "./websocketStore";
 
 const App: Component = () => {
@@ -45,21 +46,7 @@ const App: Component = () => {
             </button>
         </fieldset>
 
-        {webSocketStore.state.messages.length > 0 && (
-          <fieldset>
-            <legend>Recent Messages</legend>
-            <div style={{ "max-height": "200px", overflow: "auto" }}>
-              <For each={webSocketStore.state.messages.slice(-5)}>
-                {(msg) => (
-                  <div style={{ "margin-bottom": "5px", "font-family": "monospace", "font-size": "12px" }}>
-                    <strong>{msg.type}:</strong> {JSON.stringify(msg.data)}
-                  </div>
-                )}
-              </For>
-            </div>
-            <button onClick={() => webSocketStore.clearMessages()}>Clear Messages</button>
-          </fieldset>
-        )}
+        <WebSocketMessages />
       </div>
     </div>
   );

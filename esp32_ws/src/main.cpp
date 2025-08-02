@@ -20,6 +20,7 @@
 #include "TimeManager.h"
 #include "JsonMessageHandler.h"
 #include "HardwareController.h"
+#include "Led.h"
 
 // Replace with your network credentials
 // const char *ssid = "REPLACE_WITH_YOUR_SSID";
@@ -31,6 +32,7 @@ const char *password = "cPQdRWmFx1eM";
 AsyncWebServer server(80);
 WebsiteHost websiteHost(ssid, password);
 WebSocketManager wsManager("/ws");
+Led ledController(2, "status_led", "Status LED");  // Pin 2, ID "status_led", Name "Status LED"
 
 // WebSocket event handlers
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
@@ -89,6 +91,9 @@ void setup()
   // Initialize hardware components
   initializeHardware();
   
+  // Initialize LED controller
+  ledController.setup();
+  
   // Initialize JSON message handler
   initializeJsonHandler();
 
@@ -120,6 +125,9 @@ void loop()
 {
   // Keep the WebSocket alive
   wsManager.loop();
+  
+  // Run LED controller loop
+  ledController.loop();
   
   // Optional: Send periodic status updates (simplified)
   static unsigned long lastStatusUpdate = 0;

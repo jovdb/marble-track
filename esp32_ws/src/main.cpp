@@ -80,17 +80,6 @@ void loop()
   // Run LED controller loop
   ledController.loop();
   
-  // LED test: Blink every 5 seconds to demonstrate set() function
-  static unsigned long lastLedToggle = 0;
-  static bool ledState = false;
-  const unsigned long ledToggleInterval = 5000; // 5 seconds
-  
-  if (millis() - lastLedToggle > ledToggleInterval) {
-    ledState = !ledState;
-    ledController.set(ledState);
-    lastLedToggle = millis();
-  }
-  
   // Optional: Send periodic status updates (simplified)
   static unsigned long lastStatusUpdate = 0;
   const unsigned long statusUpdateInterval = 30000; // 30 seconds

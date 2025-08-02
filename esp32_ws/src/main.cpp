@@ -32,7 +32,7 @@ const char *password = "cPQdRWmFx1eM";
 AsyncWebServer server(80);
 WebsiteHost websiteHost(ssid, password);
 WebSocketManager wsManager("/ws");
-Led ledController(2, "STATUS_LED", "System Status LED");
+Led ledController(1, "STATUS_LED", "Test LED");
 
 void setup()
 {

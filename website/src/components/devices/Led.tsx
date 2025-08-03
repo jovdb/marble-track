@@ -1,4 +1,4 @@
-import { webSocketStore } from "../../stores/websocketStore";
+import { sendMessage } from "../../hooks/useWebSocket";
 
 export function Led() {
   const name = "Jo";
@@ -7,15 +7,13 @@ export function Led() {
 
   const setLed = (state: boolean) => {
     // Send the message format expected by ESP32 WebSocketMessageHandler
-    // The WebSocket wrapper will add timestamp and send as JSON
-    webSocketStore.send({
-      type: "device-command",
-      data: {
+    sendMessage(
+      JSON.stringify({
         action: "device-fn",
         deviceId: "test-led",
         fn: state ? "on" : "off",
-      },
-    });
+      })
+    );
   };
 
   return (

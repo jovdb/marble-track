@@ -1,3 +1,4 @@
+/*
 import { createStore } from "solid-js/store";
 import { createEffect, onCleanup } from "solid-js";
 import {
@@ -42,6 +43,7 @@ const initialState: WebSocketState = {
   messages: [],
   reconnectAttempts: 0,
 };
+
 
 export function createWebSocketStore(): WebSocketStore {
   const [state, setState] = createStore<WebSocketState>(initialState);
@@ -154,3 +156,4 @@ export function createWebSocketStore(): WebSocketStore {
 
 // Global WebSocket store instance (optional - use if you want a singleton)
 export const webSocketStore = createWebSocketStore();
+*/

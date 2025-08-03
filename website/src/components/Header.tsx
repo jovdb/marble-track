@@ -1,20 +1,20 @@
-import { createSignal, createEffect, onMount, type Component } from "solid-js";
-import { webSocketStore } from "../stores/websocketStore";
+import { type Component } from "solid-js";
 import styles from "./Header.module.css";
+import { connectionStateName } from "../hooks/useWebSocket";
 
 const Header: Component = () => {
   const getStatusClass = () => {
-    switch (webSocketStore.state.status) {
-      case 'connected':
-        return '';
-      case 'disconnected':
-        return styles['status--disconnected'];
-      case 'connecting':
-        return styles['status--connecting'];
-      case 'error':
-        return styles['status--disconnected'];
+    switch (connectionStateName()) {
+      case "Connected":
+        return "";
+      case "Disconnected":
+        return styles["status--disconnected"];
+      case "Connecting":
+        return styles["status--connecting"];
+      case "Disconnecting":
+        return styles["status--disconnected"];
       default:
-        return '';
+        return "";
     }
   };
 
@@ -24,7 +24,7 @@ const Header: Component = () => {
         <h1>Marble Manager</h1>
       </div>
       <div class={styles.header__right}>
-        <p class={getStatusClass()}>Status: {webSocketStore.state.status}</p>
+        <p class={getStatusClass()}>Status: {connectionStateName()}</p>
       </div>
     </div>
   );

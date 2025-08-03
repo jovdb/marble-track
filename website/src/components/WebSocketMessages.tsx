@@ -1,6 +1,5 @@
 import { type Component, For } from "solid-js";
-import { webSocketStore } from "../stores/websocketStore";
-import type { TimestampedMessage } from "../stores/websocketStore";
+import { clearMessages, lastMessages } from "../hooks/useWebSocket";
 
 const WebSocketMessages: Component = () => {
   const parseMessage = (msg: string) => {
@@ -31,8 +30,8 @@ const WebSocketMessages: Component = () => {
       <fieldset>
         <legend>Recent Messages</legend>
         <div style={{ "max-height": "200px", overflow: "auto" }}>
-          <For each={webSocketStore.state.messages.slice(-5)}>
-            {(timestampedMsg: TimestampedMessage) => {
+          <For each={lastMessages()}>
+            {(timestampedMsg) => {
               const parsedMsg = parseMessage(timestampedMsg.message);
               const timestamp = formatTimestamp(timestampedMsg.timestamp);
               return (
@@ -52,9 +51,7 @@ const WebSocketMessages: Component = () => {
             }}
           </For>
         </div>
-        <button onClick={() => webSocketStore.clearMessages()}>
-          Clear Messages
-        </button>
+        <button onClick={() => clearMessages()}>Clear Messages</button>
       </fieldset>
     </>
   );

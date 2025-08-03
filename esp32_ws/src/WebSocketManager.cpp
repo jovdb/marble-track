@@ -31,13 +31,16 @@ void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
         }
         break;
     case WS_EVT_DATA:
+        Serial.printf("WebSocket client #%u data received: %s\n", client->id(), data);
         if (WebSocketManager_instance->onMessageReceived)
         {
             WebSocketManager_instance->onMessageReceived(arg, data, len);
         }
         break;
     case WS_EVT_PONG:
+        Serial.printf("WebSocket client #%u pong received\n", client->id());
     case WS_EVT_ERROR:
+        Serial.printf("WebSocket client #%u error occurred\n", client->id());
         break;
     }
 }

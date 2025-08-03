@@ -62,6 +62,10 @@ public:
      */
     void loop() override;
     
+    // IDevice interface implementation overrides
+    bool supportsControllable() const override { return true; }
+    IControllable* getControllableInterface() override { return this; }
+    
     // IControllable interface implementation
     /**
      * @brief Dynamic control function for LED operations

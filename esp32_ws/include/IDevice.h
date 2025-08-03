@@ -14,6 +14,9 @@
 
 #include <Arduino.h>
 
+// Forward declaration
+struct IControllable;
+
 /**
  * @struct IDevice
  * @brief Base interface for all devices
@@ -47,6 +50,19 @@ struct IDevice {
      * the device to perform any periodic operations or state updates.
      */
     virtual void loop() = 0;
+    
+    /**
+     * @brief Check if this device implements IControllable interface
+     * @return true if device implements IControllable, false otherwise
+     */
+    virtual bool supportsControllable() const { return false; }
+
+    /**
+     * @brief Get this device as IControllable interface (if supported)
+     * @return Pointer to IControllable interface or nullptr if not supported
+     * @note Only call this if supportsControllable() returns true
+     */
+    virtual IControllable* getControllableInterface() { return nullptr; }
 };
 
 #endif // IDEVICE_H

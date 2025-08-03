@@ -41,11 +41,6 @@ const int MAX_DEVICES = 20;
 IDevice *devices[MAX_DEVICES];
 int devicesCount = 0;
 
-// Array of controllable devices
-const int MAX_CONTROLLABLES = 10;
-IControllable *controllables[MAX_CONTROLLABLES];
-int controllablesCount = 0;
-
 // Helper function to add a device
 void addDevice(IDevice *device)
 {
@@ -58,28 +53,39 @@ void addDevice(IDevice *device)
   }
 }
 
-// Helper function to add controllable device
-void addControllable(IControllable *device)
-{
-  if (controllablesCount < MAX_CONTROLLABLES && device != nullptr)
-  {
-    controllables[controllablesCount] = device;
-    controllablesCount++;
-    Serial.println("Added controllable device: " + device->getId());
-  }
-}
-
 // Helper function to find controllable device by ID
 IControllable *findControllableById(const String &deviceId)
 {
-  for (int i = 0; i < controllablesCount; i++)
+  for (int i = 0; i < devicesCount; i++)
   {
-    if (controllables[i]->getId() == deviceId)
+    if (devices[i] != nullptr && devices[i]->getId() == deviceId)
     {
-      return controllables[i];
+      // Check if device supports controllable interface and get it
+      if (devices[i]->supportsControllable())
+      {
+        return devices[i]->getControllableInterface();
+      }
     }
   }
   return nullptr;
+}
+
+// Helper function to get all controllable devices
+void getAllControllableDevices(IControllable** controllableList, int& count, int maxResults)
+{
+  count = 0;
+  for (int i = 0; i < devicesCount && count < maxResults; i++)
+  {
+    if (devices[i] != nullptr && devices[i]->supportsControllable())
+    {
+      IControllable* controllable = devices[i]->getControllableInterface();
+      if (controllable != nullptr)
+      {
+        controllableList[count] = controllable;
+        count++;
+      }
+    }
+  }
 }
 
 void setup()
@@ -97,10 +103,19 @@ void setup()
 
   // Add device to management arrays
   addDevice(testLed);
-  addControllable(testLed);
-  Serial.println("Device arrays populated:");
+  Serial.println("Device management:");
   Serial.println("  Total devices: " + String(devicesCount));
-  Serial.println("  Controllable devices: " + String(controllablesCount));
+  
+  // Count controllable devices dynamically
+  int controllableCount = 0;
+  for (int i = 0; i < devicesCount; i++)
+  {
+    if (devices[i] != nullptr && devices[i]->supportsControllable())
+    {
+      controllableCount++;
+    }
+  }
+  Serial.println("  Controllable devices: " + String(controllableCount));
 
   // Initialize JSON message handler
   initializeJsonHandler();

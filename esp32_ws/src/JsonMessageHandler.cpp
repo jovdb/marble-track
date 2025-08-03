@@ -15,16 +15,12 @@
 #include <WiFi.h>
 #include <ESP.h>
 
-// External references to global variables from main.cpp
-extern String currentDirection;
-extern int currentSpeed;
-extern bool currentLedState;
-extern int connectedClients;
-
-// External references to hardware control functions from main.cpp
-extern void setDirection(const String& value);
-extern void setLedState(bool state);
-extern void setSpeed(int speed);
+// TODO: Update JsonMessageHandler to use DeviceManager instead of global variables
+// Placeholder variables for now
+String currentDirection = "STOP";
+int currentSpeed = 0;
+bool currentLedState = false;
+int connectedClients = 0;
 
 void initializeJsonHandler() {
   Serial.println("JSON Message Handler initialized");
@@ -155,8 +151,9 @@ String processCustomCommand(JsonObject command, const String& requestId) {
   else if (action == "set_direction") {
     String direction = command["value"] | "STOP";
     if (direction == "CW" || direction == "CCW" || direction == "STOP") {
-      setDirection(direction);
-      return createJsonResponse(true, "Direction set to " + direction, "", requestId);
+      // TODO: Use DeviceManager to control motor device
+      currentDirection = direction;
+      return createJsonResponse(true, "Direction set to " + direction + " (placeholder)", "", requestId);
     } else {
       return createJsonResponse(false, "Invalid direction. Use CW, CCW, or STOP", "", requestId);
     }
@@ -164,16 +161,18 @@ String processCustomCommand(JsonObject command, const String& requestId) {
   else if (action == "set_speed") {
     int speed = command["value"] | 0;
     if (speed >= 0 && speed <= 100) {
-      setSpeed(speed);
-      return createJsonResponse(true, "Speed set to " + String(speed) + "%", "", requestId);
+      // TODO: Use DeviceManager to control motor device
+      currentSpeed = speed;
+      return createJsonResponse(true, "Speed set to " + String(speed) + "% (placeholder)", "", requestId);
     } else {
       return createJsonResponse(false, "Invalid speed. Use 0-100", "", requestId);
     }
   }
   else if (action == "set_led") {
     bool state = command["value"] | false;
-    setLedState(state);
-    return createJsonResponse(true, "LED set to " + String(state ? "ON" : "OFF"), "", requestId);
+    // TODO: Use DeviceManager to control LED device
+    currentLedState = state;
+    return createJsonResponse(true, "LED set to " + String(state ? "ON" : "OFF") + " (placeholder)", "", requestId);
   }
   else if (action == "restart") {
     // Schedule restart after sending response

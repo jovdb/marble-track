@@ -11,7 +11,6 @@
 
 #include "WebSocketMessageHandler.h"
 #include "JsonMessageHandler.h"
-#include "HardwareController.h"
 
 // Static reference to WebSocket manager
 static WebSocketManager* wsManagerRef = nullptr;
@@ -81,12 +80,10 @@ void onWebSocketEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
         case WS_EVT_CONNECT:
             Serial.printf("WebSocket: Client #%u connected from %s\n", 
                          client->id(), client->remoteIP().toString().c_str());
-            updateConnectedClients(server->count());
             break;
             
         case WS_EVT_DISCONNECT:
             Serial.printf("WebSocket: Client #%u disconnected\n", client->id());
-            updateConnectedClients(server->count());
             break;
             
         case WS_EVT_DATA:

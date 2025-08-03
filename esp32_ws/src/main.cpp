@@ -19,7 +19,6 @@
 #include "WebSocketManager.h"
 #include "TimeManager.h"
 #include "JsonMessageHandler.h"
-#include "HardwareController.h"
 #include "Led.h"
 #include "IDevice.h"
 #include "IControllable.h"
@@ -45,9 +44,6 @@ void setup()
   // Initialize serial communication
   Serial.begin(115200);
   Serial.println("Starting Marble Track JSON Communication System");
-
-  // Initialize hardware components
-  initializeHardware();
 
   // Instantiate and initialize LED controller
   testLed = new Led(1, "test-led", "Test LED");
@@ -81,8 +77,7 @@ void setup()
   Serial.println("- Info: {\"action\": \"get_info\"}");
   Serial.println("Connect via WebSocket to receive full command examples");
 
-  // Print current hardware status
-  Serial.println(getHardwareStatus());
+  Serial.println("System ready - LED device added to DeviceManager");
 }
 
 void loop()

@@ -28,36 +28,34 @@ const WebSocketMessages: Component = () => {
 
   return (
     <>
-      {webSocketStore.state.messages.length > 0 && (
-        <fieldset>
-          <legend>Recent Messages</legend>
-          <div style={{ "max-height": "200px", overflow: "auto" }}>
-            <For each={webSocketStore.state.messages.slice(-5)}>
-              {(timestampedMsg: TimestampedMessage) => {
-                const parsedMsg = parseMessage(timestampedMsg.message);
-                const timestamp = formatTimestamp(timestampedMsg.timestamp);
-                return (
-                  <div
-                    style={{
-                      "margin-bottom": "5px",
-                      "font-family": "monospace",
-                      "font-size": "12px",
-                    }}
-                  >
-                    <span style={{ color: "#666", "margin-right": "8px" }}>
-                      [{timestamp}]
-                    </span>
-                    {timestampedMsg.message}
-                  </div>
-                );
-              }}
-            </For>
-          </div>
-          <button onClick={() => webSocketStore.clearMessages()}>
-            Clear Messages
-          </button>
-        </fieldset>
-      )}
+      <fieldset>
+        <legend>Recent Messages</legend>
+        <div style={{ "max-height": "200px", overflow: "auto" }}>
+          <For each={webSocketStore.state.messages.slice(-5)}>
+            {(timestampedMsg: TimestampedMessage) => {
+              const parsedMsg = parseMessage(timestampedMsg.message);
+              const timestamp = formatTimestamp(timestampedMsg.timestamp);
+              return (
+                <div
+                  style={{
+                    "margin-bottom": "5px",
+                    "font-family": "monospace",
+                    "font-size": "12px",
+                  }}
+                >
+                  <span style={{ color: "#666", "margin-right": "8px" }}>
+                    [{timestamp}]
+                  </span>
+                  {timestampedMsg.message}
+                </div>
+              );
+            }}
+          </For>
+        </div>
+        <button onClick={() => webSocketStore.clearMessages()}>
+          Clear Messages
+        </button>
+      </fieldset>
     </>
   );
 };

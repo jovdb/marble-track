@@ -5,6 +5,7 @@ import Header from "./components/Header";
 import WebSocketMessages from "./components/WebSocketMessages";
 import WebSocketSender from "./components/WebSocketSender";
 import { webSocketStore } from "./stores/websocketStore";
+import { Led } from "./components/devices/Led";
 
 const App: Component = () => {
   let myCanvas: HTMLCanvasElement;
@@ -14,7 +15,7 @@ const App: Component = () => {
   const handleSendMessage = () => {
     webSocketStore.send({
       type: "angle_update",
-      data: { angle: position() }
+      data: { angle: position() },
     });
   };
 
@@ -39,16 +40,16 @@ const App: Component = () => {
             />
             {position()}°
           </div>
-          <button 
-            onClick={handleSendMessage} 
+          <button
+            onClick={handleSendMessage}
             disabled={!webSocketStore.state.isConnected}
           >
             Send Angle Update
-            </button>
+          </button>
         </fieldset>
 
+        <Led />
         <WebSocketSender />
-        
         <WebSocketMessages />
       </div>
     </div>

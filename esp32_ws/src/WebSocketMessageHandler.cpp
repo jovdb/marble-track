@@ -31,9 +31,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         String message = (char *)data;
         Serial.println("WebSocket: Received message: " + message);
 
-        // Parse JSON message
-
-        // Try to parse as JSON
+        // Parse JSON message and handle both direct action format and nested data format
         JsonDocument doc;
         DeserializationError error = deserializeJson(doc, message);
 
@@ -48,7 +46,19 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             return;
         }
 
+        // Check if action is at root level or in data field
         String action = doc["action"] | "";
+        String deviceId = doc["deviceId"] | "";
+        String functionName = doc["fn"] | "";
+        
+        // If no action at root level, check in data field
+        if (action.isEmpty() && doc["data"].is<JsonObject>())
+        {
+            JsonObject dataObj = doc["data"];
+            action = dataObj["action"] | "";
+            deviceId = dataObj["deviceId"] | "";
+            functionName = dataObj["fn"] | "";
+        }
 
         if (action == "restart")
         {
@@ -66,9 +76,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         }
         else if (action == "device-fn")
         {
-            String deviceId = doc["deviceId"] | "";
-            String functionName = doc["fn"] | "";
-            // TODO: Implement device function handling
+            // Device function variables are already extracted above
+            Serial.println("Device function called - Device: " + deviceId + ", Function: " + functionName);
+            // TODO: Implement device function handling using DeviceManager
             String response = createJsonResponse(true, "Device function executed", "device-fn");
             if (wsManagerRef != nullptr)
             {

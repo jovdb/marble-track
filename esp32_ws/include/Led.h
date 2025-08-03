@@ -15,6 +15,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include "IControllable.h"
+#include "ILoopable.h"
 
 /**
  * @class Led
@@ -22,9 +23,10 @@
  * 
  * Provides functionality to control LEDs with setup initialization,
  * continuous loop operations, and state control.
- * Implements IControllable interface for unified device control.
+ * Implements IControllable interface for unified device control and
+ * ILoopable interface for periodic operations.
  */
-class Led : public IControllable {
+class Led : public IControllable, public ILoopable {
 public:
     /**
      * @brief Constructor for Led class
@@ -54,6 +56,15 @@ public:
      */
     String getId() const override;
     
+    // ILoopable interface implementation
+    /**
+     * @brief Loop function for continuous LED operations
+     * 
+     * This function should be called repeatedly in the main loop.
+     * Currently empty but ready for future LED operations.
+     */
+    void loop() override;
+    
     // Led-specific public methods
     /**
      * @brief Setup function to initialize LED hardware and configurations
@@ -62,14 +73,6 @@ public:
      * to configure LED pins and initial states.
      */
     void setup();
-    
-    /**
-     * @brief Loop function for continuous LED operations
-     * 
-     * This function should be called repeatedly in the main loop.
-     * Currently empty but ready for future LED operations.
-     */
-    void loop();
     
     /**
      * @brief Set LED state

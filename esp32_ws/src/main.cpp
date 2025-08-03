@@ -22,6 +22,7 @@
 #include "HardwareController.h"
 #include "Led.h"
 #include "IControllable.h"
+#include "ILoopable.h"
 
 // Replace with your network credentials
 // const char *ssid = "REPLACE_WITH_YOUR_SSID";
@@ -40,6 +41,11 @@ const int MAX_CONTROLLABLES = 10;
 IControllable *controllables[MAX_CONTROLLABLES];
 int controllablesCount = 0;
 
+// Array of loopable devices
+const int MAX_LOOPABLES = 10;
+ILoopable *loopables[MAX_LOOPABLES];
+int loopablesCount = 0;
+
 // Helper function to add controllable device
 void addControllable(IControllable *device)
 {
@@ -48,6 +54,17 @@ void addControllable(IControllable *device)
     controllables[controllablesCount] = device;
     controllablesCount++;
     Serial.println("Added controllable device: " + device->getId());
+  }
+}
+
+// Helper function to add loopable device
+void addLoopable(ILoopable *device)
+{
+  if (loopablesCount < MAX_LOOPABLES && device != nullptr)
+  {
+    loopables[loopablesCount] = device;
+    loopablesCount++;
+    Serial.println("Added loopable device to loop array");
   }
 }
 
@@ -79,7 +96,9 @@ void setup()
 
   // Populate controlables array
   addControllable(testLed);
+  addLoopable(testLed);
   Serial.println("Controllables array populated with " + String(controllablesCount) + " devices");
+  Serial.println("Loopables array populated with " + String(loopablesCount) + " devices");
 
   // Initialize JSON message handler
   initializeJsonHandler();
@@ -112,16 +131,13 @@ void loop()
   // Keep the WebSocket alive
   wsManager.loop();
 
-  // Run LED controller loop
-  IControllable *led = findControllableById("test-led");
-  if (led != nullptr)
+  // Run all loopable devices
+  for (int i = 0; i < loopablesCount; i++)
   {
-    // led->loop();
-
-    led->control("toggle"); // Toggle LED without payload
-    delay(1000);            // Delay for 1 second to see the toggle effect
-    led->control("toggle"); // Toggle LED without payload
-    delay(1000);            // Delay for 1 second to see the toggle effect
+    if (loopables[i] != nullptr)
+    {
+      loopables[i]->loop();
+    }
   }
 
   // Small delay to prevent watchdog issues

@@ -32,10 +32,10 @@ struct IControllable {
     /**
      * @brief Dynamic control function for device operations
      * @param action The action to perform (e.g., "set", "move", "toggle")
-     * @param payload JSON object containing action parameters
+     * @param payload Pointer to JSON object containing action parameters (can be nullptr)
      * @return true if action was successful, false otherwise
      */
-    virtual bool control(const String& action, JsonObject& payload) = 0;
+    virtual bool control(const String& action, JsonObject* payload = nullptr) = 0;
     
     /**
      * @brief Get device identifier

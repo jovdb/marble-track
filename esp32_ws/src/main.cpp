@@ -21,6 +21,7 @@
 #include "JsonMessageHandler.h"
 #include "HardwareController.h"
 #include "Led.h"
+#include "IControllable.h"
 
 // Replace with your network credentials
 // const char *ssid = "REPLACE_WITH_YOUR_SSID";
@@ -32,7 +33,36 @@ const char *password = "cPQdRWmFx1eM";
 AsyncWebServer server(80);
 WebsiteHost websiteHost(ssid, password);
 WebSocketManager wsManager("/ws");
-Led testLed(1, "STATUS_LED", "Test LED");
+Led *testLed = nullptr; // Will be instantiated in setup()
+
+// Array of controllable devices
+const int MAX_CONTROLLABLES = 10;
+IControllable *controllables[MAX_CONTROLLABLES];
+int controllablesCount = 0;
+
+// Helper function to add controllable device
+void addControllable(IControllable *device)
+{
+  if (controllablesCount < MAX_CONTROLLABLES && device != nullptr)
+  {
+    controllables[controllablesCount] = device;
+    controllablesCount++;
+    Serial.println("Added controllable device: " + device->getId());
+  }
+}
+
+// Helper function to find controllable device by ID
+IControllable *findControllableById(const String &deviceId)
+{
+  for (int i = 0; i < controllablesCount; i++)
+  {
+    if (controllables[i]->getId() == deviceId)
+    {
+      return controllables[i];
+    }
+  }
+  return nullptr;
+}
 
 void setup()
 {
@@ -43,8 +73,13 @@ void setup()
   // Initialize hardware components
   initializeHardware();
 
-  // Initialize LED controller
-  testLed.setup();
+  // Instantiate and initialize LED controller
+  testLed = new Led(1, "test-led", "Test LED");
+  testLed->setup();
+
+  // Populate controlables array
+  addControllable(testLed);
+  Serial.println("Controllables array populated with " + String(controllablesCount) + " devices");
 
   // Initialize JSON message handler
   initializeJsonHandler();
@@ -70,10 +105,6 @@ void setup()
 
   // Print current hardware status
   Serial.println(getHardwareStatus());
-
-  testLed.set(true); // Turn on the LED to indicate system is ready
-  delay(1000);
-  testLed.set(false);
 }
 
 void loop()
@@ -82,7 +113,16 @@ void loop()
   wsManager.loop();
 
   // Run LED controller loop
-  testLed.loop();
+  IControllable *led = findControllableById("test-led");
+  if (led != nullptr)
+  {
+    // led->loop();
+
+    led->control("toggle"); // Toggle LED without payload
+    delay(1000);            // Delay for 1 second to see the toggle effect
+    led->control("toggle"); // Toggle LED without payload
+    delay(1000);            // Delay for 1 second to see the toggle effect
+  }
 
   // Small delay to prevent watchdog issues
   delay(10);

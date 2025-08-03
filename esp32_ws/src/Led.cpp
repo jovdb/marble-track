@@ -82,27 +82,39 @@ void Led::set(bool state)
 /**
  * @brief Dynamic control function for LED operations
  * @param action The action to perform (e.g., "set")
- * @param payload JSON object containing action parameters
+ * @param payload Pointer to JSON object containing action parameters (can be nullptr)
  * @return true if action was successful, false otherwise
  */
-bool Led::control(const String &action, JsonObject &payload)
+bool Led::control(const String &action, JsonObject *payload)
 {
-    Serial.println("Led [" + id + "]: Control action '" + action + "' with JSON payload");
+    Serial.println("Led [" + id + "]: Control action '" + action + "' with " + 
+                   (payload ? "JSON payload" : "no payload"));
 
     if (action == "set")
     {
-        // Payload should contain a "state" field with boolean value
-        if (payload["state"].is<bool>())
+        // Check if payload is provided and contains "state" field
+        if (payload && (*payload)["state"].is<bool>())
         {
-            bool state = payload["state"].as<bool>();
+            bool state = (*payload)["state"].as<bool>();
             set(state);
             return true;
+        }
+        else if (!payload)
+        {
+            Serial.println("Led [" + id + "]: Error - Missing payload for 'set' action");
+            return false;
         }
         else
         {
             Serial.println("Led [" + id + "]: Error - Missing 'state' field in payload for 'set' action");
             return false;
         }
+    }
+    else if (action == "toggle")
+    {
+        // Toggle action doesn't require a payload
+        set(!currentState);
+        return true;
     }
     else
     {

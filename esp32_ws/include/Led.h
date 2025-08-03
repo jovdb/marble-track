@@ -43,10 +43,10 @@ public:
     /**
      * @brief Dynamic control function for LED operations
      * @param action The action to perform (e.g., "set")
-     * @param payload JSON object containing action parameters
+     * @param payload Pointer to JSON object containing action parameters (can be nullptr)
      * @return true if action was successful, false otherwise
      */
-    bool control(const String& action, JsonObject& payload) override;
+    bool control(const String& action, JsonObject* payload = nullptr) override;
     
     /**
      * @brief Get device identifier

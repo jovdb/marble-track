@@ -116,6 +116,18 @@ bool Led::control(const String &action, JsonObject *payload)
         set(!currentState);
         return true;
     }
+    else if (action == "on")
+    {
+        // Turn LED on - doesn't require a payload
+        set(true);
+        return true;
+    }
+    else if (action == "off")
+    {
+        // Turn LED off - doesn't require a payload
+        set(false);
+        return true;
+    }
     else
     {
         Serial.println("Led [" + id + "]: Error - Unknown action: " + action);

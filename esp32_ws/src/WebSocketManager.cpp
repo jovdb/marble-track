@@ -84,8 +84,19 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
                     {
                         // Execute the device function
                         Serial.println("Executing function '" + functionName + "' on device '" + deviceId + "'");
-                        // TODO: Add specific function execution logic here
-                        response = createJsonResponse(true, "Device function executed successfully", "device-fn");
+                        
+                        // Create payload object from the original document if it has additional data
+                        JsonObject payload = doc.as<JsonObject>();
+                        bool success = controllable->control(functionName, &payload);
+                        
+                        if (success)
+                        {
+                            response = createJsonResponse(true, "Device function executed successfully", "device-fn");
+                        }
+                        else
+                        {
+                            response = createJsonResponse(false, "Device function execution failed", "device-fn");
+                        }
                     }
                     else
                     {

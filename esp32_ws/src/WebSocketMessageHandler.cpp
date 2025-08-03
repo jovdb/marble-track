@@ -15,25 +15,6 @@
 // Static reference to WebSocket manager
 static WebSocketManager *wsManagerRef = nullptr;
 
-/**
- * @brief Initialize the WebSocket message handler
- * @param wsManager Reference to the WebSocket manager instance
- */
-void initializeWebSocketHandler(WebSocketManager &wsManager)
-{
-    wsManagerRef = &wsManager;
-    wsManager.onMessageReceived = handleWebSocketMessage;
-    Serial.println("WebSocketMessageHandler: Initialized successfully");
-}
-
-/**
- * @brief Set the WebSocket manager reference for message handling
- * @param wsManager Reference to the WebSocket manager instance
- */
-void setWebSocketManager(WebSocketManager &wsManager)
-{
-    wsManagerRef = &wsManager;
-}
 
 /**
  * @brief Handle incoming WebSocket messages

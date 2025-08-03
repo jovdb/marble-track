@@ -4,10 +4,6 @@
 // Static instance pointer for callback access
 WebSocketManager *WebSocketManager_instance = nullptr;
 
-WebSocketManager::WebSocketManager(const char *path) : ws(path)
-{
-    WebSocketManager_instance = this;
-}
 
 void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
@@ -18,24 +14,13 @@ void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
     {
     case WS_EVT_CONNECT:
         Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
-        if (WebSocketManager_instance->onClientConnected)
-        {
-            WebSocketManager_instance->onClientConnected(client);
-        }
         break;
     case WS_EVT_DISCONNECT:
         Serial.printf("WebSocket client #%u disconnected\n", client->id());
-        if (WebSocketManager_instance->onClientDisconnected)
-        {
-            WebSocketManager_instance->onClientDisconnected(client);
-        }
         break;
     case WS_EVT_DATA:
         Serial.printf("WebSocket client #%u data received: %s\n", client->id(), data);
-        if (WebSocketManager_instance->onMessageReceived)
-        {
-            WebSocketManager_instance->onMessageReceived(arg, data, len);
-        }
+        onWebSocketEvent(server, client, type, arg, data, len);
         break;
     case WS_EVT_PONG:
         Serial.printf("WebSocket client #%u pong received\n", client->id());
@@ -45,9 +30,18 @@ void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
     }
 }
 
+WebSocketManager::WebSocketManager(const char *path) : ws(path)
+{
+    WebSocketManager_instance = this;
+}
+
 void WebSocketManager::setup(AsyncWebServer &server)
 {
-    ws.onEvent(onEvent);
+    ws.onEvent([](AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
+        if (WebSocketManager_instance) {
+            WebSocketManager_instance->onEvent(server, client, type, arg, data, len);
+        }
+    });
     server.addHandler(&ws);
     Serial.println("WebSocket manager: OK");
 }

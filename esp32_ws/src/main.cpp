@@ -45,16 +45,6 @@ void setup()
   Serial.begin(115200);
   Serial.println("Starting Marble Track JSON Communication System");
 
-  // Instantiate and initialize LED controller
-  testLed = new Led(1, "test-led", "Test LED");
-  testLed->setup();
-
-  // Add device to management system
-  deviceManager.addDevice(testLed);
-  Serial.println("Device management:");
-  Serial.println("  Total devices: " + String(deviceManager.getDeviceCount()));
-  Serial.println("  Controllable devices: " + String(deviceManager.getControllableCount()));
-
   // Initialize JSON message handler
   initializeJsonHandler();
 
@@ -77,7 +67,15 @@ void setup()
   Serial.println("- Info: {\"action\": \"get_info\"}");
   Serial.println("Connect via WebSocket to receive full command examples");
 
-  Serial.println("System ready - LED device added to DeviceManager");
+  // Instantiate and initialize LED controller
+  testLed = new Led(1, "test-led", "Test LED");
+  testLed->setup();
+
+  // Add device to management system
+  deviceManager.addDevice(testLed);
+  Serial.println("Device management:");
+  Serial.println("  Total devices: " + String(deviceManager.getDeviceCount()));
+  Serial.println("  Controllable devices: " + String(deviceManager.getControllableCount()));
 }
 
 void loop()

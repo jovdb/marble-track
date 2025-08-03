@@ -5,6 +5,9 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 
+// Forward declaration
+class DeviceManager;
+
 class WebSocketManager
 {
 private:
@@ -16,6 +19,7 @@ public:
     void loop();
     void notifyClients(String state);
     void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
+    void setDeviceManager(DeviceManager* deviceManager);
 };
 
 #endif

@@ -56,6 +56,9 @@ void setup()
 
   // Setup WebSocket with message handler
   wsManager.setup(server);
+  
+  // Inject DeviceManager into WebSocketManager
+  wsManager.setDeviceManager(&deviceManager);
 
   // Start server
   server.begin();

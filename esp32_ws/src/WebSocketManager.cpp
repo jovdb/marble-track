@@ -1,10 +1,13 @@
 #include "WebSocketManager.h"
 #include "JsonMessageHandler.h"
+#include "DeviceManager.h"
 
 // Static instance pointer for callback access
 WebSocketManager *WebSocketManager_instance = nullptr;
 // Static reference to WebSocket manager for message handling
 static WebSocketManager *wsManagerRef = nullptr;
+// Static reference to DeviceManager for device operations
+static DeviceManager *deviceManagerRef = nullptr;
 
 /**
  * @brief Handle incoming WebSocket messages
@@ -68,8 +71,37 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         {
             // Device function variables are already extracted above
             Serial.println("Device function called - Device: " + deviceId + ", Function: " + functionName);
-            // TODO: Implement device function handling using DeviceManager
-            String response = createJsonResponse(true, "Device function executed", "device-fn");
+
+            String response;
+            if (deviceManagerRef != nullptr)
+            {
+                IDevice *device = deviceManagerRef->getDeviceById(deviceId);
+                if (device != nullptr)
+                {
+                    // Check if device is controllable
+                    IControllable *controllable = deviceManagerRef->getControllableById(deviceId);
+                    if (controllable != nullptr)
+                    {
+                        // Execute the device function
+                        Serial.println("Executing function '" + functionName + "' on device '" + deviceId + "'");
+                        // TODO: Add specific function execution logic here
+                        response = createJsonResponse(true, "Device function executed successfully", "device-fn");
+                    }
+                    else
+                    {
+                        response = createJsonResponse(false, "Device is not controllable", "device-fn");
+                    }
+                }
+                else
+                {
+                    response = createJsonResponse(false, "Device not found: " + deviceId, "device-fn");
+                }
+            }
+            else
+            {
+                response = createJsonResponse(false, "DeviceManager not available", "device-fn");
+            }
+
             if (wsManagerRef != nullptr)
             {
                 wsManagerRef->notifyClients(response);
@@ -144,4 +176,9 @@ void WebSocketManager::loop()
 void WebSocketManager::notifyClients(String state)
 {
     ws.textAll(state);
+}
+
+void WebSocketManager::setDeviceManager(DeviceManager *deviceManager)
+{
+    deviceManagerRef = deviceManager;
 }

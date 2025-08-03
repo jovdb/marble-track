@@ -14,8 +14,8 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include "IDevice.h"
 #include "IControllable.h"
-#include "ILoopable.h"
 
 /**
  * @class Led
@@ -23,10 +23,10 @@
  * 
  * Provides functionality to control LEDs with setup initialization,
  * continuous loop operations, and state control.
- * Implements IControllable interface for unified device control and
- * ILoopable interface for periodic operations.
+ * Implements IDevice for base device functionality and IControllable 
+ * interface for unified device control.
  */
-class Led : public IControllable, public ILoopable {
+class Led : public IDevice, public IControllable {
 public:
     /**
      * @brief Constructor for Led class
@@ -41,6 +41,27 @@ public:
      */
     ~Led() override;
     
+    // IDevice interface implementation
+    /**
+     * @brief Get device identifier
+     * @return String identifier of the LED
+     */
+    String getId() const override;
+    
+    /**
+     * @brief Get device name
+     * @return String human-readable name of the LED
+     */
+    String getName() const override;
+    
+    /**
+     * @brief Loop function for continuous LED operations
+     * 
+     * This function should be called repeatedly in the main loop.
+     * Currently empty but ready for future LED operations.
+     */
+    void loop() override;
+    
     // IControllable interface implementation
     /**
      * @brief Dynamic control function for LED operations
@@ -49,21 +70,6 @@ public:
      * @return true if action was successful, false otherwise
      */
     bool control(const String& action, JsonObject* payload = nullptr) override;
-    
-    /**
-     * @brief Get device identifier
-     * @return String identifier of the LED
-     */
-    String getId() const override;
-    
-    // ILoopable interface implementation
-    /**
-     * @brief Loop function for continuous LED operations
-     * 
-     * This function should be called repeatedly in the main loop.
-     * Currently empty but ready for future LED operations.
-     */
-    void loop() override;
     
     // Led-specific public methods
     /**

@@ -21,8 +21,8 @@
 #include "JsonMessageHandler.h"
 #include "HardwareController.h"
 #include "Led.h"
+#include "IDevice.h"
 #include "IControllable.h"
-#include "ILoopable.h"
 
 // Replace with your network credentials
 // const char *ssid = "REPLACE_WITH_YOUR_SSID";
@@ -36,15 +36,27 @@ WebsiteHost websiteHost(ssid, password);
 WebSocketManager wsManager("/ws");
 Led *testLed = nullptr; // Will be instantiated in setup()
 
+// Array of all devices
+const int MAX_DEVICES = 20;
+IDevice *devices[MAX_DEVICES];
+int devicesCount = 0;
+
 // Array of controllable devices
 const int MAX_CONTROLLABLES = 10;
 IControllable *controllables[MAX_CONTROLLABLES];
 int controllablesCount = 0;
 
-// Array of loopable devices
-const int MAX_LOOPABLES = 10;
-ILoopable *loopables[MAX_LOOPABLES];
-int loopablesCount = 0;
+// Helper function to add a device
+void addDevice(IDevice *device)
+{
+  if (devicesCount < MAX_DEVICES && device != nullptr)
+  {
+    // Add to main device list
+    devices[devicesCount] = device;
+    devicesCount++;
+    Serial.println("Added device: " + device->getId() + " (" + device->getName() + ")");
+  }
+}
 
 // Helper function to add controllable device
 void addControllable(IControllable *device)
@@ -54,17 +66,6 @@ void addControllable(IControllable *device)
     controllables[controllablesCount] = device;
     controllablesCount++;
     Serial.println("Added controllable device: " + device->getId());
-  }
-}
-
-// Helper function to add loopable device
-void addLoopable(ILoopable *device)
-{
-  if (loopablesCount < MAX_LOOPABLES && device != nullptr)
-  {
-    loopables[loopablesCount] = device;
-    loopablesCount++;
-    Serial.println("Added loopable device to loop array");
   }
 }
 
@@ -94,11 +95,12 @@ void setup()
   testLed = new Led(1, "test-led", "Test LED");
   testLed->setup();
 
-  // Populate controlables array
+  // Add device to management arrays
+  addDevice(testLed);
   addControllable(testLed);
-  addLoopable(testLed);
-  Serial.println("Controllables array populated with " + String(controllablesCount) + " devices");
-  Serial.println("Loopables array populated with " + String(loopablesCount) + " devices");
+  Serial.println("Device arrays populated:");
+  Serial.println("  Total devices: " + String(devicesCount));
+  Serial.println("  Controllable devices: " + String(controllablesCount));
 
   // Initialize JSON message handler
   initializeJsonHandler();
@@ -131,12 +133,12 @@ void loop()
   // Keep the WebSocket alive
   wsManager.loop();
 
-  // Run all loopable devices
-  for (int i = 0; i < loopablesCount; i++)
+  // Run all devices (they all have loop() function now)
+  for (int i = 0; i < devicesCount; i++)
   {
-    if (loopables[i] != nullptr)
+    if (devices[i] != nullptr)
     {
-      loopables[i]->loop();
+      devices[i]->loop();
     }
   }
 

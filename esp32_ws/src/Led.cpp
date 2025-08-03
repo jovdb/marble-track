@@ -124,10 +124,19 @@ bool Led::control(const String &action, JsonObject *payload)
 }
 
 /**
- * @brief Get device identifier (IControllable interface implementation)
+ * @brief Get device identifier (IDevice interface implementation)
  * @return String identifier of the LED
  */
 String Led::getId() const
 {
     return id;
+}
+
+/**
+ * @brief Get device name (IDevice interface implementation)
+ * @return String human-readable name of the LED
+ */
+String Led::getName() const
+{
+    return name;
 }

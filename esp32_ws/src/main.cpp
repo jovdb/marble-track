@@ -23,6 +23,7 @@
 #include "Led.h"
 #include "IDevice.h"
 #include "IControllable.h"
+#include "DeviceManager.h"
 
 // Replace with your network credentials
 // const char *ssid = "REPLACE_WITH_YOUR_SSID";
@@ -36,57 +37,8 @@ WebsiteHost websiteHost(ssid, password);
 WebSocketManager wsManager("/ws");
 Led *testLed = nullptr; // Will be instantiated in setup()
 
-// Array of all devices
-const int MAX_DEVICES = 20;
-IDevice *devices[MAX_DEVICES];
-int devicesCount = 0;
-
-// Helper function to add a device
-void addDevice(IDevice *device)
-{
-  if (devicesCount < MAX_DEVICES && device != nullptr)
-  {
-    // Add to main device list
-    devices[devicesCount] = device;
-    devicesCount++;
-    Serial.println("Added device: " + device->getId() + " (" + device->getName() + ")");
-  }
-}
-
-// Helper function to find controllable device by ID
-IControllable *findControllableById(const String &deviceId)
-{
-  for (int i = 0; i < devicesCount; i++)
-  {
-    if (devices[i] != nullptr && devices[i]->getId() == deviceId)
-    {
-      // Check if device supports controllable interface and get it
-      if (devices[i]->supportsControllable())
-      {
-        return devices[i]->getControllableInterface();
-      }
-    }
-  }
-  return nullptr;
-}
-
-// Helper function to get all controllable devices
-void getAllControllableDevices(IControllable** controllableList, int& count, int maxResults)
-{
-  count = 0;
-  for (int i = 0; i < devicesCount && count < maxResults; i++)
-  {
-    if (devices[i] != nullptr && devices[i]->supportsControllable())
-    {
-      IControllable* controllable = devices[i]->getControllableInterface();
-      if (controllable != nullptr)
-      {
-        controllableList[count] = controllable;
-        count++;
-      }
-    }
-  }
-}
+// Device management system
+DeviceManager deviceManager;
 
 void setup()
 {
@@ -101,21 +53,11 @@ void setup()
   testLed = new Led(1, "test-led", "Test LED");
   testLed->setup();
 
-  // Add device to management arrays
-  addDevice(testLed);
+  // Add device to management system
+  deviceManager.addDevice(testLed);
   Serial.println("Device management:");
-  Serial.println("  Total devices: " + String(devicesCount));
-  
-  // Count controllable devices dynamically
-  int controllableCount = 0;
-  for (int i = 0; i < devicesCount; i++)
-  {
-    if (devices[i] != nullptr && devices[i]->supportsControllable())
-    {
-      controllableCount++;
-    }
-  }
-  Serial.println("  Controllable devices: " + String(controllableCount));
+  Serial.println("  Total devices: " + String(deviceManager.getDeviceCount()));
+  Serial.println("  Controllable devices: " + String(deviceManager.getControllableCount()));
 
   // Initialize JSON message handler
   initializeJsonHandler();
@@ -148,14 +90,8 @@ void loop()
   // Keep the WebSocket alive
   wsManager.loop();
 
-  // Run all devices (they all have loop() function now)
-  for (int i = 0; i < devicesCount; i++)
-  {
-    if (devices[i] != nullptr)
-    {
-      devices[i]->loop();
-    }
-  }
+  // Run all devices using DeviceManager
+  deviceManager.loop();
 
   // Small delay to prevent watchdog issues
   delay(10);

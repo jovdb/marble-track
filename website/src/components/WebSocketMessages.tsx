@@ -14,26 +14,13 @@ const WebSocketMessages: Component = () => {
     }
   };
 
-  const formatTimestamp = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString("en-US", {
-      hour12: false,
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      fractionalSecondDigits: 3,
-    });
-  };
-
   return (
     <>
       <fieldset>
         <legend>Recent Messages</legend>
         <div style={{ "max-height": "200px", overflow: "auto" }}>
           <For each={lastMessages()}>
-            {(timestampedMsg) => {
-              const parsedMsg = parseMessage(timestampedMsg.message);
-              const timestamp = formatTimestamp(timestampedMsg.timestamp);
+            {(message) => {
               return (
                 <div
                   style={{
@@ -42,10 +29,7 @@ const WebSocketMessages: Component = () => {
                     "font-size": "12px",
                   }}
                 >
-                  <span style={{ color: "#666", "margin-right": "8px" }}>
-                    [{timestamp}]
-                  </span>
-                  {timestampedMsg.message}
+                  {message}
                 </div>
               );
             }}

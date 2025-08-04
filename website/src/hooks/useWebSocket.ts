@@ -29,9 +29,7 @@ export const connectionStateName = createMemo(() => wsStates[wsState()], 0);
 export const isConnected = createMemo(() => wsState() === 1); // Connected state
 
 export const [lastMessage, setLastMessage] = createSignal<string | null>(null);
-export const [lastMessages, setLastMessages] = createSignal<
-  { timestamp: number; message: string }[]
->([]);
+export const [lastMessages, setLastMessages] = createSignal<string[]>([]);
 
 websocket.addEventListener("open", () => {
   console.log("WebSocket connection opened");

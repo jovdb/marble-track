@@ -63,7 +63,7 @@ public:
 
     /**
      * @brief Dynamic control function for device operations
-     * @param action The action to perform (e.g., "set", "move", "toggle")
+     * @param type The type to perform (e.g., "set", "move", "toggle")
      * @param payload Pointer to JSON object containing action parameters (can be nullptr)
      * @return true if action was successful, false otherwise
      * @note Default implementation returns false (not controllable)

@@ -79,7 +79,7 @@ export function createDeviceState<T>(deviceId: string) {
       setConnectionState(4); // Fetching state
       sendMessage(
         JSON.stringify({
-          action: "device-state",
+          type: "device-get-state",
           deviceId,
         })
       );
@@ -102,7 +102,7 @@ export function createDeviceState<T>(deviceId: string) {
       setConnectionState(4); // Fetching state
       sendMessage(
         JSON.stringify({
-          action: "device-state",
+          type: "device-get-state",
           deviceId,
         })
       );

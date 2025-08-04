@@ -52,29 +52,29 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
         return;
     }
 
-    // Extract action (check both root and data field)
-    String action = doc["action"] | "";
-    if (action.isEmpty() && doc["data"].is<JsonObject>())
+    // Extract type (check both root and data field)
+    String type = doc["type"] | "";
+    if (type.isEmpty() && doc["data"].is<JsonObject>())
     {
-        action = doc["data"]["action"] | "";
+        type = doc["data"]["type"] | "";
     }
 
-    // Handle special actions
-    if (action == "restart")
+    // Handle special type
+    if (type == "restart")
     {
         handleRestart();
         return;
     }
 
-    if (action == "device-fn")
+    if (type == "device-fn")
     {
         handleDeviceFunction(doc);
         return;
     }
 
-    if (action == "device-state")
+    if (type == "device-get-state")
     {
-        handleDeviceState(doc);
+        handleDeviceGetState(doc);
         return;
     }
 }
@@ -194,7 +194,7 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
         notifyClients(response);
 }
 
-void WebSocketManager::handleDeviceState(JsonDocument &doc)
+void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
 {
     // Extract device info from either root or data field
     String deviceId = doc["deviceId"] | "";

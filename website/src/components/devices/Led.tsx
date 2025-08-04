@@ -1,4 +1,3 @@
-import { createMemo } from "solid-js";
 import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
 
 interface ILedState {
@@ -6,14 +5,13 @@ interface ILedState {
 }
 
 export function Led(props: { id: string }) {
-  const [deviceState, connectedState] = createDeviceState<ILedState>(props.id);
-  const disabled = createMemo(() => connectedState() !== "Fetched");
+  const [deviceState, connectedState, disabled] = createDeviceState<ILedState>(props.id);
 
   const setLed = (state: boolean) => {
     // Send the message format expected by ESP32 WebSocketMessageHandler
     sendMessage(
       JSON.stringify({
-        action: "device-fn",
+        type: "device-fn",
         deviceId: "test-led",
         fn: state ? "on" : "off",
       })

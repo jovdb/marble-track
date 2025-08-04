@@ -102,9 +102,9 @@ protected:
      * @brief Notify about state change if callback is set
      * @param state Current state of the device
      */
-    void notifyStateChange(JsonObject state) {
+    void notifyStateChange() {
         if (stateChangeCallback) {
-            stateChangeCallback(getId(), state);
+            stateChangeCallback(getId(), getState());
         }
     }
 };

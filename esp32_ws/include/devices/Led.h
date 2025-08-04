@@ -14,16 +14,15 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include "IDevice.h"
+#include "Device.h"
 
 /**
  * @class Led
  * @brief Simple LED control class
  *
  * Provides basic LED control functionality with automatic initialization.
- * Implements IDevice interface with controllable functionality.
  */
-class Led : public IDevice
+class Led : public Device
 {
 public:
     /**
@@ -34,7 +33,7 @@ public:
      */
     Led(int pin, const String &id, const String &name);
 
-    // IDevice interface implementation
+    // Device interface implementation
     String getId() const override { return id; }
     String getName() const override { return name; }
     String getType() const override { return type; }

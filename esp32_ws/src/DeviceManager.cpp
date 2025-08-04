@@ -17,7 +17,7 @@ DeviceManager::DeviceManager() : devicesCount(0)
     }
 }
 
-bool DeviceManager::addDevice(IDevice* device)
+bool DeviceManager::addDevice(Device* device)
 {
     if (devicesCount < MAX_DEVICES && device != nullptr)
     {
@@ -38,7 +38,7 @@ bool DeviceManager::addDevice(IDevice* device)
     return false;
 }
 
-IDevice* DeviceManager::getControllableById(const String& deviceId)
+Device* DeviceManager::getControllableById(const String& deviceId)
 {
     for (int i = 0; i < devicesCount; i++)
     {
@@ -54,7 +54,7 @@ IDevice* DeviceManager::getControllableById(const String& deviceId)
     return nullptr;
 }
 
-void DeviceManager::getDevices(IDevice** deviceList, int& count, int maxResults)
+void DeviceManager::getDevices(Device** deviceList, int& count, int maxResults)
 {
     count = 0;
     for (int i = 0; i < devicesCount && count < maxResults; i++)
@@ -92,7 +92,7 @@ int DeviceManager::getControllableCount() const
     return deviceCount;
 }
 
-IDevice* DeviceManager::getDeviceById(const String& deviceId) const
+Device* DeviceManager::getDeviceById(const String& deviceId) const
 {
     for (int i = 0; i < devicesCount; i++)
     {

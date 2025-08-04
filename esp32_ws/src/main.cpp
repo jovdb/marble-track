@@ -7,7 +7,7 @@
 #include "WebSocketManager.h"
 #include "TimeManager.h"
 #include "devices/Led.h"
-#include "devices/IDevice.h"
+#include "devices/Device.h"
 #include "DeviceManager.h"
 
 // Replace with your network credentials

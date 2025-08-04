@@ -12,14 +12,14 @@
 #ifndef DEVICEMANAGER_H
 #define DEVICEMANAGER_H
 
-#include "devices/IDevice.h"
+#include "devices/Device.h"
 #include <Arduino.h>
 
 class DeviceManager
 {
 private:
     static const int MAX_DEVICES = 20;
-    IDevice *devices[MAX_DEVICES];
+    Device *devices[MAX_DEVICES];
     int devicesCount;
 
 public:
@@ -33,14 +33,14 @@ public:
      * @param device Pointer to device to add
      * @return true if device was added successfully, false if array is full
      */
-    bool addDevice(IDevice *device);
+    bool addDevice(Device *device);
 
     /**
      * @brief Get a controllable device by ID
      * @param deviceId The ID of the device to find
-     * @return Pointer to IDevice or nullptr if not found/not controllable
+     * @return Pointer to Device or nullptr if not found/not controllable
      */
-    IDevice* getControllableById(const String& deviceId);
+    Device* getControllableById(const String& deviceId);
 
     /**
      * @brief Get all controllable devices
@@ -48,7 +48,7 @@ public:
      * @param count Reference to store the number of devices found
      * @param maxResults Maximum number of results to return
      */
-    void getDevices(IDevice **deviceList, int &count, int maxResults);
+    void getDevices(Device **deviceList, int &count, int maxResults);
 
     /**
      * @brief Call loop() function on all registered devices
@@ -73,7 +73,7 @@ public:
      * @param deviceId The ID of the device to find
      * @return Pointer to device or nullptr if not found
      */
-    IDevice *getDeviceById(const String &deviceId) const;
+    Device *getDeviceById(const String &deviceId) const;
 };
 
 #endif // DEVICEMANAGER_H

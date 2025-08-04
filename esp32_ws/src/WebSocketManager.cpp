@@ -165,7 +165,7 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
     }
     else
     {
-        IDevice *device = deviceManager->getDeviceById(deviceId);
+        Device *device = deviceManager->getDeviceById(deviceId);
         if (!device)
         {
             response = createJsonResponse(false, "Device not found or not controllable: " + deviceId, "", "");

@@ -1,5 +1,5 @@
 /**
- * @file IDevice.h
+ * @file Device.h
  * @brief Base interface for all devices
  *
  * Defines a base interface that all devices should implement to provide
@@ -9,8 +9,8 @@
  * @date 2025
  */
 
-#ifndef IDEVICE_H
-#define IDEVICE_H
+#ifndef DEVICE_H
+#define DEVICE_H
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -20,20 +20,20 @@
 using StateChangeCallback = std::function<void(const String& deviceId, JsonObject state)>;
 
 /**
- * @class IDevice
+ * @class Device
  * @brief Base interface for all devices
  *
  * This class provides a common base interface for all devices in the system.
  * It allows for polymorphic device management and includes core functionality
  * like identification, naming, and loop operations.
  */
-class IDevice
+class Device
 {
 public:
     /**
      * @brief Virtual destructor to ensure proper cleanup of derived classes
      */
-    virtual ~IDevice() = default;
+    virtual ~Device() = default;
 
     /**
      * @brief Get device identifier
@@ -109,4 +109,4 @@ protected:
     }
 };
 
-#endif // IDEVICE_H
+#endif // DEVICE_H

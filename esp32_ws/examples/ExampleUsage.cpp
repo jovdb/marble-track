@@ -1,6 +1,6 @@
 /**
  * @file ExampleUsage.cpp
- * @brief Example demonstrating how to use the IDevice interface
+ * @brief Example demonstrating how to use the Device interface
  * 
  * This file shows how the interface can be used for
  * polymorphic device control in your marble track system.
@@ -9,11 +9,11 @@
  * @date 2025
  */
 
-#include "devices/IDevice.h"
+#include "devices/Device.h"
 #include "devices/Led.h"
 
-// Example function that works with any IDevice
-bool controlDevice(IDevice* device, const String& action, JsonObject& payload) {
+// Example function that works with any Device
+bool controlDevice(Device* device, const String& action, JsonObject& payload) {
     if (device == nullptr) {
         Serial.println("Error: Device is null");
         return false;
@@ -29,8 +29,8 @@ void demonstrateInterface() {
     Led statusLed(2, "status_led", "Main Status LED");
     statusLed.setup();
     
-    // Treat LED as IDevice interface
-    IDevice* device = &statusLed;
+    // Treat LED as Device interface
+    Device* device = &statusLed;
     
     // Create JSON payload
     JsonDocument doc;

@@ -20,15 +20,16 @@
 using StateChangeCallback = std::function<void(const String& deviceId, JsonObject state)>;
 
 /**
- * @struct IDevice
+ * @class IDevice
  * @brief Base interface for all devices
  *
- * This struct provides a common base interface for all devices in the system.
+ * This class provides a common base interface for all devices in the system.
  * It allows for polymorphic device management and includes core functionality
  * like identification, naming, and loop operations.
  */
-struct IDevice
+class IDevice
 {
+public:
     /**
      * @brief Virtual destructor to ensure proper cleanup of derived classes
      */

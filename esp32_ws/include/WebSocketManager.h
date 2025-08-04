@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+#include <ArduinoJson.h>
 
 // Forward declaration
 class DeviceManager;
@@ -12,6 +13,11 @@ class WebSocketManager
 {
 private:
     AsyncWebSocket ws;
+    DeviceManager* deviceManager = nullptr;
+    
+    // Helper methods for cleaner message handling
+    void handleRestart();
+    void handleDeviceFunction(JsonDocument& doc);
 
 public:
     WebSocketManager(const char *path = "/ws");
@@ -20,6 +26,9 @@ public:
     void notifyClients(String state);
     void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
     void setDeviceManager(DeviceManager* deviceManager);
+    
+    // Made public to allow global function access
+    void handleWebSocketMessage(void *arg, uint8_t *data, size_t len);
 };
 
 #endif

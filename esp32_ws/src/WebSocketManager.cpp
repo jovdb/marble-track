@@ -2,146 +2,62 @@
 #include "JsonMessageHandler.h"
 #include "DeviceManager.h"
 
-// Static instance pointer for callback access
-WebSocketManager *WebSocketManager_instance = nullptr;
-// Static reference to WebSocket manager for message handling
-static WebSocketManager *wsManagerRef = nullptr;
-// Static reference to DeviceManager for device operations
-static DeviceManager *deviceManagerRef = nullptr;
+// Static instance for callback access (simplified to single instance)
+static WebSocketManager *instance = nullptr;
 
 /**
  * @brief Handle incoming WebSocket messages
- * @param arg Frame info argument
- * @param data Message data
- * @param len Data length
  */
-void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
+void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 {
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
-    if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
-    {
-        data[len] = 0;
-        String message = (char *)data;
-        Serial.println("WebSocket: Received message: " + message);
+    if (!(info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT))
+        return;
 
-        // Parse JSON message and handle both direct action format and nested data format
-        JsonDocument doc;
-        DeserializationError error = deserializeJson(doc, message);
+    data[len] = 0;
+    String message = (char *)data;
+    Serial.println("WebSocket: " + message);
 
-        if (error)
-        {
-            Serial.println("JSON parse error: " + String(error.c_str()));
-            String errorResponse = createJsonResponse(false, "Invalid JSON format: " + String(error.c_str()));
-            if (wsManagerRef != nullptr)
-            {
-                wsManagerRef->notifyClients(errorResponse);
-            }
-            return;
-        }
+    // Parse JSON
+    JsonDocument doc;
+    if (deserializeJson(doc, message)) {
+        String errorResponse = createJsonResponse(false, "Invalid JSON format");
+        notifyClients(errorResponse);
+        return;
+    }
 
-        // Check if action is at root level or in data field
-        String action = doc["action"] | "";
-        String deviceId = doc["deviceId"] | "";
-        String functionName = doc["fn"] | "";
+    // Extract action (check both root and data field)
+    String action = doc["action"] | "";
+    if (action.isEmpty() && doc["data"].is<JsonObject>()) {
+        action = doc["data"]["action"] | "";
+    }
 
-        // If no action at root level, check in data field
-        if (action.isEmpty() && doc["data"].is<JsonObject>())
-        {
-            JsonObject dataObj = doc["data"];
-            action = dataObj["action"] | "";
-            deviceId = dataObj["deviceId"] | "";
-            functionName = dataObj["fn"] | "";
-        }
+    // Handle special actions
+    if (action == "restart") {
+        handleRestart();
+        return;
+    }
+    
+    if (action == "device-fn") {
+        handleDeviceFunction(doc);
+        return;
+    }
 
-        if (action == "restart")
-        {
-            // Notify clients that restart is being initiated
-            if (wsManagerRef != nullptr)
-            {
-                String response = createJsonResponse(true, "Device restart initiated", "restart");
-                wsManagerRef->notifyClients(response);
-            }
+    // Let JsonMessageHandler process everything else
+    String response = handleJsonMessage(message);
+    notifyClients(response);
+}
 
-            // Handle restart action
-            Serial.println("Restarting device in 2 seconds...");
-            delay(2000);
-            ESP.restart();
-        }
-        else if (action == "device-fn")
-        {
-            // Device function variables are already extracted above
-            Serial.println("Device function called - Device: " + deviceId + ", Function: " + functionName);
-
-            String response;
-            if (deviceManagerRef != nullptr)
-            {
-                IDevice *device = deviceManagerRef->getDeviceById(deviceId);
-                if (device != nullptr)
-                {
-                    // Check if device is controllable
-                    IControllable *controllable = deviceManagerRef->getControllableById(deviceId);
-                    if (controllable != nullptr)
-                    {
-                        // Execute the device function
-                        Serial.println("Executing function '" + functionName + "' on device '" + deviceId + "'");
-                        
-                        // Create payload object from the original document if it has additional data
-                        JsonObject payload = doc.as<JsonObject>();
-                        bool success = controllable->control(functionName, &payload);
-                        
-                        if (success)
-                        {
-                            response = createJsonResponse(true, "Device function executed successfully", "device-fn");
-                        }
-                        else
-                        {
-                            response = createJsonResponse(false, "Device function execution failed", "device-fn");
-                        }
-                    }
-                    else
-                    {
-                        response = createJsonResponse(false, "Device is not controllable", "device-fn");
-                    }
-                }
-                else
-                {
-                    response = createJsonResponse(false, "Device not found: " + deviceId, "device-fn");
-                }
-            }
-            else
-            {
-                response = createJsonResponse(false, "DeviceManager not available", "device-fn");
-            }
-
-            if (wsManagerRef != nullptr)
-            {
-                wsManagerRef->notifyClients(response);
-            }
-        }
-        else if (action == "get_info")
-        {
-            // Handle get_info action - let JsonMessageHandler process this normally
-        }
-        else
-        {
-            // For unknown actions, let JsonMessageHandler handle them
-            Serial.println("Action '" + action + "' will be processed by JsonMessageHandler");
-        }
-
-        // Use the JSON message handler to process the message
-        String response = handleJsonMessage(message);
-        if (wsManagerRef != nullptr)
-        {
-            wsManagerRef->notifyClients(response);
-        }
+// Global function wrapper for callback compatibility
+void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
+{
+    if (instance) {
+        instance->handleWebSocketMessage(arg, data, len);
     }
 }
 
 void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
-    if (WebSocketManager_instance == nullptr)
-        return;
-
     switch (type)
     {
     case WS_EVT_CONNECT:
@@ -151,30 +67,29 @@ void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
         Serial.printf("WebSocket client #%u disconnected\n", client->id());
         break;
     case WS_EVT_DATA:
-        Serial.printf("WebSocket client #%u data received: %s\n", client->id(), data);
         handleWebSocketMessage(arg, data, len);
         break;
     case WS_EVT_PONG:
-        Serial.printf("WebSocket client #%u pong received\n", client->id());
+        Serial.printf("WebSocket client #%u pong\n", client->id());
+        break;
     case WS_EVT_ERROR:
-        Serial.printf("WebSocket client #%u error occurred\n", client->id());
+        Serial.printf("WebSocket client #%u error\n", client->id());
         break;
     }
 }
 
 WebSocketManager::WebSocketManager(const char *path) : ws(path)
 {
-    WebSocketManager_instance = this;
-    wsManagerRef = this; // Set up the reference for message handling
+    instance = this;
 }
 
 void WebSocketManager::setup(AsyncWebServer &server)
 {
-    ws.onEvent([](AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
-               {
-        if (WebSocketManager_instance) {
-            WebSocketManager_instance->onEvent(server, client, type, arg, data, len);
-        } });
+    ws.onEvent([](AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
+        if (instance) {
+            instance->onEvent(server, client, type, arg, data, len);
+        }
+    });
     server.addHandler(&ws);
     Serial.println("WebSocket manager: OK");
 }
@@ -191,5 +106,48 @@ void WebSocketManager::notifyClients(String state)
 
 void WebSocketManager::setDeviceManager(DeviceManager *deviceManager)
 {
-    deviceManagerRef = deviceManager;
+    this->deviceManager = deviceManager;
+}
+
+void WebSocketManager::handleRestart()
+{
+    String response = createJsonResponse(true, "Device restart initiated", "restart");
+    notifyClients(response);
+    Serial.println("Restarting device in 2 seconds...");
+    delay(2000);
+    ESP.restart();
+}
+
+void WebSocketManager::handleDeviceFunction(JsonDocument& doc)
+{
+    // Extract device info from either root or data field
+    String deviceId = doc["deviceId"] | "";
+    String functionName = doc["fn"] | "";
+    
+    if (deviceId.isEmpty() && doc["data"].is<JsonObject>()) {
+        JsonObject dataObj = doc["data"];
+        deviceId = dataObj["deviceId"] | "";
+        functionName = dataObj["fn"] | "";
+    }
+
+    String response;
+    
+    if (!deviceManager) {
+        response = createJsonResponse(false, "DeviceManager not available", "device-fn");
+    } else {
+        IControllable *controllable = deviceManager->getControllableById(deviceId);
+        if (!controllable) {
+            response = createJsonResponse(false, "Device not found or not controllable: " + deviceId, "device-fn");
+        } else {
+            Serial.println("Executing function '" + functionName + "' on device '" + deviceId + "'");
+            JsonObject payload = doc.as<JsonObject>();
+            bool success = controllable->control(functionName, &payload);
+            
+            response = createJsonResponse(success, 
+                success ? "Device function executed successfully" : "Device function execution failed", 
+                "device-fn");
+        }
+    }
+    
+    notifyClients(response);
 }

@@ -13,11 +13,11 @@ class WebSocketManager
 {
 private:
     AsyncWebSocket ws;
-    DeviceManager* deviceManager = nullptr;
-    
+    DeviceManager *deviceManager = nullptr;
+
     // Helper methods for cleaner message handling
     void handleRestart();
-    void handleDeviceFunction(JsonDocument& doc);
+    void handleDeviceFunction(JsonDocument &doc);
 
 public:
     WebSocketManager(const char *path = "/ws");
@@ -25,8 +25,8 @@ public:
     void loop();
     void notifyClients(String state);
     void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
-    void setDeviceManager(DeviceManager* deviceManager);
-    
+    void setDeviceManager(DeviceManager *deviceManager);
+
     // Made public to allow global function access
     void handleWebSocketMessage(void *arg, uint8_t *data, size_t len);
 };

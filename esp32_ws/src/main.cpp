@@ -18,7 +18,6 @@
 #include "WebsiteHost.h"
 #include "WebSocketManager.h"
 #include "TimeManager.h"
-#include "JsonMessageHandler.h"
 #include "Led.h"
 #include "IDevice.h"
 #include "IControllable.h"
@@ -34,7 +33,7 @@ const char *password = "cPQdRWmFx1eM";
 AsyncWebServer server(80);
 WebsiteHost websiteHost(ssid, password);
 WebSocketManager wsManager("/ws");
-Led testLed(1, "test-led", "Test LED");  // Stack allocation instead of heap
+Led testLed(1, "test-led", "Test LED"); // Stack allocation instead of heap
 
 // Device management system
 DeviceManager deviceManager;
@@ -45,9 +44,6 @@ void setup()
   Serial.begin(115200);
   Serial.println("Starting Marble Track JSON Communication System");
 
-  // Initialize JSON message handler
-  initializeJsonHandler();
-
   // Initialize TimeManager
   TimeManager::initialize();
 
@@ -56,7 +52,7 @@ void setup()
 
   // Setup WebSocket with message handler
   wsManager.setup(server);
-  
+
   // Inject DeviceManager into WebSocketManager
   wsManager.setDeviceManager(&deviceManager);
 

@@ -1,15 +1,40 @@
 #include "WebSocketManager.h"
-#include "JsonMessageHandler.h"
 #include "DeviceManager.h"
+#include "TimeManager.h"
 
 // Static instance for callback access (simplified to single instance)
 static WebSocketManager *instance = nullptr;
+
+String createJsonResponse(bool success, const String &message, const String &data, const String &requestId)
+{
+    JsonDocument response;
+    response["success"] = success;
+    response["message"] = message;
+    response["timestamp"] = TimeManager::getCurrentTimestamp();
+
+    if (requestId.length() > 0)
+    {
+        response["requestId"] = requestId;
+    }
+
+    if (data.length() > 0)
+    {
+        JsonDocument dataDoc;
+        deserializeJson(dataDoc, data);
+        response["data"] = dataDoc;
+    }
+
+    String jsonString;
+    serializeJson(response, jsonString);
+    return jsonString;
+}
 
 /**
  * @brief Handle incoming WebSocket messages
  */
 void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 {
+    // Check if this is a complete, single-frame text message
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (!(info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT))
         return;
@@ -18,40 +43,41 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
     String message = (char *)data;
     Serial.println("WebSocket: " + message);
 
-    // Parse JSON
+    // Parse as JSON
     JsonDocument doc;
-    if (deserializeJson(doc, message)) {
-        String errorResponse = createJsonResponse(false, "Invalid JSON format");
+    if (deserializeJson(doc, message))
+    {
+        String errorResponse = createJsonResponse(false, "Invalid JSON format", "", "");
         notifyClients(errorResponse);
         return;
     }
 
     // Extract action (check both root and data field)
     String action = doc["action"] | "";
-    if (action.isEmpty() && doc["data"].is<JsonObject>()) {
+    if (action.isEmpty() && doc["data"].is<JsonObject>())
+    {
         action = doc["data"]["action"] | "";
     }
 
     // Handle special actions
-    if (action == "restart") {
+    if (action == "restart")
+    {
         handleRestart();
         return;
     }
-    
-    if (action == "device-fn") {
+
+    if (action == "device-fn")
+    {
         handleDeviceFunction(doc);
         return;
     }
-
-    // Let JsonMessageHandler process everything else
-    String response = handleJsonMessage(message);
-    notifyClients(response);
 }
 
 // Global function wrapper for callback compatibility
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 {
-    if (instance) {
+    if (instance)
+    {
         instance->handleWebSocketMessage(arg, data, len);
     }
 }
@@ -85,11 +111,11 @@ WebSocketManager::WebSocketManager(const char *path) : ws(path)
 
 void WebSocketManager::setup(AsyncWebServer &server)
 {
-    ws.onEvent([](AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
+    ws.onEvent([](AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
+               {
         if (instance) {
             instance->onEvent(server, client, type, arg, data, len);
-        }
-    });
+        } });
     server.addHandler(&ws);
     Serial.println("WebSocket manager: OK");
 }
@@ -111,43 +137,50 @@ void WebSocketManager::setDeviceManager(DeviceManager *deviceManager)
 
 void WebSocketManager::handleRestart()
 {
-    String response = createJsonResponse(true, "Device restart initiated", "restart");
+    String response = createJsonResponse(true, "Device restart initiated", "", "");
     notifyClients(response);
     Serial.println("Restarting device in 2 seconds...");
     delay(2000);
     ESP.restart();
 }
 
-void WebSocketManager::handleDeviceFunction(JsonDocument& doc)
+void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
 {
     // Extract device info from either root or data field
     String deviceId = doc["deviceId"] | "";
     String functionName = doc["fn"] | "";
-    
-    if (deviceId.isEmpty() && doc["data"].is<JsonObject>()) {
+
+    if (deviceId.isEmpty() && doc["data"].is<JsonObject>())
+    {
         JsonObject dataObj = doc["data"];
         deviceId = dataObj["deviceId"] | "";
         functionName = dataObj["fn"] | "";
     }
 
     String response;
-    
-    if (!deviceManager) {
-        response = createJsonResponse(false, "DeviceManager not available", "device-fn");
-    } else {
+
+    if (!deviceManager)
+    {
+        response = createJsonResponse(false, "DeviceManager not available", "", "");
+    }
+    else
+    {
         IControllable *controllable = deviceManager->getControllableById(deviceId);
-        if (!controllable) {
-            response = createJsonResponse(false, "Device not found or not controllable: " + deviceId, "device-fn");
-        } else {
+        if (!controllable)
+        {
+            response = createJsonResponse(false, "Device not found or not controllable: " + deviceId, "", "");
+        }
+        else
+        {
             Serial.println("Executing function '" + functionName + "' on device '" + deviceId + "'");
             JsonObject payload = doc.as<JsonObject>();
             bool success = controllable->control(functionName, &payload);
-            
-            response = createJsonResponse(success, 
-                success ? "Device function executed successfully" : "Device function execution failed", 
-                "device-fn");
+
+            response = createJsonResponse(success,
+                                          success ? "Device function executed successfully" : "Device function execution failed",
+                                          "", "");
         }
     }
-    
+
     notifyClients(response);
 }

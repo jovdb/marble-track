@@ -41,7 +41,7 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
 
     data[len] = 0;
     String message = (char *)data;
-    Serial.println("WebSocket: " + message);
+    Serial.println("WebSocket received: " + message);
 
     // Parse as JSON
     JsonDocument doc;
@@ -178,7 +178,7 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
         }
         else
         {
-            Serial.println("Executing function '" + functionName + "' on device '" + deviceId + "'");
+            Serial.printf("Executing: %s[%s]\n", deviceId, functionName);
             JsonObject payload = doc.as<JsonObject>();
             bool success = device->control(functionName, &payload);
 
@@ -242,7 +242,7 @@ void WebSocketManager::broadcastState(const String &deviceId, const String &stat
 
     String message;
     serializeJson(doc, message);
-    printf("Broadcasting state for device '%s': %s", deviceId.c_str(), message.c_str());
+    printf("Websocket sent:     %s\n", message.c_str());
 
     notifyClients(message);
 }

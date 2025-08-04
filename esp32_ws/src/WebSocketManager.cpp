@@ -184,3 +184,8 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
 
     notifyClients(response);
 }
+
+// Types of responses:
+// Info requested
+// Event (Button clicked)
+// State change (Led on/blinking)

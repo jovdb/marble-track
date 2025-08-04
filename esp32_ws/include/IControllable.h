@@ -38,6 +38,12 @@ struct IControllable {
     virtual bool control(const String& action, JsonObject* payload = nullptr) = 0;
     
     /**
+     * @brief Get current state of the device
+     * @return JsonObject containing the current state of the device
+     */
+    virtual JsonObject getState() = 0;
+    
+    /**
      * @brief Get device identifier
      * @return String identifier of the device
      */

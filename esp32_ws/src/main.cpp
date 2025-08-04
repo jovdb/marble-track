@@ -22,7 +22,7 @@ AsyncWebServer server(80);
 WebsiteHost websiteHost(ssid, password);
 WebSocketManager wsManager("/ws");
 DeviceManager deviceManager;
-Led testLed(1, "test-led", "Test LED");  // Global LED instance
+Led testLed(1, "test-led", "Test LED"); // Global LED instance
 
 void setup()
 {

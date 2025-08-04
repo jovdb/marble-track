@@ -20,7 +20,7 @@
  * @param name Human-readable name string for the LED
  */
 Led::Led(int pin, const String &id, const String &name)
-    : pin(pin), id(id), name(name), currentState(false)
+    : pin(pin), id(id), name(name), mode("OFF")
 {
     // Initialize the pin as output and set initial state
     pinMode(pin, OUTPUT);
@@ -35,8 +35,8 @@ Led::Led(int pin, const String &id, const String &name)
 void Led::set(bool state)
 {
     digitalWrite(pin, state ? HIGH : LOW);
-    currentState = state;
-    Serial.println("Led [" + id + "]: " + (state ? "ON" : "OFF"));
+    mode = state ? "ON" : "OFF";
+    Serial.println("Led [" + id + "]: " + mode);
 }
 
 /**
@@ -50,22 +50,44 @@ bool Led::control(const String &action, JsonObject *payload)
     Serial.println("Led [" + id + "]: " + action);
 
     // Simple action mapping
-    if (action == "on") {
+    if (action == "on")
+    {
         set(true);
-    } else if (action == "off") {
+    }
+    else if (action == "off")
+    {
         set(false);
-    } else if (action == "toggle") {
-        set(!currentState);
-    } else if (action == "set") {
-        if (!payload || !(*payload)["state"].is<bool>()) {
+    }
+    else if (action == "toggle")
+    {
+        set(!mode.equals("ON"));
+    }
+    else if (action == "set")
+    {
+        if (!payload || !(*payload)["state"].is<bool>())
+        {
             Serial.println("Led [" + id + "]: Invalid 'set' payload");
             return false;
         }
         set((*payload)["state"].as<bool>());
-    } else {
+    }
+    else
+    {
         Serial.println("Led [" + id + "]: Unknown action: " + action);
         return false;
     }
-    
+
     return true;
+}
+
+/**
+ * @brief Get current state of the LED
+ * @return JsonObject containing the current mode of the LED
+ */
+JsonObject Led::getState()
+{
+    JsonDocument doc;
+    JsonObject state = doc.to<JsonObject>();
+    state["mode"] = mode;
+    return state;
 }

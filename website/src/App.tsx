@@ -6,6 +6,7 @@ import WebSocketMessages from "./components/WebSocketMessages";
 import WebSocketSender from "./components/WebSocketSender";
 import { Led } from "./components/devices/Led";
 import { isConnected, sendMessage } from "./hooks/useWebSocket";
+import { Servo } from "./components/devices/Servo";
 
 const App: Component = () => {
   let myCanvas: HTMLCanvasElement;
@@ -48,7 +49,8 @@ const App: Component = () => {
         </fieldset>
 
         <Led id="test-led" />
-        <WebSocketSender />
+        <Servo id="test-servo" />
+        {/*<WebSocketSender />*/}
         <WebSocketMessages />
       </div>
     </div>

@@ -30,7 +30,7 @@ public:
     void setDeviceManager(DeviceManager *deviceManager);
 
     // State change broadcasting
-    void broadcastState(const String& deviceId, const String& stateJson);
+    void broadcastState(const String &deviceId, const String &stateJson, const String &error);
 
     // Made public to allow global function access
     void handleWebSocketMessage(void *arg, uint8_t *data, size_t len);

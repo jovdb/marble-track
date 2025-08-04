@@ -1,9 +1,4 @@
-import {
-  createWSState,
-  makeHeartbeatWS,
-  makeReconnectingWS,
-  makeWS,
-} from "@solid-primitives/websocket";
+import { createWSState, makeReconnectingWS } from "@solid-primitives/websocket";
 
 import { createMemo, createSignal, onCleanup, onMount } from "solid-js";
 
@@ -23,6 +18,7 @@ const wsStates = [
   "Disconnected",
   "Fetching", // Not standard
   "Fetched", // Not standard
+  "Error",
 ] as const;
 
 export const connectionStateName = createMemo(() => wsStates[wsState()], 0);
@@ -57,7 +53,7 @@ export const clearMessages = () => setLastMessages([]);
 
 export const sendMessage = (message: string): boolean => {
   if (websocket.readyState === WebSocket.OPEN) {
-    console.debug(" WebSocket message sent: ", message);
+    console.debug("WebSocket message sent:    ", message);
     websocket.send(message);
     return true;
   } else {
@@ -72,6 +68,7 @@ export function createDeviceState<T>(deviceId: string) {
   const [connectedState, setConnectionState] = createSignal<number>(
     websocket.readyState
   );
+  const [error, setError] = createSignal<string | undefined>(undefined);
 
   onMount(() => {
     // Is connected, request state
@@ -92,8 +89,15 @@ export function createDeviceState<T>(deviceId: string) {
         data.type === "device-state" &&
         data.deviceId === deviceId
       ) {
-        setDeviceState(data.state);
-        setConnectionState(5);
+        if (data.error) {
+          setError(data.error);
+          setDeviceState(undefined);
+          setConnectionState(6);
+        } else {
+          setDeviceState(data.state);
+          setError(undefined);
+          setConnectionState(5);
+        }
       }
     }
 
@@ -131,5 +135,5 @@ export function createDeviceState<T>(deviceId: string) {
   const connectionState = createMemo(() => wsStates[connectedState()]);
   const disabled = createMemo(() => connectionState() !== "Fetched");
 
-  return [deviceState, connectionState, disabled] as const;
+  return [deviceState, connectionState, disabled, error] as const;
 }

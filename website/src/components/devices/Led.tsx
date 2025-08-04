@@ -5,7 +5,8 @@ interface ILedState {
 }
 
 export function Led(props: { id: string }) {
-  const [deviceState, connectedState, disabled] = createDeviceState<ILedState>(props.id);
+  const [deviceState, connectedState, disabled, error] =
+    createDeviceState<ILedState>(props.id);
 
   const setLed = (state: boolean) => {
     // Send the message format expected by ESP32 WebSocketMessageHandler
@@ -21,7 +22,7 @@ export function Led(props: { id: string }) {
   return (
     <fieldset>
       <legend>Led: {props.id}</legend>
-      {disabled() && <span>{connectedState()}...</span>}
+      {disabled() && <span>{error() || connectedState() + ""}</span>}
       {!disabled() && (
         <>
           <div

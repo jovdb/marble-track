@@ -5,7 +5,7 @@ import {
   makeWS,
 } from "@solid-primitives/websocket";
 
-import { createMemo, createSignal } from "solid-js";
+import { createMemo, createSignal, onCleanup, onMount } from "solid-js";
 
 const marbleIp = import.meta.env.VITE_MARBLE_IP || window.location.hostname;
 const url = `ws://${marbleIp}/ws`;
@@ -66,6 +66,32 @@ export const sendMessage = (message: string): boolean => {
   }
 };
 
+export function createDeviceState<T>(deviceId: string) {
+  // Get initial value
+  const [state, setState] = createSignal<T | undefined>(undefined);
+  onMount(() => {
+    // TODO, Get initial value
+    function onMessage(event: MessageEvent) {
+      const data = JSON.parse(event.data);
+      if (
+        typeof data === "object" &&
+        data.type === "state-changed" &&
+        data.deviceId === deviceId
+      ) {
+        setState(data.state);
+      }
+    }
+
+    websocket.addEventListener("message", onMessage);
+
+    onCleanup(() => {
+      // Clean up the event listener when the component is unmounted
+      websocket.removeEventListener("message", onMessage);
+    });
+  });
+
+  return state;
+}
 /*
 export function createWebSocket(logger?: ILogger) {
   // Listen for messages

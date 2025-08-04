@@ -47,7 +47,7 @@ const App: Component = () => {
           </button>
         </fieldset>
 
-        <Led />
+        <Led id="test-led" />
         <WebSocketSender />
         <WebSocketMessages />
       </div>

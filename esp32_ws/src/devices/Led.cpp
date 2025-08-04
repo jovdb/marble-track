@@ -88,8 +88,7 @@ String Led::getState()
 {
     JsonDocument doc;
     doc["mode"] = mode;
-    doc["state"] = mode.equals("ON");
-    
+
     String result;
     serializeJson(doc, result);
     return result;

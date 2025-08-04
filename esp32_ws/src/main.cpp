@@ -43,8 +43,8 @@ void setup()
   server.begin();
 
   // Add device to management system
-  testLed.setStateChangeCallback([&](const String &deviceId, JsonObject state)
-                                 { wsManager.broadcastStateChange(deviceId, state); });
+  testLed.setStateChangeCallback([&](const String &deviceId, const String& stateJson)
+                                 { wsManager.broadcastStateChange(deviceId, stateJson); });
   deviceManager.addDevice(&testLed);
 
   Serial.println("Device management:");

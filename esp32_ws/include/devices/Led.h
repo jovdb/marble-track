@@ -42,7 +42,7 @@ public:
     // Controllable functionality
     bool isControllable() const override { return true; }
     bool control(const String &action, JsonObject *payload = nullptr) override;
-    JsonObject getState() override;
+    String getState() override;
 
     // LED-specific operations
     void set(bool state);

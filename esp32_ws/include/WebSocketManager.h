@@ -28,7 +28,7 @@ public:
     void setDeviceManager(DeviceManager *deviceManager);
 
     // State change broadcasting
-    void broadcastStateChange(const String& deviceId, JsonObject state);
+    void broadcastStateChange(const String& deviceId, const String& stateJson);
 
     // Made public to allow global function access
     void handleWebSocketMessage(void *arg, uint8_t *data, size_t len);

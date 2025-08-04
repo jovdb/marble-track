@@ -49,8 +49,6 @@ void Led::set(bool state)
  */
 bool Led::control(const String &action, JsonObject *payload)
 {
-    Serial.println("Led [" + id + "]: " + action);
-
     // Simple action mapping
     if (action == "on")
     {
@@ -84,13 +82,15 @@ bool Led::control(const String &action, JsonObject *payload)
 
 /**
  * @brief Get current state of the LED
- * @return JsonObject containing the current mode of the LED
+ * @return String containing JSON representation of the current state
  */
-JsonObject Led::getState()
+String Led::getState()
 {
-    static JsonDocument doc;
-    doc.clear();
+    JsonDocument doc;
     doc["mode"] = mode;
     doc["state"] = mode.equals("ON");
-    return doc.as<JsonObject>();
+    
+    String result;
+    serializeJson(doc, result);
+    return result;
 }

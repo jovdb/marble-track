@@ -17,7 +17,7 @@
 #include <functional>
 
 // Callback function type for state change notifications
-using StateChangeCallback = std::function<void(const String& deviceId, JsonObject state)>;
+using StateChangeCallback = std::function<void(const String& deviceId, const String& stateJson)>;
 
 /**
  * @class Device
@@ -72,12 +72,11 @@ public:
     
     /**
      * @brief Get current state of the device
-     * @return JsonObject containing the current state of the device
-     * @note Default implementation returns empty object (no state)
+     * @return String containing JSON representation of the current state
+     * @note Default implementation returns empty JSON object string
      */
-    virtual JsonObject getState() { 
-        JsonDocument doc;
-        return doc.to<JsonObject>();
+    virtual String getState() { 
+        return "{}";
     }
 
     /**

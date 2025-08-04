@@ -185,12 +185,20 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
     notifyClients(response);
 }
 
-void WebSocketManager::broadcastStateChange(const String &deviceId, JsonObject state)
+void WebSocketManager::broadcastStateChange(const String &deviceId, const String& stateJson)
 {
     JsonDocument doc;
     doc["type"] = "state-changed";
     doc["deviceId"] = deviceId;
-    doc["state"] = state;
+    
+    // Parse the state JSON string and add it to the document
+    JsonDocument stateDoc;
+    if (deserializeJson(stateDoc, stateJson) == DeserializationError::Ok) {
+        doc["state"] = stateDoc.as<JsonObject>();
+    } else {
+        // Fallback: add the string directly if parsing fails
+        doc["state"] = stateJson;
+    }
 
     String message;
     serializeJson(doc, message);

@@ -15,7 +15,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include "IDevice.h"
-#include "IControllable.h"
+#include "../IControllable.h"
 
 /**
  * @class Led

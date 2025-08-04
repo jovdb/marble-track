@@ -1,15 +1,3 @@
-/**
- * @file main.cpp
- * @brief Main application file for Marble Track Controller ESP32
- *
- * This file contains the main application logic, WebSocket event handling,
- * and system initialization for the ESP32-based marble track control system.
- * JSON message processing and hardware control are handled by separate modules.
- *
- * @author Generated for Marble Track Project
- * @date 2025
- */
-
 #include <Arduino.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -18,8 +6,8 @@
 #include "WebsiteHost.h"
 #include "WebSocketManager.h"
 #include "TimeManager.h"
-#include "Led.h"
-#include "IDevice.h"
+#include "devices/Led.h"
+#include "devices/IDevice.h"
 #include "IControllable.h"
 #include "DeviceManager.h"
 
@@ -33,10 +21,8 @@ const char *password = "cPQdRWmFx1eM";
 AsyncWebServer server(80);
 WebsiteHost websiteHost(ssid, password);
 WebSocketManager wsManager("/ws");
-Led testLed(1, "test-led", "Test LED"); // Stack allocation instead of heap
-
-// Device management system
 DeviceManager deviceManager;
+Led testLed(1, "test-led", "Test LED");  // Global LED instance
 
 void setup()
 {
@@ -52,23 +38,14 @@ void setup()
 
   // Setup WebSocket with message handler
   wsManager.setup(server);
-
-  // Inject DeviceManager into WebSocketManager
   wsManager.setDeviceManager(&deviceManager);
 
   // Start server
   server.begin();
-  Serial.println("Marble Track JSON Communication System initialized");
-  Serial.println("JSON Commands available:");
-  Serial.println("- Discovery: {\"type\": \"discovery\"}");
-  Serial.println("- Control: {\"action\": \"set_direction\", \"value\": \"CW\"}");
-  Serial.println("- GPIO: {\"action\": \"set_gpio\", \"pin\": 2, \"state\": true}");
-  Serial.println("- Info: {\"action\": \"get_info\"}");
-  Serial.println("Connect via WebSocket to receive full command examples");
 
-  // Instantiate and initialize LED controller (auto-initializes in constructor)
   // Add device to management system
   deviceManager.addDevice(&testLed);
+
   Serial.println("Device management:");
   Serial.println("  Total devices: " + String(deviceManager.getDeviceCount()));
   Serial.println("  Controllable devices: " + String(deviceManager.getControllableCount()));
@@ -81,7 +58,4 @@ void loop()
 
   // Run all devices using DeviceManager
   deviceManager.loop();
-
-  // Small delay to prevent watchdog issues
-  delay(10);
 }

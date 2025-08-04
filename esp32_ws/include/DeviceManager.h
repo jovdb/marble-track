@@ -12,7 +12,7 @@
 #ifndef DEVICEMANAGER_H
 #define DEVICEMANAGER_H
 
-#include "IDevice.h"
+#include "devices/IDevice.h"
 #include "IControllable.h"
 #include <Arduino.h>
 

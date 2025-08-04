@@ -12,6 +12,18 @@
 				"$platformio"
 			],
 			"group": "build"
+		},
+		{
+			"label": "Build ESP32 Project",
+			"type": "shell",
+			"command": "platformio",
+			"args": [
+				"run"
+			],
+			"problemMatcher": [
+				"$platformio"
+			],
+			"group": "build"
 		}
 	]
 }

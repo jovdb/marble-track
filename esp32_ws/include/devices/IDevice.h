@@ -13,9 +13,14 @@
 #define IDEVICE_H
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
+#include <functional>
 
 // Forward declaration
 struct IControllable;
+
+// Callback function type for state change notifications
+using StateChangeCallback = std::function<void(const String& deviceId, JsonObject state)>;
 
 /**
  * @struct IDevice
@@ -70,6 +75,28 @@ struct IDevice
      * @note Only call this if supportsControllable() returns true
      */
     virtual IControllable *getControllableInterface() { return nullptr; }
+
+    /**
+     * @brief Set callback function for state change notifications
+     * @param callback Function to call when device state changes
+     */
+    virtual void setStateChangeCallback(StateChangeCallback callback) { stateChangeCallback = callback; }
+
+protected:
+    /**
+     * @brief Callback function for state change notifications
+     */
+    StateChangeCallback stateChangeCallback = nullptr;
+
+    /**
+     * @brief Notify about state change if callback is set
+     * @param state Current state of the device
+     */
+    void notifyStateChange(JsonObject state) {
+        if (stateChangeCallback) {
+            stateChangeCallback(getId(), state);
+        }
+    }
 };
 
 #endif // IDEVICE_H

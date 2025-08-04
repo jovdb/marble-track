@@ -27,6 +27,9 @@ public:
     void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
     void setDeviceManager(DeviceManager *deviceManager);
 
+    // State change broadcasting
+    void broadcastStateChange(const String& deviceId, JsonObject state);
+
     // Made public to allow global function access
     void handleWebSocketMessage(void *arg, uint8_t *data, size_t len);
 };

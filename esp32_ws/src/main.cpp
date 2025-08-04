@@ -46,9 +46,15 @@ void setup()
   // Add device to management system
   deviceManager.addDevice(&testLed);
 
+  // Set up state change callback for real-time WebSocket broadcasting
+  testLed.setStateChangeCallback([&](const String& deviceId, JsonObject state) {
+    wsManager.broadcastStateChange(deviceId, state);
+  });
+
   Serial.println("Device management:");
   Serial.println("  Total devices: " + String(deviceManager.getDeviceCount()));
   Serial.println("  Controllable devices: " + String(deviceManager.getControllableCount()));
+  Serial.println("State change broadcasting enabled");
 }
 
 void loop()

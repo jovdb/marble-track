@@ -185,6 +185,18 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
     notifyClients(response);
 }
 
+void WebSocketManager::broadcastStateChange(const String& deviceId, JsonObject state)
+{
+    JsonDocument doc;
+    doc["type"] = "state-changed";
+    doc["deviceId"] = deviceId;
+    doc["state"] = state;
+    
+    String message;
+    serializeJson(doc, message);
+    notifyClients(message);
+}
+
 // Types of responses:
 // Info requested
 // Event (Button clicked)

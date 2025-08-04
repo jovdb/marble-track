@@ -37,6 +37,10 @@ void Led::set(bool state)
     digitalWrite(pin, state ? HIGH : LOW);
     mode = state ? "ON" : "OFF";
     Serial.println("Led [" + id + "]: " + mode);
+    
+    // Notify state change
+    JsonObject currentState = getState();
+    notifyStateChange(currentState);
 }
 
 /**

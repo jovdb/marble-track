@@ -165,7 +165,7 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
     }
     else
     {
-        Device *device = deviceManager->getDeviceById(deviceId);
+        Device *device = deviceManager->getControllableById(deviceId);
         if (!device)
         {
             response = createJsonResponse(false, "Device not found or not controllable: " + deviceId, "", "");
@@ -185,15 +185,17 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
     notifyClients(response);
 }
 
-void WebSocketManager::broadcastStateChange(const String& deviceId, JsonObject state)
+void WebSocketManager::broadcastStateChange(const String &deviceId, JsonObject state)
 {
     JsonDocument doc;
     doc["type"] = "state-changed";
     doc["deviceId"] = deviceId;
     doc["state"] = state;
-    
+
     String message;
     serializeJson(doc, message);
+    printf("Broadcasting state change for device '%s': %s", deviceId.c_str(), message.c_str());
+
     notifyClients(message);
 }
 

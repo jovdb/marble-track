@@ -17,7 +17,7 @@ void TimeManager::initialize()
     // Wait for time to be set
     time_t now = 0;
     int attempts = 0;
-    const int maxAttempts = 20; // 10 seconds timeout
+    const int maxAttempts = 30;
 
     while (now < 8 * 3600 * 2 && attempts < maxAttempts)
     {

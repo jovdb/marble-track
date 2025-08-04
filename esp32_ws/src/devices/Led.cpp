@@ -36,10 +36,8 @@ void Led::set(bool state)
 {
     digitalWrite(pin, state ? HIGH : LOW);
     mode = state ? "ON" : "OFF";
-    Serial.println("Led [" + id + "]: " + mode);
 
-    // Notify state change
-    JsonObject currentState = getState();
+    // Notify state change for real-time updates
     notifyStateChange();
 }
 
@@ -90,8 +88,9 @@ bool Led::control(const String &action, JsonObject *payload)
  */
 JsonObject Led::getState()
 {
-    JsonDocument doc;
-    JsonObject state = doc.to<JsonObject>();
-    state["mode"] = mode;
-    return state;
+    static JsonDocument doc;
+    doc.clear();
+    doc["mode"] = mode;
+    doc["state"] = mode.equals("ON");
+    return doc.as<JsonObject>();
 }

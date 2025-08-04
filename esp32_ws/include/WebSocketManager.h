@@ -18,6 +18,7 @@ private:
     // Helper methods for cleaner message handling
     void handleRestart();
     void handleDeviceFunction(JsonDocument &doc);
+    void handleDeviceState(JsonDocument &doc);
 
 public:
     WebSocketManager(const char *path = "/ws");
@@ -28,7 +29,7 @@ public:
     void setDeviceManager(DeviceManager *deviceManager);
 
     // State change broadcasting
-    void broadcastStateChange(const String& deviceId, const String& stateJson);
+    void broadcastState(const String& deviceId, const String& stateJson);
 
     // Made public to allow global function access
     void handleWebSocketMessage(void *arg, uint8_t *data, size_t len);

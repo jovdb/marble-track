@@ -21,6 +21,8 @@ const wsStates = [
   "Connected",
   "Disconnecting",
   "Disconnected",
+  "Fetching", // Not standard
+  "Fetched", // Not standard
 ] as const;
 
 export const connectionStateName = createMemo(() => wsStates[wsState()], 0);
@@ -57,66 +59,79 @@ export const clearMessages = () => setLastMessages([]);
 
 export const sendMessage = (message: string): boolean => {
   if (websocket.readyState === WebSocket.OPEN) {
-    console.debug("Sending WebSocket message:", message);
+    console.debug(" WebSocket message sent: ", message);
     websocket.send(message);
     return true;
   } else {
-    console.error("WebSocket is not open, cannot send message");
+    console.error("WebSocket is not open, cannot send message: ", message);
     return false;
   }
 };
 
 export function createDeviceState<T>(deviceId: string) {
   // Get initial value
-  const [state, setState] = createSignal<T | undefined>(undefined);
+  const [deviceState, setDeviceState] = createSignal<T | undefined>(undefined);
+  const [connectedState, setConnectionState] = createSignal<number>(
+    websocket.readyState
+  );
+
   onMount(() => {
-    // TODO, Get initial value
+    // Is connected, request state
+    if (websocket.readyState === WebSocket.OPEN) {
+      setConnectionState(4); // Fetching state
+      sendMessage(
+        JSON.stringify({
+          action: "device-state",
+          deviceId,
+        })
+      );
+    }
+
     function onMessage(event: MessageEvent) {
       const data = JSON.parse(event.data);
       if (
         typeof data === "object" &&
-        data.type === "state-changed" &&
+        data.type === "device-state" &&
         data.deviceId === deviceId
       ) {
-        setState(data.state);
+        setDeviceState(data.state);
+        setConnectionState(5);
       }
     }
 
+    function onOpen(event: Event) {
+      // Request state
+      setConnectionState(4); // Fetching state
+      sendMessage(
+        JSON.stringify({
+          action: "device-state",
+          deviceId,
+        })
+      );
+    }
+
+    function onClose(event: Event) {
+      setConnectionState(websocket.readyState);
+    }
+
+    // listen to state changed
     websocket.addEventListener("message", onMessage);
+
+    // If WS is not connected and it WS becomes connected
+    websocket.addEventListener("open", onOpen);
+
+    // If WS is not connected and it WS becomes connected
+    websocket.addEventListener("close", onClose);
 
     onCleanup(() => {
       // Clean up the event listener when the component is unmounted
+      websocket.removeEventListener("open", onOpen);
       websocket.removeEventListener("message", onMessage);
     });
   });
 
-  return state;
-}
-/*
-export function createWebSocket(logger?: ILogger) {
-  // Listen for messages
-  createEventListener(websocket, "message", (event) => {
-    // const data = JSON.parse(event.data);
-    const data = event.data;
-    logger?.debug("Received WebSocket message:", data);
-    setLastMessage(data);
-    setLastMessages((prev) => {
-      const newArray = [...prev, data];
-      newArray.slice(-20);
-      return newArray;
-    });
-  });
+  const connectionState = createMemo(() => wsStates[connectedState()]);
+  const disabled = createMemo(() => connectionState() !== "Fetched");
 
-  return {
-    sendMessage: (message: string) => {
-      logger?.debug("Sending WebSocket message:", message);
-      websocket.send(message);
-    },
-    isConnected: () => wsState() === 2, // Connected state
-    status: connectionStateName,
-    lastMessage,
-    lastMessages,
-    clearMessages: () => setLastMessages([]),
-  };
+  return [deviceState, connectionState, disabled] as const;
 }
-*/

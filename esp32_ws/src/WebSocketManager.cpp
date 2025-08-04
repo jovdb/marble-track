@@ -71,6 +71,12 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
         handleDeviceFunction(doc);
         return;
     }
+
+    if (action == "device-state")
+    {
+        handleDeviceState(doc);
+        return;
+    }
 }
 
 // Global function wrapper for callback compatibility
@@ -176,33 +182,67 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
             JsonObject payload = doc.as<JsonObject>();
             bool success = device->control(functionName, &payload);
 
+            /*
             response = createJsonResponse(success,
                                           success ? "Device function executed successfully" : "Device function execution failed",
                                           "", "");
+            */
+        }
+    }
+
+    if (response != nullptr)
+        notifyClients(response);
+}
+
+void WebSocketManager::handleDeviceState(JsonDocument &doc)
+{
+    // Extract device info from either root or data field
+    String deviceId = doc["deviceId"] | "";
+
+    String response;
+
+    if (!deviceManager)
+    {
+        response = createJsonResponse(false, "DeviceManager not available", "", "");
+    }
+    else
+    {
+        Device *device = deviceManager->getControllableById(deviceId);
+        if (!device)
+        {
+            response = createJsonResponse(false, "Device not found: " + deviceId, "", "");
+        }
+        else
+        {
+            String state = device->getState();
+            broadcastState(deviceId, state);
         }
     }
 
     notifyClients(response);
 }
 
-void WebSocketManager::broadcastStateChange(const String &deviceId, const String& stateJson)
+void WebSocketManager::broadcastState(const String &deviceId, const String &stateJson)
 {
     JsonDocument doc;
-    doc["type"] = "state-changed";
+    doc["type"] = "device-state";
     doc["deviceId"] = deviceId;
-    
+
     // Parse the state JSON string and add it to the document
     JsonDocument stateDoc;
-    if (deserializeJson(stateDoc, stateJson) == DeserializationError::Ok) {
+    if (deserializeJson(stateDoc, stateJson) == DeserializationError::Ok)
+    {
         doc["state"] = stateDoc.as<JsonObject>();
-    } else {
+    }
+    else
+    {
         // Fallback: add the string directly if parsing fails
         doc["state"] = stateJson;
     }
 
     String message;
     serializeJson(doc, message);
-    printf("Broadcasting state change for device '%s': %s", deviceId.c_str(), message.c_str());
+    printf("Broadcasting state for device '%s': %s", deviceId.c_str(), message.c_str());
 
     notifyClients(message);
 }

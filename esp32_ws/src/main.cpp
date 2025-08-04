@@ -70,9 +70,7 @@ void setup()
   Serial.println("- Info: {\"action\": \"get_info\"}");
   Serial.println("Connect via WebSocket to receive full command examples");
 
-  // Instantiate and initialize LED controller
-  testLed.setup();
-
+  // Instantiate and initialize LED controller (auto-initializes in constructor)
   // Add device to management system
   deviceManager.addDevice(&testLed);
   Serial.println("Device management:");

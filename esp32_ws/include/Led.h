@@ -19,75 +19,32 @@
 
 /**
  * @class Led
- * @brief LED control and management class
+ * @brief Simple LED control class
  * 
- * Provides functionality to control LEDs with setup initialization,
- * continuous loop operations, and state control.
- * Implements IDevice for base device functionality and IControllable 
- * interface for unified device control.
+ * Provides basic LED control functionality with automatic initialization.
+ * Implements IDevice and IControllable interfaces for system integration.
  */
 class Led : public IDevice, public IControllable {
 public:
     /**
-     * @brief Constructor for Led class
+     * @brief Constructor - automatically initializes pin
      * @param pin GPIO pin number for the LED
      * @param id Unique identifier string for the LED
      * @param name Human-readable name string for the LED
      */
     Led(int pin, const String& id, const String& name);
     
-    /**
-     * @brief Destructor for Led class
-     */
-    ~Led() override;
-    
     // IDevice interface implementation
-    /**
-     * @brief Get device identifier
-     * @return String identifier of the LED
-     */
-    String getId() const override;
+    String getId() const override { return id; }
+    String getName() const override { return name; }
+    void loop() override {} // No periodic operations needed
     
-    /**
-     * @brief Get device name
-     * @return String human-readable name of the LED
-     */
-    String getName() const override;
-    
-    /**
-     * @brief Loop function for continuous LED operations
-     * 
-     * This function should be called repeatedly in the main loop.
-     * Currently empty but ready for future LED operations.
-     */
-    void loop() override;
-    
-    // IDevice interface implementation overrides
+    // IControllable interface support
     bool supportsControllable() const override { return true; }
     IControllable* getControllableInterface() override { return this; }
-    
-    // IControllable interface implementation
-    /**
-     * @brief Dynamic control function for LED operations
-     * @param action The action to perform (e.g., "set")
-     * @param payload Pointer to JSON object containing action parameters (can be nullptr)
-     * @return true if action was successful, false otherwise
-     */
     bool control(const String& action, JsonObject* payload = nullptr) override;
     
-    // Led-specific public methods
-    /**
-     * @brief Setup function to initialize LED hardware and configurations
-     * 
-     * This function should be called once during system initialization
-     * to configure LED pins and initial states.
-     */
-    void setup();
-    
-    /**
-     * @brief Set LED state
-     * @param state true to turn LED on, false to turn LED off
-     */
+    // LED-specific operations
     void set(bool state);
 
 private:

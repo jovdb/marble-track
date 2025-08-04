@@ -22,48 +22,10 @@
 Led::Led(int pin, const String &id, const String &name)
     : pin(pin), id(id), name(name), currentState(false)
 {
-    // Constructor initializes member variables
-    // Pin setup is done in setup() function
-}
-
-/**
- * @brief Destructor for Led class
- *
- * Cleans up any resources used by the Led object.
- */
-Led::~Led()
-{
-    // Clean up any allocated resources
-    // For simple LED control, usually no cleanup is needed
-}
-
-/**
- * @brief Setup function to initialize LED hardware and configurations
- *
- * Configures LED pin as output and sets initial state.
- * This function should be called once during system initialization.
- */
-void Led::setup()
-{
-    Serial.println("Led: Initializing LED [" + id + "] - " + name + " on pin " + String(pin));
-
-    // Initialize the pin as output
+    // Initialize the pin as output and set initial state
     pinMode(pin, OUTPUT);
-    digitalWrite(pin, LOW); // Start with LED off
-    currentState = false;
-
-    Serial.println("Led: LED [" + id + "] initialized successfully");
-}
-
-/**
- * @brief Loop function for continuous LED operations
- *
- * This function should be called repeatedly in the main loop.
- * Currently empty but ready for future LED operations.
- */
-void Led::loop()
-{
-    // Loop operations can be added here in the future
+    digitalWrite(pin, LOW);
+    Serial.println("Led [" + id + "]: Initialized on pin " + String(pin));
 }
 
 /**
@@ -74,9 +36,7 @@ void Led::set(bool state)
 {
     digitalWrite(pin, state ? HIGH : LOW);
     currentState = state;
-
-    // Log the state change with LED ID
-    Serial.println("Led [" + id + "]: Set to " + (state ? "ON" : "OFF"));
+    Serial.println("Led [" + id + "]: " + (state ? "ON" : "OFF"));
 }
 
 /**
@@ -87,68 +47,25 @@ void Led::set(bool state)
  */
 bool Led::control(const String &action, JsonObject *payload)
 {
-    Serial.println("Led [" + id + "]: Control action '" + action + "' with " +
-                   (payload ? "JSON payload" : "no payload"));
+    Serial.println("Led [" + id + "]: " + action);
 
-    if (action == "set")
-    {
-        // Check if payload is provided and contains "state" field
-        if (payload && (*payload)["state"].is<bool>())
-        {
-            bool state = (*payload)["state"].as<bool>();
-            set(state);
-            return true;
-        }
-        else if (!payload)
-        {
-            Serial.println("Led [" + id + "]: Error - Missing payload for 'set' action");
-            return false;
-        }
-        else
-        {
-            Serial.println("Led [" + id + "]: Error - Missing 'state' field in payload for 'set' action");
-            return false;
-        }
-    }
-    else if (action == "toggle")
-    {
-        // Toggle action doesn't require a payload
-        set(!currentState);
-        return true;
-    }
-    else if (action == "on")
-    {
-        // Turn LED on - doesn't require a payload
+    // Simple action mapping
+    if (action == "on") {
         set(true);
-        return true;
-    }
-    else if (action == "off")
-    {
-        // Turn LED off - doesn't require a payload
+    } else if (action == "off") {
         set(false);
-        return true;
-    }
-    else
-    {
-        Serial.println("Led [" + id + "]: Error - Unknown action: " + action);
+    } else if (action == "toggle") {
+        set(!currentState);
+    } else if (action == "set") {
+        if (!payload || !(*payload)["state"].is<bool>()) {
+            Serial.println("Led [" + id + "]: Invalid 'set' payload");
+            return false;
+        }
+        set((*payload)["state"].as<bool>());
+    } else {
+        Serial.println("Led [" + id + "]: Unknown action: " + action);
         return false;
     }
-}
-
-/**
- * @brief Get device identifier (IDevice interface implementation)
- * @return String identifier of the LED
- */
-String Led::getId() const
-{
-    return id;
-}
-
-/**
- * @brief Get device name (IDevice interface implementation)
- * @return String human-readable name of the LED
- */
-String Led::getName() const
-{
-    return name;
+    
+    return true;
 }

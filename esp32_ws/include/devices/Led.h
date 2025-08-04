@@ -15,16 +15,15 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include "IDevice.h"
-#include "../IControllable.h"
 
 /**
  * @class Led
  * @brief Simple LED control class
  *
  * Provides basic LED control functionality with automatic initialization.
- * Implements IDevice and IControllable interfaces for system integration.
+ * Implements IDevice interface with controllable functionality.
  */
-class Led : public IDevice, public IControllable
+class Led : public IDevice
 {
 public:
     /**
@@ -41,9 +40,8 @@ public:
     String getType() const override { return type; }
     void loop() override {} // No periodic operations needed
 
-    // IControllable interface support
-    bool supportsControllable() const override { return true; }
-    IControllable *getControllableInterface() override { return this; }
+    // Controllable functionality
+    bool isControllable() const override { return true; }
     bool control(const String &action, JsonObject *payload = nullptr) override;
     JsonObject getState() override;
 
@@ -55,7 +53,7 @@ private:
     String id;           ///< Unique identifier string for the LED
     String name;         ///< Human-readable name string for the LED
     String type = "LED"; ///< Type of the device
-    String mode;
+    String mode;         ///< Current mode of the LED
 };
 
 #endif // LED_H

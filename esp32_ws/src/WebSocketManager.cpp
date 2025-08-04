@@ -165,8 +165,8 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
     }
     else
     {
-        IControllable *controllable = deviceManager->getControllableById(deviceId);
-        if (!controllable)
+        IDevice *device = deviceManager->getDeviceById(deviceId);
+        if (!device)
         {
             response = createJsonResponse(false, "Device not found or not controllable: " + deviceId, "", "");
         }
@@ -174,7 +174,7 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
         {
             Serial.println("Executing function '" + functionName + "' on device '" + deviceId + "'");
             JsonObject payload = doc.as<JsonObject>();
-            bool success = controllable->control(functionName, &payload);
+            bool success = device->control(functionName, &payload);
 
             response = createJsonResponse(success,
                                           success ? "Device function executed successfully" : "Device function execution failed",

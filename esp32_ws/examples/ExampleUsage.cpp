@@ -1,19 +1,19 @@
 /**
  * @file ExampleUsage.cpp
- * @brief Example demonstrating how to use the IControllable struct interface
+ * @brief Example demonstrating how to use the IDevice interface
  * 
- * This file shows how the struct-based interface can be used for
+ * This file shows how the interface can be used for
  * polymorphic device control in your marble track system.
  * 
  * @author Generated for Marble Track Project
  * @date 2025
  */
 
-#include "IControllable.h"
-#include "Led.h"
+#include "devices/IDevice.h"
+#include "devices/Led.h"
 
-// Example function that works with any IControllable device
-bool controlDevice(IControllable* device, const String& action, JsonObject& payload) {
+// Example function that works with any IDevice
+bool controlDevice(IDevice* device, const String& action, JsonObject& payload) {
     if (device == nullptr) {
         Serial.println("Error: Device is null");
         return false;
@@ -29,8 +29,8 @@ void demonstrateInterface() {
     Led statusLed(2, "status_led", "Main Status LED");
     statusLed.setup();
     
-    // Treat LED as IControllable interface
-    IControllable* controllableDevice = &statusLed;
+    // Treat LED as IDevice interface
+    IDevice* device = &statusLed;
     
     // Create JSON payload
     JsonDocument doc;
@@ -38,9 +38,9 @@ void demonstrateInterface() {
     payload["state"] = true;
     
     // Control device through interface
-    if (controlDevice(controllableDevice, "set", payload)) {
+    if (controlDevice(device, "set", payload)) {
         Serial.println("Device controlled successfully!");
-        Serial.println("Device ID: " + controllableDevice->getId());
+        Serial.println("Device ID: " + device->getId());
     } else {
         Serial.println("Failed to control device");
     }

@@ -16,9 +16,6 @@
 #include <ArduinoJson.h>
 #include <functional>
 
-// Forward declaration
-struct IControllable;
-
 // Callback function type for state change notifications
 using StateChangeCallback = std::function<void(const String& deviceId, JsonObject state)>;
 
@@ -64,17 +61,29 @@ struct IDevice
     virtual void loop() = 0;
 
     /**
-     * @brief Check if this device implements IControllable interface
-     * @return true if device implements IControllable, false otherwise
+     * @brief Dynamic control function for device operations
+     * @param action The action to perform (e.g., "set", "move", "toggle")
+     * @param payload Pointer to JSON object containing action parameters (can be nullptr)
+     * @return true if action was successful, false otherwise
+     * @note Default implementation returns false (not controllable)
      */
-    virtual bool supportsControllable() const { return false; }
+    virtual bool control(const String& action, JsonObject* payload = nullptr) { return false; }
+    
+    /**
+     * @brief Get current state of the device
+     * @return JsonObject containing the current state of the device
+     * @note Default implementation returns empty object (no state)
+     */
+    virtual JsonObject getState() { 
+        JsonDocument doc;
+        return doc.to<JsonObject>();
+    }
 
     /**
-     * @brief Get this device as IControllable interface (if supported)
-     * @return Pointer to IControllable interface or nullptr if not supported
-     * @note Only call this if supportsControllable() returns true
+     * @brief Check if this device supports remote control
+     * @return true if device implements control functionality, false otherwise
      */
-    virtual IControllable *getControllableInterface() { return nullptr; }
+    virtual bool isControllable() const { return false; }
 
     /**
      * @brief Set callback function for state change notifications

@@ -38,35 +38,31 @@ bool DeviceManager::addDevice(IDevice* device)
     return false;
 }
 
-IControllable* DeviceManager::getControllableById(const String& deviceId)
+IDevice* DeviceManager::getControllableById(const String& deviceId)
 {
     for (int i = 0; i < devicesCount; i++)
     {
         if (devices[i] != nullptr && devices[i]->getId() == deviceId)
         {
-            // Check if device supports controllable interface and get it
-            if (devices[i]->supportsControllable())
+            // Check if device supports controllable functionality
+            if (devices[i]->isControllable())
             {
-                return devices[i]->getControllableInterface();
+                return devices[i];
             }
         }
     }
     return nullptr;
 }
 
-void DeviceManager::getControllables(IControllable** controllableList, int& count, int maxResults)
+void DeviceManager::getDevices(IDevice** deviceList, int& count, int maxResults)
 {
     count = 0;
     for (int i = 0; i < devicesCount && count < maxResults; i++)
     {
-        if (devices[i] != nullptr && devices[i]->supportsControllable())
+        if (devices[i] != nullptr && devices[i]->isControllable())
         {
-            IControllable* controllable = devices[i]->getControllableInterface();
-            if (controllable != nullptr)
-            {
-                controllableList[count] = controllable;
-                count++;
-            }
+            deviceList[count] = devices[i];
+            count++;
         }
     }
 }
@@ -85,15 +81,15 @@ void DeviceManager::loop()
 
 int DeviceManager::getControllableCount() const
 {
-    int controllableCount = 0;
+    int deviceCount = 0;
     for (int i = 0; i < devicesCount; i++)
     {
-        if (devices[i] != nullptr && devices[i]->supportsControllable())
+        if (devices[i] != nullptr && devices[i]->isControllable())
         {
-            controllableCount++;
+            deviceCount++;
         }
     }
-    return controllableCount;
+    return deviceCount;
 }
 
 IDevice* DeviceManager::getDeviceById(const String& deviceId) const

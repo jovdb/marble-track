@@ -87,7 +87,7 @@ void Led::set(bool state)
  */
 bool Led::control(const String &action, JsonObject *payload)
 {
-    Serial.println("Led [" + id + "]: Control action '" + action + "' with " + 
+    Serial.println("Led [" + id + "]: Control action '" + action + "' with " +
                    (payload ? "JSON payload" : "no payload"));
 
     if (action == "set")
@@ -152,4 +152,3 @@ String Led::getName() const
 {
     return name;
 }
-

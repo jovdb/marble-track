@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 # Deploy website script for marble-track project
 
-# Store the original directory
+² Store the original directory
 $originalDir = Get-Location
 
 try {

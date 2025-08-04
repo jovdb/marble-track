@@ -34,7 +34,7 @@ const char *password = "cPQdRWmFx1eM";
 AsyncWebServer server(80);
 WebsiteHost websiteHost(ssid, password);
 WebSocketManager wsManager("/ws");
-Led *testLed = nullptr; // Will be instantiated in setup()
+Led testLed(1, "test-led", "Test LED");  // Stack allocation instead of heap
 
 // Device management system
 DeviceManager deviceManager;
@@ -71,11 +71,10 @@ void setup()
   Serial.println("Connect via WebSocket to receive full command examples");
 
   // Instantiate and initialize LED controller
-  testLed = new Led(1, "test-led", "Test LED");
-  testLed->setup();
+  testLed.setup();
 
   // Add device to management system
-  deviceManager.addDevice(testLed);
+  deviceManager.addDevice(&testLed);
   Serial.println("Device management:");
   Serial.println("  Total devices: " + String(deviceManager.getDeviceCount()));
   Serial.println("  Controllable devices: " + String(deviceManager.getControllableCount()));

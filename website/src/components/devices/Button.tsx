@@ -2,6 +2,9 @@ import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
 
 interface IButtonState {
   pressed: boolean;
+  pin: number;
+  name: string;
+  type: string;
 }
 
 export function Button(props: { id: string }) {
@@ -29,7 +32,9 @@ export function Button(props: { id: string }) {
 
   return (
     <fieldset>
-      <legend>Button: {props.id}</legend>
+      <legend>
+        <legend>Button: {deviceState()?.name || props.id}</legend>
+      </legend>
       {disabled() && <span>{error() || connectedState() + ""}</span>}
       {!disabled() && (
         <>

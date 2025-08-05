@@ -66,6 +66,9 @@ String ServoDevice::getState()
 {
     JsonDocument doc;
     doc["angle"] = _currentAngle;
+    doc["pin"] = _pin;
+    doc["name"] = _name;
+    doc["type"] = _type;
     String result;
     serializeJson(doc, result);
     return result;

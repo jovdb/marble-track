@@ -150,6 +150,9 @@ String Button::getState()
 {
     JsonDocument doc;
     doc["pressed"] = _currentState;
+    doc["pin"] = _pin;
+    doc["name"] = _name;
+    doc["type"] = _type;
 
     String result;
     serializeJson(doc, result);

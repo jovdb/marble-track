@@ -3,6 +3,9 @@ import { debounce } from "@solid-primitives/scheduled";
 
 interface IServoState {
   angle: number;
+  pin: number;
+  name: string;
+  type: string;
 }
 
 export function Servo(props: { id: string }) {
@@ -21,7 +24,7 @@ export function Servo(props: { id: string }) {
 
   return (
     <fieldset>
-      <legend>Servo: {props.id}</legend>
+      <legend>Servo: {deviceState()?.name || props.id}</legend>
       {disabled() && <span>{error() || connectedState()}</span>}
       {!disabled() && (
         <div>

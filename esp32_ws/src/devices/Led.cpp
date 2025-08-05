@@ -96,6 +96,9 @@ String Led::getState()
 {
     JsonDocument doc;
     doc["mode"] = _mode;
+    doc["pin"] = _pin;
+    doc["name"] = _name;
+    doc["type"] = _type;
 
     String result;
     serializeJson(doc, result);

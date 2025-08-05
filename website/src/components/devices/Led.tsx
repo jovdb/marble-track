@@ -2,6 +2,9 @@ import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
 
 interface ILedState {
   mode: "ON" | "OFF";
+  pin: number;
+  name: string;
+  type: string;
 }
 
 export function Led(props: { id: string }) {
@@ -19,7 +22,9 @@ export function Led(props: { id: string }) {
 
   return (
     <fieldset>
-      <legend>Led: {props.id}</legend>
+      <legend>
+        <legend>LED: {deviceState()?.name || props.id}</legend>
+      </legend>
       {disabled() && <span>{error() || connectedState() + ""}</span>}
       {!disabled() && (
         <>

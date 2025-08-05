@@ -4,6 +4,7 @@ import Header from "./components/Header";
 import WebSocketMessages from "./components/WebSocketMessages";
 import { Led } from "./components/devices/Led";
 import { Servo } from "./components/devices/Servo";
+import { Buzzer } from "./components/devices/Buzzer";
 
 import { Button } from "./components/devices/Button";
 const App: Component = () => {
@@ -14,6 +15,7 @@ const App: Component = () => {
         <Led id="test-led" />
         <Servo id="test-servo" />
         <Button id="test-button" />
+        <Buzzer id="test-buzzer" />
         <WebSocketMessages />
       </div>
     </div>

@@ -18,9 +18,7 @@ const WebSocketSender: Component = () => {
       <div style={{ "margin-bottom": "10px" }}>
         <textarea
           value={messageData()}
-          onInput={(e) =>
-            setMessageData((e.target as HTMLTextAreaElement).value)
-          }
+          onInput={(e) => setMessageData((e.target as HTMLTextAreaElement).value)}
           onKeyDown={handleKeyPress}
           placeholder='{"type": "ping", "data": {}} or just plain text'
           rows={3}

@@ -45,12 +45,15 @@ export class ConsoleLogger implements ILogger {
       return;
     }
 
-    const timestamp = new Date().toLocaleTimeString("en-US", { 
-      hour12: false, 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      second: '2-digit' 
-    }) + '.' + new Date().getMilliseconds().toString().padStart(3, '0');
+    const timestamp =
+      new Date().toLocaleTimeString("en-US", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      }) +
+      "." +
+      new Date().getMilliseconds().toString().padStart(3, "0");
     const formattedMessage = `${timestamp}: ${this.context}: ${message}`;
 
     switch (level) {

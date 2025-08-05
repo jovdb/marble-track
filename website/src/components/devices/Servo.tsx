@@ -9,12 +9,14 @@ export function Servo(props: { id: string }) {
   const [deviceState, connectedState, disabled, error] = createDeviceState<IServoState>(props.id);
 
   const setAngle = debounce((angle: number) => {
-    sendMessage(JSON.stringify({
-      type: "device-fn",
-      deviceId: props.id,
-      fn: "setAngle",
-      angle,
-    }));
+    sendMessage(
+      JSON.stringify({
+        type: "device-fn",
+        deviceId: props.id,
+        fn: "setAngle",
+        angle,
+      })
+    );
   }, 100);
 
   return (

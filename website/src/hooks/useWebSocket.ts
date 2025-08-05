@@ -65,9 +65,7 @@ export const sendMessage = (message: string): boolean => {
 export function createDeviceState<T>(deviceId: string) {
   // Get initial value
   const [deviceState, setDeviceState] = createSignal<T | undefined>(undefined);
-  const [connectedState, setConnectionState] = createSignal<number>(
-    websocket.readyState
-  );
+  const [connectedState, setConnectionState] = createSignal<number>(websocket.readyState);
   const [error, setError] = createSignal<string | undefined>(undefined);
 
   onMount(() => {
@@ -84,11 +82,7 @@ export function createDeviceState<T>(deviceId: string) {
 
     function onMessage(event: MessageEvent) {
       const data = JSON.parse(event.data);
-      if (
-        typeof data === "object" &&
-        data.type === "device-state" &&
-        data.deviceId === deviceId
-      ) {
+      if (typeof data === "object" && data.type === "device-state" && data.deviceId === deviceId) {
         if (data.error) {
           setError(data.error);
           setDeviceState(undefined);

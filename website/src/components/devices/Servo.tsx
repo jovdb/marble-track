@@ -36,6 +36,7 @@ export function Servo(props: { id: string }) {
             max="180"
             value={deviceState()?.angle || 90}
             onInput={(e) => setAngle(Number(e.currentTarget.value))}
+            style={{ width: "100%" }}
           />
           {deviceState()?.angle}°
           <div style={{ "margin-top": "10px", display: "flex", gap: "8px" }}>

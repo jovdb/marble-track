@@ -97,9 +97,9 @@ export function Buzzer(props: { id: string }) {
               <input
                 id={`freq-${props.id}`}
                 type="range"
-                min="100"
-                max="2000"
-                step="10"
+                min="40"
+                max="5000"
+                step="1"
                 value={frequency()}
                 onInput={(e) => setFrequency(Number(e.currentTarget.value))}
                 style={{ width: "100%" }}
@@ -112,8 +112,8 @@ export function Buzzer(props: { id: string }) {
                   color: "#666",
                 }}
               >
-                <span>100Hz</span>
-                <span>2000Hz</span>
+                <span>40Hz</span>
+                <span>5000Hz</span>
               </div>
             </div>
             <button

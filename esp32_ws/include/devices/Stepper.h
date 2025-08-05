@@ -67,7 +67,6 @@ public:
     void loop() override; // Handle stepper motor movement
 
     // Controllable functionality
-    bool isControllable() const override { return true; }
     bool control(const String &action, JsonObject *payload = nullptr) override;
     String getState() override;
 

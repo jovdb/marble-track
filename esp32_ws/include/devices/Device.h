@@ -80,12 +80,6 @@ public:
     }
 
     /**
-     * @brief Check if this device supports remote control
-     * @return true if device implements control functionality, false otherwise
-     */
-    virtual bool isControllable() const { return false; }
-
-    /**
      * @brief Set callback function for state change notifications
      * @param callback Function to call when device state changes
      */

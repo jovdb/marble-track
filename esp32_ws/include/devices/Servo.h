@@ -53,7 +53,6 @@ public:
     void loop() override {} // No periodic operations needed
 
     // Controllable functionality
-    bool isControllable() const override { return true; }
     bool control(const String &action, JsonObject *payload = nullptr) override;
     String getState() override;
 

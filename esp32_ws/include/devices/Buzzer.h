@@ -47,7 +47,6 @@ public:
     void loop() override; // Handle timing for tone/tune playback
 
     // Controllable functionality
-    bool isControllable() const override { return true; }
     bool control(const String &action, JsonObject *payload = nullptr) override;
     String getState() override;
 

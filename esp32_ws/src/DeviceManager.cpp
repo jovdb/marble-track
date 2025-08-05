@@ -43,7 +43,7 @@ void DeviceManager::getDevices(Device **deviceList, int &count, int maxResults)
     count = 0;
     for (int i = 0; i < devicesCount && count < maxResults; i++)
     {
-        if (devices[i] != nullptr && devices[i]->isControllable())
+        if (devices[i] != nullptr)
         {
             deviceList[count] = devices[i];
             count++;
@@ -61,19 +61,6 @@ void DeviceManager::loop()
             devices[i]->loop();
         }
     }
-}
-
-int DeviceManager::getControllableCount() const
-{
-    int deviceCount = 0;
-    for (int i = 0; i < devicesCount; i++)
-    {
-        if (devices[i] != nullptr && devices[i]->isControllable())
-        {
-            deviceCount++;
-        }
-    }
-    return deviceCount;
 }
 
 Device *DeviceManager::getDeviceById(const String &deviceId) const

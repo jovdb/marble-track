@@ -116,7 +116,6 @@ void setup()
 
   Serial.println("Device management:");
   Serial.println("  Total devices: " + String(deviceManager.getDeviceCount()));
-  Serial.println("  Controllable devices: " + String(deviceManager.getControllableCount()));
   Serial.println("State change broadcasting enabled");
 
   // Initialize in MANUAL mode

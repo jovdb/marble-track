@@ -36,8 +36,8 @@ public:
     bool addDevice(Device *device);
 
     /**
-     * @brief Get all controllable devices
-     * @param deviceList Array to store pointers to controllable devices
+     * @brief Get all devices
+     * @param deviceList Array to store pointers to devices
      * @param count Reference to store the number of devices found
      * @param maxResults Maximum number of results to return
      */
@@ -54,12 +54,6 @@ public:
      * @return Number of devices in the system
      */
     int getDeviceCount() const { return devicesCount; }
-
-    /**
-     * @brief Get the number of controllable devices
-     * @return Number of devices that support control functionality
-     */
-    int getControllableCount() const;
 
     /**
      * @brief Get device by ID

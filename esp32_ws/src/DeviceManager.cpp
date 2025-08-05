@@ -17,7 +17,7 @@ DeviceManager::DeviceManager() : devicesCount(0)
     }
 }
 
-bool DeviceManager::addDevice(Device* device)
+bool DeviceManager::addDevice(Device *device)
 {
     if (devicesCount < MAX_DEVICES && device != nullptr)
     {
@@ -26,7 +26,7 @@ bool DeviceManager::addDevice(Device* device)
         Serial.println("Added device: " + device->getId() + " (" + device->getName() + ")");
         return true;
     }
-    
+
     if (device == nullptr)
     {
         Serial.println("Error: Cannot add null device");
@@ -38,23 +38,7 @@ bool DeviceManager::addDevice(Device* device)
     return false;
 }
 
-Device* DeviceManager::getControllableById(const String& deviceId)
-{
-    for (int i = 0; i < devicesCount; i++)
-    {
-        if (devices[i] != nullptr && devices[i]->getId() == deviceId)
-        {
-            // Check if device supports controllable functionality
-            if (devices[i]->isControllable())
-            {
-                return devices[i];
-            }
-        }
-    }
-    return nullptr;
-}
-
-void DeviceManager::getDevices(Device** deviceList, int& count, int maxResults)
+void DeviceManager::getDevices(Device **deviceList, int &count, int maxResults)
 {
     count = 0;
     for (int i = 0; i < devicesCount && count < maxResults; i++)
@@ -92,7 +76,7 @@ int DeviceManager::getControllableCount() const
     return deviceCount;
 }
 
-Device* DeviceManager::getDeviceById(const String& deviceId) const
+Device *DeviceManager::getDeviceById(const String &deviceId) const
 {
     for (int i = 0; i < devicesCount; i++)
     {

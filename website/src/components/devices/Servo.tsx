@@ -28,7 +28,7 @@ export function Servo(props: { id: string }) {
       {disabled() && <span>{error() || connectedState()}</span>}
       {!disabled() && (
         <div>
-          <label for="angle">Angle: {deviceState()?.angle}°</label>
+          <label for="angle">Angle:</label>
           <input
             id="angle"
             type="range"
@@ -37,6 +37,7 @@ export function Servo(props: { id: string }) {
             value={deviceState()?.angle || 90}
             onInput={(e) => setAngle(Number(e.currentTarget.value))}
           />
+          {deviceState()?.angle}°
           <div style={{ "margin-top": "10px", display: "flex", gap: "8px" }}>
             <button onClick={() => setAngle(0)} disabled={disabled()}>
               0°

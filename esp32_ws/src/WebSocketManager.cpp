@@ -171,7 +171,7 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
     }
     else
     {
-        Device *device = deviceManager->getControllableById(deviceId);
+        Device *device = deviceManager->getDeviceById(deviceId);
         if (!device)
         {
             response = createJsonResponse(false, "Device not found or not controllable: " + deviceId, "", "");
@@ -207,7 +207,7 @@ void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
     }
     else
     {
-        Device *device = deviceManager->getControllableById(deviceId);
+        Device *device = deviceManager->getDeviceById(deviceId);
         if (!device)
         {
             broadcastState(deviceId, "", "Device '" + deviceId + "' not found.");
@@ -239,7 +239,8 @@ void WebSocketManager::broadcastState(const String &deviceId, const String &stat
         // Fallback: add the string directly if parsing fails
         doc["state"] = stateJson;
     }
-    doc["error"] = error;
+    if (!error.isEmpty())
+        doc["error"] = error;
 
     String message;
     serializeJson(doc, message);

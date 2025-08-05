@@ -36,13 +36,6 @@ public:
     bool addDevice(Device *device);
 
     /**
-     * @brief Get a controllable device by ID
-     * @param deviceId The ID of the device to find
-     * @return Pointer to Device or nullptr if not found/not controllable
-     */
-    Device* getControllableById(const String& deviceId);
-
-    /**
      * @brief Get all controllable devices
      * @param deviceList Array to store pointers to controllable devices
      * @param count Reference to store the number of devices found

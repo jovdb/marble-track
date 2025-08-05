@@ -48,9 +48,9 @@ export function Button(props: { id: string }) {
             <button
               onMouseDown={handlePress}
               onMouseUp={handleRelease}
-              onMouseLeave={handleRelease}
-              onTouchStart={handlePress}
-              onTouchEnd={handleRelease}
+             // onMouseLeave={handleRelease}
+             // onTouchStart={handlePress}
+              //onTouchEnd={handleRelease}
               disabled={disabled()}
             >
               Virtual Button

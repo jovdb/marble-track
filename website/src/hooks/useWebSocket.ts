@@ -101,7 +101,7 @@ export function createDeviceState<T>(deviceId: string) {
       }
     }
 
-    function onOpen(event: Event) {
+    function onOpen() {
       // Request state
       setConnectionState(4); // Fetching state
       sendMessage(
@@ -112,7 +112,7 @@ export function createDeviceState<T>(deviceId: string) {
       );
     }
 
-    function onClose(event: Event) {
+    function onClose() {
       setConnectionState(websocket.readyState);
     }
 

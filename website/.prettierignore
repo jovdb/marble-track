@@ -1,0 +1,32 @@
+# Build outputs
+dist/
+build/
+../esp32_ws/data/
+
+# Dependencies
+node_modules/
+
+# Config files
+*.config.js
+*.config.ts
+vite.config.ts
+
+# Generated files
+*.d.ts
+
+# Logs
+*.log
+npm-debug.log*
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

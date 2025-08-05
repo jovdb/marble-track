@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import solid from 'eslint-plugin-solid/configs/typescript';
+import prettierConfig from 'eslint-config-prettier';
 
 export default tseslint.config(
   js.configs.recommended,
@@ -45,6 +46,7 @@ export default tseslint.config(
     files: ['**/*.js'],
     ...js.configs.recommended,
   },
+  prettierConfig, // Must be last to override other configs
   {
     ignores: [
       'dist/**',

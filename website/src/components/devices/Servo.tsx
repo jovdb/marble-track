@@ -1,43 +1,38 @@
 import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
 import { debounce } from "@solid-primitives/scheduled";
+
 interface IServoState {
   angle: number;
 }
 
 export function Servo(props: { id: string }) {
-  const [deviceState, connectedState, disabled, error] =
-    createDeviceState<IServoState>(props.id);
+  const [deviceState, connectedState, disabled, error] = createDeviceState<IServoState>(props.id);
 
-  const setServoAngle = debounce((angle: number) => {
-    // Send the message format expected by ESP32 WebSocketMessageHandler
-    sendMessage(
-      JSON.stringify({
-        type: "device-fn",
-        deviceId: props.id,
-        fn: "setAngle",
-        angle,
-      })
-    );
-  }, 50);
+  const setAngle = debounce((angle: number) => {
+    sendMessage(JSON.stringify({
+      type: "device-fn",
+      deviceId: props.id,
+      fn: "setAngle",
+      angle,
+    }));
+  }, 100);
 
   return (
     <fieldset>
       <legend>Servo: {props.id}</legend>
-      {disabled() && <span>{error() || connectedState() + ""}</span>}
+      {disabled() && <span>{error() || connectedState()}</span>}
       {!disabled() && (
-        <>
-          <div>
-            <label for="angle">Angle:</label>
-            <input
-              id="angle"
-              type="range"
-              min="0"
-              max="179"
-              value={deviceState()?.angle}
-              onInput={(e) => setServoAngle(Number(e.currentTarget.value))}
-            />
-          </div>
-        </>
+        <div>
+          <label for="angle">Angle: {deviceState()?.angle}°</label>
+          <input
+            id="angle"
+            type="range"
+            min="0"
+            max="180"
+            value={deviceState()?.angle || 90}
+            onInput={(e) => setAngle(Number(e.currentTarget.value))}
+          />
+        </div>
       )}
     </fieldset>
   );

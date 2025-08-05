@@ -9,14 +9,11 @@ export function Led(props: { id: string }) {
     createDeviceState<ILedState>(props.id);
 
   const setLed = (state: boolean) => {
-    // Send the message format expected by ESP32 WebSocketMessageHandler
-    sendMessage(
-      JSON.stringify({
-        type: "device-fn",
-        deviceId: "test-led",
-        fn: state ? "on" : "off",
-      })
-    );
+    sendMessage(JSON.stringify({
+      type: "device-fn",
+      deviceId: props.id, // Use props.id instead of hardcoded "test-led"
+      fn: state ? "on" : "off",
+    }));
   };
 
   return (

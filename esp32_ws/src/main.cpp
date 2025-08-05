@@ -7,6 +7,7 @@
 #include "WebSocketManager.h"
 #include "TimeManager.h"
 #include "devices/Led.h"
+#include "devices/Servo.h"
 #include "devices/Device.h"
 #include "DeviceManager.h"
 
@@ -21,7 +22,8 @@ AsyncWebServer server(80);
 WebsiteHost websiteHost(ssid, password);
 WebSocketManager wsManager("/ws");
 DeviceManager deviceManager;
-Led testLed(1, "test-led", "Test LED"); // Global LED instance
+Led testLed(1, "test-led", "Test LED");                    // Global LED instance
+ServoDevice testServo(21, "test-servo", "Test Servo", 90); // Global Servo instance
 
 void setup()
 {
@@ -42,15 +44,24 @@ void setup()
   // Start server
   server.begin();
 
+  // Setup devices
+  testServo.setup(); // Initialize servo hardware
+
   // Add device to management system
-  testLed.setStateChangeCallback([&](const String &deviceId, const String& stateJson)
+  testLed.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
                                  { wsManager.broadcastState(deviceId, stateJson, ""); });
   deviceManager.addDevice(&testLed);
+
+  testServo.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+                                   { wsManager.broadcastState(deviceId, stateJson, ""); });
+  deviceManager.addDevice(&testServo);
 
   Serial.println("Device management:");
   Serial.println("  Total devices: " + String(deviceManager.getDeviceCount()));
   Serial.println("  Controllable devices: " + String(deviceManager.getControllableCount()));
   Serial.println("State change broadcasting enabled");
+
+  testServo.setAngle(20); // Set initial angle for servo
 }
 
 void loop()

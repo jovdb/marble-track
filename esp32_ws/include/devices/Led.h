@@ -46,6 +46,7 @@ public:
 
     // LED-specific operations
     void set(bool state);
+    void toggle(); // Toggle LED state
 
 private:
     int _pin;             ///< GPIO pin number for the LED

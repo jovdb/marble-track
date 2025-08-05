@@ -13,13 +13,17 @@
 #include "DeviceManager.h"
 
 // Operation modes
-enum class OperationMode {
+enum class OperationMode
+{
   MANUAL,
   AUTOMATIC
 };
 
 // Global mode variable
 OperationMode currentMode = OperationMode::MANUAL;
+
+// Timing variable for automatic mode
+unsigned long lastAutoToggleTime = 0;
 
 // Replace with your network credentials
 // const char *ssid = "REPLACE_WITH_YOUR_SSID";
@@ -32,8 +36,8 @@ AsyncWebServer server(80);
 WebsiteHost websiteHost(ssid, password);
 WebSocketManager wsManager("/ws");
 DeviceManager deviceManager;
-Led testLed(1, "test-led", "Test LED");                    // Global LED instance
-ServoDevice testServo(21, "test-servo", "Test Servo", 90); // Global Servo instance
+Led testLed(1, "test-led", "Test LED");                       // Global LED instance
+ServoDevice testServo(21, "test-servo", "Test Servo", 90);    // Global Servo instance
 Button testButton(2, "test-button", "Test Button", true, 50); // Global Button instance
 
 // Function declarations
@@ -42,17 +46,25 @@ void setOperationMode(OperationMode mode);
 void runManualMode()
 {
   // Manual mode: devices are controlled via WebSocket commands
-  // No additional automated behavior
+  // Check for button press to toggle LED
+  if (testButton.wasPressed())
+  {
+    testLed.toggle();
+  }
+
   // This is the default mode where users control devices through the web interface
 }
 
 void runAutomaticMode()
 {
   // Automatic mode: run predefined sequences or automation logic
-  // Example: Could implement timed sequences, sensor-based automation, etc.
-  
-  // Placeholder for automatic mode logic
-  // You can add your automation code here
+  // Toggle LED every second
+  unsigned long currentTime = millis();
+  if (currentTime - lastAutoToggleTime >= 1000)
+  { // 1000ms = 1 second
+    testLed.toggle();
+    lastAutoToggleTime = currentTime;
+  }
 }
 
 void setup()
@@ -75,7 +87,7 @@ void setup()
   server.begin();
 
   // Setup devices
-  testServo.setup(); // Initialize servo hardware
+  testServo.setup();  // Initialize servo hardware
   testButton.setup(); // Initialize button hardware
 
   // Add device to management system
@@ -112,25 +124,27 @@ void loop()
   deviceManager.loop();
 
   // State machine based on current mode
-  switch (currentMode) {
-    case OperationMode::MANUAL:
-      runManualMode();
-      break;
-    
-    case OperationMode::AUTOMATIC:
-      runAutomaticMode();
-      break;
+  switch (currentMode)
+  {
+  case OperationMode::MANUAL:
+    runManualMode();
+    break;
+
+  case OperationMode::AUTOMATIC:
+    runAutomaticMode();
+    break;
   }
 }
 
 void setOperationMode(OperationMode mode)
 {
-  if (currentMode != mode) {
+  if (currentMode != mode)
+  {
     currentMode = mode;
-    
-    const char* modeString = (mode == OperationMode::MANUAL) ? "MANUAL" : "AUTOMATIC";
+
+    const char *modeString = (mode == OperationMode::MANUAL) ? "MANUAL" : "AUTOMATIC";
     Serial.println("Operation mode changed to: " + String(modeString));
-    
+
     // Optional: broadcast mode change via WebSocket
     // You could add WebSocket message broadcasting here if needed
   }

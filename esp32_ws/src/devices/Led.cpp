@@ -42,6 +42,14 @@ void Led::set(bool state)
 }
 
 /**
+ * @brief Toggle LED state
+ */
+void Led::toggle()
+{
+    set(!_mode.equals("ON"));
+}
+
+/**
  * @brief Dynamic control function for LED operations
  * @param action The action to perform (e.g., "set")
  * @param payload Pointer to JSON object containing action parameters (can be nullptr)

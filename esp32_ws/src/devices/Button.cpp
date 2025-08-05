@@ -22,11 +22,11 @@
  * @param debounceMs Debounce time in milliseconds
  */
 Button::Button(int pin, const String &id, const String &name, bool pullUp, unsigned long debounceMs)
-    : pin(pin), id(id), name(name), pullUp(pullUp), debounceMs(debounceMs)
+    : _pin(pin), _id(id), _name(name), _pullUp(pullUp), _debounceMs(debounceMs)
 {
-    Serial.println("Button [" + id + "]: Created on pin " + String(pin) +
-                   (pullUp ? " (pull-up)" : " (pull-down)") +
-                   ", debounce: " + String(debounceMs) + "ms");
+    Serial.println("Button [" + _id + "]: Created on pin " + String(_pin) +
+                   (_pullUp ? " (pull-up)" : " (pull-down)") +
+                   ", debounce: " + String(_debounceMs) + "ms");
 }
 
 /**
@@ -36,18 +36,18 @@ Button::Button(int pin, const String &id, const String &name, bool pullUp, unsig
 void Button::setup()
 {
     // Configure pin mode based on pull-up/pull-down setting
-    if (pullUp)
+    if (_pullUp)
     {
-        pinMode(pin, INPUT_PULLUP);
+        pinMode(_pin, INPUT_PULLUP);
     }
     else
     {
-        pinMode(pin, INPUT);
+        pinMode(_pin, INPUT);
     }
 
     // Initialize state variables
-    rawState = readRawState();
-    currentState = rawState;
+    _rawState = readRawState();
+    _currentState = _rawState;
 }
 
 /**
@@ -62,37 +62,37 @@ void Button::loop()
     bool newRawState = readRawState();
 
     // Check if raw state has changed
-    if (newRawState != rawState)
+    if (newRawState != _rawState)
     {
         // Reset debounce timer and update raw state
-        lastDebounceTime = millis();
-        rawState = newRawState;
+        _lastDebounceTime = millis();
+        _rawState = newRawState;
     }
 
     // Check if enough time has passed for debouncing
-    if ((millis() - lastDebounceTime) > debounceMs)
+    if ((millis() - _lastDebounceTime) > _debounceMs)
     {
         // Update debounced state if it has changed
-        if (rawState != currentState)
+        if (_rawState != _currentState)
         {
-            bool previousState = currentState;
-            currentState = rawState;
+            bool previousState = _currentState;
+            _currentState = _rawState;
 
             // Set edge detection flags
-            if (currentState && !previousState)
+            if (_currentState && !previousState)
             {
                 // Button was pressed
-                pressedFlag = true;
-                pressStartTime = millis();
-                Serial.println("Button [" + id + "]: PRESSED");
+                _pressedFlag = true;
+                _pressStartTime = millis();
+                Serial.println("Button [" + _id + "]: PRESSED");
                 notifyStateChange(); // Notify state change
             }
-            else if (!currentState && previousState)
+            else if (!_currentState && previousState)
             {
                 // Button was released
-                releasedFlag = true;
-                unsigned long pressDuration = millis() - pressStartTime;
-                Serial.println("Button [" + id + "]: RELEASED (held for " + String(pressDuration) + "ms)");
+                _releasedFlag = true;
+                unsigned long pressDuration = millis() - _pressStartTime;
+                Serial.println("Button [" + _id + "]: RELEASED (held for " + String(pressDuration) + "ms)");
                 notifyStateChange(); // Notify state change
             }
         }
@@ -106,9 +106,9 @@ void Button::loop()
  */
 bool Button::wasPressed()
 {
-    if (pressedFlag)
+    if (_pressedFlag)
     {
-        pressedFlag = false;
+        _pressedFlag = false;
         return true;
     }
     return false;
@@ -121,9 +121,9 @@ bool Button::wasPressed()
  */
 bool Button::wasReleased()
 {
-    if (releasedFlag)
+    if (_releasedFlag)
     {
-        releasedFlag = false;
+        _releasedFlag = false;
         return true;
     }
     return false;
@@ -135,9 +135,9 @@ bool Button::wasReleased()
  */
 unsigned long Button::getPressedTime() const
 {
-    if (currentState)
+    if (_currentState)
     {
-        return millis() - pressStartTime;
+        return millis() - _pressStartTime;
     }
     return 0;
 }
@@ -149,7 +149,7 @@ unsigned long Button::getPressedTime() const
 String Button::getState()
 {
     JsonDocument doc;
-    doc["pressed"] = currentState;
+    doc["pressed"] = _currentState;
 
     String result;
     serializeJson(doc, result);
@@ -162,10 +162,10 @@ String Button::getState()
  */
 bool Button::readRawState()
 {
-    bool pinState = digitalRead(pin);
+    bool pinState = digitalRead(_pin);
 
     // Invert logic for pull-up configuration (pin is LOW when button is pressed)
-    if (pullUp)
+    if (_pullUp)
     {
         return !pinState;
     }

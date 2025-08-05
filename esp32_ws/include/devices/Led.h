@@ -34,9 +34,9 @@ public:
     Led(int pin, const String &id, const String &name);
 
     // Device interface implementation
-    String getId() const override { return id; }
-    String getName() const override { return name; }
-    String getType() const override { return type; }
+    String getId() const override { return _id; }
+    String getName() const override { return _name; }
+    String getType() const override { return _type; }
     void loop() override {} // No periodic operations needed
 
     // Controllable functionality
@@ -48,11 +48,11 @@ public:
     void set(bool state);
 
 private:
-    int pin;             ///< GPIO pin number for the LED
-    String id;           ///< Unique identifier string for the LED
-    String name;         ///< Human-readable name string for the LED
-    String type = "LED"; ///< Type of the device
-    String mode;         ///< Current mode of the LED
+    int _pin;             ///< GPIO pin number for the LED
+    String _id;           ///< Unique identifier string for the LED
+    String _name;         ///< Human-readable name string for the LED
+    String _type = "LED"; ///< Type of the device
+    String _mode;         ///< Current mode of the LED
 };
 
 #endif // LED_H

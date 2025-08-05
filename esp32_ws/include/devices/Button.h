@@ -43,38 +43,38 @@ public:
     void setup();
 
     // Device interface implementation
-    String getId() const override { return id; }
-    String getName() const override { return name; }
-    String getType() const override { return type; }
+    String getId() const override { return _id; }
+    String getName() const override { return _name; }
+    String getType() const override { return _type; }
     void loop() override; // Handles debouncing and state tracking
 
     String getState() override;
 
     // Button-specific operations
-    bool isPressed() const { return currentState; }
+    bool isPressed() const { return _currentState; }
     bool wasPressed(); // Returns true once when button is pressed (edge detection)
     bool wasReleased(); // Returns true once when button is released (edge detection)
     unsigned long getPressedTime() const; // How long button has been pressed (ms)
 
 private:
-    int pin;                    ///< GPIO pin number for the button
-    String id;                  ///< Unique identifier string for the button
-    String name;                ///< Human-readable name string for the button
-    String type = "BUTTON";     ///< Type of the device
-    bool pullUp;                ///< Pull-up configuration (true = internal pull-up)
-    unsigned long debounceMs;   ///< Debounce time in milliseconds
+    int _pin;                    ///< GPIO pin number for the button
+    String _id;                  ///< Unique identifier string for the button
+    String _name;                ///< Human-readable name string for the button
+    String _type = "BUTTON";     ///< Type of the device
+    bool _pullUp;                ///< Pull-up configuration (true = internal pull-up)
+    unsigned long _debounceMs;   ///< Debounce time in milliseconds
 
     // State tracking
-    bool currentState = false;          ///< Current debounced state
-    bool rawState = false;              ///< Raw pin reading
+    bool _currentState = false;          ///< Current debounced state
+    bool _rawState = false;              ///< Raw pin reading
 
     // Timing
-    unsigned long lastDebounceTime = 0; ///< Last time the pin state changed
-    unsigned long pressStartTime = 0;   ///< When the current press started
+    unsigned long _lastDebounceTime = 0; ///< Last time the pin state changed
+    unsigned long _pressStartTime = 0;   ///< When the current press started
     
     // Edge detection flags
-    bool pressedFlag = false;           ///< Set when button is pressed (cleared by wasPressed())
-    bool releasedFlag = false;          ///< Set when button is released (cleared by wasReleased())
+    bool _pressedFlag = false;           ///< Set when button is pressed (cleared by wasPressed())
+    bool _releasedFlag = false;          ///< Set when button is released (cleared by wasReleased())
 
     /**
      * @brief Read the raw pin state accounting for pull-up/pull-down configuration

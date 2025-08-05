@@ -16,16 +16,16 @@
 Servo myservo;
 
 ServoDevice::ServoDevice(int pin, const String &id, const String &name, int initialAngle)
-    : pin(pin), id(id), name(name), currentAngle(constrainAngle(initialAngle))
+    : _pin(pin), _id(id), _name(name), _currentAngle(constrainAngle(initialAngle))
 {
-    Serial.println("Servo [" + id + "]: Created on pin " + String(pin));
+    Serial.println("Servo [" + _id + "]: Created on pin " + String(_pin));
 }
 
 void ServoDevice::setup()
 {
-    myservo.attach(pin);
-    setAngle(currentAngle);
-    Serial.println("Servo [" + id + "]: Setup complete at angle " + String(currentAngle));
+    myservo.attach(_pin);
+    setAngle(_currentAngle);
+    Serial.println("Servo [" + _id + "]: Setup complete at angle " + String(_currentAngle));
 }
 
 ServoDevice::~ServoDevice()
@@ -36,11 +36,11 @@ ServoDevice::~ServoDevice()
 void ServoDevice::setAngle(int angle)
 {
     int newAngle = constrainAngle(angle);
-    if (newAngle != currentAngle)
+    if (newAngle != _currentAngle)
     {
-        currentAngle = newAngle;
-        myservo.write(pin, currentAngle);
-        Serial.println("Servo [" + id + "]: Set to angle " + String(currentAngle));
+        _currentAngle = newAngle;
+        myservo.write(_pin, _currentAngle);
+        Serial.println("Servo [" + _id + "]: Set to angle " + String(_currentAngle));
         notifyStateChange();
     }
 }
@@ -51,21 +51,21 @@ bool ServoDevice::control(const String &action, JsonObject *payload)
     {
         if (!payload || !(*payload)["angle"].is<int>())
         {
-            Serial.println("Servo [" + id + "]: Missing angle parameter");
+            Serial.println("Servo [" + _id + "]: Missing angle parameter");
             return false;
         }
         setAngle((*payload)["angle"].as<int>());
         return true;
     }
     
-    Serial.println("Servo [" + id + "]: Unknown action: " + action);
+    Serial.println("Servo [" + _id + "]: Unknown action: " + action);
     return false;
 }
 
 String ServoDevice::getState()
 {
     JsonDocument doc;
-    doc["angle"] = currentAngle;
+    doc["angle"] = _currentAngle;
     String result;
     serializeJson(doc, result);
     return result;

@@ -47,9 +47,9 @@ public:
     void setup();
 
     // Device interface implementation
-    String getId() const override { return id; }
-    String getName() const override { return name; }
-    String getType() const override { return type; }
+    String getId() const override { return _id; }
+    String getName() const override { return _name; }
+    String getType() const override { return _type; }
     void loop() override {} // No periodic operations needed
 
     // Controllable functionality
@@ -59,14 +59,14 @@ public:
 
     // Servo-specific operations
     void setAngle(int angle);
-    int getAngle() const { return currentAngle; }
+    int getAngle() const { return _currentAngle; }
 
 private:
-    int pin;                    ///< GPIO pin number for the servo
-    String id;                  ///< Unique identifier string for the servo
-    String name;                ///< Human-readable name string for the servo
-    String type = "SERVO";      ///< Type of the device
-    int currentAngle;           ///< Current angle of the servo (0-180)
+    int _pin;                    ///< GPIO pin number for the servo
+    String _id;                  ///< Unique identifier string for the servo
+    String _name;                ///< Human-readable name string for the servo
+    String _type = "SERVO";      ///< Type of the device
+    int _currentAngle;           ///< Current angle of the servo (0-180)
 
     /**
      * @brief Validate and constrain angle to valid range

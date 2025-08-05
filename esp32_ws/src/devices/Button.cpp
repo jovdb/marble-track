@@ -143,6 +143,57 @@ unsigned long Button::getPressedTime() const
 }
 
 /**
+ * @brief Dynamic control function for button operations
+ * @param action The action to perform ("pressed", "released")
+ * @param payload Pointer to JSON object containing action parameters (can be nullptr)
+ * @return true if action was successful, false otherwise
+ */
+bool Button::control(const String &action, JsonObject *payload)
+{
+    if (action == "pressed")
+    {
+        // Simulate button press: set state to pressed and trigger notifications
+        if (!_currentState)
+        {
+            _currentState = true;
+            _pressedFlag = true;
+            _pressStartTime = millis();
+            Serial.println("Button [" + _id + "]: Simulated PRESS");
+            notifyStateChange();
+            return true;
+        }
+        else
+        {
+            Serial.println("Button [" + _id + "]: Already pressed, ignoring simulated press");
+            return false;
+        }
+    }
+    else if (action == "released")
+    {
+        // Simulate button release: set state to released and trigger notifications
+        if (_currentState)
+        {
+            _currentState = false;
+            _releasedFlag = true;
+            unsigned long pressDuration = millis() - _pressStartTime;
+            Serial.println("Button [" + _id + "]: Simulated RELEASE (held for " + String(pressDuration) + "ms)");
+            notifyStateChange();
+            return true;
+        }
+        else
+        {
+            Serial.println("Button [" + _id + "]: Already released, ignoring simulated release");
+            return false;
+        }
+    }
+    else
+    {
+        Serial.println("Button [" + _id + "]: Unknown action: " + action);
+        return false;
+    }
+}
+
+/**
  * @brief Get current state of the button
  * @return String containing JSON representation of the current state
  */
@@ -150,7 +201,10 @@ String Button::getState()
 {
     JsonDocument doc;
     doc["pressed"] = _currentState;
+    doc["pressedTime"] = getPressedTime();
     doc["pin"] = _pin;
+    doc["pullUp"] = _pullUp;
+    doc["debounceMs"] = _debounceMs;
     doc["name"] = _name;
     doc["type"] = _type;
 

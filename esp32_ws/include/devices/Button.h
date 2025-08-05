@@ -48,6 +48,7 @@ public:
     String getType() const override { return _type; }
     void loop() override; // Handles debouncing and state tracking
 
+    bool control(const String &action, JsonObject *payload = nullptr) override;
     String getState() override;
 
     // Button-specific operations

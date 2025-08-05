@@ -1,9 +1,9 @@
 /**
  * @file Servo.cpp
- * @brief Implementation of ServoDevice control class using ESP32 AnalogWrite library
+ * @brief Implementation of ServoDevice control class using ESP32 LEDC PWM
  *
  * This file contains the implementation of the ServoDevice class methods
- * for controlling servo motors in the marble track system using AnalogWrite.
+ * for controlling servo motors in the marble track system using native ESP32 PWM.
  *
  * @author Generated for Marble Track Project
  * @date 2025
@@ -12,39 +12,20 @@
 #include "devices/Servo.h"
 #include <Servo.h>
 
-// Global servo instance for ESP32 AnalogWrite library
-Servo myServo;
+// One shared instance of Servo
+Servo myservo;
 
-/**
- * @brief Constructor for ServoDevice class
- *
- * Initializes the ServoDevice object with pin, id, name, and initial angle.
- * Hardware initialization is done separately in setup() function.
- * @param pin GPIO pin number for the servo
- * @param id Unique identifier string for the servo
- * @param name Human-readable name string for the servo
- * @param initialAngle Initial angle for the servo (0-180 degrees)
- */
 ServoDevice::ServoDevice(int pin, const String &id, const String &name, int initialAngle)
     : pin(pin), id(id), name(name), currentAngle(constrainAngle(initialAngle))
 {
     Serial.println("Servo [" + id + "]: Created on pin " + String(pin) + " with initial angle " + String(currentAngle));
 }
 
-/**
- * @brief Setup servo hardware and initialize PWM
- * 
- * Configures PWM for servo control and sets initial position.
- * Call this after constructor to initialize the servo hardware.
- */
 void ServoDevice::setup()
 {
     // Attach the servo to the pin
-    myServo.attach(pin);
-    
-    // Set initial angle
-    setAngle(currentAngle);
-    
+    myservo.attach(pin);
+
     Serial.println("Servo [" + id + "]: Setup complete on pin " + String(pin) + " at angle " + String(currentAngle));
 }
 
@@ -63,27 +44,21 @@ ServoDevice::~ServoDevice()
 void ServoDevice::setAngle(int angle)
 {
     int constrainedAngle = constrainAngle(angle);
-    
+
     if (constrainedAngle != currentAngle)
     {
         currentAngle = constrainedAngle;
-        
+
         // Use ESP32 AnalogWrite library's Servo.h API
-        myServo.write(pin, currentAngle);
-        
+        myservo.write(pin, currentAngle);
+
         Serial.println("Servo [" + id + "]: Set to angle " + String(currentAngle));
-        
+
         // Notify state change for real-time updates
         notifyStateChange();
     }
 }
 
-/**
- * @brief Dynamic control function for servo operations
- * @param action The action to perform (e.g., "setAngle")
- * @param payload Pointer to JSON object containing action parameters (can be nullptr)
- * @return true if action was successful, false otherwise
- */
 bool ServoDevice::control(const String &action, JsonObject *payload)
 {
     if (action == "setAngle")
@@ -125,7 +100,7 @@ String ServoDevice::getState()
     JsonDocument doc;
     doc["angle"] = currentAngle;
     doc["position"] = currentAngle; // Alias for compatibility
-    
+
     String result;
     serializeJson(doc, result);
     return result;

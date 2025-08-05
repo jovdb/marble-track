@@ -1,6 +1,5 @@
-import { error } from "console";
 import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
-
+import { debounce } from "@solid-primitives/scheduled";
 interface IServoState {
   angle: number;
 }
@@ -9,7 +8,7 @@ export function Servo(props: { id: string }) {
   const [deviceState, connectedState, disabled, error] =
     createDeviceState<IServoState>(props.id);
 
-  const setServoAngle = (angle: number) => {
+  const setServoAngle = debounce((angle: number) => {
     // Send the message format expected by ESP32 WebSocketMessageHandler
     sendMessage(
       JSON.stringify({
@@ -19,7 +18,7 @@ export function Servo(props: { id: string }) {
         angle,
       })
     );
-  };
+  }, 50);
 
   return (
     <fieldset>

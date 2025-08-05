@@ -1,6 +1,7 @@
 import { type Component } from "solid-js";
 import styles from "./Header.module.css";
 import { connectionStateName } from "../hooks/useWebSocket";
+import logo from "../assets/logo-64.png";
 
 const Header: Component = () => {
   const getStatusClass = () => {
@@ -21,6 +22,7 @@ const Header: Component = () => {
   return (
     <div class={styles.header}>
       <div class={styles.header__left}>
+        <img src={logo} alt="Logo" width="28" height="28" style={{ "margin-right": "12px" }} />
         <h1>Marble Manager</h1>
       </div>
       <div class={styles.header__right}>

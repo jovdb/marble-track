@@ -1,11 +1,13 @@
-import { createSignal } from "solid-js";
-import { sendMessage } from "../../hooks/useWebSocket";
+import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
+
+interface IButtonState {
+  pressed: boolean;
+}
 
 export function Button(props: { id: string }) {
-  const [isPressed, setIsPressed] = createSignal(false);
+  const [deviceState, connectedState, disabled, error] = createDeviceState<IButtonState>(props.id);
 
   const handlePress = () => {
-    setIsPressed(true);
     sendMessage(
       JSON.stringify({
         type: "device-fn",
@@ -16,7 +18,6 @@ export function Button(props: { id: string }) {
   };
 
   const handleRelease = () => {
-    setIsPressed(false);
     sendMessage(
       JSON.stringify({
         type: "device-fn",
@@ -29,34 +30,29 @@ export function Button(props: { id: string }) {
   return (
     <fieldset>
       <legend>Button: {props.id}</legend>
-      <div
-        style={{
-          "margin-bottom": "10px",
-          display: "flex",
-          "align-items": "center",
-          gap: "8px",
-        }}
-      >
-        <span
-          style={{
-            "font-weight": isPressed() ? "bold" : "normal",
-          }}
-        >
-          {isPressed() ? "Pressed" : "Released"}
-        </span>
-      </div>
+      {disabled() && <span>{error() || connectedState() + ""}</span>}
+      {!disabled() && (
+        <>
+          <div>
+            <span style={{ "font-weight": deviceState()?.pressed ? "bold" : "normal" }}>
+              {deviceState()?.pressed ? "Pressed" : "Released"}
+            </span>
+          </div>
 
-      <div style={{ "margin-bottom": "10px" }}>
-        <button
-          onMouseDown={handlePress}
-          onMouseUp={handleRelease}
-          onMouseLeave={handleRelease}
-          onTouchStart={handlePress}
-          onTouchEnd={handleRelease}
-        >
-          Virtual Button
-        </button>
-      </div>
+          <div style={{ "margin-bottom": "10px" }}>
+            <button
+              onMouseDown={handlePress}
+              onMouseUp={handleRelease}
+              onMouseLeave={handleRelease}
+              onTouchStart={handlePress}
+              onTouchEnd={handleRelease}
+              disabled={disabled()}
+            >
+              Virtual Button
+            </button>
+          </div>
+        </>
+      )}
     </fieldset>
   );
 }

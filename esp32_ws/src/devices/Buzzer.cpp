@@ -10,6 +10,7 @@
  */
 
 #include "devices/Buzzer.h"
+#include <NonBlockingRtttl.h>
 
 /**
  * @brief Constructor for Buzzer class
@@ -44,6 +45,12 @@ void Buzzer::setup()
  */
 void Buzzer::loop()
 {
+
+    if (rtttl::isPlaying())
+    {
+        rtttl::play();
+    }
+
     // Check if we're currently playing and if the duration has elapsed
     if (_isPlaying && _playDuration > 0)
     {
@@ -54,10 +61,10 @@ void Buzzer::loop()
             _isPlaying = false;
             _currentTune = "";
             _playDuration = 0;
-            
+
             // TODO: Stop hardware tone generation here
             // ::noTone(_pin);
-            
+
             Serial.println("Buzzer [" + _id + "]: Playback finished");
             notifyStateChange();
         }
@@ -72,12 +79,8 @@ void Buzzer::loop()
 void Buzzer::tone(int frequency, int duration)
 {
     Serial.println("Buzzer [" + _id + "]: Playing tone " + String(frequency) + "Hz for " + String(duration) + "ms");
-    
-    // TODO: Implement tone generation
-    // This would typically use PWM or tone() function
-    // Example implementation would be:
-    // ::tone(_pin, frequency, duration);
-    
+    ::tone(_pin, frequency, duration);
+
     _isPlaying = true;
     _playStartTime = millis();
     _playDuration = duration;
@@ -93,12 +96,9 @@ void Buzzer::tone(int frequency, int duration)
 void Buzzer::tune(const String &rtttl)
 {
     Serial.println("Buzzer [" + _id + "]: Playing RTTTL tune: " + rtttl);
-    
-    // TODO: Implement RTTTL parser and playback
-    // This would involve parsing the RTTTL string and playing individual notes
-    // Format: "name:d=4,o=5,b=140:notes..."
-    // Where d=default duration, o=default octave, b=beats per minute
-    
+
+    rtttl::begin(_pin, rtttl.c_str());
+
     _currentTune = rtttl;
     _isPlaying = true;
     _playStartTime = millis();
@@ -121,24 +121,24 @@ bool Buzzer::control(const String &action, JsonObject *payload)
             Serial.println("Buzzer [" + _id + "]: Invalid 'tone' payload - need frequency and duration");
             return false;
         }
-        
+
         int frequency = (*payload)["frequency"].as<int>();
         int duration = (*payload)["duration"].as<int>();
-        
+
         // Validate frequency range
         if (frequency < 20 || frequency > 20000)
         {
             Serial.println("Buzzer [" + _id + "]: Invalid frequency " + String(frequency) + "Hz (range: 20-20000)");
             return false;
         }
-        
+
         // Validate duration
         if (duration < 1 || duration > 10000)
         {
             Serial.println("Buzzer [" + _id + "]: Invalid duration " + String(duration) + "ms (range: 1-10000)");
             return false;
         }
-        
+
         tone(frequency, duration);
         return true;
     }
@@ -149,14 +149,14 @@ bool Buzzer::control(const String &action, JsonObject *payload)
             Serial.println("Buzzer [" + _id + "]: Invalid 'tune' payload - need rtttl string");
             return false;
         }
-        
+
         String rtttl = (*payload)["rtttl"].as<String>();
         if (rtttl.length() == 0)
         {
             Serial.println("Buzzer [" + _id + "]: Empty RTTTL string");
             return false;
         }
-        
+
         tune(rtttl);
         return true;
     }

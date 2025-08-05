@@ -11,6 +11,7 @@
 #include "devices/Button.h"
 #include "devices/Device.h"
 #include "DeviceManager.h"
+#include <devices/Buzzer.h>
 
 // Operation modes
 enum class OperationMode
@@ -36,9 +37,10 @@ AsyncWebServer server(80);
 WebsiteHost websiteHost(ssid, password);
 WebSocketManager wsManager("/ws");
 DeviceManager deviceManager;
-Led testLed(1, "test-led", "Test LED");                       // Global LED instance
-ServoDevice testServo(21, "test-servo", "Test Servo", 90);    // Global Servo instance
-Button testButton(2, "test-button", "Test Button", true, 50); // Global Button instance
+Led testLed(1, "test-led", "Test LED");                        // Global LED instance
+ServoDevice testServo(21, "test-servo", "Test Servo", 90);     // Global Servo instance
+Button testButton(15, "test-button", "Test Button", false, 50); // Global Button instance
+Buzzer testBuzzer(14, "test-buzzer", "Test Buzzer");           // Global Buzzer instance
 
 // Function declarations
 void setOperationMode(OperationMode mode);
@@ -57,13 +59,19 @@ void runManualMode()
 
 void runAutomaticMode()
 {
+
   // Automatic mode: run predefined sequences or automation logic
   // Toggle LED every second
   unsigned long currentTime = millis();
   if (currentTime - lastAutoToggleTime >= 1000)
-  { // 1000ms = 1 second
+  {
     testLed.toggle();
     lastAutoToggleTime = currentTime;
+  }
+
+  if (currentTime % 10000 < 5)
+  {
+    testServo.setAngle(currentTime % 180); // Rotate servo every 10 seconds
   }
 }
 
@@ -71,10 +79,10 @@ void setup()
 {
   // Initialize serial communication
   Serial.begin(115200);
-  Serial.println("Starting Marble Track JSON Communication System");
+  Serial.println("Starting Marble Track Communication System");
 
   // Initialize TimeManager
-  TimeManager::initialize();
+  // TimeManager::initialize();
 
   // Initialize WebsiteHost
   websiteHost.setup(server);
@@ -87,21 +95,24 @@ void setup()
   server.begin();
 
   // Setup devices
-  testServo.setup();  // Initialize servo hardware
-  testButton.setup(); // Initialize button hardware
-
-  // Add device to management system
   testLed.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
                                  { wsManager.broadcastState(deviceId, stateJson, ""); });
   deviceManager.addDevice(&testLed);
 
+  testServo.setup(); // Initialize servo hardware
   testServo.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
                                    { wsManager.broadcastState(deviceId, stateJson, ""); });
   deviceManager.addDevice(&testServo);
 
+  testButton.setup(); // Initialize button hardware
   testButton.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
                                     { wsManager.broadcastState(deviceId, stateJson, ""); });
   deviceManager.addDevice(&testButton);
+
+  testBuzzer.setup(); // Initialize buzzer hardware
+  testBuzzer.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+                                    { wsManager.broadcastState(deviceId, stateJson, ""); });
+  deviceManager.addDevice(&testBuzzer);
 
   Serial.println("Device management:");
   Serial.println("  Total devices: " + String(deviceManager.getDeviceCount()));

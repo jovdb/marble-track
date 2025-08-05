@@ -15,7 +15,7 @@ export function Buzzer(props: { id: string }) {
   // Local state for UI controls
   const [frequency, setFrequency] = createSignal(440); // Default to A4 note
   const [rtttl, setRtttl] = createSignal(
-    "Nokia:d=4,o=5,b=140:8e6,8d6,8f#,8g#,8c#6,8b,8d,8e,8b,8p,8e,8c#6,8b,8a,8c#6,8e6,8a6,8p"
+    "SuperMar:d=4,o=5,b=125:a,8f.,16c,16d,16f,16p,f,16d,16c,16p,16f,16p,16f,16p,8c6,8a.,g,16c,a,8f.,16c,16d,16f,16p,f,16d,16c,16p,16f,16p,16a#,16a,16g,2f,16p,8a.,8f.,8c,8a.,f,16g#,16f,16c,16p,8g#.,2g,8a.,8f.,8c,8a.,f,16g#,16f,8c,2c6"
   );
 
   const playTone = () => {
@@ -188,7 +188,7 @@ export function Buzzer(props: { id: string }) {
               <button
                 onClick={() =>
                   setRtttl(
-                    "TetrisTheme:d=4,o=5,b=144:8e6,8b,8c6,8d6,8c6,8b,8a,8a,8c6,8e6,8d6,8c6,8b,8b,8c6,8d6,8e6,8c6,8a,8a"
+                    "tetris:d=4,o=5,b=160:e6,8b,8c6,8d6,16e6,16d6,8c6,8b,a,8a,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,2a,8p,d6,8f6,a6,8g6,8f6,e6,8e6,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,a"
                   )
                 }
                 style={{

@@ -32,6 +32,17 @@ export function Servo(props: { id: string }) {
             value={deviceState()?.angle || 90}
             onInput={(e) => setAngle(Number(e.currentTarget.value))}
           />
+          <div style={{ "margin-top": "10px", display: "flex", gap: "8px" }}>
+            <button onClick={() => setAngle(0)} disabled={disabled()}>
+              0°
+            </button>
+            <button onClick={() => setAngle(90)} disabled={disabled()}>
+              90°
+            </button>
+            <button onClick={() => setAngle(180)} disabled={disabled()}>
+              180°
+            </button>
+          </div>
         </div>
       )}
     </fieldset>

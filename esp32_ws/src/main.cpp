@@ -8,6 +8,7 @@
 #include "TimeManager.h"
 #include "devices/Led.h"
 #include "devices/Servo.h"
+#include "devices/Button.h"
 #include "devices/Device.h"
 #include "DeviceManager.h"
 
@@ -33,6 +34,7 @@ WebSocketManager wsManager("/ws");
 DeviceManager deviceManager;
 Led testLed(1, "test-led", "Test LED");                    // Global LED instance
 ServoDevice testServo(21, "test-servo", "Test Servo", 90); // Global Servo instance
+Button testButton(2, "test-button", "Test Button", true, 50); // Global Button instance
 
 // Function declarations
 void setOperationMode(OperationMode mode);
@@ -74,6 +76,7 @@ void setup()
 
   // Setup devices
   testServo.setup(); // Initialize servo hardware
+  testButton.setup(); // Initialize button hardware
 
   // Add device to management system
   testLed.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
@@ -83,6 +86,10 @@ void setup()
   testServo.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
                                    { wsManager.broadcastState(deviceId, stateJson, ""); });
   deviceManager.addDevice(&testServo);
+
+  testButton.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+                                    { wsManager.broadcastState(deviceId, stateJson, ""); });
+  deviceManager.addDevice(&testButton);
 
   Serial.println("Device management:");
   Serial.println("  Total devices: " + String(deviceManager.getDeviceCount()));

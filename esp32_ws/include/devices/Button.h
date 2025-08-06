@@ -76,6 +76,7 @@ private:
     // Edge detection flags
     bool _pressedFlag = false;           ///< Set when button is pressed (cleared by wasPressed())
     bool _releasedFlag = false;          ///< Set when button is released (cleared by wasReleased())
+    bool _virtualPress = false;          ///< Flag to indicate virtual button press is active
 
     /**
      * @brief Read the raw pin state accounting for pull-up/pull-down configuration

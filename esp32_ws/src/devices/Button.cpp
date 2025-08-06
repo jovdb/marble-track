@@ -58,6 +58,12 @@ void Button::setup()
  */
 void Button::loop()
 {
+    // If we have a virtual press active, don't process physical button state
+    if (_virtualPress)
+    {
+        return;
+    }
+
     // Read current raw state
     bool newRawState = readRawState();
 
@@ -158,6 +164,7 @@ bool Button::control(const String &action, JsonObject *payload)
             _currentState = true;
             _pressedFlag = true;
             _pressStartTime = millis();
+            _virtualPress = true; // Mark as virtual press to prevent physical override
             Serial.println("Button [" + _id + "]: Simulated PRESS");
             notifyStateChange();
             return true;
@@ -175,6 +182,7 @@ bool Button::control(const String &action, JsonObject *payload)
         {
             _currentState = false;
             _releasedFlag = true;
+            _virtualPress = false; // Clear virtual press flag
             unsigned long pressDuration = millis() - _pressStartTime;
             Serial.println("Button [" + _id + "]: Simulated RELEASE (held for " + String(pressDuration) + "ms)");
             notifyStateChange();

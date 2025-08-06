@@ -24,6 +24,19 @@
   letter-spacing: -0.025em;
 }
 
+.logo {
+  animation: rotate 30s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .header__right {
   display: flex;
   align-items: center;

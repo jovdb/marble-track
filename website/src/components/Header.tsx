@@ -22,7 +22,7 @@ const Header: Component = () => {
   return (
     <div class={styles.header}>
       <div class={styles.header__left}>
-        <img src={logo} alt="Logo" width="28" height="28" style={{ "margin-right": "12px" }} />
+        <img src={logo} alt="Logo" width="28" height="28" class={styles.logo} style={{ "margin-right": "12px" }} />
         <h1>Marble Manager</h1>
       </div>
       <div class={styles.header__right}>

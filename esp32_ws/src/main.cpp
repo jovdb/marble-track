@@ -37,10 +37,13 @@ AsyncWebServer server(80);
 WebsiteHost websiteHost(ssid, password);
 WebSocketManager wsManager("/ws");
 DeviceManager deviceManager;
-Led testLed(1, "test-led", "Test LED");                        // Global LED instance
-ServoDevice testServo(21, "test-servo", "Test Servo", 90);     // Global Servo instance
-Button testButton(15, "test-button", "Test Button", false, 50); // Global Button instance
-Buzzer testBuzzer(14, "test-buzzer", "Test Buzzer");           // Global Buzzer instance
+
+#define SERVO_PWM_CHANNEL 7
+
+Led testLed(1, "test-led", "Test LED");                                       // Global LED instance
+ServoDevice testServo(21, "test-servo", "Test Servo", 90, SERVO_PWM_CHANNEL); // Global Servo instance with PWM channel 2
+Button testButton(15, "test-button", "Test Button", false, 50);               // Global Button instance
+Buzzer testBuzzer(14, "test-buzzer", "Test Buzzer");                          // Global Buzzer instance
 
 // Function declarations
 void setOperationMode(OperationMode mode);

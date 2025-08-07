@@ -93,19 +93,30 @@ void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
     switch (type)
     {
     case WS_EVT_CONNECT:
-        Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
-        break;
+        {
+            Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+            
+            // Send welcome message with connection info
+            String welcome = "{\"type\":\"connection\",\"message\":\"WebSocket connected\",\"clientId\":" + String(client->id()) + "}";
+            client->text(welcome);
+            break;
+        }
+        
     case WS_EVT_DISCONNECT:
         Serial.printf("WebSocket client #%u disconnected\n", client->id());
         break;
+        
     case WS_EVT_DATA:
+        Serial.printf("WebSocket client #%u data received\n", client->id());
         handleWebSocketMessage(arg, data, len);
         break;
+        
     case WS_EVT_PONG:
         Serial.printf("WebSocket client #%u pong\n", client->id());
         break;
+        
     case WS_EVT_ERROR:
-        Serial.printf("WebSocket client #%u error\n", client->id());
+        Serial.printf("WebSocket client #%u ERROR occurred\n", client->id());
         break;
     }
 }
@@ -122,13 +133,21 @@ void WebSocketManager::setup(AsyncWebServer &server)
         if (instance) {
             instance->onEvent(server, client, type, arg, data, len);
         } });
+    
     server.addHandler(&ws);
     Serial.println("WebSocket manager: OK");
+    Serial.println("WebSocket path: /ws");
+    Serial.printf("WebSocket server ready to accept connections\n");
 }
 
 void WebSocketManager::loop()
 {
     ws.cleanupClients();
+}
+
+String WebSocketManager::getStatus() const
+{
+    return "{\"connectedClients\":" + String(ws.count()) + ",\"path\":\"/ws\"}";
 }
 
 void WebSocketManager::notifyClients(String state)

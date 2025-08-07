@@ -132,6 +132,9 @@ void setup()
 
 void loop()
 {
+  // Process captive portal for access point mode
+  network.processCaptivePortal();
+  
   // Keep the WebSocket alive
   wsManager.loop();
 

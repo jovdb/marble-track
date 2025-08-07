@@ -14,6 +14,7 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <DNSServer.h>
 #include "Config.h"
 
 enum class NetworkMode
@@ -32,6 +33,11 @@ public:
      * @param wifi_password WiFi network password
      */
     Network(const char *wifi_ssid, const char *wifi_password);
+
+    /**
+     * @brief Destructor - cleans up DNS server
+     */
+    ~Network();
 
     /**
      * @brief Initialize network connection (WiFi with AP fallback)
@@ -81,6 +87,11 @@ public:
      */
     String getStatusJSON() const;
 
+    /**
+     * @brief Process captive portal (call in main loop when in AP mode)
+     */
+    void processCaptivePortal();
+
 private:
     // WiFi credentials
     const char *_wifi_ssid;
@@ -88,6 +99,9 @@ private:
 
     // Current network state
     NetworkMode _currentMode;
+
+    // DNS server for captive portal
+    DNSServer *_dnsServer;
 
     // Private methods
     bool connectToWiFi();

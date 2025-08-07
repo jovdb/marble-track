@@ -12,14 +12,21 @@
 #include "Network.h"
 
 Network::Network(const char *wifi_ssid, const char *wifi_password)
-    : _wifi_ssid(wifi_ssid), _wifi_password(wifi_password), _currentMode(NetworkMode::DISCONNECTED)
+    : _wifi_ssid(wifi_ssid), _wifi_password(wifi_password), _currentMode(NetworkMode::DISCONNECTED), _dnsServer(nullptr)
 {
+}
+
+Network::~Network()
+{
+    if (_dnsServer != nullptr)
+    {
+        delete _dnsServer;
+        _dnsServer = nullptr;
+    }
 }
 
 bool Network::initialize()
 {
-    Serial.println("=== Network Initialization ===");
-
     // First, try to connect to WiFi
     if (connectToWiFi())
     {
@@ -79,8 +86,19 @@ bool Network::startAccessPoint()
     if (result)
     {
         IPAddress IP = WiFi.softAPIP();
+
+        // Set up captive portal DNS server
+        if (_dnsServer == nullptr)
+        {
+            _dnsServer = new DNSServer();
+        }
+
+        // Start DNS server on port 53 and redirect all domains to our IP
+        _dnsServer->start(53, "*", IP);
+
         // Serial.printf("Password: %s\n", Config::AP_PASSWORD);
         Serial.printf(": OK: http://%s\n", IP.toString().c_str());
+        Serial.println("Captive portal enabled - all web requests will redirect here");
         return true;
     }
     else
@@ -156,4 +174,12 @@ String Network::getStatusJSON() const
 
     json += "}";
     return json;
+}
+
+void Network::processCaptivePortal()
+{
+    if (_currentMode == NetworkMode::ACCESS_POINT && _dnsServer != nullptr)
+    {
+        _dnsServer->processNextRequest();
+    }
 }

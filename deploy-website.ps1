@@ -1,15 +1,35 @@
 #!/usr/bin/env pwsh
 # Deploy website script for marble-track project
 
-² Store the original directory
+# Store the original directory
 $originalDir = Get-Location
 
 try {
     Write-Host "Building website files..." -ForegroundColor Green
     
-    # Change to website directory and build
+    # Change to website directory
     Set-Location ".\website"
+    
+    # Temporarily rename .env file to prevent it from being included in build
+    $envFile = ".\.env"
+    $envBackup = ".\.env.backup"
+    $envRenamed = $false
+    
+    if (Test-Path $envFile) {
+        Write-Host "Temporarily renaming .env file..." -ForegroundColor Yellow
+        Rename-Item $envFile $envBackup
+        $envRenamed = $true
+    }
+    
+    # Build the website
     npm run build
+    
+    # Restore .env file immediately after build
+    if ($envRenamed) {
+        Write-Host "Restoring .env file..." -ForegroundColor Yellow
+        Rename-Item $envBackup $envFile
+        $envRenamed = $false
+    }
     
     if ($LASTEXITCODE -ne 0) {
         Write-Host "FAILED: Website build failed" -ForegroundColor Red
@@ -20,6 +40,10 @@ try {
     
     # Return to project root for PlatformIO operations
     Set-Location $originalDir
+    
+    # Clean up any .env files that might have been copied to data directory
+    Write-Host "Cleaning up .env files from data directory..." -ForegroundColor Yellow
+    Get-ChildItem ".\esp32_ws\data" -Recurse -Force | Where-Object { $_.Name -like "*.env*" } | Remove-Item -Force
     
     # Quick filesystem upload for ESP32-S3
     $platformioPath = "C:\Users\vandenberghej\.platformio\penv\Scripts\platformio.exe"
@@ -37,9 +61,23 @@ try {
 }
 catch {
     Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    
+    # Restore .env file if it was renamed
+    if ($envRenamed -and (Test-Path ".\website\.env.backup")) {
+        Write-Host "Restoring .env file after error..." -ForegroundColor Yellow
+        Set-Location ".\website"
+        Rename-Item ".\.env.backup" ".\.env"
+        Set-Location $originalDir
+    }
+    
     exit 1
 }
 finally {
-    # Always return to original directory
+    # Always return to original directory and ensure .env is restored
+    if ($envRenamed -and (Test-Path ".\website\.env.backup")) {
+        Write-Host "Final .env file restoration..." -ForegroundColor Yellow
+        Set-Location ".\website"
+        Rename-Item ".\.env.backup" ".\.env"
+    }
     Set-Location $originalDir
 }

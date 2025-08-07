@@ -28,6 +28,39 @@
   margin-top: var(--spacing-6);
 }
 
+.app__refresh-icon {
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.app__refresh-icon:hover:not(.app__refresh-icon--disabled) {
+  color: var(--color-primary-600);
+  transform: rotate(45deg);
+}
+
+.app__refresh-icon--loading {
+  color: var(--color-primary-600);
+  cursor: not-allowed;
+  animation: spin 1s linear infinite;
+}
+
+.app__refresh-icon--disabled {
+  color: var(--color-text-tertiary);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .app__main {

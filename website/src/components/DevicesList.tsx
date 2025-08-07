@@ -9,6 +9,11 @@ import {
 import { getDeviceIcon } from "./icons/DeviceIcons";
 import styles from "./DevicesList.module.css";
 
+// Export refresh function for use in parent components
+export const refreshDevices = () => {
+  requestDevices();
+};
+
 export default function DevicesList() {
   // Request devices when component mounts and WebSocket is connected
   onMount(() => {
@@ -24,28 +29,8 @@ export default function DevicesList() {
     }
   });
 
-  const refreshDevices = () => {
-    requestDevices();
-  };
-
   return (
     <div class={styles["devices-list"]}>
-      <div class={styles["devices-list__header"]}>
-        <button
-          onClick={refreshDevices}
-          disabled={devicesLoading() || !isConnected()}
-          class={`${styles["devices-list__refresh-button"]} ${
-            devicesLoading() ? styles["devices-list__refresh-button--loading"] : ""
-          } ${
-            !devicesLoading() && !isConnected()
-              ? styles["devices-list__refresh-button--disabled"]
-              : ""
-          }`}
-        >
-          {devicesLoading() ? "Refreshing..." : "Refresh"}
-        </button>
-      </div>
-
       <div>
         {!devicesLoading() && !isConnected() && (
           <div

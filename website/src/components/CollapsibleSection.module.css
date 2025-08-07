@@ -44,6 +44,18 @@
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
   text-align: left;
+  flex: 1;
+}
+
+.collapsible-section__header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.collapsible-section__action {
+  display: flex;
+  align-items: center;
 }
 
 .collapsible-section__icon {

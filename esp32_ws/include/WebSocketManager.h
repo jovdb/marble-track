@@ -20,6 +20,7 @@ private:
     void handleDeviceFunction(JsonDocument &doc);
     void handleDeviceState(JsonDocument &doc);
     void handleDeviceGetState(JsonDocument &doc);
+    void handleGetDevices(JsonDocument &doc);
 
 public:
     WebSocketManager(const char *path = "/ws");

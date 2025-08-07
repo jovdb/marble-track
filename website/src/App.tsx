@@ -1,6 +1,7 @@
 import { type Component, onMount, onCleanup } from "solid-js";
 
 import Header from "./components/Header";
+import DevicesList from "./components/DevicesList";
 import WebSocketMessages from "./components/WebSocketMessages";
 import { Led } from "./components/devices/Led";
 import { Servo } from "./components/devices/Servo";
@@ -28,6 +29,7 @@ const App: Component = () => {
     <div>
       <Header />
       <div style={{ padding: "20px" }}>
+        <DevicesList />
         <Led id="test-led" />
         <Servo id="test-servo" />
         <Button id="test-button" />

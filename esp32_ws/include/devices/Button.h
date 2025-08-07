@@ -50,6 +50,7 @@ public:
 
     bool control(const String &action, JsonObject *payload = nullptr) override;
     String getState() override;
+    std::vector<int> getPins() const override { return {_pin}; }
 
     // Button-specific operations
     bool isPressed() const { return _currentState; }

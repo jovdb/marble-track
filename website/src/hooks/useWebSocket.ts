@@ -2,6 +2,20 @@ import { createWSState, makeReconnectingWS } from "@solid-primitives/websocket";
 
 import { createMemo, createSignal, onCleanup, onMount } from "solid-js";
 
+// Device store integration
+export interface DeviceInfo {
+  id: string;
+  name: string;
+  type: string;
+  pins?: number[];
+  state: any;
+}
+
+// Global device store signals
+export const [availableDevices, setAvailableDevices] = createSignal<DeviceInfo[]>([]);
+export const [devicesLoaded, setDevicesLoaded] = createSignal(false);
+export const [devicesLoading, setDevicesLoading] = createSignal(false);
+
 const marbleIp = import.meta.env.VITE_MARBLE_IP || window.location.hostname;
 const url = `ws://${marbleIp}/ws`;
 
@@ -47,6 +61,31 @@ websocket.addEventListener("message", (e) => {
     newArray.slice(-20);
     return newArray;
   });
+
+  // Handle device list responses
+  try {
+    const parsedData = JSON.parse(data);
+    if (parsedData.type === "devices-list") {
+      console.log("Received devices list:", parsedData);
+      
+      if (parsedData.error) {
+        console.error("Error getting devices:", parsedData.error);
+        setDevicesLoading(false);
+        return;
+      }
+      
+      const devices: DeviceInfo[] = parsedData.devices || [];
+      setAvailableDevices(devices);
+      setDevicesLoaded(true);
+      setDevicesLoading(false);
+      
+      console.log(`Loaded ${devices.length} devices:`, devices.map(d => d.id).join(', '));
+    }
+  } catch (error) {
+    // Ignore non-JSON messages or other parsing errors
+    // This is normal for device state messages and other types
+    console.debug("Non-JSON message received, skipping device list parsing:", error);
+  }
 });
 
 export const clearMessages = () => setLastMessages([]);
@@ -58,6 +97,18 @@ export const sendMessage = (message: string): boolean => {
     return true;
   } else {
     console.error("WebSocket is not open, cannot send message: ", message);
+    return false;
+  }
+};
+
+// Request devices from the server
+export const requestDevices = (): boolean => {
+  if (sendMessage(JSON.stringify({ type: "get-devices" }))) {
+    setDevicesLoading(true);
+    console.log("Requested device list from server");
+    return true;
+  } else {
+    console.error("Failed to request device list - WebSocket not connected");
     return false;
   }
 };

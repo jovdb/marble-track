@@ -29,6 +29,53 @@ String createJsonResponse(bool success, const String &message, const String &dat
     return jsonString;
 }
 
+void WebSocketManager::handleGetDevices(JsonDocument &doc)
+{
+    JsonDocument response;
+    response["type"] = "devices-list";
+    
+    if (!deviceManager)
+    {
+        response["error"] = "DeviceManager not available";
+    }
+    else
+    {
+        // Get devices from DeviceManager
+        Device *deviceList[20]; // MAX_DEVICES from DeviceManager
+        int count;
+        deviceManager->getDevices(deviceList, count, 20);
+        
+        // Create devices array in JSON
+        JsonArray devicesArray = response["devices"].to<JsonArray>();
+        
+        for (int i = 0; i < count; i++)
+        {
+            if (deviceList[i] != nullptr)
+            {
+                JsonObject deviceObj = devicesArray.add<JsonObject>();
+                deviceObj["id"] = deviceList[i]->getId();
+                deviceObj["name"] = deviceList[i]->getName();
+                deviceObj["type"] = deviceList[i]->getType();
+                
+                // Add pins array
+                std::vector<int> pins = deviceList[i]->getPins();
+                JsonArray pinsArray = deviceObj["pins"].to<JsonArray>();
+                for (int pin : pins) {
+                    pinsArray.add(pin);
+                }
+            }
+        }
+        
+        response["count"] = count;
+    }
+
+    String message;
+    serializeJson(response, message);
+    Serial.printf("WebSocket sent devices list: %s\n", message.c_str());
+    
+    notifyClients(message);
+}
+
 /**
  * @brief Handle incoming WebSocket messages
  */
@@ -75,6 +122,12 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
     if (type == "device-get-state")
     {
         handleDeviceGetState(doc);
+        return;
+    }
+
+    if (type == "get-devices")
+    {
+        handleGetDevices(doc);
         return;
     }
 }

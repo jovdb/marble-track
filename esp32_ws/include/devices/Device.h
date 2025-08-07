@@ -15,6 +15,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <functional>
+#include <vector>
 
 // Callback function type for state change notifications
 using StateChangeCallback = std::function<void(const String& deviceId, const String& stateJson)>;
@@ -77,6 +78,15 @@ public:
      */
     virtual String getState() { 
         return "{}";
+    }
+
+    /**
+     * @brief Get pins used by this device
+     * @return Array of pin numbers used by this device
+     * @note Default implementation returns empty array
+     */
+    virtual std::vector<int> getPins() const {
+        return {};
     }
 
     /**

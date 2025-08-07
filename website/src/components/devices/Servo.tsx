@@ -108,6 +108,43 @@ export function Servo(props: { id: string }) {
                 value={deviceState()?.angle || 90}
                 onInput={(e) => setAngle(Number(e.currentTarget.value))}
               />
+              <div class={styles.device__controls}>
+                <button 
+                  class={styles.device__button}
+                  onClick={() => setAngle(0)} 
+                  disabled={disabled()}
+                >
+                  0°
+                </button>
+                <button 
+                  class={styles.device__button}
+                  onClick={() => setAngle(45)} 
+                  disabled={disabled()}
+                >
+                  45°
+                </button>
+                <button 
+                  class={styles.device__button}
+                  onClick={() => setAngle(90)} 
+                  disabled={disabled()}
+                >
+                  90°
+                </button>
+                <button 
+                  class={styles.device__button}
+                  onClick={() => setAngle(135)} 
+                  disabled={disabled()}
+                >
+                  135°
+                </button>
+                <button 
+                  class={styles.device__button}
+                  onClick={() => setAngle(180)} 
+                  disabled={disabled()}
+                >
+                  180°
+                </button>
+              </div>
             </div>
 
             <div class={styles["device__input-group"]}>
@@ -123,44 +160,6 @@ export function Servo(props: { id: string }) {
                 value={currentSpeed()}
                 onInput={(e) => setSpeed(Number(e.currentTarget.value))}
               />
-            </div>
-
-            <div class={styles.device__controls}>
-              <button 
-                class={styles.device__button}
-                onClick={() => setAngle(0)} 
-                disabled={disabled()}
-              >
-                0°
-              </button>
-              <button 
-                class={styles.device__button}
-                onClick={() => setAngle(45)} 
-                disabled={disabled()}
-              >
-                45°
-              </button>
-              <button 
-                class={styles.device__button}
-                onClick={() => setAngle(90)} 
-                disabled={disabled()}
-              >
-                90°
-              </button>
-              <button 
-                class={styles.device__button}
-                onClick={() => setAngle(135)} 
-                disabled={disabled()}
-              >
-                135°
-              </button>
-              <button 
-                class={styles.device__button}
-                onClick={() => setAngle(180)} 
-                disabled={disabled()}
-              >
-                180°
-              </button>
             </div>
           </>
         )}

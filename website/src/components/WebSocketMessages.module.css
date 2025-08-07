@@ -59,7 +59,7 @@
 
 .websocket-messages__clear-button {
   padding: var(--spacing-2) var(--spacing-4);
-  background-color: var(--color-danger-600);
+  background-color: var(--color-primary-600);
   color: var(--color-text-inverse);
   border: none;
   border-radius: var(--radius-md);
@@ -70,7 +70,7 @@
 }
 
 .websocket-messages__clear-button:hover {
-  background-color: var(--color-danger-700);
+  background-color: var(--color-primary-700);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
@@ -81,7 +81,7 @@
 }
 
 .websocket-messages__clear-button:focus-visible {
-  outline: 2px solid var(--color-danger-500);
+  outline: 2px solid var(--color-primary-500);
   outline-offset: 2px;
 }
 

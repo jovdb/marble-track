@@ -208,13 +208,13 @@ bool Button::control(const String &action, JsonObject *payload)
 String Button::getState()
 {
     JsonDocument doc;
+    doc["type"] = _type;
+    doc["pin"] = _pin;
+    doc["name"] = _name;
     doc["pressed"] = _currentState;
     doc["pressedTime"] = getPressedTime();
-    doc["pin"] = _pin;
     doc["pullUp"] = _pullUp;
     doc["debounceMs"] = _debounceMs;
-    doc["name"] = _name;
-    doc["type"] = _type;
 
     String result;
     serializeJson(doc, result);

@@ -56,7 +56,7 @@ void Buzzer::loop()
         _isPlaying = false;
         _mode = Mode::IDLE;
         _currentTune = "";
-        
+
         Serial.println("Buzzer [" + _id + "]: Tune playback finished");
         notifyStateChange();
     }
@@ -187,21 +187,31 @@ bool Buzzer::control(const String &action, JsonObject *payload)
 String Buzzer::getState()
 {
     JsonDocument doc;
-    doc["playing"] = _isPlaying;
-    
-    // Convert mode enum to string
-    String modeStr;
-    switch (_mode) {
-        case Mode::IDLE: modeStr = "IDLE"; break;
-        case Mode::TONE: modeStr = "TONE"; break;
-        case Mode::TUNE: modeStr = "TUNE"; break;
-        default: modeStr = "UNKNOWN"; break;
-    }
-    doc["mode"] = modeStr;
-    
+
+    doc["type"] = _type;
     doc["pin"] = _pin;
     doc["name"] = _name;
-    doc["type"] = _type;
+
+    // Convert mode enum to string
+    String modeStr;
+    switch (_mode)
+    {
+    case Mode::IDLE:
+        modeStr = "IDLE";
+        break;
+    case Mode::TONE:
+        modeStr = "TONE";
+        break;
+    case Mode::TUNE:
+        modeStr = "TUNE";
+        break;
+    default:
+        modeStr = "UNKNOWN";
+        break;
+    }
+    doc["mode"] = modeStr;
+
+    doc["playing"] = _isPlaying;
 
     String result;
     serializeJson(doc, result);

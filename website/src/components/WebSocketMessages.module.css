@@ -190,6 +190,110 @@
   border-color: var(--color-border-strong);
 }
 
+.websocket-messages__message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+}
+
+.websocket-messages__message-header--clickable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--transition-fast);
+}
+
+.websocket-messages__message-header--clickable:hover {
+  background-color: var(--color-primary-50);
+  border-radius: var(--radius-sm);
+}
+
+.websocket-messages__message-text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.websocket-messages__json-view {
+  margin-top: var(--spacing-3);
+  padding: var(--spacing-3);
+  background-color: var(--color-gray-50);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-xs);
+  overflow-x: auto;
+}
+
+/* JSON Tree Styles */
+.json-toggle {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-xs);
+  padding: 2px 4px;
+  margin: 0;
+  line-height: 1.2;
+  text-align: left;
+  white-space: nowrap;
+  transition: color var(--transition-fast);
+}
+
+.json-toggle:hover {
+  color: var(--color-primary-600);
+  background-color: var(--color-primary-50);
+}
+
+.json-children {
+  margin-left: var(--spacing-3);
+}
+
+.json-item {
+  display: flex;
+  gap: var(--spacing-1);
+  align-items: flex-start;
+  margin: 2px 0;
+}
+
+.json-key {
+  color: var(--color-primary-700);
+  font-weight: var(--font-weight-medium);
+  flex-shrink: 0;
+}
+
+.json-index {
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
+
+.json-value {
+  flex: 1;
+}
+
+.json-value[data-type="string"] {
+  color: var(--color-success-600);
+}
+
+.json-value[data-type="number"] {
+  color: var(--color-primary-600);
+}
+
+.json-value[data-type="boolean"] {
+  color: var(--color-warning-600);
+  font-weight: var(--font-weight-medium);
+}
+
+.json-value[data-type="null"] {
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+.json-array,
+.json-object {
+  width: 100%;
+}
+
 .websocket-messages__empty {
   display: flex;
   align-items: center;

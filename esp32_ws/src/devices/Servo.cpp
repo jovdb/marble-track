@@ -163,14 +163,14 @@ bool ServoDevice::control(const String &action, JsonObject *payload)
 String ServoDevice::getState()
 {
     JsonDocument doc;
+    doc["type"] = _type;
+    doc["pin"] = _pin;
+    doc["name"] = _name;
     doc["angle"] = _currentAngle;
     doc["targetAngle"] = _targetAngle;
     doc["speed"] = _speed;
     doc["isMoving"] = _isMoving;
-    doc["pin"] = _pin;
     doc["pwmChannel"] = _pwmChannel;
-    doc["name"] = _name;
-    doc["type"] = _type;
     String result;
     serializeJson(doc, result);
     return result;

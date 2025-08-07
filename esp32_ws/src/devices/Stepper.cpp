@@ -277,14 +277,7 @@ bool Stepper::control(const String &action, JsonObject *payload)
 String Stepper::getState()
 {
     JsonDocument doc;
-    doc["currentPosition"] = getCurrentPosition();
-    doc["targetPosition"] = getTargetPosition();
-    doc["isRunning"] = isRunning();
-    doc["maxSpeed"] = _maxSpeed;
-    doc["acceleration"] = _acceleration;
-    doc["stepperType"] = _stepperType;
-    doc["is4Pin"] = _is4Pin;
-    
+    doc["type"] = _type;
     if (_is4Pin)
     {
         doc["pin1"] = _pin1;
@@ -297,9 +290,17 @@ String Stepper::getState()
         doc["stepPin"] = _pin1;
         doc["dirPin"] = _pin2;
     }
-    
     doc["name"] = _name;
-    doc["type"] = _type;
+
+    doc["currentPosition"] = getCurrentPosition();
+    doc["targetPosition"] = getTargetPosition();
+    doc["isRunning"] = isRunning();
+    doc["maxSpeed"] = _maxSpeed;
+    doc["acceleration"] = _acceleration;
+    doc["stepperType"] = _stepperType;
+    doc["is4Pin"] = _is4Pin;
+    
+    
 
     String result;
     serializeJson(doc, result);

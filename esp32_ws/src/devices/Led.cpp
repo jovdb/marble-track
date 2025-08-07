@@ -95,10 +95,10 @@ bool Led::control(const String &action, JsonObject *payload)
 String Led::getState()
 {
     JsonDocument doc;
-    doc["mode"] = _mode;
+    doc["type"] = _type;
     doc["pin"] = _pin;
     doc["name"] = _name;
-    doc["type"] = _type;
+    doc["mode"] = _mode;
 
     String result;
     serializeJson(doc, result);

@@ -1,5 +1,5 @@
 import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
-import { createSignal } from "solid-js";
+import { createSignal, For } from "solid-js";
 
 interface IBuzzerState {
   playing: boolean;
@@ -15,8 +15,21 @@ export function Buzzer(props: { id: string }) {
   // Local state for UI controls
   const [frequency, setFrequency] = createSignal(440); // Default to A4 note
   const [rtttl, setRtttl] = createSignal(
-    "SuperMar:d=4,o=5,b=125:a,8f.,16c,16d,16f,16p,f,16d,16c,16p,16f,16p,16f,16p,8c6,8a.,g,16c,a,8f.,16c,16d,16f,16p,f,16d,16c,16p,16f,16p,16a#,16a,16g,2f,16p,8a.,8f.,8c,8a.,f,16g#,16f,16c,16p,8g#.,2g,8a.,8f.,8c,8a.,f,16g#,16f,8c,2c6"
+    "Pacman:d=4,o=5,b=112:32b,32p,32b6,32p,32f#6,32p,32d#6,32p,32b6,32f#6,16p,16d#6,16p,32c6,32p,32c7,32p,32g6,32p,32e6,32p,32c7,32g6,16p,16e6,16p,32b,32p,32b6,32p,32f#6,32p,32d#6,32p,32b6,32f#6,16p,16d#6,16p,32d#6,32e6,32f6,32p,32f6,32f#6,32g6,32p,32g6,32g#6,32a6,32p,32b.6"
   );
+
+  // Predefined RTTTL tunes
+  const rtttlTunes = {
+    "Tetris": "tetris:d=4,o=5,b=160:e6,8b,8c6,8d6,16e6,16d6,8c6,8b,a,8a,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,2a,8p,d6,8f6,a6,8g6,8f6,e6,8e6,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,a",
+    "Nokia": "nokia:d=4,o=5,b=125:8e6,8d6,8f#,8g#,8c#6,8b,8d,8e,8b,8a,8c#,8e,2a",
+    "Super Mario": "mario:d=4,o=5,b=100:16e6,16e6,32p,8e6,16c6,8e6,8g6,8p,8g,8p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,16p",
+    "Star Wars": "starwars:d=4,o=5,b=45:32p,32f#,32f#,32f#,8b.,8f#.6,32e6,32d#6,32c#6,8b.6,16f#.6,32e6,32d#6,32c#6,8b.6,16f#.6,32e6,32d#6,32e6,8c#.6,32f#,32f#,32f#,8b.,8f#.6,32e6,32d#6,32c#6,8b.6,16f#.6,32e6,32d#6,32c#6,8b.6,16f#.6,32e6,32d#6,32e6,8c#6",
+    "Pacman": "Pacman:d=4,o=5,b=112:32b,32p,32b6,32p,32f#6,32p,32d#6,32p,32b6,32f#6,16p,16d#6,16p,32c6,32p,32c7,32p,32g6,32p,32e6,32p,32c7,32g6,16p,16e6,16p,32b,32p,32b6,32p,32f#6,32p,32d#6,32p,32b6,32f#6,16p,16d#6,16p,32d#6,32e6,32f6,32p,32f6,32f#6,32g6,32p,32g6,32g#6,32a6,32p,32b.6",
+    "Indiana Jones": "indiana:d=4,o=5,b=250:e,8p,8f,8g,8p,1c6,8p.,d,8p,8e,1f,p.,g,8p,8a,8b,8p,1f6,p,a,8p,8b,2c6,2d6,2e6,e,8p,8f,8g,8p,1c6,p,d6,8p,8e6,1f.6,g,8p,8g,e.6,8p,d6,8p,8g,e.6,8p,d6,8p,8g,f.6,8p,e6,8p,8d6,2c6",
+    "Imperial March": "Imperial:d=4,o=5,b=120:8g,8g,8g,8d#,16p,16a#,8g,8d#,16p,16a#,2g,8p,8d6,8d6,8d6,8d#6,16p,16a#,8f#,8d#,16p,16a#,2g",
+    "Happy Birthday": "birthday:d=4,o=5,b=125:8c,8c,8d,8c,8f,2e,8c,8c,8d,8c,8g,2f,8c,8c,8c6,8a,8f,8e,8d,8a#,8a#,8a,8f,8g,2f",
+    "Jingle Bells": "jingle:d=4,o=5,b=125:8e,8e,4e,8e,8e,4e,8e,8g,8c,8d,2e,8f,8f,8f,8f,8f,8e,8e,8e,16e,16e,8e,8d,8d,8e,2d,4g"
+  };
 
   const playTone = () => {
     sendMessage(
@@ -185,12 +198,13 @@ export function Buzzer(props: { id: string }) {
               >
                 Play Melody
               </button>
-              <button
-                onClick={() =>
-                  setRtttl(
-                    "tetris:d=4,o=5,b=160:e6,8b,8c6,8d6,16e6,16d6,8c6,8b,a,8a,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,2a,8p,d6,8f6,a6,8g6,8f6,e6,8e6,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,a"
-                  )
-                }
+              <select
+                onChange={(e) => {
+                  const selectedTune = e.currentTarget.value;
+                  if (selectedTune && rtttlTunes[selectedTune as keyof typeof rtttlTunes]) {
+                    setRtttl(rtttlTunes[selectedTune as keyof typeof rtttlTunes]);
+                  }
+                }}
                 style={{
                   padding: "6px 12px",
                   "background-color": "#FF9800",
@@ -201,8 +215,15 @@ export function Buzzer(props: { id: string }) {
                   "font-size": "12px",
                 }}
               >
-                Load Tetris
-              </button>
+                <option value="">Load Preset Tune</option>
+                <For each={Object.keys(rtttlTunes)}>
+                  {(tuneName) => (
+                    <option value={tuneName}>
+                      {tuneName}
+                    </option>
+                  )}
+                </For>
+              </select>
             </div>
           </div>
 

@@ -1,7 +1,7 @@
 #include "WebsiteHost.h"
 
-WebsiteHost::WebsiteHost(const char *ssid, const char *password)
-    : ssid(ssid), password(password), server(nullptr)
+WebsiteHost::WebsiteHost(Network* networkInstance)
+    : network(networkInstance), server(nullptr)
 {
 }
 
@@ -18,26 +18,13 @@ void WebsiteHost::initLittleFS()
     }
 }
 
-void WebsiteHost::initWiFi()
-{
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid, password);
-    Serial.print("Connecting to WiFi ..");
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        Serial.print('.');
-        delay(250);
-    }
-    Serial.printf(": OK, IP: %s\n", WiFi.localIP().toString().c_str());
-}
-
 void WebsiteHost::setupRoutes()
 {
     if (server == nullptr)
         return;
 
     // Web Server Root URL with debugging
-    server->on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+    server->on("/", HTTP_GET, [this](AsyncWebServerRequest *request)
                {
         Serial.println("Root page requested");
         if (LittleFS.exists("/index.html")) {
@@ -45,7 +32,27 @@ void WebsiteHost::setupRoutes()
             request->send(LittleFS, "/index.html", "text/html");
         } else {
             Serial.println("index.html NOT found in LittleFS");
-            request->send(404, "text/plain", "File not found");
+            
+            // Create a simple fallback page with network status
+            String html = "<!DOCTYPE html><html><head><title>Marble Track Control</title></head><body>";
+            html += "<h1>Marble Track Control System</h1>";
+            html += "<p>Web interface files not found in flash memory.</p>";
+            html += "<p>Please upload the website files using PlatformIO 'Upload Filesystem Image'.</p>";
+            html += "<h2>Connection Status:</h2>";
+            html += "<p>" + network->getConnectionInfo() + "</p>";
+            
+            html += "<h2>Available files in LittleFS:</h2><ul>";
+            
+            File root = LittleFS.open("/");
+            File file = root.openNextFile();
+            while (file) {
+                html += "<li>" + String(file.name()) + " (" + String(file.size()) + " bytes)</li>";
+                file = root.openNextFile();
+            }
+            html += "</ul>";
+            html += "<p><a href='/debug'>Debug Info</a> | <a href='/network-status'>Network Status</a></p>";
+            html += "</body></html>";
+            request->send(200, "text/html", html);
         } });
 
     // Debug route to list files
@@ -60,13 +67,22 @@ void WebsiteHost::setupRoutes()
         }
         request->send(200, "text/plain", message); });
 
+    // Network status endpoint (enhanced to use Network class)
+    server->on("/network-status", HTTP_GET, [this](AsyncWebServerRequest *request)
+               {
+        request->send(200, "application/json", network->getStatusJSON()); });
+
+    // Backwards compatibility for WiFi status endpoint
+    server->on("/wifi-status", HTTP_GET, [this](AsyncWebServerRequest *request)
+               {
+        request->send(200, "application/json", network->getStatusJSON()); });
+
     server->serveStatic("/", LittleFS, "/");
 }
 
 void WebsiteHost::setup(AsyncWebServer &serverRef)
 {
     server = &serverRef;
-    initWiFi();
     initLittleFS();
     setupRoutes();
 }

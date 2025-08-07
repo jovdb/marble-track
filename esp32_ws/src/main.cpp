@@ -2,7 +2,8 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
-#include <WiFi.h>
+#include "Config.h"
+#include "Network.h"
 #include "WebsiteHost.h"
 #include "WebSocketManager.h"
 #include "TimeManager.h"
@@ -26,24 +27,18 @@ OperationMode currentMode = OperationMode::MANUAL;
 // Timing variable for automatic mode
 unsigned long lastAutoToggleTime = 0;
 
-// Replace with your network credentials
-// const char *ssid = "REPLACE_WITH_YOUR_SSID";
-// const char *password = "REPLACE_WITH_YOUR_PASSWORD";
-const char *ssid = "telenet-182FE";
-const char *password = "cPQdRWmFx1eM";
-
-// Create server and instances
-AsyncWebServer server(80);
-WebsiteHost websiteHost(ssid, password);
+// Create network and server instances
+Network network(Config::WIFI_SSID, Config::WIFI_PASSWORD);
+AsyncWebServer server(Config::WEB_SERVER_PORT);
+WebsiteHost websiteHost(&network);
 WebSocketManager wsManager("/ws");
 DeviceManager deviceManager;
 
-#define SERVO_PWM_CHANNEL 7
-
-Led testLed(1, "test-led", "Test LED");                                       // Global LED instance
-ServoDevice testServo(21, "test-servo", "Test Servo", 90, SERVO_PWM_CHANNEL); // Global Servo instance with PWM channel 2
-Button testButton(15, "test-button", "Test Button", false, 50);               // Global Button instance
-Buzzer testBuzzer(14, "test-buzzer", "Test Buzzer");                          // Global Buzzer instance
+// Device instances
+Led testLed(Config::LED_PIN, "test-led", "Test LED");
+ServoDevice testServo(Config::SERVO_PIN, "test-servo", "Test Servo", Config::SERVO_INITIAL_ANGLE, Config::SERVO_PWM_CHANNEL);
+Button testButton(Config::BUTTON_PIN, "test-button", "Test Button", Config::BUTTON_INVERTED, Config::BUTTON_DEBOUNCE_MS);
+Buzzer testBuzzer(Config::BUZZER_PIN, "test-buzzer", "Test Buzzer");
 
 // Function declarations
 void setOperationMode(OperationMode mode);
@@ -81,13 +76,16 @@ void runAutomaticMode()
 void setup()
 {
   // Initialize serial communication
-  Serial.begin(115200);
+  Serial.begin(Config::SERIAL_BAUD_RATE);
   Serial.println("Starting Marble Track Communication System");
 
-  // Initialize TimeManager
-  // TimeManager::initialize();
+  // Initialize Network (will try WiFi, fall back to AP if needed)
+  bool networkInitialized = network.initialize();
+  if (!networkInitialized) {
+    Serial.println("ERROR: Network initialization failed! System may not be accessible.");
+  }
 
-  // Initialize WebsiteHost
+  // Initialize WebsiteHost with the network instance
   websiteHost.setup(server);
 
   // Setup WebSocket with message handler
@@ -126,6 +124,11 @@ void setup()
   Serial.println("Use setOperationMode() to switch between MANUAL and AUTOMATIC");
 
   testServo.setAngle(20); // Set initial angle for servo
+  
+  // Print access information
+  Serial.println("\n=== DEVICE READY ===");
+  network.printConnectionStatus();
+  Serial.println("==================\n");
 }
 
 void loop()

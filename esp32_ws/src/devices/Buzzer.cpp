@@ -189,7 +189,6 @@ String Buzzer::getState()
     JsonDocument doc;
 
     doc["type"] = _type;
-    doc["pin"] = _pin;
     doc["name"] = _name;
 
     // Convert mode enum to string

@@ -278,18 +278,6 @@ String Stepper::getState()
 {
     JsonDocument doc;
     doc["type"] = _type;
-    if (_is4Pin)
-    {
-        doc["pin1"] = _pin1;
-        doc["pin2"] = _pin2;
-        doc["pin3"] = _pin3;
-        doc["pin4"] = _pin4;
-    }
-    else
-    {
-        doc["stepPin"] = _pin1;
-        doc["dirPin"] = _pin2;
-    }
     doc["name"] = _name;
 
     doc["currentPosition"] = getCurrentPosition();

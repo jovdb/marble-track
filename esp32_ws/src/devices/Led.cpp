@@ -96,7 +96,6 @@ String Led::getState()
 {
     JsonDocument doc;
     doc["type"] = _type;
-    doc["pin"] = _pin;
     doc["name"] = _name;
     doc["mode"] = _mode;
 

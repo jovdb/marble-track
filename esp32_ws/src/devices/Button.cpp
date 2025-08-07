@@ -209,7 +209,6 @@ String Button::getState()
 {
     JsonDocument doc;
     doc["type"] = _type;
-    doc["pin"] = _pin;
     doc["name"] = _name;
     doc["pressed"] = _currentState;
     doc["pressedTime"] = getPressedTime();

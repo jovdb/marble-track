@@ -164,7 +164,6 @@ String ServoDevice::getState()
 {
     JsonDocument doc;
     doc["type"] = _type;
-    doc["pin"] = _pin;
     doc["name"] = _name;
     doc["angle"] = _currentAngle;
     doc["targetAngle"] = _targetAngle;

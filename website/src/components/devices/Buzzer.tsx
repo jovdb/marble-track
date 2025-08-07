@@ -64,7 +64,7 @@ export function Buzzer(props: { id: string }) {
       <div class={styles.device__content}>
         {disabled() && (
           <div class={styles.device__error}>
-            {error() || `Connection ${connectedState()}`}
+            {error() || (connectedState() === "Disconnected" ? "Disconnected" : connectedState())}
           </div>
         )}
         

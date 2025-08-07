@@ -1,4 +1,5 @@
 import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
+import styles from "./Device.module.css";
 
 interface IButtonState {
   pressed: boolean;
@@ -31,33 +32,48 @@ export function Button(props: { id: string }) {
   };
 
   return (
-    <fieldset>
-      <legend>
-        <legend>Button: {deviceState()?.name || props.id}</legend>
-      </legend>
-      {disabled() && <span>{error() || connectedState() + ""}</span>}
-      {!disabled() && (
-        <>
-          <div>
-            <span style={{ "font-weight": deviceState()?.pressed ? "bold" : "normal" }}>
-              {deviceState()?.pressed ? "Pressed" : "Released"}
-            </span>
+    <div class={styles.device}>
+      <div class={styles.device__header}>
+        <h3 class={styles.device__title}>
+          🔘 {deviceState()?.name || props.id}
+        </h3>
+        <span class={styles["device__type-badge"]}>BUTTON</span>
+      </div>
+      
+      <div class={styles.device__content}>
+        {disabled() && (
+          <div class={styles.device__error}>
+            {error() || `Connection ${connectedState()}`}
           </div>
+        )}
+        
+        {!disabled() && (
+          <>
+            <div class={styles.device__status}>
+              <div class={`${styles["device__status-indicator"]} ${
+                deviceState()?.pressed 
+                  ? styles["device__status-indicator--pressed"] 
+                  : styles["device__status-indicator--off"]
+              }`}></div>
+              <span class={styles["device__status-text"]}>
+                Status: {deviceState()?.pressed ? "Pressed" : "Released"}
+              </span>
+            </div>
 
-          <div style={{ "margin-bottom": "10px" }}>
-            <button
-              onMouseDown={handlePress}
-              onMouseUp={handleRelease}
-             // onMouseLeave={handleRelease}
-             // onTouchStart={handlePress}
-              //onTouchEnd={handleRelease}
-              disabled={disabled()}
-            >
-              Virtual Button
-            </button>
-          </div>
-        </>
-      )}
-    </fieldset>
+            <div class={styles.device__controls}>
+              <button 
+                class={styles.device__button}
+                onMouseDown={handlePress}
+                onMouseUp={handleRelease}
+                onMouseLeave={handleRelease}
+                disabled={disabled()}
+              >
+                Hold to Press
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }

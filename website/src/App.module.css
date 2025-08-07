@@ -1,0 +1,59 @@
+/* App Component - BEM CSS Module */
+
+.app {
+  min-height: 100vh;
+  background-color: var(--color-surface);
+}
+
+.app__main {
+  flex: 1;
+  padding: var(--spacing-6);
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.app__section {
+  margin-bottom: var(--spacing-8);
+}
+
+.app__section:last-child {
+  margin-bottom: 0;
+}
+
+.app__devices-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-6);
+  margin-top: var(--spacing-6);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .app__main {
+    padding: var(--spacing-4);
+  }
+
+  .app__devices-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-4);
+  }
+
+  .app__section {
+    margin-bottom: var(--spacing-6);
+  }
+}
+
+@media (max-width: 480px) {
+  .app__main {
+    padding: var(--spacing-3);
+  }
+
+  .app__devices-grid {
+    gap: var(--spacing-3);
+  }
+
+  .app__section {
+    margin-bottom: var(--spacing-4);
+  }
+}

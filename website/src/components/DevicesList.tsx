@@ -24,7 +24,7 @@ export default function DevicesList() {
   return (
     <div class={styles["devices-list"]}>
       <div class={styles["devices-list__header"]}>
-        <h3 class={styles["devices-list__title"]}>Available Devices</h3>
+        <h2 class={styles["devices-list__title"]}>Available Devices</h2>
         <button
           onClick={refreshDevices}
           disabled={devicesLoading() || !isConnected()}
@@ -38,48 +38,62 @@ export default function DevicesList() {
         </button>
       </div>
 
-      {!devicesLoading() && !isConnected() && (
-        <div class={`${styles["devices-list__status"]} ${styles["devices-list__status--disconnected"]}`}>
-          WebSocket not connected
-        </div>
-      )}
-
-      {devicesLoaded() && availableDevices().length === 0 && (
-        <div class={styles["devices-list__status"]}>
-          No devices found
-        </div>
-      )}
-
-      {devicesLoaded() && availableDevices().length > 0 && (
-        <div>
-          <div class={styles["devices-list__count"]}>
-            Found {availableDevices().length} device(s):
+      <div class={styles["devices-list__content"]}>
+        {!devicesLoading() && !isConnected() && (
+          <div class={`${styles["devices-list__status"]} ${styles["devices-list__status--disconnected"]}`}>
+            WebSocket not connected
           </div>
-          
-          <div class={styles["devices-list__grid"]}>
-            <For each={availableDevices()}>
-              {(device) => (
-                <div class={styles["device-card"]}>
-                  <div class={styles["device-card__name"]}>
-                    {device.name || device.id}
-                  </div>
-                  <div class={styles["device-card__detail"]}>
-                    ID: {device.id}
-                  </div>
-                  <div class={`${styles["device-card__detail"]} ${styles["device-card__detail--type"]}`}>
-                    Type: {device.type}
-                  </div>
-                  {device.pins && device.pins.length > 0 && (
-                    <div class={styles["device-card__pins"]}>
-                      Pin{device.pins.length > 1 ? 's' : ''}: {device.pins.join(', ')}
+        )}
+
+        {devicesLoaded() && availableDevices().length === 0 && (
+          <div class={styles["devices-list__status"]}>
+            No devices found
+          </div>
+        )}
+
+        {devicesLoaded() && availableDevices().length > 0 && (
+          <>
+            <div class={styles["devices-list__count"]}>
+              Found {availableDevices().length} device{availableDevices().length !== 1 ? 's' : ''}
+            </div>
+            
+            <div class={styles["devices-list__grid"]}>
+              <For each={availableDevices()}>
+                {(device) => (
+                  <div class={styles["device-card"]}>
+                    <div class={styles["device-card__header"]}>
+                      <h3 class={styles["device-card__name"]}>
+                        {device.name || device.id}
+                      </h3>
+                      <span class={styles["device-card__type-badge"]}>
+                        {device.type}
+                      </span>
                     </div>
-                  )}
-                </div>
-              )}
-            </For>
-          </div>
-        </div>
-      )}
+                    
+                    <div class={styles["device-card__details"]}>
+                      <div class={styles["device-card__detail"]}>
+                        <span class={styles["device-card__detail-label"]}>ID:</span>
+                        <span class={styles["device-card__detail-value"]}>{device.id}</span>
+                      </div>
+                      
+                      {device.pins && device.pins.length > 0 && (
+                        <div class={styles["device-card__pins"]}>
+                          <span class={styles["device-card__pins-label"]}>
+                            Pin{device.pins.length > 1 ? 's' : ''}:
+                          </span>
+                          <span class={styles["device-card__pins-list"]}>
+                            {device.pins.join(', ')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </For>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

@@ -4,31 +4,38 @@ import { connectionStateName } from "../hooks/useWebSocket";
 import logo from "../assets/logo-64.png";
 
 const Header: Component = () => {
-  const getStatusClass = () => {
+  const getStatusIndicatorClass = () => {
     switch (connectionStateName()) {
       case "Connected":
-        return "";
+        return styles["header__status-indicator"];
       case "Disconnected":
-        return styles["status--disconnected"];
+        return `${styles["header__status-indicator"]} ${styles["header__status-indicator--disconnected"]}`;
       case "Connecting":
-        return styles["status--connecting"];
+        return `${styles["header__status-indicator"]} ${styles["header__status-indicator--connecting"]}`;
       case "Disconnecting":
-        return styles["status--disconnected"];
+        return `${styles["header__status-indicator"]} ${styles["header__status-indicator--disconnected"]}`;
       default:
-        return "";
+        return styles["header__status-indicator"];
     }
   };
 
   return (
-    <div class={styles.header}>
+    <header class={styles.header}>
       <div class={styles.header__left}>
-        <img src={logo} alt="Logo" width="28" height="28" class={styles.logo} style={{ "margin-right": "12px" }} />
-        <h1>Marble Manager</h1>
+        <img 
+          src={logo} 
+          alt="Logo" 
+          class={styles.header__logo}
+        />
+        <h1 class={styles.header__title}>Marble Manager</h1>
       </div>
       <div class={styles.header__right}>
-        <p class={getStatusClass()}>Status: {connectionStateName()}</p>
+        <div class={styles.header__status}>
+          <div class={getStatusIndicatorClass()}></div>
+          <span>Status: {connectionStateName()}</span>
+        </div>
       </div>
-    </div>
+    </header>
   );
 };
 

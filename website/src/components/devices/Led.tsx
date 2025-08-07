@@ -1,4 +1,5 @@
 import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
+import styles from "./Device.module.css";
 
 interface ILedState {
   mode: "ON" | "OFF";
@@ -14,47 +15,60 @@ export function Led(props: { id: string }) {
     sendMessage(
       JSON.stringify({
         type: "device-fn",
-        deviceId: props.id, // Use props.id instead of hardcoded "test-led"
+        deviceId: props.id,
         fn: state ? "on" : "off",
       })
     );
   };
 
   return (
-    <fieldset>
-      <legend>
-        <legend>LED: {deviceState()?.name || props.id}</legend>
-      </legend>
-      {disabled() && <span>{error() || connectedState() + ""}</span>}
-      {!disabled() && (
-        <>
-          <div
-            style={{
-              "margin-bottom": "10px",
-              display: "flex",
-              "align-items": "center",
-              gap: "8px",
-            }}
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20">
-              <circle cx="10" cy="10" r="8" fill="#d3d3d3" stroke="#999" stroke-width="1" />
-              <circle
-                cx="10"
-                cy="10"
-                r="6"
-                fill={deviceState()?.mode === "ON" ? "#ff4444" : "#e0e0e0"}
-              />
-            </svg>
-            <span>{deviceState()?.mode === "ON" ? "On" : "Off"}</span>
+    <div class={styles.device}>
+      <div class={styles.device__header}>
+        <h3 class={styles.device__title}>
+          💡 {deviceState()?.name || props.id}
+        </h3>
+        <span class={styles["device__type-badge"]}>LED</span>
+      </div>
+      
+      <div class={styles.device__content}>
+        {disabled() && (
+          <div class={styles.device__error}>
+            {error() || `Connection ${connectedState()}`}
           </div>
-          <button onClick={() => setLed(true)} disabled={disabled()}>
-            On
-          </button>
-          <button onClick={() => setLed(false)} disabled={disabled()}>
-            Off
-          </button>
-        </>
-      )}
-    </fieldset>
+        )}
+        
+        {!disabled() && (
+          <>
+            <div class={styles.device__status}>
+              <div class={`${styles["device__status-indicator"]} ${
+                deviceState()?.mode === "ON" 
+                  ? styles["device__status-indicator--on"] 
+                  : styles["device__status-indicator--off"]
+              }`}></div>
+              <span class={styles["device__status-text"]}>
+                Status: {deviceState()?.mode === "ON" ? "On" : "Off"}
+              </span>
+            </div>
+
+            <div class={styles.device__controls}>
+              <button 
+                class={styles.device__button}
+                onClick={() => setLed(true)} 
+                disabled={disabled()}
+              >
+                Turn On
+              </button>
+              <button 
+                class={`${styles.device__button} ${styles["device__button--secondary"]}`}
+                onClick={() => setLed(false)} 
+                disabled={disabled()}
+              >
+                Turn Off
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }

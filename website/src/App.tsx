@@ -9,6 +9,8 @@ import { Buzzer } from "./components/devices/Buzzer";
 import { Button } from "./components/devices/Button";
 import AnimatedFavicon from "./utils/animatedFavicon";
 import logo from "./assets/logo-64.png";
+import styles from "./App.module.css";
+
 const App: Component = () => {
   let animatedFavicon: AnimatedFavicon;
 
@@ -26,16 +28,26 @@ const App: Component = () => {
   });
 
   return (
-    <div>
+    <div class={styles.app}>
       <Header />
-      <div style={{ padding: "20px" }}>
-        <DevicesList />
-        <Led id="test-led" />
-        <Servo id="test-servo" />
-        <Button id="test-button" />
-        <Buzzer id="test-buzzer" />
-        <WebSocketMessages />
-      </div>
+      <main class={styles.app__main}>
+        <section class={styles.app__section}>
+          <DevicesList />
+        </section>
+        
+        <section class={styles.app__section}>
+          <div class={styles["app__devices-grid"]}>
+            <Led id="test-led" />
+            <Servo id="test-servo" />
+            <Button id="test-button" />
+            <Buzzer id="test-buzzer" />
+          </div>
+        </section>
+
+        <section class={styles.app__section}>
+          <WebSocketMessages />
+        </section>
+      </main>
     </div>
   );
 };

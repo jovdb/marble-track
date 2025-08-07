@@ -1,0 +1,114 @@
+/* CollapsibleSection Component - BEM CSS Module */
+
+.collapsible-section {
+  background-color: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: all var(--transition-fast);
+}
+
+.collapsible-section:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.collapsible-section__header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-4) var(--spacing-5);
+  background-color: var(--color-surface);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.collapsible-section__header:hover {
+  background-color: var(--color-surface-elevated);
+}
+
+.collapsible-section__header:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: -2px;
+}
+
+.collapsible-section__title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  text-align: left;
+}
+
+.collapsible-section__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.collapsible-section__chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition-fast);
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.collapsible-section__chevron--collapsed {
+  transform: rotate(-90deg);
+}
+
+.collapsible-section__content {
+  overflow: hidden;
+  transition: max-height var(--transition-medium) ease-out, 
+              padding var(--transition-medium) ease-out;
+  max-height: 2000px; /* Large enough to accommodate most content */
+}
+
+.collapsible-section__content--collapsed {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.collapsible-section__inner {
+  padding: var(--spacing-5);
+}
+
+/* Animation for smoother collapse/expand */
+@media (prefers-reduced-motion: no-preference) {
+  .collapsible-section__content {
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.2s ease-out;
+  }
+  
+  .collapsible-section__content--collapsed {
+    opacity: 0;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.15s ease-out;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .collapsible-section__header {
+    padding: var(--spacing-3) var(--spacing-4);
+  }
+
+  .collapsible-section__inner {
+    padding: var(--spacing-4);
+  }
+
+  .collapsible-section__title {
+    font-size: var(--font-size-base);
+    gap: var(--spacing-2);
+  }
+}

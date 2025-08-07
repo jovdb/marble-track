@@ -1,6 +1,6 @@
 import { For, onMount, createEffect } from "solid-js";
 import { availableDevices, devicesLoaded, devicesLoading, requestDevices, isConnected } from "../hooks/useWebSocket";
-import { ClipboardIcon, getDeviceIcon } from "./icons/DeviceIcons";
+import { getDeviceIcon } from "./icons/DeviceIcons";
 import styles from "./DevicesList.module.css";
 
 export default function DevicesList() {
@@ -25,10 +25,6 @@ export default function DevicesList() {
   return (
     <div class={styles["devices-list"]}>
       <div class={styles["devices-list__header"]}>
-        <h2 class={styles["devices-list__title"]}>
-          <ClipboardIcon class={styles["devices-list__title-icon"]} />
-          Available Devices
-        </h2>
         <button
           onClick={refreshDevices}
           disabled={devicesLoading() || !isConnected()}

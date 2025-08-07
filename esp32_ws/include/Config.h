@@ -32,6 +32,7 @@ namespace Config {
     inline const int LED_PIN = 1;
     inline const int SERVO_PIN = 21;
     inline const int BUTTON_PIN = 15;
+    inline const int BUTTON2_PIN = 16;
     inline const int BUZZER_PIN = 14;
     
     // Button Configuration

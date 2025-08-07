@@ -1,4 +1,4 @@
-import { type Component, onMount, onCleanup } from "solid-js";
+import { type Component, onMount, onCleanup, For } from "solid-js";
 
 import Header from "./components/Header";
 import DevicesList, { refreshDevices } from "./components/DevicesList";
@@ -11,7 +11,8 @@ import { Button } from "./components/devices/Button";
 import { ClipboardIcon, RadioIcon } from "./components/icons/DeviceIcons";
 import { 
   devicesLoading, 
-  isConnected 
+  isConnected,
+  availableDevices
 } from "./hooks/useWebSocket";
 import AnimatedFavicon from "./utils/animatedFavicon";
 import logo from "./assets/logo-64.png";
@@ -32,6 +33,23 @@ const App: Component = () => {
       animatedFavicon.stop();
     }
   });
+
+  // Function to render device component based on type
+  const renderDeviceComponent = (device: any) => {
+    switch (device.type.toLowerCase()) {
+      case 'led':
+        return <Led id={device.id} />;
+      case 'servo':
+        return <Servo id={device.id} />;
+      case 'button':
+        return <Button id={device.id} />;
+      case 'buzzer':
+        return <Buzzer id={device.id} />;
+      default:
+        // Return a generic component or null for unknown device types
+        return null;
+    }
+  };
 
   // Create refresh button for devices section
   const devicesRefreshButton = (
@@ -82,10 +100,15 @@ const App: Component = () => {
             }
           >
             <div class={styles["app__devices-grid"]}>
-              <Led id="test-led" />
-              <Servo id="test-servo" />
-              <Button id="test-button" />
-              <Buzzer id="test-buzzer" />
+              {availableDevices().length === 0 ? (
+                <div class={styles["app__no-devices"]}>
+                  {isConnected() ? "No devices available for control" : "Connect to see available devices"}
+                </div>
+              ) : (
+                <For each={availableDevices()}>
+                  {(device) => renderDeviceComponent(device)}
+                </For>
+              )}
             </div>
           </CollapsibleSection>
         </section>

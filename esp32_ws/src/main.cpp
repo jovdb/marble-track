@@ -38,6 +38,7 @@ DeviceManager deviceManager;
 Led testLed(Config::LED_PIN, "test-led", "Test LED");
 ServoDevice testServo(Config::SERVO_PIN, "test-servo", "Test Servo", Config::SERVO_INITIAL_ANGLE, Config::SERVO_PWM_CHANNEL);
 Button testButton(Config::BUTTON_PIN, "test-button", "Test Button", Config::BUTTON_INVERTED, Config::BUTTON_DEBOUNCE_MS);
+Button testButton2(Config::BUTTON2_PIN, "test-button2", "Test Button 2", Config::BUTTON_INVERTED, Config::BUTTON_DEBOUNCE_MS);
 Buzzer testBuzzer(Config::BUZZER_PIN, "test-buzzer", "Test Buzzer");
 
 // Function declarations
@@ -50,6 +51,12 @@ void runManualMode()
   if (testButton.wasPressed())
   {
     testLed.toggle();
+  }
+
+  // Check for second button press to trigger buzzer
+  if (testButton2.wasPressed())
+  {
+    testBuzzer.tone(1000, 200); // Play 1000Hz tone for 200ms
   }
 
   // This is the default mode where users control devices through the web interface
@@ -109,6 +116,11 @@ void setup()
   testButton.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
                                     { wsManager.broadcastState(deviceId, stateJson, ""); });
   deviceManager.addDevice(&testButton);
+
+  testButton2.setup(); // Initialize second button hardware
+  testButton2.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+                                     { wsManager.broadcastState(deviceId, stateJson, ""); });
+  deviceManager.addDevice(&testButton2);
 
   testBuzzer.setup(); // Initialize buzzer hardware
   testBuzzer.setStateChangeCallback([&](const String &deviceId, const String &stateJson)

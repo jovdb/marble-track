@@ -16,8 +16,14 @@
 namespace Config {
     // WiFi Credentials
     // Replace with your network credentials
-    const char* WIFI_SSID = "telenet-182FE";
+    const char* WIFI_SSID = "telenet-182FE_____";
     const char* WIFI_PASSWORD = "cPQdRWmFx1eM";
+    
+    // Access Point Configuration
+    const char* AP_SSID = "MarbleTrack-Setup";
+    const char* AP_PASSWORD = "marble123";
+    const unsigned long WIFI_TIMEOUT_MS = 20000; // 20 seconds
+    const unsigned long CONNECTION_CHECK_INTERVAL_MS = 500; // 0.5 seconds
     
     // Hardware Configuration
     const int SERVO_PWM_CHANNEL = 2;  // Changed from 7 to 2 to avoid buzzer conflicts

@@ -14,6 +14,7 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include "Config.h"
 
 enum class NetworkMode {
     WIFI_CLIENT,
@@ -90,12 +91,6 @@ private:
     
     // Current network state
     NetworkMode _currentMode;
-    
-    // Configuration constants
-    static const char* AP_SSID;
-    static const char* AP_PASSWORD;
-    static const unsigned long WIFI_TIMEOUT_MS;
-    static const unsigned long CONNECTION_CHECK_INTERVAL_MS;
     
     // Private methods
     bool connectToWiFi();

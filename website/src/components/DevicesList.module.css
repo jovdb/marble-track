@@ -22,6 +22,15 @@
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.devices-list__title-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
 }
 
 .devices-list__refresh-button {
@@ -111,9 +120,11 @@
   font-weight: var(--font-weight-medium);
 }
 
-.devices-list__count::before {
-  content: "📋";
-  font-size: var(--font-size-base);
+.devices-list__count-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .devices-list__grid {
@@ -149,6 +160,16 @@
   color: var(--color-text-primary);
   font-size: var(--font-size-base);
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.device-card__icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  object-fit: contain;
 }
 
 .device-card__type-badge {

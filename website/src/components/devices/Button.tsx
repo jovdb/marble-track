@@ -1,4 +1,5 @@
 import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
+import { ButtonIcon } from "../icons/DeviceIcons";
 import styles from "./Device.module.css";
 
 interface IButtonState {
@@ -35,7 +36,8 @@ export function Button(props: { id: string }) {
     <div class={styles.device}>
       <div class={styles.device__header}>
         <h3 class={styles.device__title}>
-          🔘 {deviceState()?.name || props.id}
+          <ButtonIcon />
+          {deviceState()?.name || props.id}
         </h3>
         <span class={styles["device__type-badge"]}>BUTTON</span>
       </div>

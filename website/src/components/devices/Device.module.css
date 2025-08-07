@@ -33,6 +33,19 @@
   gap: var(--spacing-3);
 }
 
+.device__title svg,
+.device__title img {
+  flex-shrink: 0;
+}
+
+.device__title svg {
+  color: var(--color-primary-600);
+}
+
+.device__title img {
+  object-fit: contain;
+}
+
 .device__type-badge {
   background-color: var(--color-primary-100);
   color: var(--color-primary-800);

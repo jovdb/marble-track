@@ -27,9 +27,34 @@
   gap: var(--spacing-2);
 }
 
-.websocket-messages__title::before {
-  content: "📡";
-  font-size: var(--font-size-base);
+.websocket-messages__title svg,
+.websocket-messages__title img {
+  flex-shrink: 0;
+}
+
+.websocket-messages__title svg {
+  color: var(--color-primary-600);
+}
+
+.websocket-messages__title-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.websocket-messages__empty svg,
+.websocket-messages__empty img {
+  flex-shrink: 0;
+}
+
+.websocket-messages__empty svg {
+  color: var(--color-text-tertiary);
+}
+
+.websocket-messages__empty-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
 }
 
 .websocket-messages__clear-button {
@@ -98,12 +123,7 @@
   color: var(--color-text-tertiary);
   font-style: italic;
   font-size: var(--font-size-sm);
-}
-
-.websocket-messages__empty::before {
-  content: "💭";
-  margin-right: var(--spacing-2);
-  font-size: var(--font-size-base);
+  gap: var(--spacing-2);
 }
 
 /* Scrollbar styling for webkit browsers */

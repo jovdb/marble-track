@@ -1,5 +1,6 @@
 import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
 import { createSignal, For } from "solid-js";
+import { BuzzerIcon } from "../icons/DeviceIcons";
 import styles from "./Device.module.css";
 
 interface IBuzzerState {
@@ -54,7 +55,8 @@ export function Buzzer(props: { id: string }) {
     <div class={styles.device}>
       <div class={styles.device__header}>
         <h3 class={styles.device__title}>
-          🔊 {deviceState()?.name || props.id}
+          <BuzzerIcon />
+          {deviceState()?.name || props.id}
         </h3>
         <span class={styles["device__type-badge"]}>BUZZER</span>
       </div>

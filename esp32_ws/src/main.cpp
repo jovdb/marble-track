@@ -127,7 +127,6 @@ void setup()
   
   // Print access information
   Serial.println("\n=== DEVICE READY ===");
-  network.printConnectionStatus();
   Serial.println("==================\n");
 }
 

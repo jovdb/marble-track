@@ -65,8 +65,6 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
                 }
             }
         }
-        
-        response["count"] = count;
     }
 
     String message;

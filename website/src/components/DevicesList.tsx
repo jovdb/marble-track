@@ -56,48 +56,53 @@ export default function DevicesList() {
         )}
 
         {devicesLoaded() && availableDevices().length > 0 && (
-          <>
-            <div class={styles["devices-list__count"]}>
-              <ClipboardIcon class={styles["devices-list__count-icon"]} />
-              Found {availableDevices().length} device{availableDevices().length !== 1 ? 's' : ''}
-            </div>
-            
-            <div class={styles["devices-list__grid"]}>
-              <For each={availableDevices()}>
-                {(device) => (
-                  <div class={styles["device-card"]}>
-                    <div class={styles["device-card__header"]}>
-                      <h3 class={styles["device-card__name"]}>
-                        {getDeviceIcon(device.type, { class: styles["device-card__icon"] })}
-                        {device.name || device.id}
-                      </h3>
-                      <span class={styles["device-card__type-badge"]}>
-                        {device.type}
-                      </span>
-                    </div>
-                    
-                    <div class={styles["device-card__details"]}>
-                      <div class={styles["device-card__detail"]}>
-                        <span class={styles["device-card__detail-label"]}>ID:</span>
-                        <span class={styles["device-card__detail-value"]}>{device.id}</span>
-                      </div>
-                      
-                      {device.pins && device.pins.length > 0 && (
-                        <div class={styles["device-card__pins"]}>
-                          <span class={styles["device-card__pins-label"]}>
-                            Pin{device.pins.length > 1 ? 's' : ''}:
-                          </span>
-                          <span class={styles["device-card__pins-list"]}>
-                            {device.pins.join(', ')}
+          <div class={styles["devices-list__table-container"]}>
+            <table class={styles["devices-list__table"]}>
+              <thead class={styles["devices-list__table-header"]}>
+                <tr>
+                  <th class={styles["devices-list__table-th"]}>Device</th>
+                  <th class={styles["devices-list__table-th"]}>Type</th>
+                  <th class={styles["devices-list__table-th"]}>ID</th>
+                  <th class={styles["devices-list__table-th"]}>Pins</th>
+                </tr>
+              </thead>
+              <tbody class={styles["devices-list__table-body"]}>
+                <For each={availableDevices()}>
+                  {(device) => (
+                    <tr class={styles["devices-list__table-row"]}>
+                      <td class={styles["devices-list__table-td"]}>
+                        <div class={styles["devices-list__device-cell"]}>
+                          {getDeviceIcon(device.type, { class: styles["devices-list__device-icon"] })}
+                          <span class={styles["devices-list__device-name"]}>
+                            {device.name || device.id}
                           </span>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </For>
-            </div>
-          </>
+                      </td>
+                      <td class={styles["devices-list__table-td"]}>
+                        <span class={styles["devices-list__type-badge"]}>
+                          {device.type}
+                        </span>
+                      </td>
+                      <td class={styles["devices-list__table-td"]}>
+                        <code class={styles["devices-list__device-id"]}>
+                          {device.id}
+                        </code>
+                      </td>
+                      <td class={styles["devices-list__table-td"]}>
+                        {device.pins && device.pins.length > 0 ? (
+                          <code class={styles["devices-list__pins-list"]}>
+                            {device.pins.join(', ')}
+                          </code>
+                        ) : (
+                          <span class={styles["devices-list__no-pins"]}>-</span>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                </For>
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

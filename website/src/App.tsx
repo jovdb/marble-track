@@ -36,7 +36,7 @@ const App: Component = () => {
         <section class={styles.app__section}>
           <CollapsibleSection 
             title="Available Devices" 
-            icon={<ClipboardIcon />}
+            icon={<ClipboardIcon height={24} width={24} />}
           >
             <DevicesList />
           </CollapsibleSection>
@@ -66,7 +66,7 @@ const App: Component = () => {
         <section class={styles.app__section}>
           <CollapsibleSection 
             title="WebSocket Messages" 
-            icon={<RadioIcon />}
+            icon={<RadioIcon height={24} width={24} />}
           >
             <WebSocketMessages />
           </CollapsibleSection>

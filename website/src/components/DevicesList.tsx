@@ -1,5 +1,11 @@
 import { For, onMount, createEffect } from "solid-js";
-import { availableDevices, devicesLoaded, devicesLoading, requestDevices, isConnected } from "../hooks/useWebSocket";
+import {
+  availableDevices,
+  devicesLoaded,
+  devicesLoading,
+  requestDevices,
+  isConnected,
+} from "../hooks/useWebSocket";
 import { getDeviceIcon } from "./icons/DeviceIcons";
 import styles from "./DevicesList.module.css";
 
@@ -31,24 +37,26 @@ export default function DevicesList() {
           class={`${styles["devices-list__refresh-button"]} ${
             devicesLoading() ? styles["devices-list__refresh-button--loading"] : ""
           } ${
-            (!devicesLoading() && !isConnected()) ? styles["devices-list__refresh-button--disabled"] : ""
+            !devicesLoading() && !isConnected()
+              ? styles["devices-list__refresh-button--disabled"]
+              : ""
           }`}
         >
           {devicesLoading() ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 
-      <div class={styles["devices-list__content"]}>
+      <div>
         {!devicesLoading() && !isConnected() && (
-          <div class={`${styles["devices-list__status"]} ${styles["devices-list__status--disconnected"]}`}>
+          <div
+            class={`${styles["devices-list__status"]} ${styles["devices-list__status--disconnected"]}`}
+          >
             WebSocket not connected
           </div>
         )}
 
         {devicesLoaded() && availableDevices().length === 0 && (
-          <div class={styles["devices-list__status"]}>
-            No devices found
-          </div>
+          <div class={styles["devices-list__status"]}>No devices found</div>
         )}
 
         {devicesLoaded() && availableDevices().length > 0 && (
@@ -68,26 +76,24 @@ export default function DevicesList() {
                     <tr class={styles["devices-list__table-row"]}>
                       <td class={styles["devices-list__table-td"]}>
                         <div class={styles["devices-list__device-cell"]}>
-                          {getDeviceIcon(device.type, { class: styles["devices-list__device-icon"] })}
+                          {getDeviceIcon(device.type, {
+                            class: styles["devices-list__device-icon"],
+                          })}
                           <span class={styles["devices-list__device-name"]}>
                             {device.name || device.id}
                           </span>
                         </div>
                       </td>
                       <td class={styles["devices-list__table-td"]}>
-                        <span class={styles["devices-list__type-badge"]}>
-                          {device.type}
-                        </span>
+                        <span class={styles["devices-list__type-badge"]}>{device.type}</span>
                       </td>
                       <td class={styles["devices-list__table-td"]}>
-                        <code class={styles["devices-list__device-id"]}>
-                          {device.id}
-                        </code>
+                        <code class={styles["devices-list__device-id"]}>{device.id}</code>
                       </td>
                       <td class={styles["devices-list__table-td"]}>
                         {device.pins && device.pins.length > 0 ? (
                           <code class={styles["devices-list__pins-list"]}>
-                            {device.pins.join(', ')}
+                            {device.pins.join(", ")}
                           </code>
                         ) : (
                           <span class={styles["devices-list__no-pins"]}>-</span>

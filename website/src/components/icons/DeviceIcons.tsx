@@ -21,8 +21,8 @@ interface IconProps {
 export const LedIcon = (props: IconProps) => (
   <img 
     src={ledIcon}
-    width={props.width || 20} 
-    height={props.height || 20} 
+    width={props.width || 24} 
+    height={props.height || 24} 
     class={props.class}
     style={props.style}
     alt={props.alt || "LED"}
@@ -32,8 +32,8 @@ export const LedIcon = (props: IconProps) => (
 export const ServoIcon = (props: IconProps) => (
   <img 
     src={servoIcon}
-    width={props.width || 20} 
-    height={props.height || 20} 
+    width={props.width || 24} 
+    height={props.height || 24} 
     class={props.class}
     style={props.style}
     alt={props.alt || "Servo"}
@@ -43,8 +43,8 @@ export const ServoIcon = (props: IconProps) => (
 export const ButtonIcon = (props: IconProps) => (
   <img 
     src={buttonIcon}
-    width={props.width || 20} 
-    height={props.height || 20} 
+    width={props.width || 24} 
+    height={props.height || 24} 
     class={props.class}
     style={props.style}
     alt={props.alt || "Button"}
@@ -54,8 +54,8 @@ export const ButtonIcon = (props: IconProps) => (
 export const BuzzerIcon = (props: IconProps) => (
   <img 
     src={buzzerIcon}
-    width={props.width || 20} 
-    height={props.height || 20} 
+    width={props.width || 24} 
+    height={props.height || 24} 
     class={props.class}
     style={props.style}
     alt={props.alt || "Buzzer"}
@@ -65,8 +65,8 @@ export const BuzzerIcon = (props: IconProps) => (
 export const StepperIcon = (props: IconProps) => (
   <img 
     src={stepperIcon}
-    width={props.width || 20} 
-    height={props.height || 20} 
+    width={props.width || 24} 
+    height={props.height || 24} 
     class={props.class}
     style={props.style}
     alt={props.alt || "Stepper Motor"}
@@ -76,8 +76,8 @@ export const StepperIcon = (props: IconProps) => (
 export const ClipboardIcon = (props: IconProps) => (
   <img 
     src={devicesIcon}
-    width={props.width || 16} 
-    height={props.height || 16} 
+    width={props.width || 20} 
+    height={props.height || 20} 
     class={props.class}
     style={props.style}
     alt={props.alt || "Devices"}
@@ -87,8 +87,8 @@ export const ClipboardIcon = (props: IconProps) => (
 export const RadioIcon = (props: IconProps) => (
   <img 
     src={websocketIcon}
-    width={props.width || 20} 
-    height={props.height || 20} 
+    width={props.width || 24} 
+    height={props.height || 24} 
     class={props.class}
     style={props.style}
     alt={props.alt || "WebSocket"}
@@ -97,8 +97,8 @@ export const RadioIcon = (props: IconProps) => (
 
 export const MessageIcon = (props: IconProps) => (
   <svg 
-    width={props.width || 16} 
-    height={props.height || 16} 
+    width={props.width || 20} 
+    height={props.height || 20} 
     viewBox="0 0 24 24" 
     fill="none" 
     stroke="currentColor" 

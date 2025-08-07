@@ -71,8 +71,8 @@
 }
 
 .websocket-messages__title-icon {
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
 }
 
@@ -86,8 +86,8 @@
 }
 
 .websocket-messages__empty-icon {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   object-fit: contain;
 }
 

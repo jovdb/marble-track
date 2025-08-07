@@ -20,8 +20,8 @@
 }
 
 .devices-list__title-icon {
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
 }
 
@@ -84,10 +84,6 @@
   animation: spin 1s linear infinite;
 }
 
-.devices-list__content {
-  padding: var(--spacing-5);
-}
-
 .devices-list__status {
   display: flex;
   align-items: center;
@@ -113,8 +109,8 @@
 }
 
 .devices-list__count-icon {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   object-fit: contain;
   flex-shrink: 0;
 }
@@ -177,8 +173,8 @@
 }
 
 .devices-list__device-icon {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   object-fit: contain;
   flex-shrink: 0;
 }
@@ -259,7 +255,7 @@
   }
 
   .devices-list__device-icon {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
   }
 }

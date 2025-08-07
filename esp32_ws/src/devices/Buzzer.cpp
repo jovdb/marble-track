@@ -21,7 +21,7 @@
  * @param name Human-readable name string for the buzzer
  */
 Buzzer::Buzzer(int pin, const String &id, const String &name)
-    : _pin(pin), _id(id), _name(name), _isPlaying(false), _playStartTime(0), _playDuration(0)
+    : _pin(pin), _id(id), _name(name), _isPlaying(false), _mode(Mode::IDLE), _playStartTime(0), _toneDuration(0)
 {
     Serial.println("Buzzer [" + _id + "]: Created on pin " + String(_pin));
 }
@@ -45,27 +45,38 @@ void Buzzer::setup()
  */
 void Buzzer::loop()
 {
-
+    // Handle RTTTL tune playback
     if (rtttl::isPlaying())
     {
         rtttl::play();
     }
+    else if (_mode == Mode::TUNE && _isPlaying)
+    {
+        // Tune was playing but has now finished
+        _isPlaying = false;
+        _mode = Mode::IDLE;
+        _currentTune = "";
+        
+        Serial.println("Buzzer [" + _id + "]: Tune playback finished");
+        notifyStateChange();
+    }
 
-    // Check if we're currently playing and if the duration has elapsed
-    if (_isPlaying && _playDuration > 0)
+    // Check if we're currently playing a tone and if the duration has elapsed
+    if (_isPlaying && _mode == Mode::TONE && _toneDuration > 0)
     {
         unsigned long elapsed = millis() - _playStartTime;
-        if (elapsed >= _playDuration)
+        if (elapsed >= _toneDuration)
         {
-            // Playback duration has finished
+            // Tone playback duration has finished
             _isPlaying = false;
+            _mode = Mode::IDLE;
             _currentTune = "";
-            _playDuration = 0;
+            _toneDuration = 0;
 
             // TODO: Stop hardware tone generation here
             // ::noTone(_pin);
 
-            Serial.println("Buzzer [" + _id + "]: Playback finished");
+            Serial.println("Buzzer [" + _id + "]: Tone playback finished");
             notifyStateChange();
         }
     }
@@ -82,8 +93,9 @@ void Buzzer::tone(int frequency, int duration)
     ::tone(_pin, frequency, duration);
 
     _isPlaying = true;
+    _mode = Mode::TONE;
     _playStartTime = millis();
-    _playDuration = duration;
+    _toneDuration = duration;
     _currentTune = "";
     notifyStateChange();
 }
@@ -101,8 +113,9 @@ void Buzzer::tune(const String &rtttl)
 
     _currentTune = rtttl;
     _isPlaying = true;
+    _mode = Mode::TUNE;
     _playStartTime = millis();
-    _playDuration = 3000; // Default tune duration (3 seconds) - should be calculated from RTTTL
+    // Note: _toneDuration is not set for tunes - RTTTL library manages tune duration
     notifyStateChange();
 }
 
@@ -175,7 +188,17 @@ String Buzzer::getState()
 {
     JsonDocument doc;
     doc["playing"] = _isPlaying;
-    doc["currentTune"] = _currentTune;
+    
+    // Convert mode enum to string
+    String modeStr;
+    switch (_mode) {
+        case Mode::IDLE: modeStr = "IDLE"; break;
+        case Mode::TONE: modeStr = "TONE"; break;
+        case Mode::TUNE: modeStr = "TUNE"; break;
+        default: modeStr = "UNKNOWN"; break;
+    }
+    doc["mode"] = modeStr;
+    
     doc["pin"] = _pin;
     doc["name"] = _name;
     doc["type"] = _type;

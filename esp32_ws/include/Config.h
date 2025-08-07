@@ -16,7 +16,7 @@
 namespace Config {
     // WiFi Credentials
     // Replace with your network credentials
-    inline const char* WIFI_SSID = "telenet-182FE_____";
+    inline const char* WIFI_SSID = "telenet-182FE";
     inline const char* WIFI_PASSWORD = "cPQdRWmFx1eM";
     inline const unsigned long WIFI_TIMEOUT_MS = 10000; // 20 seconds
     inline const unsigned long CONNECTION_CHECK_INTERVAL_MS = 1000; // 0.5 seconds

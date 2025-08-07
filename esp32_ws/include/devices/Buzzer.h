@@ -27,6 +27,16 @@ class Buzzer : public Device
 {
 public:
     /**
+     * @brief Buzzer playback modes
+     */
+    enum class Mode
+    {
+        IDLE,  ///< Buzzer is not playing anything
+        TONE,  ///< Buzzer is playing a tone
+        TUNE   ///< Buzzer is playing a tune
+    };
+
+    /**
      * @brief Constructor - creates buzzer object
      * @param pin GPIO pin number for the buzzer
      * @param id Unique identifier string for the buzzer
@@ -71,11 +81,12 @@ private:
     String _name;                ///< Human-readable name string for the buzzer
     String _type = "BUZZER";     ///< Type of the device
     bool _isPlaying = false;     ///< Current playing state
+    Mode _mode = Mode::IDLE;     ///< Current playback mode
     String _currentTune = "";    ///< Currently loaded tune name
     
     // Timing variables
     unsigned long _playStartTime = 0;  ///< When current playback started
-    unsigned long _playDuration = 0;   ///< Duration of current playback in ms
+    unsigned long _toneDuration = 0;   ///< Duration of current tone playback in ms (not used for tunes)
 };
 
 #endif // BUZZER_H

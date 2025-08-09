@@ -1,3 +1,12 @@
+void GateWithSensor::open() {
+    if (_gateState == Closed) {
+        _buzzer.tone(500, 100);
+        _servo.setSpeed(240);
+        _servo.setAngle(170); // Open gate
+        _gateState = IsOpening;
+        _gateStateStart = millis();
+    }
+}
 
 #include "devices/GateWithSensor.h"
 #include "devices/Buzzer.h"
@@ -40,11 +49,7 @@ void GateWithSensor::loop()
     switch (_gateState) {
         case Closed:
             if (_sensor.wasPressed()) {
-                _buzzer.tone(500, 100);
-                _servo.setSpeed(240);
-                _servo.setAngle(170); // Open gate
-                _gateState = IsOpening;
-                _gateStateStart = millis();
+                open();
             }
             break;
         case IsOpening:
@@ -73,6 +78,10 @@ void GateWithSensor::loop()
 
 bool GateWithSensor::control(const String &action, JsonObject *payload)
 {
+    if (action == "Open") {
+        open();
+        return true;
+    }
     return false;
 }
 

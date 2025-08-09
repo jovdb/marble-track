@@ -25,6 +25,7 @@ public:
     String getType() const override { return _type; }
     String getName() const override { return _name; }
     void setStateChangeCallback(StateChangeCallback callback) override;
+    void open();
 private:
     enum GateState { Closed, IsOpening, Opened, Closing };
     GateState _gateState = Closed;

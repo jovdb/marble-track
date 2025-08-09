@@ -27,12 +27,15 @@ namespace Config {
     
     // Hardware Configuration
     inline const int SERVO_PWM_CHANNEL = 2;  // Changed from 7 to 2 to avoid buzzer conflicts
+    inline const int SERVO2_PWM_CHANNEL = 3; // PWM channel for second servo
     
     // Device Pin Assignments
     inline const int LED_PIN = 1;
     inline const int SERVO_PIN = 21;
+    inline const int SERVO2_PIN = 22;
     inline const int BUTTON_PIN = 15;
     inline const int BUTTON2_PIN = 16;
+    inline const int BALL_SENSOR_PIN = 47;
     inline const int BUZZER_PIN = 14;
     
     // Button Configuration

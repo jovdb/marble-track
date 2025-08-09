@@ -37,9 +37,11 @@ DeviceManager deviceManager;
 // Device instances
 Led testLed(Config::LED_PIN, "test-led", "Test LED");
 ServoDevice testServo(Config::SERVO_PIN, "test-servo", "Test Servo", Config::SERVO_INITIAL_ANGLE, Config::SERVO_PWM_CHANNEL);
+ServoDevice testServo2(Config::SERVO2_PIN, "test-servo2", "Test Servo 2", Config::SERVO_INITIAL_ANGLE, Config::SERVO2_PWM_CHANNEL);
 Button testButton(Config::BUTTON_PIN, "test-button", "Test Button", Config::BUTTON_INVERTED, Config::BUTTON_DEBOUNCE_MS);
 Button testButton2(Config::BUTTON2_PIN, "test-button2", "Test Button 2", Config::BUTTON_INVERTED, Config::BUTTON_DEBOUNCE_MS);
 Buzzer testBuzzer(Config::BUZZER_PIN, "test-buzzer", "Test Buzzer");
+Button ballSensor(Config::BALL_SENSOR_PIN, "ball-sensor", "Ball Sensor", true, Config::BUTTON_DEBOUNCE_MS);
 
 // Function declarations
 void setOperationMode(OperationMode mode);
@@ -57,6 +59,21 @@ void runManualMode()
   if (testButton2.wasPressed())
   {
     testBuzzer.tone(1000, 200); // Play 1000Hz tone for 200ms
+  }
+
+  if (ballSensor.wasPressed())
+  {
+    // Ball sensor pressed, perform action
+    Serial.println("Ball detected!");
+    testBuzzer.tone(1000, 100);
+    testLed.set(true); // Turn on LED
+    // You can add more actions here, like triggering the servo or buzzer
+  }
+  else if (ballSensor.wasReleased())
+  {
+    // Ball sensor released, perform action
+    Serial.println("Ball released!");
+    testLed.set(false); // Turn off LED
   }
 
   // This is the default mode where users control devices through the web interface
@@ -77,6 +94,7 @@ void runAutomaticMode()
   if (currentTime % 10000 < 5)
   {
     testServo.setAngle(currentTime % 180); // Rotate servo every 10 seconds
+    testServo2.setAngle((currentTime % 180) / 2); // Rotate second servo at different speed
   }
 }
 
@@ -88,7 +106,8 @@ void setup()
 
   // Initialize Network (will try WiFi, fall back to AP if needed)
   bool networkInitialized = network.initialize();
-  if (!networkInitialized) {
+  if (!networkInitialized)
+  {
     Serial.println("ERROR: Network initialization failed! System may not be accessible.");
   }
 
@@ -112,6 +131,11 @@ void setup()
                                    { wsManager.broadcastState(deviceId, stateJson, ""); });
   deviceManager.addDevice(&testServo);
 
+  testServo2.setup(); // Initialize second servo hardware
+  testServo2.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+                                    { wsManager.broadcastState(deviceId, stateJson, ""); });
+  deviceManager.addDevice(&testServo2);
+
   testButton.setup(); // Initialize button hardware
   testButton.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
                                     { wsManager.broadcastState(deviceId, stateJson, ""); });
@@ -127,6 +151,11 @@ void setup()
                                     { wsManager.broadcastState(deviceId, stateJson, ""); });
   deviceManager.addDevice(&testBuzzer);
 
+  ballSensor.setup(); // Initialize ball sensor hardware
+  ballSensor.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+                                    { wsManager.broadcastState(deviceId, stateJson, ""); });
+  deviceManager.addDevice(&ballSensor);
+
   Serial.println("Device management:");
   Serial.println("  Total devices: " + String(deviceManager.getDeviceCount()));
   Serial.println("State change broadcasting enabled");
@@ -136,7 +165,8 @@ void setup()
   Serial.println("Use setOperationMode() to switch between MANUAL and AUTOMATIC");
 
   testServo.setAngle(20); // Set initial angle for servo
-  
+  testServo2.setAngle(45); // Set initial angle for second servo
+
   // Print access information
   Serial.println("\n=== DEVICE READY ===");
   Serial.println("==================\n");
@@ -146,7 +176,7 @@ void loop()
 {
   // Process captive portal for access point mode
   network.processCaptivePortal();
-  
+
   // Keep the WebSocket alive
   wsManager.loop();
 

@@ -11,6 +11,33 @@
 
 #include "devices/Buzzer.h"
 #include <NonBlockingRtttl.h>
+#include <Arduino.h> // Needed for tone, noTone, delay
+
+/**
+ * @brief Play a startup tone sequence
+ */
+void Buzzer::startupTone()
+{
+    for (int frequency = 200; frequency <= 1000; frequency += 200)
+    {
+        this->tone(frequency, 80); // Play tone for 80ms using Buzzer::tone
+        delay(20);                 // Small delay to separate tones
+    }
+    noTone(_pin); // Ensure tone is off before the next loop
+}
+/**
+ * @file Buzzer.cpp
+ * @brief Implementation of Buzzer control class
+ *
+ * This file contains the implementation of the Buzzer class methods
+ * for controlling buzzers and playing tones/tunes in the marble track system.
+ *
+ * @author Generated for Marble Track Project
+ * @date 2025
+ */
+
+#include "devices/Buzzer.h"
+#include <NonBlockingRtttl.h>
 
 /**
  * @brief Constructor for Buzzer class
@@ -35,6 +62,8 @@ void Buzzer::setup()
     pinMode(_pin, OUTPUT);
     digitalWrite(_pin, LOW);
     Serial.println("Buzzer [" + _id + "]: Setup complete on pin " + String(_pin));
+
+    startupTone(); // Play startup tone sequence
 }
 
 /**

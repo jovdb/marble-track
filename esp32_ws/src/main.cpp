@@ -120,7 +120,7 @@ void runAutomaticMode()
 
   if (currentTime % 10000 < 5)
   {
-    testServo.setAngle(currentTime % 180);      // Rotate servo every 10 seconds
+    testServo.setAngle(currentTime % 180); // Rotate servo every 10 seconds
     // ballGate removed
   }
 }
@@ -136,7 +136,9 @@ void setup()
   if (!networkInitialized)
   {
     Serial.println("ERROR: Network initialization failed! System may not be accessible.");
-  } else {
+  }
+  else
+  {
     otaService.setup(); // <-- OTA setup only after network is ready
   }
 
@@ -159,7 +161,6 @@ void setup()
   testServo.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
                                    { wsManager.broadcastState(deviceId, stateJson, ""); });
   deviceManager.addDevice(&testServo);
-
 
   testButton.setup(); // Initialize button hardware
   testButton.setStateChangeCallback([&](const String &deviceId, const String &stateJson)

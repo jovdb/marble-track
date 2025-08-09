@@ -27,6 +27,10 @@ class Buzzer : public Device
 {
 public:
     /**
+     * @brief Play a startup tone sequence
+     */
+    void startupTone();
+    /**
      * @brief Buzzer playback modes
      */
     enum class Mode

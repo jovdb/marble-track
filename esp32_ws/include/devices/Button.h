@@ -26,6 +26,10 @@
 class Button : public Device
 {
 public:
+    enum class ButtonType {
+        NormalOpen,
+        NormalClosed
+    };
     /**
      * @brief Constructor for Button class
      * @param pin GPIO pin number for the button
@@ -33,8 +37,9 @@ public:
      * @param name Human-readable name string for the button
      * @param pullUp true for internal pull-up (button connects to ground), false for pull-down
      * @param debounceMs Debounce time in milliseconds (default: 50ms)
+     * @param type ButtonType: NormalOpen or NormalClosed (default: NormalOpen)
      */
-    Button(int pin, const String &id, const String &name, bool pullUp = true, unsigned long debounceMs = 50);
+    Button(int pin, const String &id, const String &name, bool pullUp = true, unsigned long debounceMs = 50, ButtonType type = ButtonType::NormalOpen);
 
     /**
      * @brief Setup function to initialize the button
@@ -65,6 +70,7 @@ private:
     String _type = "BUTTON";     ///< Type of the device
     bool _pullUp;                ///< Pull-up configuration (true = internal pull-up)
     unsigned long _debounceMs;   ///< Debounce time in milliseconds
+    ButtonType _buttonType = ButtonType::NormalOpen; ///< Button type (NO/NC)
 
     // State tracking
     bool _currentState = false;          ///< Current debounced state

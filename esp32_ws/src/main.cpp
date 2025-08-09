@@ -36,12 +36,12 @@ DeviceManager deviceManager;
 
 // Device instances
 Led testLed(Config::LED_PIN, "test-led", "Test LED");
-ServoDevice testServo(Config::SERVO_PIN, "test-servo", "Test Servo", Config::SERVO_INITIAL_ANGLE, Config::SERVO_PWM_CHANNEL);
-ServoDevice testServo2(Config::SERVO2_PIN, "test-servo2", "Test Servo 2", Config::SERVO_INITIAL_ANGLE, Config::SERVO2_PWM_CHANNEL);
+ServoDevice testServo(Config::SERVO_PIN, "test-servo", "Test Servo", 30, Config::SERVO_PWM_CHANNEL);
 Button testButton(Config::BUTTON_PIN, "test-button", "Test Button", Config::BUTTON_INVERTED, Config::BUTTON_DEBOUNCE_MS);
 Button testButton2(Config::BUTTON2_PIN, "test-button2", "Test Button 2", Config::BUTTON_INVERTED, Config::BUTTON_DEBOUNCE_MS);
 Buzzer testBuzzer(Config::BUZZER_PIN, "test-buzzer", "Test Buzzer");
-Button ballSensor(Config::BALL_SENSOR_PIN, "ball-sensor", "Ball Sensor", true, Config::BUTTON_DEBOUNCE_MS);
+Button ballSensor(Config::BALL_SENSOR_PIN, "ball-sensor", "Ball Sensor", true, 100, Button::ButtonType::NormalClosed);
+ServoDevice ballGate(Config::SERVO2_PIN, "ball-gate", "Ball Gate", Config::SERVO_INITIAL_ANGLE, Config::SERVO2_PWM_CHANNEL);
 
 // Function declarations
 void setOperationMode(OperationMode mode);
@@ -61,13 +61,31 @@ void runManualMode()
     testBuzzer.tone(1000, 200); // Play 1000Hz tone for 200ms
   }
 
+  static unsigned long ballActionStart = 0;
+  static int ballActionStep = 0;
   if (ballSensor.wasPressed())
   {
-    // Ball sensor pressed, perform action
     Serial.println("Ball detected!");
-    testBuzzer.tone(1000, 100);
-    testLed.set(true); // Turn on LED
-    // You can add more actions here, like triggering the servo or buzzer
+    testLed.set(true);
+    ballActionStart = millis();
+    ballActionStep = 1;
+  }
+  // Non-blocking sequence for ball sensor actions
+  if (ballActionStep == 1 && millis() - ballActionStart >= 350)
+  {
+    // testServo.setSpeed(80);
+    testServo.setSpeed(240);
+    testServo.setAngle(170);
+    testBuzzer.tone(400, 200);
+    ballActionStart = millis();
+    ballActionStep = 2;
+  }
+  if (ballActionStep == 2 && millis() - ballActionStart >= 750)
+  {
+    // testServo.setSpeed(60);
+    testServo.setSpeed(200);
+    testServo.setAngle(28);
+    ballActionStep = 0;
   }
   else if (ballSensor.wasReleased())
   {
@@ -93,8 +111,8 @@ void runAutomaticMode()
 
   if (currentTime % 10000 < 5)
   {
-    testServo.setAngle(currentTime % 180); // Rotate servo every 10 seconds
-    testServo2.setAngle((currentTime % 180) / 2); // Rotate second servo at different speed
+    testServo.setAngle(currentTime % 180);      // Rotate servo every 10 seconds
+    ballGate.setAngle((currentTime % 180) / 2); // Rotate second servo at different speed
   }
 }
 
@@ -131,10 +149,10 @@ void setup()
                                    { wsManager.broadcastState(deviceId, stateJson, ""); });
   deviceManager.addDevice(&testServo);
 
-  testServo2.setup(); // Initialize second servo hardware
-  testServo2.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                    { wsManager.broadcastState(deviceId, stateJson, ""); });
-  deviceManager.addDevice(&testServo2);
+  ballGate.setup(); // Initialize second servo hardware
+  ballGate.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+                                  { wsManager.broadcastState(deviceId, stateJson, ""); });
+  deviceManager.addDevice(&ballGate);
 
   testButton.setup(); // Initialize button hardware
   testButton.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
@@ -164,8 +182,8 @@ void setup()
   Serial.println("Operation mode: MANUAL");
   Serial.println("Use setOperationMode() to switch between MANUAL and AUTOMATIC");
 
-  testServo.setAngle(20); // Set initial angle for servo
-  testServo2.setAngle(45); // Set initial angle for second servo
+  //testServo.setAngle(20); // Set initial angle for servo
+  //ballGate.setAngle(45);  // Set initial angle for second servo
 
   // Print access information
   Serial.println("\n=== DEVICE READY ===");

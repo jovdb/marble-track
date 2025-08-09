@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include "Servo.h"
 #include "Button.h"
+#include "Buzzer.h"
 #include "Device.h"
 
 /**
@@ -12,7 +13,7 @@
  */
 class GateWithSensor : public Device {
 public:
-    GateWithSensor(int servoPin, int servoPwmChannel, int buttonPin, const String& id, const String& name,
+    GateWithSensor(int servoPin, int servoPwmChannel, int buttonPin, int buzzerPin, const String& id, const String& name,
                    int initialAngle = 90, bool buttonPullUp = true, unsigned long buttonDebounceMs = 50,
                    Button::ButtonType buttonType = Button::ButtonType::NormalOpen);
     void setup();
@@ -23,9 +24,11 @@ public:
     String getId() const override { return _id; }
     String getType() const override { return _type; }
     String getName() const override { return _name; }
+    void setStateChangeCallback(StateChangeCallback callback) override;
 private:
     ServoDevice _servo;
     Button _sensor;
+    Buzzer _buzzer;
     String _id;
     String _name;
     String _type = "GATE_WITH_SENSOR";

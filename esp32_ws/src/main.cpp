@@ -42,8 +42,7 @@ Button testButton(Config::BUTTON_PIN, "test-button", "Test Button", Config::BUTT
 Button testButton2(Config::BUTTON2_PIN, "test-button2", "Test Button 2", Config::BUTTON_INVERTED, Config::BUTTON_DEBOUNCE_MS);
 Buzzer testBuzzer(Config::BUZZER_PIN, "test-buzzer", "Test Buzzer");
 Button ballSensor(Config::BALL_SENSOR_PIN, "ball-sensor", "Ball Sensor", true, 100, Button::ButtonType::NormalClosed);
-ServoDevice ballGate(Config::SERVO2_PIN, "ball-gate", "Ball Gate", Config::SERVO_INITIAL_ANGLE, Config::SERVO2_PWM_CHANNEL);
-GateWithSensor gateWithSensor(Config::SERVO2_PIN, Config::SERVO2_PWM_CHANNEL, Config::BALL_SENSOR_PIN, "gate-with-sensor", "Gate With Sensor", 30, true, Config::BUTTON_DEBOUNCE_MS, Button::ButtonType::NormalClosed);
+GateWithSensor gateWithSensor(Config::SERVO_PIN, Config::SERVO_PWM_CHANNEL, 48, Config::BUZZER_PIN, "gate-with-sensor", "Gate", 50, true, Config::BUTTON_DEBOUNCE_MS, Button::ButtonType::NormalClosed);
 Button ballInGate(48, "ball-in-gate", "Ball In Gate", true, 100, Button::ButtonType::NormalClosed);
 
 // Function declarations
@@ -64,6 +63,12 @@ void runManualMode()
     testBuzzer.tone(1000, 200); // Play 1000Hz tone for 200ms
   }
 
+  if (ballSensor.wasPressed())
+  {
+    testBuzzer.tone(400, 200);
+  }
+
+  /*
   static unsigned long ballActionStart = 0;
   static int ballActionStep = 0;
   if (ballSensor.wasPressed())
@@ -96,6 +101,7 @@ void runManualMode()
     Serial.println("Ball released!");
     testLed.set(false); // Turn off LED
   }
+  */
 
   // This is the default mode where users control devices through the web interface
 }
@@ -115,7 +121,7 @@ void runAutomaticMode()
   if (currentTime % 10000 < 5)
   {
     testServo.setAngle(currentTime % 180);      // Rotate servo every 10 seconds
-    ballGate.setAngle((currentTime % 180) / 2); // Rotate second servo at different speed
+    // ballGate removed
   }
 }
 
@@ -152,10 +158,6 @@ void setup()
                                    { wsManager.broadcastState(deviceId, stateJson, ""); });
   deviceManager.addDevice(&testServo);
 
-  ballGate.setup(); // Initialize second servo hardware
-  ballGate.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                  { wsManager.broadcastState(deviceId, stateJson, ""); });
-  deviceManager.addDevice(&ballGate);
 
   testButton.setup(); // Initialize button hardware
   testButton.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
@@ -179,7 +181,7 @@ void setup()
 
   gateWithSensor.setup(); // Initialize GateWithSensor device
   gateWithSensor.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                      { wsManager.broadcastState(deviceId, stateJson, ""); });
+                                        { wsManager.broadcastState(deviceId, stateJson, ""); });
   deviceManager.addDevice(&gateWithSensor);
 
   Serial.println("Device management:");

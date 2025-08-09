@@ -13,6 +13,7 @@
 #include "devices/Device.h"
 #include "DeviceManager.h"
 #include <devices/Buzzer.h>
+#include "devices/GateWithSensor.h"
 
 // Operation modes
 enum class OperationMode
@@ -42,6 +43,8 @@ Button testButton2(Config::BUTTON2_PIN, "test-button2", "Test Button 2", Config:
 Buzzer testBuzzer(Config::BUZZER_PIN, "test-buzzer", "Test Buzzer");
 Button ballSensor(Config::BALL_SENSOR_PIN, "ball-sensor", "Ball Sensor", true, 100, Button::ButtonType::NormalClosed);
 ServoDevice ballGate(Config::SERVO2_PIN, "ball-gate", "Ball Gate", Config::SERVO_INITIAL_ANGLE, Config::SERVO2_PWM_CHANNEL);
+GateWithSensor gateWithSensor(Config::SERVO2_PIN, Config::SERVO2_PWM_CHANNEL, Config::BALL_SENSOR_PIN, "gate-with-sensor", "Gate With Sensor", 30, true, Config::BUTTON_DEBOUNCE_MS, Button::ButtonType::NormalClosed);
+Button ballInGate(48, "ball-in-gate", "Ball In Gate", true, 100, Button::ButtonType::NormalClosed);
 
 // Function declarations
 void setOperationMode(OperationMode mode);
@@ -174,6 +177,11 @@ void setup()
                                     { wsManager.broadcastState(deviceId, stateJson, ""); });
   deviceManager.addDevice(&ballSensor);
 
+  gateWithSensor.setup(); // Initialize GateWithSensor device
+  gateWithSensor.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+                                      { wsManager.broadcastState(deviceId, stateJson, ""); });
+  deviceManager.addDevice(&gateWithSensor);
+
   Serial.println("Device management:");
   Serial.println("  Total devices: " + String(deviceManager.getDeviceCount()));
   Serial.println("State change broadcasting enabled");
@@ -182,8 +190,8 @@ void setup()
   Serial.println("Operation mode: MANUAL");
   Serial.println("Use setOperationMode() to switch between MANUAL and AUTOMATIC");
 
-  //testServo.setAngle(20); // Set initial angle for servo
-  //ballGate.setAngle(45);  // Set initial angle for second servo
+  // testServo.setAngle(20); // Set initial angle for servo
+  // ballGate.setAngle(45);  // Set initial angle for second servo
 
   // Print access information
   Serial.println("\n=== DEVICE READY ===");

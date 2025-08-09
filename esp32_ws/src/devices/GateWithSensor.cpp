@@ -1,3 +1,7 @@
+// ...existing code...
+#include "devices/GateWithSensor.h"
+#include "devices/Buzzer.h"
+
 void GateWithSensor::open() {
     if (_gateState == Closed) {
         _buzzer.tone(500, 100);
@@ -8,8 +12,6 @@ void GateWithSensor::open() {
     }
 }
 
-#include "devices/GateWithSensor.h"
-#include "devices/Buzzer.h"
 void GateWithSensor::setStateChangeCallback(StateChangeCallback callback)
 {
     Device::setStateChangeCallback(callback);
@@ -18,11 +20,11 @@ void GateWithSensor::setStateChangeCallback(StateChangeCallback callback)
 }
 
 GateWithSensor::GateWithSensor(int servoPin, int servoPwmChannel, int buttonPin, int buzzerPin, const String &id, const String &name,
-                                                             int initialAngle, bool buttonPullUp, unsigned long buttonDebounceMs, Button::ButtonType buttonType)
-        : _servo(servoPin, id + "-servo", name + " Servo", 30, servoPwmChannel),
-            _sensor(buttonPin, id + "-sensor", name + " Sensor", buttonPullUp, buttonDebounceMs, buttonType),
-            _buzzer(buzzerPin, id + "-buzzer", name + " Buzzer"),
-            _id(id), _name(name)
+                               int initialAngle, bool buttonPullUp, unsigned long buttonDebounceMs, Button::ButtonType buttonType)
+    : _servo(servoPin, id + "-servo", name + " Servo", 30, servoPwmChannel),
+      _sensor(buttonPin, id + "-sensor", name + " Sensor", buttonPullUp, buttonDebounceMs, buttonType),
+      _buzzer(buzzerPin, id + "-buzzer", name + " Buzzer"),
+      _id(id), _name(name), _gateState(Closed), _gateStateStart(0)
 {
 }
 
@@ -32,13 +34,6 @@ void GateWithSensor::setup()
     _sensor.setup();
     _buzzer.setup();
 }
-
-enum GateState { Closed, IsOpening, Opened, Closing };
-
-// ...existing code...
-
-GateState _gateState = Closed;
-unsigned long _gateStateStart = 0;
 
 void GateWithSensor::loop()
 {
@@ -73,7 +68,6 @@ void GateWithSensor::loop()
             }
             break;
     }
-}
 }
 
 bool GateWithSensor::control(const String &action, JsonObject *payload)

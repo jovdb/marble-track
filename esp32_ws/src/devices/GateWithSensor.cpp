@@ -24,30 +24,51 @@ void GateWithSensor::setup()
     _buzzer.setup();
 }
 
+enum GateState { Closed, IsOpening, Opened, Closing };
+
+// ...existing code...
+
+GateState _gateState = Closed;
+unsigned long _gateStateStart = 0;
+
 void GateWithSensor::loop()
 {
     _servo.loop();
     _sensor.loop();
     _buzzer.loop();
 
-    static unsigned long actionStart = 0;
-    static int actionStep = 0;
-    if (_sensor.wasPressed()) {
-        _buzzer.tone(500, 100);
-        actionStart = millis();
-        actionStep = 1;
+    switch (_gateState) {
+        case Closed:
+            if (_sensor.wasPressed()) {
+                _buzzer.tone(500, 100);
+                _servo.setSpeed(240);
+                _servo.setAngle(170); // Open gate
+                _gateState = IsOpening;
+                _gateStateStart = millis();
+            }
+            break;
+        case IsOpening:
+            if (millis() - _gateStateStart >= 1000) { // Wait for opening
+                _gateState = Opened;
+                _gateStateStart = millis();
+            }
+            break;
+        case Opened:
+            // Stay open for a while, then start closing
+            if (millis() - _gateStateStart >= 1000) {
+                _servo.setSpeed(200);
+                _servo.setAngle(30); // Close gate
+                _gateState = Closing;
+                _gateStateStart = millis();
+            }
+            break;
+        case Closing:
+            if (millis() - _gateStateStart >= 1000) {
+                _gateState = Closed;
+            }
+            break;
     }
-    if (actionStep == 1 && millis() - actionStart >= 100) {
-        _servo.setSpeed(240);
-        _servo.setAngle(170);
-        actionStart = millis();
-        actionStep = 2;
-    }
-    if (actionStep == 2 && millis() - actionStart >= 1000) {
-        _servo.setSpeed(200);
-        _servo.setAngle(30);
-        actionStep = 0;
-    }
+}
 }
 
 bool GateWithSensor::control(const String &action, JsonObject *payload)
@@ -60,6 +81,14 @@ String GateWithSensor::getState()
     JsonDocument doc;
     doc["type"] = _type;
     doc["name"] = _name;
+    const char* stateStr = "Unknown";
+    switch (_gateState) {
+        case Closed: stateStr = "Closed"; break;
+        case IsOpening: stateStr = "IsOpening"; break;
+        case Opened: stateStr = "Opened"; break;
+        case Closing: stateStr = "Closing"; break;
+    }
+    doc["gateState"] = stateStr;
     String result;
     serializeJson(doc, result);
     return result;

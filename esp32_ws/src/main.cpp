@@ -1,3 +1,5 @@
+#include "OTA_Support.h"
+OTAService otaService;
 #include <Arduino.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -15,14 +17,12 @@
 #include <devices/Buzzer.h>
 #include "devices/GateWithSensor.h"
 
-// Operation modes
+#include "OTA_Support.h"
 enum class OperationMode
 {
   MANUAL,
   AUTOMATIC
 };
-
-// Global mode variable
 OperationMode currentMode = OperationMode::MANUAL;
 
 // Timing variable for automatic mode
@@ -136,6 +136,8 @@ void setup()
   if (!networkInitialized)
   {
     Serial.println("ERROR: Network initialization failed! System may not be accessible.");
+  } else {
+    otaService.setup(); // <-- OTA setup only after network is ready
   }
 
   // Initialize WebsiteHost with the network instance
@@ -202,6 +204,7 @@ void setup()
 
 void loop()
 {
+  otaService.loop();
   // Process captive portal for access point mode
   network.processCaptivePortal();
 

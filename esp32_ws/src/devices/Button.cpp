@@ -21,12 +21,13 @@
  * @param pullUp true for internal pull-up (button connects to ground), false for pull-down
  * @param debounceMs Debounce time in milliseconds
  */
-Button::Button(int pin, const String &id, const String &name, bool pullUp, unsigned long debounceMs)
-    : _pin(pin), _id(id), _name(name), _pullUp(pullUp), _debounceMs(debounceMs)
+Button::Button(int pin, const String &id, const String &name, bool pullUp, unsigned long debounceMs, ButtonType type)
+    : _pin(pin), _id(id), _name(name), _pullUp(pullUp), _debounceMs(debounceMs), _buttonType(type)
 {
+    String typeStr = (type == ButtonType::NormalOpen) ? "NormalOpen" : "NormalClosed";
     Serial.println("Button [" + _id + "]: Created on pin " + String(_pin) +
                    (_pullUp ? " (pull-up)" : " (pull-down)") +
-                   ", debounce: " + String(_debounceMs) + "ms");
+                   ", debounce: " + String(_debounceMs) + "ms, type: " + typeStr);
 }
 
 /**
@@ -214,6 +215,7 @@ String Button::getState()
     doc["pressedTime"] = getPressedTime();
     doc["pullUp"] = _pullUp;
     doc["debounceMs"] = _debounceMs;
+    doc["buttonType"] = (_buttonType == ButtonType::NormalOpen) ? "NormalOpen" : "NormalClosed";
 
     String result;
     serializeJson(doc, result);
@@ -229,12 +231,10 @@ bool Button::readRawState()
     bool pinState = digitalRead(_pin);
 
     // Invert logic for pull-up configuration (pin is LOW when button is pressed)
-    if (_pullUp)
-    {
-        return !pinState;
+    bool pressed = _pullUp ? !pinState : pinState;
+    // If NormalClosed, invert the pressed logic
+    if (_buttonType == ButtonType::NormalClosed) {
+        pressed = !pressed;
     }
-    else
-    {
-        return pinState;
-    }
+    return pressed;
 }

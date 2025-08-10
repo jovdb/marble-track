@@ -42,7 +42,7 @@ Button testButton(15, "test-button", "Test Button", false, 50);
 Button testButton2(16, "test-button2", "Test Button 2", false, 50);
 Buzzer testBuzzer(14, "test-buzzer", "Test Buzzer");
 Button ballSensor(47, "ball-sensor", "Ball Sensor", true, 100, Button::ButtonType::NormalClosed);
-GateWithSensor gateWithSensor(21, 2, 48, 14, "gate-with-sensor", "Gate", 50, true, 50, Button::ButtonType::NormalClosed);
+GateWithSensor gateWithSensor(21, 2, 48, &testBuzzer, "gate-with-sensor", "Gate", 50, true, 50, Button::ButtonType::NormalClosed);
 Button ballInGate(48, "ball-in-gate", "Ball In Gate", true, 100, Button::ButtonType::NormalClosed);
 
 // Function declarations
@@ -160,7 +160,7 @@ void setup()
   testServo.setup(); // Initialize servo hardware
   testServo.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
                                    { wsManager.broadcastState(deviceId, stateJson, ""); });
-  deviceManager.addDevice(&testServo);
+//  deviceManager.addDevice(&testServo);
 
   testButton.setup(); // Initialize button hardware
   testButton.setStateChangeCallback([&](const String &deviceId, const String &stateJson)

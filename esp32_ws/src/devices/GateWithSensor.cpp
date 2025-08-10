@@ -1,82 +1,81 @@
+#include <ArduinoJson.h>
 // ...existing code...
 #include "devices/GateWithSensor.h"
 #include "devices/Buzzer.h"
 
-void GateWithSensor::open() {
-    if (_gateState == Closed) {
-        _buzzer.tone(500, 100);
-        _servo.setSpeed(240);
-        _servo.setAngle(170); // Open gate
-        _gateState = IsOpening;
-        _gateStateStart = millis();
-    }
-}
-
-void GateWithSensor::setStateChangeCallback(StateChangeCallback callback)
-{
-    Device::setStateChangeCallback(callback);
-    _servo.setStateChangeCallback(callback);
-    _sensor.setStateChangeCallback(callback);
-}
-
-GateWithSensor::GateWithSensor(int servoPin, int servoPwmChannel, int buttonPin, int buzzerPin, const String &id, const String &name,
+GateWithSensor::GateWithSensor(int servoPin, int servoPwmChannel, int buttonPin, Buzzer *buzzer, const String &id, const String &name,
                                int initialAngle, bool buttonPullUp, unsigned long buttonDebounceMs, Button::ButtonType buttonType)
-    : _servo(servoPin, id + "-servo", name + " Servo", 30, servoPwmChannel),
-      _sensor(buttonPin, id + "-sensor", name + " Sensor", buttonPullUp, buttonDebounceMs, buttonType),
-      _buzzer(buzzerPin, id + "-buzzer", name + " Buzzer"),
-      _id(id), _name(name), _gateState(Closed), _gateStateStart(0)
+    : _servo(new ServoDevice(servoPin, id + "-servo", name + " Servo", 30, servoPwmChannel)),
+      _sensor(new Button(buttonPin, id + "-sensor", name + " Sensor", buttonPullUp, buttonDebounceMs, buttonType)),
+      _buzzer(buzzer),
+      _id(id),
+      _name(name),
+      _gateState(Closed),
+      _gateStateStart(0)
 {
-}
-
-void GateWithSensor::setup()
-{
-    _servo.setup();
-    _sensor.setup();
-    _buzzer.setup();
+    addChild(_servo);
+    addChild(_sensor);
 }
 
 void GateWithSensor::loop()
 {
-    _servo.loop();
-    _sensor.loop();
-    _buzzer.loop();
+    Device::loop();
 
-    switch (_gateState) {
-        case Closed:
-            if (_sensor.wasPressed()) {
-                open();
+    switch (_gateState)
+    {
+    case Closed:
+        if (_sensor && _sensor->wasPressed())
+        {
+            open();
+        }
+        break;
+    case IsOpening:
+        if (millis() - _gateStateStart >= 400)
+        { // Wait for opening
+            _gateState = Opened;
+            _gateStateStart = millis();
+            notifyStateChange();
+        }
+        break;
+    case Opened:
+        // Stay open for a while, then start closing
+        if (millis() - _gateStateStart >= 400)
+        {
+            if (_servo)
+            {
+                _servo->setSpeed(200);
+                _servo->setAngle(30); // Close gate
             }
-            break;
-        case IsOpening:
-            if (millis() - _gateStateStart >= 1000) { // Wait for opening
-                _gateState = Opened;
-                _gateStateStart = millis();
-            }
-            break;
-        case Opened:
-            // Stay open for a while, then start closing
-            if (millis() - _gateStateStart >= 1000) {
-                _servo.setSpeed(200);
-                _servo.setAngle(30); // Close gate
-                _gateState = Closing;
-                _gateStateStart = millis();
-            }
-            break;
-        case Closing:
-            if (millis() - _gateStateStart >= 1000) {
-                _gateState = Closed;
-            }
-            break;
+            _gateState = Closing;
+            _gateStateStart = millis();
+            notifyStateChange();
+        }
+        break;
+    case Closing:
+        if (millis() - _gateStateStart >= 1000)
+        {
+            _gateState = Closed;
+            notifyStateChange();
+        }
+        break;
     }
 }
 
-bool GateWithSensor::control(const String &action, JsonObject *payload)
+void GateWithSensor::open()
 {
-    if (action == "Open") {
-        open();
-        return true;
+    if (_gateState == Closed)
+    {
+        if (_buzzer)
+            _buzzer->tone(500, 100);
+        if (_servo)
+        {
+            _servo->setSpeed(240);
+            _servo->setAngle(170); // Open gate
+        }
+        _gateState = IsOpening;
+        _gateStateStart = millis();
+        notifyStateChange();
     }
-    return false;
 }
 
 String GateWithSensor::getState()
@@ -84,12 +83,21 @@ String GateWithSensor::getState()
     JsonDocument doc;
     doc["type"] = _type;
     doc["name"] = _name;
-    const char* stateStr = "Unknown";
-    switch (_gateState) {
-        case Closed: stateStr = "Closed"; break;
-        case IsOpening: stateStr = "IsOpening"; break;
-        case Opened: stateStr = "Opened"; break;
-        case Closing: stateStr = "Closing"; break;
+    const char *stateStr = "Unknown";
+    switch (_gateState)
+    {
+    case Closed:
+        stateStr = "Closed";
+        break;
+    case IsOpening:
+        stateStr = "IsOpening";
+        break;
+    case Opened:
+        stateStr = "Opened";
+        break;
+    case Closing:
+        stateStr = "Closing";
+        break;
     }
     doc["gateState"] = stateStr;
     String result;
@@ -97,12 +105,8 @@ String GateWithSensor::getState()
     return result;
 }
 
-std::vector<int> GateWithSensor::getPins() const
+bool GateWithSensor::control(const String &action, JsonObject *payload)
 {
-    std::vector<int> pins;
-    const auto &servoPins = _servo.getPins();
-    const auto &sensorPins = _sensor.getPins();
-    pins.insert(pins.end(), servoPins.begin(), servoPins.end());
-    pins.insert(pins.end(), sensorPins.begin(), sensorPins.end());
-    return pins;
+    // Default implementation, extend as needed
+    return false;
 }

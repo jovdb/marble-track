@@ -6,6 +6,12 @@ Device::~Device() {
     }
 }
 
+void Device::addChild(Device *child) {
+    if (child) {
+        children.push_back(child);
+    }
+}
+
 void Device::setup() {
     for (Device *child : children) {
         if (child) child->setup();

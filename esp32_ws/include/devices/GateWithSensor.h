@@ -30,8 +30,8 @@ private:
     enum GateState { Closed, IsOpening, Opened, Closing };
     GateState _gateState = Closed;
     unsigned long _gateStateStart = 0;
-    ServoDevice* _servo;
-    Button* _sensor;
+    ServoDevice _servo;
+    Button _sensor;
     Buzzer _buzzer;
     String _id;
     String _name;

@@ -18,7 +18,7 @@
 #include <vector>
 
 // Callback function type for state change notifications
-using StateChangeCallback = std::function<void(const String& deviceId, const String& stateJson)>;
+using StateChangeCallback = std::function<void(const String &deviceId, const String &stateJson)>;
 
 /**
  * @class Device
@@ -32,9 +32,42 @@ class Device
 {
 public:
     /**
-     * @brief Virtual destructor to ensure proper cleanup of derived classes
+     * @brief Default setup implementation: calls setup on all children
      */
-    virtual ~Device() = default;
+    virtual void setup()
+    {
+        for (Device *child : children)
+        {
+            if (child)
+                child->setup();
+        }
+    }
+
+    virtual ~Device()
+    {
+        for (Device *child : children)
+        {
+            delete child;
+        }
+    }
+
+    /**
+     * @brief Add a child device
+     * @param child Pointer to child device (ownership transferred)
+     */
+    void addChild(Device *child)
+    {
+        children.push_back(child);
+    }
+
+    /**
+     * @brief Get child devices
+     * @return Vector of child device pointers
+     */
+    std::vector<Device *> getChildren() const
+    {
+        return children;
+    }
 
     /**
      * @brief Get device identifier
@@ -60,7 +93,14 @@ public:
      * This function should be called repeatedly in the main loop to allow
      * the device to perform any periodic operations or state updates.
      */
-    virtual void loop() = 0;
+    virtual void loop()
+    {
+        for (Device *child : children)
+        {
+            if (child)
+                child->loop();
+        }
+    }
 
     /**
      * @brief Dynamic control function for device operations
@@ -69,14 +109,15 @@ public:
      * @return true if action was successful, false otherwise
      * @note Default implementation returns false (not controllable)
      */
-    virtual bool control(const String& action, JsonObject* payload = nullptr) { return false; }
-    
+    virtual bool control(const String &action, JsonObject *payload = nullptr) { return false; }
+
     /**
      * @brief Get current state of the device
      * @return String containing JSON representation of the current state
      * @note Default implementation returns empty JSON object string
      */
-    virtual String getState() { 
+    virtual String getState()
+    {
         return "{}";
     }
 
@@ -85,17 +126,39 @@ public:
      * @return Array of pin numbers used by this device
      * @note Default implementation returns empty array
      */
-    virtual std::vector<int> getPins() const {
-        return {};
+    virtual std::vector<int> getPins() const
+    {
+        std::vector<int> pins;
+        // Get own pins (default: none)
+        // ...existing code...
+        // Get pins from children
+        for (const Device *child : children)
+        {
+            if (child)
+            {
+                auto childPins = child->getPins();
+                pins.insert(pins.end(), childPins.begin(), childPins.end());
+            }
+        }
+        return pins;
     }
 
     /**
      * @brief Set callback function for state change notifications
      * @param callback Function to call when device state changes
      */
-    virtual void setStateChangeCallback(StateChangeCallback callback) { stateChangeCallback = callback; }
+    virtual void setStateChangeCallback(StateChangeCallback callback)
+    {
+        stateChangeCallback = callback;
+        for (Device *child : children)
+        {
+            if (child)
+                child->setStateChangeCallback(callback);
+        }
+    }
 
 protected:
+    std::vector<Device *> children;
     /**
      * @brief Callback function for state change notifications
      */
@@ -105,8 +168,10 @@ protected:
      * @brief Notify about state change if callback is set
      * @param state Current state of the device
      */
-    void notifyStateChange() {
-        if (stateChangeCallback) {
+    void notifyStateChange()
+    {
+        if (stateChangeCallback)
+        {
             stateChangeCallback(getId(), getState());
         }
     }

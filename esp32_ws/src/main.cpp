@@ -29,20 +29,20 @@ OperationMode currentMode = OperationMode::MANUAL;
 unsigned long lastAutoToggleTime = 0;
 
 // Create network and server instances
-Network network(Config::WIFI_SSID, Config::WIFI_PASSWORD);
-AsyncWebServer server(Config::WEB_SERVER_PORT);
+Network network("telenet-182FE", "cPQdRWmFx1eM");
+AsyncWebServer server(80);
 WebsiteHost websiteHost(&network);
 WebSocketManager wsManager("/ws");
 DeviceManager deviceManager;
 
 // Device instances
-Led testLed(Config::LED_PIN, "test-led", "Test LED");
-ServoDevice testServo(Config::SERVO_PIN, "test-servo", "Test Servo", 30, Config::SERVO_PWM_CHANNEL);
-Button testButton(Config::BUTTON_PIN, "test-button", "Test Button", Config::BUTTON_INVERTED, Config::BUTTON_DEBOUNCE_MS);
-Button testButton2(Config::BUTTON2_PIN, "test-button2", "Test Button 2", Config::BUTTON_INVERTED, Config::BUTTON_DEBOUNCE_MS);
-Buzzer testBuzzer(Config::BUZZER_PIN, "test-buzzer", "Test Buzzer");
-Button ballSensor(Config::BALL_SENSOR_PIN, "ball-sensor", "Ball Sensor", true, 100, Button::ButtonType::NormalClosed);
-GateWithSensor gateWithSensor(Config::SERVO_PIN, Config::SERVO_PWM_CHANNEL, 48, Config::BUZZER_PIN, "gate-with-sensor", "Gate", 50, true, Config::BUTTON_DEBOUNCE_MS, Button::ButtonType::NormalClosed);
+Led testLed(1, "test-led", "Test LED");
+ServoDevice testServo(21, "test-servo", "Test Servo", 30, 2);
+Button testButton(15, "test-button", "Test Button", false, 50);
+Button testButton2(16, "test-button2", "Test Button 2", false, 50);
+Buzzer testBuzzer(14, "test-buzzer", "Test Buzzer");
+Button ballSensor(47, "ball-sensor", "Ball Sensor", true, 100, Button::ButtonType::NormalClosed);
+GateWithSensor gateWithSensor(21, 2, 48, 14, "gate-with-sensor", "Gate", 50, true, 50, Button::ButtonType::NormalClosed);
 Button ballInGate(48, "ball-in-gate", "Ball In Gate", true, 100, Button::ButtonType::NormalClosed);
 
 // Function declarations
@@ -128,7 +128,7 @@ void runAutomaticMode()
 void setup()
 {
   // Initialize serial communication
-  Serial.begin(Config::SERIAL_BAUD_RATE);
+  Serial.begin(115200);
   Serial.println("Starting Marble Track Communication System");
 
   // Initialize Network (will try WiFi, fall back to AP if needed)

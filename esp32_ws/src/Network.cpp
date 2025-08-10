@@ -16,6 +16,11 @@ Network::Network(const char *wifi_ssid, const char *wifi_password)
 {
 }
 
+static const char *AP_SSID = "MarbleTrackAP";
+static const char *AP_PASSWORD = ""; // Default password for the Access Point
+static const unsigned long WIFI_TIMEOUT_MS = 10000; // Timeout for WiFi connection
+static const unsigned long CONNECTION_CHECK_INTERVAL_MS = 500; // Interval to check connection status
+
 Network::~Network()
 {
     if (_dnsServer != nullptr)
@@ -56,9 +61,9 @@ bool Network::connectToWiFi()
 
     unsigned long startTime = millis();
 
-    while (WiFi.status() != WL_CONNECTED && (millis() - startTime) < Config::WIFI_TIMEOUT_MS)
+    while (WiFi.status() != WL_CONNECTED && (millis() - startTime) < WIFI_TIMEOUT_MS)
     {
-        delay(Config::CONNECTION_CHECK_INTERVAL_MS);
+        delay(CONNECTION_CHECK_INTERVAL_MS);
         Serial.print(".");
     }
 
@@ -78,10 +83,10 @@ bool Network::connectToWiFi()
 
 bool Network::startAccessPoint()
 {
-    Serial.printf("Creating own network '%s' ...", Config::AP_SSID);
+    Serial.printf("Creating own network '%s' ...", AP_SSID);
 
     WiFi.mode(WIFI_AP);
-    bool result = WiFi.softAP(Config::AP_SSID, Config::AP_PASSWORD);
+    bool result = WiFi.softAP(AP_SSID, AP_PASSWORD);
 
     if (result)
     {
@@ -96,7 +101,7 @@ bool Network::startAccessPoint()
         // Start DNS server on port 53 and redirect all domains to our IP
         _dnsServer->start(53, "*", IP);
 
-        // Serial.printf("Password: %s\n", Config::AP_PASSWORD);
+        // Serial.printf("Password: %s\n", AP_PASSWORD);
         Serial.printf(": OK: http://%s\n", IP.toString().c_str());
         Serial.println("Captive portal enabled - all web requests will redirect here");
         return true;
@@ -116,7 +121,7 @@ String Network::getConnectionInfo() const
         return "WiFi Client: " + String(_wifi_ssid) + " / IP: " + WiFi.localIP().toString();
 
     case NetworkMode::ACCESS_POINT:
-        return "Access Point: " + String(Config::AP_SSID) + " / IP: " + WiFi.softAPIP().toString();
+        return "Access Point: " + String(AP_SSID) + " / IP: " + WiFi.softAPIP().toString();
 
     case NetworkMode::DISCONNECTED:
     default:
@@ -158,7 +163,7 @@ String Network::getStatusJSON() const
     case NetworkMode::ACCESS_POINT:
         json += "\"mode\":\"ap\",";
         json += "\"connected\":true,";
-        json += "\"ssid\":\"" + String(Config::AP_SSID) + "\",";
+        json += "\"ssid\":\"" + String(AP_SSID) + "\",";
         json += "\"ip\":\"" + WiFi.softAPIP().toString() + "\",";
         json += "\"clients\":" + String(WiFi.softAPgetStationNum());
         break;

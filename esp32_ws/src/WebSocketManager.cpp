@@ -314,7 +314,7 @@ void WebSocketManager::broadcastState(const String &deviceId, const String &stat
 
     String message;
     serializeJson(doc, message);
-    printf("Websocket sent:     %s\n", message.c_str());
+    Serial.printf("Websocket sent:     %s\n", message.c_str());
 
     notifyClients(message);
 }

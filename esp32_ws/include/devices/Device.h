@@ -31,131 +31,18 @@ using StateChangeCallback = std::function<void(const String &deviceId, const Str
 class Device
 {
 public:
-    /**
-     * @brief Default setup implementation: calls setup on all children
-     */
-    virtual void setup()
-    {
-        for (Device *child : children)
-        {
-            if (child)
-                child->setup();
-        }
-    }
-
-    virtual ~Device()
-    {
-        for (Device *child : children)
-        {
-            delete child;
-        }
-    }
-
-    /**
-     * @brief Add a child device
-     * @param child Pointer to child device (ownership transferred)
-     */
-    void addChild(Device *child)
-    {
-        children.push_back(child);
-    }
-
-    /**
-     * @brief Get child devices
-     * @return Vector of child device pointers
-     */
-    std::vector<Device *> getChildren() const
-    {
-        return children;
-    }
-
-    /**
-     * @brief Get device identifier
-     * @return String identifier of the device
-     */
+    virtual void setup();
+    virtual ~Device();
+    void addChild(Device *child);
+    std::vector<Device *> getChildren() const;
     virtual String getId() const = 0;
-
-    /**
-     * @brief Get device type, can be used for custom UI
-     *
-     */
     virtual String getType() const = 0;
-
-    /**
-     * @brief Get device name
-     * @return String human-readable name of the device
-     */
     virtual String getName() const = 0;
-
-    /**
-     * @brief Loop function for continuous device operations
-     *
-     * This function should be called repeatedly in the main loop to allow
-     * the device to perform any periodic operations or state updates.
-     */
-    virtual void loop()
-    {
-        for (Device *child : children)
-        {
-            if (child)
-                child->loop();
-        }
-    }
-
-    /**
-     * @brief Dynamic control function for device operations
-     * @param type The type to perform (e.g., "set", "move", "toggle")
-     * @param payload Pointer to JSON object containing action parameters (can be nullptr)
-     * @return true if action was successful, false otherwise
-     * @note Default implementation returns false (not controllable)
-     */
-    virtual bool control(const String &action, JsonObject *payload = nullptr) { return false; }
-
-    /**
-     * @brief Get current state of the device
-     * @return String containing JSON representation of the current state
-     * @note Default implementation returns empty JSON object string
-     */
-    virtual String getState()
-    {
-        return "{}";
-    }
-
-    /**
-     * @brief Get pins used by this device
-     * @return Array of pin numbers used by this device
-     * @note Default implementation returns empty array
-     */
-    virtual std::vector<int> getPins() const
-    {
-        std::vector<int> pins;
-        // Get own pins (default: none)
-        // ...existing code...
-        // Get pins from children
-        for (const Device *child : children)
-        {
-            if (child)
-            {
-                auto childPins = child->getPins();
-                pins.insert(pins.end(), childPins.begin(), childPins.end());
-            }
-        }
-        return pins;
-    }
-
-    /**
-     * @brief Set callback function for state change notifications
-     * @param callback Function to call when device state changes
-     */
-    virtual void setStateChangeCallback(StateChangeCallback callback)
-    {
-        stateChangeCallback = callback;
-        for (Device *child : children)
-        {
-            if (child)
-                child->setStateChangeCallback(callback);
-        }
-    }
+    virtual void loop();
+    virtual bool control(const String &action, JsonObject *payload = nullptr);
+    virtual String getState();
+    virtual std::vector<int> getPins() const;
+    virtual void setStateChangeCallback(StateChangeCallback callback);
 
 protected:
     std::vector<Device *> children;
@@ -168,13 +55,7 @@ protected:
      * @brief Notify about state change if callback is set
      * @param state Current state of the device
      */
-    void notifyStateChange()
-    {
-        if (stateChangeCallback)
-        {
-            stateChangeCallback(getId(), getState());
-        }
-    }
+    void notifyStateChange();
 };
 
 #endif // DEVICE_H

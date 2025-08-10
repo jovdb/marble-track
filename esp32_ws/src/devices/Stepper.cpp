@@ -294,3 +294,14 @@ String Stepper::getState()
     serializeJson(doc, result);
     return result;
 }
+
+std::vector<int> Stepper::getPins() const {
+    std::vector<int> pins;
+    pins.push_back(_pin1);
+    pins.push_back(_pin2);
+    if (_is4Pin) {
+        pins.push_back(_pin3);
+        pins.push_back(_pin4);
+    }
+    return pins;
+}

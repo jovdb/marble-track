@@ -29,6 +29,11 @@ class Stepper : public Device
 {
 public:
     /**
+     * @brief Get all pin numbers used by this stepper
+     * @return std::vector<int> of pin numbers
+     */
+    std::vector<int> getPins() const override;
+    /**
      * @brief Constructor for 2-pin stepper (DRIVER - NEMA 17 with driver)
      * @param stepPin GPIO pin number for the step signal
      * @param dirPin GPIO pin number for the direction signal

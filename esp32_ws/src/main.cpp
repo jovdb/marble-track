@@ -18,7 +18,6 @@ OTAService otaService;
 
 #include "devices/GateWithSensor.h"
 #include "devices/Stepper.h"
-#include "devices/Wheel.h"
 
 #include "OTA_Support.h"
 enum class OperationMode
@@ -48,10 +47,7 @@ Button ballSensor(47, "ball-sensor", "Ball Sensor", true, 100, Button::ButtonTyp
 GateWithSensor gateWithSensor(21, 2, 48, &testBuzzer, "gate-with-sensor", "Gate", 50, true, 50, Button::ButtonType::NormalClosed);
 Button ballInGate(48, "ball-in-gate", "Ball In Gate", true, 100, Button::ButtonType::NormalClosed);
 
-// Stepper stepper1(41, 40, 39, 38, "stepper1", "Small stepper", 100.0, 150.0);
-
-// Wheel device instance (example pins: 41, 40, 39, 38 for stepper, 35 for button)
-Wheel marbleWheel(41, 40, 39, 38, 35, "marble-wheel", "Marble Wheel", 1000.0, 500.0, true, 50, Button::ButtonType::NormalOpen);
+Stepper stepper1(41, 40, 39, 38, "stepper1", "Small stepper", 100.0, 150.0);
 
 // Function declarations
 void setOperationMode(OperationMode mode);
@@ -60,10 +56,9 @@ void runManualMode()
 {
   // Manual mode: devices are controlled via WebSocket commands
   // Check for button press to toggle LED
- /*
   if (testButton.isPressed())
   {
-    /*stepper1.move(1000); // Move stepper 100 steps on button press
+    stepper1.move(1000); // Move stepper 100 steps on button press
   }
   if (testButton.wasPressed())
   {
@@ -76,7 +71,7 @@ void runManualMode()
   {
     // Stop on release
     stepper1.move(0);
-  }*/
+  }
 
   // Check for second button press to trigger buzzer
   if (testButton2.wasPressed())
@@ -209,14 +204,11 @@ void setup()
                                         { wsManager.broadcastState(deviceId, stateJson, ""); });
   deviceManager.addDevice(&gateWithSensor);
 
-  // ...existing code...
-
-
-  // Setup and register marbleWheel
-  marbleWheel.setup();
-  marbleWheel.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                     { wsManager.broadcastState(deviceId, stateJson, ""); });
-  deviceManager.addDevice(&marbleWheel);
+  // Setup and register stepper1
+  stepper1.setup();
+  stepper1.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+                                  { wsManager.broadcastState(deviceId, stateJson, ""); });
+  deviceManager.addDevice(&stepper1);
 
   Serial.println("Device management:");
   Serial.println("  Total devices: " + String(deviceManager.getDeviceCount()));

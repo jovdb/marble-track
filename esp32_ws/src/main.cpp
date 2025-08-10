@@ -67,7 +67,7 @@ void runManualMode()
     stepper1.setMaxSpeed(1000); // Set stepper speed
     stepper1.setAcceleration(100);
   }
-  if (!testButton.isPressed())
+  if (!testButton.wasPressed())
   {
     // Stop on release
     stepper1.move(0);
@@ -145,6 +145,7 @@ void setup()
 {
   // Initialize serial communication
   Serial.begin(115200);
+  Serial.println("Serial test OK");
   Serial.println("Starting Marble Track Communication System");
 
   // Initialize Network (will try WiFi, fall back to AP if needed)
@@ -219,10 +220,6 @@ void setup()
 
   // testServo.setAngle(20); // Set initial angle for servo
   // ballGate.setAngle(45);  // Set initial angle for second servo
-
-  // Print access information
-  Serial.println("\n=== DEVICE READY ===");
-  Serial.println("==================\n");
 }
 
 void loop()

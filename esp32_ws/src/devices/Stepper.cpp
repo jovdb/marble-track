@@ -101,8 +101,8 @@ void Stepper::loop()
     // If stepper just stopped moving, notify state change
     if (wasMoving && !_isMoving)
     {
-        Serial.println("Stepper [" + _id + "]: Movement completed at position " + String(_stepper.currentPosition()));
-        notifyStateChange();
+        // Serial.println("Stepper [" + _id + "]: Movement completed at position " + String(_stepper.currentPosition()));
+        // notifyStateChange();
     }
 }
 
@@ -112,10 +112,10 @@ void Stepper::loop()
  */
 void Stepper::move(long steps)
 {
-    Serial.println("Stepper [" + _id + "]: Moving " + String(steps) + " steps");
+    //Serial.println("Stepper [" + _id + "]: Moving " + String(steps) + " steps");
     _stepper.move(steps);
     _isMoving = true;
-    notifyStateChange();
+    // notifyStateChange();
 }
 
 /**
@@ -127,7 +127,7 @@ void Stepper::moveTo(long position)
     Serial.println("Stepper [" + _id + "]: Moving to position " + String(position));
     _stepper.moveTo(position);
     _isMoving = true;
-    notifyStateChange();
+    // notifyStateChange();
 }
 
 /**
@@ -187,7 +187,7 @@ void Stepper::stop()
     Serial.println("Stepper [" + _id + "]: Emergency stop");
     _stepper.stop();
     _isMoving = false;
-    notifyStateChange();
+    // notifyStateChange();
 }
 
 /**

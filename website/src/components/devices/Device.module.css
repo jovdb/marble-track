@@ -230,6 +230,10 @@
   flex-shrink: 0;
 }
 
+.device__svg {
+  fill: none;
+}
+
 /* Animations */
 @keyframes pulse {
   0%, 100% {

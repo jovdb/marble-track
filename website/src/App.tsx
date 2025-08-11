@@ -15,6 +15,7 @@ import AnimatedFavicon from "./utils/animatedFavicon";
 import logo from "./assets/logo-64.png";
 import styles from "./App.module.css";
 import { logger } from "./stores/logger";
+import { Wheel } from "./components/devices/Wheel";
 
 const App: Component = () => {
   let animatedFavicon: AnimatedFavicon;
@@ -45,6 +46,9 @@ const App: Component = () => {
         return <Buzzer id={device.id} />;
       case "gate":
         return <Gate id={device.id} />;
+      case "wheel":
+        return <Wheel id={device.id} />;
+
       default:
         // Return a generic component or null for unknown device types
         logger.error(`Unknown device type: ${device.type}`);
@@ -116,6 +120,7 @@ const App: Component = () => {
                 <For each={availableDevices()}>{(device) => renderDeviceComponent(device)}</For>
               )}
             </div>
+            <Wheel id="test" />
           </CollapsibleSection>
         </section>
 

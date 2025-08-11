@@ -1,3 +1,4 @@
+import { Device } from "./Device";
 import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
 import { ButtonIcon } from "../icons/DeviceIcons";
 import styles from "./Device.module.css";
@@ -33,49 +34,37 @@ export function Button(props: { id: string }) {
   };
 
   return (
-    <div class={styles.device}>
-      <div class={styles.device__header}>
-        <h3 class={styles.device__title}>
-          <ButtonIcon />
-          {deviceState()?.name || props.id}
-        </h3>
-        <span class={styles["device__type-badge"]}>BUTTON</span>
-      </div>
-      
-      <div class={styles.device__content}>
-        {disabled() && (
-          <div class={styles.device__error}>
-            {error() || (connectedState() === "Disconnected" ? "Disconnected" : connectedState())}
+    <Device id={props.id} name={deviceState()?.name} type="BUTTON">
+      {disabled() && (
+        <div class={styles.device__error}>
+          {error() || (connectedState() === "Disconnected" ? "Disconnected" : connectedState())}
+        </div>
+      )}
+      {!disabled() && (
+        <>
+          <div class={styles.device__status}>
+            <div class={`${styles["device__status-indicator"]} ${
+              deviceState()?.pressed 
+                ? styles["device__status-indicator--pressed"] 
+                : styles["device__status-indicator--off"]
+            }`}></div>
+            <span class={styles["device__status-text"]}>
+              Status: {deviceState()?.pressed ? "Pressed" : "Released"}
+            </span>
           </div>
-        )}
-        
-        {!disabled() && (
-          <>
-            <div class={styles.device__status}>
-              <div class={`${styles["device__status-indicator"]} ${
-                deviceState()?.pressed 
-                  ? styles["device__status-indicator--pressed"] 
-                  : styles["device__status-indicator--off"]
-              }`}></div>
-              <span class={styles["device__status-text"]}>
-                Status: {deviceState()?.pressed ? "Pressed" : "Released"}
-              </span>
-            </div>
-
-            <div class={styles.device__controls}>
-              <button 
-                class={styles.device__button}
-                onMouseDown={handlePress}
-                onMouseUp={handleRelease}
-                onMouseLeave={handleRelease}
-                disabled={disabled()}
-              >
-                Hold to Press
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+          <div class={styles.device__controls}>
+            <button 
+              class={styles.device__button}
+              onMouseDown={handlePress}
+              onMouseUp={handleRelease}
+              onMouseLeave={handleRelease}
+              disabled={disabled()}
+            >
+              Hold to Press
+            </button>
+          </div>
+        </>
+      )}
+    </Device>
   );
 }

@@ -41,8 +41,12 @@ bool Wheel::control(const String &action, JsonObject *payload)
 String Wheel::getState()
 {
     JsonDocument doc;
-    doc["type"] = getType();
-    doc["name"] = getName();
+    // Copy base Device state fields
+    JsonDocument baseDoc;
+    deserializeJson(baseDoc, Device::getState());
+    for (JsonPair kv : baseDoc.as<JsonObject>()) {
+        doc[kv.key()] = kv.value();
+    }
     doc["stepperPosition"] = _stepper ? _stepper->getCurrentPosition() : 0;
     doc["buttonPressed"] = _sensor ? _sensor->wasPressed() : false;
     String result;

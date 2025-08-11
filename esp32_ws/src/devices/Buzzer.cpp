@@ -217,8 +217,12 @@ String Buzzer::getState()
 {
     JsonDocument doc;
 
-    doc["type"] = getType();
-    doc["name"] = getName();
+    // Copy base Device state fields
+    JsonDocument baseDoc;
+    deserializeJson(baseDoc, Device::getState());
+    for (JsonPair kv : baseDoc.as<JsonObject>()) {
+        doc[kv.key()] = kv.value();
+    }
 
     // Convert mode enum to string
     String modeStr;

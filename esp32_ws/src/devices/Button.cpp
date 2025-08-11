@@ -209,8 +209,16 @@ bool Button::control(const String &action, JsonObject *payload)
 String Button::getState()
 {
     JsonDocument doc;
-    doc["type"] = getType();
-    doc["name"] = getName();
+
+    // Copy base Device state fields
+    JsonDocument baseDoc;
+    deserializeJson(baseDoc, Device::getState());
+    for (JsonPair kv : baseDoc.as<JsonObject>())
+    {
+        doc[kv.key()] = kv.value();
+    }
+
+    // Add Button-specific fields
     doc["pressed"] = _currentState;
     doc["pressedTime"] = getPressedTime();
     doc["pullUp"] = _pullUp;
@@ -233,7 +241,8 @@ bool Button::readRawState()
     // Invert logic for pull-up configuration (pin is LOW when button is pressed)
     bool pressed = _pullUp ? !pinState : pinState;
     // If NormalClosed, invert the pressed logic
-    if (_buttonType == ButtonType::NormalClosed) {
+    if (_buttonType == ButtonType::NormalClosed)
+    {
         pressed = !pressed;
     }
     return pressed;

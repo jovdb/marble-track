@@ -1,5 +1,5 @@
-// Include header first to ensure Device type is defined
 #include "devices/Device.h"
+
 Device::Device(const String &name, const String &type) : _name(name), _type(type) {}
 
 Device::~Device()

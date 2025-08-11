@@ -163,8 +163,12 @@ bool ServoDevice::control(const String &action, JsonObject *payload)
 String ServoDevice::getState()
 {
     JsonDocument doc;
-    doc["type"] = getType();
-    doc["name"] = getName();
+    // Copy base Device state fields
+    JsonDocument baseDoc;
+    deserializeJson(baseDoc, Device::getState());
+    for (JsonPair kv : baseDoc.as<JsonObject>()) {
+        doc[kv.key()] = kv.value();
+    }
     doc["angle"] = _currentAngle;
     doc["targetAngle"] = _targetAngle;
     doc["speed"] = _speed;

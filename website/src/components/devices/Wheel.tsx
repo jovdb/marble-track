@@ -28,16 +28,25 @@ export function Wheel(props: { id: string }) {
 
   setDirection(1);
   
-  const interval = setInterval(() => {
-    if (direction() === 1) {
-      setAngle((prev) => ((prev ?? 0) + 0.1) % 360);
-    } else if (direction() === -1) {
-      setAngle((prev) => ((prev ?? 0) - 0.1 + 360) % 360);
-    }
-  }, 1000 / 60);
+  let animationFrame: number | null = null;
+  let lastTime: number | null = null;
 
+  function animateWheel(time: number) {
+    if (lastTime === null) lastTime = time;
+    const dt = (time - lastTime) / 1000; // seconds
+    lastTime = time;
+    const speed = 10; // degrees per second
+    if (direction() === 1) {
+      setAngle((prev) => ((prev ?? 0) + speed * dt) % 360);
+    } else if (direction() === -1) {
+      setAngle((prev) => ((prev ?? 0) - speed * dt + 360) % 360);
+    }
+    animationFrame = requestAnimationFrame(animateWheel);
+  }
+
+  animationFrame = requestAnimationFrame(animateWheel);
   onCleanup(() => {
-    clearInterval(interval);
+    if (animationFrame) cancelAnimationFrame(animationFrame);
   });
 
   const size = 100;

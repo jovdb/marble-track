@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createSignal, onCleanup } from "solid-js";
 import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
 import styles from "./Device.module.css";
 
@@ -27,16 +27,28 @@ export function Gate(props: { id: string }) {
     );
   };
 
-  setInterval(() => {
-    const step = 3;
-    const currentState = gateState();
+  let animationFrame: number | null = null;
+  let lastTime: number | null = null;
 
+  function animateGate(time: number) {
+    if (lastTime === null) lastTime = time;
+    const dt = (time - lastTime) / 1000; // seconds
+    lastTime = time;
+    const speed = 180; // degrees per second
+    const currentState = gateState();
     if (currentState === "IsOpening" || currentState === "Opened") {
-      setAngle((prev) => Math.max(prev - step, openedAngle));
+      setAngle((prev) => Math.max(prev - speed * dt, openedAngle));
     } else if (currentState === "Closing" || currentState === "Closed") {
-      setAngle((prev) => Math.min(prev + step, closedAngle));
+      setAngle((prev) => Math.min(prev + speed * dt, closedAngle));
     }
-  }, 1000 / 60);
+    animationFrame = requestAnimationFrame(animateGate);
+  }
+
+  // Start animation
+  animationFrame = requestAnimationFrame(animateGate);
+  onCleanup(() => {
+    if (animationFrame) cancelAnimationFrame(animationFrame);
+  });
 
   setInterval(() => {
     setGateState(gateState() === "Closed" ? "Opened" : "Closed");

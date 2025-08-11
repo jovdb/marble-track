@@ -121,6 +121,7 @@ const App: Component = () => {
               )}
             </div>
             <Wheel id="test" />
+            <Gate id="test2" />
           </CollapsibleSection>
         </section>
 

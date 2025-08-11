@@ -53,7 +53,7 @@ export function Wheel(props: { id: string }) {
   const arrowRadius = radius * 0.8; // Radius for the arrow path
 
   return (
-    <Device id={props.id} name={deviceState()?.name} type={deviceState()?.type}>
+    <Device id={props.id} deviceState={deviceState()}>
       <div style={{ "max-width": "300px", margin: "0 auto" }}>
         <svg class={styles.svg} viewBox="0 0 100 100" style={{ "max-width": "300px" }}>
           <g transform={`rotate(${angle()})`} transform-origin={`${size / 2}px ${size / 2}px`}>

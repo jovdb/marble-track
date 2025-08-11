@@ -20,7 +20,7 @@ export function Led(props: { id: string }) {
   };
 
   return (
-    <Device id={props.id} name={deviceState()?.name} type={deviceState()?.type}>
+    <Device id={props.id} deviceState={deviceState()}>
       {disabled() && (
         <div class={styles.device__error}>
           {error() || (connectedState() === "Disconnected" ? "Disconnected" : connectedState())}

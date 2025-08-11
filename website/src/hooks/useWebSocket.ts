@@ -8,7 +8,6 @@ export interface DeviceInfo {
   name: string;
   type: string;
   pins?: number[];
-  state: any;
 }
 
 // Global device store signals
@@ -51,7 +50,7 @@ websocket.addEventListener("error", (e) => {
   console.error("WebSocket error", e);
 });
 websocket.addEventListener("message", (e) => {
-  console.log("WebSocket message received:", e.data);
+  console.log("WebSocket message received:", JSON.parse(e.data));
 
   const data = e.data;
   setLastMessage(data);

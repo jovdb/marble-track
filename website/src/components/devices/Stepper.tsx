@@ -39,7 +39,7 @@ export function Stepper(props: { id: string }) {
   };
 
   return (
-    <Device id={props.id} name={deviceState()?.name} type="STEPPER">
+    <Device id={props.id} deviceState={deviceState()}>
       {disabled() && (
         <div class={styles.device__error}>
           {error() || (connectedState() === "Disconnected" ? "Disconnected" : connectedState())}

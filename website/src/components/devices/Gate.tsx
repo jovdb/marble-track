@@ -48,7 +48,7 @@ export function Gate(props: { id: string }) {
   });
 
   return (
-    <Device id={props.id} name={deviceState()?.name} type={deviceState()?.type}>
+    <Device id={props.id} deviceState={deviceState()}>
       <div>
         <svg viewBox="18 18 80 70">
           <g style="transform-origin: 50px 50px;" transform={`rotate(-3)`}>

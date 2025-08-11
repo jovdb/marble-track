@@ -4,13 +4,12 @@ import styles from "./Device.module.css";
 export interface IDeviceState {
   name: string;
   type: string;
+  children?: IDeviceState[];
 }
 
 interface DeviceProps {
   id: string;
-  name?: string;
-  type?: string;
-  hasChildren?: boolean;
+  deviceState: IDeviceState | undefined;
   children?: JSX.Element | JSX.Element[];
 }
 
@@ -20,21 +19,34 @@ export function Device(props: DeviceProps) {
   return (
     <div class={styles.device}>
       <div class={styles.device__header}>
-        <h3 class={styles.device__title}>{props.name || props.id}</h3>
-        {props.type && <span class={styles["device__type-badge"]}>{props.type}</span>}
-        {props.hasChildren && (
+        <h3 class={styles.device__title}>{props.deviceState?.name || props.id}</h3>
+        {props.deviceState?.type && (
+          <span class={styles["device__type-badge"]}>{props.deviceState?.type}</span>
+        )}
+        {props.deviceState?.children?.length && (
           <button
-            class={styles.device__button}
+            class={styles.device__advancedBtn}
             type="button"
+            aria-label={showChildren() ? "Hide advanced" : "Show advanced"}
             onClick={() => setShowChildren((v) => !v)}
           >
-            {showChildren() ? "Hide details" : "Show more"}
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle cx="5" cy="12" r="2" fill="currentColor" />
+              <circle cx="12" cy="12" r="2" fill="currentColor" />
+              <circle cx="19" cy="12" r="2" fill="currentColor" />
+            </svg>
           </button>
         )}
       </div>
       <div class={styles.device__content}>
         {props.children}
-        {props.hasChildren && showChildren() && (
+        {props.deviceState?.children?.length && showChildren() && (
           <div class={styles.device__children}>{props.children}</div>
         )}
       </div>

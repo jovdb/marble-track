@@ -20,6 +20,7 @@ OTAService otaService;
 #include "devices/Stepper.h"
 
 #include "OTA_Support.h"
+#include <devices/Wheel.h>
 enum class OperationMode
 {
   MANUAL,
@@ -46,8 +47,8 @@ Buzzer testBuzzer(14, "test-buzzer", "Test Buzzer");
 Button ballSensor(47, "ball-sensor", "Ball Sensor", true, 100, Button::ButtonType::NormalClosed);
 GateWithSensor gateWithSensor(21, 2, 48, &testBuzzer, "gate-with-sensor", "Gate", 50, true, 50, Button::ButtonType::NormalClosed);
 Button ballInGate(48, "ball-in-gate", "Ball In Gate", true, 100, Button::ButtonType::NormalClosed);
-
 Stepper stepper1(41, 40, 39, 38, "stepper1", "Small stepper", 100.0, 150.0);
+Wheel wheel(41, 40, 39, 38, 47, "wheel", "Wheel");
 
 // Function declarations
 void setOperationMode(OperationMode mode);
@@ -58,19 +59,19 @@ void runManualMode()
   // Check for button press to toggle LED
   if (testButton.isPressed())
   {
-    stepper1.move(1000); // Move stepper 100 steps on button press
+    stepper1.move(8000); // Move stepper 100 steps on button press
   }
   if (testButton.wasPressed())
   {
     testLed.toggle();
     testBuzzer.tone(200, 100);
     stepper1.setMaxSpeed(1000); // Set stepper speed
-    stepper1.setAcceleration(100);
+    stepper1.setAcceleration(50);
   }
   if (!testButton.wasPressed())
   {
     // Stop on release
-    stepper1.move(0);
+    // stepper1.move(0);
   }
 
   // Check for second button press to trigger buzzer
@@ -209,6 +210,11 @@ void setup()
   stepper1.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
                                   { wsManager.broadcastState(deviceId, stateJson, ""); });
   deviceManager.addDevice(&stepper1);
+
+  wheel.setup(); // Initialize Wheel device
+  wheel.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+                               { wsManager.broadcastState(deviceId, stateJson, ""); });
+  deviceManager.addDevice(&wheel);
 
   Serial.println("Device management:");
   Serial.println("  Total devices: " + String(deviceManager.getDeviceCount()));

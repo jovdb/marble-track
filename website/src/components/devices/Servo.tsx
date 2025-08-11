@@ -1,19 +1,16 @@
-import { Device } from "./Device";
+import { Device, IDeviceState } from "./Device";
 import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
 import { debounce } from "@solid-primitives/scheduled";
 import { createSignal } from "solid-js";
-import { ServoIcon } from "../icons/DeviceIcons";
 import styles from "./Device.module.css";
 
-interface IServoState {
+interface IServoState extends IDeviceState {
   angle: number;
   targetAngle: number;
   speed: number;
   isMoving: boolean;
   pin: number;
   pwmChannel: number;
-  name: string;
-  type: string;
 }
 
 export function Servo(props: { id: string }) {
@@ -55,7 +52,7 @@ export function Servo(props: { id: string }) {
   };
 
   return (
-    <Device id={props.id} name={deviceState()?.name} type="SERVO">
+    <Device id={props.id} name={deviceState()?.name} type={deviceState()?.type}>
       {disabled() && (
         <div class={styles.device__error}>
           {error() || (connectedState() === "Disconnected" ? "Disconnected" : connectedState())}
@@ -64,19 +61,20 @@ export function Servo(props: { id: string }) {
       {!disabled() && (
         <>
           <div class={styles.device__status}>
-            <div class={`${styles["device__status-indicator"]} ${
-              deviceState()?.isMoving 
-                ? styles["device__status-indicator--moving"] 
-                : styles["device__status-indicator--off"]
-            }`}></div>
+            <div
+              class={`${styles["device__status-indicator"]} ${
+                deviceState()?.isMoving
+                  ? styles["device__status-indicator--moving"]
+                  : styles["device__status-indicator--off"]
+              }`}
+            ></div>
             <span class={styles["device__status-text"]}>
-              {deviceState()?.isMoving 
-                ? `Moving to ${deviceState()?.targetAngle}\u00b0` 
-                : `At ${deviceState()?.angle || 0}\u00b0`
-              }
+              {deviceState()?.isMoving
+                ? `Moving to ${deviceState()?.targetAngle}\u00b0`
+                : `At ${deviceState()?.angle || 0}\u00b0`}
             </span>
             {deviceState()?.isMoving && (
-              <button 
+              <button
                 class={`${styles.device__button} ${styles["device__button--danger"]}`}
                 onClick={stopMovement}
                 style={{ "margin-left": "auto" }}
@@ -99,37 +97,37 @@ export function Servo(props: { id: string }) {
               onInput={(e) => setAngle(Number(e.currentTarget.value))}
             />
             <div class={styles.device__controls}>
-              <button 
+              <button
                 class={styles.device__button}
-                onClick={() => setAngle(0)} 
+                onClick={() => setAngle(0)}
                 disabled={disabled()}
               >
                 0\u00b0
               </button>
-              <button 
+              <button
                 class={styles.device__button}
-                onClick={() => setAngle(45)} 
+                onClick={() => setAngle(45)}
                 disabled={disabled()}
               >
                 45\u00b0
               </button>
-              <button 
+              <button
                 class={styles.device__button}
-                onClick={() => setAngle(90)} 
+                onClick={() => setAngle(90)}
                 disabled={disabled()}
               >
                 90\u00b0
               </button>
-              <button 
+              <button
                 class={styles.device__button}
-                onClick={() => setAngle(135)} 
+                onClick={() => setAngle(135)}
                 disabled={disabled()}
               >
                 135\u00b0
               </button>
-              <button 
+              <button
                 class={styles.device__button}
-                onClick={() => setAngle(180)} 
+                onClick={() => setAngle(180)}
                 disabled={disabled()}
               >
                 180\u00b0

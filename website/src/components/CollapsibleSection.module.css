@@ -80,8 +80,9 @@
 
 .collapsible-section__content {
   overflow: hidden;
-  transition: max-height var(--transition-medium) ease-out, 
-              padding var(--transition-medium) ease-out;
+  transition:
+    max-height var(--transition-medium) ease-out,
+    padding var(--transition-medium) ease-out;
   max-height: 2000px; /* Large enough to accommodate most content */
 }
 
@@ -98,14 +99,16 @@
 /* Animation for smoother collapse/expand */
 @media (prefers-reduced-motion: no-preference) {
   .collapsible-section__content {
-    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.2s ease-out;
+    transition:
+      max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.2s ease-out;
   }
-  
+
   .collapsible-section__content--collapsed {
     opacity: 0;
-    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.15s ease-out;
+    transition:
+      max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.15s ease-out;
   }
 }
 

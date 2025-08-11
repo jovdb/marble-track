@@ -1,12 +1,10 @@
-import { Device } from "./Device";
+import { Device, IDeviceState } from "./Device";
 import { createSignal, onCleanup } from "solid-js";
 import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
 import styles from "./Device.module.css";
 
-interface IWheelState {
+interface IWheelState extends IDeviceState {
   position: number;
-  name: string;
-  type: string;
 }
 
 export function Wheel(props: { id: string }) {
@@ -20,8 +18,7 @@ export function Wheel(props: { id: string }) {
       JSON.stringify({
         type: "device-fn",
         deviceId: props.id,
-        fn: "goto",
-        target: "next-breakpoint",
+        fn: "next-breakpoint",
       })
     );
   };
@@ -56,7 +53,7 @@ export function Wheel(props: { id: string }) {
   const arrowRadius = radius * 0.8; // Radius for the arrow path
 
   return (
-    <Device id={props.id} name={deviceState()?.name} type="WHEEL">
+    <Device id={props.id} name={deviceState()?.name} type={deviceState()?.type}>
       <div style={{ "max-width": "300px", margin: "0 auto" }}>
         <svg class={styles.svg} viewBox="0 0 100 100" style={{ "max-width": "300px" }}>
           <g transform={`rotate(${angle()})`} transform-origin={`${size / 2}px ${size / 2}px`}>

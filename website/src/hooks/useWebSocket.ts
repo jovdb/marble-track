@@ -67,19 +67,19 @@ websocket.addEventListener("message", (e) => {
     const parsedData = JSON.parse(data);
     if (parsedData.type === "devices-list") {
       console.log("Received devices list:", parsedData);
-      
+
       if (parsedData.error) {
         console.error("Error getting devices:", parsedData.error);
         setDevicesLoading(false);
         return;
       }
-      
+
       const devices: DeviceInfo[] = parsedData.devices || [];
       setAvailableDevices(devices);
       setDevicesLoaded(true);
       setDevicesLoading(false);
-      
-      console.log(`Loaded ${devices.length} devices:`, devices.map(d => d.id).join(', '));
+
+      console.log(`Loaded ${devices.length} devices:`, devices.map((d) => d.id).join(", "));
     }
   } catch (error) {
     // Ignore non-JSON messages or other parsing errors

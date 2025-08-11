@@ -1,6 +1,11 @@
 import { createSignal, JSX } from "solid-js";
 import styles from "./Device.module.css";
 
+export interface IDeviceState {
+  name: string;
+  type: string;
+}
+
 interface DeviceProps {
   id: string;
   name?: string;
@@ -9,15 +14,15 @@ interface DeviceProps {
   children?: JSX.Element | JSX.Element[];
 }
 
-export function Device({ id, name, type, hasChildren, children }: DeviceProps) {
+export function Device(props: DeviceProps) {
   const [showChildren, setShowChildren] = createSignal(false);
 
   return (
     <div class={styles.device}>
       <div class={styles.device__header}>
-        <h3 class={styles.device__title}>{name || id}</h3>
-        {type && <span class={styles["device__type-badge"]}>{type}</span>}
-        {hasChildren && (
+        <h3 class={styles.device__title}>{props.name || props.id}</h3>
+        {props.type && <span class={styles["device__type-badge"]}>{props.type}</span>}
+        {props.hasChildren && (
           <button
             class={styles.device__button}
             type="button"
@@ -28,9 +33,9 @@ export function Device({ id, name, type, hasChildren, children }: DeviceProps) {
         )}
       </div>
       <div class={styles.device__content}>
-        {children}
-        {hasChildren && showChildren() && (
-          <div class={styles.device__children}>{children}</div>
+        {props.children}
+        {props.hasChildren && showChildren() && (
+          <div class={styles.device__children}>{props.children}</div>
         )}
       </div>
     </div>

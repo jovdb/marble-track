@@ -1,13 +1,9 @@
-import { Device } from "./Device";
+import { Device, IDeviceState } from "./Device";
 import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
-import { LedIcon } from "../icons/DeviceIcons";
 import styles from "./Device.module.css";
 
-interface ILedState {
+interface ILedState extends IDeviceState {
   mode: "ON" | "OFF";
-  pin: number;
-  name: string;
-  type: string;
 }
 
 export function Led(props: { id: string }) {
@@ -24,7 +20,7 @@ export function Led(props: { id: string }) {
   };
 
   return (
-    <Device id={props.id} name={deviceState()?.name} type="LED">
+    <Device id={props.id} name={deviceState()?.name} type={deviceState()?.type}>
       {disabled() && (
         <div class={styles.device__error}>
           {error() || (connectedState() === "Disconnected" ? "Disconnected" : connectedState())}
@@ -33,26 +29,28 @@ export function Led(props: { id: string }) {
       {!disabled() && (
         <>
           <div class={styles.device__status}>
-            <div class={`${styles["device__status-indicator"]} ${
-              deviceState()?.mode === "ON" 
-                ? styles["device__status-indicator--on"] 
-                : styles["device__status-indicator--off"]
-            }`}></div>
+            <div
+              class={`${styles["device__status-indicator"]} ${
+                deviceState()?.mode === "ON"
+                  ? styles["device__status-indicator--on"]
+                  : styles["device__status-indicator--off"]
+              }`}
+            ></div>
             <span class={styles["device__status-text"]}>
               Status: {deviceState()?.mode === "ON" ? "On" : "Off"}
             </span>
           </div>
           <div class={styles.device__controls}>
-            <button 
+            <button
               class={styles.device__button}
-              onClick={() => setLed(true)} 
+              onClick={() => setLed(true)}
               disabled={disabled()}
             >
               Turn On
             </button>
-            <button 
+            <button
               class={`${styles.device__button} ${styles["device__button--secondary"]}`}
-              onClick={() => setLed(false)} 
+              onClick={() => setLed(false)}
               disabled={disabled()}
             >
               Turn Off

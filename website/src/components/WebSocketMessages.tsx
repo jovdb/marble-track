@@ -6,30 +6,38 @@ import styles from "./WebSocketMessages.module.css";
 // JSON Tree Component
 const JsonTree: Component<{ data: any; level?: number }> = (props) => {
   const level = () => props.level || 0;
-  
-  if (typeof props.data === 'string' || typeof props.data === 'number' || typeof props.data === 'boolean') {
+
+  if (
+    typeof props.data === "string" ||
+    typeof props.data === "number" ||
+    typeof props.data === "boolean"
+  ) {
     return (
       <span class={styles["json-value"]} data-type={typeof props.data}>
-        {typeof props.data === 'string' ? `"${props.data}"` : String(props.data)}
+        {typeof props.data === "string" ? `"${props.data}"` : String(props.data)}
       </span>
     );
   }
-  
+
   if (props.data === null || props.data === undefined) {
-    return <span class={styles["json-value"]} data-type="null">null</span>;
+    return (
+      <span class={styles["json-value"]} data-type="null">
+        null
+      </span>
+    );
   }
-  
+
   if (Array.isArray(props.data)) {
     const [isExpanded, setIsExpanded] = createSignal(level() === 0); // Auto-expand first level
-    
+
     return (
       <div class={styles["json-array"]}>
-        <button 
+        <button
           class={styles["json-toggle"]}
           onClick={() => setIsExpanded(!isExpanded())}
           style={{ "margin-left": `${level() * 20}px` }}
         >
-          {isExpanded() ? '▼' : '▶'} [{props.data.length}]
+          {isExpanded() ? "▼" : "▶"} [{props.data.length}]
         </button>
         {isExpanded() && (
           <div class={styles["json-children"]}>
@@ -46,19 +54,19 @@ const JsonTree: Component<{ data: any; level?: number }> = (props) => {
       </div>
     );
   }
-  
-  if (typeof props.data === 'object') {
+
+  if (typeof props.data === "object") {
     const [isExpanded, setIsExpanded] = createSignal(level() === 0); // Auto-expand first level
     const keys = Object.keys(props.data);
-    
+
     return (
       <div class={styles["json-object"]}>
-        <button 
+        <button
           class={styles["json-toggle"]}
           onClick={() => setIsExpanded(!isExpanded())}
           style={{ "margin-left": `${level() * 20}px` }}
         >
-          {isExpanded() ? '▼' : '▶'} {`{${keys.length}}`}
+          {isExpanded() ? "▼" : "▶"} {`{${keys.length}}`}
         </button>
         {isExpanded() && (
           <div class={styles["json-children"]}>
@@ -75,14 +83,14 @@ const JsonTree: Component<{ data: any; level?: number }> = (props) => {
       </div>
     );
   }
-  
+
   return null;
 };
 
 // Expandable Message Component
 const ExpandableMessage: Component<{ message: string }> = (props) => {
   const [isExpanded, setIsExpanded] = createSignal(false);
-  
+
   const parsedData = createMemo(() => {
     try {
       return JSON.parse(props.message);
@@ -90,21 +98,25 @@ const ExpandableMessage: Component<{ message: string }> = (props) => {
       return null;
     }
   });
-  
+
   const isJsonMessage = () => parsedData() !== null;
-  
+
   return (
     <div class={styles["websocket-messages__message"]}>
-      <div 
+      <div
         class={`${styles["websocket-messages__message-header"]} ${isJsonMessage() ? styles["websocket-messages__message-header--clickable"] : ""}`}
         onClick={() => isJsonMessage() && setIsExpanded(!isExpanded())}
-        title={isJsonMessage() ? (isExpanded() ? "Click to collapse JSON" : "Click to expand JSON") : undefined}
+        title={
+          isJsonMessage()
+            ? isExpanded()
+              ? "Click to collapse JSON"
+              : "Click to expand JSON"
+            : undefined
+        }
       >
-        <span class={styles["websocket-messages__message-text"]}>
-          {props.message}
-        </span>
+        <span class={styles["websocket-messages__message-text"]}>{props.message}</span>
       </div>
-      
+
       {isExpanded() && isJsonMessage() && (
         <div class={styles["websocket-messages__json-view"]}>
           <JsonTree data={parsedData()} />
@@ -126,14 +138,14 @@ const WebSocketMessages: Component = () => {
         raw: message,
         type: parsed.type || "",
         deviceId: parsed.deviceId || "",
-        parsed
+        parsed,
       };
     } catch {
       return {
         raw: message,
         type: "",
         deviceId: "",
-        parsed: null
+        parsed: null,
       };
     }
   };
@@ -144,7 +156,7 @@ const WebSocketMessages: Component = () => {
     const typeFilter = messageTypeFilter().toLowerCase().trim();
     const deviceFilter = deviceIdFilter().trim();
 
-    return messages.filter(msg => {
+    return messages.filter((msg) => {
       const typeMatch = !typeFilter || msg.type.toLowerCase().includes(typeFilter);
       const deviceMatch = !deviceFilter || msg.deviceId === deviceFilter;
       return typeMatch && deviceMatch;
@@ -153,7 +165,9 @@ const WebSocketMessages: Component = () => {
 
   // Get unique device IDs from available devices
   const deviceOptions = createMemo(() => {
-    return availableDevices().map(device => device.id).sort();
+    return availableDevices()
+      .map((device) => device.id)
+      .sort();
   });
   return (
     <div class={styles["websocket-messages"]}>
@@ -172,7 +186,7 @@ const WebSocketMessages: Component = () => {
               onInput={(e) => setMessageTypeFilter(e.currentTarget.value)}
             />
           </div>
-          
+
           <div class={styles["websocket-messages__filter-group"]}>
             <label class={styles["websocket-messages__filter-label"]} for="device-id-filter">
               Device ID:
@@ -190,15 +204,12 @@ const WebSocketMessages: Component = () => {
             </select>
           </div>
         </div>
-        
-        <button 
-          class={styles["websocket-messages__clear-button"]}
-          onClick={() => clearMessages()}
-        >
+
+        <button class={styles["websocket-messages__clear-button"]} onClick={() => clearMessages()}>
           Clear Messages
         </button>
       </div>
-      
+
       <div class={styles["websocket-messages__scrollable-content"]}>
         {filteredMessages().length === 0 ? (
           <div class={styles["websocket-messages__empty"]}>
@@ -208,9 +219,7 @@ const WebSocketMessages: Component = () => {
         ) : (
           <div class={styles["websocket-messages__list"]}>
             <For each={filteredMessages().slice().reverse()}>
-              {(message) => (
-                <ExpandableMessage message={message.raw} />
-              )}
+              {(message) => <ExpandableMessage message={message.raw} />}
             </For>
           </div>
         )}

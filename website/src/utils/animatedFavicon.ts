@@ -13,10 +13,10 @@ class AnimatedFavicon {
   private readonly updateInterval = 32; // 32ms = ~31 FPS
 
   constructor() {
-    this.canvas = document.createElement('canvas');
+    this.canvas = document.createElement("canvas");
     this.canvas.width = this.size;
     this.canvas.height = this.size;
-    this.ctx = this.canvas.getContext('2d')!;
+    this.ctx = this.canvas.getContext("2d")!;
     this.img = new Image();
   }
 
@@ -37,21 +37,15 @@ class AnimatedFavicon {
   private drawRotatedImage(): void {
     // Clear canvas
     this.ctx.clearRect(0, 0, this.size, this.size);
-    
+
     // Save context and apply rotation
     this.ctx.save();
     this.ctx.translate(this.size / 2, this.size / 2);
     this.ctx.rotate(this.angle);
-    
+
     // Draw image centered
-    this.ctx.drawImage(
-      this.img, 
-      -this.size / 2, 
-      -this.size / 2, 
-      this.size, 
-      this.size
-    );
-    
+    this.ctx.drawImage(this.img, -this.size / 2, -this.size / 2, this.size, this.size);
+
     this.ctx.restore();
   }
 
@@ -60,19 +54,19 @@ class AnimatedFavicon {
    */
   private updateFavicon(): void {
     this.drawRotatedImage();
-    
+
     // Convert canvas to data URL
-    const dataURL = this.canvas.toDataURL('image/png');
-    
+    const dataURL = this.canvas.toDataURL("image/png");
+
     // Find or create favicon link element
     let link = document.querySelector('link[rel="shortcut icon"]') as HTMLLinkElement;
     if (!link) {
-      link = document.createElement('link');
-      link.rel = 'shortcut icon';
-      link.type = 'image/png';
+      link = document.createElement("link");
+      link.rel = "shortcut icon";
+      link.type = "image/png";
       document.head.appendChild(link);
     }
-    
+
     // Update favicon
     link.href = dataURL;
   }
@@ -85,7 +79,7 @@ class AnimatedFavicon {
     if (this.angle >= 2 * Math.PI) {
       this.angle = 0;
     }
-    
+
     this.updateFavicon();
   };
 
@@ -97,7 +91,7 @@ class AnimatedFavicon {
       await this.loadImage(imageSrc);
       this.intervalId = window.setInterval(this.animate, this.updateInterval);
     } catch (error) {
-      console.error('Failed to load favicon image:', error);
+      console.error("Failed to load favicon image:", error);
     }
   }
 

@@ -29,27 +29,24 @@ export function useDeviceStore() {
 
   // Setup WebSocket listener
   onMount(() => {
-    // Get WebSocket instance from the useWebSocket module
-    const websocket = (window as any).websocket;
-    
     messageHandler = (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data);
         if (data.type === "devices-list") {
           console.log("Received devices list:", data);
-          
+
           if (data.error) {
             console.error("Error getting devices:", data.error);
             setDevicesLoading(false);
             return;
           }
-          
+
           const devices: DeviceInfo[] = data.devices || [];
           setAvailableDevices(devices);
           setDevicesLoaded(true);
           setDevicesLoading(false);
-          
-          console.log(`Loaded ${devices.length} devices:`, devices.map(d => d.id).join(', '));
+
+          console.log(`Loaded ${devices.length} devices:`, devices.map((d) => d.id).join(", "));
         }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
@@ -68,7 +65,7 @@ export function useDeviceStore() {
     availableDevices,
     devicesLoaded,
     devicesLoading,
-    requestDevices
+    requestDevices,
   };
 }
 

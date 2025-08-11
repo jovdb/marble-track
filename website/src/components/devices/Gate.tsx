@@ -1,12 +1,10 @@
-import { Device } from "./Device";
+import { Device, IDeviceState } from "./Device";
 import { createSignal, onCleanup } from "solid-js";
 import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
 import styles from "./Device.module.css";
 
-interface IGateState {
+interface IGateState extends IDeviceState {
   gateState: "Closed" | "IsOpening" | "Opened" | "Closing";
-  name: string;
-  type: string;
 }
 
 export function Gate(props: { id: string }) {
@@ -14,7 +12,9 @@ export function Gate(props: { id: string }) {
   const closedAngle = 0;
   const openedAngle = -110;
   const [angle, setAngle] = createSignal(closedAngle);
-  const [gateState, setGateState] = createSignal<"Closed" | "IsOpening" | "Opened" | "Closing">("Closed");
+  const [gateState, setGateState] = createSignal<"Closed" | "IsOpening" | "Opened" | "Closing">(
+    "Closed"
+  );
 
   const openGate = () => {
     sendMessage(
@@ -48,7 +48,7 @@ export function Gate(props: { id: string }) {
   });
 
   return (
-    <Device id={props.id} name={deviceState()?.name} type="GATE">
+    <Device id={props.id} name={deviceState()?.name} type={deviceState()?.type}>
       <div>
         <svg viewBox="18 18 80 70">
           <g style="transform-origin: 50px 50px;" transform={`rotate(-3)`}>

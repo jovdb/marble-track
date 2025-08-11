@@ -46,7 +46,7 @@ const App: Component = () => {
         return <Buzzer id={device.id} />;
       case "gate":
         return <Gate id={device.id} />;
-      case "wheel":
+      case "marble_wheel":
         return <Wheel id={device.id} />;
 
       default:
@@ -120,8 +120,6 @@ const App: Component = () => {
                 <For each={availableDevices()}>{(device) => renderDeviceComponent(device)}</For>
               )}
             </div>
-            <Wheel id="test" />
-            <Gate id="test2" />
           </CollapsibleSection>
         </section>
 

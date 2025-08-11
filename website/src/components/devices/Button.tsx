@@ -1,13 +1,9 @@
-import { Device } from "./Device";
+import { Device, IDeviceState } from "./Device";
 import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
-import { ButtonIcon } from "../icons/DeviceIcons";
 import styles from "./Device.module.css";
 
-interface IButtonState {
+interface IButtonState extends IDeviceState {
   pressed: boolean;
-  pin: number;
-  name: string;
-  type: string;
 }
 
 export function Button(props: { id: string }) {
@@ -34,7 +30,7 @@ export function Button(props: { id: string }) {
   };
 
   return (
-    <Device id={props.id} name={deviceState()?.name} type="BUTTON">
+    <Device id={props.id} name={deviceState()?.name} type={deviceState()?.type}>
       {disabled() && (
         <div class={styles.device__error}>
           {error() || (connectedState() === "Disconnected" ? "Disconnected" : connectedState())}
@@ -43,17 +39,19 @@ export function Button(props: { id: string }) {
       {!disabled() && (
         <>
           <div class={styles.device__status}>
-            <div class={`${styles["device__status-indicator"]} ${
-              deviceState()?.pressed 
-                ? styles["device__status-indicator--pressed"] 
-                : styles["device__status-indicator--off"]
-            }`}></div>
+            <div
+              class={`${styles["device__status-indicator"]} ${
+                deviceState()?.pressed
+                  ? styles["device__status-indicator--pressed"]
+                  : styles["device__status-indicator--off"]
+              }`}
+            ></div>
             <span class={styles["device__status-text"]}>
               Status: {deviceState()?.pressed ? "Pressed" : "Released"}
             </span>
           </div>
           <div class={styles.device__controls}>
-            <button 
+            <button
               class={styles.device__button}
               onMouseDown={handlePress}
               onMouseUp={handleRelease}

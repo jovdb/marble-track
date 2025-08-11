@@ -2,13 +2,11 @@ import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
 import { createSignal, For } from "solid-js";
 import { BuzzerIcon } from "../icons/DeviceIcons";
 import styles from "./Device.module.css";
+import { IDeviceState } from "./Device";
 
-interface IBuzzerState {
+interface IBuzzerState extends IDeviceState {
   playing: boolean;
   currentTune: string;
-  pin: number;
-  name: string;
-  type: string;
 }
 
 export function Buzzer(props: { id: string }) {
@@ -20,11 +18,15 @@ export function Buzzer(props: { id: string }) {
   );
 
   const rtttlTunes = {
-    "Tetris": "tetris:d=4,o=5,b=160:e6,8b,8c6,8d6,16e6,16d6,8c6,8b,a,8a,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,2a,8p,d6,8f6,a6,8g6,8f6,e6,8e6,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,a",
-    "Nokia": "nokia:d=4,o=5,b=125:8e6,8d6,8f#,8g#,8c#6,8b,8d,8e,8b,8a,8c#,8e,2a",
-    "Super Mario": "mario:d=4,o=5,b=100:16e6,16e6,32p,8e6,16c6,8e6,8g6,8p,8g,8p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,16p",
-    "Star Wars": "starwars:d=4,o=5,b=45:32p,32f#,32f#,32f#,8b.,8f#.6,32e6,32d#6,32c#6,8b.6,16f#.6,32e6,32d#6,32c#6,8b.6,16f#.6,32e6,32d#6,32e6,8c#.6,32f#,32f#,32f#,8b.,8f#.6,32e6,32d#6,32c#6,8b.6,16f#.6,32e6,32d#6,32c#6,8b.6,16f#.6,32e6,32d#6,32e6,8c#6",
-    "Happy Birthday": "birthday:d=4,o=5,b=125:8c,8c,8d,8c,8f,2e,8c,8c,8d,8c,8g,2f,8c,8c,8c6,8a,8f,8e,8d,8a#,8a#,8a,8f,8g,2f"
+    Tetris:
+      "tetris:d=4,o=5,b=160:e6,8b,8c6,8d6,16e6,16d6,8c6,8b,a,8a,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,2a,8p,d6,8f6,a6,8g6,8f6,e6,8e6,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,a",
+    Nokia: "nokia:d=4,o=5,b=125:8e6,8d6,8f#,8g#,8c#6,8b,8d,8e,8b,8a,8c#,8e,2a",
+    "Super Mario":
+      "mario:d=4,o=5,b=100:16e6,16e6,32p,8e6,16c6,8e6,8g6,8p,8g,8p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,16p",
+    "Star Wars":
+      "starwars:d=4,o=5,b=45:32p,32f#,32f#,32f#,8b.,8f#.6,32e6,32d#6,32c#6,8b.6,16f#.6,32e6,32d#6,32c#6,8b.6,16f#.6,32e6,32d#6,32e6,8c#.6,32f#,32f#,32f#,8b.,8f#.6,32e6,32d#6,32c#6,8b.6,16f#.6,32e6,32d#6,32c#6,8b.6,16f#.6,32e6,32d#6,32e6,8c#6",
+    "Happy Birthday":
+      "birthday:d=4,o=5,b=125:8c,8c,8d,8c,8f,2e,8c,8c,8d,8c,8g,2f,8c,8c,8c6,8a,8f,8e,8d,8a#,8a#,8a,8f,8g,2f",
   };
 
   const playTone = () => {
@@ -60,22 +62,24 @@ export function Buzzer(props: { id: string }) {
         </h3>
         <span class={styles["device__type-badge"]}>BUZZER</span>
       </div>
-      
+
       <div class={styles.device__content}>
         {disabled() && (
           <div class={styles.device__error}>
             {error() || (connectedState() === "Disconnected" ? "Disconnected" : connectedState())}
           </div>
         )}
-        
+
         {!disabled() && (
           <>
             <div class={styles.device__status}>
-              <div class={`${styles["device__status-indicator"]} ${
-                deviceState()?.playing 
-                  ? styles["device__status-indicator--on"] 
-                  : styles["device__status-indicator--off"]
-              }`}></div>
+              <div
+                class={`${styles["device__status-indicator"]} ${
+                  deviceState()?.playing
+                    ? styles["device__status-indicator--on"]
+                    : styles["device__status-indicator--off"]
+                }`}
+              ></div>
               <span class={styles["device__status-text"]}>
                 {deviceState()?.playing ? "Playing" : "Idle"}
                 {deviceState()?.currentTune && deviceState()?.playing && " (Melody)"}
@@ -97,7 +101,7 @@ export function Buzzer(props: { id: string }) {
                 onInput={(e) => setFrequency(Number(e.currentTarget.value))}
               />
               <div class={styles.device__controls}>
-                <button 
+                <button
                   class={styles.device__button}
                   onClick={playTone}
                   disabled={disabled() || deviceState()?.playing}
@@ -118,15 +122,15 @@ export function Buzzer(props: { id: string }) {
                 onInput={(e) => setRtttl(e.currentTarget.value)}
                 placeholder="Enter RTTTL string..."
                 rows="3"
-                style={{ 
+                style={{
                   "font-family": "var(--font-family-mono)",
                   "font-size": "var(--font-size-xs)",
-                  "resize": "vertical",
-                  "min-height": "60px"
+                  resize: "vertical",
+                  "min-height": "60px",
                 }}
               />
               <div class={styles.device__controls}>
-                <button 
+                <button
                   class={styles.device__button}
                   onClick={playMelody}
                   disabled={disabled() || deviceState()?.playing || rtttl().trim().length === 0}

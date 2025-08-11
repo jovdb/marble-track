@@ -248,7 +248,7 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
         }
         else
         {
-            Serial.printf("Executing: %s[%s]\n", deviceId, functionName);
+            Serial.printf("Executing action: %s[%s]\n", deviceId, functionName);
             JsonObject payload = doc.as<JsonObject>();
             bool success = device->control(functionName, &payload);
 

@@ -90,15 +90,15 @@ public:
 
     /**
      * @brief Set the maximum speed of the stepper motor
-     * @param speed Maximum speed in steps per second
+     * @param maxSpeed Maximum speed in steps per second
      */
-    void setMaxSpeed(float speed);
+    void setMaxSpeed(float maxSpeed);
 
     /**
      * @brief Set the acceleration of the stepper motor
-     * @param acceleration Acceleration in steps per second per second
+     * @param maxAcceleration Acceleration in steps per second per second
      */
-    void setAcceleration(float acceleration);
+    void setAcceleration(float maxAcceleration);
 
     /**
      * @brief Get current position of the stepper motor
@@ -129,7 +129,7 @@ private:
     String _name;                ///< Human-readable name string for the stepper
     String _type = "STEPPER";    ///< Type of the device
     float _maxSpeed;             ///< Maximum speed in steps per second
-    float _acceleration;         ///< Acceleration in steps per second per second
+    float _maxAcceleration;         ///< Acceleration in steps per second per second
     bool _isMoving = false;      ///< Current movement state
     
     // Pin configuration

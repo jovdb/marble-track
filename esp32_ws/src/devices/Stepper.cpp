@@ -24,10 +24,10 @@
  * @param maxSpeed Maximum speed in steps per second
  * @param acceleration Acceleration in steps per second per second
  */
-Stepper::Stepper(int stepPin, int dirPin, const String &id, const String &name, 
+Stepper::Stepper(int stepPin, int dirPin, const String &id, const String &name,
                  float maxSpeed, float acceleration)
     : _stepper(AccelStepper::DRIVER, stepPin, dirPin),
-      _id(id), _name(name), _maxSpeed(maxSpeed), _acceleration(acceleration),
+      _id(id), _name(name), _maxSpeed(maxSpeed), _maxAcceleration(acceleration),
       _is4Pin(false), _pin1(stepPin), _pin2(dirPin), _pin3(-1), _pin4(-1),
       _stepperType("DRIVER")
 {
@@ -51,11 +51,11 @@ Stepper::Stepper(int stepPin, int dirPin, const String &id, const String &name,
 Stepper::Stepper(int pin1, int pin2, int pin3, int pin4, const String &id, const String &name,
                  float maxSpeed, float acceleration)
     : _stepper(AccelStepper::HALF4WIRE, pin1, pin3, pin2, pin4),
-      _id(id), _name(name), _maxSpeed(maxSpeed), _acceleration(acceleration),
+      _id(id), _name(name), _maxSpeed(maxSpeed), _maxAcceleration(acceleration),
       _is4Pin(true), _pin1(pin1), _pin2(pin2), _pin3(pin3), _pin4(pin4),
       _stepperType("HALF4WIRE")
 {
-    Serial.println("Stepper [" + _id + "]: Created HALF4WIRE type on pins " + String(_pin1) + 
+    Serial.println("Stepper [" + _id + "]: Created HALF4WIRE type on pins " + String(_pin1) +
                    ", " + String(_pin2) + ", " + String(_pin3) + ", " + String(_pin4));
 }
 
@@ -67,24 +67,24 @@ void Stepper::setup()
 {
     // Set maximum speed and acceleration
     _stepper.setMaxSpeed(_maxSpeed);
-    _stepper.setAcceleration(_acceleration);
-    
+    _stepper.setAcceleration(_maxAcceleration);
+
     // Set current position to 0
     _stepper.setCurrentPosition(0);
-    
+
     if (_is4Pin)
     {
-        Serial.println("Stepper [" + _id + "]: Setup complete (HALF4WIRE) on pins " + 
+        Serial.println("Stepper [" + _id + "]: Setup complete (HALF4WIRE) on pins " +
                        String(_pin1) + ", " + String(_pin2) + ", " + String(_pin3) + ", " + String(_pin4));
     }
     else
     {
-        Serial.println("Stepper [" + _id + "]: Setup complete (DRIVER) on pins " + 
+        Serial.println("Stepper [" + _id + "]: Setup complete (DRIVER) on pins " +
                        String(_pin1) + " (step), " + String(_pin2) + " (dir)");
     }
-    
-    Serial.println("Stepper [" + _id + "]: Max speed: " + String(_maxSpeed) + 
-                   " steps/s, Acceleration: " + String(_acceleration) + " steps/s²");
+
+    Serial.println("Stepper [" + _id + "]: Max speed: " + String(_maxSpeed) +
+                   " steps/s, Acceleration: " + String(_maxAcceleration) + " steps/s²");
 }
 
 /**
@@ -97,7 +97,7 @@ void Stepper::loop()
 {
     bool wasMoving = _isMoving;
     _isMoving = _stepper.run();
-    
+
     // If stepper just stopped moving, notify state change
     if (wasMoving && !_isMoving)
     {
@@ -112,7 +112,7 @@ void Stepper::loop()
  */
 void Stepper::move(long steps)
 {
-    //Serial.println("Stepper [" + _id + "]: Moving " + String(steps) + " steps");
+    // Serial.println("Stepper [" + _id + "]: Moving " + String(steps) + " steps");
     _stepper.move(steps);
     _isMoving = true;
     // notifyStateChange();
@@ -132,24 +132,29 @@ void Stepper::moveTo(long position)
 
 /**
  * @brief Set the maximum speed of the stepper motor
- * @param speed Maximum speed in steps per second
+ * @param maxSpeed Maximum speed in steps per second
  */
-void Stepper::setMaxSpeed(float speed)
+void Stepper::setMaxSpeed(float maxSpeed)
 {
-    _maxSpeed = speed;
-    _stepper.setMaxSpeed(speed);
-    Serial.println("Stepper [" + _id + "]: Max speed set to " + String(speed) + " steps/s");
+    if (_maxSpeed == maxSpeed)
+        return;
+
+    _maxSpeed = maxSpeed;
+    _stepper.setMaxSpeed(maxSpeed);
+    Serial.println("Stepper [" + _id + "]: Max speed set to " + String(maxSpeed) + " steps/s");
 }
 
 /**
  * @brief Set the acceleration of the stepper motor
- * @param acceleration Acceleration in steps per second per second
+ * @param maxAcceleration Acceleration in steps per second per second
  */
-void Stepper::setAcceleration(float acceleration)
+void Stepper::setAcceleration(float maxAcceleration)
 {
-    _acceleration = acceleration;
-    _stepper.setAcceleration(acceleration);
-    Serial.println("Stepper [" + _id + "]: Acceleration set to " + String(acceleration) + " steps/s²");
+    if (_maxAcceleration == maxAcceleration)
+        return;
+    _maxAcceleration = maxAcceleration;
+    _stepper.setAcceleration(maxAcceleration);
+    Serial.println("Stepper [" + _id + "]: Acceleration set to " + String(maxAcceleration) + " steps/s²");
 }
 
 /**
@@ -158,7 +163,7 @@ void Stepper::setAcceleration(float acceleration)
  */
 long Stepper::getCurrentPosition() const
 {
-    return const_cast<AccelStepper&>(_stepper).currentPosition();
+    return const_cast<AccelStepper &>(_stepper).currentPosition();
 }
 
 /**
@@ -167,7 +172,7 @@ long Stepper::getCurrentPosition() const
  */
 long Stepper::getTargetPosition() const
 {
-    return const_cast<AccelStepper&>(_stepper).targetPosition();
+    return const_cast<AccelStepper &>(_stepper).targetPosition();
 }
 
 /**
@@ -200,16 +205,31 @@ bool Stepper::control(const String &action, JsonObject *payload)
 {
     if (action == "move")
     {
+
+        if (payload && (*payload)["maxAcceleration"].is<long>())
+        {
+            long maxAcceleration = (*payload)["maxAcceleration"].as<long>();
+            setAcceleration(maxAcceleration);
+        }
+
+        if (payload && (*payload)["maxSpeed"].is<long>())
+        {
+            long maxSpeed = (*payload)["maxSpeed"].as<long>();
+            setMaxSpeed(maxSpeed);
+        }
+
         if (!payload || !(*payload)["steps"].is<long>())
         {
-            Serial.println("Stepper [" + _id + "]: Invalid 'move' payload - need steps");
             return false;
         }
 
         long steps = (*payload)["steps"].as<long>();
+        Serial.printf("Stepper [%s]: Move %ld steps (Speed: %ld, Acceleration: %ld)\n", _id.c_str(), steps, _maxSpeed, _maxAcceleration);
         move(steps);
         return true;
     }
+
+    /*
     else if (action == "moveTo")
     {
         if (!payload || !(*payload)["position"].is<long>())
@@ -222,11 +242,13 @@ bool Stepper::control(const String &action, JsonObject *payload)
         moveTo(position);
         return true;
     }
+        */
     else if (action == "stop")
     {
         stop();
         return true;
     }
+    /*
     else if (action == "setSpeed")
     {
         if (!payload || !(*payload)["speed"].is<float>())
@@ -247,25 +269,26 @@ bool Stepper::control(const String &action, JsonObject *payload)
     }
     else if (action == "setAcceleration")
     {
-        if (!payload || !(*payload)["acceleration"].is<float>())
+        if (!payload || !(*payload)["maxAcceleration"].is<float>())
         {
-            Serial.println("Stepper [" + _id + "]: Invalid 'setAcceleration' payload - need acceleration");
+            Serial.println("Stepper [" + _id + "]: Invalid 'setAcceleration' payload - need maxAcceleration");
             return false;
         }
 
-        float acceleration = (*payload)["acceleration"].as<float>();
-        if (acceleration <= 0 || acceleration > 10000)
+        float maxAcceleration = (*payload)["maxAcceleration"].as<float>();
+        if (maxAcceleration <= 0 || maxAcceleration > 10000)
         {
             Serial.println("Stepper [" + _id + "]: Invalid acceleration " + String(acceleration) + " (range: 1-10000)");
             return false;
         }
 
-        setAcceleration(acceleration);
+        setAcceleration(maxAcceleration);
         return true;
     }
+    */
     else
     {
-        Serial.println("Stepper [" + _id + "]: Unknown action: " + action);
+        Serial.printf("Stepper [%s]: Unknown action: '%s'\n", _id.c_str(), action.c_str());
         return false;
     }
 }
@@ -284,22 +307,22 @@ String Stepper::getState()
     doc["targetPosition"] = getTargetPosition();
     doc["isRunning"] = isRunning();
     doc["maxSpeed"] = _maxSpeed;
-    doc["acceleration"] = _acceleration;
+    doc["acceleration"] = _maxAcceleration;
     doc["stepperType"] = _stepperType;
     doc["is4Pin"] = _is4Pin;
-    
-    
 
     String result;
     serializeJson(doc, result);
     return result;
 }
 
-std::vector<int> Stepper::getPins() const {
+std::vector<int> Stepper::getPins() const
+{
     std::vector<int> pins;
     pins.push_back(_pin1);
     pins.push_back(_pin2);
-    if (_is4Pin) {
+    if (_is4Pin)
+    {
         pins.push_back(_pin3);
         pins.push_back(_pin4);
     }

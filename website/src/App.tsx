@@ -16,6 +16,7 @@ import logo from "./assets/logo-64.png";
 import styles from "./App.module.css";
 import { logger } from "./stores/logger";
 import { Wheel } from "./components/devices/Wheel";
+import { Stepper } from "./components/devices/Stepper";
 
 const App: Component = () => {
   let animatedFavicon: AnimatedFavicon;
@@ -44,6 +45,8 @@ const App: Component = () => {
         return <Button id={device.id} />;
       case "buzzer":
         return <Buzzer id={device.id} />;
+      case "stepper":
+        return <Stepper id={device.id} />;
       case "gate":
         return <Gate id={device.id} />;
       case "marble_wheel":

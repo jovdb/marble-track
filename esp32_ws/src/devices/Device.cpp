@@ -47,6 +47,19 @@ String Device::getState()
     doc["type"] = _type;
     doc["name"] = _name;
 
+    // If there are children, add their states to a 'children' array
+    if (!children.empty()) {
+        JsonArray childrenArr = doc.createNestedArray("children");
+        for (Device *child : children) {
+            if (child) {
+                String childStateStr = child->getState();
+                JsonDocument childDoc;
+                deserializeJson(childDoc, childStateStr);
+                childrenArr.add(childDoc.as<JsonObject>());
+            }
+        }
+    }
+
     String result;
     serializeJson(doc, result);
     return result;

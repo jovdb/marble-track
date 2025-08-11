@@ -48,7 +48,7 @@ void Buzzer::startupTone()
  * @param name Human-readable name string for the buzzer
  */
 Buzzer::Buzzer(int pin, const String &id, const String &name)
-    : _pin(pin), _id(id), _name(name), _isPlaying(false), _mode(Mode::IDLE), _playStartTime(0), _toneDuration(0)
+    : Device(name, "BUZZER"), _pin(pin), _id(id), _isPlaying(false), _mode(Mode::IDLE), _playStartTime(0), _toneDuration(0)
 {
     Serial.println("Buzzer [" + _id + "]: Created on pin " + String(_pin));
 }
@@ -217,8 +217,8 @@ String Buzzer::getState()
 {
     JsonDocument doc;
 
-    doc["type"] = _type;
-    doc["name"] = _name;
+    doc["type"] = getType();
+    doc["name"] = getName();
 
     // Convert mode enum to string
     String modeStr;

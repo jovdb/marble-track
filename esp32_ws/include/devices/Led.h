@@ -35,8 +35,6 @@ public:
 
     // Device interface implementation
     String getId() const override { return _id; }
-    String getName() const override { return _name; }
-    String getType() const override { return _type; }
     void loop() override {} // No periodic operations needed
 
     // Controllable functionality
@@ -51,8 +49,6 @@ public:
 private:
     int _pin;             ///< GPIO pin number for the LED
     String _id;           ///< Unique identifier string for the LED
-    String _name;         ///< Human-readable name string for the LED
-    String _type = "LED"; ///< Type of the device
     String _mode;         ///< Current mode of the LED
 };
 

@@ -20,8 +20,6 @@ GateWithSensor(int servoPin, int servoPwmChannel, int buttonPin, Buzzer* buzzer,
     bool control(const String& action, JsonObject* payload = nullptr) override;
     String getState() override;
     String getId() const override { return _id; }
-    String getType() const override { return _type; }
-    String getName() const override { return _name; }
     void open();
 private:
     enum GateState { Closed, IsOpening, Opened, Closing };
@@ -31,8 +29,6 @@ private:
     Button* _sensor;
     Buzzer* _buzzer;
     String _id;
-    String _name;
-    String _type = "GATE";
 };
 
 #endif // GATE_WITH_SENSOR_H

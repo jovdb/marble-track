@@ -31,13 +31,14 @@ using StateChangeCallback = std::function<void(const String &deviceId, const Str
 class Device
 {
 public:
+    Device(const String &name, const String &type);
     virtual void setup();
     virtual ~Device();
     void addChild(Device *child);
     std::vector<Device *> getChildren() const;
     virtual String getId() const = 0;
-    virtual String getType() const = 0;
-    virtual String getName() const = 0;
+    virtual String getType() const { return _type; }
+    virtual String getName() const { return _name; }
     virtual void loop();
     virtual bool control(const String &action, JsonObject *payload = nullptr);
     virtual String getState();
@@ -45,6 +46,8 @@ public:
     virtual void setStateChangeCallback(StateChangeCallback callback);
 
 protected:
+    String _name;
+    String _type;
     std::vector<Device *> children;
     /**
      * @brief Callback function for state change notifications

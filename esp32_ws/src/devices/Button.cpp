@@ -22,7 +22,7 @@
  * @param debounceMs Debounce time in milliseconds
  */
 Button::Button(int pin, const String &id, const String &name, bool pullUp, unsigned long debounceMs, ButtonType type)
-    : _pin(pin), _id(id), _name(name), _pullUp(pullUp), _debounceMs(debounceMs), _buttonType(type)
+    : Device(name, "BUTTON"), _pin(pin), _id(id), _pullUp(pullUp), _debounceMs(debounceMs), _buttonType(type)
 {
     String typeStr = (type == ButtonType::NormalOpen) ? "NormalOpen" : "NormalClosed";
     Serial.println("Button [" + _id + "]: Created on pin " + String(_pin) +
@@ -209,8 +209,8 @@ bool Button::control(const String &action, JsonObject *payload)
 String Button::getState()
 {
     JsonDocument doc;
-    doc["type"] = _type;
-    doc["name"] = _name;
+    doc["type"] = getType();
+    doc["name"] = getName();
     doc["pressed"] = _currentState;
     doc["pressedTime"] = getPressedTime();
     doc["pullUp"] = _pullUp;

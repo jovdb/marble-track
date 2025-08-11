@@ -56,8 +56,6 @@ public:
 
     // Device interface implementation
     String getId() const override { return _id; }
-    String getName() const override { return _name; }
-    String getType() const override { return _type; }
     void loop() override; // Handle timing for tone/tune playback
 
     // Controllable functionality
@@ -83,8 +81,6 @@ public:
 private:
     int _pin;                    ///< GPIO pin number for the buzzer
     String _id;                  ///< Unique identifier string for the buzzer
-    String _name;                ///< Human-readable name string for the buzzer
-    String _type = "BUZZER";     ///< Type of the device
     bool _isPlaying = false;     ///< Current playing state
     Mode _mode = Mode::IDLE;     ///< Current playback mode
     String _currentTune = "";    ///< Currently loaded tune name

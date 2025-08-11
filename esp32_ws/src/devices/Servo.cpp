@@ -14,7 +14,7 @@
 #include <pwmWrite.h>
 
 ServoDevice::ServoDevice(int pin, const String &id, const String &name, int initialAngle, int pwmChannel)
-    : _pin(pin), _id(id), _name(name), _currentAngle(constrainAngle(initialAngle)), 
+    : Device(name, "SERVO"), _pin(pin), _id(id), _currentAngle(constrainAngle(initialAngle)), 
       _targetAngle(constrainAngle(initialAngle)), _speed(60.0), _isMoving(false), 
       _lastUpdate(0), _pwmChannel(pwmChannel), _servoPwm()
 {
@@ -163,8 +163,8 @@ bool ServoDevice::control(const String &action, JsonObject *payload)
 String ServoDevice::getState()
 {
     JsonDocument doc;
-    doc["type"] = _type;
-    doc["name"] = _name;
+    doc["type"] = getType();
+    doc["name"] = getName();
     doc["angle"] = _currentAngle;
     doc["targetAngle"] = _targetAngle;
     doc["speed"] = _speed;

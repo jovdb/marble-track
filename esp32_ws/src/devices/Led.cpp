@@ -20,7 +20,7 @@
  * @param name Human-readable name string for the LED
  */
 Led::Led(int pin, const String &id, const String &name)
-    : _pin(pin), _id(id), _name(name), _mode("OFF")
+    : Device(name, "LED"), _pin(pin), _id(id), _mode("OFF")
 {
     // Initialize the pin as output and set initial state
     pinMode(_pin, OUTPUT);
@@ -95,8 +95,8 @@ bool Led::control(const String &action, JsonObject *payload)
 String Led::getState()
 {
     JsonDocument doc;
-    doc["type"] = _type;
-    doc["name"] = _name;
+    doc["type"] = getType();
+    doc["name"] = getName();
     doc["mode"] = _mode;
 
     String result;

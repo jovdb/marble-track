@@ -25,13 +25,13 @@
  * @param acceleration Acceleration in steps per second per second
  */
 Stepper::Stepper(int stepPin, int dirPin, const String &id, const String &name,
-                 float maxSpeed, float acceleration)
-    : _stepper(AccelStepper::DRIVER, stepPin, dirPin),
-      _id(id), _name(name), _maxSpeed(maxSpeed), _maxAcceleration(acceleration),
-      _is4Pin(false), _pin1(stepPin), _pin2(dirPin), _pin3(-1), _pin4(-1),
-      _stepperType("DRIVER")
+                                 float maxSpeed, float acceleration)
+        : Device(name, "STEPPER"), _stepper(AccelStepper::DRIVER, stepPin, dirPin),
+            _id(id), _maxSpeed(maxSpeed), _maxAcceleration(acceleration),
+            _is4Pin(false), _pin1(stepPin), _pin2(dirPin), _pin3(-1), _pin4(-1),
+            _stepperType("DRIVER")
 {
-    Serial.println("Stepper [" + _id + "]: Created DRIVER type on pins " + String(_pin1) + " (step), " + String(_pin2) + " (dir)");
+        Serial.println("Stepper [" + _id + "]: Created DRIVER type on pins " + String(_pin1) + " (step), " + String(_pin2) + " (dir)");
 }
 
 /**
@@ -49,14 +49,14 @@ Stepper::Stepper(int stepPin, int dirPin, const String &id, const String &name,
  * @param acceleration Acceleration in steps per second per second
  */
 Stepper::Stepper(int pin1, int pin2, int pin3, int pin4, const String &id, const String &name,
-                 float maxSpeed, float acceleration)
-    : _stepper(AccelStepper::HALF4WIRE, pin1, pin3, pin2, pin4),
-      _id(id), _name(name), _maxSpeed(maxSpeed), _maxAcceleration(acceleration),
-      _is4Pin(true), _pin1(pin1), _pin2(pin2), _pin3(pin3), _pin4(pin4),
-      _stepperType("HALF4WIRE")
+                                 float maxSpeed, float acceleration)
+        : Device(name, "STEPPER"), _stepper(AccelStepper::HALF4WIRE, pin1, pin3, pin2, pin4),
+            _id(id), _maxSpeed(maxSpeed), _maxAcceleration(acceleration),
+            _is4Pin(true), _pin1(pin1), _pin2(pin2), _pin3(pin3), _pin4(pin4),
+            _stepperType("HALF4WIRE")
 {
-    Serial.println("Stepper [" + _id + "]: Created HALF4WIRE type on pins " + String(_pin1) +
-                   ", " + String(_pin2) + ", " + String(_pin3) + ", " + String(_pin4));
+        Serial.println("Stepper [" + _id + "]: Created HALF4WIRE type on pins " + String(_pin1) +
+                                     ", " + String(_pin2) + ", " + String(_pin3) + ", " + String(_pin4));
 }
 
 /**
@@ -300,8 +300,8 @@ bool Stepper::control(const String &action, JsonObject *payload)
 String Stepper::getState()
 {
     JsonDocument doc;
-    doc["type"] = _type;
-    doc["name"] = _name;
+    doc["type"] = getType();
+    doc["name"] = getName();
 
     doc["currentPosition"] = getCurrentPosition();
     doc["targetPosition"] = getTargetPosition();

@@ -67,8 +67,6 @@ public:
 
     // Device interface implementation
     String getId() const override { return _id; }
-    String getName() const override { return _name; }
-    String getType() const override { return _type; }
     void loop() override; // Handle stepper motor movement
 
     // Controllable functionality
@@ -126,8 +124,6 @@ public:
 private:
     AccelStepper _stepper;       ///< AccelStepper library instance
     String _id;                  ///< Unique identifier string for the stepper
-    String _name;                ///< Human-readable name string for the stepper
-    String _type = "STEPPER";    ///< Type of the device
     float _maxSpeed;             ///< Maximum speed in steps per second
     float _maxAcceleration;         ///< Acceleration in steps per second per second
     bool _isMoving = false;      ///< Current movement state

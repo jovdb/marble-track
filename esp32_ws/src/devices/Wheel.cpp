@@ -1,9 +1,9 @@
 #include "devices/Wheel.h"
 
 Wheel::Wheel(int pin1, int pin2, int pin3, int pin4, int buttonPin, const String &id, const String &name)
-    : _stepper(new Stepper(pin1, pin2, pin3, pin4, id + "-stepper", name + " Stepper", 100, 1000)),
+    : Device(name, "MARBLE_WHEEL"), _stepper(new Stepper(pin1, pin2, pin3, pin4, id + "-stepper", name + " Stepper", 100, 1000)),
       _sensor(new Button(buttonPin, id + "-sensor", name + " Sensor", true, 100, Button::ButtonType::NormalClosed)),
-      _id(id), _name(name)
+      _id(id)
 {
     addChild(_stepper);
     addChild(_sensor);
@@ -41,8 +41,8 @@ bool Wheel::control(const String &action, JsonObject *payload)
 String Wheel::getState()
 {
     JsonDocument doc;
-    doc["type"] = _type;
-    doc["name"] = _name;
+    doc["type"] = getType();
+    doc["name"] = getName();
     doc["stepperPosition"] = _stepper ? _stepper->getCurrentPosition() : 0;
     doc["buttonPressed"] = _sensor ? _sensor->wasPressed() : false;
     String result;

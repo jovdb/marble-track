@@ -58,7 +58,7 @@ void runManualMode()
   if (testButton.isPressed())
   {
     testBuzzer.tone(200, 100);
-    wheel.spin(8000); // Move stepper 100 steps on button press
+    wheel.move(8000); // Move stepper 100 steps on button press
   }
 
   // Check for second button press to trigger buzzer

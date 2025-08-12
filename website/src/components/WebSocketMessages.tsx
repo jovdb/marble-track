@@ -1,6 +1,6 @@
 import { type Component, For, createSignal, createMemo } from "solid-js";
 import { clearMessages, lastMessages, availableDevices } from "../hooks/useWebSocket";
-import { MessageIcon } from "./icons/DeviceIcons";
+import { MessageIcon } from "./icons/Icons";
 import styles from "./WebSocketMessages.module.css";
 
 // JSON Tree Component

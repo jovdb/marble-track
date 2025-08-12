@@ -9,7 +9,7 @@ import { Servo } from "./components/devices/Servo";
 import { Buzzer } from "./components/devices/Buzzer";
 import { Button } from "./components/devices/Button";
 import { Gate } from "./components/devices/Gate";
-import { ClipboardIcon, RadioIcon } from "./components/icons/DeviceIcons";
+import { ClipboardIcon, RadioIcon } from "./components/icons/Icons";
 import { devicesLoading, isConnected, availableDevices } from "./hooks/useWebSocket";
 import AnimatedFavicon from "./utils/animatedFavicon";
 import logo from "./assets/logo-64.png";

@@ -1,6 +1,6 @@
 import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
 import { createSignal, For } from "solid-js";
-import { BuzzerIcon } from "../icons/DeviceIcons";
+import { BuzzerIcon } from "../icons/Icons";
 import styles from "./Device.module.css";
 import { IDeviceState } from "./Device";
 

@@ -22,29 +22,31 @@ export function Device(props: DeviceProps) {
     <div class={styles.device}>
       <div class={styles.device__header}>
         <h3 class={styles.device__title}>{props.deviceState?.name || props.id}</h3>
-        {props.deviceState?.type && (
-          <span class={styles["device__type-badge"]}>{props.deviceState?.type}</span>
-        )}
-        {props.deviceState?.children?.length && (
-          <button
-            class={styles.device__advancedBtn}
-            type="button"
-            aria-label={showChildren() ? "Hide advanced" : "Show advanced"}
-            onClick={() => setShowChildren((v) => !v)}
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+        <span style={{ display: "flex", gap: "var(--spacing-2)" }}>
+          {props.deviceState?.type && (
+            <span class={styles["device__type-badge"]}>{props.deviceState?.type}</span>
+          )}
+          {props.deviceState?.children?.length && (
+            <button
+              class={`${styles["device__advanced-button"]} ${showChildren() ? styles["device__advanced-button--active"] : ""}`}
+              type="button"
+              aria-label={showChildren() ? "Hide advanced" : "Show advanced"}
+              onClick={() => setShowChildren((v) => !v)}
             >
-              <circle cx="5" cy="12" r="2" fill="currentColor" />
-              <circle cx="12" cy="12" r="2" fill="currentColor" />
-              <circle cx="19" cy="12" r="2" fill="currentColor" />
-            </svg>
-          </button>
-        )}
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle cx="5" cy="12" r="2" fill="currentColor" />
+                <circle cx="12" cy="12" r="2" fill="currentColor" />
+                <circle cx="19" cy="12" r="2" fill="currentColor" />
+              </svg>
+            </button>
+          )}
+        </span>
       </div>
       <div class={styles.device__content}>
         {!showChildren() && props.children}

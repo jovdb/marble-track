@@ -267,3 +267,17 @@
     width: 100%;
   }
 }
+
+.device__advanced-button {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  display: flex; /* no padding */
+  box-shadow: var(--shadow-sm);
+}
+
+.device__advanced-button--active {
+  transform: translateY(1px);
+  background-color: var(--color-gray-200);
+  box-shadow: var(--inset-shadow-sm);
+}

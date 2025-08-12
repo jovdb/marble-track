@@ -11,14 +11,15 @@ Wheel::Wheel(int pin1, int pin2, int pin3, int pin4, int buttonPin, const String
 void Wheel::loop()
 {
     Device::loop();
+
     // Example: spin wheel if button pressed
     if (_sensor && _sensor->wasPressed())
     {
-        spin(200); // Spin 200 steps when button pressed
+        move(0); // Spin 200 steps when button pressed
     }
 }
 
-void Wheel::spin(long steps)
+void Wheel::move(long steps)
 {
     if (_stepper)
     {
@@ -31,7 +32,7 @@ bool Wheel::control(const String &action, JsonObject *payload)
     if (action == "next-breakpoint")
     {
         long steps = payload && (*payload)["steps"].is<long>() ? (*payload)["steps"].as<long>() : 5000;
-        spin(steps);
+        move(steps);
         return true;
     }
     return false;

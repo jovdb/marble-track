@@ -6,7 +6,7 @@ import {
   requestDevices,
   isConnected,
 } from "../hooks/useWebSocket";
-import { getDeviceIcon } from "./icons/DeviceIcons";
+import { getDeviceIcon } from "./icons/Icons";
 import styles from "./DevicesList.module.css";
 
 // Export refresh function for use in parent components

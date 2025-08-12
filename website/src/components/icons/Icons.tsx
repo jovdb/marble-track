@@ -9,6 +9,7 @@ import buzzerIcon from "../../assets/icons/buzzer1.png";
 import stepperIcon from "../../assets/icons/stepper.png";
 import devicesIcon from "../../assets/icons/devices.png";
 import websocketIcon from "../../assets/icons/websocket.png";
+import dotsIcon from "../../assets/icons/dots.png";
 
 interface IconProps {
   width?: number;
@@ -111,6 +112,17 @@ export const MessageIcon = (props: IconProps) => (
     <path d="M12 10h.01" />
     <path d="M16 10h.01" />
   </svg>
+);
+
+export const DotsIcon = (props: IconProps) => (
+  <img
+    src={dotsIcon}
+    width={props.width || 24}
+    height={props.height || 24}
+    class={props.class}
+    style={props.style}
+    alt={props.alt || "WebSocket"}
+  />
 );
 
 // Helper function to get device icon by type

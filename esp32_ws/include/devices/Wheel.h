@@ -17,7 +17,7 @@ public:
     String getState() override;
     void loop() override;
     bool control(const String &action, JsonObject *payload = nullptr) override;
-    void spin(long steps);
+    void move(long steps);
 
 private:
     Stepper *_stepper;

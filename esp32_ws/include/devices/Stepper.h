@@ -43,7 +43,7 @@ public:
      * @param acceleration Acceleration in steps per second per second (default: 500)
      */
     Stepper(int stepPin, int dirPin, const String &id, const String &name, 
-            float maxSpeed = 1000.0, float acceleration = 500.0);
+        float maxSpeed = 1000.0, float acceleration = 500.0);
 
     /**
      * @brief Constructor for 4-pin stepper (HALF4WIRE - 28BYJ-48)
@@ -57,7 +57,7 @@ public:
      * @param acceleration Acceleration in steps per second per second (default: 250)
      */
     Stepper(int pin1, int pin2, int pin3, int pin4, const String &id, const String &name,
-            float maxSpeed = 500.0, float acceleration = 250.0);
+        float maxSpeed = 500.0, float acceleration = 250.0);
 
     /**
      * @brief Setup function to initialize the stepper motor
@@ -65,8 +65,6 @@ public:
      */
     void setup();
 
-    // Device interface implementation
-    String getId() const override { return _id; }
     void loop() override; // Handle stepper motor movement
 
     // Controllable functionality
@@ -123,7 +121,6 @@ public:
 
 private:
     AccelStepper _stepper;       ///< AccelStepper library instance
-    String _id;                  ///< Unique identifier string for the stepper
     float _maxSpeed;             ///< Maximum speed in steps per second
     float _maxAcceleration;         ///< Acceleration in steps per second per second
     bool _isMoving = false;      ///< Current movement state

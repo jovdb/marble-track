@@ -26,8 +26,8 @@
  */
 Stepper::Stepper(int stepPin, int dirPin, const String &id, const String &name,
                                  float maxSpeed, float acceleration)
-        : Device(name, "STEPPER"), _stepper(AccelStepper::DRIVER, stepPin, dirPin),
-            _id(id), _maxSpeed(maxSpeed), _maxAcceleration(acceleration),
+        : Device(id, name, "STEPPER"), _stepper(AccelStepper::DRIVER, stepPin, dirPin),
+            _maxSpeed(maxSpeed), _maxAcceleration(acceleration),
             _is4Pin(false), _pin1(stepPin), _pin2(dirPin), _pin3(-1), _pin4(-1),
             _stepperType("DRIVER")
 {
@@ -50,8 +50,8 @@ Stepper::Stepper(int stepPin, int dirPin, const String &id, const String &name,
  */
 Stepper::Stepper(int pin1, int pin2, int pin3, int pin4, const String &id, const String &name,
                                  float maxSpeed, float acceleration)
-        : Device(name, "STEPPER"), _stepper(AccelStepper::HALF4WIRE, pin1, pin3, pin2, pin4),
-            _id(id), _maxSpeed(maxSpeed), _maxAcceleration(acceleration),
+        : Device(id, name, "STEPPER"), _stepper(AccelStepper::HALF4WIRE, pin1, pin3, pin2, pin4),
+            _maxSpeed(maxSpeed), _maxAcceleration(acceleration),
             _is4Pin(true), _pin1(pin1), _pin2(pin2), _pin3(pin3), _pin4(pin4),
             _stepperType("HALF4WIRE")
 {

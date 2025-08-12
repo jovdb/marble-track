@@ -14,7 +14,7 @@
 #include <pwmWrite.h>
 
 ServoDevice::ServoDevice(int pin, const String &id, const String &name, int initialAngle, int pwmChannel)
-    : Device(name, "SERVO"), _pin(pin), _id(id), _currentAngle(constrainAngle(initialAngle)), 
+    : Device(id, name, "SERVO"), _pin(pin), _currentAngle(constrainAngle(initialAngle)), 
       _targetAngle(constrainAngle(initialAngle)), _speed(60.0), _isMoving(false), 
       _lastUpdate(0), _pwmChannel(pwmChannel), _servoPwm()
 {

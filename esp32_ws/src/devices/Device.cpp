@@ -1,6 +1,6 @@
 #include "devices/Device.h"
 
-Device::Device(const String &name, const String &type) : _name(name), _type(type) {}
+Device::Device(const String &id, const String &name, const String &type) : _id(id), _name(name), _type(type) {}
 
 Device::~Device()
 {
@@ -44,6 +44,8 @@ bool Device::control(const String &action, JsonObject *payload)
 String Device::getState()
 {
     JsonDocument doc;
+    doc["id"] = _id;
+    doc["id"] = _id;
     doc["type"] = _type;
     doc["name"] = _name;
 

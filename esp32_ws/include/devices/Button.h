@@ -47,8 +47,6 @@ public:
      */
     void setup();
 
-    // Device interface implementation
-    String getId() const override { return _id; }
     void loop() override; // Handles debouncing and state tracking
 
     bool control(const String &action, JsonObject *payload = nullptr) override;
@@ -63,7 +61,6 @@ public:
 
 private:
     int _pin;                    ///< GPIO pin number for the button
-    String _id;                  ///< Unique identifier string for the button
     bool _pullUp;                ///< Pull-up configuration (true = internal pull-up)
     unsigned long _debounceMs;   ///< Debounce time in milliseconds
     ButtonType _buttonType = ButtonType::NormalOpen; ///< Button type (NO/NC)

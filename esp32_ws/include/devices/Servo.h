@@ -49,8 +49,6 @@ public:
      */
     void setup();
 
-    // Device interface implementation
-    String getId() const override { return _id; }
     void loop() override; // Handle smooth movement updates
 
     // Controllable functionality
@@ -69,7 +67,6 @@ public:
 
 private:
     int _pin;                    ///< GPIO pin number for the servo
-    String _id;                  ///< Unique identifier string for the servo
     int _currentAngle;           ///< Current angle of the servo (0-180)
     int _targetAngle;            ///< Target angle for smooth movement
     float _speed;                ///< Movement speed in degrees per second

@@ -48,7 +48,7 @@ void Buzzer::startupTone()
  * @param name Human-readable name string for the buzzer
  */
 Buzzer::Buzzer(int pin, const String &id, const String &name)
-    : Device(name, "BUZZER"), _pin(pin), _id(id), _isPlaying(false), _mode(Mode::IDLE), _playStartTime(0), _toneDuration(0)
+    : Device(id, name, "BUZZER"), _pin(pin), _isPlaying(false), _mode(Mode::IDLE), _playStartTime(0), _toneDuration(0)
 {
     Serial.println("Buzzer [" + _id + "]: Created on pin " + String(_pin));
 }
@@ -86,7 +86,7 @@ void Buzzer::loop()
         _mode = Mode::IDLE;
         _currentTune = "";
 
-        Serial.println("Buzzer [" + _id + "]: Tune playback finished");
+    Serial.println("Buzzer [" + _id + "]: Tune playback finished");
         notifyStateChange();
     }
 
@@ -204,7 +204,7 @@ bool Buzzer::control(const String &action, JsonObject *payload)
     }
     else
     {
-        Serial.println("Buzzer [" + _id + "]: Unknown action: " + action);
+    Serial.println("Buzzer [" + _id + "]: Unknown action: " + action);
         return false;
     }
 }

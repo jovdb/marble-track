@@ -5,10 +5,9 @@
 
 GateWithSensor::GateWithSensor(int servoPin, int servoPwmChannel, int buttonPin, Buzzer *buzzer, const String &id, const String &name,
                                                              int initialAngle, bool buttonPullUp, unsigned long buttonDebounceMs, Button::ButtonType buttonType)
-        : Device(name, "GATE"), _servo(new ServoDevice(servoPin, id + "-servo", name + " Servo", 30, servoPwmChannel)),
+        : Device(id, name, "GATE"), _servo(new ServoDevice(servoPin, id + "-servo", name + " Servo", 30, servoPwmChannel)),
             _sensor(new Button(buttonPin, id + "-sensor", name + " Sensor", buttonPullUp, buttonDebounceMs, buttonType)),
             _buzzer(buzzer),
-            _id(id),
             _gateState(Closed),
             _gateStateStart(0)
 {

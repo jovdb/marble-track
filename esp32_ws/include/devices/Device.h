@@ -31,12 +31,12 @@ using StateChangeCallback = std::function<void(const String &deviceId, const Str
 class Device
 {
 public:
-    Device(const String &name, const String &type);
+    Device(const String &id, const String &name, const String &type);
     virtual void setup();
     virtual ~Device();
     void addChild(Device *child);
     std::vector<Device *> getChildren() const;
-    virtual String getId() const = 0;
+    virtual String getId() const { return _id; }
     virtual String getType() const { return _type; }
     virtual String getName() const { return _name; }
     virtual void loop();
@@ -46,6 +46,7 @@ public:
     virtual void setStateChangeCallback(StateChangeCallback callback);
 
 protected:
+    String _id;
     String _name;
     String _type;
     std::vector<Device *> children;

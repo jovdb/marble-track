@@ -18,6 +18,31 @@ import { logger } from "./stores/logger";
 import { Wheel } from "./components/devices/Wheel";
 import { Stepper } from "./components/devices/Stepper";
 
+// Function to render device component based on type
+export const renderDeviceComponent = (device: { id: string; type: string }) => {
+  switch (device.type.toLowerCase()) {
+    case "led":
+      return <Led id={device.id} />;
+    case "servo":
+      return <Servo id={device.id} />;
+    case "button":
+      return <Button id={device.id} />;
+    case "buzzer":
+      return <Buzzer id={device.id} />;
+    case "stepper":
+      return <Stepper id={device.id} />;
+    case "gate":
+      return <Gate id={device.id} />;
+    case "marble_wheel":
+      return <Wheel id={device.id} />;
+
+    default:
+      // Return a generic component or null for unknown device types
+      logger.error(`Unknown device type: ${device.type}`);
+      return null;
+  }
+};
+
 const App: Component = () => {
   let animatedFavicon: AnimatedFavicon;
 
@@ -33,31 +58,6 @@ const App: Component = () => {
       animatedFavicon.stop();
     }
   });
-
-  // Function to render device component based on type
-  const renderDeviceComponent = (device: any) => {
-    switch (device.type.toLowerCase()) {
-      case "led":
-        return <Led id={device.id} />;
-      case "servo":
-        return <Servo id={device.id} />;
-      case "button":
-        return <Button id={device.id} />;
-      case "buzzer":
-        return <Buzzer id={device.id} />;
-      case "stepper":
-        return <Stepper id={device.id} />;
-      case "gate":
-        return <Gate id={device.id} />;
-      case "marble_wheel":
-        return <Wheel id={device.id} />;
-
-      default:
-        // Return a generic component or null for unknown device types
-        logger.error(`Unknown device type: ${device.type}`);
-        return null;
-    }
-  };
 
   // Create refresh button for devices section
   const devicesRefreshButton = (

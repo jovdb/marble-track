@@ -20,7 +20,7 @@
  * @param name Human-readable name string for the LED
  */
 Led::Led(int pin, const String &id, const String &name)
-    : Device(name, "LED"), _pin(pin), _id(id), _mode("OFF")
+    : Device(id, name, "LED"), _pin(pin), _mode("OFF")
 {
     // Initialize the pin as output and set initial state
     pinMode(_pin, OUTPUT);
@@ -81,7 +81,7 @@ bool Led::control(const String &action, JsonObject *payload)
     }
     else
     {
-        Serial.println("Led [" + _id + "]: Unknown action: " + action);
+    Serial.println("Led [" + _id + "]: Unknown action: " + action);
         return false;
     }
 

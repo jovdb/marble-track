@@ -22,7 +22,7 @@
  * @param debounceMs Debounce time in milliseconds
  */
 Button::Button(int pin, const String &id, const String &name, bool pullUp, unsigned long debounceMs, ButtonType type)
-    : Device(name, "BUTTON"), _pin(pin), _id(id), _pullUp(pullUp), _debounceMs(debounceMs), _buttonType(type)
+    : Device(id, name, "BUTTON"), _pin(pin), _pullUp(pullUp), _debounceMs(debounceMs), _buttonType(type)
 {
     String typeStr = (type == ButtonType::NormalOpen) ? "NormalOpen" : "NormalClosed";
     Serial.println("Button [" + _id + "]: Created on pin " + String(_pin) +
@@ -197,7 +197,7 @@ bool Button::control(const String &action, JsonObject *payload)
     }
     else
     {
-        Serial.println("Button [" + _id + "]: Unknown action: " + action);
+    Serial.println("Button [" + _id + "]: Unknown action: " + action);
         return false;
     }
 }

@@ -1,7 +1,9 @@
-import { createSignal, JSX } from "solid-js";
+import { createSignal, For, JSX } from "solid-js";
 import styles from "./Device.module.css";
+import { renderDeviceComponent } from "../../App";
 
 export interface IDeviceState {
+  id: string;
   name: string;
   type: string;
   children?: IDeviceState[];
@@ -45,9 +47,13 @@ export function Device(props: DeviceProps) {
         )}
       </div>
       <div class={styles.device__content}>
-        {props.children}
+        {!showChildren && props.children}
         {props.deviceState?.children?.length && showChildren() && (
-          <div class={styles.device__children}>{props.children}</div>
+          <div class={styles.device__children}>
+            <For each={props.deviceState.children}>
+              {(child: IDeviceState) => renderDeviceComponent(child)}
+            </For>
+          </div>
         )}
       </div>
     </div>

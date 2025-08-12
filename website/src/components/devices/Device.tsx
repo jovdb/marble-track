@@ -47,8 +47,8 @@ export function Device(props: DeviceProps) {
         )}
       </div>
       <div class={styles.device__content}>
-        {!showChildren && props.children}
-        {props.deviceState?.children?.length && showChildren() && (
+        {!showChildren() && props.children}
+        {showChildren() && props.deviceState?.children?.length && (
           <div class={styles.device__children}>
             <For each={props.deviceState.children}>
               {(child: IDeviceState) => renderDeviceComponent(child)}

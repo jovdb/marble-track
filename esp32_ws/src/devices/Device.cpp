@@ -1,4 +1,5 @@
 #include "devices/Device.h"
+#include <vector>
 
 Device::Device(const String &id, const String &name, const String &type) : _id(id), _name(name), _type(type) {}
 
@@ -16,6 +17,11 @@ void Device::addChild(Device *child)
     {
         children.push_back(child);
     }
+}
+
+std::vector<Device *> Device::getChildren() const
+{
+    return children;
 }
 
 void Device::setup()
@@ -50,10 +56,13 @@ String Device::getState()
     doc["name"] = _name;
 
     // If there are children, add their states to a 'children' array
-    if (!children.empty()) {
+    if (!children.empty())
+    {
         JsonArray childrenArr = doc.createNestedArray("children");
-        for (Device *child : children) {
-            if (child) {
+        for (Device *child : children)
+        {
+            if (child)
+            {
                 String childStateStr = child->getState();
                 JsonDocument childDoc;
                 deserializeJson(childDoc, childStateStr);

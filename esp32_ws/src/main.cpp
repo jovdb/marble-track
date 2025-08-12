@@ -40,14 +40,12 @@ DeviceManager deviceManager;
 
 // Device instances
 Led testLed(1, "test-led", "Test LED");
-ServoDevice testServo(21, "test-servo", "Test Servo", 30, 2);
 Button testButton(15, "test-button", "Test Button", false, 50);
 Button testButton2(16, "test-button2", "Test Button 2", false, 50);
 Buzzer testBuzzer(14, "test-buzzer", "Test Buzzer");
 Button ballSensor(47, "ball-sensor", "Ball Sensor", true, 100, Button::ButtonType::NormalClosed);
 GateWithSensor gateWithSensor(21, 2, 48, &testBuzzer, "gate-with-sensor", "Gate", 50, true, 50, Button::ButtonType::NormalClosed);
 Button ballInGate(48, "ball-in-gate", "Ball In Gate", true, 100, Button::ButtonType::NormalClosed);
-Stepper stepper1(41, 40, 39, 38, "stepper1", "Small stepper", 100.0, 150.0);
 Wheel wheel(41, 40, 39, 38, 47, "wheel", "Wheel");
 
 // Function declarations
@@ -59,19 +57,8 @@ void runManualMode()
   // Check for button press to toggle LED
   if (testButton.isPressed())
   {
-    stepper1.move(8000); // Move stepper 100 steps on button press
-  }
-  if (testButton.wasPressed())
-  {
-    testLed.toggle();
     testBuzzer.tone(200, 100);
-    stepper1.setMaxSpeed(1000); // Set stepper speed
-    stepper1.setAcceleration(50);
-  }
-  if (!testButton.wasPressed())
-  {
-    // Stop on release
-    // stepper1.move(0);
+    wheel.spin(8000); // Move stepper 100 steps on button press
   }
 
   // Check for second button press to trigger buzzer
@@ -125,21 +112,6 @@ void runManualMode()
 
 void runAutomaticMode()
 {
-
-  // Automatic mode: run predefined sequences or automation logic
-  // Toggle LED every second
-  unsigned long currentTime = millis();
-  if (currentTime - lastAutoToggleTime >= 1000)
-  {
-    testLed.toggle();
-    lastAutoToggleTime = currentTime;
-  }
-
-  if (currentTime % 10000 < 5)
-  {
-    testServo.setAngle(currentTime % 180); // Rotate servo every 10 seconds
-    // ballGate removed
-  }
 }
 
 void setup()
@@ -175,11 +147,6 @@ void setup()
                                  { wsManager.broadcastState(deviceId, stateJson, ""); });
   deviceManager.addDevice(&testLed);
 
-  testServo.setup(); // Initialize servo hardware
-  testServo.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                   { wsManager.broadcastState(deviceId, stateJson, ""); });
-  //  deviceManager.addDevice(&testServo);
-
   testButton.setup(); // Initialize button hardware
   testButton.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
                                     { wsManager.broadcastState(deviceId, stateJson, ""); });
@@ -205,12 +172,6 @@ void setup()
                                         { wsManager.broadcastState(deviceId, stateJson, ""); });
   deviceManager.addDevice(&gateWithSensor);
 
-  // Setup and register stepper1
-  stepper1.setup();
-  stepper1.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                  { wsManager.broadcastState(deviceId, stateJson, ""); });
-  deviceManager.addDevice(&stepper1);
-
   wheel.setup(); // Initialize Wheel device
   wheel.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
                                { wsManager.broadcastState(deviceId, stateJson, ""); });
@@ -223,9 +184,6 @@ void setup()
   // Initialize in MANUAL mode
   Serial.println("Operation mode: MANUAL");
   Serial.println("Use setOperationMode() to switch between MANUAL and AUTOMATIC");
-
-  // testServo.setAngle(20); // Set initial angle for servo
-  // ballGate.setAngle(45);  // Set initial angle for second servo
 }
 
 void loop()

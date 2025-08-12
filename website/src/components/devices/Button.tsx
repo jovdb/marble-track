@@ -55,7 +55,6 @@ export function Button(props: { id: string }) {
               class={styles.device__button}
               onMouseDown={handlePress}
               onMouseUp={handleRelease}
-              onMouseLeave={handleRelease}
               disabled={disabled()}
             >
               Hold to Press

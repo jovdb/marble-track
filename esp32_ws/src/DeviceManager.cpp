@@ -65,11 +65,28 @@ void DeviceManager::loop()
 
 Device *DeviceManager::getDeviceById(const String &deviceId) const
 {
+    // Helper function for recursive search
+    std::function<Device *(Device *)> findRecursive = [&](Device *dev) -> Device *
+    {
+        if (!dev)
+            return nullptr;
+        if (dev->getId() == deviceId)
+            return dev;
+        for (Device *child : dev->getChildren())
+        {
+            Device *found = findRecursive(child);
+            if (found)
+                return found;
+        }
+        return nullptr;
+    };
     for (int i = 0; i < devicesCount; i++)
     {
-        if (devices[i] != nullptr && devices[i]->getId() == deviceId)
+        if (devices[i] != nullptr)
         {
-            return devices[i];
+            Device *found = findRecursive(devices[i]);
+            if (found)
+                return found;
         }
     }
     return nullptr;

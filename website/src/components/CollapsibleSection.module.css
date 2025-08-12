@@ -83,7 +83,6 @@
   transition:
     max-height var(--transition-medium) ease-out,
     padding var(--transition-medium) ease-out;
-  max-height: 2000px; /* Large enough to accommodate most content */
 }
 
 .collapsible-section__content--collapsed {

@@ -234,6 +234,12 @@
   fill: none;
 }
 
+.device__children {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--spacing-4);
+}
+
 /* Animations */
 @keyframes pulse {
   0%,

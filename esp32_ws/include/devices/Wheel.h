@@ -18,6 +18,7 @@ public:
     void loop() override;
     bool control(const String &action, JsonObject *payload = nullptr) override;
     void move(long steps);
+    void calibrate();
 
 private:
     Stepper *_stepper;

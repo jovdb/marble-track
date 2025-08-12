@@ -29,6 +29,10 @@ class Stepper : public Device
 {
 public:
     /**
+     * @brief Reset the stepper motor's current position to zero
+     */
+    void setCurrentPosition(long position);
+    /**
      * @brief Get all pin numbers used by this stepper
      * @return std::vector<int> of pin numbers
      */
@@ -42,8 +46,8 @@ public:
      * @param maxSpeed Maximum speed in steps per second (default: 1000)
      * @param acceleration Acceleration in steps per second per second (default: 500)
      */
-    Stepper(int stepPin, int dirPin, const String &id, const String &name, 
-        float maxSpeed = 1000.0, float acceleration = 500.0);
+    Stepper(int stepPin, int dirPin, const String &id, const String &name,
+            float maxSpeed = 1000.0, float acceleration = 500.0);
 
     /**
      * @brief Constructor for 4-pin stepper (HALF4WIRE - 28BYJ-48)
@@ -57,7 +61,7 @@ public:
      * @param acceleration Acceleration in steps per second per second (default: 250)
      */
     Stepper(int pin1, int pin2, int pin3, int pin4, const String &id, const String &name,
-        float maxSpeed = 500.0, float acceleration = 250.0);
+            float maxSpeed = 500.0, float acceleration = 250.0);
 
     /**
      * @brief Setup function to initialize the stepper motor
@@ -120,15 +124,15 @@ public:
     void stop();
 
 private:
-    AccelStepper _stepper;       ///< AccelStepper library instance
-    float _maxSpeed;             ///< Maximum speed in steps per second
-    float _maxAcceleration;         ///< Acceleration in steps per second per second
-    bool _isMoving = false;      ///< Current movement state
-    
+    AccelStepper _stepper;  ///< AccelStepper library instance
+    float _maxSpeed;        ///< Maximum speed in steps per second
+    float _maxAcceleration; ///< Acceleration in steps per second per second
+    bool _isMoving = false; ///< Current movement state
+
     // Pin configuration
-    bool _is4Pin = false;        ///< True if 4-pin configuration, false if 2-pin
+    bool _is4Pin = false;           ///< True if 4-pin configuration, false if 2-pin
     int _pin1, _pin2, _pin3, _pin4; ///< Pin numbers (all used for 4-pin, only pin1&pin2 for 2-pin)
-    String _stepperType;         ///< Type string for debugging ("DRIVER" or "HALF4WIRE")
+    String _stepperType;            ///< Type string for debugging ("DRIVER" or "HALF4WIRE")
 };
 
 #endif // STEPPER_H

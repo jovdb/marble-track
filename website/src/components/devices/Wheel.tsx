@@ -23,6 +23,26 @@ export function Wheel(props: { id: string }) {
     );
   };
 
+  const handleCalibrate = () => {
+    sendMessage(
+      JSON.stringify({
+        type: "device-fn",
+        deviceId: props.id,
+        fn: "calibrate",
+      })
+    );
+  };
+
+  const handleStop = () => {
+    sendMessage(
+      JSON.stringify({
+        type: "device-fn",
+        deviceId: props.id,
+        fn: "stop",
+      })
+    );
+  };
+
   setDirection(1);
   let animationFrame: number | null = null;
   let lastTime: number | null = null;
@@ -134,8 +154,14 @@ export function Wheel(props: { id: string }) {
             <span class={styles["device__status-text"]}>Position: {deviceState()?.position}</span>
           </div>
           <div class={styles.device__controls}>
+            <button class={styles.device__button} onClick={handleCalibrate} disabled={disabled()}>
+              Calibrate
+            </button>
             <button class={styles.device__button} onClick={handleNext} disabled={disabled()}>
               Next
+            </button>
+            <button class={styles.device__button} onClick={handleStop} disabled={disabled()}>
+              Stop
             </button>
           </div>
         </>

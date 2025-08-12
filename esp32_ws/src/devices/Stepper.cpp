@@ -1,3 +1,4 @@
+
 /**
  * @file Stepper.cpp
  * @brief Implementation of Stepper motor control class
@@ -25,13 +26,13 @@
  * @param acceleration Acceleration in steps per second per second
  */
 Stepper::Stepper(int stepPin, int dirPin, const String &id, const String &name,
-                                 float maxSpeed, float acceleration)
-        : Device(id, name, "STEPPER"), _stepper(AccelStepper::DRIVER, stepPin, dirPin),
-            _maxSpeed(maxSpeed), _maxAcceleration(acceleration),
-            _is4Pin(false), _pin1(stepPin), _pin2(dirPin), _pin3(-1), _pin4(-1),
-            _stepperType("DRIVER")
+                 float maxSpeed, float acceleration)
+    : Device(id, name, "STEPPER"), _stepper(AccelStepper::DRIVER, stepPin, dirPin),
+      _maxSpeed(maxSpeed), _maxAcceleration(acceleration),
+      _is4Pin(false), _pin1(stepPin), _pin2(dirPin), _pin3(-1), _pin4(-1),
+      _stepperType("DRIVER")
 {
-        Serial.println("Stepper [" + _id + "]: Created DRIVER type on pins " + String(_pin1) + " (step), " + String(_pin2) + " (dir)");
+    Serial.println("Stepper [" + _id + "]: Created DRIVER type on pins " + String(_pin1) + " (step), " + String(_pin2) + " (dir)");
 }
 
 /**
@@ -49,14 +50,14 @@ Stepper::Stepper(int stepPin, int dirPin, const String &id, const String &name,
  * @param acceleration Acceleration in steps per second per second
  */
 Stepper::Stepper(int pin1, int pin2, int pin3, int pin4, const String &id, const String &name,
-                                 float maxSpeed, float acceleration)
-        : Device(id, name, "STEPPER"), _stepper(AccelStepper::HALF4WIRE, pin1, pin3, pin2, pin4),
-            _maxSpeed(maxSpeed), _maxAcceleration(acceleration),
-            _is4Pin(true), _pin1(pin1), _pin2(pin2), _pin3(pin3), _pin4(pin4),
-            _stepperType("HALF4WIRE")
+                 float maxSpeed, float acceleration)
+    : Device(id, name, "STEPPER"), _stepper(AccelStepper::HALF4WIRE, pin1, pin3, pin2, pin4),
+      _maxSpeed(maxSpeed), _maxAcceleration(acceleration),
+      _is4Pin(true), _pin1(pin1), _pin2(pin2), _pin3(pin3), _pin4(pin4),
+      _stepperType("HALF4WIRE")
 {
-        Serial.println("Stepper [" + _id + "]: Created HALF4WIRE type on pins " + String(_pin1) +
-                                     ", " + String(_pin2) + ", " + String(_pin3) + ", " + String(_pin4));
+    Serial.println("Stepper [" + _id + "]: Created HALF4WIRE type on pins " + String(_pin1) +
+                   ", " + String(_pin2) + ", " + String(_pin3) + ", " + String(_pin4));
 }
 
 /**
@@ -130,6 +131,16 @@ void Stepper::moveTo(long position)
     // notifyStateChange();
 }
 
+/**
+ * @brief Reset the stepper motor's current position to zero
+ */
+void Stepper::setCurrentPosition(long position)
+{
+    Serial.println("Stepper [" + _id + "]: Resetting current position to 0");
+    _stepper.setCurrentPosition(0);
+    // Optionally, update state or notify if needed
+    // notifyStateChange();
+}
 /**
  * @brief Set the maximum speed of the stepper motor
  * @param maxSpeed Maximum speed in steps per second
@@ -303,7 +314,8 @@ String Stepper::getState()
     // Copy base Device state fields
     JsonDocument baseDoc;
     deserializeJson(baseDoc, Device::getState());
-    for (JsonPair kv : baseDoc.as<JsonObject>()) {
+    for (JsonPair kv : baseDoc.as<JsonObject>())
+    {
         doc[kv.key()] = kv.value();
     }
 

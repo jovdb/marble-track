@@ -25,7 +25,7 @@ Led::Led(int pin, const String &id, const String &name)
     // Initialize the pin as output and set initial state
     pinMode(_pin, OUTPUT);
     digitalWrite(_pin, LOW);
-    Serial.println("Led [" + _id + "]: Initialized on pin " + String(_pin));
+    log("Initialized on pin %d\n", _pin);
 }
 
 /**
@@ -74,14 +74,14 @@ bool Led::control(const String &action, JsonObject *payload)
     {
         if (!payload || !(*payload)["state"].is<bool>())
         {
-            Serial.println("Led [" + _id + "]: Invalid 'set' payload");
+            log("Invalid 'set' payload\n");
             return false;
         }
         set((*payload)["state"].as<bool>());
     }
     else
     {
-    Serial.println("Led [" + _id + "]: Unknown action: " + action);
+    log("Unknown action: %s\n", action.c_str());
         return false;
     }
 

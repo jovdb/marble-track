@@ -25,9 +25,7 @@ Button::Button(int pin, const String &id, const String &name, bool pullUp, unsig
     : Device(id, name, "BUTTON"), _pin(pin), _pullUp(pullUp), _debounceMs(debounceMs), _buttonType(type)
 {
     String typeStr = (type == ButtonType::NormalOpen) ? "NormalOpen" : "NormalClosed";
-    Serial.println("Button [" + _id + "]: Created on pin " + String(_pin) +
-                   (_pullUp ? " (pull-up)" : " (pull-down)") +
-                   ", debounce: " + String(_debounceMs) + "ms, type: " + typeStr);
+    log("Created on pin %d%s, debounce: %lums, type: %s\n", _pin, _pullUp ? " (pull-up)" : " (pull-down)", _debounceMs, typeStr.c_str());
 }
 
 /**
@@ -91,7 +89,7 @@ void Button::loop()
                 // Button was pressed
                 _pressedFlag = true;
                 _pressStartTime = millis();
-                Serial.println("Button [" + _id + "]: PRESSED");
+                log("PRESSED\n");
                 notifyStateChange(); // Notify state change
             }
             else if (!_currentState && previousState)
@@ -99,7 +97,7 @@ void Button::loop()
                 // Button was released
                 _releasedFlag = true;
                 unsigned long pressDuration = millis() - _pressStartTime;
-                Serial.println("Button [" + _id + "]: RELEASED (held for " + String(pressDuration) + "ms)");
+                log("RELEASED (held for %lums)\n", pressDuration);
                 notifyStateChange(); // Notify state change
             }
         }
@@ -166,13 +164,13 @@ bool Button::control(const String &action, JsonObject *payload)
             _pressedFlag = true;
             _pressStartTime = millis();
             _virtualPress = true; // Mark as virtual press to prevent physical override
-            Serial.println("Button [" + _id + "]: Simulated PRESS");
+            log("Simulated PRESS\n");
             notifyStateChange();
             return true;
         }
         else
         {
-            Serial.println("Button [" + _id + "]: Already pressed, ignoring simulated press");
+            log("Already pressed, ignoring simulated press\n");
             return false;
         }
     }
@@ -185,19 +183,19 @@ bool Button::control(const String &action, JsonObject *payload)
             _releasedFlag = true;
             _virtualPress = false; // Clear virtual press flag
             unsigned long pressDuration = millis() - _pressStartTime;
-            Serial.println("Button [" + _id + "]: Simulated RELEASE (held for " + String(pressDuration) + "ms)");
+            log("Simulated RELEASE (held for %lums)\n", pressDuration);
             notifyStateChange();
             return true;
         }
         else
         {
-            Serial.println("Button [" + _id + "]: Already released, ignoring simulated release");
+            log("Already released, ignoring simulated release\n");
             return false;
         }
     }
     else
     {
-    Serial.println("Button [" + _id + "]: Unknown action: " + action);
+    log("Unknown action: %s\n", action.c_str());
         return false;
     }
 }

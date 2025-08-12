@@ -18,7 +18,7 @@ ServoDevice::ServoDevice(int pin, const String &id, const String &name, int init
       _targetAngle(constrainAngle(initialAngle)), _speed(60.0), _isMoving(false), 
       _lastUpdate(0), _pwmChannel(pwmChannel), _servoPwm()
 {
-    Serial.println("Servo [" + _id + "]: Created on pin " + String(_pin) + ", PWM channel " + String(_pwmChannel));
+        log("Created on pin %d, PWM channel %d\n", _pin, _pwmChannel);
 }
 
 void ServoDevice::setup()
@@ -26,7 +26,7 @@ void ServoDevice::setup()
     _servoPwm.attachServo(_pin, _pwmChannel);
     _servoPwm.writeServo(_pin, _currentAngle);
     _lastUpdate = millis();
-    Serial.println("Servo [" + _id + "]: Setup complete at angle " + String(_currentAngle) + " with speed " + String(_speed) + "°/s");
+    log("Setup complete at angle %d with speed %.2f°/s\n", _currentAngle, _speed);
 }
 
 ServoDevice::~ServoDevice()
@@ -63,7 +63,7 @@ void ServoDevice::setAngle(int angle, float speed)
             _servoPwm.writeServo(_pin, _currentAngle);
         }
         
-        Serial.println("Servo [" + _id + "]: Moving from " + String(_currentAngle) + "° to " + String(_targetAngle) + "° at " + String(_speed) + "°/s");
+    log("Moving from %d° to %d° at %.2f°/s\n", _currentAngle, _targetAngle, _speed);
         notifyStateChange();
     }
 }
@@ -71,7 +71,7 @@ void ServoDevice::setAngle(int angle, float speed)
 void ServoDevice::setSpeed(float speed)
 {
     _speed = max(1.0f, speed); // Minimum speed of 1 degree per second
-    Serial.println("Servo [" + _id + "]: Speed set to " + String(_speed) + "°/s");
+    log("Speed set to %.2f°/s\n", _speed);
 }
 
 void ServoDevice::updateMovement()
@@ -99,14 +99,14 @@ void ServoDevice::updateMovement()
         if (_currentAngle != previousAngle)
         {
             _servoPwm.writeServo(_pin, _currentAngle);
-            Serial.println("Servo [" + _id + "]: Moving to " + String(_currentAngle) + "° (target: " + String(_targetAngle) + "°)");
+            log("Moving to %d° (target: %d°)\n", _currentAngle, _targetAngle);
         }
         
         // Check if movement is complete
         if (_currentAngle == _targetAngle)
         {
             _isMoving = false;
-            Serial.println("Servo [" + _id + "]: Reached target angle " + String(_currentAngle) + "°");
+            log("Reached target angle %d°\n", _currentAngle);
             notifyStateChange();
         }
         
@@ -120,7 +120,7 @@ bool ServoDevice::control(const String &action, JsonObject *payload)
     {
         if (!payload || !(*payload)["angle"].is<int>())
         {
-            Serial.println("Servo [" + _id + "]: Missing angle parameter");
+        log("Missing angle parameter\n");
             return false;
         }
         
@@ -141,7 +141,7 @@ bool ServoDevice::control(const String &action, JsonObject *payload)
     {
         if (!payload || !(*payload)["speed"].is<float>())
         {
-            Serial.println("Servo [" + _id + "]: Missing speed parameter");
+        log("Missing speed parameter\n");
             return false;
         }
         setSpeed((*payload)["speed"].as<float>());
@@ -151,12 +151,12 @@ bool ServoDevice::control(const String &action, JsonObject *payload)
     {
         _targetAngle = _currentAngle;
         _isMoving = false;
-        Serial.println("Servo [" + _id + "]: Movement stopped at angle " + String(_currentAngle) + "°");
+    log("Movement stopped at angle %d°\n", _currentAngle);
         notifyStateChange();
         return true;
     }
     
-    Serial.println("Servo [" + _id + "]: Unknown action: " + action);
+    log("Unknown action: %s\n", action.c_str());
     return false;
 }
 

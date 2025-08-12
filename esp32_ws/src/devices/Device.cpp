@@ -76,6 +76,17 @@ String Device::getState()
     return result;
 }
 
+void Device::log(const char *format, ...) const
+{
+    Serial.print("Device[");
+    Serial.print(_id);
+    Serial.print("]: ");
+    va_list args;
+    va_start(args, format);
+    Serial.printf(format, args);
+    va_end(args);
+}
+
 std::vector<int> Device::getPins() const
 {
     std::vector<int> pins;

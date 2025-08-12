@@ -38,7 +38,7 @@ void Wheel::loop()
     case wheelState::CALIBRATING:
         if (_sensor->wasPressed())
         {
-            Serial.println("Wheel [" + getId() + "]: Calibration complete.");
+            log("Calibration complete.\n");
             _stepper->setCurrentPosition(0);
             _stepper->stop();
         }
@@ -61,7 +61,7 @@ void Wheel::calibrate()
 {
     if (_stepper)
     {
-        Serial.println("Wheel [" + getId() + "]: Calibration started.");
+    log("Calibration started.\n");
         _state = wheelState::CALIBRATING;
         _stepper->move(100000);
         notifyStateChange();
@@ -84,7 +84,7 @@ bool Wheel::control(const String &action, JsonObject *payload)
     }
     else if (action == "stop")
     {
-        Serial.println("Wheel [" + getId() + "]: Stopping.");
+    log("Stopping.\n");
         _stepper->stop();
         return true;
     }

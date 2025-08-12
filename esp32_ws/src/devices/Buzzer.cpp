@@ -50,7 +50,7 @@ void Buzzer::startupTone()
 Buzzer::Buzzer(int pin, const String &id, const String &name)
     : Device(id, name, "BUZZER"), _pin(pin), _isPlaying(false), _mode(Mode::IDLE), _playStartTime(0), _toneDuration(0)
 {
-    Serial.println("Buzzer [" + _id + "]: Created on pin " + String(_pin));
+    log("Created on pin %d\n", _pin);
 }
 
 /**
@@ -61,7 +61,7 @@ void Buzzer::setup()
 {
     pinMode(_pin, OUTPUT);
     digitalWrite(_pin, LOW);
-    Serial.println("Buzzer [" + _id + "]: Setup complete on pin " + String(_pin));
+    log("Setup complete on pin %d\n", _pin);
 
     startupTone(); // Play startup tone sequence
 }
@@ -86,7 +86,7 @@ void Buzzer::loop()
         _mode = Mode::IDLE;
         _currentTune = "";
 
-    Serial.println("Buzzer [" + _id + "]: Tune playback finished");
+    log("Tune playback finished\n");
         notifyStateChange();
     }
 
@@ -105,7 +105,7 @@ void Buzzer::loop()
             // TODO: Stop hardware tone generation here
             // ::noTone(_pin);
 
-            Serial.println("Buzzer [" + _id + "]: Tone playback finished");
+            log("Tone playback finished\n");
             notifyStateChange();
         }
     }
@@ -118,7 +118,7 @@ void Buzzer::loop()
  */
 void Buzzer::tone(int frequency, int duration)
 {
-    Serial.println("Buzzer [" + _id + "]: Playing tone " + String(frequency) + "Hz for " + String(duration) + "ms");
+    log("Playing tone %dHz for %dms\n", frequency, duration);
     ::tone(_pin, frequency, duration);
 
     _isPlaying = true;
@@ -136,7 +136,7 @@ void Buzzer::tone(int frequency, int duration)
  */
 void Buzzer::tune(const String &rtttl)
 {
-    Serial.println("Buzzer [" + _id + "]: Playing RTTTL tune: " + rtttl);
+    log("Playing RTTTL tune: %s\n", rtttl.c_str());
 
     rtttl::begin(_pin, rtttl.c_str());
 
@@ -160,7 +160,7 @@ bool Buzzer::control(const String &action, JsonObject *payload)
     {
         if (!payload || !(*payload)["frequency"].is<int>() || !(*payload)["duration"].is<int>())
         {
-            Serial.println("Buzzer [" + _id + "]: Invalid 'tone' payload - need frequency and duration");
+            log("Invalid 'tone' payload - need frequency and duration\n");
             return false;
         }
 
@@ -170,14 +170,14 @@ bool Buzzer::control(const String &action, JsonObject *payload)
         // Validate frequency range
         if (frequency < 20 || frequency > 20000)
         {
-            Serial.println("Buzzer [" + _id + "]: Invalid frequency " + String(frequency) + "Hz (range: 20-20000)");
+            log("Invalid frequency %dHz (range: 20-20000)\n", frequency);
             return false;
         }
 
         // Validate duration
         if (duration < 1 || duration > 10000)
         {
-            Serial.println("Buzzer [" + _id + "]: Invalid duration " + String(duration) + "ms (range: 1-10000)");
+            log("Invalid duration %dms (range: 1-10000)\n", duration);
             return false;
         }
 
@@ -188,14 +188,14 @@ bool Buzzer::control(const String &action, JsonObject *payload)
     {
         if (!payload || !(*payload)["rtttl"].is<String>())
         {
-            Serial.println("Buzzer [" + _id + "]: Invalid 'tune' payload - need rtttl string");
+            log("Invalid 'tune' payload - need rtttl string\n");
             return false;
         }
 
         String rtttl = (*payload)["rtttl"].as<String>();
         if (rtttl.length() == 0)
         {
-            Serial.println("Buzzer [" + _id + "]: Empty RTTTL string");
+            log("Empty RTTTL string\n");
             return false;
         }
 
@@ -204,7 +204,7 @@ bool Buzzer::control(const String &action, JsonObject *payload)
     }
     else
     {
-    Serial.println("Buzzer [" + _id + "]: Unknown action: " + action);
+    log("Unknown action: %s\n", action.c_str());
         return false;
     }
 }

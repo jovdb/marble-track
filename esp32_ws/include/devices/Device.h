@@ -44,6 +44,7 @@ public:
     virtual String getState();
     virtual std::vector<int> getPins() const;
     virtual void setStateChangeCallback(StateChangeCallback callback);
+    void log(const char *format, ...) const;
 
 protected:
     String _id;

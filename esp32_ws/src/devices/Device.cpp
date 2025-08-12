@@ -58,7 +58,7 @@ String Device::getState()
     // If there are children, add their states to a 'children' array
     if (!children.empty())
     {
-        JsonArray childrenArr = doc.createNestedArray("children");
+        JsonArray childrenArr = doc["children"].to<JsonArray>();
         for (Device *child : children)
         {
             if (child)

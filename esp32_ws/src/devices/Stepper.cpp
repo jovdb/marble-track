@@ -136,8 +136,8 @@ void Stepper::moveTo(long position)
  */
 void Stepper::setCurrentPosition(long position)
 {
-    Serial.println("Stepper [" + _id + "]: Resetting current position to 0");
-    _stepper.setCurrentPosition(0);
+    Serial.println("Stepper [" + _id + "]: Resetting current position to " + String(position));
+    _stepper.setCurrentPosition(position);
     // Optionally, update state or notify if needed
     // notifyStateChange();
 }

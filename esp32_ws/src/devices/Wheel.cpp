@@ -1,12 +1,14 @@
 #include "devices/Wheel.h"
 
-Wheel::Wheel(int pin1, int pin2, int pin3, int pin4, int buttonPin, const String &id, const String &name)
-    : Device(id, name, "MARBLE_WHEEL"), _stepper(new Stepper(pin1, pin2, pin3, pin4, id + "-stepper", name + " Stepper", 100, 1000)),
-      _sensor(new Button(buttonPin, id + "-sensor", name + " Sensor", true, 100, Button::ButtonType::NormalClosed))
-{
-    addChild(_stepper);
-    addChild(_sensor);
-}
+Wheel::Wheel(int stepPin1, int dirPin, int buttonPin, const String &id, const String &name)
+        : Device(id, name, "MARBLE_WHEEL"),
+            _stepper(new Stepper(stepPin1, dirPin, id + "-stepper", name + " Stepper", 100, 1000)),
+            _sensor(new Button(buttonPin, id + "-sensor", name + " Sensor", true, 100, Button::ButtonType::NormalClosed)),
+            _state(wheelState::IDLE)
+    {
+        addChild(_stepper);
+        addChild(_sensor);
+    }
 
 // Array of breakpoints values
 // these are the number of steps after the reset button
@@ -16,7 +18,7 @@ static enum class wheelState {
     CALIBRATING,
     IDLE,
     MOVING
-} _state = wheelState::IDLE; ///< Current movement state
+} _state; ///< Current movement state
 
 void Wheel::loop()
 {

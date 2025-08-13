@@ -13,7 +13,13 @@
 class Wheel : public Device
 {
 public:
-    Wheel(int pin1, int pin2, int pin3, int pin4, int buttonPin, const String &id, const String &name);
+    enum class wheelState
+    {
+        CALIBRATING,
+        IDLE,
+        MOVING
+    };
+    Wheel(int stepPin1, int dirPin, int buttonPin, const String &id, const String &name);
     String getState() override;
     void loop() override;
     bool control(const String &action, JsonObject *payload = nullptr) override;
@@ -23,6 +29,7 @@ public:
 private:
     Stepper *_stepper;
     Button *_sensor;
+    wheelState _state;
 };
 
 #endif // WHEEL_H

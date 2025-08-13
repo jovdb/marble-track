@@ -9,6 +9,9 @@
  * @date 2025
  */
 
+#ifdef ESP32
+#include <mdns.h>
+#endif
 #include "Network.h"
 
 Network::Network(const char *wifi_ssid, const char *wifi_password)
@@ -17,8 +20,8 @@ Network::Network(const char *wifi_ssid, const char *wifi_password)
 }
 
 static const char *AP_SSID = "MarbleTrackAP";
-static const char *AP_PASSWORD = ""; // Default password for the Access Point
-static const unsigned long WIFI_TIMEOUT_MS = 10000; // Timeout for WiFi connection
+static const char *AP_PASSWORD = "";                           // Default password for the Access Point
+static const unsigned long WIFI_TIMEOUT_MS = 10000;            // Timeout for WiFi connection
 static const unsigned long CONNECTION_CHECK_INTERVAL_MS = 500; // Interval to check connection status
 
 Network::~Network()
@@ -36,15 +39,32 @@ bool Network::initialize()
     if (connectToWiFi())
     {
         _currentMode = NetworkMode::WIFI_CLIENT;
-        return true;
     }
 
     // If WiFi fails, start Access Point
-    if (startAccessPoint())
+    if (_currentMode == NetworkMode::DISCONNECTED && startAccessPoint())
     {
         _currentMode = NetworkMode::ACCESS_POINT;
-        return true;
     }
+
+    // Start mDNS responder for marble-track.local using ESP-IDF mDNS
+#ifdef ESP32
+    if (_currentMode != NetworkMode::DISCONNECTED)
+    {
+        if (mdns_init() == ESP_OK)
+        {
+            mdns_hostname_set("marble-track");
+            mdns_instance_name_set("Jo's Marble Track");
+            mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
+
+            Serial.println("mDNS: http://marble-track.local : OK");
+        }
+        else
+        {
+            Serial.println("mDNS: http://marble-track.local : ERROR");
+        }
+    }
+#endif
 
     // If both fail
     _currentMode = NetworkMode::DISCONNECTED;

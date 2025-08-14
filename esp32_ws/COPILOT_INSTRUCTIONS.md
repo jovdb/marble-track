@@ -27,7 +27,7 @@ This project is the firmware for the ESP32-based marble track system. It uses Pl
   Instead of using `poi` command , use the full poi path `C:\Users\vandenberghej\.platformio\penv\Scripts\platformio.exe`
 - Example commands:
   - Build: `C:\Users\vandenberghej\.platformio\penv\Scripts\platformio.exe run`
-  - Upload: `platformioC:\Users\vandenberghej\.platformio\penv\Scripts\platformio.exe run --target upload`
+  - Upload: `C:\Users\vandenberghej\.platformio\penv\Scripts\platformio.exe run --target upload`
   - Monitor: `C:\Users\vandenberghej\.platformio\penv\Scripts\platformio.exe device monitor`
 - When adjusting code, always start a build to see if there are build errors, if so try to fix them and rebuild until all fixed.
 

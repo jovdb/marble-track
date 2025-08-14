@@ -1,0 +1,7 @@
+- OTA updates
+- marble.track (mDNS)
+- make configurable at runtime without build
+  - save config on fs
+- also support acceleration for stepper stop
+- complete wheel cpp
+- Add logging of ArduinoLog loge, logw, ..

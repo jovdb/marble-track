@@ -1,3 +1,6 @@
+#include "esp_log.h"
+
+static const char *TAG = "WebSocketManager";
 #include "WebSocketManager.h"
 #include "DeviceManager.h"
 #include "TimeManager.h"
@@ -69,7 +72,7 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
 
     String message;
     serializeJson(response, message);
-    Serial.printf("WebSocket sent devices list: %s\n", message.c_str());
+    ESP_LOGI(TAG, "WebSocket sent devices list: %s", message.c_str());
     
     notifyClients(message);
 }
@@ -86,7 +89,7 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
 
     data[len] = 0;
     String message = (char *)data;
-    Serial.println("WebSocket received: " + message);
+    ESP_LOGI(TAG, "WebSocket received: %s", message.c_str());
 
     // Parse as JSON
     JsonDocument doc;
@@ -145,7 +148,7 @@ void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
     {
     case WS_EVT_CONNECT:
         {
-            Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+        ESP_LOGI(TAG, "WebSocket client #%u connected from %s", client->id(), client->remoteIP().toString().c_str());
             
             // Send welcome message with connection info
             String welcome = "{\"type\":\"connection\",\"message\":\"WebSocket connected\",\"clientId\":" + String(client->id()) + "}";
@@ -154,20 +157,20 @@ void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
         }
         
     case WS_EVT_DISCONNECT:
-        Serial.printf("WebSocket client #%u disconnected\n", client->id());
+    ESP_LOGI(TAG, "WebSocket client #%u disconnected", client->id());
         break;
         
     case WS_EVT_DATA:
-        Serial.printf("WebSocket client #%u data received\n", client->id());
+    ESP_LOGI(TAG, "WebSocket client #%u data received", client->id());
         handleWebSocketMessage(arg, data, len);
         break;
         
     case WS_EVT_PONG:
-        Serial.printf("WebSocket client #%u pong\n", client->id());
+    ESP_LOGI(TAG, "WebSocket client #%u pong", client->id());
         break;
         
     case WS_EVT_ERROR:
-        Serial.printf("WebSocket client #%u ERROR occurred\n", client->id());
+    ESP_LOGE(TAG, "WebSocket client #%u ERROR occurred", client->id());
         break;
     }
 }
@@ -186,9 +189,9 @@ void WebSocketManager::setup(AsyncWebServer &server)
         } });
     
     server.addHandler(&ws);
-    Serial.println("WebSocket manager: OK");
-    Serial.println("WebSocket path: /ws");
-    Serial.printf("WebSocket server ready to accept connections\n");
+    ESP_LOGI(TAG, "WebSocket manager: OK");
+    ESP_LOGI(TAG, "WebSocket path: /ws");
+    ESP_LOGI(TAG, "WebSocket server ready to accept connections");
 }
 
 void WebSocketManager::loop()
@@ -215,7 +218,7 @@ void WebSocketManager::handleRestart()
 {
     String response = createJsonResponse(true, "Device restart initiated", "", "");
     notifyClients(response);
-    Serial.println("Restarting device in 2 seconds...");
+    ESP_LOGI(TAG, "Restarting device in 2 seconds...");
     delay(2000);
     ESP.restart();
 }
@@ -248,7 +251,7 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
         }
         else
         {
-            Serial.printf("Executing action: %s[%s]\n", deviceId, functionName);
+            ESP_LOGI(TAG, "Executing action: %s[%s]", deviceId.c_str(), functionName.c_str());
             JsonObject payload = doc.as<JsonObject>();
             bool success = device->control(functionName, &payload);
 
@@ -314,7 +317,7 @@ void WebSocketManager::broadcastState(const String &deviceId, const String &stat
 
     String message;
     serializeJson(doc, message);
-    Serial.printf("Websocket sent:     %s\n", message.c_str());
+    ESP_LOGI(TAG, "Websocket sent: %s", message.c_str());
 
     notifyClients(message);
 }

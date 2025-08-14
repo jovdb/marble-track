@@ -11,7 +11,11 @@
  * @date 2025
  */
 
+
 #include "devices/Stepper.h"
+#include "esp_log.h"
+
+static const char *TAG = "Stepper";
 
 /**
  * @brief Constructor for 2-pin stepper (DRIVER - NEMA 17 with driver)
@@ -32,7 +36,7 @@ Stepper::Stepper(int stepPin, int dirPin, const String &id, const String &name,
       _is4Pin(false), _pin1(stepPin), _pin2(dirPin), _pin3(-1), _pin4(-1),
       _stepperType("DRIVER")
 {
-    Serial.println("Stepper [" + _id + "]: Created DRIVER type on pins " + String(_pin1) + " (step), " + String(_pin2) + " (dir)");
+    ESP_LOGI(TAG, "Stepper [%s]: Created DRIVER type on pins %d (step), %d (dir)", _id.c_str(), _pin1, _pin2);
 }
 
 /**
@@ -56,8 +60,7 @@ Stepper::Stepper(int pin1, int pin2, int pin3, int pin4, const String &id, const
       _is4Pin(true), _pin1(pin1), _pin2(pin2), _pin3(pin3), _pin4(pin4),
       _stepperType("HALF4WIRE")
 {
-    Serial.println("Stepper [" + _id + "]: Created HALF4WIRE type on pins " + String(_pin1) +
-                   ", " + String(_pin2) + ", " + String(_pin3) + ", " + String(_pin4));
+    ESP_LOGI(TAG, "Stepper [%s]: Created HALF4WIRE type on pins %d, %d, %d, %d", _id.c_str(), _pin1, _pin2, _pin3, _pin4);
 }
 
 /**
@@ -75,17 +78,14 @@ void Stepper::setup()
 
     if (_is4Pin)
     {
-        Serial.println("Stepper [" + _id + "]: Setup complete (HALF4WIRE) on pins " +
-                       String(_pin1) + ", " + String(_pin2) + ", " + String(_pin3) + ", " + String(_pin4));
+    ESP_LOGI(TAG, "Stepper [%s]: Setup complete (HALF4WIRE) on pins %d, %d, %d, %d", _id.c_str(), _pin1, _pin2, _pin3, _pin4);
     }
     else
     {
-        Serial.println("Stepper [" + _id + "]: Setup complete (DRIVER) on pins " +
-                       String(_pin1) + " (step), " + String(_pin2) + " (dir)");
+    ESP_LOGI(TAG, "Stepper [%s]: Setup complete (DRIVER) on pins %d (step), %d (dir)", _id.c_str(), _pin1, _pin2);
     }
 
-    Serial.println("Stepper [" + _id + "]: Max speed: " + String(_maxSpeed) +
-                   " steps/s, Acceleration: " + String(_maxAcceleration) + " steps/s²");
+    ESP_LOGI(TAG, "Stepper [%s]: Max speed: %.2f steps/s, Acceleration: %.2f steps/s^2", _id.c_str(), _maxSpeed, _maxAcceleration);
 }
 
 /**
@@ -125,7 +125,7 @@ void Stepper::move(long steps)
  */
 void Stepper::moveTo(long position)
 {
-    Serial.println("Stepper [" + _id + "]: Moving to position " + String(position));
+    ESP_LOGI(TAG, "Stepper [%s]: Moving to position %ld", _id.c_str(), position);
     _stepper.moveTo(position);
     _isMoving = true;
     // notifyStateChange();
@@ -136,7 +136,7 @@ void Stepper::moveTo(long position)
  */
 void Stepper::setCurrentPosition(long position)
 {
-    Serial.println("Stepper [" + _id + "]: Resetting current position to " + String(position));
+    ESP_LOGI(TAG, "Stepper [%s]: Resetting current position to %ld", _id.c_str(), position);
     _stepper.setCurrentPosition(position);
     // Optionally, update state or notify if needed
     // notifyStateChange();
@@ -152,7 +152,7 @@ void Stepper::setMaxSpeed(float maxSpeed)
 
     _maxSpeed = maxSpeed;
     _stepper.setMaxSpeed(maxSpeed);
-    Serial.println("Stepper [" + _id + "]: Max speed set to " + String(maxSpeed) + " steps/s");
+    ESP_LOGI(TAG, "Stepper [%s]: Max speed set to %.2f steps/s", _id.c_str(), maxSpeed);
 }
 
 /**
@@ -165,7 +165,7 @@ void Stepper::setAcceleration(float maxAcceleration)
         return;
     _maxAcceleration = maxAcceleration;
     _stepper.setAcceleration(maxAcceleration);
-    Serial.println("Stepper [" + _id + "]: Acceleration set to " + String(maxAcceleration) + " steps/s²");
+    ESP_LOGI(TAG, "Stepper [%s]: Acceleration set to %.2f steps/s^2", _id.c_str(), maxAcceleration);
 }
 
 /**
@@ -200,7 +200,7 @@ bool Stepper::isRunning() const
  */
 void Stepper::stop()
 {
-    Serial.println("Stepper [" + _id + "]: Emergency stop");
+    ESP_LOGW(TAG, "Stepper [%s]: Emergency stop", _id.c_str());
     _stepper.stop();
     _isMoving = false;
     // notifyStateChange();
@@ -235,7 +235,7 @@ bool Stepper::control(const String &action, JsonObject *payload)
         }
 
         long steps = (*payload)["steps"].as<long>();
-        Serial.printf("Stepper [%s]: Move %ld steps (Speed: %ld, Acceleration: %ld)\n", _id.c_str(), steps, _maxSpeed, _maxAcceleration);
+    ESP_LOGI(TAG, "Stepper [%s]: Move %ld steps (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), steps, _maxSpeed, _maxAcceleration);
         move(steps);
         return true;
     }
@@ -299,7 +299,7 @@ bool Stepper::control(const String &action, JsonObject *payload)
     */
     else
     {
-        Serial.printf("Stepper [%s]: Unknown action: '%s'\n", _id.c_str(), action.c_str());
+    ESP_LOGW(TAG, "Stepper [%s]: Unknown action: '%s'", _id.c_str(), action.c_str());
         return false;
     }
 }

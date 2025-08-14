@@ -6,7 +6,11 @@
  * @date 2025
  */
 
+
 #include "DeviceManager.h"
+#include "esp_log.h"
+
+static const char *TAG = "DeviceManager";
 
 DeviceManager::DeviceManager() : devicesCount(0)
 {
@@ -23,17 +27,17 @@ bool DeviceManager::addDevice(Device *device)
     {
         devices[devicesCount] = device;
         devicesCount++;
-        Serial.println("Added device: " + device->getId() + " (" + device->getName() + ")");
+    ESP_LOGI(TAG, "Added device: %s (%s)", device->getId().c_str(), device->getName().c_str());
         return true;
     }
 
     if (device == nullptr)
     {
-        Serial.println("Error: Cannot add null device");
+    ESP_LOGE(TAG, "Error: Cannot add null device");
     }
     else
     {
-        Serial.println("Error: Device array is full, cannot add device: " + device->getId());
+    ESP_LOGE(TAG, "Error: Device array is full, cannot add device: %s", device->getId().c_str());
     }
     return false;
 }

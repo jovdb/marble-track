@@ -15,17 +15,22 @@ OTAService otaService;
 #include "devices/Device.h"
 #include "DeviceManager.h"
 #include <devices/Buzzer.h>
+#include "esp_log.h"
 
 #include "devices/GateWithSensor.h"
 #include "devices/Stepper.h"
 
 #include "OTA_Support.h"
 #include <devices/Wheel.h>
+
+static const char *TAG = "main";
+
 enum class OperationMode
 {
   MANUAL,
   AUTOMATIC
 };
+
 OperationMode currentMode = OperationMode::MANUAL;
 
 // Timing variable for automatic mode
@@ -120,14 +125,19 @@ void setup()
 {
   // Initialize serial communication
   Serial.begin(115200);
-  Serial.println("Serial test OK");
-  Serial.println("Starting Marble Track Communication System");
+
+  // Logging setup
+  esp_log_level_set("*", ESP_LOG_INFO);
+  // esp_log_level_set("main", ESP_LOG_DEBUG);
+  // esp_log_level_set("Network", ESP_LOG_DEBUG);
+
+  ESP_LOGI(TAG, "Starting Marble Track");
 
   // Initialize Network (will try WiFi, fall back to AP if needed)
   bool networkInitialized = network.initialize();
   if (!networkInitialized)
   {
-    Serial.println("ERROR: Network initialization failed! System may not be accessible.");
+    ESP_LOGE(TAG, "ERROR: Network initialization failed! System may not be accessible.");
   }
   else
   {
@@ -184,13 +194,13 @@ void setup()
                                { wsManager.broadcastState(deviceId, stateJson, ""); });
   deviceManager.addDevice(&wheel);
 
-  Serial.println("Device management:");
-  Serial.println("  Total devices: " + String(deviceManager.getDeviceCount()));
-  Serial.println("State change broadcasting enabled");
+  ESP_LOGI(TAG, "Device management:");
+  ESP_LOGI(TAG, "  Total devices: %d", deviceManager.getDeviceCount());
+  ESP_LOGI(TAG, "State change broadcasting enabled");
 
   // Initialize in MANUAL mode
-  Serial.println("Operation mode: MANUAL");
-  Serial.println("Use setOperationMode() to switch between MANUAL and AUTOMATIC");
+  ESP_LOGI(TAG, "Operation mode: MANUAL");
+  ESP_LOGI(TAG, "Use setOperationMode() to switch between MANUAL and AUTOMATIC");
 }
 
 void loop()
@@ -225,7 +235,7 @@ void setOperationMode(OperationMode mode)
     currentMode = mode;
 
     const char *modeString = (mode == OperationMode::MANUAL) ? "MANUAL" : "AUTOMATIC";
-    Serial.println("Operation mode changed to: " + String(modeString));
+    ESP_LOGI(TAG, "Operation mode changed to: %s", modeString);
 
     // Optional: broadcast mode change via WebSocket
     // You could add WebSocket message broadcasting here if needed

@@ -1,3 +1,5 @@
+#include "esp_log.h"
+static const char *TAG = "Network";
 /**
  * @file Network.cpp
  * @brief Implementation of Network management class
@@ -57,24 +59,24 @@ bool Network::initialize()
             mdns_instance_name_set("Jo's Marble Track");
             mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
 
-            Serial.println("mDNS: http://marble-track.local : OK");
+            ESP_LOGI(TAG, "mDNS: http://marble-track.local : OK");
         }
         else
         {
-            Serial.println("mDNS: http://marble-track.local : ERROR");
+            ESP_LOGE(TAG, "mDNS: http://marble-track.local : ERROR");
         }
     }
 #endif
 
     // If both fail
     _currentMode = NetworkMode::DISCONNECTED;
-    Serial.println("No network connection!");
+    ESP_LOGE(TAG, "No network connection!");
     return false;
 }
 
 bool Network::connectToWiFi()
 {
-    Serial.printf("Connect to WiFi network '%s' ..", _wifi_ssid);
+    ESP_LOGI(TAG, "Connect to WiFi network '%s' ..", _wifi_ssid);
 
     WiFi.mode(WIFI_STA);
     WiFi.begin(_wifi_ssid, _wifi_password);
@@ -84,18 +86,18 @@ bool Network::connectToWiFi()
     while (WiFi.status() != WL_CONNECTED && (millis() - startTime) < WIFI_TIMEOUT_MS)
     {
         delay(CONNECTION_CHECK_INTERVAL_MS);
-        Serial.print(".");
+        // ESP_LOGI(TAG, "."); // Optionally log progress
     }
 
     if (WiFi.status() == WL_CONNECTED)
     {
-        Serial.printf(": OK, http://%s\n", WiFi.localIP().toString().c_str());
-        //         Serial.printf("Signal Strength: %d dBm\n", WiFi.RSSI());
+        ESP_LOGI(TAG, ": OK, http://%s", WiFi.localIP().toString().c_str());
+        // ESP_LOGI(TAG, "Signal Strength: %d dBm", WiFi.RSSI());
         return true;
     }
     else
     {
-        Serial.println(": ERROR: Could not connect");
+        ESP_LOGE(TAG, ": ERROR: Could not connect");
         WiFi.disconnect();
         return false;
     }
@@ -103,7 +105,7 @@ bool Network::connectToWiFi()
 
 bool Network::startAccessPoint()
 {
-    Serial.printf("Creating own network '%s' ...", AP_SSID);
+    ESP_LOGI(TAG, "Creating own network '%s' ...", AP_SSID);
 
     WiFi.mode(WIFI_AP);
     bool result = WiFi.softAP(AP_SSID, AP_PASSWORD);
@@ -121,14 +123,14 @@ bool Network::startAccessPoint()
         // Start DNS server on port 53 and redirect all domains to our IP
         _dnsServer->start(53, "*", IP);
 
-        // Serial.printf("Password: %s\n", AP_PASSWORD);
-        Serial.printf(": OK: http://%s\n", IP.toString().c_str());
-        Serial.println("Captive portal enabled - all web requests will redirect here");
+        // ESP_LOGI(TAG, "Password: %s", AP_PASSWORD);
+        ESP_LOGI(TAG, ": OK: http://%s", IP.toString().c_str());
+        ESP_LOGI(TAG, "Captive portal enabled - all web requests will redirect here");
         return true;
     }
     else
     {
-        Serial.println(": ERROR: Failed to start Access Point!");
+        ESP_LOGE(TAG, ": ERROR: Failed to start Access Point!");
         return false;
     }
 }

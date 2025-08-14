@@ -1,3 +1,6 @@
+#include "esp_log.h"
+
+static const char *TAG = "Wheel";
 #include "devices/Wheel.h"
 
 Wheel::Wheel(int stepPin1, int dirPin, int buttonPin, const String &id, const String &name)
@@ -40,7 +43,7 @@ void Wheel::loop()
     case wheelState::CALIBRATING:
         if (_sensor->wasPressed())
         {
-            Serial.println("Wheel [" + getId() + "]: Calibration complete.");
+            ESP_LOGI(TAG, "Wheel [%s]: Calibration complete.", getId().c_str());
             _stepper->setCurrentPosition(0);
             _stepper->stop();
         }
@@ -63,7 +66,7 @@ void Wheel::calibrate()
 {
     if (_stepper)
     {
-        Serial.println("Wheel [" + getId() + "]: Calibration started.");
+    ESP_LOGI(TAG, "Wheel [%s]: Calibration started.", getId().c_str());
         _state = wheelState::CALIBRATING;
         _stepper->move(100000);
         notifyStateChange();
@@ -86,7 +89,7 @@ bool Wheel::control(const String &action, JsonObject *payload)
     }
     else if (action == "stop")
     {
-        Serial.println("Wheel [" + getId() + "]: Stopping.");
+    ESP_LOGI(TAG, "Wheel [%s]: Stopping.", getId().c_str());
         _stepper->stop();
         return true;
     }

@@ -1,3 +1,6 @@
+#include "esp_log.h"
+
+static const char *TAG = "Servo";
 /**
  * @file Servo.cpp
  * @brief Implementation of ServoDevice control class using ESP32 AnalogWrite
@@ -14,11 +17,11 @@
 #include <pwmWrite.h>
 
 ServoDevice::ServoDevice(int pin, const String &id, const String &name, int initialAngle, int pwmChannel)
-    : Device(id, name, "SERVO"), _pin(pin), _currentAngle(constrainAngle(initialAngle)), 
-      _targetAngle(constrainAngle(initialAngle)), _speed(60.0), _isMoving(false), 
+    : Device(id, name, "SERVO"), _pin(pin), _currentAngle(constrainAngle(initialAngle)),
+      _targetAngle(constrainAngle(initialAngle)), _speed(60.0), _isMoving(false),
       _lastUpdate(0), _pwmChannel(pwmChannel), _servoPwm()
 {
-    Serial.println("Servo [" + _id + "]: Created on pin " + String(_pin) + ", PWM channel " + String(_pwmChannel));
+    ESP_LOGI(TAG, "Servo [%s]: Created on pin %d, PWM channel %d", _id.c_str(), _pin, _pwmChannel);
 }
 
 void ServoDevice::setup()
@@ -26,7 +29,7 @@ void ServoDevice::setup()
     _servoPwm.attachServo(_pin, _pwmChannel);
     _servoPwm.writeServo(_pin, _currentAngle);
     _lastUpdate = millis();
-    Serial.println("Servo [" + _id + "]: Setup complete at angle " + String(_currentAngle) + " with speed " + String(_speed) + "°/s");
+    ESP_LOGI(TAG, "Servo [%s]: Setup complete at angle %d with speed %.2f deg/s", _id.c_str(), _currentAngle, _speed);
 }
 
 ServoDevice::~ServoDevice()
@@ -56,14 +59,14 @@ void ServoDevice::setAngle(int angle, float speed)
         _speed = max(1.0f, speed); // Minimum speed of 1 degree per second
         _isMoving = (_currentAngle != _targetAngle);
         _lastUpdate = millis();
-        
+
         if (!_isMoving)
         {
             // If already at target, write immediately
             _servoPwm.writeServo(_pin, _currentAngle);
         }
-        
-        Serial.println("Servo [" + _id + "]: Moving from " + String(_currentAngle) + "° to " + String(_targetAngle) + "° at " + String(_speed) + "°/s");
+
+        ESP_LOGI(TAG, "Servo [%s]: Moving from %d deg to %d deg at %.2f deg/s", _id.c_str(), _currentAngle, _targetAngle, _speed);
         notifyStateChange();
     }
 }
@@ -71,21 +74,21 @@ void ServoDevice::setAngle(int angle, float speed)
 void ServoDevice::setSpeed(float speed)
 {
     _speed = max(1.0f, speed); // Minimum speed of 1 degree per second
-    Serial.println("Servo [" + _id + "]: Speed set to " + String(_speed) + "°/s");
+    ESP_LOGI(TAG, "Servo [%s]: Speed set to %.2f deg/s", _id.c_str(), _speed);
 }
 
 void ServoDevice::updateMovement()
 {
     unsigned long currentTime = millis();
     unsigned long deltaTime = currentTime - _lastUpdate;
-    
+
     if (deltaTime >= 20) // Update every 20ms for smooth movement
     {
         // Calculate how much to move based on speed and time elapsed
         float degreesToMove = (_speed * deltaTime) / 1000.0; // Convert ms to seconds
-        
+
         int previousAngle = _currentAngle;
-        
+
         if (_currentAngle < _targetAngle)
         {
             _currentAngle = min(_targetAngle, (int)(_currentAngle + degreesToMove));
@@ -94,22 +97,22 @@ void ServoDevice::updateMovement()
         {
             _currentAngle = max(_targetAngle, (int)(_currentAngle - degreesToMove));
         }
-        
+
         // Only write to servo if angle actually changed
         if (_currentAngle != previousAngle)
         {
             _servoPwm.writeServo(_pin, _currentAngle);
-            Serial.println("Servo [" + _id + "]: Moving to " + String(_currentAngle) + "° (target: " + String(_targetAngle) + "°)");
+            ESP_LOGI(TAG, "Servo [%s]: Moving to %d deg (target: %d deg)", _id.c_str(), _currentAngle, _targetAngle);
         }
-        
+
         // Check if movement is complete
         if (_currentAngle == _targetAngle)
         {
             _isMoving = false;
-            Serial.println("Servo [" + _id + "]: Reached target angle " + String(_currentAngle) + "°");
+            ESP_LOGI(TAG, "Servo [%s]: Reached target angle %d deg", _id.c_str(), _currentAngle);
             notifyStateChange();
         }
-        
+
         _lastUpdate = currentTime;
     }
 }
@@ -120,12 +123,12 @@ bool ServoDevice::control(const String &action, JsonObject *payload)
     {
         if (!payload || !(*payload)["angle"].is<int>())
         {
-            Serial.println("Servo [" + _id + "]: Missing angle parameter");
+            ESP_LOGE(TAG, "Servo [%s]: Missing angle parameter", _id.c_str());
             return false;
         }
-        
+
         int angle = (*payload)["angle"].as<int>();
-        
+
         if ((*payload)["speed"].is<float>())
         {
             float speed = (*payload)["speed"].as<float>();
@@ -141,7 +144,7 @@ bool ServoDevice::control(const String &action, JsonObject *payload)
     {
         if (!payload || !(*payload)["speed"].is<float>())
         {
-            Serial.println("Servo [" + _id + "]: Missing speed parameter");
+            ESP_LOGE(TAG, "Servo [%s]: Missing speed parameter", _id.c_str());
             return false;
         }
         setSpeed((*payload)["speed"].as<float>());
@@ -151,12 +154,12 @@ bool ServoDevice::control(const String &action, JsonObject *payload)
     {
         _targetAngle = _currentAngle;
         _isMoving = false;
-        Serial.println("Servo [" + _id + "]: Movement stopped at angle " + String(_currentAngle) + "°");
+        ESP_LOGI(TAG, "Servo [%s]: Movement stopped at angle %d deg", _id.c_str(), _currentAngle);
         notifyStateChange();
         return true;
     }
-    
-    Serial.println("Servo [" + _id + "]: Unknown action: " + action);
+
+    ESP_LOGW(TAG, "Servo [%s]: Unknown action: %s", _id.c_str(), action.c_str());
     return false;
 }
 
@@ -166,7 +169,8 @@ String ServoDevice::getState()
     // Copy base Device state fields
     JsonDocument baseDoc;
     deserializeJson(baseDoc, Device::getState());
-    for (JsonPair kv : baseDoc.as<JsonObject>()) {
+    for (JsonPair kv : baseDoc.as<JsonObject>())
+    {
         doc[kv.key()] = kv.value();
     }
     doc["angle"] = _currentAngle;

@@ -9,9 +9,13 @@
  * @date 2025
  */
 
+
 #include "devices/Buzzer.h"
 #include <NonBlockingRtttl.h>
 #include <Arduino.h> // Needed for tone, noTone, delay
+#include "esp_log.h"
+
+static const char *TAG = "Buzzer";
 
 /**
  * @brief Play a startup tone sequence
@@ -50,7 +54,7 @@ void Buzzer::startupTone()
 Buzzer::Buzzer(int pin, const String &id, const String &name)
     : Device(id, name, "BUZZER"), _pin(pin), _isPlaying(false), _mode(Mode::IDLE), _playStartTime(0), _toneDuration(0)
 {
-    Serial.println("Buzzer [" + _id + "]: Created on pin " + String(_pin));
+    ESP_LOGI(TAG, "Buzzer [%s]: Created on pin %d", _id.c_str(), _pin);
 }
 
 /**
@@ -61,7 +65,7 @@ void Buzzer::setup()
 {
     pinMode(_pin, OUTPUT);
     digitalWrite(_pin, LOW);
-    Serial.println("Buzzer [" + _id + "]: Setup complete on pin " + String(_pin));
+    ESP_LOGI(TAG, "Buzzer [%s]: Setup complete on pin %d", _id.c_str(), _pin);
 
     startupTone(); // Play startup tone sequence
 }
@@ -86,7 +90,7 @@ void Buzzer::loop()
         _mode = Mode::IDLE;
         _currentTune = "";
 
-    Serial.println("Buzzer [" + _id + "]: Tune playback finished");
+    ESP_LOGI(TAG, "Buzzer [%s]: Tune playback finished", _id.c_str());
         notifyStateChange();
     }
 
@@ -105,7 +109,7 @@ void Buzzer::loop()
             // TODO: Stop hardware tone generation here
             // ::noTone(_pin);
 
-            Serial.println("Buzzer [" + _id + "]: Tone playback finished");
+            ESP_LOGI(TAG, "Buzzer [%s]: Tone playback finished", _id.c_str());
             notifyStateChange();
         }
     }
@@ -118,7 +122,7 @@ void Buzzer::loop()
  */
 void Buzzer::tone(int frequency, int duration)
 {
-    Serial.println("Buzzer [" + _id + "]: Playing tone " + String(frequency) + "Hz for " + String(duration) + "ms");
+    ESP_LOGI(TAG, "Buzzer [%s]: Playing tone %dHz for %dms", _id.c_str(), frequency, duration);
     ::tone(_pin, frequency, duration);
 
     _isPlaying = true;
@@ -136,7 +140,7 @@ void Buzzer::tone(int frequency, int duration)
  */
 void Buzzer::tune(const String &rtttl)
 {
-    Serial.println("Buzzer [" + _id + "]: Playing RTTTL tune: " + rtttl);
+    ESP_LOGI(TAG, "Buzzer [%s]: Playing RTTTL tune: %s", _id.c_str(), rtttl.c_str());
 
     rtttl::begin(_pin, rtttl.c_str());
 
@@ -160,7 +164,7 @@ bool Buzzer::control(const String &action, JsonObject *payload)
     {
         if (!payload || !(*payload)["frequency"].is<int>() || !(*payload)["duration"].is<int>())
         {
-            Serial.println("Buzzer [" + _id + "]: Invalid 'tone' payload - need frequency and duration");
+            ESP_LOGE(TAG, "Buzzer [%s]: Invalid 'tone' payload - need frequency and duration", _id.c_str());
             return false;
         }
 
@@ -170,14 +174,14 @@ bool Buzzer::control(const String &action, JsonObject *payload)
         // Validate frequency range
         if (frequency < 20 || frequency > 20000)
         {
-            Serial.println("Buzzer [" + _id + "]: Invalid frequency " + String(frequency) + "Hz (range: 20-20000)");
+            ESP_LOGE(TAG, "Buzzer [%s]: Invalid frequency %dHz (range: 20-20000)", _id.c_str(), frequency);
             return false;
         }
 
         // Validate duration
         if (duration < 1 || duration > 10000)
         {
-            Serial.println("Buzzer [" + _id + "]: Invalid duration " + String(duration) + "ms (range: 1-10000)");
+            ESP_LOGE(TAG, "Buzzer [%s]: Invalid duration %dms (range: 1-10000)", _id.c_str(), duration);
             return false;
         }
 
@@ -188,14 +192,14 @@ bool Buzzer::control(const String &action, JsonObject *payload)
     {
         if (!payload || !(*payload)["rtttl"].is<String>())
         {
-            Serial.println("Buzzer [" + _id + "]: Invalid 'tune' payload - need rtttl string");
+            ESP_LOGE(TAG, "Buzzer [%s]: Invalid 'tune' payload - need rtttl string", _id.c_str());
             return false;
         }
 
         String rtttl = (*payload)["rtttl"].as<String>();
         if (rtttl.length() == 0)
         {
-            Serial.println("Buzzer [" + _id + "]: Empty RTTTL string");
+            ESP_LOGE(TAG, "Buzzer [%s]: Empty RTTTL string", _id.c_str());
             return false;
         }
 
@@ -204,7 +208,7 @@ bool Buzzer::control(const String &action, JsonObject *payload)
     }
     else
     {
-    Serial.println("Buzzer [" + _id + "]: Unknown action: " + action);
+    ESP_LOGW(TAG, "Buzzer [%s]: Unknown action: %s", _id.c_str(), action.c_str());
         return false;
     }
 }

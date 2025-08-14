@@ -1,3 +1,6 @@
+#include "esp_log.h"
+
+static const char *TAG = "Led";
 /**
  * @file Led.cpp
  * @brief Implementation of LED control class
@@ -25,7 +28,7 @@ Led::Led(int pin, const String &id, const String &name)
     // Initialize the pin as output and set initial state
     pinMode(_pin, OUTPUT);
     digitalWrite(_pin, LOW);
-    Serial.println("Led [" + _id + "]: Initialized on pin " + String(_pin));
+    ESP_LOGI(TAG, "Led [%s]: Initialized on pin %d", _id.c_str(), _pin);
 }
 
 /**
@@ -74,14 +77,14 @@ bool Led::control(const String &action, JsonObject *payload)
     {
         if (!payload || !(*payload)["state"].is<bool>())
         {
-            Serial.println("Led [" + _id + "]: Invalid 'set' payload");
+            ESP_LOGE(TAG, "Led [%s]: Invalid 'set' payload", _id.c_str());
             return false;
         }
         set((*payload)["state"].as<bool>());
     }
     else
     {
-    Serial.println("Led [" + _id + "]: Unknown action: " + action);
+    ESP_LOGW(TAG, "Led [%s]: Unknown action: %s", _id.c_str(), action.c_str());
         return false;
     }
 

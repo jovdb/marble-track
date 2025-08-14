@@ -1,3 +1,6 @@
+#include "esp_log.h"
+
+static const char *TAG = "Button";
 /**
  * @file Button.cpp
  * @brief Implementation of Button input class
@@ -25,9 +28,7 @@ Button::Button(int pin, const String &id, const String &name, bool pullUp, unsig
     : Device(id, name, "BUTTON"), _pin(pin), _pullUp(pullUp), _debounceMs(debounceMs), _buttonType(type)
 {
     String typeStr = (type == ButtonType::NormalOpen) ? "NormalOpen" : "NormalClosed";
-    Serial.println("Button [" + _id + "]: Created on pin " + String(_pin) +
-                   (_pullUp ? " (pull-up)" : " (pull-down)") +
-                   ", debounce: " + String(_debounceMs) + "ms, type: " + typeStr);
+    ESP_LOGI(TAG, "Button [%s]: Created on pin %d %s, debounce: %dms, type: %s", _id.c_str(), _pin, (_pullUp ? "(pull-up)" : "(pull-down)"), _debounceMs, typeStr.c_str());
 }
 
 /**
@@ -91,7 +92,7 @@ void Button::loop()
                 // Button was pressed
                 _pressedFlag = true;
                 _pressStartTime = millis();
-                Serial.println("Button [" + _id + "]: PRESSED");
+                ESP_LOGI(TAG, "Button [%s]: PRESSED", _id.c_str());
                 notifyStateChange(); // Notify state change
             }
             else if (!_currentState && previousState)
@@ -99,7 +100,7 @@ void Button::loop()
                 // Button was released
                 _releasedFlag = true;
                 unsigned long pressDuration = millis() - _pressStartTime;
-                Serial.println("Button [" + _id + "]: RELEASED (held for " + String(pressDuration) + "ms)");
+                ESP_LOGI(TAG, "Button [%s]: RELEASED (held for %lu ms)", _id.c_str(), pressDuration);
                 notifyStateChange(); // Notify state change
             }
         }
@@ -166,13 +167,13 @@ bool Button::control(const String &action, JsonObject *payload)
             _pressedFlag = true;
             _pressStartTime = millis();
             _virtualPress = true; // Mark as virtual press to prevent physical override
-            Serial.println("Button [" + _id + "]: Simulated PRESS");
+            ESP_LOGI(TAG, "Button [%s]: Simulated PRESS", _id.c_str());
             notifyStateChange();
             return true;
         }
         else
         {
-            Serial.println("Button [" + _id + "]: Already pressed, ignoring simulated press");
+            ESP_LOGW(TAG, "Button [%s]: Already pressed, ignoring simulated press", _id.c_str());
             return false;
         }
     }
@@ -185,19 +186,19 @@ bool Button::control(const String &action, JsonObject *payload)
             _releasedFlag = true;
             _virtualPress = false; // Clear virtual press flag
             unsigned long pressDuration = millis() - _pressStartTime;
-            Serial.println("Button [" + _id + "]: Simulated RELEASE (held for " + String(pressDuration) + "ms)");
+            ESP_LOGI(TAG, "Button [%s]: Simulated RELEASE (held for %lu ms)", _id.c_str(), pressDuration);
             notifyStateChange();
             return true;
         }
         else
         {
-            Serial.println("Button [" + _id + "]: Already released, ignoring simulated release");
+            ESP_LOGW(TAG, "Button [%s]: Already released, ignoring simulated release", _id.c_str());
             return false;
         }
     }
     else
     {
-    Serial.println("Button [" + _id + "]: Unknown action: " + action);
+    ESP_LOGW(TAG, "Button [%s]: Unknown action: %s", _id.c_str(), action.c_str());
         return false;
     }
 }

@@ -143,67 +143,27 @@ void setup()
   // Start server
   server.begin();
 
-  // Setup devices
+  Device* devices[] = {
+    new Led(1, "test-led", "Test LED"),
+    new Button(15, "test-button", "Test Button", false, 50),
+    new Button(16, "test-button2", "Test Button 2", false, 50),
+    new Buzzer(14, "test-buzzer", "Test Buzzer"),
+    new ServoDevice(8, "test-servo", "SG90", 0, 0),
+    new Button(47, "ball-sensor", "Ball Sensor", true, 100, Button::ButtonType::NormalClosed),
+    new GateWithSensor(21, 2, 48, static_cast<Buzzer*>(nullptr), "gate-with-sensor", "Gate", 50, true, 50, Button::ButtonType::NormalClosed),
+    new Stepper(45, 48, "stepper", "Stepper Motor", 1000, 500),
+    new Stepper(4, 5, 6, 7, "test-stepper", "28BYJ48", 1000, 500),
+    new Wheel(45, 48, 39, "wheel", "Wheel")
+  };
 
-  Led *testLed = new Led(1, "test-led", "Test LED");
-  testLed->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                  { wsManager.broadcastState(deviceId, stateJson, ""); });
-  testLed->setup();
-  deviceManager.addDevice(testLed);
-
-  Button *testButton = new Button(15, "test-button", "Test Button", false, 50);
-  testButton->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                     { wsManager.broadcastState(deviceId, stateJson, ""); });
-  testButton->setup();
-  deviceManager.addDevice(testButton);
-
-  Button *testButton2 = new Button(16, "test-button2", "Test Button 2", false, 50);
-  testButton2->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                      { wsManager.broadcastState(deviceId, stateJson, ""); });
-  testButton2->setup();
-  deviceManager.addDevice(testButton2);
-
-  Buzzer *testBuzzer = new Buzzer(14, "test-buzzer", "Test Buzzer");
-  testBuzzer->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                     { wsManager.broadcastState(deviceId, stateJson, ""); });
-  testBuzzer->setup();
-  deviceManager.addDevice(testBuzzer);
-
-  ServoDevice *testServo = new ServoDevice(8, "test-servo", "SG90", 0, 0);
-  testServo->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                    { wsManager.broadcastState(deviceId, stateJson, ""); });
-  testServo->setup();
-  deviceManager.addDevice(testServo);
-
-  Button *ballSensor = new Button(47, "ball-sensor", "Ball Sensor", true, 100, Button::ButtonType::NormalClosed);
-  ballSensor->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                     { wsManager.broadcastState(deviceId, stateJson, ""); });
-  ballSensor->setup();
-  deviceManager.addDevice(ballSensor);
-
-  GateWithSensor *gateWithSensor = new GateWithSensor(21, 2, 48, testBuzzer, "gate-with-sensor", "Gate", 50, true, 50, Button::ButtonType::NormalClosed);
-  gateWithSensor->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                         { wsManager.broadcastState(deviceId, stateJson, ""); });
-  gateWithSensor->setup();
-  deviceManager.addDevice(gateWithSensor);
-
-  Stepper *stepper = new Stepper(45, 48, "stepper", "Stepper Motor", 1000, 500);
-  stepper->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                  { wsManager.broadcastState(deviceId, stateJson, ""); });
-  stepper->setup();
-  deviceManager.addDevice(stepper);
-
-  Stepper *testStepper = new Stepper(4, 5, 6, 7, "test-stepper", "28BYJ48", 1000, 500);
-  testStepper->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                      { wsManager.broadcastState(deviceId, stateJson, ""); });
-  testStepper->setup();
-  deviceManager.addDevice(testStepper);
-
-  Wheel *wheel = new Wheel(45, 48, 39, "wheel", "Wheel");
-  wheel->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                { wsManager.broadcastState(deviceId, stateJson, ""); });
-  wheel->setup();
-  deviceManager.addDevice(wheel);
+  const int numDevices = sizeof(devices) / sizeof(devices[0]);
+  for (int i = 0; i < numDevices; ++i) {
+    devices[i]->setStateChangeCallback([&](const String &deviceId, const String &stateJson) {
+      wsManager.broadcastState(deviceId, stateJson, "");
+    });
+    devices[i]->setup();
+    deviceManager.addDevice(devices[i]);
+  }
 
   ESP_LOGI(TAG, "Device management:");
   ESP_LOGI(TAG, "  Total devices: %d", deviceManager.getDeviceCount());

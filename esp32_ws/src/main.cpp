@@ -51,6 +51,7 @@ Buzzer testBuzzer(14, "test-buzzer", "Test Buzzer");
 Button ballSensor(47, "ball-sensor", "Ball Sensor", true, 100, Button::ButtonType::NormalClosed);
 Stepper stepper(45, 48, "stepper", "Stepper Motor", 1000, 500);
 Stepper testStepper(4, 5, 6, 7, "test-stepper", "28BYJ48", 1000, 500);
+ServoDevice testServo(8, "test-servo", "SG90", 0, 0);
 
 GateWithSensor gateWithSensor(21, 2, 48, &testBuzzer, "gate-with-sensor", "Gate", 50, true, 50, Button::ButtonType::NormalClosed);
 Button ballInGate(48, "ball-in-gate", "Ball In Gate", true, 100, Button::ButtonType::NormalClosed);
@@ -174,6 +175,11 @@ void setup()
   testBuzzer.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
                                     { wsManager.broadcastState(deviceId, stateJson, ""); });
   deviceManager.addDevice(&testBuzzer);
+
+  testServo.setup();
+  testServo.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+                                   { wsManager.broadcastState(deviceId, stateJson, ""); });
+  deviceManager.addDevice(&testServo);
 
   ballSensor.setup(); // Initialize ball sensor hardware
   ballSensor.setStateChangeCallback([&](const String &deviceId, const String &stateJson)

@@ -44,18 +44,7 @@ WebSocketManager wsManager("/ws");
 DeviceManager deviceManager;
 
 // Device instances
-Led testLed(1, "test-led", "Test LED");
-Button testButton(15, "test-button", "Test Button", false, 50);
-Button testButton2(16, "test-button2", "Test Button 2", false, 50);
-Buzzer testBuzzer(14, "test-buzzer", "Test Buzzer");
-Button ballSensor(47, "ball-sensor", "Ball Sensor", true, 100, Button::ButtonType::NormalClosed);
-Stepper stepper(45, 48, "stepper", "Stepper Motor", 1000, 500);
-Stepper testStepper(4, 5, 6, 7, "test-stepper", "28BYJ48", 1000, 500);
-ServoDevice testServo(8, "test-servo", "SG90", 0, 0);
-
-GateWithSensor gateWithSensor(21, 2, 48, &testBuzzer, "gate-with-sensor", "Gate", 50, true, 50, Button::ButtonType::NormalClosed);
-Button ballInGate(48, "ball-in-gate", "Ball In Gate", true, 100, Button::ButtonType::NormalClosed);
-Wheel wheel(45, 48, 39, "wheel", "Wheel");
+// ...existing code...
 
 // Function declarations
 void setOperationMode(OperationMode mode);
@@ -64,21 +53,19 @@ void runManualMode()
 {
   // Manual mode: devices are controlled via WebSocket commands
   // Check for button press to toggle LED
-  if (testButton.isPressed())
-  {
-    testBuzzer.tone(200, 100);
-    wheel.move(8000); // Move stepper 100 steps on button press
+  Button *testButton = deviceManager.getDeviceByIdAs<Button>("test-button");
+  Buzzer *testBuzzer = deviceManager.getDeviceByIdAs<Buzzer>("test-buzzer");
+  Wheel *wheel = deviceManager.getDeviceByIdAs<Wheel>("wheel");
+  Button *testButton2 = deviceManager.getDeviceByIdAs<Button>("test-button2");
+
+  if (testButton && testBuzzer && wheel && testButton->isPressed()) {
+    testBuzzer->tone(200, 100);
+    wheel->move(8000); // Move stepper 100 steps on button press
   }
 
   // Check for second button press to trigger buzzer
-  if (testButton2.wasPressed())
-  {
-    testBuzzer.tone(1000, 200); // Play 1000Hz tone for 200ms
-  }
-
-  if (ballSensor.wasPressed())
-  {
-    testBuzzer.tone(400, 200);
+  if (testButton2 && testBuzzer && testButton2->wasPressed()) {
+    testBuzzer->tone(1000, 200); // Play 1000Hz tone for 200ms
   }
 
   /*
@@ -157,54 +144,66 @@ void setup()
   server.begin();
 
   // Setup devices
-  testLed.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                 { wsManager.broadcastState(deviceId, stateJson, ""); });
-  deviceManager.addDevice(&testLed);
 
-  testButton.setup(); // Initialize button hardware
-  testButton.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                    { wsManager.broadcastState(deviceId, stateJson, ""); });
-  deviceManager.addDevice(&testButton);
+  Led *testLed = new Led(1, "test-led", "Test LED");
+  testLed->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+                                  { wsManager.broadcastState(deviceId, stateJson, ""); });
+  testLed->setup();
+  deviceManager.addDevice(testLed);
 
-  testButton2.setup(); // Initialize second button hardware
-  testButton2.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+  Button *testButton = new Button(15, "test-button", "Test Button", false, 50);
+  testButton->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
                                      { wsManager.broadcastState(deviceId, stateJson, ""); });
-  deviceManager.addDevice(&testButton2);
+  testButton->setup();
+  deviceManager.addDevice(testButton);
 
-  testBuzzer.setup(); // Initialize buzzer hardware
-  testBuzzer.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                    { wsManager.broadcastState(deviceId, stateJson, ""); });
-  deviceManager.addDevice(&testBuzzer);
+  Button *testButton2 = new Button(16, "test-button2", "Test Button 2", false, 50);
+  testButton2->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+                                      { wsManager.broadcastState(deviceId, stateJson, ""); });
+  testButton2->setup();
+  deviceManager.addDevice(testButton2);
 
-  testServo.setup();
-  testServo.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                   { wsManager.broadcastState(deviceId, stateJson, ""); });
-  deviceManager.addDevice(&testServo);
-
-  ballSensor.setup(); // Initialize ball sensor hardware
-  ballSensor.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                    { wsManager.broadcastState(deviceId, stateJson, ""); });
-  deviceManager.addDevice(&ballSensor);
-
-  gateWithSensor.setup(); // Initialize GateWithSensor device
-  gateWithSensor.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                        { wsManager.broadcastState(deviceId, stateJson, ""); });
-  deviceManager.addDevice(&gateWithSensor);
-
-  stepper.setup(); // Initialize Stepper device
-  stepper.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                 { wsManager.broadcastState(deviceId, stateJson, ""); });
-  deviceManager.addDevice(&stepper);
-
-  testStepper.setup(); // Initialize testStepper device
-  testStepper.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+  Buzzer *testBuzzer = new Buzzer(14, "test-buzzer", "Test Buzzer");
+  testBuzzer->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
                                      { wsManager.broadcastState(deviceId, stateJson, ""); });
-  deviceManager.addDevice(&testStepper);
+  testBuzzer->setup();
+  deviceManager.addDevice(testBuzzer);
 
-  wheel.setup(); // Initialize Wheel device
-  wheel.setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                               { wsManager.broadcastState(deviceId, stateJson, ""); });
-  deviceManager.addDevice(&wheel);
+  ServoDevice *testServo = new ServoDevice(8, "test-servo", "SG90", 0, 0);
+  testServo->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+                                    { wsManager.broadcastState(deviceId, stateJson, ""); });
+  testServo->setup();
+  deviceManager.addDevice(testServo);
+
+  Button *ballSensor = new Button(47, "ball-sensor", "Ball Sensor", true, 100, Button::ButtonType::NormalClosed);
+  ballSensor->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+                                     { wsManager.broadcastState(deviceId, stateJson, ""); });
+  ballSensor->setup();
+  deviceManager.addDevice(ballSensor);
+
+  GateWithSensor *gateWithSensor = new GateWithSensor(21, 2, 48, testBuzzer, "gate-with-sensor", "Gate", 50, true, 50, Button::ButtonType::NormalClosed);
+  gateWithSensor->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+                                         { wsManager.broadcastState(deviceId, stateJson, ""); });
+  gateWithSensor->setup();
+  deviceManager.addDevice(gateWithSensor);
+
+  Stepper *stepper = new Stepper(45, 48, "stepper", "Stepper Motor", 1000, 500);
+  stepper->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+                                  { wsManager.broadcastState(deviceId, stateJson, ""); });
+  stepper->setup();
+  deviceManager.addDevice(stepper);
+
+  Stepper *testStepper = new Stepper(4, 5, 6, 7, "test-stepper", "28BYJ48", 1000, 500);
+  testStepper->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+                                      { wsManager.broadcastState(deviceId, stateJson, ""); });
+  testStepper->setup();
+  deviceManager.addDevice(testStepper);
+
+  Wheel *wheel = new Wheel(45, 48, 39, "wheel", "Wheel");
+  wheel->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
+                                { wsManager.broadcastState(deviceId, stateJson, ""); });
+  wheel->setup();
+  deviceManager.addDevice(wheel);
 
   ESP_LOGI(TAG, "Device management:");
   ESP_LOGI(TAG, "  Total devices: %d", deviceManager.getDeviceCount());

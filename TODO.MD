@@ -5,3 +5,4 @@
 - also support acceleration for stepper stop
 - complete wheel cpp
 - Add logging of ArduinoLog loge, logw, ..
+- Use Async API for describing WS possibilities

@@ -24,6 +24,16 @@ private:
 
 public:
     /**
+     * @brief Get device by ID and cast to specific type
+     * @tparam T Device type to cast to
+     * @param deviceId The ID of the device to find
+     * @return Pointer to device of type T or nullptr if not found or wrong type
+     */
+    template <typename T>
+    T* getDeviceByIdAs(const String& deviceId) const {
+        return static_cast<T*>(getDeviceById(deviceId));
+    }
+    /**
      * @brief Constructor - initializes empty device array
      */
     DeviceManager();

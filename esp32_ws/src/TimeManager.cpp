@@ -10,7 +10,7 @@ const char *TimeManager::ntpServer2 = "time.nist.gov";
 const long TimeManager::gmtOffset_sec = 0;
 const int TimeManager::daylightOffset_sec = 0;
 
-void TimeManager::initialize()
+void TimeManager::setup()
 {
     ESP_LOGI(TAG, "Time synchronization..");
 

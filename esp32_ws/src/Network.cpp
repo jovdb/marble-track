@@ -35,7 +35,7 @@ Network::~Network()
     }
 }
 
-bool Network::initialize()
+bool Network::setup()
 {
     // First, try to connect to WiFi
     if (connectToWiFi())

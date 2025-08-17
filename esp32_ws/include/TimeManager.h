@@ -8,7 +8,7 @@
 class TimeManager {
 public:
     // Initialize NTP time synchronization
-    static void initialize();
+    static void setup();
     
     // Get current Unix timestamp in milliseconds (like JavaScript Date.now())
     static unsigned long long getCurrentTimestamp();

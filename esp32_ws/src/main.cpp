@@ -135,7 +135,7 @@ void setup()
   ESP_LOGI(TAG, "Starting Marble Track");
 
   // Initialize Network (will try WiFi, fall back to AP if needed)
-  bool networkInitialized = network.initialize();
+  bool networkInitialized = network.setup();
   if (!networkInitialized)
   {
     ESP_LOGE(TAG, "ERROR: Network initialization failed! System may not be accessible.");

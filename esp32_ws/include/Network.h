@@ -43,7 +43,7 @@ public:
      * @brief Initialize network connection (WiFi with AP fallback)
      * @return true if initialization was successful
      */
-    bool initialize();
+    bool setup();
 
     /**
      * @brief Get current network mode

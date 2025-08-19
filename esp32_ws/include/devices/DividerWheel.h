@@ -24,10 +24,13 @@ public:
     bool control(const String &action, JsonObject *payload);
     String getState() override;
 
+public:
+    enum CalibrationState { NO, YES, FAILED };
 private:
     Stepper *_stepper;
     Button *_button;
     wheelState _state = IDLE;
+    CalibrationState _calibrationState = NO;
 };
 
 #endif // DIVIDERWHEEL_H

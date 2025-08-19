@@ -35,6 +35,8 @@ export const renderDeviceComponent = (device: { id: string; type: string }) => {
       return <Gate id={device.id} />;
     case "marble_wheel":
       return <Wheel id={device.id} />;
+    case "dividerwheel":
+      return <Wheel id={device.id} />;
 
     default:
       // Return a generic component or null for unknown device types

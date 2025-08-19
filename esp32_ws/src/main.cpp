@@ -148,16 +148,14 @@ void setup()
 
   Device *devices[] = {
       new Led(1, "test-led", "Test LED"),
-      new Button(15, "test-button", "Test Button", false, 50),
+//      new Button(15, "test-button", "Test Button", false, 50),
       new Button(16, "test-button2", "Test Button 2", false, 50),
       new Buzzer(14, "test-buzzer", "Test Buzzer"),
       new ServoDevice(8, "test-servo", "SG90", 0, 0),
       new Button(47, "ball-sensor", "Ball Sensor", true, 100, Button::ButtonType::NormalClosed),
       new GateWithSensor(21, 2, 48, static_cast<Buzzer *>(nullptr), "gate-with-sensor", "Gate", 50, true, 50, Button::ButtonType::NormalClosed),
       new Stepper(45, 48, "stepper", "Stepper Motor", 1000, 500),
-      new Stepper(4, 5, 6, 7, "test-stepper", "28BYJ48", 1000, 500),
-      new Wheel(45, 48, 39, "wheel", "Wheel"),
-      new DividerWheel(4, 5, 6, 7, 15, "divider-wheel", "Divider Wheel")};
+      new DividerWheel(10, 11, 12, 13, 15, "wheel", "Divider Wheel")};
 
   const int numDevices = sizeof(devices) / sizeof(devices[0]);
   for (int i = 0; i < numDevices; ++i)

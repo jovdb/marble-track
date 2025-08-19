@@ -268,7 +268,7 @@
   }
 }
 
-.device__advanced-button {
+.device-button {
   background-color: transparent;
   border: none;
   padding: 0;
@@ -276,8 +276,9 @@
   box-shadow: var(--shadow-sm);
 }
 
-.device__advanced-button--active {
+.device-button--active {
   transform: translateY(1px);
   background-color: var(--color-gray-200);
   box-shadow: var(--inset-shadow-sm);
 }
+

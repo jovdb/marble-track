@@ -6,7 +6,7 @@ DividerWheel::DividerWheel(int stepPin1, int stepPin2, int stepPin3, int stepPin
     : Device(id, name, "DividerWheel")
 {
     _stepper = new Stepper(stepPin1, stepPin2, stepPin3, stepPin4, id + "-stepper", name + " Stepper", 1000, 500);
-    _button = new Button(buttonPin, id + "-button", name + " Button", false, 50);
+    _button = new Button(buttonPin, id + "-button", name + " Button", true, 50);
     addChild(_stepper);
     addChild(_button);
 }
@@ -20,6 +20,29 @@ DividerWheel::~DividerWheel()
 void DividerWheel::loop()
 {
     Device::loop();
+
+    switch (_state)
+    {
+    case wheelState::CALIBRATING:
+        if (_button->wasPressed())
+        {
+            ESP_LOGI(TAG, "Wheel [%s]: Calibration complete.", getId().c_str());
+            _stepper->setCurrentPosition(0);
+            _stepper->stop();
+            _state = wheelState::IDLE;
+            notifyStateChange();
+        }
+        if (!_stepper->isMoving())
+        {
+            // Ended without calibrating button pressed
+            // Check if button is connected
+            // Check if button is pressed
+        }
+        break;
+
+    default:
+        break;
+    }
 }
 
 void DividerWheel::setup()
@@ -37,11 +60,16 @@ void DividerWheel::move(long steps)
 
 void DividerWheel::calibrate()
 {
+    static float calibrationSpeed = 500;
+    static float calibrationAcceleration = 200;
+
     if (_stepper)
     {
         ESP_LOGI(TAG, "Wheel [%s]: Calibration started.", getId().c_str());
         _state = wheelState::CALIBRATING;
-        _stepper->move(100000);
+        _stepper->setMaxSpeed(calibrationSpeed);
+        _stepper->setAcceleration(calibrationAcceleration);
+        _stepper->move(5000);
         notifyStateChange();
     }
 }

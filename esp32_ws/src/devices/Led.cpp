@@ -23,7 +23,7 @@ static const char *TAG = "Led";
  * @param name Human-readable name string for the LED
  */
 Led::Led(int pin, const String &id, const String &name)
-    : Device(id, name, "LED"), _pin(pin), _mode("OFF")
+    : Device(id, name, "led"), _pin(pin), _mode("OFF")
 {
     // Initialize the pin as output and set initial state
     pinMode(_pin, OUTPUT);

@@ -25,7 +25,7 @@ static const char *TAG = "Button";
  * @param debounceMs Debounce time in milliseconds
  */
 Button::Button(int pin, const String &id, const String &name, bool pullUp, unsigned long debounceMs, ButtonType type)
-    : Device(id, name, "BUTTON"), _pin(pin), _pullUp(pullUp), _debounceMs(debounceMs), _buttonType(type)
+    : Device(id, name, "button"), _pin(pin), _pullUp(pullUp), _debounceMs(debounceMs), _buttonType(type)
 {
     String typeStr = (type == ButtonType::NormalOpen) ? "NormalOpen" : "NormalClosed";
     ESP_LOGI(TAG, "Button [%s]: Created on pin %d %s, debounce: %dms, type: %s", _id.c_str(), _pin, (_pullUp ? "(pull-up)" : "(pull-down)"), _debounceMs, typeStr.c_str());

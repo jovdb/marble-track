@@ -33,9 +33,7 @@ export const renderDeviceComponent = (device: { id: string; type: string }) => {
       return <Stepper id={device.id} />;
     case "gate":
       return <Gate id={device.id} />;
-    case "marble_wheel":
-      return <Wheel id={device.id} />;
-    case "dividerwheel":
+    case "wheel":
       return <Wheel id={device.id} />;
 
     default:

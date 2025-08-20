@@ -52,7 +52,7 @@ void Buzzer::startupTone()
  * @param name Human-readable name string for the buzzer
  */
 Buzzer::Buzzer(int pin, const String &id, const String &name)
-    : Device(id, name, "BUZZER"), _pin(pin), _isPlaying(false), _mode(Mode::IDLE), _playStartTime(0), _toneDuration(0)
+    : Device(id, name, "buzzer"), _pin(pin), _isPlaying(false), _mode(Mode::IDLE), _playStartTime(0), _toneDuration(0)
 {
     ESP_LOGI(TAG, "Buzzer [%s]: Created on pin %d", _id.c_str(), _pin);
 }

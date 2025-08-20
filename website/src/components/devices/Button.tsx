@@ -1,5 +1,5 @@
 import { Device, IDeviceState } from "./Device";
-import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
+import { createDeviceState, IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
 import styles from "./Device.module.css";
 
 interface IButtonState extends IDeviceState {
@@ -10,23 +10,19 @@ export function Button(props: { id: string }) {
   const [deviceState, connectedState, disabled, error] = createDeviceState<IButtonState>(props.id);
 
   const handlePress = () => {
-    sendMessage(
-      JSON.stringify({
-        type: "device-fn",
-        deviceId: props.id,
-        fn: "pressed",
-      })
-    );
+    sendMessage({
+      type: "device-fn",
+      deviceId: props.id,
+      fn: "pressed",
+    } as IWsDeviceMessage);
   };
 
   const handleRelease = () => {
-    sendMessage(
-      JSON.stringify({
-        type: "device-fn",
-        deviceId: props.id,
-        fn: "released",
-      })
-    );
+    sendMessage({
+      type: "device-fn",
+      deviceId: props.id,
+      fn: "released",
+    } as IWsDeviceMessage);
   };
 
   return (

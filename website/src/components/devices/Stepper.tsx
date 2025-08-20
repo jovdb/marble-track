@@ -1,5 +1,5 @@
 import { Device, IDeviceState } from "./Device";
-import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
+import { createDeviceState, IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
 import { createSignal } from "solid-js";
 import styles from "./Device.module.css";
 
@@ -17,26 +17,22 @@ export function Stepper(props: { id: string }) {
   const [maxAcceleration, setAcceleration] = createSignal(deviceState()?.maxAcceleration || 300);
 
   const updateStepper = () => {
-    sendMessage(
-      JSON.stringify({
-        type: "device-fn",
-        deviceId: props.id,
-        fn: "move",
-        steps: steps(),
-        maxSpeed: maxSpeed(),
-        maxAcceleration: maxAcceleration(),
-      })
-    );
+    sendMessage({
+      type: "device-fn",
+      deviceId: props.id,
+      fn: "move",
+      steps: steps(),
+      maxSpeed: maxSpeed(),
+      maxAcceleration: maxAcceleration(),
+    } as IWsDeviceMessage);
   };
 
   const stopStepper = () => {
-    sendMessage(
-      JSON.stringify({
-        type: "device-fn",
-        deviceId: props.id,
-        fn: "stop",
-      })
-    );
+    sendMessage({
+      type: "device-fn",
+      deviceId: props.id,
+      fn: "stop",
+    } as IWsDeviceMessage);
   };
 
   return (

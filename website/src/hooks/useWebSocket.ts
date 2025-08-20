@@ -10,6 +10,14 @@ export interface DeviceInfo {
   pins?: number[];
 }
 
+export interface IWsMessage {
+  type: string;
+}
+export interface IWsDeviceMessage extends IWsMessage {
+  deviceId?: string;
+  fn?: string;
+}
+
 // Global device store signals
 export const [availableDevices, setAvailableDevices] = createSignal<DeviceInfo[]>([]);
 export const [devicesLoaded, setDevicesLoaded] = createSignal(false);
@@ -89,10 +97,10 @@ websocket.addEventListener("message", (e) => {
 
 export const clearMessages = () => setLastMessages([]);
 
-export const sendMessage = (message: string): boolean => {
+export const sendMessage = (message: IWsMessage): boolean => {
   if (websocket.readyState === WebSocket.OPEN) {
     console.debug("WebSocket message sent:    ", message);
-    websocket.send(message);
+    websocket.send(JSON.stringify(message));
     return true;
   } else {
     console.error("WebSocket is not open, cannot send message: ", message);
@@ -102,7 +110,7 @@ export const sendMessage = (message: string): boolean => {
 
 // Request devices from the server
 export const requestDevices = (): boolean => {
-  if (sendMessage(JSON.stringify({ type: "get-devices" }))) {
+  if (sendMessage({ type: "get-devices" } as IWsMessage)) {
     setDevicesLoading(true);
     console.log("Requested device list from server");
     return true;
@@ -122,12 +130,10 @@ export function createDeviceState<T>(deviceId: string) {
     // Is connected, request state
     if (websocket.readyState === WebSocket.OPEN) {
       setConnectionState(4); // Fetching state
-      sendMessage(
-        JSON.stringify({
-          type: "device-get-state",
-          deviceId,
-        })
-      );
+      sendMessage({
+        type: "device-get-state",
+        deviceId,
+      } as IWsMessage);
     }
 
     function onMessage(event: MessageEvent) {
@@ -148,12 +154,10 @@ export function createDeviceState<T>(deviceId: string) {
     function onOpen() {
       // Request state
       setConnectionState(4); // Fetching state
-      sendMessage(
-        JSON.stringify({
-          type: "device-get-state",
-          deviceId,
-        })
-      );
+      sendMessage({
+        type: "device-get-state",
+        deviceId,
+      } as IWsMessage);
     }
 
     function onClose() {

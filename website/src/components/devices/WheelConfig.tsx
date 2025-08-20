@@ -1,50 +1,43 @@
 import styles from "./Device.module.css";
-import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
+import { createDeviceState, IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
 import { IWheelState } from "./Wheel";
-import { createMemo } from "solid-js";
 import { IStepperState } from "./Stepper";
 
 // Update the import path below to the correct location of IWheelState
 
 export function WheelConfig(props: { id: string }) {
-  const [deviceState, connectedState, disabled] = createDeviceState<IWheelState>(props.id);
+  const [deviceState, , disabled] = createDeviceState<IWheelState>(props.id);
 
-  const [stepperState] = createDeviceState<IWheelState>(props.id + "-stepper");
+  const [stepperState] = createDeviceState<IStepperState>(props.id + "-stepper");
 
   const onCalibrateClicked = () => {
-    sendMessage(
-      JSON.stringify({
-        type: "device-fn",
-        deviceId: props.id,
-        fn: "calibrate",
-      })
-    );
+    sendMessage({
+      type: "device-fn",
+      deviceId: props.id,
+      fn: "calibrate",
+    } as IWsDeviceMessage);
   };
 
   const onUnblock = () => {
     const stepper = deviceState()?.children?.find((c) => c.type === "STEPPER");
     if (!stepper) return;
-    sendMessage(
-      JSON.stringify({
-        type: "device-fn",
-        deviceId: stepper.id,
-        fn: "move",
-        steps: -100,
-      })
-    );
+    sendMessage({
+      type: "device-fn",
+      deviceId: stepper.id,
+      fn: "move",
+      steps: -100,
+    } as IWsDeviceMessage);
   };
 
   const moveSteps = (steps: number) => {
     const stepper = deviceState()?.children?.find((c) => c.type === "STEPPER");
     if (!stepper) return;
-    sendMessage(
-      JSON.stringify({
-        type: "device-fn",
-        deviceId: stepper.id,
-        fn: "move",
-        steps,
-      })
-    );
+    sendMessage({
+      type: "device-fn",
+      deviceId: stepper.id,
+      fn: "move",
+      steps,
+    } as IWsDeviceMessage);
   };
 
   return (

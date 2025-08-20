@@ -1,5 +1,5 @@
 import { Device, IDeviceState } from "./Device";
-import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
+import { createDeviceState, IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
 import { debounce } from "@solid-primitives/scheduled";
 import { createSignal } from "solid-js";
 import styles from "./Device.module.css";
@@ -18,37 +18,31 @@ export function Servo(props: { id: string }) {
   const [currentSpeed, setCurrentSpeed] = createSignal(60);
 
   const setAngle = debounce((angle: number) => {
-    sendMessage(
-      JSON.stringify({
-        type: "device-fn",
-        deviceId: props.id,
-        fn: "setAngle",
-        angle,
-        speed: currentSpeed(),
-      })
-    );
+    sendMessage({
+      type: "device-fn",
+      deviceId: props.id,
+      fn: "setAngle",
+      angle,
+      speed: currentSpeed(),
+    } as IWsDeviceMessage);
   }, 100);
 
   const setSpeed = debounce((speed: number) => {
     setCurrentSpeed(speed);
-    sendMessage(
-      JSON.stringify({
-        type: "device-fn",
-        deviceId: props.id,
-        fn: "setSpeed",
-        speed,
-      })
-    );
+    sendMessage({
+      type: "device-fn",
+      deviceId: props.id,
+      fn: "setSpeed",
+      speed,
+    } as IWsDeviceMessage);
   }, 300);
 
   const stopMovement = () => {
-    sendMessage(
-      JSON.stringify({
-        type: "device-fn",
-        deviceId: props.id,
-        fn: "stop",
-      })
-    );
+    sendMessage({
+      type: "device-fn",
+      deviceId: props.id,
+      fn: "stop",
+    } as IWsDeviceMessage);
   };
 
   return (

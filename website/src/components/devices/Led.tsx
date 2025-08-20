@@ -1,5 +1,5 @@
 import { Device, IDeviceState } from "./Device";
-import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
+import { createDeviceState, IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
 import styles from "./Device.module.css";
 
 interface ILedState extends IDeviceState {
@@ -10,13 +10,11 @@ export function Led(props: { id: string }) {
   const [deviceState, connectedState, disabled, error] = createDeviceState<ILedState>(props.id);
 
   const setLed = (state: boolean) => {
-    sendMessage(
-      JSON.stringify({
-        type: "device-fn",
-        deviceId: props.id,
-        fn: state ? "on" : "off",
-      })
-    );
+    sendMessage({
+      type: "device-fn",
+      deviceId: props.id,
+      fn: state ? "on" : "off",
+    } as IWsDeviceMessage);
   };
 
   return (

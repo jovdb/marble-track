@@ -1,12 +1,13 @@
 import { Device, IDeviceState } from "./Device";
 import { createSignal, onCleanup } from "solid-js";
-import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
+import { createDeviceState, IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
 import styles from "./Device.module.css";
 import { WheelConfig } from "./WheelConfig";
 
 export interface IWheelState extends IDeviceState {
   position: number;
   state: "CALIBRATING" | "IDLE";
+  calibrationState: "YES" | "NO" | "FAILED";
 }
 
 export function Wheel(props: { id: string }) {
@@ -16,46 +17,38 @@ export function Wheel(props: { id: string }) {
   const [angle, setAngle] = createSignal<undefined | number>(undefined);
 
   const onNextClicked = () => {
-    sendMessage(
-      JSON.stringify({
-        type: "device-fn",
-        deviceId: props.id,
-        fn: "next-breakpoint",
-      })
-    );
+    sendMessage({
+      type: "device-fn",
+      deviceId: props.id,
+      fn: "next-breakpoint",
+    } as IWsDeviceMessage);
   };
 
   const onUnblockClicked = () => {
     const stepper = deviceState()?.children?.find((c) => c.type === "STEPPER");
     if (!stepper) return;
-    sendMessage(
-      JSON.stringify({
-        type: "device-fn",
-        deviceId: stepper.id,
-        fn: "move",
-        steps: -100,
-      })
-    );
+    sendMessage({
+      type: "device-fn",
+      deviceId: stepper.id,
+      fn: "move",
+      steps: -100,
+    } as IWsDeviceMessage);
   };
 
   const onCalibrateClicked = () => {
-    sendMessage(
-      JSON.stringify({
-        type: "device-fn",
-        deviceId: props.id,
-        fn: "calibrate",
-      })
-    );
+    sendMessage({
+      type: "device-fn",
+      deviceId: props.id,
+      fn: "calibrate",
+    } as IWsDeviceMessage);
   };
 
   const onStopClicked = () => {
-    sendMessage(
-      JSON.stringify({
-        type: "device-fn",
-        deviceId: props.id,
-        fn: "stop",
-      })
-    );
+    sendMessage({
+      type: "device-fn",
+      deviceId: props.id,
+      fn: "stop",
+    } as IWsDeviceMessage);
   };
 
   setDirection(1);
@@ -172,7 +165,9 @@ export function Wheel(props: { id: string }) {
               </span>
             </div>
             <div>
-              <span class={styles["device__status-text"]}>Calibrated: {deviceState()?.calibrationstate}</span>
+              <span class={styles["device__status-text"]}>
+                Calibrated: {deviceState()?.calibrationState}
+              </span>
             </div>
             <div>
               <span class={styles["device__status-text"]}>Position: {deviceState()?.position}</span>

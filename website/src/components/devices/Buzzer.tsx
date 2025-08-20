@@ -1,4 +1,4 @@
-import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
+import { createDeviceState, IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
 import { createSignal, For } from "solid-js";
 import { BuzzerIcon } from "../icons/Icons";
 import styles from "./Device.module.css";
@@ -30,27 +30,23 @@ export function Buzzer(props: { id: string }) {
   };
 
   const playTone = () => {
-    sendMessage(
-      JSON.stringify({
-        type: "device-fn",
-        deviceId: props.id,
-        fn: "tone",
-        frequency: frequency(),
-        duration: 1000,
-      })
-    );
+    sendMessage({
+      type: "device-fn",
+      deviceId: props.id,
+      fn: "tone",
+      frequency: frequency(),
+      duration: 1000,
+    } as IWsDeviceMessage);
   };
 
   const playMelody = () => {
     if (rtttl().trim().length === 0) return;
-    sendMessage(
-      JSON.stringify({
-        type: "device-fn",
-        deviceId: props.id,
-        fn: "tune",
-        rtttl: rtttl(),
-      })
-    );
+    sendMessage({
+      type: "device-fn",
+      deviceId: props.id,
+      fn: "tune",
+      rtttl: rtttl(),
+    } as IWsDeviceMessage);
   };
 
   return (

@@ -12,6 +12,7 @@ export function Led(props: { id: string }) {
   const setLed = (state: boolean) => {
     sendMessage({
       type: "device-fn",
+      deviceType: "led",
       deviceId: props.id,
       fn: state ? "on" : "off",
     } as IWsDeviceMessage);

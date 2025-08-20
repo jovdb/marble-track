@@ -19,6 +19,7 @@ export function Stepper(props: { id: string }) {
   const updateStepper = () => {
     sendMessage({
       type: "device-fn",
+      deviceType: "stepper",
       deviceId: props.id,
       fn: "move",
       steps: steps(),
@@ -30,6 +31,7 @@ export function Stepper(props: { id: string }) {
   const stopStepper = () => {
     sendMessage({
       type: "device-fn",
+      deviceType: "servo",
       deviceId: props.id,
       fn: "stop",
     } as IWsDeviceMessage);

@@ -20,6 +20,7 @@ export function Servo(props: { id: string }) {
   const setAngle = debounce((angle: number) => {
     sendMessage({
       type: "device-fn",
+      deviceType: "servo",
       deviceId: props.id,
       fn: "setAngle",
       angle,
@@ -31,6 +32,7 @@ export function Servo(props: { id: string }) {
     setCurrentSpeed(speed);
     sendMessage({
       type: "device-fn",
+      deviceType: "servo",
       deviceId: props.id,
       fn: "setSpeed",
       speed,
@@ -40,6 +42,7 @@ export function Servo(props: { id: string }) {
   const stopMovement = () => {
     sendMessage({
       type: "device-fn",
+      deviceType: "servo",
       deviceId: props.id,
       fn: "stop",
     } as IWsDeviceMessage);

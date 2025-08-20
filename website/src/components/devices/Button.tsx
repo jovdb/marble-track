@@ -12,6 +12,7 @@ export function Button(props: { id: string }) {
   const handlePress = () => {
     sendMessage({
       type: "device-fn",
+      deviceType: "button",
       deviceId: props.id,
       fn: "pressed",
     } as IWsDeviceMessage);
@@ -20,6 +21,7 @@ export function Button(props: { id: string }) {
   const handleRelease = () => {
     sendMessage({
       type: "device-fn",
+      deviceType: "button",
       deviceId: props.id,
       fn: "released",
     } as IWsDeviceMessage);

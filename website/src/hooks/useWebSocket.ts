@@ -14,8 +14,9 @@ export interface IWsMessage {
   type: string;
 }
 export interface IWsDeviceMessage extends IWsMessage {
-  deviceId?: string;
-  fn?: string;
+  deviceType: string;
+  deviceId: string;
+  fn: string;
 }
 
 // Global device store signals

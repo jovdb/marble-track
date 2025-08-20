@@ -17,6 +17,7 @@ export function Gate(props: { id: string }) {
   const openGate = () => {
     sendMessage({
       type: "device-fn",
+      deviceType: "gate",
       deviceId: props.id,
       fn: "open",
     } as IWsDeviceMessage);

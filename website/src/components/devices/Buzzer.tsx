@@ -32,6 +32,7 @@ export function Buzzer(props: { id: string }) {
   const playTone = () => {
     sendMessage({
       type: "device-fn",
+      deviceType: "buzzer",
       deviceId: props.id,
       fn: "tone",
       frequency: frequency(),
@@ -43,6 +44,7 @@ export function Buzzer(props: { id: string }) {
     if (rtttl().trim().length === 0) return;
     sendMessage({
       type: "device-fn",
+      deviceType: "buzzer",
       deviceId: props.id,
       fn: "tune",
       rtttl: rtttl(),

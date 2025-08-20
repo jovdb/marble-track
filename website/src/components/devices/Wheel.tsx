@@ -19,6 +19,7 @@ export function Wheel(props: { id: string }) {
   const onNextClicked = () => {
     sendMessage({
       type: "device-fn",
+      deviceType: "wheel",
       deviceId: props.id,
       fn: "next-breakpoint",
     } as IWsDeviceMessage);
@@ -29,6 +30,7 @@ export function Wheel(props: { id: string }) {
     if (!stepper) return;
     sendMessage({
       type: "device-fn",
+      deviceType: "stepper",
       deviceId: stepper.id,
       fn: "move",
       steps: -100,
@@ -38,6 +40,7 @@ export function Wheel(props: { id: string }) {
   const onCalibrateClicked = () => {
     sendMessage({
       type: "device-fn",
+      deviceType: "wheel",
       deviceId: props.id,
       fn: "calibrate",
     } as IWsDeviceMessage);
@@ -46,6 +49,7 @@ export function Wheel(props: { id: string }) {
   const onStopClicked = () => {
     sendMessage({
       type: "device-fn",
+      deviceType: "wheel",
       deviceId: props.id,
       fn: "stop",
     } as IWsDeviceMessage);

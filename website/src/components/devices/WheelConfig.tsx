@@ -13,6 +13,7 @@ export function WheelConfig(props: { id: string }) {
   const onCalibrateClicked = () => {
     sendMessage({
       type: "device-fn",
+      deviceType: "wheel",
       deviceId: props.id,
       fn: "calibrate",
     } as IWsDeviceMessage);
@@ -23,6 +24,7 @@ export function WheelConfig(props: { id: string }) {
     if (!stepper) return;
     sendMessage({
       type: "device-fn",
+      deviceType: "stepper",
       deviceId: stepper.id,
       fn: "move",
       steps: -100,
@@ -34,6 +36,7 @@ export function WheelConfig(props: { id: string }) {
     if (!stepper) return;
     sendMessage({
       type: "device-fn",
+      deviceType: "stepper",
       deviceId: stepper.id,
       fn: "move",
       steps,

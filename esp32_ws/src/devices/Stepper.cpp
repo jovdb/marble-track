@@ -103,7 +103,7 @@ void Stepper::loop()
     if (wasMoving && !_isMoving)
     {
         // Serial.println("Stepper [" + _id + "]: Movement completed at position " + String(_stepper.currentPosition()));
-        // notifyStateChange();
+        notifyStateChange();
     }
 }
 
@@ -116,7 +116,7 @@ void Stepper::move(long steps)
     // Serial.println("Stepper [" + _id + "]: Moving " + String(steps) + " steps");
     _stepper.move(steps);
     _isMoving = true;
-    // notifyStateChange();
+    notifyStateChange();
 }
 
 /**
@@ -190,7 +190,7 @@ long Stepper::getTargetPosition() const
  * @brief Check if the stepper motor is currently moving
  * @return true if moving, false if stopped
  */
-bool Stepper::isRunning() const
+bool Stepper::isMoving() const
 {
     return _isMoving;
 }
@@ -321,7 +321,7 @@ String Stepper::getState()
 
     doc["currentPosition"] = getCurrentPosition();
     doc["targetPosition"] = getTargetPosition();
-    doc["isRunning"] = isRunning();
+    doc["isMoving"] = isMoving();
     doc["maxSpeed"] = _maxSpeed;
     doc["acceleration"] = _maxAcceleration;
     doc["stepperType"] = _stepperType;

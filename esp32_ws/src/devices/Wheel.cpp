@@ -4,14 +4,14 @@ static const char *TAG = "Wheel";
 #include "devices/Wheel.h"
 
 Wheel::Wheel(int stepPin1, int dirPin, int buttonPin, const String &id, const String &name)
-        : Device(id, name, "MARBLE_WHEEL"),
-            _stepper(new Stepper(stepPin1, dirPin, id + "-stepper", name + " Stepper", 100, 1000)),
-            _sensor(new Button(buttonPin, id + "-sensor", name + " Sensor", true, 100, Button::ButtonType::NormalClosed)),
-            _state(wheelState::IDLE)
-    {
-        addChild(_stepper);
-        addChild(_sensor);
-    }
+    : Device(id, name, "MARBLE_WHEEL"),
+      _stepper(new Stepper(stepPin1, dirPin, id + "-stepper", name + " Stepper", 100, 1000)),
+      _sensor(new Button(buttonPin, id + "-sensor", name + " Sensor", true, 100, Button::ButtonType::NormalClosed)),
+      _state(wheelState::IDLE)
+{
+    addChild(_stepper);
+    addChild(_sensor);
+}
 
 // Array of breakpoints values
 // these are the number of steps after the reset button
@@ -27,12 +27,12 @@ void Wheel::loop()
 {
     Device::loop();
 
-    if (_stepper && _stepper->isRunning() && _state != wheelState::MOVING)
+    if (_stepper && _stepper->isMoving() && _state != wheelState::MOVING)
     {
-//        _state = wheelState::MOVING;
-//        notifyStateChange();
+        //        _state = wheelState::MOVING;
+        //        notifyStateChange();
     }
-    else if (_stepper && !_stepper->isRunning() && _state == wheelState::MOVING)
+    else if (_stepper && !_stepper->isMoving() && _state == wheelState::MOVING)
     {
         _state = wheelState::IDLE;
         notifyStateChange();
@@ -66,7 +66,7 @@ void Wheel::calibrate()
 {
     if (_stepper)
     {
-    ESP_LOGI(TAG, "Wheel [%s]: Calibration started.", getId().c_str());
+        ESP_LOGI(TAG, "Wheel [%s]: Calibration started.", getId().c_str());
         _state = wheelState::CALIBRATING;
         _stepper->move(100000);
         notifyStateChange();
@@ -89,7 +89,7 @@ bool Wheel::control(const String &action, JsonObject *payload)
     }
     else if (action == "stop")
     {
-    ESP_LOGI(TAG, "Wheel [%s]: Stopping.", getId().c_str());
+        ESP_LOGI(TAG, "Wheel [%s]: Stopping.", getId().c_str());
         _stepper->stop();
         return true;
     }

@@ -181,3 +181,10 @@ export function createDeviceState<T>(deviceId: string) {
 
   return [deviceState, connectionState, disabled, error] as const;
 }
+
+// Extensible message interface: other files can augment this via declaration merging
+declare global {
+  export interface IMessages {
+    "dividerwheel-action"?: { action: string; payload?: any };
+  }
+}

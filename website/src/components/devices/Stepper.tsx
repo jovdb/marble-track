@@ -3,10 +3,11 @@ import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
 import { createSignal } from "solid-js";
 import styles from "./Device.module.css";
 
-interface IStepperState extends IDeviceState {
+export interface IStepperState extends IDeviceState {
   steps: number;
   maxSpeed: number;
   maxAcceleration: number;
+  currentPosition: number;
 }
 
 export function Stepper(props: { id: string }) {

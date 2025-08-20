@@ -6,7 +6,7 @@ import { WheelConfig } from "./WheelConfig";
 
 export interface IWheelState extends IDeviceState {
   position: number;
-  state: "stopped" | "moving";
+  state: "CALIBRATING" | "IDLE";
 }
 
 export function Wheel(props: { id: string }) {
@@ -15,7 +15,7 @@ export function Wheel(props: { id: string }) {
   const [direction, setDirection] = createSignal(0);
   const [angle, setAngle] = createSignal<undefined | number>(undefined);
 
-  const handleNext = () => {
+  const onNextClicked = () => {
     sendMessage(
       JSON.stringify({
         type: "device-fn",
@@ -25,7 +25,20 @@ export function Wheel(props: { id: string }) {
     );
   };
 
-  const handleCalibrate = () => {
+  const onUnblockClicked = () => {
+    const stepper = deviceState()?.children?.find((c) => c.type === "STEPPER");
+    if (!stepper) return;
+    sendMessage(
+      JSON.stringify({
+        type: "device-fn",
+        deviceId: stepper.id,
+        fn: "move",
+        steps: -100,
+      })
+    );
+  };
+
+  const onCalibrateClicked = () => {
     sendMessage(
       JSON.stringify({
         type: "device-fn",
@@ -35,7 +48,7 @@ export function Wheel(props: { id: string }) {
     );
   };
 
-  const handleStop = () => {
+  const onStopClicked = () => {
     sendMessage(
       JSON.stringify({
         type: "device-fn",
@@ -153,17 +166,34 @@ export function Wheel(props: { id: string }) {
       {!disabled() && (
         <>
           <div class={styles.device__status}>
-            <span class={styles["device__status-text"]}>Position: {deviceState()?.position}</span>
+            <div>
+              <span class={styles["device__status-text"]}>
+                Status: {deviceState()?.state === "CALIBRATING" ? "Calibrating..." : "Idle"}
+              </span>
+            </div>
+            <div>
+              <span class={styles["device__status-text"]}>Calibrated: {deviceState()?.calibrationstate}</span>
+            </div>
+            <div>
+              <span class={styles["device__status-text"]}>Position: {deviceState()?.position}</span>
+            </div>
           </div>
           <div class={styles.device__controls}>
-            <button class={styles.device__button} onClick={handleCalibrate} disabled={disabled()}>
+            <button
+              class={styles.device__button}
+              onClick={onCalibrateClicked}
+              disabled={disabled()}
+            >
               Calibrate
             </button>
-            <button class={styles.device__button} onClick={handleNext} disabled={disabled()}>
+            <button class={styles.device__button} onClick={onNextClicked} disabled={disabled()}>
               Next
             </button>
-            <button class={styles.device__button} onClick={handleStop} disabled={disabled()}>
+            <button class={styles.device__button} onClick={onStopClicked} disabled={disabled()}>
               Stop
+            </button>
+            <button class={styles.device__button} onClick={onUnblockClicked} disabled={disabled()}>
+              Unblock
             </button>
           </div>
         </>

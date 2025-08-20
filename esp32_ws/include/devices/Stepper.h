@@ -116,7 +116,7 @@ public:
      * @brief Check if the stepper motor is currently moving
      * @return true if moving, false if stopped
      */
-    bool isRunning() const;
+    bool isMoving() const;
 
     /**
      * @brief Stop the stepper motor immediately

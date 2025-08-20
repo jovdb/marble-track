@@ -62,7 +62,7 @@
 }
 
 .device__status {
-  display: flex;
+  /*display: flex;*/
   align-items: center;
   gap: var(--spacing-3);
   margin-bottom: var(--spacing-4);
@@ -125,6 +125,10 @@
   align-items: center;
   justify-content: center;
   gap: var(--spacing-2);
+}
+
+.device__button-small {
+  min-width: 30px;
 }
 
 .device__button:hover:not(:disabled) {
@@ -281,4 +285,3 @@
   background-color: var(--color-gray-200);
   box-shadow: var(--inset-shadow-sm);
 }
-

@@ -7,6 +7,7 @@ DividerWheel::DividerWheel(int stepPin1, int stepPin2, int stepPin3, int stepPin
 {
     _stepper = new Stepper(stepPin1, stepPin2, stepPin3, stepPin4, id + "-stepper", name + " Stepper", 1000, 500);
     _button = new Button(buttonPin, id + "-button", name + " Button", true, 50);
+    _calibrationState = CalibrationState::NO;
     addChild(_stepper);
     addChild(_button);
 }
@@ -24,12 +25,13 @@ void DividerWheel::loop()
     switch (_state)
     {
     case wheelState::CALIBRATING:
-        if (_button->wasPressed())
+        if (_button->wasReleased())
         {
             ESP_LOGI(TAG, "Wheel [%s]: Calibration complete.", getId().c_str());
             _stepper->setCurrentPosition(0);
             _stepper->stop();
             _state = wheelState::IDLE;
+            _calibrationState = CalibrationState::YES;
             notifyStateChange();
         }
         if (!_stepper->isMoving())
@@ -37,6 +39,8 @@ void DividerWheel::loop()
             // Ended without calibrating button pressed
             // Check if button is connected
             // Check if button is pressed
+            _calibrationState = CalibrationState::FAILED;
+            notifyStateChange();
         }
         break;
 
@@ -60,8 +64,8 @@ void DividerWheel::move(long steps)
 
 void DividerWheel::calibrate()
 {
-    static float calibrationSpeed = 500;
-    static float calibrationAcceleration = 200;
+    static float calibrationSpeed = 300;
+    static float calibrationAcceleration = 50;
 
     if (_stepper)
     {
@@ -109,6 +113,10 @@ String DividerWheel::getState()
         doc[kv.key()] = kv.value();
     }
     doc["state"] = _state == wheelState::CALIBRATING ? "CALIBRATING" : "IDLE";
+    doc["calibrationState"] = _calibrationState == CalibrationState::YES  ? "YES"
+                              : _calibrationState == CalibrationState::NO ? "NO"
+                                                                          : "FAILED";
+
     String result;
     serializeJson(doc, result);
     return result;

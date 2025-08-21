@@ -61,19 +61,7 @@ void Led::toggle()
 bool Led::control(const String &action, JsonObject *payload)
 {
     // Simple action mapping
-    if (action == "on")
-    {
-        set(true);
-    }
-    else if (action == "off")
-    {
-        set(false);
-    }
-    else if (action == "toggle")
-    {
-        set(!_mode.equals("ON"));
-    }
-    else if (action == "set")
+    if (action == "set")
     {
         if (!payload || !(*payload)["state"].is<bool>())
         {
@@ -84,7 +72,7 @@ bool Led::control(const String &action, JsonObject *payload)
     }
     else
     {
-    ESP_LOGW(TAG, "Led [%s]: Unknown action: %s", _id.c_str(), action.c_str());
+        ESP_LOGW(TAG, "Led [%s]: Unknown action: %s", _id.c_str(), action.c_str());
         return false;
     }
 
@@ -101,7 +89,8 @@ String Led::getState()
     // Copy base Device state fields
     JsonDocument baseDoc;
     deserializeJson(baseDoc, Device::getState());
-    for (JsonPair kv : baseDoc.as<JsonObject>()) {
+    for (JsonPair kv : baseDoc.as<JsonObject>())
+    {
         doc[kv.key()] = kv.value();
     }
     doc["mode"] = _mode;

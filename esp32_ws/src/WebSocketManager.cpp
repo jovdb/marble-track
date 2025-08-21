@@ -124,6 +124,7 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
         handleGetDevices(doc);
         return;
     }
+
     if (type == "device-save-config") {
         handleDeviceSaveConfig(doc);
         return;
@@ -132,6 +133,8 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
         handleDeviceReadConfig(doc);
         return;
     }
+}
+
 // Save config from client for a device
 void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc) {
     String deviceId = doc["deviceId"] | "";
@@ -144,7 +147,7 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc) {
         notifyClients(createJsonResponse(false, "Device not found: " + deviceId, "", ""));
         return;
     }
-    if (!doc.containsKey("config")) {
+    if (!doc["config"].is<JsonObject>()) {
         notifyClients(createJsonResponse(false, "No config provided", "", ""));
         return;
     }
@@ -175,7 +178,6 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc) {
     String respStr;
     serializeJson(response, respStr);
     notifyClients(respStr);
-}
 }
 
 // Global function wrapper for callback compatibility

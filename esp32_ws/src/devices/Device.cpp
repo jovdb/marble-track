@@ -1,5 +1,7 @@
 #include <FS.h>
 #include <SPIFFS.h>
+#include <ArduinoJson.h>
+#include "devices/Device.h"
 
 bool Device::saveConfig(const String &id, const JsonObject &json) {
     String filename = "/device_config.json";
@@ -29,7 +31,7 @@ JsonDocument Device::readConfig(const String &id) {
         file.close();
     }
     JsonDocument doc;
-    if (allConfig.containsKey(id)) {
+    if (allConfig[id].is<JsonObject>()) {
         doc.set(allConfig[id]);
     }
     return doc;

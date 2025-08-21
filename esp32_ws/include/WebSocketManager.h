@@ -36,6 +36,10 @@ public:
 
     // Made public to allow global function access
     void handleWebSocketMessage(void *arg, uint8_t *data, size_t len);
+
+    // Device config handlers
+    void handleDeviceSaveConfig(JsonDocument &doc);
+    void handleDeviceReadConfig(JsonDocument &doc);
 };
 
 #endif

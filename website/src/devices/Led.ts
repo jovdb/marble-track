@@ -13,11 +13,11 @@ export function createLedStore(deviceId: string) {
   /** Set LED state (on/off, brightness, etc.) */
   const setLed = (value: any) => {
     sendMessage({
-      type: "device-action",
+      type: "device-fn",
       deviceId,
       deviceType,
       fn: "set",
-      value,
+      args: { value },
     } as IWsDeviceMessage);
   };
 

@@ -58,17 +58,17 @@ void Led::toggle()
  * @param payload Pointer to JSON object containing action parameters (can be nullptr)
  * @return true if action was successful, false otherwise
  */
-bool Led::control(const String &action, JsonObject *payload)
+bool Led::control(const String &action, JsonObject *args)
 {
     // Simple action mapping
     if (action == "set")
     {
-        if (!payload || !(*payload)["state"].is<bool>())
+        if (!args || !(*args)["value"].is<bool>())
         {
             ESP_LOGE(TAG, "Led [%s]: Invalid 'set' payload", _id.c_str());
             return false;
         }
-        set((*payload)["state"].as<bool>());
+        set((*args)["value"].as<bool>());
     }
     else
     {

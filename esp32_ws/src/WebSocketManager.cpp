@@ -36,7 +36,7 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
 {
     JsonDocument response;
     response["type"] = "devices-list";
-    
+
     if (!deviceManager)
     {
         response["error"] = "DeviceManager not available";
@@ -47,10 +47,10 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
         Device *deviceList[20]; // MAX_DEVICES from DeviceManager
         int count;
         deviceManager->getDevices(deviceList, count, 20);
-        
+
         // Create devices array in JSON
         JsonArray devicesArray = response["devices"].to<JsonArray>();
-        
+
         for (int i = 0; i < count; i++)
         {
             if (deviceList[i] != nullptr)
@@ -59,11 +59,12 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
                 deviceObj["id"] = deviceList[i]->getId();
                 deviceObj["name"] = deviceList[i]->getName();
                 deviceObj["type"] = deviceList[i]->getType();
-                
+
                 // Add pins array
                 std::vector<int> pins = deviceList[i]->getPins();
                 JsonArray pinsArray = deviceObj["pins"].to<JsonArray>();
-                for (int pin : pins) {
+                for (int pin : pins)
+                {
                     pinsArray.add(pin);
                 }
             }
@@ -73,7 +74,7 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
     String message;
     serializeJson(response, message);
     ESP_LOGI(TAG, "WebSocket sent devices list: %s", message.c_str());
-    
+
     notifyClients(message);
 }
 
@@ -108,46 +109,56 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
     }
 
     // Handle special type
-    if (type == "restart") {
+    if (type == "restart")
+    {
         handleRestart();
         return;
     }
-    if (type == "device-fn") {
+    if (type == "device-fn")
+    {
         handleDeviceFunction(doc);
         return;
     }
-    if (type == "device-get-state") {
+    if (type == "device-get-state")
+    {
         handleDeviceGetState(doc);
         return;
     }
-    if (type == "get-devices") {
+    if (type == "get-devices")
+    {
         handleGetDevices(doc);
         return;
     }
 
-    if (type == "device-save-config") {
+    if (type == "device-save-config")
+    {
         handleDeviceSaveConfig(doc);
         return;
     }
-    if (type == "device-read-config") {
+    if (type == "device-read-config")
+    {
         handleDeviceReadConfig(doc);
         return;
     }
 }
 
 // Save config from client for a device
-void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc) {
+void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
+{
     String deviceId = doc["deviceId"] | "";
-    if (!deviceManager) {
+    if (!deviceManager)
+    {
         notifyClients(createJsonResponse(false, "DeviceManager not available", "", ""));
         return;
     }
     Device *device = deviceManager->getDeviceById(deviceId);
-    if (!device) {
+    if (!device)
+    {
         notifyClients(createJsonResponse(false, "Device not found: " + deviceId, "", ""));
         return;
     }
-    if (!doc["config"].is<JsonObject>()) {
+    if (!doc["config"].is<JsonObject>())
+    {
         notifyClients(createJsonResponse(false, "No config provided", "", ""));
         return;
     }
@@ -157,14 +168,17 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc) {
 }
 
 // Read config for a device and send to client
-void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc) {
+void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
+{
     String deviceId = doc["deviceId"] | "";
-    if (!deviceManager) {
+    if (!deviceManager)
+    {
         notifyClients(createJsonResponse(false, "DeviceManager not available", "", ""));
         return;
     }
     Device *device = deviceManager->getDeviceById(deviceId);
-    if (!device) {
+    if (!device)
+    {
         notifyClients(createJsonResponse(false, "Device not found: " + deviceId, "", ""));
         return;
     }
@@ -194,30 +208,30 @@ void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
     switch (type)
     {
     case WS_EVT_CONNECT:
-        {
+    {
         ESP_LOGI(TAG, "WebSocket client #%u connected from %s", client->id(), client->remoteIP().toString().c_str());
-            
-            // Send welcome message with connection info
-            String welcome = "{\"type\":\"connection\",\"message\":\"WebSocket connected\",\"clientId\":" + String(client->id()) + "}";
-            client->text(welcome);
-            break;
-        }
-        
-    case WS_EVT_DISCONNECT:
-    ESP_LOGI(TAG, "WebSocket client #%u disconnected", client->id());
+
+        // Send welcome message with connection info
+        String welcome = "{\"type\":\"connection\",\"message\":\"WebSocket connected\",\"clientId\":" + String(client->id()) + "}";
+        client->text(welcome);
         break;
-        
+    }
+
+    case WS_EVT_DISCONNECT:
+        ESP_LOGI(TAG, "WebSocket client #%u disconnected", client->id());
+        break;
+
     case WS_EVT_DATA:
-    ESP_LOGI(TAG, "WebSocket client #%u data received", client->id());
+        ESP_LOGI(TAG, "WebSocket client #%u data received", client->id());
         handleWebSocketMessage(arg, data, len);
         break;
-        
+
     case WS_EVT_PONG:
-    ESP_LOGI(TAG, "WebSocket client #%u pong", client->id());
+        ESP_LOGI(TAG, "WebSocket client #%u pong", client->id());
         break;
-        
+
     case WS_EVT_ERROR:
-    ESP_LOGE(TAG, "WebSocket client #%u ERROR occurred", client->id());
+        ESP_LOGE(TAG, "WebSocket client #%u ERROR occurred", client->id());
         break;
     }
 }
@@ -234,7 +248,7 @@ void WebSocketManager::setup(AsyncWebServer &server)
         if (instance) {
             instance->onEvent(server, client, type, arg, data, len);
         } });
-    
+
     server.addHandler(&ws);
     ESP_LOGI(TAG, "WebSocket manager: OK");
     ESP_LOGI(TAG, "WebSocket path: /ws");
@@ -299,7 +313,7 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
         else
         {
             ESP_LOGI(TAG, "Executing action: %s[%s]", deviceId.c_str(), functionName.c_str());
-            JsonObject payload = doc.as<JsonObject>();
+            JsonObject payload = doc["args"].as<JsonObject>();
             bool success = device->control(functionName, &payload);
 
             /*

@@ -34,7 +34,7 @@ void DividerWheel::loop()
             _calibrationState = CalibrationState::YES;
             notifyStateChange();
         }
-        if (!_stepper->isMoving())
+        else if (!_stepper->isMoving())
         {
             // Ended without calibrating button pressed
             // Check if button is connected

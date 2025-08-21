@@ -45,6 +45,11 @@ public:
     virtual std::vector<int> getPins() const;
     virtual void setStateChangeCallback(StateChangeCallback callback);
 
+    // Save a JSON object for a device id in a single config file
+    bool saveConfig(const String &id, const JsonObject &json);
+    // Read a config object for a device id from a single config file
+    JsonDocument readConfig(const String &id);
+
 protected:
     String _id;
     String _name;

@@ -1,31 +1,14 @@
-import { Device, IDeviceState } from "./Device";
-import { createDeviceState, IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
+import { Device } from "./Device";
 import styles from "./Device.module.css";
-
-interface ILedState extends IDeviceState {
-  mode: "ON" | "OFF";
-}
+import { createLedStore } from "../../devices/Led";
 
 export function Led(props: { id: string }) {
-  const [deviceState, connectedState, disabled, error] = createDeviceState<ILedState>(props.id);
-
-  const setLed = (state: boolean) => {
-    sendMessage({
-      type: "device-fn",
-      deviceType: "led",
-      deviceId: props.id,
-      fn: state ? "on" : "off",
-    } as IWsDeviceMessage);
-  };
+  const { state: deviceState, error, setLed } = createLedStore(props.id);
 
   return (
     <Device id={props.id} deviceState={deviceState()}>
-      {disabled() && (
-        <div class={styles.device__error}>
-          {error() || (connectedState() === "Disconnected" ? "Disconnected" : connectedState())}
-        </div>
-      )}
-      {!disabled() && (
+      {error() && <div class={styles.device__error}>{error()}</div>}
+      {!error() && (
         <>
           <div class={styles.device__status}>
             <div
@@ -40,17 +23,12 @@ export function Led(props: { id: string }) {
             </span>
           </div>
           <div class={styles.device__controls}>
-            <button
-              class={styles.device__button}
-              onClick={() => setLed(true)}
-              disabled={disabled()}
-            >
+            <button class={styles.device__button} onClick={() => setLed(true)}>
               Turn On
             </button>
             <button
               class={`${styles.device__button} ${styles["device__button--secondary"]}`}
               onClick={() => setLed(false)}
-              disabled={disabled()}
             >
               Turn Off
             </button>

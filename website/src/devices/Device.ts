@@ -45,11 +45,12 @@ function saveDeviceConfig(deviceId: string, config: any): Promise<boolean> {
   });
 }
 
-export function createDeviceStore(deviceId: string) {
+export function createDeviceStore<TState, TConfig>(deviceId: string) {
   // Device state
-  const [state, setState] = createSignal<any>(undefined);
-  const [config, setConfig] = createSignal<any>(undefined);
+  const [state, setState] = createSignal<TState | undefined>(undefined);
+  const [config, setConfig] = createSignal<TConfig | undefined>(undefined);
   const [error, setError] = createSignal<string | undefined>(undefined);
+  const [connectionState, setConnectionState] = createSignal<number>(WebSocket.CONNECTING);
 
   // Load device state from backend
   const loadState = () => {
@@ -67,15 +68,25 @@ export function createDeviceStore(deviceId: string) {
         setState(data.state);
         setError(undefined);
       }
+      setConnectionState(WebSocket.OPEN);
     }
   }
 
   onMount(() => {
     window.addEventListener("message", onMessage);
+    setConnectionState(WebSocket.CONNECTING);
     loadState();
+    // Listen for WebSocket open/close events
+    const ws = window.WebSocket && window.WebSocket.prototype;
+    function handleOpen() { setConnectionState(WebSocket.OPEN); }
+    function handleClose() { setConnectionState(WebSocket.CLOSED); }
+    window.addEventListener("open", handleOpen);
+    window.addEventListener("close", handleClose);
   });
   onCleanup(() => {
     window.removeEventListener("message", onMessage);
+    window.removeEventListener("open", handleOpen);
+    window.removeEventListener("close", handleClose);
   });
 
   // Load config from backend
@@ -105,6 +116,7 @@ export function createDeviceStore(deviceId: string) {
     state,
     config,
     error,
+    connectionState,
     loadState,
     loadConfig,
     saveConfig,

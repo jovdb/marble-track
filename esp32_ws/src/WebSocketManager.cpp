@@ -108,29 +108,74 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
     }
 
     // Handle special type
-    if (type == "restart")
-    {
+    if (type == "restart") {
         handleRestart();
         return;
     }
-
-    if (type == "device-fn")
-    {
+    if (type == "device-fn") {
         handleDeviceFunction(doc);
         return;
     }
-
-    if (type == "device-get-state")
-    {
+    if (type == "device-get-state") {
         handleDeviceGetState(doc);
         return;
     }
-
-    if (type == "get-devices")
-    {
+    if (type == "get-devices") {
         handleGetDevices(doc);
         return;
     }
+    if (type == "device-save-config") {
+        handleDeviceSaveConfig(doc);
+        return;
+    }
+    if (type == "device-read-config") {
+        handleDeviceReadConfig(doc);
+        return;
+    }
+// Save config from client for a device
+void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc) {
+    String deviceId = doc["deviceId"] | "";
+    if (!deviceManager) {
+        notifyClients(createJsonResponse(false, "DeviceManager not available", "", ""));
+        return;
+    }
+    Device *device = deviceManager->getDeviceById(deviceId);
+    if (!device) {
+        notifyClients(createJsonResponse(false, "Device not found: " + deviceId, "", ""));
+        return;
+    }
+    if (!doc.containsKey("config")) {
+        notifyClients(createJsonResponse(false, "No config provided", "", ""));
+        return;
+    }
+    JsonObject configObj = doc["config"].as<JsonObject>();
+    bool success = device->saveConfig(deviceId, configObj);
+    notifyClients(createJsonResponse(success, success ? "Config saved" : "Config save failed", "", ""));
+}
+
+// Read config for a device and send to client
+void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc) {
+    String deviceId = doc["deviceId"] | "";
+    if (!deviceManager) {
+        notifyClients(createJsonResponse(false, "DeviceManager not available", "", ""));
+        return;
+    }
+    Device *device = deviceManager->getDeviceById(deviceId);
+    if (!device) {
+        notifyClients(createJsonResponse(false, "Device not found: " + deviceId, "", ""));
+        return;
+    }
+    JsonDocument config = device->readConfig(deviceId);
+    String configStr;
+    serializeJson(config, configStr);
+    JsonDocument response;
+    response["type"] = "device-config";
+    response["deviceId"] = deviceId;
+    response["config"] = config;
+    String respStr;
+    serializeJson(response, respStr);
+    notifyClients(respStr);
+}
 }
 
 // Global function wrapper for callback compatibility

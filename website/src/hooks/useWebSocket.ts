@@ -30,7 +30,7 @@ const url = `ws://${marbleIp}/ws`;
 // const websocket = makeHeartbeatWS(makeReconnectingWS(url), {
 //   message: "👍", // heartbeat message
 // });
-const websocket = makeReconnectingWS(url);
+export const websocket = makeReconnectingWS(url);
 
 const wsState = createWSState(websocket);
 const wsStates = [

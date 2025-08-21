@@ -1,5 +1,6 @@
 import { createSignal, onCleanup, onMount } from "solid-js";
-import { sendMessage, IWsMessage } from "../hooks/useWebSocket";
+import { sendMessage, IWsMessage, websocket } from "../hooks/useWebSocket";
+import { IDeviceState } from "../components/devices/Device";
 
 function readDeviceConfig(deviceId: string): Promise<any> {
   return new Promise((resolve, reject) => {
@@ -45,7 +46,7 @@ function saveDeviceConfig(deviceId: string, config: any): Promise<boolean> {
   });
 }
 
-export function createDeviceStore<TState, TConfig>(deviceId: string) {
+export function createDeviceStore<TState extends IDeviceState, TConfig>(deviceId: string) {
   // Device state
   const [state, setState] = createSignal<TState | undefined>(undefined);
   const [config, setConfig] = createSignal<TConfig | undefined>(undefined);
@@ -72,21 +73,26 @@ export function createDeviceStore<TState, TConfig>(deviceId: string) {
     }
   }
 
+  function handleOpen() {
+    setConnectionState(WebSocket.OPEN);
+  }
+
+  function handleClose() {
+    setConnectionState(WebSocket.CLOSED);
+  }
+
   onMount(() => {
-    window.addEventListener("message", onMessage);
     setConnectionState(WebSocket.CONNECTING);
     loadState();
-    // Listen for WebSocket open/close events
-    const ws = window.WebSocket && window.WebSocket.prototype;
-    function handleOpen() { setConnectionState(WebSocket.OPEN); }
-    function handleClose() { setConnectionState(WebSocket.CLOSED); }
-    window.addEventListener("open", handleOpen);
-    window.addEventListener("close", handleClose);
+
+    websocket.addEventListener("message", onMessage);
+    websocket.addEventListener("open", handleOpen);
+    websocket.addEventListener("close", handleClose);
   });
   onCleanup(() => {
-    window.removeEventListener("message", onMessage);
-    window.removeEventListener("open", handleOpen);
-    window.removeEventListener("close", handleClose);
+    websocket.removeEventListener("close", handleClose);
+    websocket.removeEventListener("open", handleOpen);
+    websocket.removeEventListener("message", onMessage);
   });
 
   // Load config from backend

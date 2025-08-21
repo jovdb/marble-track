@@ -1,17 +1,24 @@
+import { IDeviceState } from "../components/devices/Device";
 import { createDeviceStore } from "../devices/Device";
-import { sendMessage, IWsMessage } from "../hooks/useWebSocket";
+import { sendMessage, IWsDeviceMessage } from "../hooks/useWebSocket";
+
+interface ILedState extends IDeviceState {
+  mode: "ON" | "OFF";
+}
 
 export function createLedStore(deviceId: string) {
-  const base = createDeviceStore(deviceId);
+  const deviceType = "led";
+  const base = createDeviceStore<ILedState, unknown>(deviceId);
 
-  // Set LED state (on/off, brightness, etc.)
+  /** Set LED state (on/off, brightness, etc.) */
   const setLed = (value: any) => {
     sendMessage({
       type: "device-action",
       deviceId,
-      fn: "setLed",
+      deviceType,
+      fn: "set",
       value,
-    } as IWsMessage);
+    } as IWsDeviceMessage);
   };
 
   return {

@@ -1,9 +1,8 @@
-import { Device, IDeviceState } from "./Device";
+import { Device } from "./Device";
 import { createSignal, onCleanup } from "solid-js";
-import { createDeviceState, IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
 import styles from "./Device.module.css";
 import { WheelConfig } from "./WheelConfig";
-import { createWheelStore } from "../../devices/Wheel";
+import { createWheelStore } from "../../stores/Wheel";
 
 export function Wheel(props: { id: string }) {
   const { state, error, nextBreakpoint, calibrate } = createWheelStore(props.id);

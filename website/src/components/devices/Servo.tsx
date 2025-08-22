@@ -1,83 +1,37 @@
-import { Device, IDeviceState } from "./Device";
-import { createDeviceState, IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
+import { Device } from "./Device";
 import { debounce } from "@solid-primitives/scheduled";
 import { createSignal } from "solid-js";
 import styles from "./Device.module.css";
-
-interface IServoState extends IDeviceState {
-  angle: number;
-  targetAngle: number;
-  speed: number;
-  isMoving: boolean;
-  pin: number;
-  pwmChannel: number;
-}
+import { createServoStore } from "../../stores/Servo";
 
 export function Servo(props: { id: string }) {
-  const [deviceState, connectedState, disabled, error] = createDeviceState<IServoState>(props.id);
+  const { state, error, stop, setAngle } = createServoStore(props.id);
   const [currentSpeed, setCurrentSpeed] = createSignal(60);
 
-  const setAngle = debounce((angle: number) => {
-    sendMessage({
-      type: "device-fn",
-      deviceType: "servo",
-      deviceId: props.id,
-      fn: "setAngle",
-      args: {
-        angle,
-        speed: currentSpeed(),
-      },
-    } as IWsDeviceMessage);
-  }, 100);
-
-  const setSpeed = debounce((speed: number) => {
-    setCurrentSpeed(speed);
-    sendMessage({
-      type: "device-fn",
-      deviceType: "servo",
-      deviceId: props.id,
-      args: {
-        fn: "setSpeed",
-        speed,
-      },
-    } as IWsDeviceMessage);
-  }, 300);
-
-  const stopMovement = () => {
-    sendMessage({
-      type: "device-fn",
-      deviceType: "servo",
-      deviceId: props.id,
-      fn: "stop",
-    } as IWsDeviceMessage);
-  };
-
   return (
-    <Device id={props.id} deviceState={deviceState()}>
-      {disabled() && (
-        <div class={styles.device__error}>
-          {error() || (connectedState() === "Disconnected" ? "Disconnected" : connectedState())}
-        </div>
-      )}
-      {!disabled() && (
+    <Device id={props.id} deviceState={state()}>
+      {error() && <div class={styles.device__error}>{error()}</div>}
+      {!error() && (
         <>
           <div class={styles.device__status}>
             <div
               class={`${styles["device__status-indicator"]} ${
-                deviceState()?.isMoving
+                state()?.isMoving
                   ? styles["device__status-indicator--moving"]
                   : styles["device__status-indicator--off"]
               }`}
             ></div>
             <span class={styles["device__status-text"]}>
-              {deviceState()?.isMoving
-                ? `Moving to ${deviceState()?.targetAngle}\u00b0`
-                : `At ${deviceState()?.angle || 0}\u00b0`}
+              {state()?.isMoving
+                ? `Moving to ${state()?.targetAngle}\u00b0`
+                : `At ${state()?.angle || 0}\u00b0`}
             </span>
-            {deviceState()?.isMoving && (
+            {state()?.isMoving && (
               <button
                 class={`${styles.device__button} ${styles["device__button--danger"]}`}
-                onClick={stopMovement}
+                onClick={() => {
+                  stop();
+                }}
                 style={{ "margin-left": "auto" }}
               >
                 Stop
@@ -86,7 +40,7 @@ export function Servo(props: { id: string }) {
           </div>
           <div class={styles["device__input-group"]}>
             <label class={styles.device__label} for={`angle-${props.id}`}>
-              Angle: {deviceState()?.angle || 0}\u00b0
+              Angle: {state()?.angle || 0}\u00b0
             </label>
             <input
               id={`angle-${props.id}`}
@@ -94,44 +48,44 @@ export function Servo(props: { id: string }) {
               type="range"
               min="0"
               max="180"
-              value={deviceState()?.angle || 90}
-              onInput={(e) => setAngle(Number(e.currentTarget.value))}
+              value={state()?.angle || 90}
+              onInput={(e) =>
+                debounce(
+                  () => setAngle({ angle: Number(e.currentTarget.value), speed: currentSpeed() }),
+                  100
+                )
+              }
             />
             <div class={styles.device__controls}>
               <button
                 class={styles.device__button}
-                onClick={() => setAngle(0)}
-                disabled={disabled()}
+                onClick={() => setAngle({ angle: 0, speed: currentSpeed() })}
               >
-                0\u00b0
+                0°
               </button>
               <button
                 class={styles.device__button}
-                onClick={() => setAngle(45)}
-                disabled={disabled()}
+                onClick={() => setAngle({ angle: 45, speed: currentSpeed() })}
               >
-                45\u00b0
+                45°
               </button>
               <button
                 class={styles.device__button}
-                onClick={() => setAngle(90)}
-                disabled={disabled()}
+                onClick={() => setAngle({ angle: 90, speed: currentSpeed() })}
               >
-                90\u00b0
+                90°
               </button>
               <button
                 class={styles.device__button}
-                onClick={() => setAngle(135)}
-                disabled={disabled()}
+                onClick={() => setAngle({ angle: 135, speed: currentSpeed() })}
               >
-                135\u00b0
+                135°
               </button>
               <button
                 class={styles.device__button}
-                onClick={() => setAngle(180)}
-                disabled={disabled()}
+                onClick={() => setAngle({ angle: 180, speed: currentSpeed() })}
               >
-                180\u00b0
+                180°
               </button>
             </div>
           </div>
@@ -146,7 +100,7 @@ export function Servo(props: { id: string }) {
               min="40"
               max="180"
               value={currentSpeed()}
-              onInput={(e) => setSpeed(Number(e.currentTarget.value))}
+              onInput={(e) => setCurrentSpeed(Number(e.currentTarget.value))}
             />
           </div>
         </>

@@ -1,5 +1,5 @@
 import { IDeviceState } from "../components/devices/Device";
-import { createDeviceStore } from "../stores/Device";
+import { createDeviceStore } from "./Device";
 import { IWsDeviceMessage, sendMessage } from "../hooks/useWebSocket";
 
 export interface IWheelState extends IDeviceState {

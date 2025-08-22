@@ -13,6 +13,7 @@ export interface DeviceInfo {
 export interface IWsMessage {
   type: string;
 }
+
 export interface IWsDeviceMessage extends IWsMessage {
   type: "device-fn";
   deviceType: string;

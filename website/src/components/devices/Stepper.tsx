@@ -1,52 +1,31 @@
-import { Device, IDeviceState } from "./Device";
-import { createDeviceState, IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
+import { Device } from "./Device";
 import { createSignal } from "solid-js";
 import styles from "./Device.module.css";
-
-export interface IStepperState extends IDeviceState {
-  steps: number;
-  maxSpeed: number;
-  maxAcceleration: number;
-  currentPosition: number;
-}
+import { createStepperStore } from "../../stores/Stepper";
 
 export function Stepper(props: { id: string }) {
-  const [deviceState, connectedState, disabled, error] = createDeviceState<IStepperState>(props.id);
-  const [steps, setSteps] = createSignal(deviceState()?.steps || 1000);
-  const [maxSpeed, setMaxSpeed] = createSignal(deviceState()?.maxSpeed || 1000);
-  const [maxAcceleration, setAcceleration] = createSignal(deviceState()?.maxAcceleration || 300);
+  const { state, error, move, stop } = createStepperStore(props.id);
+
+  const [steps, setSteps] = createSignal(state()?.steps || 1000);
+  const [maxSpeed, setMaxSpeed] = createSignal(state()?.maxSpeed || 1000);
+  const [maxAcceleration, setAcceleration] = createSignal(state()?.maxAcceleration || 300);
 
   const updateStepper = () => {
-    sendMessage({
-      type: "device-fn",
-      deviceType: "stepper",
-      deviceId: props.id,
-      fn: "move",
-      args: {
-        steps: steps(),
-        maxSpeed: maxSpeed(),
-        maxAcceleration: maxAcceleration(),
-      },
-    } as IWsDeviceMessage);
+    move({
+      steps: steps(),
+      maxSpeed: maxSpeed(),
+      maxAcceleration: maxAcceleration(),
+    });
   };
 
   const stopStepper = () => {
-    sendMessage({
-      type: "device-fn",
-      deviceType: "servo",
-      deviceId: props.id,
-      fn: "stop",
-    } as IWsDeviceMessage);
+    stop();
   };
 
   return (
-    <Device id={props.id} deviceState={deviceState()}>
-      {disabled() && (
-        <div class={styles.device__error}>
-          {error() || (connectedState() === "Disconnected" ? "Disconnected" : connectedState())}
-        </div>
-      )}
-      {!disabled() && (
+    <Device id={props.id} deviceState={state()}>
+      {error() && <div class={styles.device__error}>{error()}</div>}
+      {!error() && (
         <>
           {/*
           <div class={styles.device__status}>
@@ -104,10 +83,10 @@ export function Stepper(props: { id: string }) {
             />
           </div>
           <div class={styles.device__controls}>
-            <button class={styles.device__button} onClick={updateStepper} disabled={disabled()}>
+            <button class={styles.device__button} onClick={updateStepper}>
               Move
             </button>
-            <button class={styles.device__button} onClick={stopStepper} disabled={disabled()}>
+            <button class={styles.device__button} onClick={stopStepper}>
               Stop
             </button>
           </div>

@@ -1,7 +1,7 @@
 import styles from "./Device.module.css";
 import { createDeviceState, IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
 import { IWheelState } from "./Wheel";
-import { IStepperState } from "./Stepper";
+import { IStepperState } from "../../stores/Stepper";
 
 // Update the import path below to the correct location of IWheelState
 

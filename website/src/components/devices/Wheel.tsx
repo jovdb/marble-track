@@ -1,12 +1,15 @@
 import { Device } from "./Device";
-import { createSignal, onCleanup } from "solid-js";
+import { createMemo, createSignal, onCleanup } from "solid-js";
 import styles from "./Device.module.css";
 import { WheelConfig } from "./WheelConfig";
 import { createWheelStore } from "../../stores/Wheel";
 
 export function Wheel(props: { id: string }) {
-  const { state, error, nextBreakpoint, calibrate } = createWheelStore(props.id);
+  const { state, error, nextBreakpoint, calibrate, getChildStateByType } = createWheelStore(
+    props.id
+  );
 
+  const currentPosition = createMemo(() => getChildStateByType("stepper")()?.currentPosition);
   const [steps] = createSignal<undefined | number>(undefined);
   const [direction, setDirection] = createSignal<-1 | 0 | 1>(0);
   const [uiAngle, setUiAngle] = createSignal<undefined | number>(undefined);
@@ -136,7 +139,7 @@ export function Wheel(props: { id: string }) {
               </span>
             </div>
             <div>
-              <span class={styles["device__status-text"]}>Position: {state()?.position}</span>
+              <span class={styles["device__status-text"]}>Position: {currentPosition()}</span>
             </div>
           </div>
           <div class={styles.device__controls}>

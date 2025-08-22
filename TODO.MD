@@ -8,3 +8,4 @@
 - complete wheel cpp
 - use zod to validate state
 - Use Async API for describing WS possibilities
+- if stepper finished, wheel is not updated, I would remove children state and let parent collect relevant state

@@ -3,7 +3,6 @@ import { IWsDeviceMessage, sendMessage } from "../hooks/useWebSocket";
 
 const deviceType = "wheel";
 export interface IWheelState extends IDeviceState {
-  position: number;
   state: "CALIBRATING" | "IDLE";
   calibrationState: "YES" | "NO" | "FAILED";
 }

@@ -1,51 +1,33 @@
-import { Device, IDeviceState } from "./Device";
-import { createDeviceState, IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
+import { Device } from "./Device";
 import styles from "./Device.module.css";
-
-interface IButtonState extends IDeviceState {
-  pressed: boolean;
-}
+import { createButtonStore } from "../../stores/Button";
 
 export function Button(props: { id: string }) {
-  const [deviceState, connectedState, disabled, error] = createDeviceState<IButtonState>(props.id);
+  const { state, error, press, release } = createButtonStore(props.id);
 
   const handlePress = () => {
-    sendMessage({
-      type: "device-fn",
-      deviceType: "button",
-      deviceId: props.id,
-      fn: "pressed",
-    } as IWsDeviceMessage);
+    press();
   };
 
   const handleRelease = () => {
-    sendMessage({
-      type: "device-fn",
-      deviceType: "button",
-      deviceId: props.id,
-      fn: "released",
-    } as IWsDeviceMessage);
+    release();
   };
 
   return (
-    <Device id={props.id} deviceState={deviceState()}>
-      {disabled() && (
-        <div class={styles.device__error}>
-          {error() || (connectedState() === "Disconnected" ? "Disconnected" : connectedState())}
-        </div>
-      )}
-      {!disabled() && (
+    <Device id={props.id} deviceState={state()}>
+      {error() && <div class={styles.device__error}>{error()}</div>}
+      {!error() && (
         <>
           <div class={styles.device__status}>
             <div
               class={`${styles["device__status-indicator"]} ${
-                deviceState()?.pressed
+                state()?.pressed
                   ? styles["device__status-indicator--pressed"]
                   : styles["device__status-indicator--off"]
               }`}
             ></div>
             <span class={styles["device__status-text"]}>
-              Status: {deviceState()?.pressed ? "Pressed" : "Released"}
+              Status: {state()?.pressed ? "Pressed" : "Released"}
             </span>
           </div>
           <div class={styles.device__controls}>
@@ -53,7 +35,6 @@ export function Button(props: { id: string }) {
               class={styles.device__button}
               onMouseDown={handlePress}
               onMouseUp={handleRelease}
-              disabled={disabled()}
             >
               Hold to Press
             </button>

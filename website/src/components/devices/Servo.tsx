@@ -23,8 +23,10 @@ export function Servo(props: { id: string }) {
       deviceType: "servo",
       deviceId: props.id,
       fn: "setAngle",
-      angle,
-      speed: currentSpeed(),
+      args: {
+        angle,
+        speed: currentSpeed(),
+      },
     } as IWsDeviceMessage);
   }, 100);
 
@@ -34,8 +36,10 @@ export function Servo(props: { id: string }) {
       type: "device-fn",
       deviceType: "servo",
       deviceId: props.id,
-      fn: "setSpeed",
-      speed,
+      args: {
+        fn: "setSpeed",
+        speed,
+      },
     } as IWsDeviceMessage);
   }, 300);
 

@@ -9,7 +9,6 @@
  * @date 2025
  */
 
-
 #include "devices/Buzzer.h"
 #include <NonBlockingRtttl.h>
 #include <Arduino.h> // Needed for tone, noTone, delay
@@ -90,7 +89,7 @@ void Buzzer::loop()
         _mode = Mode::IDLE;
         _currentTune = "";
 
-    ESP_LOGI(TAG, "Buzzer [%s]: Tune playback finished", _id.c_str());
+        ESP_LOGI(TAG, "Buzzer [%s]: Tune playback finished", _id.c_str());
         notifyStateChange();
     }
 
@@ -158,18 +157,30 @@ void Buzzer::tune(const String &rtttl)
  * @param payload Pointer to JSON object containing action parameters (can be nullptr)
  * @return true if action was successful, false otherwise
  */
-bool Buzzer::control(const String &action, JsonObject *payload)
+bool Buzzer::control(const String &action, JsonObject *args)
 {
     if (action == "tone")
     {
-        if (!payload || !(*payload)["frequency"].is<int>() || !(*payload)["duration"].is<int>())
+        if (!args)
         {
-            ESP_LOGE(TAG, "Buzzer [%s]: Invalid 'tone' payload - need frequency and duration", _id.c_str());
+            ESP_LOGE(TAG, "Buzzer [%s]: args missing", _id.c_str());
             return false;
         }
 
-        int frequency = (*payload)["frequency"].as<int>();
-        int duration = (*payload)["duration"].as<int>();
+        if (!(*args)["frequency"].is<int>())
+        {
+            ESP_LOGE(TAG, "Buzzer [%s]: Invalid 'tone' args - frequency missing", _id.c_str());
+            return false;
+        }
+
+        if (!(*args)["duration"].is<int>())
+        {
+            ESP_LOGE(TAG, "Buzzer [%s]: Invalid 'tone' args - duration missing", _id.c_str());
+            return false;
+        }
+
+        int frequency = (*args)["frequency"].as<int>();
+        int duration = (*args)["duration"].as<int>();
 
         // Validate frequency range
         if (frequency < 20 || frequency > 20000)
@@ -190,13 +201,19 @@ bool Buzzer::control(const String &action, JsonObject *payload)
     }
     else if (action == "tune")
     {
-        if (!payload || !(*payload)["rtttl"].is<String>())
+        if (!args)
         {
-            ESP_LOGE(TAG, "Buzzer [%s]: Invalid 'tune' payload - need rtttl string", _id.c_str());
+            ESP_LOGE(TAG, "Buzzer [%s]: Invalid 'tune' - args missing", _id.c_str());
             return false;
         }
 
-        String rtttl = (*payload)["rtttl"].as<String>();
+        if (!(*args)["rtttl"].is<String>())
+        {
+            ESP_LOGE(TAG, "Buzzer [%s]: Invalid 'tune' args - need rtttl string", _id.c_str());
+            return false;
+        }
+
+        String rtttl = (*args)["rtttl"].as<String>();
         if (rtttl.length() == 0)
         {
             ESP_LOGE(TAG, "Buzzer [%s]: Empty RTTTL string", _id.c_str());
@@ -208,7 +225,7 @@ bool Buzzer::control(const String &action, JsonObject *payload)
     }
     else
     {
-    ESP_LOGW(TAG, "Buzzer [%s]: Unknown action: %s", _id.c_str(), action.c_str());
+        ESP_LOGW(TAG, "Buzzer [%s]: Unknown action: %s", _id.c_str(), action.c_str());
         return false;
     }
 }
@@ -224,7 +241,8 @@ String Buzzer::getState()
     // Copy base Device state fields
     JsonDocument baseDoc;
     deserializeJson(baseDoc, Device::getState());
-    for (JsonPair kv : baseDoc.as<JsonObject>()) {
+    for (JsonPair kv : baseDoc.as<JsonObject>())
+    {
         doc[kv.key()] = kv.value();
     }
 

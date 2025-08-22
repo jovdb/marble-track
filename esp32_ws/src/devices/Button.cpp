@@ -156,7 +156,7 @@ unsigned long Button::getPressedTime() const
  * @param payload Pointer to JSON object containing action parameters (can be nullptr)
  * @return true if action was successful, false otherwise
  */
-bool Button::control(const String &action, JsonObject *payload)
+bool Button::control(const String &action, JsonObject *args)
 {
     if (action == "pressed")
     {

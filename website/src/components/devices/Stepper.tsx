@@ -22,9 +22,11 @@ export function Stepper(props: { id: string }) {
       deviceType: "stepper",
       deviceId: props.id,
       fn: "move",
-      steps: steps(),
-      maxSpeed: maxSpeed(),
-      maxAcceleration: maxAcceleration(),
+      args: {
+        steps: steps(),
+        maxSpeed: maxSpeed(),
+        maxAcceleration: maxAcceleration(),
+      },
     } as IWsDeviceMessage);
   };
 

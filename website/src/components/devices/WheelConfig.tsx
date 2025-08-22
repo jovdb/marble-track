@@ -27,7 +27,9 @@ export function WheelConfig(props: { id: string }) {
       deviceType: "stepper",
       deviceId: stepper.id,
       fn: "move",
-      steps: -100,
+      args: {
+        steps: -100,
+      },
     } as IWsDeviceMessage);
   };
 
@@ -39,7 +41,9 @@ export function WheelConfig(props: { id: string }) {
       deviceType: "stepper",
       deviceId: stepper.id,
       fn: "move",
-      steps,
+      args: {
+        steps,
+      },
     } as IWsDeviceMessage);
   };
 

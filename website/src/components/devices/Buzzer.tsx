@@ -1,16 +1,10 @@
-import { createDeviceState, IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
 import { createSignal, For } from "solid-js";
 import { BuzzerIcon } from "../icons/Icons";
 import styles from "./Device.module.css";
-import { IDeviceState } from "./Device";
-
-interface IBuzzerState extends IDeviceState {
-  playing: boolean;
-  currentTune: string;
-}
+import { createBuzzerStore } from "../../stores/Buzzer";
 
 export function Buzzer(props: { id: string }) {
-  const [deviceState, connectedState, disabled, error] = createDeviceState<IBuzzerState>(props.id);
+  const { state, error, tone, tune } = createBuzzerStore(props.id);
 
   const [frequency, setFrequency] = createSignal(440);
   const [rtttl, setRtttl] = createSignal(
@@ -30,25 +24,15 @@ export function Buzzer(props: { id: string }) {
   };
 
   const playTone = () => {
-    sendMessage({
-      type: "device-fn",
-      deviceType: "buzzer",
-      deviceId: props.id,
-      fn: "tone",
+    tone({
       frequency: frequency(),
       duration: 1000,
-    } as IWsDeviceMessage);
+    });
   };
 
-  const playMelody = () => {
+  const playTune = () => {
     if (rtttl().trim().length === 0) return;
-    sendMessage({
-      type: "device-fn",
-      deviceType: "buzzer",
-      deviceId: props.id,
-      fn: "tune",
-      rtttl: rtttl(),
-    } as IWsDeviceMessage);
+    tune(rtttl());
   };
 
   return (
@@ -56,31 +40,27 @@ export function Buzzer(props: { id: string }) {
       <div class={styles.device__header}>
         <h3 class={styles.device__title}>
           <BuzzerIcon />
-          {deviceState()?.name || props.id}
+          {state()?.name || props.id}
         </h3>
         <span class={styles["device__type-badge"]}>BUZZER</span>
       </div>
 
       <div class={styles.device__content}>
-        {disabled() && (
-          <div class={styles.device__error}>
-            {error() || (connectedState() === "Disconnected" ? "Disconnected" : connectedState())}
-          </div>
-        )}
+        {error() && <div class={styles.device__error}>{error()}</div>}
 
-        {!disabled() && (
+        {!error() && (
           <>
             <div class={styles.device__status}>
               <div
                 class={`${styles["device__status-indicator"]} ${
-                  deviceState()?.playing
+                  state()?.playing
                     ? styles["device__status-indicator--on"]
                     : styles["device__status-indicator--off"]
                 }`}
               ></div>
               <span class={styles["device__status-text"]}>
-                {deviceState()?.playing ? "Playing" : "Idle"}
-                {deviceState()?.currentTune && deviceState()?.playing && " (Melody)"}
+                {state()?.playing ? "Playing" : "Idle"}
+                {state()?.currentTune && state()?.playing && " (Melody)"}
               </span>
             </div>
 
@@ -102,7 +82,7 @@ export function Buzzer(props: { id: string }) {
                 <button
                   class={styles.device__button}
                   onClick={playTone}
-                  disabled={disabled() || deviceState()?.playing}
+                  disabled={state()?.playing}
                 >
                   Play Tone
                 </button>
@@ -130,8 +110,8 @@ export function Buzzer(props: { id: string }) {
               <div class={styles.device__controls}>
                 <button
                   class={styles.device__button}
-                  onClick={playMelody}
-                  disabled={disabled() || deviceState()?.playing || rtttl().trim().length === 0}
+                  onClick={playTune}
+                  disabled={state()?.playing || rtttl().trim().length === 0}
                 >
                   Play Melody
                 </button>

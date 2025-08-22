@@ -9,33 +9,34 @@ export interface IStepperState extends IDeviceState {
   currentPosition: number;
 }
 
+export function move(
+  deviceId: string,
+  args: { steps: number; maxSpeed?: number; maxAcceleration?: number }
+) {
+  sendMessage({
+    type: "device-fn",
+    deviceType: "stepper",
+    deviceId,
+    fn: "move",
+    args,
+  } as IWsDeviceMessage);
+}
+
+export function stop(deviceId: string) {
+  sendMessage({
+    type: "device-fn",
+    deviceType: "stepper",
+    deviceId,
+    fn: "stop",
+  } as IWsDeviceMessage);
+}
+
 export function createStepperStore(deviceId: string) {
-  const deviceType = "stepper";
   const base = createDeviceStore<IStepperState, unknown>(deviceId);
-
-  // Set stepper state (e.g., step, direction, speed, etc.)
-  const move = (args: { steps: number; maxSpeed?: number; maxAcceleration?: number }) => {
-    sendMessage({
-      type: "device-fn",
-      deviceType,
-      deviceId,
-      fn: "move",
-      args,
-    } as IWsDeviceMessage);
-  };
-
-  const stop = () => {
-    sendMessage({
-      type: "device-fn",
-      deviceType,
-      deviceId,
-      fn: "stop",
-    } as IWsDeviceMessage);
-  };
 
   return {
     ...base,
-    move,
-    stop,
+    move: (args: Parameters<typeof move>[1]) => move(deviceId, args),
+    stop: () => stop(deviceId),
   };
 }

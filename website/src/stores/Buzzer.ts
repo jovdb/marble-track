@@ -8,37 +8,32 @@ interface IBuzzerState extends IDeviceState {
   mode: string;
 }
 
+export function playTone(deviceId: string, args: { frequency: number; duration: number }) {
+  sendMessage({
+    type: "device-fn",
+    deviceId,
+    deviceType: "buzzer",
+    fn: "tone",
+    args,
+  } as IWsDeviceMessage);
+}
+
+export function playTune(deviceId: string, rtttl: string) {
+  sendMessage({
+    type: "device-fn",
+    deviceId,
+    deviceType: "buzzer",
+    fn: "tune",
+    args: { rtttl },
+  } as IWsDeviceMessage);
+}
+
 export function createBuzzerStore(deviceId: string) {
-  const deviceType = "buzzer";
   const base = createDeviceStore<IBuzzerState, unknown>(deviceId);
-
-  /** Play a tone */
-  const tone = (args: { frequency: number; duration: number }) => {
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "tone",
-      args,
-    } as IWsDeviceMessage);
-  };
-
-  /** Play a rtttl tune */
-  const tune = (rtttl: string) => {
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "tune",
-      args: {
-        rtttl,
-      },
-    } as IWsDeviceMessage);
-  };
 
   return {
     ...base,
-    tone,
-    tune,
+    tone: (args: Parameters<typeof playTone>[1]) => playTone(deviceId, args),
+    tune: (rtttl: string) => playTune(deviceId, rtttl),
   };
 }

@@ -6,23 +6,21 @@ interface ILedState extends IDeviceState {
   mode: "ON" | "OFF";
 }
 
-export function createLedStore(deviceId: string) {
-  const deviceType = "led";
-  const base = createDeviceStore<ILedState, unknown>(deviceId);
+export function setLed(deviceId: string, value: any) {
+  sendMessage({
+    type: "device-fn",
+    deviceId,
+    deviceType: "led",
+    fn: "set",
+    args: { value },
+  } as IWsDeviceMessage);
+}
 
-  /** Set LED state (on/off, brightness, etc.) */
-  const setLed = (value: any) => {
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "set",
-      args: { value },
-    } as IWsDeviceMessage);
-  };
+export function createLedStore(deviceId: string) {
+  const base = createDeviceStore<ILedState, unknown>(deviceId);
 
   return {
     ...base,
-    setLed,
+    setLed: (value: Parameters<typeof setLed>[1]) => setLed(deviceId, value),
   };
 }

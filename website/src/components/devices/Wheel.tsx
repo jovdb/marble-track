@@ -3,58 +3,21 @@ import { createSignal, onCleanup } from "solid-js";
 import { createDeviceState, IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
 import styles from "./Device.module.css";
 import { WheelConfig } from "./WheelConfig";
-
-export interface IWheelState extends IDeviceState {
-  position: number;
-  state: "CALIBRATING" | "IDLE";
-  calibrationState: "YES" | "NO" | "FAILED";
-}
+import { createWheelStore } from "../../devices/Wheel";
 
 export function Wheel(props: { id: string }) {
-  const [deviceState, connectedState, disabled, error] = createDeviceState<IWheelState>(props.id);
+  const { state, error, nextBreakpoint, calibrate } = createWheelStore(props.id);
+
   const [steps] = createSignal<undefined | number>(undefined);
   const [direction, setDirection] = createSignal(0);
   const [angle, setAngle] = createSignal<undefined | number>(undefined);
 
   const onNextClicked = () => {
-    sendMessage({
-      type: "device-fn",
-      deviceType: "wheel",
-      deviceId: props.id,
-      fn: "next-breakpoint",
-    } as IWsDeviceMessage);
-  };
-
-  const onUnblockClicked = () => {
-    const stepper = deviceState()?.children?.find((c) => c.type === "STEPPER");
-    if (!stepper) return;
-    sendMessage({
-      type: "device-fn",
-      deviceType: "stepper",
-      deviceId: stepper.id,
-      fn: "move",
-      args: {
-        steps: -100,
-      },
-    } as IWsDeviceMessage);
+    nextBreakpoint();
   };
 
   const onCalibrateClicked = () => {
-    sendMessage({
-      type: "device-fn",
-      deviceType: "wheel",
-      deviceId: props.id,
-      fn: "calibrate",
-    } as IWsDeviceMessage);
-  };
-
-  const onStopClicked = () => {
-    sendMessage({
-      type: "device-fn",
-      deviceType: "wheel",
-      deviceId: props.id,
-      fn: "stop",
-    } as IWsDeviceMessage);
+    calibrate();
   };
 
   setDirection(1);
@@ -87,7 +50,7 @@ export function Wheel(props: { id: string }) {
   const arrowRadius = radius * 0.8; // Radius for the arrow path
 
   return (
-    <Device id={props.id} deviceState={deviceState()} config={<WheelConfig id={props.id} />}>
+    <Device id={props.id} deviceState={state()} config={<WheelConfig id={props.id} />}>
       <div style={{ "max-width": "300px", margin: "0 auto" }}>
         <svg class={styles.svg} viewBox="0 0 100 100" style={{ "max-width": "300px" }}>
           <g transform={`rotate(${angle()})`} transform-origin={`${size / 2}px ${size / 2}px`}>
@@ -157,44 +120,30 @@ export function Wheel(props: { id: string }) {
           </g>
         </svg>
       </div>
-      {disabled() && (
-        <div class={styles.device__error}>
-          {error() || (connectedState() === "Disconnected" ? "Disconnected" : connectedState())}
-        </div>
-      )}
-      {!disabled() && (
+      {error() && <div class={styles.device__error}>{error()}</div>}
+      {!error() && (
         <>
           <div class={styles.device__status}>
             <div>
               <span class={styles["device__status-text"]}>
-                Status: {deviceState()?.state === "CALIBRATING" ? "Calibrating..." : "Idle"}
+                Status: {state()?.state === "CALIBRATING" ? "Calibrating..." : "Idle"}
               </span>
             </div>
             <div>
               <span class={styles["device__status-text"]}>
-                Calibrated: {deviceState()?.calibrationState}
+                Calibrated: {state()?.calibrationState}
               </span>
             </div>
             <div>
-              <span class={styles["device__status-text"]}>Position: {deviceState()?.position}</span>
+              <span class={styles["device__status-text"]}>Position: {state()?.position}</span>
             </div>
           </div>
           <div class={styles.device__controls}>
-            <button
-              class={styles.device__button}
-              onClick={onCalibrateClicked}
-              disabled={disabled()}
-            >
+            <button class={styles.device__button} onClick={onCalibrateClicked}>
               Calibrate
             </button>
-            <button class={styles.device__button} onClick={onNextClicked} disabled={disabled()}>
+            <button class={styles.device__button} onClick={onNextClicked}>
               Next
-            </button>
-            <button class={styles.device__button} onClick={onStopClicked} disabled={disabled()}>
-              Stop
-            </button>
-            <button class={styles.device__button} onClick={onUnblockClicked} disabled={disabled()}>
-              Unblock
             </button>
           </div>
         </>

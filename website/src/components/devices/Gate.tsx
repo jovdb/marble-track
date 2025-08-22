@@ -1,7 +1,8 @@
-import { Device, IDeviceState } from "./Device";
+import { Device } from "./Device";
 import { createSignal, onCleanup } from "solid-js";
 import { createDeviceState, IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
 import styles from "./Device.module.css";
+import { IDeviceState } from "../../stores/Device";
 
 interface IGateState extends IDeviceState {
   gateState: "Closed" | "IsOpening" | "Opened" | "Closing";

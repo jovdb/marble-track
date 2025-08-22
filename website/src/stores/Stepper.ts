@@ -1,7 +1,7 @@
-import { IDeviceState } from "../components/devices/Device";
-import { createDeviceStore } from "./Device";
+import { createDeviceStore, IDeviceState } from "./Device";
 import { sendMessage, IWsDeviceMessage } from "../hooks/useWebSocket";
 
+const deviceType = "stepper";
 export interface IStepperState extends IDeviceState {
   steps: number;
   maxSpeed: number;
@@ -15,7 +15,7 @@ export function move(
 ) {
   sendMessage({
     type: "device-fn",
-    deviceType: "stepper",
+    deviceType,
     deviceId,
     fn: "move",
     args,
@@ -25,18 +25,24 @@ export function move(
 export function stop(deviceId: string) {
   sendMessage({
     type: "device-fn",
-    deviceType: "stepper",
+    deviceType,
     deviceId,
     fn: "stop",
   } as IWsDeviceMessage);
 }
 
 export function createStepperStore(deviceId: string) {
-  const base = createDeviceStore<IStepperState, unknown>(deviceId);
+  const base = createDeviceStore(deviceId, deviceType);
 
   return {
     ...base,
     move: (args: Parameters<typeof move>[1]) => move(deviceId, args),
     stop: () => stop(deviceId),
   };
+}
+
+declare global {
+  export interface IDeviceStates {
+    [deviceType]: IStepperState;
+  }
 }

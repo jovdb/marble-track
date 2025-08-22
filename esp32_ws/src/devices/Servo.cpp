@@ -117,21 +117,21 @@ void ServoDevice::updateMovement()
     }
 }
 
-bool ServoDevice::control(const String &action, JsonObject *payload)
+bool ServoDevice::control(const String &action, JsonObject *args)
 {
     if (action == "setAngle")
     {
-        if (!payload || !(*payload)["angle"].is<int>())
+        if (!args || !(*args)["angle"].is<int>())
         {
             ESP_LOGE(TAG, "Servo [%s]: Missing angle parameter", _id.c_str());
             return false;
         }
 
-        int angle = (*payload)["angle"].as<int>();
+        int angle = (*args)["angle"].as<int>();
 
-        if ((*payload)["speed"].is<float>())
+        if ((*args)["speed"].is<float>())
         {
-            float speed = (*payload)["speed"].as<float>();
+            float speed = (*args)["speed"].as<float>();
             setAngle(angle, speed);
         }
         else
@@ -142,12 +142,12 @@ bool ServoDevice::control(const String &action, JsonObject *payload)
     }
     else if (action == "setSpeed")
     {
-        if (!payload || !(*payload)["speed"].is<float>())
+        if (!args || !(*args)["speed"].is<float>())
         {
             ESP_LOGE(TAG, "Servo [%s]: Missing speed parameter", _id.c_str());
             return false;
         }
-        setSpeed((*payload)["speed"].as<float>());
+        setSpeed((*args)["speed"].as<float>());
         return true;
     }
     else if (action == "stop")

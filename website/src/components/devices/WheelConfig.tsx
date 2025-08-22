@@ -1,11 +1,13 @@
 import styles from "./Device.module.css";
 import { IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
 import { createWheelStore } from "../../stores/Wheel";
+import { createMemo } from "solid-js";
 
 // Update the import path below to the correct location of IWheelState
 
 export function WheelConfig(props: { id: string }) {
-  const { state, error, calibrate } = createWheelStore(props.id);
+  const { state, error, calibrate, getChildStateByType } = createWheelStore(props.id);
+  const currentPosition = createMemo(() => getChildStateByType("stepper")()?.currentPosition);
 
   const moveSteps = (steps: number) => {
     const stepper = state()?.children?.find((c) => c.type === "stepper");
@@ -31,7 +33,7 @@ export function WheelConfig(props: { id: string }) {
       >
         Calibrate
       </button>
-      Current: {state()?.position ?? "?"}
+      Current: {currentPosition() ?? "?"}
       <div style={{ display: "flex", gap: "0.5em", "margin-top": "1em" }}>
         <button
           class={`${styles["device__button"]} ${styles["device__button-small"]}`}

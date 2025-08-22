@@ -1,6 +1,5 @@
-import { createDeviceStore } from "./Device";
+import { createDeviceStore, IDeviceState } from "./Device";
 import { sendMessage, IWsDeviceMessage } from "../hooks/useWebSocket";
-import { IDeviceState } from "../components/devices/Device";
 
 interface IServoState extends IDeviceState {
   angle: number;
@@ -49,7 +48,7 @@ const stop = (deviceId: string) => {
 };
 
 export function createServoStore(deviceId: string) {
-  const base = createDeviceStore<IServoState, unknown>(deviceId);
+  const base = createDeviceStore(deviceId, deviceType);
 
   return {
     ...base,
@@ -57,4 +56,10 @@ export function createServoStore(deviceId: string) {
     setSpeed: (speed: Parameters<typeof setSpeed>[1]) => setSpeed(deviceId, speed),
     stop: () => stop(deviceId),
   };
+}
+
+declare global {
+  export interface IDeviceStates {
+    [deviceType]: IServoState;
+  }
 }

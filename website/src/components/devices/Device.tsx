@@ -1,13 +1,7 @@
 import { createSignal, For, JSX } from "solid-js";
 import styles from "./Device.module.css";
 import { renderDeviceComponent } from "../../App";
-
-export interface IDeviceState {
-  id: string;
-  name: string;
-  type: string;
-  children?: IDeviceState[];
-}
+import { IDeviceState } from "../../stores/Device";
 
 interface DeviceProps {
   id: string;

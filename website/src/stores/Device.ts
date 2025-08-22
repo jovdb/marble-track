@@ -1,6 +1,5 @@
-import { createSignal, onCleanup, onMount } from "solid-js";
+import { Accessor, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { sendMessage, IWsMessage, websocket } from "../hooks/useWebSocket";
-import { IDeviceState } from "../components/devices/Device";
 
 function readDeviceConfig(deviceId: string): Promise<any> {
   return new Promise((resolve, reject) => {
@@ -46,10 +45,13 @@ function saveDeviceConfig(deviceId: string, config: any): Promise<boolean> {
   });
 }
 
-export function createDeviceStore<TState extends IDeviceState, TConfig>(deviceId: string) {
+export function createDeviceStore<TDeviceType extends keyof IDeviceStates>(
+  deviceId: string,
+  _deviceType: TDeviceType
+) {
   // Device state
-  const [state, setState] = createSignal<TState | undefined>(undefined);
-  const [config, setConfig] = createSignal<TConfig | undefined>(undefined);
+  const [state, setState] = createSignal<IDeviceStates[TDeviceType] | undefined>(undefined);
+  const [config, setConfig] = createSignal<unknown | undefined>(undefined);
   const [error, setError] = createSignal<string | undefined>(undefined);
   const [connectionState, setConnectionState] = createSignal<number>(WebSocket.CONNECTING);
 
@@ -57,6 +59,21 @@ export function createDeviceStore<TState extends IDeviceState, TConfig>(deviceId
   const loadState = () => {
     sendMessage({ type: "device-get-state", deviceId } as IWsMessage);
   };
+
+  function getChildStateByType<TDeviceType extends keyof IDeviceStates>(
+    deviceType: TDeviceType
+  ): Accessor<IDeviceStates[TDeviceType] | undefined> {
+    const findChild: (state: IDeviceState | undefined) => IDeviceState | undefined = (state) => {
+      for (const child of state?.children || []) {
+        if (child.type === deviceType) {
+          return child;
+        }
+        const result = findChild(child);
+        if (result) return result;
+      }
+    };
+    return createMemo(() => findChild(state()));
+  }
 
   // Listen for state updates from WebSocket
   function onMessage(event: MessageEvent) {
@@ -120,6 +137,7 @@ export function createDeviceStore<TState extends IDeviceState, TConfig>(deviceId
 
   return {
     state,
+    getChildStateByType,
     config,
     error,
     connectionState,
@@ -127,4 +145,23 @@ export function createDeviceStore<TState extends IDeviceState, TConfig>(deviceId
     loadConfig,
     saveConfig,
   };
+}
+
+export interface IDeviceState {
+  id: string;
+  name: string;
+  type: string;
+  children?: IDeviceState[];
+}
+
+export type IDeviceConfig = object;
+
+declare global {
+  export interface IDeviceStates {
+    [key: string]: IDeviceState;
+  }
+
+  export interface IDeviceConfigs {
+    [key: string]: IDeviceConfig;
+  }
 }

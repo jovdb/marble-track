@@ -1,6 +1,7 @@
-import { createDeviceStore } from "./Device";
+import { createDeviceStore, IDeviceState } from "./Device";
 import { sendMessage, IWsDeviceMessage } from "../hooks/useWebSocket";
-import { IDeviceState } from "../components/devices/Device";
+
+const deviceType = "button";
 
 interface IButtonState extends IDeviceState {
   pressed: boolean;
@@ -10,7 +11,7 @@ export function pressButton(deviceId: string) {
   sendMessage({
     type: "device-fn",
     deviceId,
-    deviceType: "button",
+    deviceType,
     fn: "pressed",
   } as IWsDeviceMessage);
 }
@@ -19,17 +20,23 @@ export function releaseButton(deviceId: string) {
   sendMessage({
     type: "device-fn",
     deviceId,
-    deviceType: "button",
+    deviceType,
     fn: "released",
   } as IWsDeviceMessage);
 }
 
 export function createButtonStore(deviceId: string) {
-  const base = createDeviceStore<IButtonState, unknown>(deviceId);
+  const base = createDeviceStore(deviceId, deviceType);
 
   return {
     ...base,
     press: () => pressButton(deviceId),
     release: () => releaseButton(deviceId),
   };
+}
+
+declare global {
+  export interface IDeviceStates {
+    [deviceType]: IButtonState;
+  }
 }

@@ -8,20 +8,22 @@ export function Wheel(props: { id: string }) {
   const { state, error, nextBreakpoint, calibrate } = createWheelStore(props.id);
 
   const [steps] = createSignal<undefined | number>(undefined);
-  const [direction, setDirection] = createSignal(0);
-  const [angle, setAngle] = createSignal<undefined | number>(undefined);
+  const [direction, setDirection] = createSignal<-1 | 0 | 1>(0);
+  const [uiAngle, setUiAngle] = createSignal<undefined | number>(undefined);
+
+  let lastTime: number | null = null;
 
   const onNextClicked = () => {
     nextBreakpoint();
   };
 
   const onCalibrateClicked = () => {
+    lastTime = null;
     calibrate();
   };
 
-  setDirection(1);
+  setDirection(state()?.state === "CALIBRATING" ? -1 : 0);
   let animationFrame: number | null = null;
-  let lastTime: number | null = null;
 
   function animateWheel(time: number) {
     if (lastTime === null) lastTime = time;
@@ -29,9 +31,9 @@ export function Wheel(props: { id: string }) {
     lastTime = time;
     const speed = 10; // degrees per second
     if (direction() === 1) {
-      setAngle((prev) => ((prev ?? 0) + speed * dt) % 360);
+      setUiAngle((prev) => ((prev ?? 0) + speed * dt) % 360);
     } else if (direction() === -1) {
-      setAngle((prev) => ((prev ?? 0) - speed * dt + 360) % 360);
+      setUiAngle((prev) => ((prev ?? 0) - speed * dt + 360) % 360);
     }
     animationFrame = requestAnimationFrame(animateWheel);
   }
@@ -52,7 +54,7 @@ export function Wheel(props: { id: string }) {
     <Device id={props.id} deviceState={state()} config={<WheelConfig id={props.id} />}>
       <div style={{ "max-width": "300px", margin: "0 auto" }}>
         <svg class={styles.svg} viewBox="0 0 100 100" style={{ "max-width": "300px" }}>
-          <g transform={`rotate(${angle()})`} transform-origin={`${size / 2}px ${size / 2}px`}>
+          <g transform={`rotate(${uiAngle()})`} transform-origin={`${size / 2}px ${size / 2}px`}>
             <circle
               cx={size / 2}
               cy={size / 2}

@@ -1,13 +1,18 @@
 import styles from "./Device.module.css";
 import { IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
 import { createWheelStore } from "../../stores/Wheel";
-import { createMemo } from "solid-js";
+import { createMemo, createSignal, For, onMount } from "solid-js";
 
 // Update the import path below to the correct location of IWheelState
 
 export function WheelConfig(props: { id: string }) {
-  const { state, error, calibrate, getChildStateByType } = createWheelStore(props.id);
+  const { state, error, calibrate, getChildStateByType, config, saveConfig, loadConfig } =
+    createWheelStore(props.id);
   const currentPosition = createMemo(() => getChildStateByType("stepper")()?.currentPosition);
+
+  onMount(() => {
+    loadConfig();
+  });
 
   const moveSteps = (steps: number) => {
     const stepper = state()?.children?.find((c) => c.type === "stepper");
@@ -77,6 +82,34 @@ export function WheelConfig(props: { id: string }) {
         >
           +200
         </button>
+      </div>
+      <button
+        class={`${styles["device__button"]}]}`}
+        onClick={() => {
+          saveConfig({ breakPoints: [100, 200] });
+        }}
+        disabled={!!error()}
+      >
+        Save
+      </button>
+      <div>
+        Breakpoints:
+        <ul>
+          <For each={config()?.breakPoints}>
+            {(bp) => (
+              <li>
+                {bp}
+                <button
+                  onClick={() => {
+                    alert("todo");
+                  }}
+                >
+                  Remove
+                </button>
+              </li>
+            )}
+          </For>
+        </ul>
       </div>
     </div>
   );

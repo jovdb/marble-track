@@ -51,7 +51,7 @@ export function createDeviceStore<TDeviceType extends keyof IDeviceStates>(
 ) {
   // Device state
   const [state, setState] = createSignal<IDeviceStates[TDeviceType] | undefined>(undefined);
-  const [config, setConfig] = createSignal<unknown | undefined>(undefined);
+  const [config, setConfig] = createSignal<IDeviceConfigs[TDeviceType] | undefined>(undefined);
   const [error, setError] = createSignal<string | undefined>(undefined);
   const [connectionState, setConnectionState] = createSignal<number>(WebSocket.CONNECTING);
 

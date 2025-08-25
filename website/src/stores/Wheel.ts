@@ -1,10 +1,14 @@
-import { createDeviceStore, IDeviceState } from "./Device";
+import { createDeviceStore, IDeviceConfig, IDeviceState } from "./Device";
 import { IWsDeviceMessage, sendMessage } from "../hooks/useWebSocket";
 
 const deviceType = "wheel";
 export interface IWheelState extends IDeviceState {
   state: "CALIBRATING" | "IDLE";
   calibrationState: "YES" | "NO" | "FAILED";
+}
+
+export interface IWheelConfig extends IDeviceConfig {
+  breakPoints: number[];
 }
 
 export function calibrateWheel(deviceId: string) {
@@ -38,5 +42,9 @@ export function createWheelStore(deviceId: string) {
 declare global {
   export interface IDeviceStates {
     [deviceType]: IWheelState;
+  }
+
+  export interface IDeviceConfigs {
+    [deviceType]: IWheelConfig;
   }
 }

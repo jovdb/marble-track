@@ -28,7 +28,7 @@ export const [devicesLoaded, setDevicesLoaded] = createSignal(false);
 export const [devicesLoading, setDevicesLoading] = createSignal(false);
 
 const url = import.meta.env.VITE_MARBLE_WS || `ws://${window.location.hostname}/ws`;
-
+console.log("Connecting to WebSocket:", url);
 // const websocket = makeHeartbeatWS(makeReconnectingWS(url), {
 //   message: "👍", // heartbeat message
 // });
@@ -76,8 +76,6 @@ websocket.addEventListener("message", (e) => {
   try {
     const parsedData = JSON.parse(data);
     if (parsedData.type === "devices-list") {
-      console.log("Received devices list:", parsedData);
-
       if (parsedData.error) {
         console.error("Error getting devices:", parsedData.error);
         setDevicesLoading(false);

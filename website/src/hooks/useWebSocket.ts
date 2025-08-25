@@ -27,8 +27,7 @@ export const [availableDevices, setAvailableDevices] = createSignal<DeviceInfo[]
 export const [devicesLoaded, setDevicesLoaded] = createSignal(false);
 export const [devicesLoading, setDevicesLoading] = createSignal(false);
 
-const marbleIp = import.meta.env.VITE_MARBLE_IP || window.location.hostname;
-const url = `ws://${marbleIp}/ws`;
+const url = import.meta.env.VITE_MARBLE_WS || `ws://${window.location.hostname}/ws`;
 
 // const websocket = makeHeartbeatWS(makeReconnectingWS(url), {
 //   message: "👍", // heartbeat message

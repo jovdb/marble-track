@@ -3,7 +3,7 @@
 static const char *TAG = "WebsiteHost";
 #include "WebsiteHost.h"
 
-WebsiteHost::WebsiteHost(Network* networkInstance)
+WebsiteHost::WebsiteHost(Network *networkInstance)
     : network(networkInstance), server(nullptr)
 {
 }
@@ -13,11 +13,11 @@ void WebsiteHost::initLittleFS()
     ESP_LOGI(TAG, "Mounting file system...");
     if (!LittleFS.begin(true))
     {
-    ESP_LOGE(TAG, ": ERROR mounting");
+        ESP_LOGE(TAG, ": ERROR mounting");
     }
     else
     {
-    ESP_LOGI(TAG, ": OK");
+        ESP_LOGI(TAG, ": OK");
     }
 }
 
@@ -28,35 +28,35 @@ void WebsiteHost::setupRoutes()
 
     // Captive Portal Detection and Windows/Proxy Probe Short-circuit
     // These routes handle the automatic connectivity checks that devices make
-    server->on("/generate_204", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    server->on("/generate_204", HTTP_GET, [this](AsyncWebServerRequest *request)
+               {
     ESP_LOGI(TAG, "Android captive portal check - redirecting to main page");
-        request->redirect("http://" + network->getIPAddress().toString() + "/");
-    });
+        request->redirect("http://" + network->getIPAddress().toString() + "/"); });
 
-    server->on("/fwlink", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    server->on("/fwlink", HTTP_GET, [this](AsyncWebServerRequest *request)
+               {
     ESP_LOGI(TAG, "Windows captive portal check - redirecting to main page");
-        request->redirect("http://" + network->getIPAddress().toString() + "/");
-    });
+        request->redirect("http://" + network->getIPAddress().toString() + "/"); });
 
-    server->on("/hotspot-detect.html", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    server->on("/hotspot-detect.html", HTTP_GET, [this](AsyncWebServerRequest *request)
+               {
     ESP_LOGI(TAG, "iOS captive portal check - redirecting to main page");
-        request->redirect("http://" + network->getIPAddress().toString() + "/");
-    });
+        request->redirect("http://" + network->getIPAddress().toString() + "/"); });
 
-    server->on("/connectivity-check.html", HTTP_GET, [this](AsyncWebServerRequest *request) {
+    server->on("/connectivity-check.html", HTTP_GET, [this](AsyncWebServerRequest *request)
+               {
     ESP_LOGI(TAG, "Generic captive portal check - redirecting to main page");
-        request->redirect("http://" + network->getIPAddress().toString() + "/");
-    });
+        request->redirect("http://" + network->getIPAddress().toString() + "/"); });
 
     // Windows/Proxy probe files: short-circuit to avoid LittleFS and watchdog resets
-    server->on("/connecttest.txt", HTTP_ANY, [](AsyncWebServerRequest *request) {
+    server->on("/connecttest.txt", HTTP_ANY, [](AsyncWebServerRequest *request)
+               {
     ESP_LOGI(TAG, "Windows connecttest.txt probe - short-circuit 200 OK");
-        request->send(200, "text/plain", "OK");
-    });
-    server->on("/wpad.dat", HTTP_ANY, [](AsyncWebServerRequest *request) {
+        request->send(200, "text/plain", "OK"); });
+    server->on("/wpad.dat", HTTP_ANY, [](AsyncWebServerRequest *request)
+               {
     ESP_LOGI(TAG, "Windows wpad.dat probe - short-circuit 200 OK");
-        request->send(200, "text/plain", "OK");
-    });
+        request->send(200, "text/plain", "OK"); });
 
     // Web Server Root URL with debugging
     server->on("/", HTTP_GET, [this](AsyncWebServerRequest *request)
@@ -104,8 +104,7 @@ void WebsiteHost::setupRoutes()
 
     // Network status endpoint (enhanced to use Network class)
     server->on("/network-status", HTTP_GET, [this](AsyncWebServerRequest *request)
-               {
-        request->send(200, "application/json", network->getStatusJSON()); });
+               { request->send(200, "application/json", network->getStatusJSON()); });
 
     // WebSocket configuration endpoint for frontend
     server->on("/ws-config", HTTP_GET, [this](AsyncWebServerRequest *request)
@@ -118,7 +117,7 @@ void WebsiteHost::setupRoutes()
         wsConfig += "\"}";
         request->send(200, "application/json", wsConfig); });
 
-    // WebSocket status endpoint for debugging 
+    // WebSocket status endpoint for debugging
     server->on("/ws-status", HTTP_GET, [this](AsyncWebServerRequest *request)
                {
         // Get WebSocket manager status (we need to get a reference to it)
@@ -145,11 +144,11 @@ void WebsiteHost::setupRoutes()
 
     // Backwards compatibility for WiFi status endpoint
     server->on("/wifi-status", HTTP_GET, [this](AsyncWebServerRequest *request)
-               {
-        request->send(200, "application/json", network->getStatusJSON()); });
+               { request->send(200, "application/json", network->getStatusJSON()); });
 
     // Catch-all handler for any other requests (prevents LittleFS errors)
-    server->onNotFound([this](AsyncWebServerRequest *request) {
+    server->onNotFound([this](AsyncWebServerRequest *request)
+                       {
         String url = request->url();
     ESP_LOGW(TAG, "404 - File not found: %s - redirecting to root", url.c_str());
         
@@ -163,8 +162,7 @@ void WebsiteHost::setupRoutes()
         } else {
             // For other missing files, return a simple redirect to root
             request->redirect("http://" + network->getIPAddress().toString() + "/");
-        }
-    });
+        } });
 
     server->serveStatic("/", LittleFS, "/");
 }

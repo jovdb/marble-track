@@ -9,3 +9,6 @@
 - use zod to validate state
 - Use Async API for describing WS possibilities
 - if stepper finished, wheel is not updated, I would remove children state and let parent collect relevant state
+- Add reset device in Web Ui
+- Store network and password in Config not commited
+- Allow to configure network via accesspoint website

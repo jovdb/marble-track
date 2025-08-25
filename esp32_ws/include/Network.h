@@ -28,6 +28,11 @@ class Network
 {
 public:
     /**
+     * @brief Get the hostname used for mDNS and OTA
+     * @return String hostname
+     */
+    String getHostname() const;
+    /**
      * @brief Constructor
      * @param wifi_ssid WiFi network SSID to connect to
      * @param wifi_password WiFi network password

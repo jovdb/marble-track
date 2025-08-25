@@ -133,7 +133,8 @@ void setup()
   }
   else
   {
-    otaService.setup(); // <-- OTA setup only after network is ready
+    String hostnameStr = network.getHostname();
+    otaService.setup(hostnameStr.c_str()); // <-- OTA setup only after network is ready
   }
 
   // Initialize WebsiteHost with the network instance

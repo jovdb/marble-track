@@ -1,24 +1,20 @@
-#include "esp_log.h"
-static const char *TAG = "Network";
-/**
- * @file Network.cpp
- * @brief Implementation of Network management class
- *
- * This file contains the implementation of the Network class methods
- * for handling WiFi connection and Access Point fallback functionality.
- *
- * @author Generated for Marble Track Project
- * @date 2025
- */
-
 #ifdef ESP32
 #include <mdns.h>
 #endif
 #include "Network.h"
+static const char *TAG = "Network";
 
 Network::Network(const char *wifi_ssid, const char *wifi_password)
     : _wifi_ssid(wifi_ssid), _wifi_password(wifi_password), _currentMode(NetworkMode::DISCONNECTED), _dnsServer(nullptr)
 {
+}
+
+String Network::getHostname() const
+{
+    // If you want to make this configurable, use a member variable
+    // For now, return the default used in mDNS and OTA
+    String hostname = "marble-track.local";
+    return hostname;
 }
 
 static const char *AP_SSID = "MarbleTrackAP";
@@ -55,7 +51,7 @@ bool Network::setup()
     {
         if (mdns_init() == ESP_OK)
         {
-            mdns_hostname_set("marble-track");
+            mdns_hostname_set("marble-track.local");
             mdns_instance_name_set("Jo's Marble Track");
             mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
 

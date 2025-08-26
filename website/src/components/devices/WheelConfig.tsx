@@ -7,8 +7,16 @@ import { createMemo, For, onMount } from "solid-js";
 // Update the import path below to the correct location of IWheelState
 
 export function WheelConfig(props: { id: string }) {
-  const { state, error, calibrate, getChildStateByType, config, saveConfig, loadConfig } =
-    createWheelStore(props.id);
+  const {
+    state,
+    error,
+    calibrate,
+    getChildStateByType,
+    config,
+    setConfig,
+    saveConfig,
+    loadConfig,
+  } = createWheelStore(props.id);
   const currentPosition = createMemo(() => getChildStateByType("stepper")()?.currentPosition);
 
   onMount(() => {
@@ -102,7 +110,7 @@ export function WheelConfig(props: { id: string }) {
                     if (index() > 0) {
                       [arr[index() - 1], arr[index()]] = [arr[index()], arr[index() - 1]];
                       cfg.breakPoints = arr;
-                      saveConfig(cfg);
+                      setConfig(cfg);
                     }
                   }}
                 >
@@ -118,7 +126,7 @@ export function WheelConfig(props: { id: string }) {
                     if (index() < arr.length - 1) {
                       [arr[index() + 1], arr[index()]] = [arr[index()], arr[index() + 1]];
                       cfg.breakPoints = arr;
-                      saveConfig(cfg);
+                      setConfig(cfg);
                     }
                   }}
                 >
@@ -131,7 +139,7 @@ export function WheelConfig(props: { id: string }) {
                     const cfg = config() || ({} as IWheelConfig);
                     cfg.breakPoints = cfg.breakPoints.slice() || [];
                     cfg.breakPoints.splice(index(), 1);
-                    saveConfig(cfg);
+                    setConfig(cfg);
                   }}
                 >
                   ✕
@@ -146,7 +154,7 @@ export function WheelConfig(props: { id: string }) {
             const cfg = config() || ({} as IWheelConfig);
             cfg.breakPoints = cfg.breakPoints.slice() || [];
             cfg.breakPoints.push(Math.floor(Math.random() * 1000));
-            saveConfig(cfg);
+            setConfig(cfg);
           }}
         >
           + Add Breakpoint
@@ -154,7 +162,8 @@ export function WheelConfig(props: { id: string }) {
       </div>
       <div>
         <button
-          class={`${styles["device__button"]}]}`}
+          class={`${wheelStyles["wheel-config__button"]} ${wheelStyles["wheel-config__button--add"]}`}
+          style={{ "min-width": "100px" }}
           onClick={() => {
             saveConfig(config()?.breakPoints);
           }}

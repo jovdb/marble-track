@@ -12,3 +12,4 @@
 - Add reset device in Web Ui
 - Store network and password in Config not commited
 - Allow to configure network via accesspoint website
+- Do websocket handling on other thread?

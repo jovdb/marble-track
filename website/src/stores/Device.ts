@@ -139,6 +139,7 @@ export function createDeviceStore<TDeviceType extends keyof IDeviceStates>(
     loadState,
     loadConfig,
     saveConfig,
+    setConfig,
   };
 }
 

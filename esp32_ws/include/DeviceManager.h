@@ -1,3 +1,6 @@
+#include <SPIFFS.h>
+#include <ArduinoJson.h>
+#include "esp_log.h"
 /**
  * @file DeviceManager.h
  * @brief Device management system for marble track controller
@@ -13,10 +16,14 @@
 #define DEVICEMANAGER_H
 
 #include "devices/Device.h"
+#include <functional>
 #include <Arduino.h>
+
+using StateChangeCallback = std::function<void(const String &deviceId, const String &stateJson)>;
 
 class DeviceManager
 {
+
 private:
     static const int MAX_DEVICES = 20;
     Device *devices[MAX_DEVICES];
@@ -30,8 +37,9 @@ public:
      * @return Pointer to device of type T or nullptr if not found or wrong type
      */
     template <typename T>
-    T* getDeviceByIdAs(const String& deviceId) const {
-        return static_cast<T*>(getDeviceById(deviceId));
+    T *getDeviceByIdAs(const String &deviceId) const
+    {
+        return static_cast<T *>(getDeviceById(deviceId));
     }
     /**
      * @brief Constructor - initializes empty device array
@@ -54,6 +62,12 @@ public:
     void getDevices(Device **deviceList, int &count, int maxResults);
 
     /**
+     * @brief Setup all devices and assign state change callback
+     * @param callback The callback to assign to each device
+     */
+    void setup(StateChangeCallback callback);
+
+    /**
      * @brief Call loop() function on all registered devices
      * This should be called from the main loop to update all devices
      */
@@ -71,6 +85,9 @@ public:
      * @return Pointer to device or nullptr if not found
      */
     Device *getDeviceById(const String &deviceId) const;
+
+    void loadDevicesFromJsonFile();
+    void saveDevicesToJsonFile();
 };
 
 #endif // DEVICEMANAGER_H

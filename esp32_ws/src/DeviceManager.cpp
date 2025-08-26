@@ -1,16 +1,118 @@
-/**
- * @file DeviceManager.cpp
- * @brief Implementation of device management system
- *
- * @author Generated for Marble Track Project
- * @date 2025
- */
-
-
+#include <ArduinoJson.h>
+#include <vector>
+#include <SPIFFS.h>
+#include "esp_log.h"
 #include "DeviceManager.h"
 #include "esp_log.h"
 
 static const char *TAG = "DeviceManager";
+static constexpr const char *DEVICES_LIST_FILE = "/spiffs/devices.json";
+
+void DeviceManager::loadDevicesFromJsonFile()
+{
+    if (!SPIFFS.begin(true))
+    {
+        ESP_LOGE(TAG, "SPIFFS mount failed");
+        return;
+    }
+    if (!SPIFFS.exists(DEVICES_LIST_FILE))
+    {
+        ESP_LOGI(TAG, "Devices JSON file not found, using default devices");
+        return;
+    }
+    File file = SPIFFS.open(DEVICES_LIST_FILE, FILE_READ);
+    if (file)
+    {
+        JsonDocument doc;
+        DeserializationError err = deserializeJson(doc, file);
+        file.close();
+        if (!err && doc.is<JsonArray>())
+        {
+            JsonArray arr = doc.as<JsonArray>();
+            // loadDevicesFromJson implementation (re-add here if needed)
+            // Clear current devices
+            for (int i = 0; i < devicesCount; i++)
+            {
+                if (devices[i])
+                {
+                    delete devices[i];
+                    devices[i] = nullptr;
+                }
+            }
+            devicesCount = 0;
+            for (JsonObject obj : arr)
+            {
+                String id = obj["id"] | "";
+                String name = obj["name"] | "";
+                String type = obj["type"] | "";
+                std::vector<int> pins;
+                if (obj["pins"].is<JsonArray>())
+                {
+                    for (int pin : obj["pins"].as<JsonArray>())
+                    {
+                        pins.push_back(pin);
+                    }
+                }
+                Device *dev = new Device(id, name, type);
+                if (devicesCount < MAX_DEVICES)
+                {
+                    devices[devicesCount++] = dev;
+                }
+                else
+                {
+                    delete dev;
+                }
+            }
+            ESP_LOGI(TAG, "Loaded devices from %s", DEVICES_LIST_FILE);
+        }
+        else
+        {
+            ESP_LOGE(TAG, "Failed to parse devices JSON file");
+        }
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Failed to open devices JSON file for reading");
+    }
+}
+
+void DeviceManager::saveDevicesToJsonFile()
+{
+    if (!SPIFFS.begin(true))
+    {
+        ESP_LOGE(TAG, "SPIFFS mount failed");
+        return;
+    }
+    File file = SPIFFS.open(DEVICES_LIST_FILE, FILE_WRITE);
+    if (file)
+    {
+        JsonDocument doc;
+        JsonArray devicesArray = doc.to<JsonArray>();
+        for (int i = 0; i < devicesCount; i++)
+        {
+            if (devices[i])
+            {
+                JsonObject deviceObj = devicesArray.add<JsonObject>();
+                deviceObj["id"] = devices[i]->getId();
+                deviceObj["name"] = devices[i]->getName();
+                deviceObj["type"] = devices[i]->getType();
+                std::vector<int> pins = devices[i]->getPins();
+                JsonArray pinsArray = deviceObj["pins"].to<JsonArray>();
+                for (int pin : pins)
+                {
+                    pinsArray.add(pin);
+                }
+            }
+        }
+        serializeJson(devicesArray, file);
+        file.close();
+        ESP_LOGI(TAG, "Saved devices list to %s", DEVICES_LIST_FILE);
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Failed to open %s for writing", DEVICES_LIST_FILE);
+    }
+}
 
 DeviceManager::DeviceManager() : devicesCount(0)
 {
@@ -27,17 +129,17 @@ bool DeviceManager::addDevice(Device *device)
     {
         devices[devicesCount] = device;
         devicesCount++;
-    ESP_LOGI(TAG, "Added device: %s (%s)", device->getId().c_str(), device->getName().c_str());
+        ESP_LOGI(TAG, "Added device: %s (%s)", device->getId().c_str(), device->getName().c_str());
         return true;
     }
 
     if (device == nullptr)
     {
-    ESP_LOGE(TAG, "Error: Cannot add null device");
+        ESP_LOGE(TAG, "Error: Cannot add null device");
     }
     else
     {
-    ESP_LOGE(TAG, "Error: Device array is full, cannot add device: %s", device->getId().c_str());
+        ESP_LOGE(TAG, "Error: Device array is full, cannot add device: %s", device->getId().c_str());
     }
     return false;
 }
@@ -51,6 +153,18 @@ void DeviceManager::getDevices(Device **deviceList, int &count, int maxResults)
         {
             deviceList[count] = devices[i];
             count++;
+        }
+    }
+}
+
+void DeviceManager::setup(StateChangeCallback callback)
+{
+    for (int i = 0; i < devicesCount; i++)
+    {
+        if (devices[i])
+        {
+            devices[i]->setStateChangeCallback(callback);
+            devices[i]->setup();
         }
     }
 }

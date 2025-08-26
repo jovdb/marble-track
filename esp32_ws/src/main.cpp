@@ -147,25 +147,34 @@ void setup()
   // Start server
   server.begin();
 
-  Device *devices[] = {
-      new Led(1, "test-led", "Test LED"),
-      // new Button(15, "test-button", "Test Button", false, 50),
-      new Button(16, "test-button2", "Test Button 2", false, 50),
-      new Buzzer(14, "test-buzzer", "Test Buzzer"),
-      // new ServoDevice(8, "test-servo", "SG90", 0, 0),
-      // new Button(47, "ball-sensor", "Ball Sensor", true, 100, Button::ButtonType::NormalClosed),
-      // new GateWithSensor(21, 2, 48, static_cast<Buzzer *>(nullptr), "gate-with-sensor", "Gate", 50, true, 50, Button::ButtonType::NormalClosed),
-      // new Stepper(45, 48, "stepper", "Stepper Motor", 1000, 500),
-      new DividerWheel(10, 11, 12, 13, 15, "wheel", "Divider Wheel")};
+  // Try to load devices from JSON file
+  deviceManager.loadDevicesFromJsonFile();
 
-  const int numDevices = sizeof(devices) / sizeof(devices[0]);
-  for (int i = 0; i < numDevices; ++i)
+  // If no devices loaded, use hardcoded devices and save to disk
+  if (deviceManager.getDeviceCount() == 0)
   {
-    devices[i]->setStateChangeCallback([&](const String &deviceId, const String &stateJson)
-                                       { wsManager.broadcastState(deviceId, stateJson, ""); });
-    devices[i]->setup();
-    deviceManager.addDevice(devices[i]);
+    Device *devices[] = {
+        new Led(1, "test-led", "Test LED"),
+        // new Button(15, "test-button", "Test Button", false, 50),
+        new Button(16, "test-button2", "Test Button 2", false, 50),
+        new Buzzer(14, "test-buzzer", "Test Buzzer"),
+        // new ServoDevice(8, "test-servo", "SG90", 0, 0),
+        // new Button(47, "ball-sensor", "Ball Sensor", true, 100, Button::ButtonType::NormalClosed),
+        // new GateWithSensor(21, 2, 48, static_cast<Buzzer *>(nullptr), "gate-with-sensor", "Gate", 50, true, 50, Button::ButtonType::NormalClosed),
+        // new Stepper(45, 48, "stepper", "Stepper Motor", 1000, 500),
+        new DividerWheel(10, 11, 12, 13, 15, "wheel", "Divider Wheel")};
+
+    const int numDevices = sizeof(devices) / sizeof(devices[0]);
+    for (int i = 0; i < numDevices; ++i)
+    {
+      deviceManager.addDevice(devices[i]);
+    }
+    deviceManager.saveDevicesToJsonFile();
   }
+
+  // Setup  Devices
+  deviceManager.setup([&](const String &deviceId, const String &stateJson)
+                      { wsManager.broadcastState(deviceId, stateJson, ""); });
 
   ESP_LOGI(TAG, "Device management:");
   ESP_LOGI(TAG, "  Total devices: %d", deviceManager.getDeviceCount());

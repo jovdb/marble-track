@@ -1,7 +1,7 @@
 import styles from "./Device.module.css";
 import { IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
-import { createWheelStore } from "../../stores/Wheel";
-import { createMemo, createSignal, For, onMount } from "solid-js";
+import { createWheelStore, IWheelConfig } from "../../stores/Wheel";
+import { createMemo, For, onMount } from "solid-js";
 
 // Update the import path below to the correct location of IWheelState
 
@@ -83,33 +83,48 @@ export function WheelConfig(props: { id: string }) {
           +200
         </button>
       </div>
-      <button
-        class={`${styles["device__button"]}]}`}
-        onClick={() => {
-          saveConfig({ breakPoints: [100, 200] });
-        }}
-        disabled={!!error()}
-      >
-        Save
-      </button>
       <div>
         Breakpoints:
         <ul>
           <For each={config()?.breakPoints}>
-            {(bp) => (
+            {(bp, index) => (
               <li>
                 {bp}
                 <button
                   onClick={() => {
-                    alert("todo");
+                    const cfg = config() || ({} as IWheelConfig);
+                    cfg.breakPoints = cfg.breakPoints.slice() || [];
+                    cfg.breakPoints.splice(index(), 1);
+                    saveConfig(cfg);
                   }}
                 >
-                  Remove
+                  X
                 </button>
               </li>
             )}
           </For>
+          <button
+            onClick={() => {
+              const cfg = config() || ({} as IWheelConfig);
+              cfg.breakPoints = cfg.breakPoints.slice() || [];
+              cfg.breakPoints.push(Math.floor(Math.random() * 1000));
+              saveConfig(cfg);
+            }}
+          >
+            +
+          </button>
         </ul>
+      </div>
+      <div>
+        <button
+          class={`${styles["device__button"]}]}`}
+          onClick={() => {
+            saveConfig(config()?.breakPoints);
+          }}
+          disabled={!!error()}
+        >
+          Save
+        </button>
       </div>
     </div>
   );

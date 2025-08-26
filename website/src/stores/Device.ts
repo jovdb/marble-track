@@ -1,13 +1,13 @@
 import { Accessor, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { sendMessage, IWsMessage, websocket } from "../hooks/useWebSocket";
 
-function readDeviceConfig(deviceId: string): Promise<any> {
+function readDeviceConfig(ws: WebSocket, deviceId: string): Promise<any> {
   return new Promise((resolve, reject) => {
     const handler = (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data);
         if (data.type === "device-read-config" && data.deviceId === deviceId) {
-          window.removeEventListener("message", handler);
+          ws.removeEventListener("message", handler);
           if (data.error) {
             reject(data.error);
           } else {
@@ -18,18 +18,18 @@ function readDeviceConfig(deviceId: string): Promise<any> {
         // Ignore non-JSON
       }
     };
-    window.addEventListener("message", handler);
+    ws.addEventListener("message", handler);
     sendMessage({ type: "device-read-config", deviceId } as IWsMessage);
   });
 }
 
-function saveDeviceConfig(deviceId: string, config: any): Promise<boolean> {
+function saveDeviceConfig(ws: WebSocket, deviceId: string, config: any): Promise<boolean> {
   return new Promise((resolve, reject) => {
     const handler = (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data);
         if (data.type === "device-save-config" && data.deviceId === deviceId) {
-          window.removeEventListener("message", handler);
+          ws.removeEventListener("message", handler);
           if (data.error) {
             reject(data.error);
           } else {
@@ -40,7 +40,7 @@ function saveDeviceConfig(deviceId: string, config: any): Promise<boolean> {
         // Ignore non-JSON
       }
     };
-    window.addEventListener("message", handler);
+    ws.addEventListener("message", handler);
     sendMessage({ type: "device-save-config", deviceId, config } as IWsMessage);
   });
 }
@@ -87,6 +87,14 @@ export function createDeviceStore<TDeviceType extends keyof IDeviceStates>(
         setError(undefined);
       }
       setConnectionState(WebSocket.OPEN);
+    } else if (data.type === "device-read-config" && data.deviceId === deviceId) {
+      if (data.error) {
+        setError(data.error);
+        setConfig(undefined);
+      } else {
+        setConfig(data.config);
+        setError(undefined);
+      }
     }
   }
 
@@ -113,26 +121,13 @@ export function createDeviceStore<TDeviceType extends keyof IDeviceStates>(
   });
 
   // Load config from backend
-  const loadConfig = async () => {
-    try {
-      const cfg = await readDeviceConfig(deviceId);
-      setConfig(cfg);
-      setError(undefined);
-    } catch (err: any) {
-      setError(err?.toString() || "Failed to load config");
-      setConfig(undefined);
-    }
+  const loadConfig = () => {
+    readDeviceConfig(websocket, deviceId);
   };
 
   // Save config to backend
-  const saveConfig = async (cfg: any) => {
-    try {
-      await saveDeviceConfig(deviceId, cfg);
-      setConfig(cfg);
-      setError(undefined);
-    } catch (err: any) {
-      setError(err?.toString() || "Failed to save config");
-    }
+  const saveConfig = (cfg: any) => {
+    saveDeviceConfig(websocket, deviceId, cfg);
   };
 
   return {

@@ -1,32 +1,22 @@
-import { readConfig, saveConfig, findDevice } from "../utils/configUtils.ts";
+import { readConfig, findDevice } from "../utils/configUtils.ts";
 import { sendError } from "../utils/error.ts";
 
-export function deviceSaveConfigHandler(
+export function deviceReadConfigHandler(
   ws: import("ws").WebSocket,
-  deviceId: string,
-  deviceConfig: object
+  deviceId: string
 ) {
-  if (!deviceId || deviceConfig === undefined) {
-    sendError(ws, "Missing deviceId or config in device-save-config");
+  if (!deviceId) {
+    sendError(ws, "Missing deviceId in device-read-config");
     return;
   }
 
   const config = readConfig();
-
-  // Find device
   const device = findDevice(config.devices, deviceId);
   if (!device) {
     sendError(ws, `DeviceId ${deviceId} not found.`);
     return;
   }
 
-  // Override config
-  device.config = deviceConfig;
-
-  // Save Config
-  saveConfig(config);
-
-  // Notify all of the change
   ws.send(
     JSON.stringify({
       type: "device-read-config",

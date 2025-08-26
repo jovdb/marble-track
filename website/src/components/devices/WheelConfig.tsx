@@ -83,24 +83,29 @@ export function WheelConfig(props: { id: string }) {
           +200
         </button>
       </div>
-      <div>
-        Breakpoints:
-        <ul>
+      <div class={styles.device__input_group} style={{ width: "100%", margin: "1em 0" }}>
+        <label class={styles.device__label} style={{ "margin-bottom": "0.5em" }}>
+          Breakpoints:
+        </label>
+        <ul style={{ "list-style": "none", padding: 0, margin: 0 }}>
           <For each={config()?.breakPoints}>
             {(bp, index) => (
-              <li style={{ display: "flex", "align-items": "center", gap: "0.5em" }}>
-                {bp}
+              <li
+                style={{
+                  display: "flex",
+                  "align-items": "center",
+                  gap: "0.5em",
+                  "margin-bottom": "0.5em",
+                  background: "var(--color-surface)",
+                  "border-radius": "var(--radius-md)",
+                  "box-shadow": "var(--shadow-xs)",
+                  padding: "0.5em 0.75em",
+                }}
+              >
+                <span style={{ flex: 1, "font-weight": 500 }}>{bp}</span>
+
                 <button
-                  onClick={() => {
-                    const cfg = config() || ({} as IWheelConfig);
-                    cfg.breakPoints = cfg.breakPoints.slice() || [];
-                    cfg.breakPoints.splice(index(), 1);
-                    saveConfig(cfg);
-                  }}
-                >
-                  X
-                </button>
-                <button
+                  class={`${styles.device__button} ${styles.device__button_small}`}
                   disabled={index() === 0}
                   title="Move Up"
                   onClick={() => {
@@ -112,9 +117,12 @@ export function WheelConfig(props: { id: string }) {
                       saveConfig(cfg);
                     }
                   }}
-                >↑</button>
+                >
+                  ↑
+                </button>
                 <button
-                  disabled={index() === (config()?.breakPoints.length - 1)}
+                  class={`${styles.device__button} ${styles.device__button_small}`}
+                  disabled={index() === (config()?.breakPoints?.length ?? 0) - 1}
                   title="Move Down"
                   onClick={() => {
                     const cfg = config() || ({} as IWheelConfig);
@@ -125,21 +133,38 @@ export function WheelConfig(props: { id: string }) {
                       saveConfig(cfg);
                     }
                   }}
-                >↓</button>
+                >
+                  ↓
+                </button>
+                <button
+                  class={`${styles.device__button} ${styles.device__button_small}`}
+                  style={{ background: "var(--color-danger-600)", color: "white" }}
+                  title="Delete"
+                  onClick={() => {
+                    const cfg = config() || ({} as IWheelConfig);
+                    cfg.breakPoints = cfg.breakPoints.slice() || [];
+                    cfg.breakPoints.splice(index(), 1);
+                    saveConfig(cfg);
+                  }}
+                >
+                  ✕
+                </button>
               </li>
             )}
           </For>
-          <button
-            onClick={() => {
-              const cfg = config() || ({} as IWheelConfig);
-              cfg.breakPoints = cfg.breakPoints.slice() || [];
-              cfg.breakPoints.push(Math.floor(Math.random() * 1000));
-              saveConfig(cfg);
-            }}
-          >
-            +
-          </button>
         </ul>
+        <button
+          class={`${styles.device__button} ${styles.device__button_small}`}
+          style={{ "margin-top": "0.5em", background: "var(--color-success-600)", color: "white" }}
+          onClick={() => {
+            const cfg = config() || ({} as IWheelConfig);
+            cfg.breakPoints = cfg.breakPoints.slice() || [];
+            cfg.breakPoints.push(Math.floor(Math.random() * 1000));
+            saveConfig(cfg);
+          }}
+        >
+          + Add Breakpoint
+        </button>
       </div>
       <div>
         <button

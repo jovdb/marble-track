@@ -45,9 +45,13 @@ try {
     Write-Host "Cleaning up .env files from data directory..." -ForegroundColor Yellow
     Get-ChildItem ".\esp32_ws\data" -Recurse -Force | Where-Object { $_.Name -like "*.env*" } | Remove-Item -Force
     
+    # Remove previous ESP32 filesystem files
+    Write-Host "Clearing previous files..." -ForegroundColor Yellow
+    Get-ChildItem ".\esp32_ws\data" -Recurse -File | Remove-Item -Force
+
     # Quick filesystem upload for ESP32-S3
     $platformioPath = "C:\Users\vandenberghej\.platformio\penv\Scripts\platformio.exe"
-    
+
     Write-Host "Uploading data folder to ESP32..." -ForegroundColor Green
     & $platformioPath run --target uploadfs
     

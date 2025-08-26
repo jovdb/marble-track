@@ -7,7 +7,7 @@ interface DeviceProps {
   id: string;
   deviceState: IDeviceState | undefined;
   children?: JSX.Element | JSX.Element[];
-  config?: JSX.Element;
+  configComponent?: JSX.Element;
 }
 
 export function Device(props: DeviceProps) {
@@ -46,7 +46,7 @@ export function Device(props: DeviceProps) {
             </button>
             // add config button
           )}
-          {!!props.config && (
+          {!!props.configComponent && (
             <button
               class={`${styles["device__header-button"]} ${showConfig() ? styles["device__header-button--active"] : ""}`}
               type="button"
@@ -77,7 +77,7 @@ export function Device(props: DeviceProps) {
             </For>
           </div>
         )}
-        {showConfig() && props.config && <div class={styles.device__children}>{props.config}</div>}
+        {showConfig() && props.configComponent && <div class={styles.device__children}>{props.configComponent}</div>}
       </div>
     </div>
   );

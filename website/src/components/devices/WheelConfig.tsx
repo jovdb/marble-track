@@ -88,7 +88,7 @@ export function WheelConfig(props: { id: string }) {
         <ul>
           <For each={config()?.breakPoints}>
             {(bp, index) => (
-              <li>
+              <li style={{ display: "flex", "align-items": "center", gap: "0.5em" }}>
                 {bp}
                 <button
                   onClick={() => {
@@ -100,6 +100,32 @@ export function WheelConfig(props: { id: string }) {
                 >
                   X
                 </button>
+                <button
+                  disabled={index() === 0}
+                  title="Move Up"
+                  onClick={() => {
+                    const cfg = config() || ({} as IWheelConfig);
+                    const arr = cfg.breakPoints.slice() || [];
+                    if (index() > 0) {
+                      [arr[index() - 1], arr[index()]] = [arr[index()], arr[index() - 1]];
+                      cfg.breakPoints = arr;
+                      saveConfig(cfg);
+                    }
+                  }}
+                >↑</button>
+                <button
+                  disabled={index() === (config()?.breakPoints.length - 1)}
+                  title="Move Down"
+                  onClick={() => {
+                    const cfg = config() || ({} as IWheelConfig);
+                    const arr = cfg.breakPoints.slice() || [];
+                    if (index() < arr.length - 1) {
+                      [arr[index() + 1], arr[index()]] = [arr[index()], arr[index() + 1]];
+                      cfg.breakPoints = arr;
+                      saveConfig(cfg);
+                    }
+                  }}
+                >↓</button>
               </li>
             )}
           </For>

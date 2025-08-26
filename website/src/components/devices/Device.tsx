@@ -24,7 +24,7 @@ export function Device(props: DeviceProps) {
           )}
           {props.deviceState?.children?.length && (
             <button
-              class={`${styles["device-button"]} ${showChildren() ? styles["device__advanced-button--active"] : ""}`}
+              class={`${styles["device__header-button"]} ${showChildren() ? styles["device__header-button--active"] : ""}`}
               type="button"
               aria-label={showChildren() ? "Hide advanced" : "Show advanced"}
               onClick={() => {
@@ -48,7 +48,7 @@ export function Device(props: DeviceProps) {
           )}
           {!!props.config && (
             <button
-              class={`${styles["device-button"]} ${showConfig() ? styles["device-button--active"] : ""}`}
+              class={`${styles["device__header-button"]} ${showConfig() ? styles["device__header-button--active"] : ""}`}
               type="button"
               onClick={() => {
                 setShowConfig((v) => !v);
@@ -56,7 +56,7 @@ export function Device(props: DeviceProps) {
               }}
             >
               <svg
-                fill="#000000"
+                fill="currentColor"
                 width="24"
                 height="24"
                 viewBox="0 0 32 32"

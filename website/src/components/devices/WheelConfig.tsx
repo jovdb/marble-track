@@ -1,4 +1,5 @@
 import styles from "./Device.module.css";
+import wheelStyles from "./WheelConfig.module.css";
 import { IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
 import { createWheelStore, IWheelConfig } from "../../stores/Wheel";
 import { createMemo, For, onMount } from "solid-js";
@@ -83,29 +84,16 @@ export function WheelConfig(props: { id: string }) {
           +200
         </button>
       </div>
-      <div class={styles.device__input_group} style={{ width: "100%", margin: "1em 0" }}>
-        <label class={styles.device__label} style={{ "margin-bottom": "0.5em" }}>
-          Breakpoints:
-        </label>
-        <ul style={{ "list-style": "none", padding: 0, margin: 0 }}>
+      <div class={wheelStyles["wheel-config__breakpoints"]}>
+        <label class={wheelStyles["wheel-config__label"]}>Breakpoints:</label>
+        <ul class={wheelStyles["wheel-config__list"]}>
           <For each={config()?.breakPoints}>
             {(bp, index) => (
-              <li
-                style={{
-                  display: "flex",
-                  "align-items": "center",
-                  gap: "0.5em",
-                  "margin-bottom": "0.5em",
-                  background: "var(--color-surface)",
-                  "border-radius": "var(--radius-md)",
-                  "box-shadow": "var(--shadow-xs)",
-                  padding: "0.5em 0.75em",
-                }}
-              >
-                <span style={{ flex: 1, "font-weight": 500 }}>{bp}</span>
+              <li class={wheelStyles["wheel-config__item"]}>
+                <span class={wheelStyles["wheel-config__value"]}>{bp}</span>
 
                 <button
-                  class={`${styles.device__button} ${styles.device__button_small}`}
+                  class={wheelStyles["wheel-config__button"]}
                   disabled={index() === 0}
                   title="Move Up"
                   onClick={() => {
@@ -121,7 +109,7 @@ export function WheelConfig(props: { id: string }) {
                   ↑
                 </button>
                 <button
-                  class={`${styles.device__button} ${styles.device__button_small}`}
+                  class={wheelStyles["wheel-config__button"]}
                   disabled={index() === (config()?.breakPoints?.length ?? 0) - 1}
                   title="Move Down"
                   onClick={() => {
@@ -137,8 +125,7 @@ export function WheelConfig(props: { id: string }) {
                   ↓
                 </button>
                 <button
-                  class={`${styles.device__button} ${styles.device__button_small}`}
-                  style={{ background: "var(--color-danger-600)", color: "white" }}
+                  class={`${wheelStyles["wheel-config__button"]} ${wheelStyles["wheel-config__button--delete"]}`}
                   title="Delete"
                   onClick={() => {
                     const cfg = config() || ({} as IWheelConfig);
@@ -154,8 +141,7 @@ export function WheelConfig(props: { id: string }) {
           </For>
         </ul>
         <button
-          class={`${styles.device__button} ${styles.device__button_small}`}
-          style={{ "margin-top": "0.5em", background: "var(--color-success-600)", color: "white" }}
+          class={`${wheelStyles["wheel-config__button"]} ${wheelStyles["wheel-config__button--add"]}`}
           onClick={() => {
             const cfg = config() || ({} as IWheelConfig);
             cfg.breakPoints = cfg.breakPoints.slice() || [];

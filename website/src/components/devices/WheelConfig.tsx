@@ -98,7 +98,7 @@ export function WheelConfig(props: { id: string }) {
                   title="Move Up"
                   onClick={() => {
                     const cfg = config() || ({} as IWheelConfig);
-                    const arr = cfg.breakPoints.slice() || [];
+                    const arr = cfg.breakPoints?.slice() || [];
                     if (index() > 0) {
                       [arr[index() - 1], arr[index()]] = [arr[index()], arr[index() - 1]];
                       cfg.breakPoints = arr;
@@ -114,7 +114,7 @@ export function WheelConfig(props: { id: string }) {
                   title="Move Down"
                   onClick={() => {
                     const cfg = config() || ({} as IWheelConfig);
-                    const arr = cfg.breakPoints.slice() || [];
+                    const arr = cfg.breakPoints?.slice() || [];
                     if (index() < arr.length - 1) {
                       [arr[index() + 1], arr[index()]] = [arr[index()], arr[index() + 1]];
                       cfg.breakPoints = arr;
@@ -129,7 +129,7 @@ export function WheelConfig(props: { id: string }) {
                   title="Delete"
                   onClick={() => {
                     const cfg = config() || ({} as IWheelConfig);
-                    cfg.breakPoints = cfg.breakPoints.slice() || [];
+                    cfg.breakPoints = cfg.breakPoints?.slice() || [];
                     cfg.breakPoints.splice(index(), 1);
                     saveConfig(cfg);
                   }}
@@ -144,7 +144,7 @@ export function WheelConfig(props: { id: string }) {
           class={`${wheelStyles["wheel-config__button"]} ${wheelStyles["wheel-config__button--add"]}`}
           onClick={() => {
             const cfg = config() || ({} as IWheelConfig);
-            cfg.breakPoints = cfg.breakPoints.slice() || [];
+            cfg.breakPoints = cfg.breakPoints?.slice() || [];
             cfg.breakPoints.push(Math.floor(Math.random() * 1000));
             saveConfig(cfg);
           }}

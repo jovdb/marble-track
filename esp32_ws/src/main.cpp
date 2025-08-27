@@ -116,7 +116,7 @@ void runAutomaticMode()
 void setup()
 {
   // Initialize serial communication
-  Serial.begin(115200);
+  Serial.begin(460800);
 
   // Logging setup
   esp_log_level_set("*", ESP_LOG_INFO);

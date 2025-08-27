@@ -40,6 +40,7 @@ unsigned long lastAutoToggleTime = 0;
 // Create network and server instances
 Network network("telenet-182FE", "cPQdRWmFx1eM");
 AsyncWebServer server(80);
+LittleFSManager littleFSManager;
 WebsiteHost websiteHost(&network);
 WebSocketManager wsManager("/ws");
 DeviceManager deviceManager;
@@ -137,6 +138,8 @@ void setup()
     otaService.setup(hostnameStr.c_str()); // <-- OTA setup only after network is ready
   }
 
+  littleFSManager.setup();
+
   // Initialize WebsiteHost with the network instance
   websiteHost.setup(server);
 
@@ -188,6 +191,9 @@ void setup()
 void loop()
 {
   otaService.loop();
+
+  littleFSManager.loop();
+
   // Process captive portal for access point mode
   network.processCaptivePortal();
 

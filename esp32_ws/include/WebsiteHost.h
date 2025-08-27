@@ -4,21 +4,21 @@
 #include <Arduino.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include "LittleFS.h"
+#include "LittleFSManager.h"
 #include "Network.h"
 
 class WebsiteHost {
 private:
     Network* network;
     AsyncWebServer* server;
-    
+    LittleFSManager littleFSManager;
     // Private methods
-    void initLittleFS();
     void setupRoutes();
 
 public:
     WebsiteHost(Network* networkInstance);
     void setup(AsyncWebServer& serverRef);
+    void loop() { littleFSManager.loop(); }
 };
 
 #endif

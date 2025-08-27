@@ -8,19 +8,6 @@ WebsiteHost::WebsiteHost(Network *networkInstance)
 {
 }
 
-void WebsiteHost::initLittleFS()
-{
-    ESP_LOGI(TAG, "Mounting file system...");
-    if (!LittleFS.begin(true))
-    {
-        ESP_LOGE(TAG, ": ERROR mounting");
-    }
-    else
-    {
-        ESP_LOGI(TAG, ": OK");
-    }
-}
-
 void WebsiteHost::setupRoutes()
 {
     if (server == nullptr)
@@ -170,6 +157,5 @@ void WebsiteHost::setupRoutes()
 void WebsiteHost::setup(AsyncWebServer &serverRef)
 {
     server = &serverRef;
-    initLittleFS();
     setupRoutes();
 }

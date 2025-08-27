@@ -1,26 +1,22 @@
 #include <ArduinoJson.h>
 #include <vector>
-#include <SPIFFS.h>
+#include "LittleFS.h"
 #include "esp_log.h"
 #include "DeviceManager.h"
 #include "esp_log.h"
 
 static const char *TAG = "DeviceManager";
-static constexpr const char *DEVICES_LIST_FILE = "/spiffs/devices.json";
+static constexpr const char *DEVICES_LIST_FILE = "/devices.json";
 
 void DeviceManager::loadDevicesFromJsonFile()
 {
-    if (!SPIFFS.begin(true))
+    if (!LittleFS.exists(DEVICES_LIST_FILE))
     {
-        ESP_LOGE(TAG, "SPIFFS mount failed");
+        ESP_LOGI(TAG, "Devices JSON file not found.");
         return;
     }
-    if (!SPIFFS.exists(DEVICES_LIST_FILE))
-    {
-        ESP_LOGI(TAG, "Devices JSON file not found, using default devices");
-        return;
-    }
-    File file = SPIFFS.open(DEVICES_LIST_FILE, FILE_READ);
+
+    File file = LittleFS.open(DEVICES_LIST_FILE, FILE_READ);
     if (file)
     {
         JsonDocument doc;
@@ -45,6 +41,7 @@ void DeviceManager::loadDevicesFromJsonFile()
                 String id = obj["id"] | "";
                 String name = obj["name"] | "";
                 String type = obj["type"] | "";
+                /*
                 std::vector<int> pins;
                 if (obj["pins"].is<JsonArray>())
                 {
@@ -53,14 +50,16 @@ void DeviceManager::loadDevicesFromJsonFile()
                         pins.push_back(pin);
                     }
                 }
-                Device *dev = new Device(id, name, type);
+                    */
                 if (devicesCount < MAX_DEVICES)
                 {
+                    Device *dev = new Device(id, name, type);
                     devices[devicesCount++] = dev;
                 }
                 else
                 {
-                    delete dev;
+                    ESP_LOGW(TAG, "Maximum device limit reached, cannot load more devices");
+                    break;
                 }
             }
             ESP_LOGI(TAG, "Loaded devices from %s", DEVICES_LIST_FILE);
@@ -78,12 +77,7 @@ void DeviceManager::loadDevicesFromJsonFile()
 
 void DeviceManager::saveDevicesToJsonFile()
 {
-    if (!SPIFFS.begin(true))
-    {
-        ESP_LOGE(TAG, "SPIFFS mount failed");
-        return;
-    }
-    File file = SPIFFS.open(DEVICES_LIST_FILE, FILE_WRITE);
+    File file = LittleFS.open(DEVICES_LIST_FILE, FILE_WRITE);
     if (file)
     {
         JsonDocument doc;

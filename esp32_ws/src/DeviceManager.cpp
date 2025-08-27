@@ -3,6 +3,7 @@
 #include "LittleFS.h"
 #include "esp_log.h"
 #include "DeviceManager.h"
+#include "devices/Led.h"
 #include "esp_log.h"
 
 static const char *TAG = "DeviceManager";
@@ -53,8 +54,21 @@ void DeviceManager::loadDevicesFromJsonFile()
                     */
                 if (devicesCount < MAX_DEVICES)
                 {
-                    Device *dev = new Device(id, name, type);
-                    devices[devicesCount++] = dev;
+                    if (type == "led")
+                    {
+                        Led *led = new Led(id, name);
+                        // If pins are provided in JSON, use the first pin
+                        // if (obj["pins"].is<JsonArray>() && obj["pins"].size() > 0) {
+                        //     int pin = obj["pins"][0];
+                        //     led->setup(pin);
+                        // }
+                        devices[devicesCount++] = led;
+                    }
+                    // Add more device types here with else if (type == "buzzer") { ... }
+                    else
+                    {
+                        ESP_LOGW(TAG, "Unknown device type: %s", type.c_str());
+                    }
                 }
                 else
                 {

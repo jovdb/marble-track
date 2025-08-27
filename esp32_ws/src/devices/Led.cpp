@@ -1,18 +1,7 @@
 #include "esp_log.h"
+#include "devices/Led.h"
 
 static const char *TAG = "Led";
-/**
- * @file Led.cpp
- * @brief Implementation of LED control class
- *
- * This file contains the implementation of the Led class methods
- * for controlling LEDs in the marble track system.
- *
- * @author Generated for Marble Track Project
- * @date 2025
- */
-
-#include "devices/Led.h"
 
 /**
  * @brief Constructor for Led class
@@ -22,13 +11,23 @@ static const char *TAG = "Led";
  * @param id Unique identifier string for the LED
  * @param name Human-readable name string for the LED
  */
-Led::Led(int pin, const String &id, const String &name)
-    : Device(id, name, "led"), _pin(pin), _mode("OFF")
+Led::Led(const String &id, const String &name)
+    : Device(id, name, "led"), _mode("OFF")
 {
-    // Initialize the pin as output and set initial state
+}
+
+/**
+ * @brief Setup the LED hardware pin
+ * @param pin GPIO pin number for the LED
+ */
+void Led::setup()
+{
+    Device::setup();
+
+    _pin = 1;
     pinMode(_pin, OUTPUT);
     digitalWrite(_pin, LOW);
-    ESP_LOGI(TAG, "Led [%s]: Initialized on pin %d", _id.c_str(), _pin);
+    ESP_LOGI(TAG, "Led [%s]: Setup on pin %d", _id.c_str(), _pin);
 }
 
 /**

@@ -157,7 +157,7 @@ void setup()
   if (deviceManager.getDeviceCount() == 0)
   {
     Device *devices[] = {
-        new Led(1, "test-led", "Test LED"),
+        new Led("test-led", "Test LED"),
         // new Button(15, "test-button", "Test Button", false, 50),
         new Button(16, "test-button2", "Test Button 2", false, 50),
         new Buzzer(14, "test-buzzer", "Test Buzzer"),

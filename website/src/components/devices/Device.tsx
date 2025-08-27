@@ -77,7 +77,9 @@ export function Device(props: DeviceProps) {
             </For>
           </div>
         )}
-        {showConfig() && props.configComponent && <div class={styles.device__children}>{props.configComponent}</div>}
+        {showConfig() && props.configComponent && (
+          <div class={styles.device__children}>{props.configComponent}</div>
+        )}
       </div>
     </div>
   );

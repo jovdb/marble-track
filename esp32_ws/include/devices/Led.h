@@ -13,6 +13,14 @@
  */
 class Led : public Device
 {
+
+    enum class LedMode
+    {
+        BLINKING, ///< LED is blinking
+        ON,       ///< LED is turned on
+        OFF       ///< LED is turned off
+    };
+
 public:
     /**
      * @brief Constructor - automatically initializes pin
@@ -21,7 +29,7 @@ public:
      */
     Led(const String &id, const String &name);
     void setup();
-    void loop() override {} // No periodic operations needed
+    void loop();
 
     // Controllable functionality
     bool control(const String &action, JsonObject *payload = nullptr) override;
@@ -32,9 +40,17 @@ public:
     void set(bool state);
     void toggle(); // Toggle LED state
 
+    // Non-blocking blink
+    void blink(unsigned long onTime = 500, unsigned long offTime = 500);
+
 private:
     int _pin = -1;        ///< GPIO pin number for the LED
-    String _mode = "OFF"; ///< Current mode of the LED
+    LedMode _mode = LedMode::OFF; ///< Current mode of the LED
+    // Blink state
+    unsigned long _blinkOnTime = 500;
+    unsigned long _blinkOffTime = 500;
+    unsigned long _lastToggleTime = 0;
+    bool _isOn = false;
 };
 
 #endif // LED_H

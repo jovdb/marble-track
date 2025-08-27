@@ -51,7 +51,7 @@ void Buzzer::startupTone()
  * @param name Human-readable name string for the buzzer
  */
 Buzzer::Buzzer(int pin, const String &id, const String &name)
-    : Device(id, name, "buzzer"), _pin(pin), _isPlaying(false), _mode(Mode::IDLE), _playStartTime(0), _toneDuration(0)
+    : Device(id, name, "buzzer"), _pin(pin), _isPlaying(false), _mode(BuzzerMode::IDLE), _playStartTime(0), _toneDuration(0)
 {
     ESP_LOGI(TAG, "Buzzer [%s]: Created on pin %d", _id.c_str(), _pin);
 }
@@ -82,11 +82,11 @@ void Buzzer::loop()
     {
         rtttl::play();
     }
-    else if (_mode == Mode::TUNE && _isPlaying)
+    else if (_mode == BuzzerMode::TUNE && _isPlaying)
     {
         // Tune was playing but has now finished
         _isPlaying = false;
-        _mode = Mode::IDLE;
+        _mode = BuzzerMode::IDLE;
         _currentTune = "";
 
         ESP_LOGI(TAG, "Buzzer [%s]: Tune playback finished", _id.c_str());
@@ -94,14 +94,14 @@ void Buzzer::loop()
     }
 
     // Check if we're currently playing a tone and if the duration has elapsed
-    if (_isPlaying && _mode == Mode::TONE && _toneDuration > 0)
+    if (_isPlaying && _mode == BuzzerMode::TONE && _toneDuration > 0)
     {
         unsigned long elapsed = millis() - _playStartTime;
         if (elapsed >= _toneDuration)
         {
             // Tone playback duration has finished
             _isPlaying = false;
-            _mode = Mode::IDLE;
+            _mode = BuzzerMode::IDLE;
             _currentTune = "";
             _toneDuration = 0;
 
@@ -125,7 +125,7 @@ void Buzzer::tone(int frequency, int duration)
     ::tone(_pin, frequency, duration);
 
     _isPlaying = true;
-    _mode = Mode::TONE;
+    _mode = BuzzerMode::TONE;
     _playStartTime = millis();
     _toneDuration = duration;
     _currentTune = "";
@@ -145,7 +145,7 @@ void Buzzer::tune(const String &rtttl)
 
     _currentTune = rtttl;
     _isPlaying = true;
-    _mode = Mode::TUNE;
+    _mode = BuzzerMode::TUNE;
     _playStartTime = millis();
     // Note: _toneDuration is not set for tunes - RTTTL library manages tune duration
     notifyStateChange();
@@ -250,13 +250,13 @@ String Buzzer::getState()
     String modeStr;
     switch (_mode)
     {
-    case Mode::IDLE:
+    case BuzzerMode::IDLE:
         modeStr = "IDLE";
         break;
-    case Mode::TONE:
+    case BuzzerMode::TONE:
         modeStr = "TONE";
         break;
-    case Mode::TUNE:
+    case BuzzerMode::TUNE:
         modeStr = "TUNE";
         break;
     default:

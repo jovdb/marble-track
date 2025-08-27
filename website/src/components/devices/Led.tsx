@@ -3,7 +3,7 @@ import styles from "./Device.module.css";
 import { createLedStore } from "../../stores/Led";
 
 export function Led(props: { id: string }) {
-  const { state, error, setLed } = createLedStore(props.id);
+  const { state, error, setLed, blink } = createLedStore(props.id);
 
   return (
     <Device id={props.id} deviceState={state()}>
@@ -31,6 +31,12 @@ export function Led(props: { id: string }) {
               onClick={() => setLed(false)}
             >
               Turn Off
+            </button>
+            <button
+              class={`${styles.device__button} ${styles["device__button--secondary"]}`}
+              onClick={() => blink?.()}
+            >
+              Blink
             </button>
           </div>
         </>

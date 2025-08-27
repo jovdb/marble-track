@@ -12,7 +12,7 @@ static const char *TAG = "Led";
  * @param name Human-readable name string for the LED
  */
 Led::Led(const String &id, const String &name)
-    : Device(id, name, "led"), _mode("OFF")
+    : Device(id, name, "led"), _mode(LedMode::OFF)
 {
 }
 
@@ -26,8 +26,10 @@ void Led::setup()
 
     _pin = 1;
     pinMode(_pin, OUTPUT);
-    digitalWrite(_pin, LOW);
+    // digitalWrite(_pin, LOW);
     ESP_LOGI(TAG, "Led [%s]: Setup on pin %d", _id.c_str(), _pin);
+
+    Led::blink(100, 300);
 }
 
 /**
@@ -37,7 +39,7 @@ void Led::setup()
 void Led::set(bool state)
 {
     digitalWrite(_pin, state ? HIGH : LOW);
-    _mode = state ? "ON" : "OFF";
+    _mode = state ? LedMode::ON : LedMode::OFF;
 
     // Notify state change for real-time updates
     notifyStateChange();
@@ -48,7 +50,7 @@ void Led::set(bool state)
  */
 void Led::toggle()
 {
-    set(!_mode.equals("ON"));
+    set(_mode != LedMode::ON);
 }
 
 /**
@@ -59,7 +61,6 @@ void Led::toggle()
  */
 bool Led::control(const String &action, JsonObject *args)
 {
-    // Simple action mapping
     if (action == "set")
     {
         if (!args || !(*args)["value"].is<bool>())
@@ -68,14 +69,27 @@ bool Led::control(const String &action, JsonObject *args)
             return false;
         }
         set((*args)["value"].as<bool>());
+        return true;
+    }
+    else if (action == "blink")
+    {
+        unsigned long onTime = 500;
+        unsigned long offTime = 500;
+        if (args)
+        {
+            if ((*args)["onTime"].is<unsigned long>())
+                onTime = (*args)["onTime"].as<unsigned long>();
+            if ((*args)["offTime"].is<unsigned long>())
+                offTime = (*args)["offTime"].as<unsigned long>();
+        }
+        blink(onTime, offTime);
+        return true;
     }
     else
     {
         ESP_LOGW(TAG, "Led [%s]: Unknown action: %s", _id.c_str(), action.c_str());
         return false;
     }
-
-    return true;
 }
 
 /**
@@ -92,9 +106,59 @@ String Led::getState()
     {
         doc[kv.key()] = kv.value();
     }
-    doc["mode"] = _mode;
+    switch (_mode)
+    {
+    case LedMode::ON:
+        doc["mode"] = "ON";
+        break;
+    case LedMode::OFF:
+        doc["mode"] = "OFF";
+        break;
+    case LedMode::BLINKING:
+        doc["mode"] = "BLINKING";
+        break;
+    }
 
     String result;
     serializeJson(doc, result);
     return result;
+}
+
+void Led::blink(unsigned long onTime, unsigned long offTime)
+{
+    _mode = LedMode::BLINKING;
+    _blinkOnTime = onTime;
+    _blinkOffTime = offTime;
+    _lastToggleTime = millis() - 1000000;
+
+    // Notify state change for real-time updates
+    notifyStateChange();
+}
+
+void Led::loop()
+{
+    Device::loop();
+
+    if (_mode == LedMode::BLINKING && _pin != -1)
+    {
+        unsigned long now = millis();
+        if (_isOn)
+        {
+            if (now - _lastToggleTime >= _blinkOnTime)
+            {
+                digitalWrite(_pin, LOW);
+                _isOn = false;
+                _lastToggleTime = now;
+            }
+        }
+        else
+        {
+            if (now - _lastToggleTime >= _blinkOffTime)
+            {
+                digitalWrite(_pin, HIGH);
+                _isOn = true;
+                _lastToggleTime = now;
+            }
+        }
+    }
 }

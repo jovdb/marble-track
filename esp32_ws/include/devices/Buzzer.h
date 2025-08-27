@@ -33,7 +33,7 @@ public:
     /**
      * @brief Buzzer playback modes
      */
-    enum class Mode
+    enum class BuzzerMode
     {
         IDLE,  ///< Buzzer is not playing anything
         TONE,  ///< Buzzer is playing a tone
@@ -79,7 +79,7 @@ public:
 private:
     int _pin;                    ///< GPIO pin number for the buzzer
     bool _isPlaying = false;     ///< Current playing state
-    Mode _mode = Mode::IDLE;     ///< Current playback mode
+    BuzzerMode _mode = BuzzerMode::IDLE;     ///< Current playback mode
     String _currentTune = "";    ///< Currently loaded tune name
     
     // Timing variables

@@ -32,14 +32,14 @@ class Device
 {
 public:
     Device(const String &id, const String &name, const String &type);
-    virtual void setup();
     virtual ~Device();
+    virtual void setup();
+    virtual void loop();
     void addChild(Device *child);
     std::vector<Device *> getChildren() const;
     virtual String getId() const { return _id; }
     virtual String getType() const { return _type; }
     virtual String getName() const { return _name; }
-    virtual void loop();
     virtual bool control(const String &action, JsonObject *payload = nullptr);
     virtual String getState();
     virtual std::vector<int> getPins() const;

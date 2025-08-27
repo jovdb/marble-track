@@ -2,40 +2,6 @@
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
 #include "devices/Device.h"
-
-bool Device::saveConfig(const String &id, const JsonObject &json) {
-    String filename = "/device_config.json";
-    JsonDocument allConfig;
-    // Read existing config file
-    File file = SPIFFS.open(filename, FILE_READ);
-    if (file) {
-        deserializeJson(allConfig, file);
-        file.close();
-    }
-    // Update config for this device id
-    allConfig[id] = json;
-    // Write back to file
-    file = SPIFFS.open(filename, FILE_WRITE);
-    if (!file) return false;
-    serializeJson(allConfig, file);
-    file.close();
-    return true;
-}
-
-JsonDocument Device::readConfig(const String &id) {
-    String filename = "/device_config.json";
-    JsonDocument allConfig;
-    File file = SPIFFS.open(filename, FILE_READ);
-    if (file) {
-        deserializeJson(allConfig, file);
-        file.close();
-    }
-    JsonDocument doc;
-    if (allConfig[id].is<JsonObject>()) {
-        doc.set(allConfig[id]);
-    }
-    return doc;
-}
 #include "devices/Device.h"
 #include <vector>
 
@@ -144,4 +110,44 @@ void Device::notifyStateChange()
     {
         stateChangeCallback(getId(), getState());
     }
+}
+
+bool Device::saveConfig(const String &id, const JsonObject &json)
+{
+    String filename = "/device_config.json";
+    JsonDocument allConfig;
+    // Read existing config file
+    File file = SPIFFS.open(filename, FILE_READ);
+    if (file)
+    {
+        deserializeJson(allConfig, file);
+        file.close();
+    }
+    // Update config for this device id
+    allConfig[id] = json;
+    // Write back to file
+    file = SPIFFS.open(filename, FILE_WRITE);
+    if (!file)
+        return false;
+    serializeJson(allConfig, file);
+    file.close();
+    return true;
+}
+
+JsonDocument Device::readConfig(const String &id)
+{
+    String filename = "/device_config.json";
+    JsonDocument allConfig;
+    File file = SPIFFS.open(filename, FILE_READ);
+    if (file)
+    {
+        deserializeJson(allConfig, file);
+        file.close();
+    }
+    JsonDocument doc;
+    if (allConfig[id].is<JsonObject>())
+    {
+        doc.set(allConfig[id]);
+    }
+    return doc;
 }

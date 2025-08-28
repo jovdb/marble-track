@@ -17,6 +17,7 @@ import styles from "./App.module.css";
 import { logger } from "./stores/logger";
 import { Wheel } from "./components/devices/Wheel";
 import { Stepper } from "./components/devices/Stepper";
+import { sendMessage } from "./hooks/useWebSocket";
 
 // Function to render device component based on type
 export const renderDeviceComponent = (device: { id: string; type: string }) => {
@@ -44,6 +45,11 @@ export const renderDeviceComponent = (device: { id: string; type: string }) => {
 };
 
 const App: Component = () => {
+  // Reset button handler
+  const handleReset = () => {
+    sendMessage({ type: "restart" });
+  };
+
   let animatedFavicon: AnimatedFavicon;
 
   onMount(async () => {
@@ -82,6 +88,13 @@ const App: Component = () => {
   return (
     <div class={styles.app}>
       <Header />
+      <button
+        class={styles.app__resetButton}
+        onClick={handleReset}
+        style={{ position: "absolute", top: "10px", right: "10px", "z-index": 1000 }}
+      >
+        Reset Device
+      </button>
       <main class={styles.app__main}>
         <section class={styles.app__section}>
           <CollapsibleSection

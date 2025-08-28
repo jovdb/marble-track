@@ -4,6 +4,8 @@
 #include "esp_log.h"
 #include "DeviceManager.h"
 #include "devices/Led.h"
+#include "devices/Buzzer.h"
+#include "devices/Button.h"
 #include "esp_log.h"
 
 static const char *TAG = "DeviceManager";
@@ -64,7 +66,16 @@ void DeviceManager::loadDevicesFromJsonFile()
                         // }
                         devices[devicesCount++] = led;
                     }
-                    // Add more device types here with else if (type == "buzzer") { ... }
+                    else if (type == "buzzer")
+                    {
+                        Buzzer *buzzer = new Buzzer(id, name);
+                        devices[devicesCount++] = buzzer;
+                    }
+                    else if (type == "button")
+                    {
+                        Button *button = new Button(id, name);
+                        devices[devicesCount++] = button;
+                    }
                     else
                     {
                         ESP_LOGW(TAG, "Unknown device type: %s", type.c_str());

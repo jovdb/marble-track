@@ -1,4 +1,5 @@
 #include "esp_log.h"
+#include <LittleFS.h>
 
 static const char *TAG = "WebSocketManager";
 #include "WebSocketManager.h"
@@ -124,9 +125,42 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
         handleDeviceGetState(doc);
         return;
     }
+
     if (type == "get-devices")
     {
         handleGetDevices(doc);
+        return;
+    }
+
+    // New handler for downloading devices.json config
+    if (type == "get-devices-config")
+    {
+        JsonDocument response;
+        response["type"] = "devices-config";
+        // Read devices.json from LittleFS
+        File file = LittleFS.open("/devices.json", "r");
+        if (!file)
+        {
+            response["error"] = "devices.json not found";
+        }
+        else
+        {
+            // Parse file contents as JSON
+            JsonDocument configDoc;
+            DeserializationError err = deserializeJson(configDoc, file);
+            if (err)
+            {
+                response["error"] = "Failed to parse devices.json";
+            }
+            else
+            {
+                response["config"] = configDoc;
+            }
+            file.close();
+        }
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
         return;
     }
 

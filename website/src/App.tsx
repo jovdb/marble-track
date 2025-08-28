@@ -10,7 +10,7 @@ import { Buzzer } from "./components/devices/Buzzer";
 import { Button } from "./components/devices/Button";
 import { Gate } from "./components/devices/Gate";
 import { ClipboardIcon, RadioIcon } from "./components/icons/Icons";
-import { devicesLoading, isConnected, availableDevices } from "./hooks/useWebSocket";
+import { devicesLoading, isConnected, availableDevices, websocket } from "./hooks/useWebSocket";
 import AnimatedFavicon from "./utils/animatedFavicon";
 import logo from "./assets/logo-64.png";
 import styles from "./App.module.css";
@@ -48,6 +48,44 @@ const App: Component = () => {
   // Reset button handler
   const handleReset = () => {
     sendMessage({ type: "restart" });
+  };
+
+  // Download devices config handler
+  const handleDownloadConfig = () => {
+    // Send a WebSocket request for devices config
+    sendMessage({ type: "get-devices-config" });
+  };
+
+  onMount(() => {
+    // Listen for devices-config response and trigger download
+    const wsHandler = (event: MessageEvent) => {
+      try {
+        const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+        if (data && data.type === "devices-config" && data.config) {
+          const blob = new Blob([JSON.stringify(data.config, null, 2)], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "devices.json";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+      } catch {
+        // Ignore parse errors
+      }
+    };
+    websocket.addEventListener("message", wsHandler);
+    onCleanup(() => {
+      websocket.removeEventListener("message", wsHandler);
+    });
+  });
+
+  // Upload devices config handler
+  const handleUploadConfig = () => {
+    // TODO: Implement upload logic
+    alert("Upload devices config not implemented yet.");
   };
 
   let animatedFavicon: AnimatedFavicon;
@@ -102,6 +140,14 @@ const App: Component = () => {
             icon={<ClipboardIcon height={24} width={24} />}
             headerAction={devicesRefreshButton}
           >
+            <div class={styles["app__config-buttons"]}>
+              <button class={styles["app__config-button"]} onClick={handleDownloadConfig}>
+                Download
+              </button>
+              <button class={styles["app__config-button"]} onClick={handleUploadConfig}>
+                Upload
+              </button>
+            </div>
             <DevicesList />
           </CollapsibleSection>
         </section>

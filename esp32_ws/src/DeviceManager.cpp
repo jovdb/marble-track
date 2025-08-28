@@ -217,3 +217,31 @@ Device *DeviceManager::getDeviceById(const String &deviceId) const
     }
     return nullptr;
 }
+// Recursively search for the first device of the given type
+Device *DeviceManager::getDeviceByType(const String &deviceType) const
+{
+    std::function<Device *(Device *)> findRecursive = [&](Device *dev) -> Device *
+    {
+        if (!dev)
+            return nullptr;
+        if (dev->getType() == deviceType)
+            return dev;
+        for (Device *child : dev->getChildren())
+        {
+            Device *found = findRecursive(child);
+            if (found)
+                return found;
+        }
+        return nullptr;
+    };
+    for (int i = 0; i < devicesCount; i++)
+    {
+        if (devices[i] != nullptr)
+        {
+            Device *found = findRecursive(devices[i]);
+            if (found)
+                return found;
+        }
+    }
+    return nullptr;
+}

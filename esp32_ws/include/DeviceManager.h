@@ -1,19 +1,9 @@
-#include <SPIFFS.h>
-#include <ArduinoJson.h>
-#include "esp_log.h"
-/**
- * @file DeviceManager.h
- * @brief Device management system for marble track controller
- *
- * This class manages all devices in the system, providing centralized
- * device registration, lookup, and lifecycle management.
- *
- * @author Generated for Marble Track Project
- * @date 2025
- */
 
 #ifndef DEVICEMANAGER_H
 #define DEVICEMANAGER_H
+
+#include <ArduinoJson.h>
+#include "esp_log.h"
 
 #include "devices/Device.h"
 #include <functional>
@@ -30,6 +20,32 @@ private:
     int devicesCount;
 
 public:
+    /**
+     * @brief Recursively search for the first device of the given type
+     * @param deviceType The type string to search for
+     * @return Pointer to device or nullptr if not found
+     */
+    Device *getDeviceByType(const String &deviceType) const;
+
+    /**
+     * @brief Recursively search for the first device of the given type and cast to specific type
+     * @tparam T Device type to cast to
+     * @param deviceType The type string to search for
+     * @return Pointer to device of type T or nullptr if not found or wrong type
+     */
+    template <typename T>
+    T *getDeviceByTypeAs(const String &deviceType) const
+    {
+        return static_cast<T *>(getDeviceByType(deviceType));
+    }
+
+    /**
+     * @brief Get device by ID
+     * @param deviceId The ID of the device to find
+     * @return Pointer to device or nullptr if not found
+     */
+    Device *getDeviceById(const String &deviceId) const;
+
     /**
      * @brief Get device by ID and cast to specific type
      * @tparam T Device type to cast to
@@ -79,14 +95,7 @@ public:
      */
     int getDeviceCount() const { return devicesCount; }
 
-    /**
-     * @brief Get device by ID
-     * @param deviceId The ID of the device to find
-     * @return Pointer to device or nullptr if not found
-     */
-    Device *getDeviceById(const String &deviceId) const;
-
-    void loadDevicesFromJsonFile();
+        void loadDevicesFromJsonFile();
     void saveDevicesToJsonFile();
 };
 

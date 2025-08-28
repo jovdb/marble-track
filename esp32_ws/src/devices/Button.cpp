@@ -24,11 +24,13 @@ static const char *TAG = "Button";
  * @param pullUp true for internal pull-up (button connects to ground), false for pull-down
  * @param debounceMs Debounce time in milliseconds
  */
-Button::Button(int pin, const String &id, const String &name, bool pullUp, unsigned long debounceMs, ButtonType type)
-    : Device(id, name, "button"), _pin(pin), _pullUp(pullUp), _debounceMs(debounceMs), _buttonType(type)
+Button::Button(const String &id, const String &name)
+    : Device(id, name, "button")
 {
-    String typeStr = (type == ButtonType::NormalOpen) ? "NormalOpen" : "NormalClosed";
-    ESP_LOGI(TAG, "Button [%s]: Created on pin %d %s, debounce: %dms, type: %s", _id.c_str(), _pin, (_pullUp ? "(pull-up)" : "(pull-down)"), _debounceMs, typeStr.c_str());
+    _pin = -1;
+    _pullUp = true;
+    _debounceMs = 50;
+    _buttonType = ButtonType::NormalOpen;
 }
 
 /**
@@ -198,7 +200,7 @@ bool Button::control(const String &action, JsonObject *args)
     }
     else
     {
-    ESP_LOGW(TAG, "Button [%s]: Unknown action: %s", _id.c_str(), action.c_str());
+        ESP_LOGW(TAG, "Button [%s]: Unknown action: %s", _id.c_str(), action.c_str());
         return false;
     }
 }

@@ -4,15 +4,15 @@
 #include "devices/Buzzer.h"
 
 GateWithSensor::GateWithSensor(int servoPin, int servoPwmChannel, int buttonPin, Buzzer *buzzer, const String &id, const String &name,
-                                                             int initialAngle, bool buttonPullUp, unsigned long buttonDebounceMs, Button::ButtonType buttonType)
-        : Device(id, name, "gate"), _servo(new ServoDevice(servoPin, id + "-servo", name + " Servo", 30, servoPwmChannel)),
-            _sensor(new Button(buttonPin, id + "-sensor", name + " Sensor", buttonPullUp, buttonDebounceMs, buttonType)),
-            _buzzer(buzzer),
-            _gateState(Closed),
-            _gateStateStart(0)
+                               int initialAngle, bool buttonPullUp, unsigned long buttonDebounceMs, Button::ButtonType buttonType)
+    : Device(id, name, "gate"), _servo(new ServoDevice(servoPin, id + "-servo", name + " Servo", 30, servoPwmChannel)),
+      _sensor(new Button(id + "-sensor", name + " Sensor")),
+      _buzzer(buzzer),
+      _gateState(Closed),
+      _gateStateStart(0)
 {
-        addChild(_servo);
-        addChild(_sensor);
+    addChild(_servo);
+    addChild(_sensor);
 }
 
 void GateWithSensor::loop()
@@ -82,7 +82,8 @@ String GateWithSensor::getState()
     // Copy base Device state fields
     JsonDocument baseDoc;
     deserializeJson(baseDoc, Device::getState());
-    for (JsonPair kv : baseDoc.as<JsonObject>()) {
+    for (JsonPair kv : baseDoc.as<JsonObject>())
+    {
         doc[kv.key()] = kv.value();
     }
     const char *stateStr = "Unknown";

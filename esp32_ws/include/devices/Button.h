@@ -26,20 +26,13 @@
 class Button : public Device
 {
 public:
-    enum class ButtonType {
+    enum class ButtonType
+    {
         NormalOpen,
         NormalClosed
     };
-    /**
-     * @brief Constructor for Button class
-     * @param pin GPIO pin number for the button
-     * @param id Unique identifier string for the button
-     * @param name Human-readable name string for the button
-     * @param pullUp true for internal pull-up (button connects to ground), false for pull-down
-     * @param debounceMs Debounce time in milliseconds (default: 50ms)
-     * @param type ButtonType: NormalOpen or NormalClosed (default: NormalOpen)
-     */
-    Button(int pin, const String &id, const String &name, bool pullUp = true, unsigned long debounceMs = 50, ButtonType type = ButtonType::NormalOpen);
+
+    Button(const String &id, const String &name);
 
     /**
      * @brief Setup function to initialize the button
@@ -55,28 +48,28 @@ public:
 
     // Button-specific operations
     bool isPressed() const { return _currentState; }
-    bool wasPressed(); // Returns true once when button is pressed (edge detection)
-    bool wasReleased(); // Returns true once when button is released (edge detection)
+    bool wasPressed();                    // Returns true once when button is pressed (edge detection)
+    bool wasReleased();                   // Returns true once when button is released (edge detection)
     unsigned long getPressedTime() const; // How long button has been pressed (ms)
 
 private:
-    int _pin;                    ///< GPIO pin number for the button
-    bool _pullUp;                ///< Pull-up configuration (true = internal pull-up)
-    unsigned long _debounceMs;   ///< Debounce time in milliseconds
+    int _pin;                                        ///< GPIO pin number for the button
+    bool _pullUp;                                    ///< Pull-up configuration (true = internal pull-up)
+    unsigned long _debounceMs;                       ///< Debounce time in milliseconds
     ButtonType _buttonType = ButtonType::NormalOpen; ///< Button type (NO/NC)
 
     // State tracking
-    bool _currentState = false;          ///< Current debounced state
-    bool _rawState = false;              ///< Raw pin reading
+    bool _currentState = false; ///< Current debounced state
+    bool _rawState = false;     ///< Raw pin reading
 
     // Timing
     unsigned long _lastDebounceTime = 0; ///< Last time the pin state changed
     unsigned long _pressStartTime = 0;   ///< When the current press started
-    
+
     // Edge detection flags
-    bool _pressedFlag = false;           ///< Set when button is pressed (cleared by wasPressed())
-    bool _releasedFlag = false;          ///< Set when button is released (cleared by wasReleased())
-    bool _virtualPress = false;          ///< Flag to indicate virtual button press is active
+    bool _pressedFlag = false;  ///< Set when button is pressed (cleared by wasPressed())
+    bool _releasedFlag = false; ///< Set when button is released (cleared by wasReleased())
+    bool _virtualPress = false; ///< Flag to indicate virtual button press is active
 
     /**
      * @brief Read the raw pin state accounting for pull-up/pull-down configuration

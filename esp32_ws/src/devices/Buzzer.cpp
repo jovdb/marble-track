@@ -58,7 +58,6 @@ Buzzer::Buzzer(const String &id, const String &name)
     _mode = BuzzerMode::IDLE;
     _playStartTime = 0;
     _toneDuration = 0;
-    ESP_LOGI(TAG, "Buzzer [%s]: Created on pin %d", _id.c_str(), _pin);
 }
 
 /**

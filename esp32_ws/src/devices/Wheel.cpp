@@ -6,7 +6,7 @@ static const char *TAG = "Wheel";
 Wheel::Wheel(int stepPin1, int dirPin, int buttonPin, const String &id, const String &name)
     : Device(id, name, "wheel"),
       _stepper(new Stepper(stepPin1, dirPin, id + "-stepper", name + " Stepper", 100, 1000)),
-      _sensor(new Button(buttonPin, id + "-sensor", name + " Sensor", true, 100, Button::ButtonType::NormalClosed)),
+      _sensor(new Button(id + "-sensor", name + " Sensor")),
       _state(wheelState::IDLE)
 {
     addChild(_stepper);

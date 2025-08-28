@@ -50,9 +50,14 @@ void Buzzer::startupTone()
  * @param id Unique identifier string for the buzzer
  * @param name Human-readable name string for the buzzer
  */
-Buzzer::Buzzer(int pin, const String &id, const String &name)
-    : Device(id, name, "buzzer"), _pin(pin), _isPlaying(false), _mode(BuzzerMode::IDLE), _playStartTime(0), _toneDuration(0)
+Buzzer::Buzzer(const String &id, const String &name)
+    : Device(id, name, "buzzer")
 {
+    _pin = -1;
+    _isPlaying = false;
+    _mode = BuzzerMode::IDLE;
+    _playStartTime = 0;
+    _toneDuration = 0;
     ESP_LOGI(TAG, "Buzzer [%s]: Created on pin %d", _id.c_str(), _pin);
 }
 
@@ -62,11 +67,10 @@ Buzzer::Buzzer(int pin, const String &id, const String &name)
  */
 void Buzzer::setup()
 {
+    _pin = 2;
+
     pinMode(_pin, OUTPUT);
     digitalWrite(_pin, LOW);
-    ESP_LOGI(TAG, "Buzzer [%s]: Setup complete on pin %d", _id.c_str(), _pin);
-
-    startupTone(); // Play startup tone sequence
 }
 
 /**

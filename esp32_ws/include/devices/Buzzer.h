@@ -35,18 +35,17 @@ public:
      */
     enum class BuzzerMode
     {
-        IDLE,  ///< Buzzer is not playing anything
-        TONE,  ///< Buzzer is playing a tone
-        TUNE   ///< Buzzer is playing a tune
+        IDLE, ///< Buzzer is not playing anything
+        TONE, ///< Buzzer is playing a tone
+        TUNE  ///< Buzzer is playing a tune
     };
 
     /**
      * @brief Constructor - creates buzzer object
-     * @param pin GPIO pin number for the buzzer
      * @param id Unique identifier string for the buzzer
      * @param name Human-readable name string for the buzzer
      */
-    Buzzer(int pin, const String &id, const String &name);
+    Buzzer(const String &id, const String &name);
 
     /**
      * @brief Setup function to initialize the buzzer
@@ -77,14 +76,14 @@ public:
     void tune(const String &rtttl);
 
 private:
-    int _pin;                    ///< GPIO pin number for the buzzer
-    bool _isPlaying = false;     ///< Current playing state
-    BuzzerMode _mode = BuzzerMode::IDLE;     ///< Current playback mode
-    String _currentTune = "";    ///< Currently loaded tune name
-    
+    int _pin;                            ///< GPIO pin number for the buzzer
+    bool _isPlaying = false;             ///< Current playing state
+    BuzzerMode _mode = BuzzerMode::IDLE; ///< Current playback mode
+    String _currentTune = "";            ///< Currently loaded tune name
+
     // Timing variables
-    unsigned long _playStartTime = 0;  ///< When current playback started
-    unsigned long _toneDuration = 0;   ///< Duration of current tone playback in ms (not used for tunes)
+    unsigned long _playStartTime = 0; ///< When current playback started
+    unsigned long _toneDuration = 0;  ///< Duration of current tone playback in ms (not used for tunes)
 };
 
 #endif // BUZZER_H

@@ -163,8 +163,10 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
         return;
     }
     JsonObject configObj = doc["config"].as<JsonObject>();
-    bool success = device->saveConfig(deviceId, configObj);
-    notifyClients(createJsonResponse(success, success ? "Config saved" : "Config save failed", "", ""));
+    device->setConfig(&configObj);
+
+    deviceManager->saveDevicesToJsonFile();
+    notifyClients(createJsonResponse(true, "Config saved", "", ""));
 }
 
 // Read config for a device and send to client
@@ -182,7 +184,7 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
         notifyClients(createJsonResponse(false, "Device not found: " + deviceId, "", ""));
         return;
     }
-    JsonDocument config = device->readConfig(deviceId);
+    JsonDocument config = device->getConfig();
     String configStr;
     serializeJson(config, configStr);
     JsonDocument response;
@@ -236,7 +238,8 @@ void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
     }
 }
 
-WebSocketManager::WebSocketManager(const char *path) : ws(path)
+WebSocketManager::WebSocketManager(DeviceManager *deviceManager, const char *path)
+    : ws(path), deviceManager(deviceManager)
 {
     instance = this;
 }

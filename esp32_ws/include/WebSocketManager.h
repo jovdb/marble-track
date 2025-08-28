@@ -13,7 +13,7 @@ class WebSocketManager
 {
 private:
     AsyncWebSocket ws;
-    DeviceManager *deviceManager = nullptr;
+    DeviceManager *deviceManager;
 
     // Helper methods for cleaner message handling
     void handleRestart();
@@ -23,7 +23,7 @@ private:
     void handleGetDevices(JsonDocument &doc);
 
 public:
-    WebSocketManager(const char *path = "/ws");
+    WebSocketManager(DeviceManager *deviceManager, const char *path = "/ws");
     void setup(AsyncWebServer &server);
     void loop();
     void notifyClients(String state);

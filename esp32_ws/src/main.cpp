@@ -42,8 +42,8 @@ Network network("telenet-182FE", "cPQdRWmFx1eM");
 AsyncWebServer server(80);
 LittleFSManager littleFSManager;
 WebsiteHost websiteHost(&network);
-WebSocketManager wsManager("/ws");
 DeviceManager deviceManager;
+WebSocketManager wsManager(&deviceManager, "/ws");
 
 // Device instances
 // ...existing code...

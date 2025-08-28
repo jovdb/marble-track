@@ -19,8 +19,7 @@ import { Wheel } from "./components/devices/Wheel";
 import { Stepper } from "./components/devices/Stepper";
 import { sendMessage } from "./hooks/useWebSocket";
 
-// Function to render device component based on type
-export const renderDeviceComponent = (device: { id: string; type: string }) => {
+export function renderDeviceComponent(device: { id: string; type: string }) {
   switch (device.type.toLowerCase()) {
     case "led":
       return <Led id={device.id} />;
@@ -38,11 +37,10 @@ export const renderDeviceComponent = (device: { id: string; type: string }) => {
       return <Wheel id={device.id} />;
 
     default:
-      // Return a generic component or null for unknown device types
       logger.error(`Unknown device type: ${device.type}`);
       return null;
   }
-};
+}
 
 const App: Component = () => {
   // Reset button handler
@@ -52,7 +50,6 @@ const App: Component = () => {
 
   // Download devices config handler
   const handleDownloadConfig = () => {
-    // Send a WebSocket request for devices config
     sendMessage({ type: "get-devices-config" });
   };
 
@@ -62,7 +59,9 @@ const App: Component = () => {
       try {
         const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
         if (data && data.type === "devices-config" && data.config) {
-          const blob = new Blob([JSON.stringify(data.config, null, 2)], { type: "application/json" });
+          const blob = new Blob([JSON.stringify(data.config, null, 2)], {
+            type: "application/json",
+          });
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
@@ -84,26 +83,40 @@ const App: Component = () => {
 
   // Upload devices config handler
   const handleUploadConfig = () => {
-    // TODO: Implement upload logic
-    alert("Upload devices config not implemented yet.");
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json,application/json";
+    input.style.display = "none";
+    input.onchange = async () => {
+      const file = (input.files && input.files[0]) || null;
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const json = JSON.parse(text);
+        sendMessage({ type: "set-devices-config", config: json });
+        alert("Config uploaded. Please refresh devices after upload.");
+      } catch {
+        alert("Invalid JSON file.");
+      }
+    };
+    document.body.appendChild(input);
+    input.click();
+    document.body.removeChild(input);
   };
 
   let animatedFavicon: AnimatedFavicon;
 
   onMount(async () => {
-    // Initialize and start animated favicon
     animatedFavicon = new AnimatedFavicon();
     await animatedFavicon.start(logo);
   });
 
   onCleanup(() => {
-    // Clean up animation when component unmounts
     if (animatedFavicon) {
       animatedFavicon.stop();
     }
   });
 
-  // Create refresh button for devices section
   const devicesRefreshButton = (
     <svg
       onClick={refreshDevices}

@@ -12,6 +12,7 @@ export interface DeviceInfo {
 
 export interface IWsMessage {
   type: string;
+  config?: any;
 }
 
 export interface IWsDeviceMessage extends IWsMessage {

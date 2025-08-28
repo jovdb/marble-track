@@ -15,12 +15,14 @@
   padding: 8px 16px;
   font-size: 1rem;
   cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition:
+    background 0.2s,
+    box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 .app__config-button:hover {
   background: #005fa3;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 /* App Component - BEM CSS Module */
 

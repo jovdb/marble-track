@@ -83,6 +83,7 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
  * @brief Handle incoming WebSocket messages
  */
 void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
+
 {
     // Check if this is a complete, single-frame text message
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
@@ -129,6 +130,38 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
     if (type == "get-devices")
     {
         handleGetDevices(doc);
+        return;
+    }
+
+    // Handler for replacing devices.json via websocket upload
+    if (type == "set-devices-config")
+    {
+        JsonDocument response;
+        response["type"] = "set-devices-config-result";
+        if (!doc["config"].is<JsonArray>())
+        {
+            response["success"] = false;
+            response["error"] = "Missing or invalid config array";
+        }
+        else
+        {
+            File file = LittleFS.open("/devices.json", "w");
+            if (!file)
+            {
+                response["success"] = false;
+                response["error"] = "Failed to open devices.json for writing";
+            }
+            else
+            {
+                serializeJson(doc["config"], file);
+                file.close();
+                response["success"] = true;
+                response["message"] = "devices.json updated";
+            }
+        }
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
         return;
     }
 

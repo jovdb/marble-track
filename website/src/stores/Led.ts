@@ -4,7 +4,7 @@ import { sendMessage, IWsDeviceMessage } from "../hooks/useWebSocket";
 const deviceType = "led";
 
 interface ILedState extends IDeviceState {
-  mode: "ON" | "OFF";
+  mode: "ON" | "OFF" | "BLINKING";
 }
 
 export function setLed(deviceId: string, value: any) {

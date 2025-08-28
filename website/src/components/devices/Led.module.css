@@ -1,0 +1,33 @@
+.led__status-indicator {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  background-color: var(--color-gray-400);
+}
+
+.led__status-indicator--on {
+  background-color: var(--color-success-500);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+.led__status-indicator--off {
+  background-color: var(--color-gray-400);
+}
+
+.led__status-indicator--blinking {
+  animation: blinking 1s infinite;
+}
+
+/* Animations */
+@keyframes blinking {
+  0% {
+    background-color: var(--color-success-500);
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+  }
+
+  100% {
+    background-color: var(--color-gray-400);
+    box-shadow: none;
+  }
+}

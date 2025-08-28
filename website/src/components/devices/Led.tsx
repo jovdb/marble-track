@@ -1,5 +1,6 @@
 import { Device } from "./Device";
 import styles from "./Device.module.css";
+import ledStyles from "./Led.module.css";
 import { createLedStore } from "../../stores/Led";
 
 export function Led(props: { id: string }) {
@@ -12,15 +13,15 @@ export function Led(props: { id: string }) {
         <>
           <div class={styles.device__status}>
             <div
-              class={`${styles["device__status-indicator"]} ${
+              class={`${ledStyles["led__status-indicator"]} ${
                 state()?.mode === "ON"
-                  ? styles["device__status-indicator--on"]
-                  : styles["device__status-indicator--off"]
+                  ? ledStyles["led__status-indicator--on"]
+                  : state()?.mode === "BLINKING"
+                    ? ledStyles["led__status-indicator--blinking"]
+                    : ledStyles["led__status-indicator--off"]
               }`}
             ></div>
-            <span class={styles["device__status-text"]}>
-              Status: {state()?.mode === "ON" ? "On" : "Off"}
-            </span>
+            <span class={styles["device__status-text"]}>Status: {state()?.mode}</span>
           </div>
           <div class={styles.device__controls}>
             <button class={styles.device__button} onClick={() => setLed(true)}>

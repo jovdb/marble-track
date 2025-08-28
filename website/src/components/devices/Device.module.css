@@ -77,6 +77,7 @@
   height: 16px;
   border-radius: var(--radius-full);
   flex-shrink: 0;
+  background-color: var(--color-gray-400);
 }
 
 .device__status-indicator--on {
@@ -86,11 +87,6 @@
 
 .device__status-indicator--off {
   background-color: var(--color-gray-400);
-}
-
-.device__status-indicator--moving {
-  background-color: var(--color-warning-500);
-  animation: pulse 1s ease-in-out infinite;
 }
 
 .device__status-indicator--pressed {
@@ -242,17 +238,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--spacing-4);
-}
-
-/* Animations */
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
 }
 
 /* Responsive Design */

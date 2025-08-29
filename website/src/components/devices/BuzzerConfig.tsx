@@ -1,4 +1,3 @@
-
 import { createSignal } from "solid-js";
 import DeviceConfig from "./DeviceConfig";
 

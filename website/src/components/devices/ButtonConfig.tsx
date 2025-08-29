@@ -41,7 +41,7 @@ export default function ButtonConfig(props: ButtonConfigProps) {
           value={debounce()}
           min={0}
           onInput={(e) => setDebounce(Number(e.currentTarget.value))}
-          style={{ "margin-left": "0.5rem", "width": "4em" }}
+          style={{ "margin-left": "0.5rem", width: "4em" }}
         />
       </label>
     </DeviceConfig>

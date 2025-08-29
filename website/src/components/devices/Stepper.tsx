@@ -2,6 +2,7 @@ import { Device } from "./Device";
 import { createSignal } from "solid-js";
 import styles from "./Device.module.css";
 import { createStepperStore } from "../../stores/Stepper";
+import StepperConfig from "./StepperConfig";
 
 export function Stepper(props: { id: string }) {
   const { state, error, move, stop } = createStepperStore(props.id);
@@ -23,7 +24,7 @@ export function Stepper(props: { id: string }) {
   };
 
   return (
-    <Device id={props.id} deviceState={state()}>
+    <Device id={props.id} deviceState={state()} configComponent={<StepperConfig id={props.id} />}>
       {error() && <div class={styles.device__error}>{error()}</div>}
       {!error() && (
         <>

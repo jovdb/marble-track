@@ -83,11 +83,11 @@ void DeviceManager::loadDevicesFromJsonFile()
                         ServoDevice *servo = new ServoDevice(id, name);
                         devices[devicesCount++] = servo;
                     }
-                    else if (type == "stepper")
-                    {
-                        Stepper *stepper = new Stepper(id, name);
-                        devices[devicesCount++] = stepper;
-                    }
+                    // else if (type == "stepper")
+                    // {
+                    //     Stepper *stepper = new Stepper(id, name);
+                    //     devices[devicesCount++] = stepper;
+                    // }
 
                     else
                     {

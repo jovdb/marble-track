@@ -161,7 +161,7 @@ void setup()
         // new Button("test-button", "Test Button"),
         new Button("test-button2", "Test Button 2"),
         new Buzzer("test-buzzer", "Test Buzzer"),
-        // new ServoDevice(8, "test-servo", "SG90", 0, 0),
+        // new ServoDevice()"test-servo", "SG90"),
         // new Button()"ball-sensor", "Ball Sensor"),
         // new GateWithSensor(21, 2, 48, static_cast<Buzzer *>(nullptr), "gate-with-sensor", "Gate", 50, true, 50, Button::ButtonType::NormalClosed),
         // new Stepper(45, 48, "stepper", "Stepper Motor", 1000, 500),

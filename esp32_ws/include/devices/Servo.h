@@ -56,21 +56,21 @@ public:
     // Servo-specific operations
     void setAngle(int angle);
     void setAngle(int angle, float speed); // Speed in degrees per second
-    void setSpeed(float speed); // Set default movement speed
+    void setSpeed(float speed);            // Set default movement speed
     int getAngle() const { return _currentAngle; }
     int getTargetAngle() const { return _targetAngle; }
     float getSpeed() const { return _speed; }
     bool isMoving() const { return _isMoving; }
 
 private:
-    int _pin = 1;                    ///< GPIO pin number for the servo
-    int _currentAngle = 90;           ///< Current angle of the servo (0-180)
-    int _targetAngle = 90;            ///< Target angle for smooth movement
-    float _speed = 60.0;                ///< Movement speed in degrees per second
-    bool _isMoving = false;              ///< Flag indicating if servo is currently moving
-    unsigned long _lastUpdate = 0;   ///< Last time movement was updated
-    int _pwmChannel = 0;             ///< PWM channel for ESP32 AnalogWrite
-    Pwm _servoPwm;               ///< Persistent PWM instance for this servo
+    int _pin = 1;                  ///< GPIO pin number for the servo
+    int _currentAngle = 90;        ///< Current angle of the servo (0-180)
+    int _targetAngle = 90;         ///< Target angle for smooth movement
+    float _speed = 60.0;           ///< Movement speed in degrees per second
+    bool _isMoving = false;        ///< Flag indicating if servo is currently moving
+    unsigned long _lastUpdate = 0; ///< Last time movement was updated
+    int _pwmChannel = 0;           ///< PWM channel for ESP32 AnalogWrite
+    Pwm _servoPwm;                 ///< Persistent PWM instance for this servo
 
     /**
      * @brief Validate and constrain angle to valid range

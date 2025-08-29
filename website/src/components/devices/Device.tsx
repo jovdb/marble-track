@@ -18,7 +18,7 @@ export function Device(props: DeviceProps) {
     <div class={styles.device}>
       <div class={styles.device__header}>
         <h3 class={styles.device__title}>{props.deviceState?.name || props.id}</h3>
-        <span style={{ display: "flex", gap: "var(--spacing-2)" }}>
+        <span style={{ display: "flex", gap: "var(--spacing-2)", "align-items": "center" }}>
           {props.deviceState?.type && (
             <span class={styles["device__type-badge"]}>{props.deviceState?.type}</span>
           )}

@@ -6,7 +6,9 @@
 #include "devices/Led.h"
 #include "devices/Buzzer.h"
 #include "devices/Button.h"
-#include "esp_log.h"
+#include "devices/Servo.h"
+#include "devices/Stepper.h"
+#include "devices/Wheel.h"
 
 static const char *TAG = "DeviceManager";
 static constexpr const char *DEVICES_LIST_FILE = "/devices.json";
@@ -76,6 +78,17 @@ void DeviceManager::loadDevicesFromJsonFile()
                         Button *button = new Button(id, name);
                         devices[devicesCount++] = button;
                     }
+                    else if (type == "servo")
+                    {
+                        ServoDevice *servo = new ServoDevice(id, name);
+                        devices[devicesCount++] = servo;
+                    }
+                    else if (type == "stepper")
+                    {
+                        Stepper *stepper = new Stepper(id, name);
+                        devices[devicesCount++] = stepper;
+                    }
+
                     else
                     {
                         ESP_LOGW(TAG, "Unknown device type: %s", type.c_str());

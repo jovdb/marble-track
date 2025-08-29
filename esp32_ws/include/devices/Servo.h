@@ -30,13 +30,10 @@ class ServoDevice : public Device
 public:
     /**
      * @brief Constructor - creates servo object without initializing hardware
-     * @param pin GPIO pin number for the servo
      * @param id Unique identifier string for the servo
      * @param name Human-readable name string for the servo
-     * @param initialAngle Initial angle for the servo (0-180 degrees)
-     * @param pwmChannel PWM channel for ESP32 AnalogWrite (0-15)
      */
-    ServoDevice(int pin, const String &id, const String &name, int initialAngle = 90, int pwmChannel = 0);
+    ServoDevice(const String &id, const String &name);
 
     /**
      * @brief Destructor - cleans up servo object
@@ -47,7 +44,7 @@ public:
      * @brief Setup servo hardware and initialize PWM
      * Call this after constructor to initialize the servo hardware
      */
-    void setup();
+    void setup(); // Now sets up pin, initialAngle, pwmChannel with defaults
 
     void loop() override; // Handle smooth movement updates
 
@@ -66,13 +63,13 @@ public:
     bool isMoving() const { return _isMoving; }
 
 private:
-    int _pin;                    ///< GPIO pin number for the servo
-    int _currentAngle;           ///< Current angle of the servo (0-180)
-    int _targetAngle;            ///< Target angle for smooth movement
-    float _speed;                ///< Movement speed in degrees per second
-    bool _isMoving;              ///< Flag indicating if servo is currently moving
-    unsigned long _lastUpdate;   ///< Last time movement was updated
-    int _pwmChannel;             ///< PWM channel for ESP32 AnalogWrite
+    int _pin = 1;                    ///< GPIO pin number for the servo
+    int _currentAngle = 90;           ///< Current angle of the servo (0-180)
+    int _targetAngle = 90;            ///< Target angle for smooth movement
+    float _speed = 60.0;                ///< Movement speed in degrees per second
+    bool _isMoving = false;              ///< Flag indicating if servo is currently moving
+    unsigned long _lastUpdate = 0;   ///< Last time movement was updated
+    int _pwmChannel = 0;             ///< PWM channel for ESP32 AnalogWrite
     Pwm _servoPwm;               ///< Persistent PWM instance for this servo
 
     /**

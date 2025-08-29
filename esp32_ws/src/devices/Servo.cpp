@@ -16,20 +16,23 @@ static const char *TAG = "Servo";
 #include "devices/Servo.h"
 #include <pwmWrite.h>
 
-ServoDevice::ServoDevice(int pin, const String &id, const String &name, int initialAngle, int pwmChannel)
-    : Device(id, name, "servo"), _pin(pin), _currentAngle(constrainAngle(initialAngle)),
-      _targetAngle(constrainAngle(initialAngle)), _speed(60.0), _isMoving(false),
-      _lastUpdate(0), _pwmChannel(pwmChannel), _servoPwm()
+ServoDevice::ServoDevice(const String &id, const String &name)
+    : Device(id, name, "servo"), _servoPwm()
 {
-    ESP_LOGI(TAG, "Servo [%s]: Created on pin %d, PWM channel %d", _id.c_str(), _pin, _pwmChannel);
+    // Defaults set in member initializers
+    ESP_LOGI(TAG, "Servo [%s]: Created (defaults: pin %d, angle %d, pwm %d)", _id.c_str(), _pin, _currentAngle, _pwmChannel);
 }
 
 void ServoDevice::setup()
 {
+    _pin = -1;
+    _currentAngle = 0;
+    _targetAngle = 0;
+    _pwmChannel = 0;
     _servoPwm.attachServo(_pin, _pwmChannel);
     _servoPwm.writeServo(_pin, _currentAngle);
     _lastUpdate = millis();
-    ESP_LOGI(TAG, "Servo [%s]: Setup complete at angle %d with speed %.2f deg/s", _id.c_str(), _currentAngle, _speed);
+    ESP_LOGI(TAG, "Servo [%s]: Setup complete at pin %d, angle %d, pwm %d, speed %.2f deg/s", _id.c_str(), _pin, _currentAngle, _pwmChannel, _speed);
 }
 
 ServoDevice::~ServoDevice()

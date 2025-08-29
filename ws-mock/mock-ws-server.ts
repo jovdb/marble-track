@@ -3,6 +3,7 @@ import { WebSocketServer } from "ws";
 import { getDevicesHandler } from "./handlers/getDevicesHandler.ts";
 import { deviceSaveConfigHandler } from "./handlers/deviceSaveConfigHandler.ts";
 import { deviceReadConfigHandler } from "./handlers/deviceLoadConfigHandler.ts";
+import { getDevicesListHandler } from "./handlers/getDevicesListHandler.ts";
 
 const PORT: number = 5173;
 const WS_PATH: string = "/ws";
@@ -27,6 +28,9 @@ wss.on(
         switch (data.type) {
           case "get-devices":
             getDevicesHandler(ws);
+            break;
+          case "get-devices-list":
+            getDevicesListHandler(ws);
             break;
           case "device-save-config":
             deviceSaveConfigHandler(ws, data.deviceId, data.config);
@@ -65,5 +69,8 @@ server.on(
 server.listen(PORT, () => {
   console.log(
     `Mock WebSocket server running at ws://localhost:${PORT}${WS_PATH}`
+  );
+  console.log(
+    `Set website/.env variable:\nVITE_MARBLE_WS=ws://localhost:${PORT}${WS_PATH}`
   );
 });

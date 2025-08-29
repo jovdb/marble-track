@@ -1,6 +1,7 @@
 import { Device } from "./Device";
 import styles from "./Device.module.css";
 import { createButtonStore } from "../../stores/Button";
+import ButtonConfig from "./ButtonConfig";
 
 export function Button(props: { id: string }) {
   const { state, error, press, release } = createButtonStore(props.id);
@@ -14,7 +15,7 @@ export function Button(props: { id: string }) {
   };
 
   return (
-    <Device id={props.id} deviceState={state()}>
+    <Device id={props.id} deviceState={state()} configComponent={<ButtonConfig id={props.id} />}>
       {error() && <div class={styles.device__error}>{error()}</div>}
       {!error() && (
         <>

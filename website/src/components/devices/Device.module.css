@@ -279,5 +279,7 @@
   border-right-color: #aaa;
   transform: translateY(1px);
   background-color: rgba(0, 0, 0, 0.1);
+  background-color: var(--color-primary-600);
   box-shadow: var(--inset-shadow-sm);
+  color: #bbbbee;
 }

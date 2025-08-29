@@ -1,17 +1,18 @@
+
 import { createSignal } from "solid-js";
 import DeviceConfig from "./DeviceConfig";
 
-interface LedConfigProps {
+interface BuzzerConfigProps {
   id: string;
 }
 
-export default function LedConfig(props: LedConfigProps) {
+export default function BuzzerConfig(props: BuzzerConfigProps) {
   const [pin, setPin] = createSignal(1);
 
   return (
     <DeviceConfig id={props.id} onSave={() => alert(`TODO: save`)}>
       <label>
-        Pin number:
+        PWM Pin number:
         <input
           type="number"
           value={pin()}

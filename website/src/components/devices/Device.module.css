@@ -259,11 +259,13 @@
 
 .device__header-button {
   background-color: rgba(0, 0, 0, 0.05);
-  border: 2px solid #888;
-  border-top-color: #aaa;
-  border-left-color: #aaa;
-  border-bottom-color: #888;
-  border-right-color: #888;
+  border: none;
+  border-style: solid;
+  border-width: 1px;
+  border-top-color: #ddd;
+  border-left-color: #ddd;
+  border-bottom-color: #ccc;
+  border-right-color: #ccc;
   padding: 4px;
   display: flex; /* no padding */
   box-shadow: var(--shadow-sm);

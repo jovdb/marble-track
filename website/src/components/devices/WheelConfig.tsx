@@ -3,6 +3,7 @@ import wheelStyles from "./WheelConfig.module.css";
 import { IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
 import { createWheelStore, IWheelConfig } from "../../stores/Wheel";
 import { createMemo, For, onMount } from "solid-js";
+import DeviceConfig from "./DeviceConfig";
 
 // Update the import path below to the correct location of IWheelState
 
@@ -30,7 +31,7 @@ export function WheelConfig(props: { id: string }) {
   };
 
   return (
-    <div class={styles.device__controls}>
+    <DeviceConfig id={props.id} onSave={() => alert(`TODO: save`)}>
       <button
         class={styles.device__button}
         onClick={() => {
@@ -152,17 +153,6 @@ export function WheelConfig(props: { id: string }) {
           + Add Breakpoint
         </button>
       </div>
-      <div>
-        <button
-          class={`${styles["device__button"]}]}`}
-          onClick={() => {
-            saveConfig(config()?.breakPoints);
-          }}
-          disabled={!!error()}
-        >
-          Save
-        </button>
-      </div>
-    </div>
+    </DeviceConfig>
   );
 }

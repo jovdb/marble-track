@@ -28,6 +28,11 @@
 class ServoDevice : public Device
 {
 public:
+    // Pin and PWM channel getters/setters
+    int getPin() const;
+    void setPin(int pin);
+    int getPwmChannel() const;
+    void setPwmChannel(int channel);
     /**
      * @brief Constructor - creates servo object without initializing hardware
      * @param id Unique identifier string for the servo

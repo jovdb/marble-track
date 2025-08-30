@@ -161,8 +161,8 @@ void setup()
         // new Button("test-button", "Test Button"),
         new Button("test-button2", "Test Button 2"),
         new Buzzer("test-buzzer", "Test Buzzer"),
-        // new ServoDevice()"test-servo", "SG90"),
-        // new Button()"ball-sensor", "Ball Sensor"),
+        // new ServoDevice("test-servo", "SG90"),
+        // new Button("ball-sensor", "Ball Sensor"),
         // new GateWithSensor(21, 2, 48, static_cast<Buzzer *>(nullptr), "gate-with-sensor", "Gate", 50, true, 50, Button::ButtonType::NormalClosed),
         // new Stepper(45, 48, "stepper", "Stepper Motor", 1000, 500),
         new DividerWheel(10, 11, 12, 13, 15, "wheel", "Divider Wheel")};
@@ -174,6 +174,11 @@ void setup()
     }
     deviceManager.saveDevicesToJsonFile();
   }
+  // TEMP
+  ServoDevice *testServo = new ServoDevice("test-servo", "SG90");
+  testServo->setPin(42);
+  testServo->setPwmChannel(1);
+  deviceManager.addDevice(testServo);
 
   // Setup  Devices
   deviceManager.setup([&](const String &deviceId, const String &stateJson)

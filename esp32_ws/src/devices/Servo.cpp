@@ -190,3 +190,8 @@ int ServoDevice::constrainAngle(int angle)
 {
     return constrain(angle, 0, 180);
 }
+
+int ServoDevice::getPin() const { return _pin; }
+void ServoDevice::setPin(int pin) { _pin = pin; }
+int ServoDevice::getPwmChannel() const { return _pwmChannel; }
+void ServoDevice::setPwmChannel(int channel) { _pwmChannel = channel; }

@@ -3,13 +3,14 @@ import { debounce } from "@solid-primitives/scheduled";
 import { createSignal } from "solid-js";
 import styles from "./Device.module.css";
 import { createServoStore } from "../../stores/Servo";
+import { ServoIcon } from "../icons/Icons";
 
 export function Servo(props: { id: string }) {
   const { state, error, stop, setAngle } = createServoStore(props.id);
   const [currentSpeed, setCurrentSpeed] = createSignal(60);
 
   return (
-    <Device id={props.id} deviceState={state()}>
+    <Device id={props.id} deviceState={state()} icon={<ServoIcon />}>
       {error() && <div class={styles.device__error}>{error()}</div>}
       {!error() && (
         <>

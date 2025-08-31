@@ -22,13 +22,24 @@
   align-items: center;
   justify-content: space-between;
 }
+.device__header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.device__header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
 
 .device__title {
   margin: 0;
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
-  display: flex;
+  display: inline;
   align-items: center;
   gap: var(--spacing-3);
 }

@@ -3,12 +3,18 @@ import styles from "./Device.module.css";
 import ledStyles from "./Led.module.css";
 import { createLedStore } from "../../stores/Led";
 import LedConfig from "./LedConfig";
+import { LedIcon } from "../icons/Icons";
 
 export function Led(props: { id: string }) {
   const { state, error, setLed, blink } = createLedStore(props.id);
 
   return (
-    <Device id={props.id} deviceState={state()} configComponent={<LedConfig id={props.id} />}>
+    <Device
+      id={props.id}
+      deviceState={state()}
+      configComponent={<LedConfig id={props.id} />}
+      icon={<LedIcon />}
+    >
       {error() && <div class={styles.device__error}>{error()}</div>}
       {!error() && (
         <>

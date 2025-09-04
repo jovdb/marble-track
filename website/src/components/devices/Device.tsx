@@ -2,6 +2,7 @@ import { createSignal, For, JSX } from "solid-js";
 import styles from "./Device.module.css";
 import { renderDeviceComponent } from "../../App";
 import { IDeviceState } from "../../stores/Device";
+import { useDevice } from "../../stores/useDevice";
 
 interface DeviceProps {
   id: string;
@@ -14,12 +15,14 @@ interface DeviceProps {
 export function Device(props: DeviceProps) {
   const [showChildren, setShowChildren] = createSignal(false);
   const [showConfig, setShowConfig] = createSignal(false);
+  const [device, actions] = useDevice(props.id);
 
   return (
     <div class={styles.device}>
       <div class={styles.device__header}>
         <div class={styles["device__header-left"]}>
           {props.icon}
+          {device.name}
           <h3 class={styles.device__title}>{props.deviceState?.name || props.id}</h3>
         </div>
         <div class={styles["device__header-right"]}>

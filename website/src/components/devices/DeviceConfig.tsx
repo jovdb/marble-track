@@ -17,7 +17,7 @@ export default function DeviceConfig(props: DeviceConfigProps) {
       >
         <div>{props.children}</div>
         <div style={{ display: "flex", gap: "1rem", "justify-content": "flex-end" }}>
-          <button type="submit" >Save</button>
+          <button type="submit">Save</button>
         </div>
       </form>
     </div>

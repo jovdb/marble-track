@@ -5,6 +5,11 @@
 $originalDir = Get-Location
 
 try {
+
+     # Remove previous ESP32 filesystem files
+    Write-Host "Clearing previous files..." -ForegroundColor Yellow
+    Get-ChildItem ".\esp32_ws\data" -Recurse -File | Remove-Item -Force
+
     Write-Host "Building website files..." -ForegroundColor Green
     
     # Change to website directory
@@ -44,10 +49,6 @@ try {
     # Clean up any .env files that might have been copied to data directory
     Write-Host "Cleaning up .env files from data directory..." -ForegroundColor Yellow
     Get-ChildItem ".\esp32_ws\data" -Recurse -Force | Where-Object { $_.Name -like "*.env*" } | Remove-Item -Force
-    
-    # Remove previous ESP32 filesystem files
-    Write-Host "Clearing previous files..." -ForegroundColor Yellow
-    Get-ChildItem ".\esp32_ws\data" -Recurse -File | Remove-Item -Force
 
     # Quick filesystem upload for ESP32-S3
     $platformioPath = "C:\Users\vandenberghej\.platformio\penv\Scripts\platformio.exe"

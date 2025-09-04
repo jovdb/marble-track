@@ -46,9 +46,9 @@ bool Network::setup()
     }
 
     // Start mDNS responder for marble-track.local using ESP-IDF mDNS
-#ifdef ESP32
     if (_currentMode != NetworkMode::DISCONNECTED)
     {
+        // Start mDNS
         if (mdns_init() == ESP_OK)
         {
             mdns_hostname_set("marble-track.local");
@@ -61,10 +61,10 @@ bool Network::setup()
         {
             ESP_LOGE(TAG, "mDNS: http://marble-track.local : ERROR");
         }
-    }
-#endif
 
-    // If both fail
+        return true; // Allow successful setup if mDNS fails
+    }
+
     _currentMode = NetworkMode::DISCONNECTED;
     ESP_LOGE(TAG, "No network connection!");
     return false;
@@ -121,6 +121,7 @@ bool Network::startAccessPoint()
 
         // ESP_LOGI(TAG, "Password: %s", AP_PASSWORD);
         ESP_LOGI(TAG, ": OK: http://%s", IP.toString().c_str());
+        ESP_LOGI(TAG, "AP mode SSID: %s, IP: %s, StationCount: %d", AP_SSID, IP.toString().c_str(), WiFi.softAPgetStationNum());
         ESP_LOGI(TAG, "Captive portal enabled - all web requests will redirect here");
         return true;
     }

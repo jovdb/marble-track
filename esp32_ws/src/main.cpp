@@ -20,6 +20,7 @@ OTAService otaService;
 
 #include "devices/GateWithSensor.h"
 #include "devices/Stepper.h"
+#include "devices/PwmMotor.h"
 
 #include "OTA_Support.h"
 #include <devices/Wheel.h>
@@ -179,6 +180,11 @@ void setup()
   testServo->setPin(42);
   testServo->setPwmChannel(1);
   deviceManager.addDevice(testServo);
+  
+  // TEMP - Add test PWM Motor
+  PwmMotor *testPwmMotor = new PwmMotor("test-pwm-motor", "Test PWM Motor");
+  testPwmMotor->setupMotor(14, 0, 1000, 10);  // pin 14, channel 0, 1kHz, 10-bit resolution
+  deviceManager.addDevice(testPwmMotor);
 
   // Setup  Devices
   deviceManager.setup([&](const String &deviceId, const String &stateJson)

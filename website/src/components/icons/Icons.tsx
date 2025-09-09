@@ -138,6 +138,8 @@ export const getDeviceIcon = (type: string, props?: IconProps) => {
       return <BuzzerIcon {...props} />;
     case "STEPPER":
       return <StepperIcon {...props} />;
+    case "PWMMOTOR":
+      return <StepperIcon {...props} />; // Using stepper icon for PWM motor
     default:
       return <LedIcon {...props} />; // Default fallback
   }

@@ -9,6 +9,7 @@ import { Servo } from "./components/devices/Servo";
 import { Buzzer } from "./components/devices/Buzzer";
 import { Button } from "./components/devices/Button";
 import { Gate } from "./components/devices/Gate";
+import { PwmMotor } from "./components/devices/PwmMotor";
 import { ClipboardIcon, RadioIcon } from "./components/icons/Icons";
 import { devicesLoading, isConnected, availableDevices, websocket } from "./hooks/useWebSocket";
 import AnimatedFavicon from "./utils/animatedFavicon";
@@ -35,6 +36,8 @@ export function renderDeviceComponent(device: { id: string; type: string }) {
       return <Gate id={device.id} />;
     case "wheel":
       return <Wheel id={device.id} />;
+    case "pwmmotor":
+      return <PwmMotor id={device.id} />;
 
     default:
       logger.error(`Unknown device type: ${device.type}`);

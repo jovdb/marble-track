@@ -270,7 +270,7 @@ void checkSerialCommands()
     {
       // Enter key pressed - show network info
       logNetworkInfo();
-      Serial.println("💡 Commands: 'restart', 'devices', 'network', 'memory'");
+      Serial.println("💡 Commands: 'devices', 'network', 'memory', 'restart'");
       Serial.println();
     }
     else if (input.equalsIgnoreCase("restart"))
@@ -285,6 +285,41 @@ void checkSerialCommands()
       Serial.printf("⚙️  Devices: %d total | Mode: %s\n",
                     deviceManager.getDeviceCount(),
                     (currentMode == OperationMode::MANUAL) ? "MANUAL" : "AUTOMATIC");
+      
+      // Get all devices and display their information
+      Device *deviceList[20]; // MAX_DEVICES from DeviceManager
+      int deviceCount = 0;
+      deviceManager.getDevices(deviceList, deviceCount, 20);
+      
+      if (deviceCount > 0) {
+        for (int i = 0; i < deviceCount; i++) {
+          if (deviceList[i] != nullptr) {
+            String state = deviceList[i]->getState();
+            
+            // Display device info with styled JSON state
+            Serial.printf("  %d. %s [%s] %s\n", 
+                         i + 1,
+                         deviceList[i]->getType().c_str(),
+                         deviceList[i]->getId().c_str(),
+                         deviceList[i]->getName().c_str());
+            
+            // Parse and pretty-print JSON
+            JsonDocument stateDoc;
+            DeserializationError error = deserializeJson(stateDoc, state);
+            
+            if (error) {
+              Serial.printf("     JSON State: %s\n", state.c_str());
+            } else {
+              Serial.println("     JSON State:");
+              serializeJsonPretty(stateDoc, Serial);
+              Serial.println();
+            }
+            Serial.println();
+          }
+        }
+      } else {
+        Serial.println("  No devices found");
+      }
       Serial.println();
     }
     else if (input.equalsIgnoreCase("network"))

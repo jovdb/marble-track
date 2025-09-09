@@ -1,5 +1,3 @@
-#include "OTA_Support.h"
-OTAService otaService;
 #include <Arduino.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -27,6 +25,9 @@ OTAService otaService;
 
 static const char *TAG = "main";
 
+// Service instances
+OTAService otaService;
+
 enum class OperationMode
 {
   MANUAL,
@@ -51,6 +52,8 @@ WebSocketManager wsManager(&deviceManager, "/ws");
 
 // Function declarations
 void setOperationMode(OperationMode mode);
+void logNetworkInfo();
+void checkSerialCommands();
 
 void runManualMode()
 {
@@ -113,6 +116,8 @@ void runManualMode()
 
 void runAutomaticMode()
 {
+  // Automatic mode: Future implementation for automated sequences
+  // Currently not implemented - system runs in MANUAL mode
 }
 
 void setup()
@@ -159,13 +164,8 @@ void setup()
   {
     Device *devices[] = {
         new Led("test-led", "Test LED"),
-        // new Button("test-button", "Test Button"),
         new Button("test-button2", "Test Button 2"),
         new Buzzer("test-buzzer", "Test Buzzer"),
-        // new ServoDevice("test-servo", "SG90"),
-        // new Button("ball-sensor", "Ball Sensor"),
-        // new GateWithSensor(21, 2, 48, static_cast<Buzzer *>(nullptr), "gate-with-sensor", "Gate", 50, true, 50, Button::ButtonType::NormalClosed),
-        // new Stepper(45, 48, "stepper", "Stepper Motor", 1000, 500),
         new DividerWheel(10, 11, 12, 13, 15, "wheel", "Divider Wheel")};
 
     const int numDevices = sizeof(devices) / sizeof(devices[0]);
@@ -175,15 +175,15 @@ void setup()
     }
     deviceManager.saveDevicesToJsonFile();
   }
-  // TEMP
+
+  // Add development/test devices (these are not saved to JSON)
   ServoDevice *testServo = new ServoDevice("test-servo", "SG90");
   testServo->setPin(42);
   testServo->setPwmChannel(1);
   deviceManager.addDevice(testServo);
-  
-  // TEMP - Add test PWM Motor
+
   PwmMotor *testPwmMotor = new PwmMotor("test-pwm-motor", "Test PWM Motor");
-  testPwmMotor->setupMotor(14, 0, 1000, 10);  // pin 14, channel 0, 1kHz, 10-bit resolution
+  testPwmMotor->setupMotor(14, 0, 1000, 10); // pin 14, channel 0, 1kHz, 10-bit resolution
   deviceManager.addDevice(testPwmMotor);
 
   // Setup  Devices
@@ -206,6 +206,9 @@ void setup()
 
 void loop()
 {
+  // Check for serial input commands
+  checkSerialCommands();
+
   otaService.loop();
 
   littleFSManager.loop();
@@ -229,6 +232,81 @@ void loop()
   case OperationMode::AUTOMATIC:
     runAutomaticMode();
     break;
+  }
+}
+
+void logNetworkInfo()
+{
+  Serial.println();
+  Serial.println("📡 Network Status:");
+
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    Serial.printf("  ✅ WiFi: %s\n", WiFi.SSID().c_str());
+    Serial.printf("  🏠 mDNS: http://marble-track.local\n");
+    Serial.printf("  🌍 Web: http://%s\n", WiFi.localIP().toString().c_str());
+  }
+  else
+  {
+    Serial.println("  ❌ WiFi: Disconnected");
+    if (WiFi.getMode() == WIFI_AP || WiFi.getMode() == WIFI_AP_STA)
+    {
+      Serial.printf("  🏢 AP Mode: %s at %s\n", WiFi.softAPSSID().c_str(), WiFi.softAPIP().toString().c_str());
+    }
+  }
+  Serial.println();
+}
+
+void checkSerialCommands()
+{
+  // Check if there's any serial input available
+  if (Serial.available())
+  {
+    String input = Serial.readStringUntil('\n');
+    input.trim(); // Remove whitespace and newline characters
+
+    // Check for Enter key (empty input) or specific commands
+    if (input.length() == 0)
+    {
+      // Enter key pressed - show network info
+      logNetworkInfo();
+      Serial.println("💡 Commands: 'restart', 'devices', 'network', 'memory'");
+      Serial.println();
+    }
+    else if (input.equalsIgnoreCase("restart"))
+    {
+      Serial.println("🔄 Restarting ESP32...");
+      delay(1000);
+      ESP.restart();
+    }
+    else if (input.equalsIgnoreCase("devices"))
+    {
+      Serial.println();
+      Serial.printf("⚙️  Devices: %d total | Mode: %s\n",
+                    deviceManager.getDeviceCount(),
+                    (currentMode == OperationMode::MANUAL) ? "MANUAL" : "AUTOMATIC");
+      Serial.println();
+    }
+    else if (input.equalsIgnoreCase("network"))
+    {
+      logNetworkInfo();
+    }
+    else if (input.equalsIgnoreCase("memory"))
+    {
+      Serial.println();
+      Serial.println("💾 Memory Status:");
+      uint32_t free = ESP.getFreeHeap();
+      uint32_t total = ESP.getHeapSize();
+      uint32_t percent = (free * 100) / total;
+      Serial.printf("   ⚡ Free: %d%% (%d bytes) | Total: %d bytes\n", percent, free, total);
+      Serial.printf("   📈 Min Free: %d bytes | CPU: %d MHz\n", ESP.getMinFreeHeap(), ESP.getCpuFreqMHz());
+      Serial.println();
+    }
+    else
+    {
+      Serial.printf("❓ Unknown command: '%s'\n", input.c_str());
+      Serial.println();
+    }
   }
 }
 

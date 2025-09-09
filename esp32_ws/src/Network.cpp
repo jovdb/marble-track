@@ -13,7 +13,7 @@ String Network::getHostname() const
 {
     // If you want to make this configurable, use a member variable
     // For now, return the default used in mDNS and OTA
-    String hostname = "marble-track.local";
+    String hostname = "marble-track";
     return hostname;
 }
 
@@ -51,15 +51,29 @@ bool Network::setup()
         // Start mDNS
         if (mdns_init() == ESP_OK)
         {
-            mdns_hostname_set("marble-track.local");
-            mdns_instance_name_set("Jo's Marble Track");
-            mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
-
-            ESP_LOGI(TAG, "mDNS: http://marble-track.local : OK");
+            // Set hostname without .local suffix - mDNS will append it automatically
+            if (mdns_hostname_set("marble-track") == ESP_OK)
+            {
+                mdns_instance_name_set("Marble Track Controller");
+                
+                // Add HTTP service
+                if (mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0) == ESP_OK)
+                {
+                    ESP_LOGI(TAG, "mDNS: http://marble-track.local : OK");
+                }
+                else
+                {
+                    ESP_LOGW(TAG, "mDNS: HTTP service registration failed");
+                }
+            }
+            else
+            {
+                ESP_LOGE(TAG, "mDNS: hostname setup failed");
+            }
         }
         else
         {
-            ESP_LOGE(TAG, "mDNS: http://marble-track.local : ERROR");
+            ESP_LOGE(TAG, "mDNS: initialization failed");
         }
 
         return true; // Allow successful setup if mDNS fails

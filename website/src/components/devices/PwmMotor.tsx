@@ -4,6 +4,7 @@ import { createSignal } from "solid-js";
 import styles from "./Device.module.css";
 import { createPwmMotorStore } from "../../stores/PwmMotor";
 import { StepperIcon } from "../icons/Icons"; // Using stepper icon as closest to motor
+import PwmMotorConfig from "./PwmMotorConfig";
 
 export function PwmMotor(props: { id: string }) {
   const { state, error, setDutyCycle, stop } = createPwmMotorStore(props.id);
@@ -14,7 +15,12 @@ export function PwmMotor(props: { id: string }) {
   }, 100);
 
   return (
-    <Device id={props.id} deviceState={state()} icon={<StepperIcon />}>
+    <Device 
+      id={props.id} 
+      deviceState={state()} 
+      configComponent={<PwmMotorConfig id={props.id} />}
+      icon={<StepperIcon />}
+    >
       {error() && <div class={styles.device__error}>{error()}</div>}
       {!error() && (
         <>

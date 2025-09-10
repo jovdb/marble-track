@@ -56,7 +56,7 @@ export function PwmMotor(props: { id: string }) {
 
           <div class={styles["device__input-group"]}>
             <label class={styles.device__label} for={`dutyCycle-${props.id}`}>
-              Duty Cycle: {(currentDutyCycle() || state()?.dutyCycle || 0).toFixed(1)}%
+              Duty Cycle: {(currentDutyCycle() || state()?.dutyCycle || 0).toFixed(0)}%
             </label>
             <input
               id={`dutyCycle-${props.id}`}
@@ -64,7 +64,7 @@ export function PwmMotor(props: { id: string }) {
               type="range"
               min="0"
               max="100"
-              step="0.1"
+              step="1"
               value={currentDutyCycle() || state()?.dutyCycle || 0}
               onInput={(e) => {
                 const value = Number(e.currentTarget.value);

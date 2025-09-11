@@ -7,10 +7,15 @@ PwmMotor::PwmMotor(const String &id, const String &name)
     : Device(id, name, "pwmmotor"), 
       _pin(-1), 
       _pwmChannel(0), 
-      _frequency(1000), 
-      _resolutionBits(10),
+      _frequency(5000), 
+      _resolutionBits(12),
       _currentDutyCycle(0.0),
       _isSetup(false),
+      _isAnimating(false),
+      _startDutyCycle(0.0),
+      _targetDutyCycle(0.0),
+      _animationStartTime(0),
+      _animationDuration(0),
       _mcpwmUnit(MCPWM_UNIT_0),
       _mcpwmTimer(MCPWM_TIMER_0),
       _mcpwmSignal(MCPWM0A)
@@ -98,6 +103,34 @@ void PwmMotor::setDutyCycle(float dutyCycle)
     notifyStateChange();
 }
 
+void PwmMotor::setDutyCycleAnimated(float dutyCycle, uint32_t durationMs)
+{
+    if (!_isSetup) {
+        ESP_LOGE(TAG, "PwmMotor [%s]: Not setup. Call setupMotor() first.", _id.c_str());
+        return;
+    }
+
+    // Clamp duty cycle to valid range
+    if (dutyCycle < 0.0) dutyCycle = 0.0;
+    if (dutyCycle > 100.0) dutyCycle = 100.0;
+
+    // If duration is 0, just set immediately
+    if (durationMs == 0) {
+        setDutyCycle(dutyCycle);
+        return;
+    }
+
+    // Setup animation
+    _startDutyCycle = _currentDutyCycle;
+    _targetDutyCycle = dutyCycle;
+    _animationStartTime = millis();
+    _animationDuration = durationMs;
+    _isAnimating = true;
+
+    ESP_LOGI(TAG, "PwmMotor [%s]: Starting animated transition from %.1f%% to %.1f%% over %dms", 
+             _id.c_str(), _startDutyCycle, _targetDutyCycle, durationMs);
+}
+
 void PwmMotor::stop()
 {
     setDutyCycle(0.0);
@@ -124,7 +157,11 @@ void PwmMotor::setup()
 void PwmMotor::loop()
 {
     Device::loop();
-    // No continuous processing needed for PWM motor
+    
+    // Handle animation updates
+    if (_isAnimating) {
+        updateAnimation();
+    }
 }
 
 bool PwmMotor::control(const String &action, JsonObject *args)
@@ -135,7 +172,14 @@ bool PwmMotor::control(const String &action, JsonObject *args)
             return false;
         }
         float dutyCycle = (*args)["value"].as<float>();
-        setDutyCycle(dutyCycle);
+        
+        // Check for optional duration parameter
+        if ((*args)["durationMs"].is<uint32_t>()) {
+            uint32_t durationMs = (*args)["durationMs"].as<uint32_t>();
+            setDutyCycleAnimated(dutyCycle, durationMs);
+        } else {
+            setDutyCycle(dutyCycle);
+        }
         return true;
     }
     else if (action == "stop") {
@@ -180,8 +224,73 @@ String PwmMotor::getState()
     doc["dutyCycle"] = _currentDutyCycle;
     doc["isSetup"] = _isSetup;
     doc["running"] = (_currentDutyCycle > 0.0);
+    doc["isAnimating"] = _isAnimating;
+    
+    if (_isAnimating) {
+        doc["targetDutyCycle"] = _targetDutyCycle;
+        doc["animationProgress"] = (millis() - _animationStartTime) / (float)_animationDuration;
+    }
     
     String result;
     serializeJson(doc, result);
     return result;
+}
+
+void PwmMotor::updateAnimation()
+{
+    if (!_isAnimating) return;
+    
+    uint32_t currentTime = millis();
+    uint32_t elapsed = currentTime - _animationStartTime;
+    
+    // Check if animation is complete
+    if (elapsed >= _animationDuration) {
+        _isAnimating = false;
+        setDutyCycle(_targetDutyCycle);
+        ESP_LOGI(TAG, "PwmMotor [%s]: Animation complete, final duty cycle: %.1f%%", 
+                 _id.c_str(), _targetDutyCycle);
+        return;
+    }
+    
+    // Calculate animation progress (0.0 to 1.0)
+    float progress = (float)elapsed / (float)_animationDuration;
+    
+    // Apply easing function
+    float easedProgress = easeInOutQuad(progress);
+    
+    // Interpolate between start and target duty cycle
+    float currentDutyCycle = _startDutyCycle + ((_targetDutyCycle - _startDutyCycle) * easedProgress);
+    
+    // Apply the interpolated duty cycle directly (bypass setDutyCycle to avoid recursive calls)
+    _currentDutyCycle = currentDutyCycle;
+    
+    // Set the duty cycle using MCPWM
+    esp_err_t err = mcpwm_set_duty(_mcpwmUnit, _mcpwmTimer, MCPWM_OPR_A, currentDutyCycle);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "PwmMotor [%s]: Failed to set animated duty cycle: %s", _id.c_str(), esp_err_to_name(err));
+        _isAnimating = false;
+        return;
+    }
+    
+    // Update duty cycle type to percentage
+    mcpwm_set_duty_type(_mcpwmUnit, _mcpwmTimer, MCPWM_OPR_A, MCPWM_DUTY_MODE_0);
+    
+    // Notify state change for WebSocket updates (less frequently during animation)
+    if (elapsed % 100 == 0) { // Update every 100ms during animation
+        notifyStateChange();
+    }
+}
+
+float PwmMotor::easeInOutQuad(float t)
+{
+    // Clamp input to valid range
+    if (t < 0.0f) t = 0.0f;
+    if (t > 1.0f) t = 1.0f;
+    
+    // Ease-in-out quadratic function
+    if (t < 0.5f) {
+        return 2.0f * t * t;
+    } else {
+        return 1.0f - 2.0f * (1.0f - t) * (1.0f - t);
+    }
 }

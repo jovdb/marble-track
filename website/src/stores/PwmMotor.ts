@@ -13,13 +13,19 @@ interface IPwmMotorState extends IDeviceState {
   running: boolean;
 }
 
-export function setDutyCycle(deviceId: string, value: number) {
+export function setDutyCycle(deviceId: string, value: number, durationMs?: number) {
+  const args: { value: number; durationMs?: number } = { value };
+  
+  if (durationMs !== undefined && durationMs > 0) {
+    args.durationMs = durationMs;
+  }
+  
   sendMessage({
     type: "device-fn",
     deviceId,
     deviceType,
     fn: "setDutyCycle",
-    args: { value },
+    args,
   } as IWsDeviceMessage);
 }
 
@@ -54,7 +60,7 @@ export function createPwmMotorStore(deviceId: string) {
 
   return {
     ...base,
-    setDutyCycle: (value: number) => setDutyCycle(deviceId, value),
+    setDutyCycle: (value: number, durationMs?: number) => setDutyCycle(deviceId, value, durationMs),
     stop: () => stop(deviceId),
     setupMotor: (pin: number, channel: number, frequency: number, resolutionBits: number) =>
       setupMotor(deviceId, pin, channel, frequency, resolutionBits),

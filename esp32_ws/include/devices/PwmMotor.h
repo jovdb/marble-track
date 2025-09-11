@@ -43,6 +43,13 @@ public:
     void setDutyCycle(float dutyCycle);
 
     /**
+     * @brief Set motor duty cycle with animated transition
+     * @param dutyCycle Target duty cycle as percentage (0.0 to 100.0)
+     * @param durationMs Duration of animation in milliseconds
+     */
+    void setDutyCycleAnimated(float dutyCycle, uint32_t durationMs);
+
+    /**
      * @brief Get current duty cycle
      * @return Current duty cycle as percentage (0.0 to 100.0)
      */
@@ -67,6 +74,13 @@ private:
     float _currentDutyCycle;
     bool _isSetup;
     
+    // Animation state
+    bool _isAnimating;
+    float _startDutyCycle;
+    float _targetDutyCycle;
+    uint32_t _animationStartTime;
+    uint32_t _animationDuration;
+    
     mcpwm_unit_t _mcpwmUnit;
     mcpwm_timer_t _mcpwmTimer;
     mcpwm_io_signals_t _mcpwmSignal;
@@ -76,6 +90,18 @@ private:
      * @return true if configuration successful
      */
     bool configureMCPWM();
+
+    /**
+     * @brief Update animation state and apply eased duty cycle
+     */
+    void updateAnimation();
+
+    /**
+     * @brief Easing function for smooth animations (ease-in-out)
+     * @param t Normalized time (0.0 to 1.0)
+     * @return Eased value (0.0 to 1.0)
+     */
+    float easeInOutQuad(float t);
 };
 
 #endif // PWMMOTOR_H

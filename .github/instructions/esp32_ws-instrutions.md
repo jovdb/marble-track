@@ -32,14 +32,21 @@ This project is the firmware for the ESP32-based marble track system. It uses Pl
 - When adjusting code, always start a build to see if there are build errors, if so try to fix them and rebuild until all fixed.
 
 ## Adding New Devices
+
 1. Create header/source files in `include/devices/` and `src/devices/`.
 2. Inherit from `Device` and implement required methods.
 3. For composite devices, manage children with pointers and `addChild()`.
 4. Register the device in `main.cpp`.
 
+## Scripts
+
+- Monitor logs: `C:\Users\vandenberghej\.platformio\penv\Scripts\platformio.exe device monitor`
+- Build: `C:\Users\vandenberghej\.platformio\penv\Scripts\platformio.exe run`
+- Upload code: `C:\Users\vandenberghej\.platformio\penv\Scripts\platformio.exe run --target upload`
+
 ## Troubleshooting
+
 - If build errors occur, Check the logging output to know what iswrong
 - For runtime errors, check the logging of the PlatformIO Serial Monitor
----
 
 For further assistance, use GitHub Copilot in VS Code and refer to this file for project-specific instructions.

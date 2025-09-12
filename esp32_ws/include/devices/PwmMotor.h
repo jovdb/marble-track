@@ -39,8 +39,9 @@ public:
     /**
      * @brief Set motor duty cycle
      * @param dutyCycle Duty cycle as percentage (0.0 to 100.0)
+     * @param notifyChange Whether to send state change notification (default: true)
      */
-    void setDutyCycle(float dutyCycle);
+    void setDutyCycle(float dutyCycle, bool notifyChange = true);
 
     /**
      * @brief Set motor duty cycle with animated transition

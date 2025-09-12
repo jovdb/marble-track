@@ -9,17 +9,19 @@ interface IPwmMotorState extends IDeviceState {
   frequency: number;
   resolutionBits: number;
   dutyCycle: number;
-  isSetup: boolean;
-  running: boolean;
+  /** Available when animating */
+  targetDutyCycle?: number;
+  /** Available when animating */
+  targetDurationMs?: number;
 }
 
 export function setDutyCycle(deviceId: string, value: number, durationMs?: number) {
   const args: { value: number; durationMs?: number } = { value };
-  
+
   if (durationMs !== undefined && durationMs > 0) {
     args.durationMs = durationMs;
   }
-  
+
   sendMessage({
     type: "device-fn",
     deviceId,

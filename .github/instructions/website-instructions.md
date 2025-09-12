@@ -28,7 +28,7 @@ This is the frontend web application for the marble track system. It is built wi
 - `tsconfig.json`: TypeScript configuration
 - `eslint.config.js`: ESLint configuration
 
-## Development & Build
+## Scripts
 
 - Install dependencies: `npm install`
 - Start dev server: `npm run dev`
@@ -36,6 +36,7 @@ This is the frontend web application for the marble track system. It is built wi
 - Preview production build: `npm run preview`
 - Validating formatting and linting rules: `npm run check`
 - Fixing formatting and lint rules: `npm run fix`
+- Upload website: `../deploydeploy-website.ps1`
 
 ## Troubleshooting
 

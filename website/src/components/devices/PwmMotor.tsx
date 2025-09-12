@@ -17,9 +17,9 @@ export function PwmMotor(props: { id: string }) {
   }, 100);
 
   return (
-    <Device 
-      id={props.id} 
-      deviceState={state()} 
+    <Device
+      id={props.id}
+      deviceState={state()}
       configComponent={<PwmMotorConfig id={props.id} />}
       icon={<StepperIcon />}
     >
@@ -43,7 +43,8 @@ export function PwmMotor(props: { id: string }) {
 
           <div class={styles.device__status}>
             <span class={styles["device__status-text"]}>
-              Pin: {state()?.pin || "N/A"} | Channel: {state()?.pwmChannel || "N/A"} | Freq: {state()?.frequency || "N/A"}Hz
+              Pin: {state()?.pin || "N/A"} | Channel: {state()?.pwmChannel || "N/A"} | Freq:{" "}
+              {state()?.frequency || "N/A"}Hz
             </span>
           </div>
 

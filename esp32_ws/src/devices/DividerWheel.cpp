@@ -3,8 +3,9 @@
 static const char *TAG = "DividerWheel";
 
 DividerWheel::DividerWheel(int stepPin1, int stepPin2, int stepPin3, int stepPin4, int buttonPin, const String &id, const String &name)
-    : Device(id, name, "wheel")
+    : Device(id, "wheel")
 {
+    _name = name;
     _stepper = new Stepper(id + "-stepper", name + " Stepper");
     _stepper->configure4Pin(stepPin1, stepPin2, stepPin3, stepPin4, 1000, 500);
     _button = new Button(id + "-button", name + " Button");

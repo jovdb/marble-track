@@ -31,7 +31,7 @@ using StateChangeCallback = std::function<void(const String &deviceId, const Str
 class Device
 {
 public:
-    Device(const String &id, const String &name, const String &type);
+    Device(const String &id, const String &type);
     virtual ~Device();
     virtual void setup();
     virtual void loop();

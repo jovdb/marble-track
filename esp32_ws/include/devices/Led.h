@@ -34,7 +34,9 @@ public:
     // Controllable functionality
     bool control(const String &action, JsonObject *payload = nullptr) override;
     String getState() override;
-    std::vector<int> getPins() const override { return {_pin}; }
+    JsonObject getConfig() const override;
+    void setConfig(JsonObject *config) override;
+    std::vector<int> getPins() const override { return _pin != -1 ? std::vector<int>{_pin} : std::vector<int>{}; }
 
     // LED-specific operations
     void set(bool state);
@@ -42,6 +44,10 @@ public:
 
     // Non-blocking blink
     void blink(unsigned long onTime = 500, unsigned long offTime = 500);
+
+    // Configuration
+    void configurePin(int pin);
+    bool isConfigured() const { return _pin != -1; }
 
 private:
     int _pin = -1;        ///< GPIO pin number for the LED

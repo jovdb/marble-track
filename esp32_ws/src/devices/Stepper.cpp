@@ -26,7 +26,7 @@ static const char *TAG = "Stepper";
  * @param name Human-readable name string for the stepper
  */
 Stepper::Stepper(const String &id, const String &name)
-    : Device(id, name, "stepper")
+    : Device(id, "stepper")
 {
     ESP_LOGI(TAG, "Stepper [%s]: Created (not configured yet)", _id.c_str());
 }

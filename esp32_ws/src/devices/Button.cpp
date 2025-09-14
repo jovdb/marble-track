@@ -25,8 +25,9 @@ static const char *TAG = "Button";
  * @param debounceMs Debounce time in milliseconds
  */
 Button::Button(const String &id, const String &name)
-    : Device(id, name, "button")
+    : Device(id, "button")
 {
+    _name = name;
     _pin = -1;
     _pullUp = true;
     _debounceMs = 50;

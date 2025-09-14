@@ -4,11 +4,12 @@ static const char *TAG = "Wheel";
 #include "devices/Wheel.h"
 
 Wheel::Wheel(int stepPin1, int dirPin, int buttonPin, const String &id, const String &name)
-    : Device(id, name, "wheel"),
+    : Device(id, "wheel"),
       _stepper(new Stepper(id + "-stepper", name + " Stepper")),
       _sensor(new Button(id + "-sensor", name + " Sensor")),
       _state(wheelState::IDLE)
 {
+    _name = name;
     _stepper->configure2Pin(stepPin1, dirPin, 100, 1000);
     addChild(_stepper);
     addChild(_sensor);

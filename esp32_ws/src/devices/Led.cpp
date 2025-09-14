@@ -12,8 +12,9 @@ static const char *TAG = "Led";
  * @param name Human-readable name string for the LED
  */
 Led::Led(const String &id, const String &name)
-    : Device(id, name, "led"), _mode(LedMode::OFF)
+    : Device(id, "led"), _mode(LedMode::OFF)
 {
+    _name = name;
 }
 
 /**
@@ -24,9 +25,13 @@ void Led::setup()
 {
     Device::setup();
 
-    _pin = 1;
+    if (_pin == -1) {
+        ESP_LOGW(TAG, "Led [%s]: Pin not configured - call configurePin() first", _id.c_str());
+        return;
+    }
+
     pinMode(_pin, OUTPUT);
-    // digitalWrite(_pin, LOW);
+    digitalWrite(_pin, LOW);
     ESP_LOGI(TAG, "Led [%s]: Setup on pin %d", _id.c_str(), _pin);
 
     Led::blink(100, 300);
@@ -38,6 +43,11 @@ void Led::setup()
  */
 void Led::set(bool state)
 {
+    if (_pin == -1) {
+        ESP_LOGW(TAG, "Led [%s]: Pin not configured - cannot set state", _id.c_str());
+        return;
+    }
+
     digitalWrite(_pin, state ? HIGH : LOW);
     _mode = state ? LedMode::ON : LedMode::OFF;
 
@@ -160,5 +170,63 @@ void Led::loop()
                 _lastToggleTime = now;
             }
         }
+    }
+}
+
+/**
+ * @brief Configure the LED pin
+ * @param pin GPIO pin number for the LED
+ */
+void Led::configurePin(int pin)
+{
+    if (pin < 0) {
+        ESP_LOGW(TAG, "Led [%s]: Invalid pin number %d", _id.c_str(), pin);
+        return;
+    }
+
+    _pin = pin;
+    ESP_LOGI(TAG, "Led [%s]: Configured with pin %d", _id.c_str(), _pin);
+}
+
+/**
+ * @brief Get configuration as JSON
+ * @return JsonObject containing the current configuration
+ */
+JsonObject Led::getConfig() const
+{
+    JsonDocument doc;
+    JsonObject config = doc.to<JsonObject>();
+    
+    config["configured"] = (_pin != -1);
+    if (_pin != -1) {
+        config["pin"] = _pin;
+    }
+    config["name"] = _name;
+    
+    return config;
+}
+
+/**
+ * @brief Set configuration from JSON
+ * @param config Pointer to JSON object containing configuration
+ */
+void Led::setConfig(JsonObject *config)
+{
+    if (!config) {
+        ESP_LOGW(TAG, "Led [%s]: Null config provided", _id.c_str());
+        return;
+    }
+    
+    // Set name if provided
+    if ((*config)["name"].is<String>()) {
+        _name = (*config)["name"].as<String>();
+        ESP_LOGI(TAG, "Led [%s]: Name updated to '%s'", _id.c_str(), _name.c_str());
+    }
+    
+    // Set pin if provided
+    if ((*config)["pin"].is<int>()) {
+        int pin = (*config)["pin"].as<int>();
+        configurePin(pin);
+        ESP_LOGI(TAG, "Led [%s]: Configured from JSON with pin %d", _id.c_str(), pin);
     }
 }

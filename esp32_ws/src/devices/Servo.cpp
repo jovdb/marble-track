@@ -17,8 +17,9 @@ static const char *TAG = "Servo";
 #include <pwmWrite.h>
 
 ServoDevice::ServoDevice(const String &id, const String &name)
-    : Device(id, name, "servo"), _servoPwm()
+    : Device(id, "servo"), _servoPwm()
 {
+    _name = name;
     // Defaults set in member initializers
     ESP_LOGI(TAG, "Servo [%s]: Created (defaults: pin %d, angle %d, pwm %d)", _id.c_str(), _pin, _currentAngle, _pwmChannel);
 }

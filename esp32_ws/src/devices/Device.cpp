@@ -6,7 +6,7 @@
 #include "devices/Device.h"
 #include <vector>
 
-Device::Device(const String &id, const String &name, const String &type) : _id(id), _name(name), _type(type) {}
+Device::Device(const String &id, const String &type) : _id(id), _name(""), _type(type) {}
 
 Device::~Device()
 {

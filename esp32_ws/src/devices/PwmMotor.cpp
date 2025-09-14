@@ -4,7 +4,7 @@
 static const char *TAG = "PwmMotor";
 
 PwmMotor::PwmMotor(const String &id, const String &name)
-    : Device(id, name, "pwmmotor"),
+    : Device(id, "pwmmotor"),
       _pin(-1),
       _pwmChannel(0),
       _frequency(5000),
@@ -20,6 +20,7 @@ PwmMotor::PwmMotor(const String &id, const String &name)
       _mcpwmTimer(MCPWM_TIMER_0),
       _mcpwmSignal(MCPWM0A)
 {
+    _name = name;
 }
 
 bool PwmMotor::setupMotor(int pin, int pwmChannel, uint32_t frequency, uint8_t resolutionBits)

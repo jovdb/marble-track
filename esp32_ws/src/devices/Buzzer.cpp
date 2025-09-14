@@ -51,8 +51,9 @@ void Buzzer::startupTone()
  * @param name Human-readable name string for the buzzer
  */
 Buzzer::Buzzer(const String &id, const String &name)
-    : Device(id, name, "buzzer")
+    : Device(id, "buzzer")
 {
+    _name = name;
     _pin = -1;
     _isPlaying = false;
     _mode = BuzzerMode::IDLE;

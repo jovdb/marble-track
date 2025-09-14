@@ -1,5 +1,5 @@
 import { createSignal, onMount, onCleanup } from "solid-js";
-import { IWsMessage, sendMessage } from "../hooks/useWebSocket";
+import { sendMessage } from "../hooks/useWebSocket";
 
 export interface DeviceInfo {
   id: string;
@@ -19,7 +19,7 @@ let messageHandler: ((event: MessageEvent) => void) | null = null;
 export function useDeviceStore() {
   // Request devices from the server
   const requestDevices = () => {
-    if (sendMessage({ type: "get-devices" } as IWsMessage)) {
+    if (sendMessage({ type: "get-devices" })) {
       setDevicesLoading(true);
       console.log("Requested device list from server");
     } else {

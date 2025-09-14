@@ -1,5 +1,5 @@
 import { Accessor, createMemo, createSignal, onCleanup, onMount } from "solid-js";
-import { sendMessage, IWsMessage, websocket } from "../hooks/useWebSocket";
+import { sendMessage, websocket } from "../hooks/useWebSocket";
 
 function readDeviceConfig(ws: WebSocket, deviceId: string): Promise<any> {
   return new Promise((resolve, reject) => {
@@ -19,7 +19,7 @@ function readDeviceConfig(ws: WebSocket, deviceId: string): Promise<any> {
       }
     };
     ws.addEventListener("message", handler);
-    sendMessage({ type: "device-read-config", deviceId } as IWsMessage);
+    sendMessage({ type: "device-read-config", deviceId });
   });
 }
 
@@ -41,7 +41,7 @@ function saveDeviceConfig(ws: WebSocket, deviceId: string, config: any): Promise
       }
     };
     ws.addEventListener("message", handler);
-    sendMessage({ type: "device-save-config", deviceId, config } as IWsMessage);
+    sendMessage({ type: "device-save-config", deviceId, config });
   });
 }
 
@@ -57,7 +57,7 @@ export function createDeviceStore<TDeviceType extends keyof IDeviceStates>(
 
   // Load device state from backend
   const loadState = () => {
-    sendMessage({ type: "device-get-state", deviceId } as IWsMessage);
+    sendMessage({ type: "device-get-state", deviceId });
   };
 
   function getChildStateByType<TDeviceType extends keyof IDeviceStates>(

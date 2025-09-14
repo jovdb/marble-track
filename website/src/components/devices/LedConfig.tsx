@@ -1,6 +1,5 @@
 import { createSignal } from "solid-js";
 import DeviceConfig from "./DeviceConfig";
-import { setupMotor } from "../../stores/PwmMotor";
 
 interface LedConfigProps {
   id: string;
@@ -8,7 +7,7 @@ interface LedConfigProps {
 
 export default function LedConfig(props: LedConfigProps) {
   const [name, setName] = createSignal("Led");
-  const [pin, setPin] = createSignal(props);
+  const [pin, setPin] = createSignal(1);
 
   return (
     <DeviceConfig

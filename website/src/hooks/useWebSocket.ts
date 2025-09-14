@@ -10,18 +10,29 @@ export interface DeviceInfo {
   pins?: number[];
 }
 
-export interface IWsMessage {
-  type: string;
-  config?: any;
+interface IWsMessageBase<TType extends string = string> {
+  type: TType;
 }
 
-export interface IWsDeviceMessage extends IWsMessage {
-  type: "device-fn";
+export interface IWsDeviceMessage extends IWsMessageBase<"device-fn"> {
   deviceType: string;
   deviceId: string;
   fn: string;
   args: object;
 }
+
+export interface IWsMessages {
+  restart: IWsMessageBase<"restart">;
+  "get-devices": IWsMessageBase<"get-devices">;
+  "get-devices-config": IWsMessageBase<"get-devices-config">;
+  "device-fn": IWsDeviceMessage;
+  "device-get-state": IWsMessageBase<"device-get-state"> & { deviceId: string };
+  "device-read-config": IWsMessageBase<"device-read-config"> & { deviceId: string };
+  "device-save-config": IWsMessageBase<"device-save-config"> & { deviceId: string; config: any };
+  "set-devices-config": IWsMessageBase<"set-devices-config"> & { config: any };
+}
+
+export type IWsMessage = IWsMessages[keyof IWsMessages];
 
 // Global device store signals
 export const [availableDevices, setAvailableDevices] = createSignal<DeviceInfo[]>([]);
@@ -112,7 +123,7 @@ export const sendMessage = (message: IWsMessage): boolean => {
 
 // Request devices from the server
 export const requestDevices = (): boolean => {
-  if (sendMessage({ type: "get-devices" } as IWsMessage)) {
+  if (sendMessage({ type: "get-devices" })) {
     setDevicesLoading(true);
     console.log("Requested device list from server");
     return true;
@@ -135,7 +146,7 @@ export function createDeviceState<T>(deviceId: string) {
       sendMessage({
         type: "device-get-state",
         deviceId,
-      } as IWsMessage);
+      });
     }
 
     function onMessage(event: MessageEvent) {
@@ -159,7 +170,7 @@ export function createDeviceState<T>(deviceId: string) {
       sendMessage({
         type: "device-get-state",
         deviceId,
-      } as IWsMessage);
+      });
     }
 
     function onClose() {

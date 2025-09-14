@@ -13,6 +13,8 @@ interface IPwmMotorState extends IDeviceState {
   targetDutyCycle?: number;
   /** Available when animating */
   targetDurationMs?: number;
+
+  running?: boolean;
 }
 
 export function setDutyCycle(deviceId: string, value: number, durationMs?: number) {

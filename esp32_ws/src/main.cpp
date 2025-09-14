@@ -162,8 +162,12 @@ void setup()
   // If no devices loaded, use hardcoded devices and save to disk
   if (deviceManager.getDeviceCount() == 0)
   {
+
+    Led *led = new Led("test-led");
+    led->setName("Test LED");
+
     Device *devices[] = {
-        new Led("test-led", "Test LED"),
+        led,
         new Button("test-button2", "Test Button 2"),
         new Buzzer("test-buzzer", "Test Buzzer"),
         new DividerWheel(10, 11, 12, 13, 15, "wheel", "Divider Wheel")};
@@ -189,7 +193,7 @@ void setup()
   Stepper *testStepper = new Stepper("test-stepper", "Test Stepper");
   testStepper->configure2Pin(17, 18, 1000, 500);
   testStepper->setMaxSpeed(2000);
-  //TODO: setMaxAcceleration(1000);
+  // TODO: setMaxAcceleration(1000);
   deviceManager.addDevice(testStepper);
 
   // Setup  Devices

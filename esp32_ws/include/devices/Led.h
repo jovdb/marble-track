@@ -23,11 +23,14 @@ class Led : public Device
 
 public:
     /**
-     * @brief Constructor - automatically initializes pin
+     * @brief Constructor - automatically initializes with ID only
      * @param id Unique identifier string for the LED
-     * @param name Human-readable name string for the LED
      */
-    Led(const String &id, const String &name);
+    Led(const String &id);
+
+    // Name getter and setter
+    String getName() const { return _name; }
+    void setName(const String &name) { _name = name; }
     void setup();
     void loop();
 

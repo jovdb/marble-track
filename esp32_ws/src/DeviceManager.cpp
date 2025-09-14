@@ -60,7 +60,8 @@ void DeviceManager::loadDevicesFromJsonFile()
                 {
                     if (type == "led")
                     {
-                        Led *led = new Led(id, name);
+                        Led *led = new Led(id);
+                        led->setName(name);
                         // If pins are provided in JSON, use the first pin
                         // if (obj["pins"].is<JsonArray>() && obj["pins"].size() > 0) {
                         //     int pin = obj["pins"][0];

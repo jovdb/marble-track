@@ -6,15 +6,13 @@ static const char *TAG = "Led";
 /**
  * @brief Constructor for Led class
  *
- * Initializes the Led object with pin, id, and name parameters.
- * @param pin GPIO pin number for the LED
+ * Initializes the Led object with just the ID parameter.
  * @param id Unique identifier string for the LED
- * @param name Human-readable name string for the LED
  */
-Led::Led(const String &id, const String &name)
+Led::Led(const String &id)
     : Device(id, "led"), _mode(LedMode::OFF)
 {
-    _name = name;
+    // Name can be set later using setName()
 }
 
 /**

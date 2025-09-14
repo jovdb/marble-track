@@ -9,6 +9,7 @@
 #include "devices/Servo.h"
 #include "devices/Stepper.h"
 #include "devices/Wheel.h"
+#include "devices/PwmMotor.h"
 
 static const char *TAG = "DeviceManager";
 static constexpr const char *DEVICES_LIST_FILE = "/devices.json";
@@ -62,34 +63,75 @@ void DeviceManager::loadDevicesFromJsonFile()
                     {
                         Led *led = new Led(id);
                         led->setName(name);
-                        // If pins are provided in JSON, use the first pin
-                        // if (obj["pins"].is<JsonArray>() && obj["pins"].size() > 0) {
-                        //     int pin = obj["pins"][0];
-                        //     led->setup(pin);
-                        // }
+                        
+                        // Apply configuration from JSON config property if it exists
+                        if (obj["config"].is<JsonObject>()) {
+                            JsonObject config = obj["config"];
+                            led->setConfig(&config);
+                        }
+                        
                         devices[devicesCount++] = led;
                     }
                     else if (type == "buzzer")
                     {
                         Buzzer *buzzer = new Buzzer(id, name);
+                        
+                        // Apply configuration from JSON config property if it exists
+                        if (obj["config"].is<JsonObject>()) {
+                            JsonObject config = obj["config"];
+                            buzzer->setConfig(&config);
+                        }
+                        
                         devices[devicesCount++] = buzzer;
                     }
                     else if (type == "button")
                     {
                         Button *button = new Button(id, name);
+                        
+                        // Apply configuration from JSON config property if it exists
+                        if (obj["config"].is<JsonObject>()) {
+                            JsonObject config = obj["config"];
+                            button->setConfig(&config);
+                        }
+                        
                         devices[devicesCount++] = button;
                     }
                     else if (type == "servo")
                     {
                         ServoDevice *servo = new ServoDevice(id, name);
+                        
+                        // Apply configuration from JSON config property if it exists
+                        if (obj["config"].is<JsonObject>()) {
+                            JsonObject config = obj["config"];
+                            servo->setConfig(&config);
+                        }
+                        
                         devices[devicesCount++] = servo;
                     }
-                    // else if (type == "stepper")
-                    // {
-                    //     Stepper *stepper = new Stepper(id, name);
-                    //     devices[devicesCount++] = stepper;
-                    // }
-
+                    else if (type == "stepper")
+                    {
+                        Stepper *stepper = new Stepper(id, name);
+                        
+                        // Apply configuration from JSON config property if it exists
+                        if (obj["config"].is<JsonObject>()) {
+                            JsonObject config = obj["config"];
+                            stepper->setConfig(&config);
+                        }
+                        
+                        devices[devicesCount++] = stepper;
+                    }
+                    else if (type == "pwmmotor")
+                    {
+                        PwmMotor *motor = new PwmMotor(id, name);
+                        
+                        // Apply configuration from JSON config property if it exists
+                        if (obj["config"].is<JsonObject>()) {
+                            JsonObject config = obj["config"];
+                            motor->setConfig(&config);
+                        }
+                        
+                        devices[devicesCount++] = motor;
+                    }
                     else
                     {
                         ESP_LOGW(TAG, "Unknown device type: %s", type.c_str());

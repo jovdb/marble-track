@@ -11,7 +11,7 @@ import { Button } from "./components/devices/Button";
 import { Gate } from "./components/devices/Gate";
 import { PwmMotor } from "./components/devices/PwmMotor";
 import { ClipboardIcon, RadioIcon } from "./components/icons/Icons";
-import { devicesLoading, isConnected, availableDevices, websocket } from "./hooks/useWebSocket";
+import { devicesLoading, isConnected, availableDevices } from "./hooks/useWebSocket";
 import AnimatedFavicon from "./utils/animatedFavicon";
 import logo from "./assets/logo-64.png";
 import styles from "./App.module.css";
@@ -56,12 +56,17 @@ const App: Component = () => {
     sendMessage({ type: "get-devices-config" });
   };
 
+  /*
   onMount(() => {
     // Listen for devices-config response and trigger download
     const wsHandler = (event: MessageEvent) => {
       try {
-        const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
-        if (data && data.type === "devices-config" && data.config) {
+        const data =
+          typeof event.data === "string"
+            ? (JSON.parse(event.data) as IWsReceiveMessage)
+            : undefined;
+        
+        if (data && data.type === "devices-config" && "config" in data) {
           const blob = new Blob([JSON.stringify(data.config, null, 2)], {
             type: "application/json",
           });
@@ -83,6 +88,7 @@ const App: Component = () => {
       websocket.removeEventListener("message", wsHandler);
     });
   });
+  */
 
   // Upload devices config handler
   const handleUploadConfig = () => {

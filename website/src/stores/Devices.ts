@@ -1,5 +1,7 @@
+/*
 import { Accessor, createMemo, createSignal, onCleanup, onMount } from "solid-js";
-import { IWsReceiveMessage, sendMessage, websocket } from "../hooks/useWebSocket";
+import { sendMessage, IWsMessageBase, websocket } from "../hooks/useWebSocket";
+import { createStore } from "solid-js/store";
 
 function readDeviceConfig(ws: WebSocket, deviceId: string): Promise<any> {
   return new Promise((resolve, reject) => {
@@ -8,7 +10,7 @@ function readDeviceConfig(ws: WebSocket, deviceId: string): Promise<any> {
         const data = JSON.parse(event.data) as IWsReceiveMessage;
         if (data.type === "device-read-config" && data.deviceId === deviceId) {
           ws.removeEventListener("message", handler);
-          if ("error" in data) {
+          if (data.error) {
             reject(data.error);
           } else {
             resolve(data.config);
@@ -19,7 +21,7 @@ function readDeviceConfig(ws: WebSocket, deviceId: string): Promise<any> {
       }
     };
     ws.addEventListener("message", handler);
-    sendMessage({ type: "device-read-config", deviceId });
+    sendMessage({ type: "device-read-config", deviceId } as IWsMessageBase);
   });
 }
 
@@ -30,7 +32,7 @@ function saveDeviceConfig(ws: WebSocket, deviceId: string, config: any): Promise
         const data = JSON.parse(event.data) as IWsReceiveMessage;
         if (data.type === "device-save-config" && data.deviceId === deviceId) {
           ws.removeEventListener("message", handler);
-          if ("error" in data) {
+          if (data.error) {
             reject(data.error);
           } else {
             resolve(true);
@@ -41,44 +43,41 @@ function saveDeviceConfig(ws: WebSocket, deviceId: string, config: any): Promise
       }
     };
     ws.addEventListener("message", handler);
-    sendMessage({ type: "device-save-config", deviceId, config });
+    sendMessage({ type: "device-save-config", deviceId, config } as IWsMessageBase);
   });
 }
 
-export function createDeviceStore<TDeviceType extends keyof IDeviceStates>(
-  deviceId: string,
-  _deviceType: TDeviceType
-) {
+export function createDevicesStore<IDevices>()
+   
   // Device state
   const [state, setState] = createSignal<IDeviceStates[TDeviceType] | undefined>(undefined);
   const [config, setConfig] = createSignal<IDeviceConfigs[TDeviceType] | undefined>(undefined);
   const [error, setError] = createSignal<string | undefined>(undefined);
   const [connectionState, setConnectionState] = createSignal<number>(WebSocket.CONNECTING);
 
-  // Load device state from backend
-  const loadState = () => {
-    sendMessage({ type: "device-get-state", deviceId });
+  const store = createStore<IDevices>({
+
+  });
+
+  // Load devices
+  const loadDevices = () => {
+   sendMessage({ type: "get-devices" });
   };
 
-  function getChildStateByType<TDeviceType extends keyof IDeviceStates>(
-    deviceType: TDeviceType
-  ): Accessor<IDeviceStates[TDeviceType] | undefined> {
-    const findChild: (state: IDeviceState | undefined) => IDeviceState | undefined = (state) => {
-      for (const child of state?.children || []) {
-        if (child.type === deviceType) {
-          return child;
-        }
-        const result = findChild(child);
-        if (result) return result;
-      }
-    };
-    return createMemo(() => findChild(state()));
-  }
 
   // Listen for state updates from WebSocket
   function onMessage(event: MessageEvent) {
-    const data = JSON.parse(event.data);
-    if (data.type === "device-state" && data.deviceId === deviceId) {
+    const data = JSON.parse(event.data) as IWsReceiveMessage;
+
+    if (data.type === "devices") {
+      if (data.error) {
+        setError(data.error);
+        setState(undefined);
+      } else {
+        setState(data.state);
+        setError(undefined);
+      }
+    } else if (data.type === "device-state") {
       if (data.error) {
         setError(data.error);
         setState(undefined);
@@ -87,7 +86,8 @@ export function createDeviceStore<TDeviceType extends keyof IDeviceStates>(
         setError(undefined);
       }
       setConnectionState(WebSocket.OPEN);
-    } else if (data.type === "device-read-config" && data.deviceId === deviceId) {
+    
+    } else if (data.type === "device-config") {
       if (data.error) {
         setError(data.error);
         setConfig(undefined);
@@ -100,6 +100,9 @@ export function createDeviceStore<TDeviceType extends keyof IDeviceStates>(
 
   function handleOpen() {
     setConnectionState(WebSocket.OPEN);
+
+    // Load devices
+    sendMessage({ type: "get-devices" });
   }
 
   function handleClose() {
@@ -108,16 +111,16 @@ export function createDeviceStore<TDeviceType extends keyof IDeviceStates>(
 
   onMount(() => {
     setConnectionState(WebSocket.CONNECTING);
-    loadState();
 
-    websocket.addEventListener("message", onMessage);
     websocket.addEventListener("open", handleOpen);
     websocket.addEventListener("close", handleClose);
+    websocket.addEventListener("message", onMessage);
   });
+
   onCleanup(() => {
+    websocket.removeEventListener("message", onMessage);
     websocket.removeEventListener("close", handleClose);
     websocket.removeEventListener("open", handleOpen);
-    websocket.removeEventListener("message", onMessage);
   });
 
   // Load config from backend
@@ -136,18 +139,23 @@ export function createDeviceStore<TDeviceType extends keyof IDeviceStates>(
     config,
     error,
     connectionState,
-    loadState,
+    loadState: loadDevices,
     loadConfig,
     saveConfig,
   };
 }
 
-export interface IDeviceState {
+export type IDeviceState = object;
+
+export interface IDevice {
   id: string;
-  name: string;
   type: string;
-  children?: IDeviceState[];
+  state: IDeviceState;
+  config: IDeviceConfig;
+  children?: IDevice[];
 }
+
+export type IDevices = Record<string, IDevice>;
 
 export type IDeviceConfig = object;
 
@@ -160,3 +168,4 @@ declare global {
     [key: string]: IDeviceConfig;
   }
 }
+*/

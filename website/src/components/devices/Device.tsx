@@ -15,7 +15,7 @@ interface DeviceProps {
 export function Device(props: DeviceProps) {
   const [showChildren, setShowChildren] = createSignal(false);
   const [showConfig, setShowConfig] = createSignal(false);
-  const [device, actions] = useDevice(props.id);
+  const [device] = useDevice(props.id);
 
   return (
     <div class={styles.device}>

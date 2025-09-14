@@ -21,18 +21,86 @@ export interface IWsDeviceMessage extends IWsMessageBase<"device-fn"> {
   args: object;
 }
 
-export interface IWsMessages {
+export interface IWsSendMessages {
   restart: IWsMessageBase<"restart">;
   "get-devices": IWsMessageBase<"get-devices">;
   "get-devices-config": IWsMessageBase<"get-devices-config">;
+  "set-devices-config": IWsMessageBase<"set-devices-config"> & { config: any };
   "device-fn": IWsDeviceMessage;
   "device-get-state": IWsMessageBase<"device-get-state"> & { deviceId: string };
   "device-read-config": IWsMessageBase<"device-read-config"> & { deviceId: string };
   "device-save-config": IWsMessageBase<"device-save-config"> & { deviceId: string; config: any };
-  "set-devices-config": IWsMessageBase<"set-devices-config"> & { config: any };
 }
 
-export type IWsMessage = IWsMessages[keyof IWsMessages];
+export type IWsSendMessage = IWsSendMessages[keyof IWsSendMessages];
+
+export type IWsReceiveDevicesListMessage =
+  | (IWsMessageBase<"device-list"> & { error: string })
+  | (IWsMessageBase<"device-list"> & {
+      devices: {
+        id: string;
+        type: string;
+      }[];
+    });
+
+export type IWsReceiveDeviceStateMessage =
+  | (IWsMessageBase<"device-state"> & {
+      deviceId: string;
+      type: string;
+      error: string;
+    })
+  | (IWsMessageBase<"device-state"> & {
+      deviceId: string;
+      type: string;
+      state: any;
+    });
+
+export type IWsReceiveDeviceConfigMessage =
+  | (IWsMessageBase<"device-config"> & {
+      deviceId: string;
+      type: string;
+      error: string;
+    })
+  | (IWsMessageBase<"device-config"> & {
+      deviceId: string;
+      type: string;
+      config: any;
+    });
+
+export type IWsReceiveDeviceReadConfigMessage =
+  | (IWsMessageBase<"device-read-config"> & {
+      deviceId: string;
+      type: string;
+      error: string;
+    })
+  | (IWsMessageBase<"device-read-config"> & {
+      deviceId: string;
+      type: string;
+      config: any;
+    });
+
+export type IWsReceiveDeviceSaveConfigMessage =
+  | (IWsMessageBase<"device-save-config"> & {
+      deviceId: string;
+      type: string;
+      error: string;
+      // TODO: config?
+    })
+  | (IWsMessageBase<"device-save-config"> & {
+      deviceId: string;
+      type: string;
+      config: any;
+    });
+
+export interface IWsReceiveMessages {
+  "devices-list": IWsReceiveDevicesListMessage;
+  "device-state": IWsReceiveDeviceStateMessage;
+  "devices-config": IWsReceiveDeviceConfigMessage;
+  "device-read-config": IWsReceiveDeviceReadConfigMessage;
+  "device-save-config": IWsReceiveDeviceSaveConfigMessage;
+}
+
+export type IWsReceiveMessage = IWsReceiveMessages[keyof IWsReceiveMessages];
 
 // Global device store signals
 export const [availableDevices, setAvailableDevices] = createSignal<DeviceInfo[]>([]);
@@ -110,7 +178,7 @@ websocket.addEventListener("message", (e) => {
 
 export const clearMessages = () => setLastMessages([]);
 
-export const sendMessage = (message: IWsMessage): boolean => {
+export const sendMessage = (message: IWsSendMessage): boolean => {
   if (websocket.readyState === WebSocket.OPEN) {
     console.debug("WebSocket message sent:    ", message);
     websocket.send(JSON.stringify(message));
@@ -150,9 +218,10 @@ export function createDeviceState<T>(deviceId: string) {
     }
 
     function onMessage(event: MessageEvent) {
-      const data = JSON.parse(event.data);
+      const data = JSON.parse(event.data) as IWsReceiveMessage;
+
       if (typeof data === "object" && data.type === "device-state" && data.deviceId === deviceId) {
-        if (data.error) {
+        if ("error" in data) {
           setError(data.error);
           setDeviceState(undefined);
           setConnectionState(6);

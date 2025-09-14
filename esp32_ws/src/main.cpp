@@ -183,8 +183,14 @@ void setup()
   deviceManager.addDevice(testServo);
 
   PwmMotor *testPwmMotor = new PwmMotor("test-pwm-motor", "Test PWM Motor");
-  testPwmMotor->setupMotor(14, 0, 1000, 10); // pin 14, channel 0, 1kHz, 10-bit resolution
+  testPwmMotor->setupMotor(15, 0, 1000, 10); // pin 14, channel 0, 1kHz, 10-bit resolution
   deviceManager.addDevice(testPwmMotor);
+
+  Stepper *testStepper = new Stepper("test-stepper", "Test Stepper");
+  testStepper->configure2Pin(17, 18, 1000, 500);
+  testStepper->setMaxSpeed(2000);
+  //TODO: setMaxAcceleration(1000);
+  deviceManager.addDevice(testStepper);
 
   // Setup  Devices
   deviceManager.setup([&](const String &deviceId, const String &stateJson)
@@ -285,31 +291,37 @@ void checkSerialCommands()
       Serial.printf("⚙️  Devices: %d total | Mode: %s\n",
                     deviceManager.getDeviceCount(),
                     (currentMode == OperationMode::MANUAL) ? "MANUAL" : "AUTOMATIC");
-      
+
       // Get all devices and display their information
       Device *deviceList[20]; // MAX_DEVICES from DeviceManager
       int deviceCount = 0;
       deviceManager.getDevices(deviceList, deviceCount, 20);
-      
-      if (deviceCount > 0) {
-        for (int i = 0; i < deviceCount; i++) {
-          if (deviceList[i] != nullptr) {
+
+      if (deviceCount > 0)
+      {
+        for (int i = 0; i < deviceCount; i++)
+        {
+          if (deviceList[i] != nullptr)
+          {
             String state = deviceList[i]->getState();
-            
+
             // Display device info with styled JSON state
-            Serial.printf("  %d. %s [%s] %s\n", 
-                         i + 1,
-                         deviceList[i]->getType().c_str(),
-                         deviceList[i]->getId().c_str(),
-                         deviceList[i]->getName().c_str());
-            
+            Serial.printf("  %d. %s [%s] %s\n",
+                          i + 1,
+                          deviceList[i]->getType().c_str(),
+                          deviceList[i]->getId().c_str(),
+                          deviceList[i]->getName().c_str());
+
             // Parse and pretty-print JSON
             JsonDocument stateDoc;
             DeserializationError error = deserializeJson(stateDoc, state);
-            
-            if (error) {
+
+            if (error)
+            {
               Serial.printf("     JSON State: %s\n", state.c_str());
-            } else {
+            }
+            else
+            {
               Serial.println("     JSON State:");
               serializeJsonPretty(stateDoc, Serial);
               Serial.println();
@@ -317,7 +329,9 @@ void checkSerialCommands()
             Serial.println();
           }
         }
-      } else {
+      }
+      else
+      {
         Serial.println("  No devices found");
       }
       Serial.println();

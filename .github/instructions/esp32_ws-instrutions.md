@@ -14,6 +14,20 @@ This project is the firmware for the ESP32-based marble track system. It uses Pl
 - Use `setStateChangeCallback()` for device state updates and event handling.
 - Register all devices in `main.cpp` using `deviceManager.addDevice()`.
 
+## Devices
+
+- Devices have a constructor with only and deviceId and a deviceType which are readonly
+- getState()
+  Return the state of the device as JSON with the most important values.
+  This is used to send to the web socket clients
+- control()
+  Used to be able to trigger the most important functions of the device with a JSON containing the arguments for the function
+- getConfig
+  returns the config of the device from the micro controller as JSON. Used by webs socket clients to pas to the Config website.
+- setConfig
+  Web socket clients will be able to update the config of a device with this function.
+  It will be saved in a JSON file on the Micro controller
+
 ## File Structure
 
 - `include/devices/`: Device headers (Button, Servo, Buzzer, Stepper, Wheel, GateWithSensor)
@@ -46,7 +60,7 @@ This project is the firmware for the ESP32-based marble track system. It uses Pl
 
 ## Troubleshooting
 
-- If build errors occur, Check the logging output to know what iswrong
+- If build errors occur, Check the logging output to know what is wrong
 - For runtime errors, check the logging of the PlatformIO Serial Monitor
 
 For further assistance, use GitHub Copilot in VS Code and refer to this file for project-specific instructions.

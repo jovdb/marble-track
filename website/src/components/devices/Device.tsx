@@ -22,8 +22,7 @@ export function Device(props: DeviceProps) {
       <div class={styles.device__header}>
         <div class={styles["device__header-left"]}>
           {props.icon}
-          {device.name}
-          <h3 class={styles.device__title}>{props.deviceState?.name || props.id}</h3>
+          <h3 class={styles.device__title}>{device.name}</h3>
         </div>
         <div class={styles["device__header-right"]}>
           <span style={{ display: "flex", gap: "var(--spacing-2)", "align-items": "center" }}>

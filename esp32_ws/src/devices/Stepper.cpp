@@ -18,49 +18,25 @@
 static const char *TAG = "Stepper";
 
 /**
- * @brief Constructor for 2-pin stepper (DRIVER - NEMA 17 with driver)
+ * @brief Constructor for Stepper motor
  *
- * Initializes the Stepper object for use with stepper motor drivers (like A4988, DRV8825)
- * that require step and direction pins.
- * @param stepPin GPIO pin number for the step signal
- * @param dirPin GPIO pin number for the direction signal
+ * Initializes the Stepper object with just ID and name.
+ * Configuration must be done separately using configure2Pin() or configure4Pin()
  * @param id Unique identifier string for the stepper
  * @param name Human-readable name string for the stepper
- * @param maxSpeed Maximum speed in steps per second
- * @param acceleration Acceleration in steps per second per second
  */
-Stepper::Stepper(int stepPin, int dirPin, const String &id, const String &name,
-                 float maxSpeed, float acceleration)
-    : Device(id, name, "stepper"), _stepper(AccelStepper::DRIVER, stepPin, dirPin),
-      _maxSpeed(maxSpeed), _maxAcceleration(acceleration),
-      _is4Pin(false), _pin1(stepPin), _pin2(dirPin), _pin3(-1), _pin4(-1),
-      _stepperType("DRIVER")
+Stepper::Stepper(const String &id, const String &name)
+    : Device(id, name, "stepper")
 {
-    ESP_LOGI(TAG, "Stepper [%s]: Created DRIVER type on pins %d (step), %d (dir)", _id.c_str(), _pin1, _pin2);
+    ESP_LOGI(TAG, "Stepper [%s]: Created (not configured yet)", _id.c_str());
 }
 
 /**
- * @brief Constructor for 4-pin stepper (HALF4WIRE - 28BYJ-48)
- *
- * Initializes the Stepper object for direct connection to 4-wire stepper motors
- * like the 28BYJ-48.
- * @param pin1 GPIO pin number for motor pin 1
- * @param pin2 GPIO pin number for motor pin 2
- * @param pin3 GPIO pin number for motor pin 3
- * @param pin4 GPIO pin number for motor pin 4
- * @param id Unique identifier string for the stepper
- * @param name Human-readable name string for the stepper
- * @param maxSpeed Maximum speed in steps per second
- * @param acceleration Acceleration in steps per second per second
+ * @brief Destructor - cleans up AccelStepper instance
  */
-Stepper::Stepper(int pin1, int pin2, int pin3, int pin4, const String &id, const String &name,
-                 float maxSpeed, float acceleration)
-    : Device(id, name, "stepper"), _stepper(AccelStepper::HALF4WIRE, pin1, pin3, pin2, pin4),
-      _maxSpeed(maxSpeed), _maxAcceleration(acceleration),
-      _is4Pin(true), _pin1(pin1), _pin2(pin2), _pin3(pin3), _pin4(pin4),
-      _stepperType("HALF4WIRE")
+Stepper::~Stepper()
 {
-    ESP_LOGI(TAG, "Stepper [%s]: Created HALF4WIRE type on pins %d, %d, %d, %d", _id.c_str(), _pin1, _pin2, _pin3, _pin4);
+    cleanupAccelStepper();
 }
 
 /**
@@ -69,20 +45,30 @@ Stepper::Stepper(int pin1, int pin2, int pin3, int pin4, const String &id, const
  */
 void Stepper::setup()
 {
+    if (!_configured) {
+        ESP_LOGW(TAG, "Stepper [%s]: Not configured yet - call configure2Pin() or configure4Pin() first", _id.c_str());
+        return;
+    }
+
+    if (!_stepper) {
+        ESP_LOGE(TAG, "Stepper [%s]: AccelStepper instance not initialized", _id.c_str());
+        return;
+    }
+
     // Set maximum speed and acceleration
-    _stepper.setMaxSpeed(_maxSpeed);
-    _stepper.setAcceleration(_maxAcceleration);
+    _stepper->setMaxSpeed(_maxSpeed);
+    _stepper->setAcceleration(_maxAcceleration);
 
     // Set current position to 0
-    _stepper.setCurrentPosition(0);
+    _stepper->setCurrentPosition(0);
 
     if (_is4Pin)
     {
-    ESP_LOGI(TAG, "Stepper [%s]: Setup complete (HALF4WIRE) on pins %d, %d, %d, %d", _id.c_str(), _pin1, _pin2, _pin3, _pin4);
+        ESP_LOGI(TAG, "Stepper [%s]: Setup complete (HALF4WIRE) on pins %d, %d, %d, %d", _id.c_str(), _pin1, _pin2, _pin3, _pin4);
     }
     else
     {
-    ESP_LOGI(TAG, "Stepper [%s]: Setup complete (DRIVER) on pins %d (step), %d (dir)", _id.c_str(), _pin1, _pin2);
+        ESP_LOGI(TAG, "Stepper [%s]: Setup complete (DRIVER) on pins %d (step), %d (dir)", _id.c_str(), _pin1, _pin2);
     }
 
     ESP_LOGI(TAG, "Stepper [%s]: Max speed: %.2f steps/s, Acceleration: %.2f steps/s^2", _id.c_str(), _maxSpeed, _maxAcceleration);
@@ -96,13 +82,17 @@ void Stepper::setup()
  */
 void Stepper::loop()
 {
+    if (!_configured || !_stepper) {
+        return;
+    }
+
     bool wasMoving = _isMoving;
-    _isMoving = _stepper.run();
+    _isMoving = _stepper->run();
 
     // If stepper just stopped moving, notify state change
     if (wasMoving && !_isMoving)
     {
-        // Serial.println("Stepper [" + _id + "]: Movement completed at position " + String(_stepper.currentPosition()));
+        // Serial.println("Stepper [" + _id + "]: Movement completed at position " + String(_stepper->currentPosition()));
         notifyStateChange();
     }
 }
@@ -113,8 +103,13 @@ void Stepper::loop()
  */
 void Stepper::move(long steps)
 {
+    if (!_configured || !_stepper) {
+        ESP_LOGW(TAG, "Stepper [%s]: Not configured - cannot move", _id.c_str());
+        return;
+    }
+
     // Serial.println("Stepper [" + _id + "]: Moving " + String(steps) + " steps");
-    _stepper.move(steps);
+    _stepper->move(steps);
     _isMoving = true;
     notifyStateChange();
 }
@@ -125,8 +120,13 @@ void Stepper::move(long steps)
  */
 void Stepper::moveTo(long position)
 {
+    if (!_configured || !_stepper) {
+        ESP_LOGW(TAG, "Stepper [%s]: Not configured - cannot move to position", _id.c_str());
+        return;
+    }
+
     ESP_LOGI(TAG, "Stepper [%s]: Moving to position %ld", _id.c_str(), position);
-    _stepper.moveTo(position);
+    _stepper->moveTo(position);
     _isMoving = true;
     // notifyStateChange();
 }
@@ -136,8 +136,13 @@ void Stepper::moveTo(long position)
  */
 void Stepper::setCurrentPosition(long position)
 {
+    if (!_configured || !_stepper) {
+        ESP_LOGW(TAG, "Stepper [%s]: Not configured - cannot set current position", _id.c_str());
+        return;
+    }
+
     ESP_LOGI(TAG, "Stepper [%s]: Resetting current position to %ld", _id.c_str(), position);
-    _stepper.setCurrentPosition(position);
+    _stepper->setCurrentPosition(position);
     // Optionally, update state or notify if needed
     // notifyStateChange();
 }
@@ -151,7 +156,9 @@ void Stepper::setMaxSpeed(float maxSpeed)
         return;
 
     _maxSpeed = maxSpeed;
-    _stepper.setMaxSpeed(maxSpeed);
+    if (_stepper) {
+        _stepper->setMaxSpeed(maxSpeed);
+    }
     ESP_LOGI(TAG, "Stepper [%s]: Max speed set to %.2f steps/s", _id.c_str(), maxSpeed);
 }
 
@@ -164,7 +171,9 @@ void Stepper::setAcceleration(float maxAcceleration)
     if (_maxAcceleration == maxAcceleration)
         return;
     _maxAcceleration = maxAcceleration;
-    _stepper.setAcceleration(maxAcceleration);
+    if (_stepper) {
+        _stepper->setAcceleration(maxAcceleration);
+    }
     ESP_LOGI(TAG, "Stepper [%s]: Acceleration set to %.2f steps/s^2", _id.c_str(), maxAcceleration);
 }
 
@@ -174,7 +183,10 @@ void Stepper::setAcceleration(float maxAcceleration)
  */
 long Stepper::getCurrentPosition() const
 {
-    return const_cast<AccelStepper &>(_stepper).currentPosition();
+    if (!_configured || !_stepper) {
+        return 0;
+    }
+    return _stepper->currentPosition();
 }
 
 /**
@@ -183,7 +195,10 @@ long Stepper::getCurrentPosition() const
  */
 long Stepper::getTargetPosition() const
 {
-    return const_cast<AccelStepper &>(_stepper).targetPosition();
+    if (!_configured || !_stepper) {
+        return 0;
+    }
+    return _stepper->targetPosition();
 }
 
 /**
@@ -201,7 +216,9 @@ bool Stepper::isMoving() const
 void Stepper::stop()
 {
     ESP_LOGW(TAG, "Stepper [%s]: Emergency stop", _id.c_str());
-    _stepper.stop();
+    if (_stepper) {
+        _stepper->stop();
+    }
     _isMoving = false;
     // notifyStateChange();
 }
@@ -335,12 +352,180 @@ String Stepper::getState()
 std::vector<int> Stepper::getPins() const
 {
     std::vector<int> pins;
-    pins.push_back(_pin1);
-    pins.push_back(_pin2);
-    if (_is4Pin)
-    {
-        pins.push_back(_pin3);
-        pins.push_back(_pin4);
+    if (_configured) {
+        pins.push_back(_pin1);
+        pins.push_back(_pin2);
+        if (_is4Pin)
+        {
+            pins.push_back(_pin3);
+            pins.push_back(_pin4);
+        }
     }
     return pins;
+}
+
+/**
+ * @brief Configure stepper for 2-pin mode (DRIVER - NEMA 17 with driver)
+ * @param stepPin GPIO pin number for the step signal
+ * @param dirPin GPIO pin number for the direction signal
+ * @param maxSpeed Maximum speed in steps per second
+ * @param acceleration Acceleration in steps per second per second
+ */
+void Stepper::configure2Pin(int stepPin, int dirPin, float maxSpeed, float acceleration)
+{
+    cleanupAccelStepper();
+    
+    _is4Pin = false;
+    _pin1 = stepPin;
+    _pin2 = dirPin;
+    _pin3 = -1;
+    _pin4 = -1;
+    _maxSpeed = maxSpeed;
+    _maxAcceleration = acceleration;
+    _stepperType = "DRIVER";
+    
+    initializeAccelStepper();
+    _configured = true;
+    
+    ESP_LOGI(TAG, "Stepper [%s]: Configured as DRIVER type on pins %d (step), %d (dir)", _id.c_str(), _pin1, _pin2);
+}
+
+/**
+ * @brief Configure stepper for 4-pin mode (HALF4WIRE - 28BYJ-48)
+ * @param pin1 GPIO pin number for motor pin 1
+ * @param pin2 GPIO pin number for motor pin 2
+ * @param pin3 GPIO pin number for motor pin 3
+ * @param pin4 GPIO pin number for motor pin 4
+ * @param maxSpeed Maximum speed in steps per second
+ * @param acceleration Acceleration in steps per second per second
+ */
+void Stepper::configure4Pin(int pin1, int pin2, int pin3, int pin4, float maxSpeed, float acceleration)
+{
+    cleanupAccelStepper();
+    
+    _is4Pin = true;
+    _pin1 = pin1;
+    _pin2 = pin2;
+    _pin3 = pin3;
+    _pin4 = pin4;
+    _maxSpeed = maxSpeed;
+    _maxAcceleration = acceleration;
+    _stepperType = "HALF4WIRE";
+    
+    initializeAccelStepper();
+    _configured = true;
+    
+    ESP_LOGI(TAG, "Stepper [%s]: Configured as HALF4WIRE type on pins %d, %d, %d, %d", _id.c_str(), _pin1, _pin2, _pin3, _pin4);
+}
+
+/**
+ * @brief Initialize the AccelStepper instance based on current configuration
+ */
+void Stepper::initializeAccelStepper()
+{
+    if (_stepper) {
+        delete _stepper;
+        _stepper = nullptr;
+    }
+    
+    if (_is4Pin) {
+        _stepper = new AccelStepper(AccelStepper::HALF4WIRE, _pin1, _pin3, _pin2, _pin4);
+    } else {
+        _stepper = new AccelStepper(AccelStepper::DRIVER, _pin1, _pin2);
+    }
+}
+
+/**
+ * @brief Clean up existing AccelStepper instance
+ */
+void Stepper::cleanupAccelStepper()
+{
+    if (_stepper) {
+        delete _stepper;
+        _stepper = nullptr;
+    }
+}
+
+/**
+ * @brief Get configuration as JSON
+ * @return JsonObject containing the current configuration
+ */
+JsonObject Stepper::getConfig() const
+{
+    JsonDocument doc;
+    JsonObject config = doc.to<JsonObject>();
+    
+    config["configured"] = _configured;
+    if (_configured) {
+        config["stepperType"] = _stepperType;
+        config["is4Pin"] = _is4Pin;
+        config["maxSpeed"] = _maxSpeed;
+        config["acceleration"] = _maxAcceleration;
+        
+        if (_is4Pin) {
+            JsonArray pins = config["pins"].to<JsonArray>();
+            pins.add(_pin1);
+            pins.add(_pin2);
+            pins.add(_pin3);
+            pins.add(_pin4);
+        } else {
+            JsonObject pinConfig = config["pins"].to<JsonObject>();
+            pinConfig["stepPin"] = _pin1;
+            pinConfig["dirPin"] = _pin2;
+        }
+    }
+    
+    return config;
+}
+
+/**
+ * @brief Set configuration from JSON
+ * @param config Pointer to JSON object containing configuration
+ */
+void Stepper::setConfig(JsonObject *config)
+{
+    if (!config) {
+        ESP_LOGW(TAG, "Stepper [%s]: Null config provided", _id.c_str());
+        return;
+    }
+    
+    // Check if we should configure as 2-pin or 4-pin
+    if ((*config)["stepperType"].is<String>()) {
+        String stepperType = (*config)["stepperType"].as<String>();
+        
+        if (stepperType == "DRIVER") {
+            // Configure as 2-pin
+            if ((*config)["pins"]["stepPin"].is<int>() && (*config)["pins"]["dirPin"].is<int>()) {
+                int stepPin = (*config)["pins"]["stepPin"].as<int>();
+                int dirPin = (*config)["pins"]["dirPin"].as<int>();
+                float maxSpeed = (*config)["maxSpeed"].is<float>() ? (*config)["maxSpeed"].as<float>() : 1000.0;
+                float acceleration = (*config)["acceleration"].is<float>() ? (*config)["acceleration"].as<float>() : 500.0;
+                
+                configure2Pin(stepPin, dirPin, maxSpeed, acceleration);
+                ESP_LOGI(TAG, "Stepper [%s]: Configured from JSON as DRIVER", _id.c_str());
+            } else {
+                ESP_LOGW(TAG, "Stepper [%s]: Invalid 2-pin configuration in JSON", _id.c_str());
+            }
+        } else if (stepperType == "HALF4WIRE") {
+            // Configure as 4-pin
+            if ((*config)["pins"].is<JsonArray>() && (*config)["pins"].size() == 4) {
+                JsonArray pins = (*config)["pins"].as<JsonArray>();
+                int pin1 = pins[0].as<int>();
+                int pin2 = pins[1].as<int>();
+                int pin3 = pins[2].as<int>();
+                int pin4 = pins[3].as<int>();
+                float maxSpeed = (*config)["maxSpeed"].is<float>() ? (*config)["maxSpeed"].as<float>() : 500.0;
+                float acceleration = (*config)["acceleration"].is<float>() ? (*config)["acceleration"].as<float>() : 250.0;
+                
+                configure4Pin(pin1, pin2, pin3, pin4, maxSpeed, acceleration);
+                ESP_LOGI(TAG, "Stepper [%s]: Configured from JSON as HALF4WIRE", _id.c_str());
+            } else {
+                ESP_LOGW(TAG, "Stepper [%s]: Invalid 4-pin configuration in JSON", _id.c_str());
+            }
+        } else {
+            ESP_LOGW(TAG, "Stepper [%s]: Unknown stepperType '%s'", _id.c_str(), stepperType.c_str());
+        }
+    } else {
+        ESP_LOGW(TAG, "Stepper [%s]: No stepperType specified in config", _id.c_str());
+    }
 }

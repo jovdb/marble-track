@@ -20,9 +20,7 @@ export function useDevice<TState, TConfig>(deviceId: string) {
   // reuse store
   // If an instance changes a value all must update
   const result = dynamicStores[deviceId];
-  if (result) {
-    return result;
-  }
+  if (result) return result;
 
   const [store, setStore] = createStore({
     deviceId,

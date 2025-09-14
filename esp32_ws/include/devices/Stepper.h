@@ -38,30 +38,16 @@ public:
      */
     std::vector<int> getPins() const override;
     /**
-     * @brief Constructor for 2-pin stepper (DRIVER - NEMA 17 with driver)
-     * @param stepPin GPIO pin number for the step signal
-     * @param dirPin GPIO pin number for the direction signal
+     * @brief Constructor for Stepper motor
      * @param id Unique identifier string for the stepper
      * @param name Human-readable name string for the stepper
-     * @param maxSpeed Maximum speed in steps per second (default: 1000)
-     * @param acceleration Acceleration in steps per second per second (default: 500)
      */
-    Stepper(int stepPin, int dirPin, const String &id, const String &name,
-            float maxSpeed = 1000.0, float acceleration = 500.0);
-
+    Stepper(const String &id, const String &name);
+    
     /**
-     * @brief Constructor for 4-pin stepper (HALF4WIRE - 28BYJ-48)
-     * @param pin1 GPIO pin number for motor pin 1
-     * @param pin2 GPIO pin number for motor pin 2
-     * @param pin3 GPIO pin number for motor pin 3
-     * @param pin4 GPIO pin number for motor pin 4
-     * @param id Unique identifier string for the stepper
-     * @param name Human-readable name string for the stepper
-     * @param maxSpeed Maximum speed in steps per second (default: 500)
-     * @param acceleration Acceleration in steps per second per second (default: 250)
+     * @brief Destructor - cleans up AccelStepper instance
      */
-    Stepper(int pin1, int pin2, int pin3, int pin4, const String &id, const String &name,
-            float maxSpeed = 500.0, float acceleration = 250.0);
+    ~Stepper();
 
     /**
      * @brief Setup function to initialize the stepper motor
@@ -74,6 +60,8 @@ public:
     // Controllable functionality
     bool control(const String &action, JsonObject *payload = nullptr) override;
     String getState() override;
+    JsonObject getConfig() const override;
+    void setConfig(JsonObject *config) override;
 
     // Stepper-specific operations
     /**
@@ -123,16 +111,72 @@ public:
      */
     void stop();
 
+    // Configuration setters/getters
+    /**
+     * @brief Configure stepper for 2-pin mode (DRIVER - NEMA 17 with driver)
+     * @param stepPin GPIO pin number for the step signal
+     * @param dirPin GPIO pin number for the direction signal
+     * @param maxSpeed Maximum speed in steps per second (default: 1000)
+     * @param acceleration Acceleration in steps per second per second (default: 500)
+     */
+    void configure2Pin(int stepPin, int dirPin, float maxSpeed = 1000.0, float acceleration = 500.0);
+
+    /**
+     * @brief Configure stepper for 4-pin mode (HALF4WIRE - 28BYJ-48)
+     * @param pin1 GPIO pin number for motor pin 1
+     * @param pin2 GPIO pin number for motor pin 2
+     * @param pin3 GPIO pin number for motor pin 3
+     * @param pin4 GPIO pin number for motor pin 4
+     * @param maxSpeed Maximum speed in steps per second (default: 500)
+     * @param acceleration Acceleration in steps per second per second (default: 250)
+     */
+    void configure4Pin(int pin1, int pin2, int pin3, int pin4, float maxSpeed = 500.0, float acceleration = 250.0);
+
+    /**
+     * @brief Get maximum speed
+     * @return Maximum speed in steps per second
+     */
+    float getMaxSpeed() const { return _maxSpeed; }
+
+    /**
+     * @brief Get acceleration
+     * @return Acceleration in steps per second per second
+     */
+    float getAcceleration() const { return _maxAcceleration; }
+
+    /**
+     * @brief Get stepper type
+     * @return Type string ("DRIVER" or "HALF4WIRE")
+     */
+    String getStepperType() const { return _stepperType; }
+
+    /**
+     * @brief Check if stepper is configured
+     * @return true if configured, false otherwise
+     */
+    bool isConfigured() const { return _configured; }
+
 private:
-    AccelStepper _stepper;  ///< AccelStepper library instance
-    float _maxSpeed;        ///< Maximum speed in steps per second
-    float _maxAcceleration; ///< Acceleration in steps per second per second
-    bool _isMoving = false; ///< Current movement state
+    AccelStepper *_stepper = nullptr; ///< AccelStepper library instance
+    float _maxSpeed = 1000.0;         ///< Maximum speed in steps per second
+    float _maxAcceleration = 500.0;   ///< Acceleration in steps per second per second
+    bool _isMoving = false;           ///< Current movement state
+    bool _configured = false;         ///< True if stepper has been configured
 
     // Pin configuration
     bool _is4Pin = false;           ///< True if 4-pin configuration, false if 2-pin
-    int _pin1, _pin2, _pin3, _pin4; ///< Pin numbers (all used for 4-pin, only pin1&pin2 for 2-pin)
-    String _stepperType;            ///< Type string for debugging ("DRIVER" or "HALF4WIRE")
+    int _pin1 = -1, _pin2 = -1, _pin3 = -1, _pin4 = -1; ///< Pin numbers (all used for 4-pin, only pin1&pin2 for 2-pin)
+    String _stepperType = "";       ///< Type string for debugging ("DRIVER" or "HALF4WIRE")
+
+    /**
+     * @brief Initialize the AccelStepper instance based on current configuration
+     */
+    void initializeAccelStepper();
+
+    /**
+     * @brief Clean up existing AccelStepper instance
+     */
+    void cleanupAccelStepper();
 };
 
 #endif // STEPPER_H

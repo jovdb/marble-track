@@ -41,13 +41,6 @@ export function PwmMotor(props: { id: string }) {
             </span>
           </div>
 
-          <div class={styles.device__status}>
-            <span class={styles["device__status-text"]}>
-              Pin: {state()?.pin || "N/A"} | Channel: {state()?.pwmChannel || "N/A"} | Freq:{" "}
-              {state()?.frequency || "N/A"}Hz
-            </span>
-          </div>
-
           <div class={styles["device__input-group"]}>
             <label class={styles.device__label} for={`dutyCycle-${props.id}`}>
               Duty Cycle: {(currentDutyCycle() || state()?.dutyCycle || 0).toFixed(0)}%

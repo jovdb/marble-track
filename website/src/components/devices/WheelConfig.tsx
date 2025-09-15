@@ -1,9 +1,10 @@
 import styles from "./Device.module.css";
 import wheelStyles from "./WheelConfig.module.css";
-import { IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
+import { sendMessage } from "../../hooks/useWebSocket";
 import { createWheelStore, IWheelConfig } from "../../stores/Wheel";
 import { createMemo, For, onMount } from "solid-js";
 import DeviceConfig from "./DeviceConfig";
+import { IWsSendMessage } from "../../interfaces/WebSockets";
 
 // Update the import path below to the correct location of IWheelState
 
@@ -27,7 +28,7 @@ export function WheelConfig(props: { id: string }) {
       args: {
         steps,
       },
-    } as IWsDeviceMessage);
+    } as IWsSendMessage);
   };
 
   return (

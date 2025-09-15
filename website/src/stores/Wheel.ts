@@ -1,5 +1,6 @@
 import { createDeviceStore, IDeviceConfig, IDeviceState } from "./Device";
-import { IWsDeviceMessage, sendMessage } from "../hooks/useWebSocket";
+import { sendMessage } from "../hooks/useWebSocket";
+import { IWsDeviceMessage } from "../interfaces/WebSockets";
 
 const deviceType = "wheel";
 export interface IWheelState extends IDeviceState {

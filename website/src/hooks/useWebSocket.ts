@@ -1,6 +1,7 @@
 import { createWSState, makeReconnectingWS } from "@solid-primitives/websocket";
 
 import { createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { IWsReceiveMessage, IWsSendMessage } from "../interfaces/WebSockets";
 
 // Device store integration
 export interface DeviceInfo {
@@ -9,98 +10,6 @@ export interface DeviceInfo {
   type: string;
   pins?: number[];
 }
-
-interface IWsMessageBase<TType extends string = string> {
-  type: TType;
-}
-
-export interface IWsDeviceMessage extends IWsMessageBase<"device-fn"> {
-  deviceType: string;
-  deviceId: string;
-  fn: string;
-  args: object;
-}
-
-export interface IWsSendMessages {
-  restart: IWsMessageBase<"restart">;
-  "get-devices": IWsMessageBase<"get-devices">;
-  "get-devices-config": IWsMessageBase<"get-devices-config">;
-  "set-devices-config": IWsMessageBase<"set-devices-config"> & { config: any };
-  "device-fn": IWsDeviceMessage;
-  "device-get-state": IWsMessageBase<"device-get-state"> & { deviceId: string };
-  "device-read-config": IWsMessageBase<"device-read-config"> & { deviceId: string };
-  "device-save-config": IWsMessageBase<"device-save-config"> & { deviceId: string; config: any };
-}
-
-export type IWsSendMessage = IWsSendMessages[keyof IWsSendMessages];
-
-export type IWsReceiveDevicesListMessage =
-  | (IWsMessageBase<"device-list"> & { error: string })
-  | (IWsMessageBase<"device-list"> & {
-      devices: {
-        id: string;
-        type: string;
-      }[];
-    });
-
-export type IWsReceiveDeviceStateMessage =
-  | (IWsMessageBase<"device-state"> & {
-      deviceId: string;
-      type: string;
-      error: string;
-    })
-  | (IWsMessageBase<"device-state"> & {
-      deviceId: string;
-      type: string;
-      state: any;
-    });
-
-export type IWsReceiveDeviceConfigMessage =
-  | (IWsMessageBase<"device-config"> & {
-      deviceId: string;
-      type: string;
-      error: string;
-    })
-  | (IWsMessageBase<"device-config"> & {
-      deviceId: string;
-      type: string;
-      config: any;
-    });
-
-export type IWsReceiveDeviceReadConfigMessage =
-  | (IWsMessageBase<"device-read-config"> & {
-      deviceId: string;
-      type: string;
-      error: string;
-    })
-  | (IWsMessageBase<"device-read-config"> & {
-      deviceId: string;
-      type: string;
-      config: any;
-    });
-
-export type IWsReceiveDeviceSaveConfigMessage =
-  | (IWsMessageBase<"device-save-config"> & {
-      deviceId: string;
-      type: string;
-      error: string;
-      // TODO: config?
-    })
-  | (IWsMessageBase<"device-save-config"> & {
-      deviceId: string;
-      type: string;
-      config: any;
-    });
-
-export interface IWsReceiveMessages {
-  "devices-list": IWsReceiveDevicesListMessage;
-  "device-state": IWsReceiveDeviceStateMessage;
-  "devices-config": IWsReceiveDeviceConfigMessage;
-  "device-read-config": IWsReceiveDeviceReadConfigMessage;
-  "device-save-config": IWsReceiveDeviceSaveConfigMessage;
-}
-
-export type IWsReceiveMessage = IWsReceiveMessages[keyof IWsReceiveMessages];
 
 // Global device store signals
 export const [availableDevices, setAvailableDevices] = createSignal<DeviceInfo[]>([]);

@@ -1,8 +1,9 @@
 import { Device } from "./Device";
 import { createSignal, onCleanup } from "solid-js";
-import { createDeviceState, IWsDeviceMessage, sendMessage } from "../../hooks/useWebSocket";
+import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
 import styles from "./Device.module.css";
 import { IDeviceState } from "../../stores/Device";
+import { IWsSendMessage } from "../../interfaces/WebSockets";
 
 interface IGateState extends IDeviceState {
   gateState: "Closed" | "IsOpening" | "Opened" | "Closing";
@@ -21,7 +22,7 @@ export function Gate(props: { id: string }) {
       deviceType: "gate",
       deviceId: props.id,
       fn: "open",
-    } as IWsDeviceMessage);
+    } as IWsSendMessage);
   };
 
   // Animation logic (can be improved)

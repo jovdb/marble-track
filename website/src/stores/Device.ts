@@ -1,5 +1,6 @@
 import { Accessor, createMemo, createSignal, onCleanup, onMount } from "solid-js";
-import { IWsReceiveMessage, sendMessage, websocket } from "../hooks/useWebSocket";
+import { sendMessage, websocket } from "../hooks/useWebSocket";
+import { IWsReceiveMessage } from "../interfaces/WebSockets";
 
 function readDeviceConfig(ws: WebSocket, deviceId: string): Promise<any> {
   return new Promise((resolve, reject) => {

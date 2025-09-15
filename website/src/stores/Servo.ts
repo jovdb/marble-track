@@ -1,5 +1,6 @@
 import { createDeviceStore, IDeviceState } from "./Device";
-import { sendMessage, IWsDeviceMessage } from "../hooks/useWebSocket";
+import { sendMessage } from "../hooks/useWebSocket";
+import { IWsDeviceMessage } from "../interfaces/WebSockets";
 
 interface IServoState extends IDeviceState {
   angle: number;

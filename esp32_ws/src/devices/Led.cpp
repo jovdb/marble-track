@@ -23,7 +23,8 @@ void Led::setup()
 {
     Device::setup();
 
-    if (_pin == -1) {
+    if (_pin == -1)
+    {
         ESP_LOGW(TAG, "Led [%s]: Pin not configured - call configurePin() first", _id.c_str());
         return;
     }
@@ -41,7 +42,8 @@ void Led::setup()
  */
 void Led::set(bool state)
 {
-    if (_pin == -1) {
+    if (_pin == -1)
+    {
         ESP_LOGW(TAG, "Led [%s]: Pin not configured - cannot set state", _id.c_str());
         return;
     }
@@ -177,7 +179,8 @@ void Led::loop()
  */
 void Led::configurePin(int pin)
 {
-    if (pin < 0) {
+    if (pin < 0)
+    {
         ESP_LOGW(TAG, "Led [%s]: Invalid pin number %d", _id.c_str(), pin);
         return;
     }
@@ -194,13 +197,14 @@ JsonObject Led::getConfig() const
 {
     JsonDocument doc;
     JsonObject config = doc.to<JsonObject>();
-    
+
     config["configured"] = (_pin != -1);
-    if (_pin != -1) {
+    if (_pin != -1)
+    {
         config["pin"] = _pin;
     }
     config["name"] = _name;
-    
+
     return config;
 }
 
@@ -210,19 +214,22 @@ JsonObject Led::getConfig() const
  */
 void Led::setConfig(JsonObject *config)
 {
-    if (!config) {
+    if (!config)
+    {
         ESP_LOGW(TAG, "Led [%s]: Null config provided", _id.c_str());
         return;
     }
-    
+
     // Set name if provided
-    if ((*config)["name"].is<String>()) {
+    if ((*config)["name"].is<String>())
+    {
         _name = (*config)["name"].as<String>();
         ESP_LOGI(TAG, "Led [%s]: Name updated to '%s'", _id.c_str(), _name.c_str());
     }
-    
+
     // Set pin if provided
-    if ((*config)["pin"].is<int>()) {
+    if ((*config)["pin"].is<int>())
+    {
         int pin = (*config)["pin"].as<int>();
         configurePin(pin);
         ESP_LOGI(TAG, "Led [%s]: Configured from JSON with pin %d", _id.c_str(), pin);

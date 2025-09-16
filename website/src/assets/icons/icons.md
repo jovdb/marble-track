@@ -1,2 +1,3 @@
 Icons downloaded from thenounproject
-https://static.thenounproject.com/png/2123131-200.png
+https://thenounproject.com/
+Esample: https://static.thenounproject.com/png/2123131-200.png

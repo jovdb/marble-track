@@ -58,14 +58,6 @@
   flex-shrink: 0;
 }
 
-.header__status-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-success-500);
-  animation: pulse 2s ease-in-out infinite;
-}
-
 .header__status-indicator--disconnected {
   background-color: var(--color-danger-500);
   animation: none;
@@ -74,6 +66,9 @@
 .header__status-indicator--connecting {
   background-color: var(--color-warning-500);
   animation: pulse 1s ease-in-out infinite;
+}
+
+.header__status-text {
 }
 
 /* Animations */
@@ -112,15 +107,9 @@
   }
 }
 
-@media (max-width: 768px) {
-  .header {
-    padding: var(--spacing-3) var(--spacing-4);
-    flex-direction: column;
-    gap: var(--spacing-3);
-    align-items: flex-start;
-  }
 
-  .header__right {
-    align-self: flex-end;
+@media (max-width: 400px) {
+  .header__status-text {
+    display: none;
   }
 }

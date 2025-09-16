@@ -10,8 +10,11 @@ import stepperIcon from "../../assets/icons/stepper.png";
 import devicesIcon from "../../assets/icons/devices.png";
 import websocketIcon from "../../assets/icons/websocket.png";
 import dotsIcon from "../../assets/icons/dots.png";
+import connectedIcon from "../../assets/icons/connected.svg";
+import disconnectedIcon from "../../assets/icons/disconnected.svg";
 
-interface IconProps {
+// Icon component props
+export interface IconProps {
   width?: number;
   height?: number;
   class?: string;
@@ -122,6 +125,28 @@ export const DotsIcon = (props: IconProps) => (
     class={props.class}
     style={props.style}
     alt={props.alt || "WebSocket"}
+  />
+);
+
+export const ConnectedIcon = (props: IconProps) => (
+  <img
+    src={connectedIcon}
+    width={props.width || 24}
+    height={props.height || 24}
+    class={props.class}
+    style={props.style}
+    alt={props.alt || "Connected"}
+  />
+);
+
+export const DisconnectedIcon = (props: IconProps) => (
+  <img
+    src={disconnectedIcon}
+    width={props.width || 24}
+    height={props.height || 24}
+    class={props.class}
+    style={props.style}
+    alt={props.alt || "Disconnected"}
   />
 );
 

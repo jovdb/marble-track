@@ -21,11 +21,6 @@ export interface IWebSocketStore {
   reconnectAttempts: number;
   maxReconnectAttempts: number;
   reconnectDelay: number;
-  
-  // Heartbeat
-  lastHeartbeat: number | null;
-  heartbeatInterval: number;
-  missedHeartbeats: number;
 }
 
 // Message callback type
@@ -47,10 +42,6 @@ export interface IWebSocketActions {
   // State management
   setError: (error: string | null) => void;
   resetReconnectAttempts: () => void;
-  
-  // Heartbeat management
-  sendHeartbeat: () => boolean;
-  resetHeartbeat: () => void;
 }
 
 const wsStates = [
@@ -179,13 +170,6 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
 
   // Message subscribers
   const messageSubscribers = new Set<MessageCallback>();
-  
-  // Heartbeat management
-  let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
-  let heartbeatTimeoutTimer: ReturnType<typeof setTimeout> | null = null;
-  const HEARTBEAT_INTERVAL = 30000; // 30 seconds
-  const HEARTBEAT_TIMEOUT = 10000; // 10 seconds timeout for heartbeat response
-  const MAX_MISSED_HEARTBEATS = 3;
 
   // Initialize store with default values
   const [store, setStore] = createStore<IWebSocketStore>(
@@ -206,11 +190,6 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
       reconnectAttempts: 0,
       maxReconnectAttempts: 5,
       reconnectDelay: 1000,
-      
-      // Heartbeat
-      lastHeartbeat: null,
-      heartbeatInterval: 30000, // 30 seconds
-      missedHeartbeats: 0,
     },
     { name: "useWebSocket2Store" }
   );
@@ -234,20 +213,12 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
     setStore({
       error: null,
       reconnectAttempts: 0,
-      missedHeartbeats: 0,
-      lastHeartbeat: Date.now(),
     });
-    
-    // Start heartbeat
-    startHeartbeat();
   };
 
   const handleClose = (event: CloseEvent) => {
     console.log("WebSocket connection closed", event.reason);
     setStore("isConnected", false);
-    
-    // Stop heartbeat
-    stopHeartbeat();
   };
 
   const handleError = (event: Event) => {
@@ -274,22 +245,6 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
     }
 
     if (parsedData) {
-      // Handle heartbeat response
-      if (parsedData.type === "pong" || parsedData.type === "heartbeat-response") {
-        console.debug("Heartbeat response received");
-        setStore({
-          lastHeartbeat: Date.now(),
-          missedHeartbeats: 0,
-        });
-        
-        // Clear heartbeat timeout
-        if (heartbeatTimeoutTimer) {
-          clearTimeout(heartbeatTimeoutTimer);
-          heartbeatTimeoutTimer = null;
-        }
-        return; // Don't notify subscribers for heartbeat messages
-      }
-      
       // Notify all subscribers
       messageSubscribers.forEach((callback) => {
         try {
@@ -298,50 +253,6 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
           console.error("Error in message subscriber callback:", error);
         }
       });
-    }
-  };
-
-  // Heartbeat functions
-  const startHeartbeat = () => {
-    stopHeartbeat(); // Clear any existing heartbeat
-    
-    heartbeatTimer = setInterval(() => {
-      if (websocket.readyState === WebSocket.OPEN) {
-        // Send heartbeat
-        const heartbeatMessage = { type: "ping", timestamp: Date.now() };
-        websocket.send(JSON.stringify(heartbeatMessage));
-        console.debug("Heartbeat sent");
-        
-        // Set timeout for heartbeat response
-        heartbeatTimeoutTimer = setTimeout(() => {
-          const missed = store.missedHeartbeats + 1;
-          setStore("missedHeartbeats", missed);
-          
-          console.warn(`Missed heartbeat ${missed}/${MAX_MISSED_HEARTBEATS}`);
-          
-          if (missed >= MAX_MISSED_HEARTBEATS) {
-            console.error("Connection appears to be lost - too many missed heartbeats");
-            setStore({
-              error: "Connection lost - heartbeat timeout",
-              isConnected: false,
-            });
-            
-            // Force close and reconnect
-            websocket.close();
-          }
-        }, HEARTBEAT_TIMEOUT);
-      }
-    }, HEARTBEAT_INTERVAL);
-  };
-  
-  const stopHeartbeat = () => {
-    if (heartbeatTimer) {
-      clearInterval(heartbeatTimer);
-      heartbeatTimer = null;
-    }
-    if (heartbeatTimeoutTimer) {
-      clearTimeout(heartbeatTimeoutTimer);
-      heartbeatTimeoutTimer = null;
     }
   };
 
@@ -357,9 +268,6 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
       websocket.removeEventListener("close", handleClose);
       websocket.removeEventListener("error", handleError);
       websocket.removeEventListener("message", handleMessage);
-      
-      // Clean up heartbeat timers
-      stopHeartbeat();
     });
   });
 
@@ -408,27 +316,6 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
         messageSubscribers.delete(callback);
       };
     },
-    
-    sendHeartbeat: (): boolean => {
-      if (websocket.readyState === WebSocket.OPEN) {
-        const heartbeatMessage = { type: "ping", timestamp: Date.now() };
-        websocket.send(JSON.stringify(heartbeatMessage));
-        console.debug("Manual heartbeat sent");
-        return true;
-      }
-      return false;
-    },
-    
-    resetHeartbeat: () => {
-      setStore({
-        lastHeartbeat: Date.now(),
-        missedHeartbeats: 0,
-      });
-      
-      if (websocket.readyState === WebSocket.OPEN) {
-        startHeartbeat();
-      }
-    },
   };
 
   return [
@@ -470,54 +357,4 @@ export function useWebSocketMessage(callback: MessageCallback): void {
       unsubscribe();
     });
   });
-}
-
-/**
- * Hook for monitoring WebSocket connection health
- * Returns computed values for connection health status
- * 
- * @example
- * ```tsx
- * function ConnectionStatus() {
- *   const health = useWebSocketHealth();
- *   
- *   return (
- *     <div class={health.isHealthy ? "healthy" : "unhealthy"}>
- *       Status: {health.statusText}
- *       {health.lastHeartbeat && (
- *         <span>Last heartbeat: {new Date(health.lastHeartbeat).toLocaleTimeString()}</span>
- *       )}
- *     </div>
- *   );
- * }
- * ```
- */
-export function useWebSocketHealth() {
-  const [wsStore] = useWebSocket2();
-  
-  const isHealthy = createMemo(() => {
-    return wsStore.isConnected && wsStore.missedHeartbeats < 2;
-  });
-  
-  const statusText = createMemo(() => {
-    if (!wsStore.isConnected) return "Disconnected";
-    if (wsStore.missedHeartbeats === 0) return "Healthy";
-    if (wsStore.missedHeartbeats < 2) return "Warning";
-    return "Unhealthy";
-  });
-  
-  const timeSinceLastHeartbeat = createMemo(() => {
-    if (!wsStore.lastHeartbeat) return null;
-    return Date.now() - wsStore.lastHeartbeat;
-  });
-  
-  return {
-    isHealthy: isHealthy(),
-    statusText: statusText(),
-    lastHeartbeat: wsStore.lastHeartbeat,
-    timeSinceLastHeartbeat: timeSinceLastHeartbeat(),
-    missedHeartbeats: wsStore.missedHeartbeats,
-    isConnected: wsStore.isConnected,
-    connectionStateName: wsStore.connectionStateName,
-  };
 }

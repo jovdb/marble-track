@@ -67,12 +67,23 @@ export type IWsReceiveDeviceSaveConfigMessage =
       config: any;
     });
 
+// Heartbeat message types
+export type IWsReceiveHeartbeatMessage = IWsMessageBase<"pong"> & {
+  timestamp?: number;
+};
+
+export type IWsReceiveHeartbeatResponseMessage = IWsMessageBase<"heartbeat-response"> & {
+  timestamp?: number;
+};
+
 export type IWsReceiveMessage =
   | IWsReceiveDevicesListMessage
   | IWsReceiveDeviceStateMessage
   | IWsReceiveDeviceConfigMessage
   | IWsReceiveDeviceReadConfigMessage
-  | IWsReceiveDeviceSaveConfigMessage;
+  | IWsReceiveDeviceSaveConfigMessage
+  | IWsReceiveHeartbeatMessage
+  | IWsReceiveHeartbeatResponseMessage;
 
 export type IWsSendRestartMessage = IWsMessageBase<"restart">;
 
@@ -97,6 +108,15 @@ export type IWsSendDeviceSaveConfigMessage = IWsMessageBase<"device-save-config"
   config: any;
 };
 
+// Heartbeat send message types
+export type IWsSendPingMessage = IWsMessageBase<"ping"> & {
+  timestamp?: number;
+};
+
+export type IWsSendHeartbeatMessage = IWsMessageBase<"heartbeat"> & {
+  timestamp?: number;
+};
+
 export type IWsSendMessage =
   | IWsSendRestartMessage
   | IWsSendGetDevicesMessage
@@ -105,4 +125,6 @@ export type IWsSendMessage =
   | IWsSendDeviceFunctionMessage
   | IWsSendDeviceGetStateMessage
   | IWsSendDeviceReadConfigMessage
-  | IWsSendDeviceSaveConfigMessage;
+  | IWsSendDeviceSaveConfigMessage
+  | IWsSendPingMessage
+  | IWsSendHeartbeatMessage;

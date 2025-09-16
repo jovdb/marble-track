@@ -1,11 +1,13 @@
-import { type Component } from "solid-js";
+import { createMemo, type Component } from "solid-js";
 import styles from "./Header.module.css";
-import { connectionStateName } from "../hooks/useWebSocket";
 import logo from "../assets/logo-64.png";
+import { useWebSocket2 } from "../hooks/useWebSocket2";
 
 const Header: Component = () => {
-  const getStatusIndicatorClass = () => {
-    switch (connectionStateName()) {
+  const [state] = useWebSocket2();
+
+  const getStatusIndicatorClass = createMemo(() => {
+    switch (state.connectionStateName) {
       case "Connected":
         return styles["header__status-indicator"];
       case "Disconnected":
@@ -17,7 +19,7 @@ const Header: Component = () => {
       default:
         return styles["header__status-indicator"];
     }
-  };
+  });
 
   return (
     <header class={styles.header}>
@@ -28,7 +30,7 @@ const Header: Component = () => {
       <div class={styles.header__right}>
         <div class={styles.header__status}>
           <div class={getStatusIndicatorClass()}></div>
-          <span>Status: {connectionStateName()}</span>
+          <span>Status: {state.connectionStateName}</span>
         </div>
       </div>
     </header>

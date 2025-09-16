@@ -10,8 +10,8 @@ export interface IWsDeviceMessage extends IWsMessageBase<"device-fn"> {
 }
 
 export type IWsReceiveDevicesListMessage =
-  | (IWsMessageBase<"device-list"> & { error: string })
-  | (IWsMessageBase<"device-list"> & {
+  | (IWsMessageBase<"devices-list"> & { error: string })
+  | (IWsMessageBase<"devices-list"> & {
       devices: {
         id: string;
         type: string;

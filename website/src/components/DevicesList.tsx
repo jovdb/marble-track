@@ -1,13 +1,9 @@
-import { For, onMount, createEffect } from "solid-js";
-import {
-  availableDevices,
-  devicesLoaded,
-  devicesLoading,
-  requestDevices,
-  isConnected,
-} from "../hooks/useWebSocket";
+import { createEffect, For } from "solid-js";
+import { requestDevices } from "../hooks/useWebSocket";
 import { getDeviceIcon } from "./icons/Icons";
 import styles from "./DevicesList.module.css";
+import { useDevices } from "../stores/Devices";
+import { useWebSocket2 } from "../hooks/useWebSocket2";
 
 // Export refresh function for use in parent components
 export const refreshDevices = () => {
@@ -15,48 +11,36 @@ export const refreshDevices = () => {
 };
 
 export default function DevicesList() {
-  // Request devices when component mounts and WebSocket is connected
-  onMount(() => {
-    if (isConnected()) {
-      requestDevices();
-    }
-  });
+  const [devicesState, { loadDevices }] = useDevices();
 
-  // Request devices when WebSocket becomes connected
+  const [socketState] = useWebSocket2();
+
+  // Request devices on mount or when WebSocket becomes connected
   createEffect(() => {
-    if (isConnected() && !devicesLoaded() && !devicesLoading()) {
-      requestDevices();
+    if (socketState.isConnected) {
+      loadDevices();
     }
   });
 
   return (
     <div class={styles["devices-list"]}>
       <div>
-        {!devicesLoading() && !isConnected() && (
-          <div
-            class={`${styles["devices-list__status"]} ${styles["devices-list__status--disconnected"]}`}
-          >
-            WebSocket not connected
-          </div>
-        )}
-
-        {devicesLoaded() && availableDevices().length === 0 && (
+        {Object.values(devicesState.devices).length === 0 && (
           <div class={styles["devices-list__status"]}>No devices found</div>
         )}
 
-        {devicesLoaded() && availableDevices().length > 0 && (
+        {Object.values(devicesState.devices).length > 0 && (
           <div class={styles["devices-list__table-container"]}>
             <table class={styles["devices-list__table"]}>
               <thead class={styles["devices-list__table-header"]}>
                 <tr>
-                  <th class={styles["devices-list__table-th"]}>Device</th>
+                  <th class={styles["devices-list__table-th"]}></th>
                   <th class={styles["devices-list__table-th"]}>Type</th>
                   <th class={styles["devices-list__table-th"]}>ID</th>
-                  <th class={styles["devices-list__table-th"]}>Pins</th>
                 </tr>
               </thead>
               <tbody class={styles["devices-list__table-body"]}>
-                <For each={availableDevices()}>
+                <For each={Object.values(devicesState.devices)}>
                   {(device) => (
                     <tr class={styles["devices-list__table-row"]}>
                       <td class={styles["devices-list__table-td"]}>
@@ -64,9 +48,6 @@ export default function DevicesList() {
                           {getDeviceIcon(device.type, {
                             class: styles["devices-list__device-icon"],
                           })}
-                          <span class={styles["devices-list__device-name"]}>
-                            {device.name || device.id}
-                          </span>
                         </div>
                       </td>
                       <td class={styles["devices-list__table-td"]}>
@@ -75,7 +56,7 @@ export default function DevicesList() {
                       <td class={styles["devices-list__table-td"]}>
                         <code class={styles["devices-list__device-id"]}>{device.id}</code>
                       </td>
-                      <td class={styles["devices-list__table-td"]}>
+                      {/* <td class={styles["devices-list__table-td"]}>
                         {device.pins && device.pins.length > 0 ? (
                           <code class={styles["devices-list__pins-list"]}>
                             {device.pins.join(", ")}
@@ -83,7 +64,7 @@ export default function DevicesList() {
                         ) : (
                           <span class={styles["devices-list__no-pins"]}>-</span>
                         )}
-                      </td>
+                      </td> */}
                     </tr>
                   )}
                 </For>

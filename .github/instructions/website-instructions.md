@@ -8,11 +8,12 @@ This is the frontend web application for the marble track system. It is built wi
 
 - Use TypeScript for all source files
 - Organize code by feature: components, hooks, interfaces, stores, utils, assets.
-- Use CSS modules for component styling with BEM naming convetions
+- Use CSS modules for component styling with BEM naming conventions
 - All device types should have a corresponding component in `components/devices/`.
 - Update interfaces in `interfaces/` when adding new device types or message formats.
 - Use the `stores/` directory for global state management (e.g., logger, websocketStore).
-- Never destucture component props, use a argument props and in the TSX use {props.field} (See SolidJS)
+- Never destructure component props, use a argument props and in the TSX use {props.field} (See SolidJS)
+- Never destructure hook returned store props, as it removes the reactivity of store
 
 ## File Structure
 

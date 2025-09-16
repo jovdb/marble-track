@@ -1,4 +1,4 @@
-import { createWSState, makeReconnectingWS } from "@solid-primitives/websocket";
+import { createWSState, makeReconnectingWS, makeHeartbeatWS } from "@solid-primitives/websocket";
 import { createContext, createMemo, onCleanup, onMount, useContext } from "solid-js";
 import { createStore } from "solid-js/store";
 import { IWsReceiveMessage, IWsSendMessage } from "../interfaces/WebSockets";
@@ -21,6 +21,11 @@ export interface IWebSocketStore {
   reconnectAttempts: number;
   maxReconnectAttempts: number;
   reconnectDelay: number;
+
+  // Heartbeat
+  lastHeartbeat: number | null;
+  heartbeatInterval: number;
+  isHeartbeatEnabled: boolean;
 }
 
 // Message callback type
@@ -164,8 +169,13 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
   const wsUrl = url || import.meta.env.VITE_MARBLE_WS || `ws://${window.location.hostname}/ws`;
   console.log("Connecting to WebSocket:", wsUrl);
 
-  // Create reconnecting WebSocket
-  const websocket = makeReconnectingWS(wsUrl);
+  // Create reconnecting WebSocket with heartbeat
+  const reconnectingWS = makeReconnectingWS(wsUrl);
+  const websocket = makeHeartbeatWS(reconnectingWS, {
+    message: JSON.stringify({ type: "ping" }),
+    interval: 10000, // 10 seconds
+    wait: 5000, // 10 seconds wait for response
+  });
   const wsState = createWSState(websocket);
 
   // Message subscribers
@@ -190,6 +200,11 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
       reconnectAttempts: 0,
       maxReconnectAttempts: 5,
       reconnectDelay: 1000,
+
+      // Heartbeat
+      lastHeartbeat: null,
+      heartbeatInterval: 30000,
+      isHeartbeatEnabled: true,
     },
     { name: "useWebSocket2Store" }
   );
@@ -213,6 +228,7 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
     setStore({
       error: null,
       reconnectAttempts: 0,
+      lastHeartbeat: Date.now(),
     });
   };
 
@@ -230,19 +246,27 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
   const handleMessage = (event: MessageEvent) => {
     const data = event.data;
 
-    // Update message history
-    setStore("lastMessage", data);
-    setStore("lastMessages", (prev) => [...prev, data].slice(-20)); // Keep only last 20 messages
-
-    console.log("WebSocket message received:", data);
-
-    // Parse message and notify subscribers
+    // Parse message first to check for heartbeat responses
     let parsedData: IWsReceiveMessage | undefined;
     try {
       parsedData = JSON.parse(data) as IWsReceiveMessage;
     } catch (error) {
       console.error("Non-JSON message received:", error);
     }
+
+    // Handle heartbeat responses (pong)
+    if (parsedData && parsedData.type === "pong") {
+      setStore("lastHeartbeat", Date.now());
+      console.debug("Heartbeat pong received");
+      // Don't add heartbeat messages to message history
+      return;
+    }
+
+    // Update message history for non-heartbeat messages
+    setStore("lastMessage", data);
+    setStore("lastMessages", (prev) => [...prev, data].slice(-20)); // Keep only last 20 messages
+
+    console.log("WebSocket message received:", data);
 
     if (parsedData) {
       // Notify all subscribers
@@ -356,5 +380,43 @@ export function useWebSocketMessage(callback: MessageCallback): void {
     onCleanup(() => {
       unsubscribe();
     });
+  });
+}
+
+/**
+ * Hook for monitoring WebSocket heartbeat health
+ * Returns a signal indicating if the connection is healthy based on heartbeat
+ *
+ * @param timeoutMs Maximum time since last heartbeat before considering unhealthy (default: 60000ms = 1 minute)
+ *
+ * @example
+ * ```tsx
+ * function ConnectionStatus() {
+ *   const [wsStore] = useWebSocket2();
+ *   const isHealthy = useWebSocketHealth();
+ *
+ *   return (
+ *     <div>
+ *       Connection: {wsStore.isConnected ? "Connected" : "Disconnected"}
+ *       Health: {isHealthy() ? "Healthy" : "Unhealthy"}
+ *     </div>
+ *   );
+ * }
+ * ```
+ */
+export function useWebSocketHealth(timeoutMs: number = 60000) {
+  const [wsStore] = useWebSocket2();
+
+  return createMemo(() => {
+    if (!wsStore.isConnected || !wsStore.isHeartbeatEnabled) {
+      return false;
+    }
+
+    if (wsStore.lastHeartbeat === null) {
+      return false;
+    }
+
+    const timeSinceLastHeartbeat = Date.now() - wsStore.lastHeartbeat;
+    return timeSinceLastHeartbeat < timeoutMs;
   });
 }

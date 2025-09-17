@@ -73,7 +73,8 @@ export function createDeviceStore<TDeviceType extends keyof IDeviceStates>(
         if (result) return result;
       }
     };
-    return createMemo(() => findChild(state()));
+    return undefined;
+    // return createMemo(() => findChild(state));
   }
 
   // Listen for state updates from WebSocket

@@ -47,24 +47,6 @@
   margin-bottom: 0;
 }
 
-.app__devices-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: var(--spacing-6);
-  margin-top: var(--spacing-6);
-}
-
-.app__no-devices {
-  grid-column: 1 / -1;
-  text-align: center;
-  color: var(--color-text-tertiary);
-  font-style: italic;
-  padding: var(--spacing-8) var(--spacing-4);
-  background-color: var(--color-surface);
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-md);
-}
-
 .app__refresh-icon {
   color: var(--color-text-secondary);
   cursor: pointer;
@@ -104,11 +86,6 @@
     padding: var(--spacing-4);
   }
 
-  .app__devices-grid {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-4);
-  }
-
   .app__section {
     margin-bottom: var(--spacing-6);
   }
@@ -117,10 +94,6 @@
 @media (max-width: 480px) {
   .app__main {
     padding: var(--spacing-3);
-  }
-
-  .app__devices-grid {
-    gap: var(--spacing-3);
   }
 
   .app__section {

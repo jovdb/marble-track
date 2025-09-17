@@ -1,6 +1,5 @@
-import { createDeviceStore, IDeviceState } from "./Device";
-import { sendMessage } from "../hooks/useWebSocket";
-import { IWsDeviceMessage } from "../interfaces/WebSockets";
+import { IDeviceConfig, IDeviceState } from "./Device";
+import { IDevice, useDevice } from "./Devices";
 
 const deviceType = "led";
 
@@ -8,34 +7,42 @@ interface ILedState extends IDeviceState {
   mode: "ON" | "OFF" | "BLINKING";
 }
 
-export function setLed(deviceId: string, value: any) {
-  sendMessage({
-    type: "device-fn",
-    deviceId,
-    deviceType,
-    fn: "set",
-    args: { value },
-  } as IWsDeviceMessage);
+interface ILedConfig extends IDeviceConfig {
+  name: string;
+  pin: number;
 }
 
-export function blink(deviceId: string, onTime?: number, offTime?: number) {
-  sendMessage({
-    type: "device-fn",
-    deviceId,
-    deviceType,
-    fn: "blink",
-    args: { onTime, offTime },
-  } as IWsDeviceMessage);
-}
+export function useLed(deviceId: string) {
+  const [device, { sendMessage, ...actions }] = useDevice(deviceId);
 
-export function createLedStore(deviceId: string) {
-  const base = createDeviceStore(deviceId, deviceType);
+  function setLed(deviceId: string, value: any) {
+    sendMessage({
+      type: "device-fn",
+      deviceId,
+      deviceType,
+      fn: "set",
+      args: { value },
+    });
+  }
 
-  return {
-    ...base,
-    setLed: (value: Parameters<typeof setLed>[1]) => setLed(deviceId, value),
-    blink: (onTime?: number, offTime?: number) => blink(deviceId, onTime, offTime),
-  };
+  function blink(deviceId: string, onTime?: number, offTime?: number) {
+    sendMessage({
+      type: "device-fn",
+      deviceId,
+      deviceType,
+      fn: "blink",
+      args: { onTime, offTime },
+    });
+  }
+
+  return [
+    device as IDevice<ILedState, ILedConfig>,
+    {
+      ...actions,
+      setLed: (value: Parameters<typeof setLed>[1]) => setLed(deviceId, value),
+      blink: (onTime?: number, offTime?: number) => blink(deviceId, onTime, offTime),
+    },
+  ] as const;
 }
 
 declare global {

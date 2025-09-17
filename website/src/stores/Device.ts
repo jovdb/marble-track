@@ -144,12 +144,7 @@ export function createDeviceStore<TDeviceType extends keyof IDeviceStates>(
   };
 }
 
-export interface IDeviceState {
-  id: string;
-  name: string;
-  type: string;
-  children?: IDeviceState[];
-}
+export interface IDeviceState {}
 
 export type IDeviceConfig = object;
 

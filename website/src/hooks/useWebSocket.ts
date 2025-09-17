@@ -89,7 +89,6 @@ websocket.addEventListener("message", (e) => {
 
 export const clearMessages = () => setLastMessages([]);
 
-/** @deprecated Use sendMessage from hook instead */
 export const sendMessage = (message: IWsSendMessage): boolean => {
   if (websocket.readyState === WebSocket.OPEN) {
     console.debug("WebSocket message sent:    ", message);

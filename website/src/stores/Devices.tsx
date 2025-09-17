@@ -1,6 +1,4 @@
 import { createStore, produce } from "solid-js/store";
-import { sendMessage, websocket } from "../hooks/useWebSocket";
-import { IWsReceiveMessage } from "../interfaces/WebSockets";
 import { createContext, onCleanup, onMount, useContext } from "solid-js";
 import { IWebSocketActions, useWebSocket2 } from "../hooks/useWebSocket2";
 
@@ -8,11 +6,14 @@ export type IDeviceConfig = object;
 
 export type IDeviceState = object;
 
-export interface IDevice {
+export interface IDevice<
+  TState extends IDeviceState = IDeviceState,
+  TConfig extends IDeviceConfig = IDeviceConfig,
+> {
   id: string;
   type: string;
-  state?: IDeviceState;
-  config?: IDeviceConfig;
+  state?: TState;
+  config?: TConfig;
   children?: IDevice[];
 }
 
@@ -151,5 +152,5 @@ export function useDevice(deviceId: string) {
     getDeviceState();
   });
 
-  return [store.devices[deviceId], { getDeviceConfig, getDeviceState }] as const;
+  return [store.devices[deviceId], { getDeviceConfig, getDeviceState, sendMessage }] as const;
 }

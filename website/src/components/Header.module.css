@@ -22,6 +22,9 @@
 .header__logo {
   width: 28px;
   height: 28px;
+}
+
+.header__logo--connected {
   animation: rotate 30s linear infinite;
 }
 
@@ -56,19 +59,6 @@
   border: 1px solid var(--color-border);
   white-space: nowrap;
   flex-shrink: 0;
-}
-
-.header__status-indicator--disconnected {
-  background-color: var(--color-danger-500);
-  animation: none;
-}
-
-.header__status-indicator--connecting {
-  background-color: var(--color-warning-500);
-  animation: pulse 1s ease-in-out infinite;
-}
-
-.header__status-text {
 }
 
 /* Animations */
@@ -106,7 +96,6 @@
     padding: var(--spacing-2) var(--spacing-3);
   }
 }
-
 
 @media (max-width: 400px) {
   .header__status-text {

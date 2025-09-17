@@ -18,9 +18,8 @@ import styles from "./App.module.css";
 import { logger } from "./stores/logger";
 import { Wheel } from "./components/devices/Wheel";
 import { Stepper } from "./components/devices/Stepper";
-import { sendMessage } from "./hooks/useWebSocket";
-import { DevicesProvider } from "./stores/Devices";
-import { WebSocketProvider } from "./hooks/WebSocketProvider";
+import { Providers } from "./Providers";
+import { useWebSocket2 } from "./hooks/useWebSocket2";
 
 export function renderDeviceComponent(device: { id: string; type: string }) {
   switch (device.type.toLowerCase()) {
@@ -48,10 +47,8 @@ export function renderDeviceComponent(device: { id: string; type: string }) {
 }
 
 const App: Component = () => {
-  // Reset button handler
-  const handleReset = () => {
-    sendMessage({ type: "restart" });
-  };
+  // const [, { sendMessage }] = useWebSocket2();
+
 
   // Download devices config handler
   const handleDownloadConfig = () => {
@@ -149,79 +146,70 @@ const App: Component = () => {
 
   return (
     <div class={styles.app}>
-      <WebSocketProvider>
-        <DevicesProvider>
-          <Header />
-          <button
-            class={styles.app__resetButton}
-            onClick={handleReset}
-            style={{ position: "absolute", top: "10px", right: "10px", "z-index": 1000 }}
-          >
-            Reset Device
-          </button>
-          <main class={styles.app__main}>
-            <section class={styles.app__section}>
-              <CollapsibleSection
-                title="Available Devices"
-                icon={<ClipboardIcon height={24} width={24} />}
-                headerAction={devicesRefreshButton}
-              >
-                <div class={styles["app__config-buttons"]}>
-                  <button class={styles["app__config-button"]} onClick={handleDownloadConfig}>
-                    Download
-                  </button>
-                  <button class={styles["app__config-button"]} onClick={handleUploadConfig}>
-                    Upload
-                  </button>
-                </div>
-                <DevicesList />
-              </CollapsibleSection>
-            </section>
+      <Providers>
+        <Header />
+        <main class={styles.app__main}>
+          <section class={styles.app__section}>
+            <CollapsibleSection
+              title="Available Devices"
+              icon={<ClipboardIcon height={24} width={24} />}
+              headerAction={devicesRefreshButton}
+            >
+              <div class={styles["app__config-buttons"]}>
+                <button class={styles["app__config-button"]} onClick={handleDownloadConfig}>
+                  Download
+                </button>
+                <button class={styles["app__config-button"]} onClick={handleUploadConfig}>
+                  Upload
+                </button>
+              </div>
+              <DevicesList />
+            </CollapsibleSection>
+          </section>
 
-            <section class={styles.app__section}>
-              <CollapsibleSection
-                title="Device Controls"
-                icon={
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <rect width="7" height="9" x="3" y="3" rx="1" />
-                    <rect width="7" height="5" x="14" y="3" rx="1" />
-                    <rect width="7" height="9" x="14" y="12" rx="1" />
-                    <rect width="7" height="5" x="3" y="16" rx="1" />
-                  </svg>
-                }
-              >
-                <div class={styles["app__devices-grid"]}>
-                  {availableDevices().length === 0 ? (
-                    <div class={styles["app__no-devices"]}>
-                      {isConnected()
-                        ? "No devices available for control"
-                        : "Connect to see available devices"}
-                    </div>
-                  ) : (
-                    <For each={availableDevices()}>{(device) => renderDeviceComponent(device)}</For>
-                  )}
-                </div>
-              </CollapsibleSection>
-            </section>
+          <section class={styles.app__section}>
+            <CollapsibleSection
+              title="Device Controls"
+              icon={
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect width="7" height="9" x="3" y="3" rx="1" />
+                  <rect width="7" height="5" x="14" y="3" rx="1" />
+                  <rect width="7" height="9" x="14" y="12" rx="1" />
+                  <rect width="7" height="5" x="3" y="16" rx="1" />
+                </svg>
+              }
+            >
+              <div class={styles["app__devices-grid"]}>
+                {availableDevices().length === 0 ? (
+                  <div class={styles["app__no-devices"]}>
+                    {isConnected()
+                      ? "No devices available for control"
+                      : "Connect to see available devices"}
+                  </div>
+                ) : (
+                  <For each={availableDevices()}>{(device) => renderDeviceComponent(device)}</For>
+                )}
+              </div>
+            </CollapsibleSection>
+          </section>
 
-            <section class={styles.app__section}>
-              <CollapsibleSection
-                title="WebSocket Messages"
-                icon={<RadioIcon height={24} width={24} />}
-              >
-                <WebSocketMessages />
-              </CollapsibleSection>
-            </section>
-          </main>
-        </DevicesProvider>
-      </WebSocketProvider>
+          <section class={styles.app__section}>
+            <CollapsibleSection
+              title="WebSocket Messages"
+              icon={<RadioIcon height={24} width={24} />}
+            >
+              <WebSocketMessages />
+            </CollapsibleSection>
+          </section>
+        </main>
+      </Providers>
     </div>
   );
 };

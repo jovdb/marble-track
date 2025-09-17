@@ -1,0 +1,16 @@
+.transparent-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
+}
+
+.transparent-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+/*
+.transparent-button:not(:disabled):not(.transparent-button--no-hover):hover {
+	color: var(--hover-color);
+}
+*/

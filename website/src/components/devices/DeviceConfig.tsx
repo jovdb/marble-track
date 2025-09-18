@@ -1,4 +1,5 @@
-import { JSX } from "solid-js";
+import { JSX, onMount } from "solid-js";
+import { useDevice } from "../../stores/Devices";
 
 interface DeviceConfigProps {
   id: string;
@@ -7,6 +8,12 @@ interface DeviceConfigProps {
 }
 
 export default function DeviceConfig(props: DeviceConfigProps) {
+  const [, { getDeviceConfig }] = useDevice(props.id);
+
+  onMount(() => {
+    getDeviceConfig();
+  });
+
   return (
     <div style={{ display: "flex", "flex-direction": "column", gap: "1rem" }}>
       <form

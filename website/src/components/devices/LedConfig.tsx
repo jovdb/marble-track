@@ -8,21 +8,17 @@ interface LedConfigProps {
 }
 
 export default function LedConfig(props: LedConfigProps) {
-  const [device, { getDeviceConfig, setDeviceConfig }] = useLed(props.id);
-  //const [name, setName] = createSignal("Led");
-  //const [pin, setPin] = createSignal(device.config?.pin || "");
-
-  onMount(() => {
-    getDeviceConfig();
-  });
+  const [device, { setDeviceConfig }] = useLed(props.id);
+  const [name, setName] = createSignal(device?.config?.name || "Led");
+  const [pin, setPin] = createSignal(device?.config?.pin || 1);
 
   return (
     <DeviceConfig
       id={props.id}
       onSave={() => {
         setDeviceConfig({
-          name: "Jo",
-          pin: 2,
+          name: name(),
+          pin: pin(),
         });
       }}
     >
@@ -32,7 +28,7 @@ export default function LedConfig(props: LedConfigProps) {
             Name:
             <input
               type="text"
-              value={device.config?.name || ""}
+              value={name() || ""}
               onInput={(e) => setName(e.currentTarget.value)}
               style={{ "margin-left": "0.5rem" }}
             />
@@ -43,8 +39,9 @@ export default function LedConfig(props: LedConfigProps) {
             Pin number:
             <input
               type="number"
-              value={device.config?.pin || ""}
-              min={0}
+              value={pin() || "1"}
+              min={1}
+              max={40}
               onInput={(e) => setPin(Number(e.currentTarget.value))}
               style={{ "margin-left": "0.5rem" }}
             />

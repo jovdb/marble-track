@@ -1,8 +1,8 @@
-import { createSignal, For, JSX } from "solid-js";
+import { createMemo, createSignal, For, JSX, onMount } from "solid-js";
 import styles from "./Device.module.css";
 import { IDeviceState } from "../../stores/Device";
-import { useDevice } from "../../stores/useDevice";
 import { renderDeviceComponent } from "../Devices";
+import { useDevice } from "../../stores/Devices";
 
 interface DeviceProps {
   id: string;
@@ -15,20 +15,27 @@ interface DeviceProps {
 export function Device(props: DeviceProps) {
   const [showChildren, setShowChildren] = createSignal(false);
   const [showConfig, setShowConfig] = createSignal(false);
-  const [device] = useDevice(props.id);
+  const [device, { getDeviceConfig }] = useDevice(props.id);
+
+  onMount(() => {
+    getDeviceConfig();
+  });
+
+  const name = createMemo(() => device.config?.name || device.deviceId);
 
   return (
     <div class={styles.device}>
       <div class={styles.device__header}>
         <div class={styles["device__header-left"]}>
           {props.icon}
-          <h3 class={styles.device__title}>{device.name}</h3>
+          <h3 class={styles.device__title}>{name()}</h3>
         </div>
         <div class={styles["device__header-right"]}>
           <span style={{ display: "flex", gap: "var(--spacing-2)", "align-items": "center" }}>
             {props.deviceState?.type && (
               <span class={styles["device__type-badge"]}>{props.deviceState?.type}</span>
             )}
+            {/*             
             {props.deviceState?.children?.length && (
               <button
                 class={`${styles["device__header-button"]} ${showChildren() ? styles["device__header-button--active"] : ""}`}
@@ -52,7 +59,7 @@ export function Device(props: DeviceProps) {
                 </svg>
               </button>
               // add config button
-            )}
+            )} */}
             {!!props.configComponent && (
               <button
                 class={`${styles["device__header-button"]} ${showConfig() ? styles["device__header-button--active"] : ""}`}
@@ -78,13 +85,14 @@ export function Device(props: DeviceProps) {
       </div>
       <div class={styles.device__content}>
         {!showChildren() && !showConfig() && props.children}
-        {showChildren() && props.deviceState?.children?.length && (
+      
+        {/* {showChildren() && props.deviceState?.children?.length && (
           <div class={styles.device__children}>
             <For each={props.deviceState.children}>
               {(child: IDeviceState) => renderDeviceComponent(child)}
             </For>
           </div>
-        )}
+        )} */}
         {showConfig() && props.configComponent && (
           <div class={styles.device__children}>{props.configComponent}</div>
         )}

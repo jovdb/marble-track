@@ -144,7 +144,7 @@ void setup()
   else
   {
     String hostnameStr = network.getHostname();
-    MLOG_INFO("Network ready, hostname: %s", hostnameStr.c_str());
+    MLOG_INFO("Network ready, hostname: %s.local", hostnameStr.c_str());
     otaService.setup(hostnameStr.c_str()); // <-- OTA setup only after network is ready
   }
 
@@ -183,7 +183,7 @@ void setup()
     }
     deviceManager.saveDevicesToJsonFile();
   }
-
+/*
   // Add development/test devices (these are not saved to JSON)
   ServoDevice *testServo = new ServoDevice("test-servo", "SG90");
   testServo->setPin(42);
@@ -199,7 +199,7 @@ void setup()
   testStepper->setMaxSpeed(2000);
   // TODO: setMaxAcceleration(1000);
   deviceManager.addDevice(testStepper);
-
+*/
   // Setup  Devices
   deviceManager.setup([&](const String &deviceId, const String &stateJson)
                       { wsManager.broadcastState(deviceId, stateJson, ""); });
@@ -208,8 +208,8 @@ void setup()
   Buzzer *buzzer = deviceManager.getDeviceByTypeAs<Buzzer>("buzzer");
   if (buzzer)
   {
+    MLOG_INFO("Startup tone");
     buzzer->startupTone(); // Play startup tone sequence
-    MLOG_INFO("Startup tone played");
   }
 
   MLOG_INFO("Device management initialized - Total devices: %d", deviceManager.getDeviceCount());

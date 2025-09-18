@@ -22,7 +22,7 @@ export default function LedConfig(props: LedConfigProps) {
       onSave={() => {
         setDeviceConfig({
           name: "Jo",
-          pin: 3,
+          pin: 2,
         });
       }}
     >

@@ -18,8 +18,6 @@ ServoDevice::ServoDevice(const String &id, const String &name)
     : Device(id, "servo"), _servoPwm()
 {
     _name = name;
-    // Defaults set in member initializers
-    MLOG_INFO("Servo [%s]: Created (defaults: pin %d, angle %d, pwm %d)", _id.c_str(), _pin, _currentAngle, _pwmChannel);
 }
 
 void ServoDevice::setup()

@@ -11,7 +11,6 @@
  * @date 2025
  */
 
-
 #include "devices/Stepper.h"
 #include "Logging.h"
 
@@ -26,7 +25,7 @@
 Stepper::Stepper(const String &id, const String &name)
     : Device(id, "stepper")
 {
-    MLOG_INFO("Stepper [%s]: Created (not configured yet)", _id.c_str());
+
 }
 
 /**
@@ -43,12 +42,14 @@ Stepper::~Stepper()
  */
 void Stepper::setup()
 {
-    if (!_configured) {
-        MLOG_WARN("Stepper [%s]: Not configured yet - call configure2Pin() or configure4Pin() first", _id.c_str());
+    if (!_configured)
+    {
+        // MLOG_WARN("Stepper [%s]: Not configured yet - call configure2Pin() or configure4Pin() first", _id.c_str());
         return;
     }
 
-    if (!_stepper) {
+    if (!_stepper)
+    {
         MLOG_ERROR("Stepper [%s]: AccelStepper instance not initialized", _id.c_str());
         return;
     }
@@ -69,7 +70,8 @@ void Stepper::setup()
  */
 void Stepper::loop()
 {
-    if (!_configured || !_stepper) {
+    if (!_configured || !_stepper)
+    {
         return;
     }
 
@@ -90,7 +92,8 @@ void Stepper::loop()
  */
 void Stepper::move(long steps)
 {
-    if (!_configured || !_stepper) {
+    if (!_configured || !_stepper)
+    {
         MLOG_WARN("Stepper [%s]: Not configured - cannot move", _id.c_str());
         return;
     }
@@ -107,7 +110,8 @@ void Stepper::move(long steps)
  */
 void Stepper::moveTo(long position)
 {
-    if (!_configured || !_stepper) {
+    if (!_configured || !_stepper)
+    {
         MLOG_WARN("Stepper [%s]: Not configured - cannot move to position", _id.c_str());
         return;
     }
@@ -123,7 +127,8 @@ void Stepper::moveTo(long position)
  */
 void Stepper::setCurrentPosition(long position)
 {
-    if (!_configured || !_stepper) {
+    if (!_configured || !_stepper)
+    {
         MLOG_WARN("Stepper [%s]: Not configured - cannot set current position", _id.c_str());
         return;
     }
@@ -143,7 +148,8 @@ void Stepper::setMaxSpeed(float maxSpeed)
         return;
 
     _maxSpeed = maxSpeed;
-    if (_stepper) {
+    if (_stepper)
+    {
         _stepper->setMaxSpeed(maxSpeed);
     }
     MLOG_INFO("Stepper [%s]: Max speed set to %.2f steps/s", _id.c_str(), maxSpeed);
@@ -158,7 +164,8 @@ void Stepper::setAcceleration(float maxAcceleration)
     if (_maxAcceleration == maxAcceleration)
         return;
     _maxAcceleration = maxAcceleration;
-    if (_stepper) {
+    if (_stepper)
+    {
         _stepper->setAcceleration(maxAcceleration);
     }
     MLOG_INFO("Stepper [%s]: Acceleration set to %.2f steps/s^2", _id.c_str(), maxAcceleration);
@@ -170,7 +177,8 @@ void Stepper::setAcceleration(float maxAcceleration)
  */
 long Stepper::getCurrentPosition() const
 {
-    if (!_configured || !_stepper) {
+    if (!_configured || !_stepper)
+    {
         return 0;
     }
     return _stepper->currentPosition();
@@ -182,7 +190,8 @@ long Stepper::getCurrentPosition() const
  */
 long Stepper::getTargetPosition() const
 {
-    if (!_configured || !_stepper) {
+    if (!_configured || !_stepper)
+    {
         return 0;
     }
     return _stepper->targetPosition();
@@ -203,7 +212,8 @@ bool Stepper::isMoving() const
 void Stepper::stop()
 {
     MLOG_WARN("Stepper [%s]: Emergency stop", _id.c_str());
-    if (_stepper) {
+    if (_stepper)
+    {
         _stepper->stop();
     }
     _isMoving = false;
@@ -239,7 +249,7 @@ bool Stepper::control(const String &action, JsonObject *payload)
         }
 
         long steps = (*payload)["steps"].as<long>();
-    MLOG_INFO("Stepper [%s]: Move %ld steps (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), steps, _maxSpeed, _maxAcceleration);
+        MLOG_INFO("Stepper [%s]: Move %ld steps (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), steps, _maxSpeed, _maxAcceleration);
         move(steps);
         return true;
     }
@@ -303,7 +313,7 @@ bool Stepper::control(const String &action, JsonObject *payload)
     */
     else
     {
-    MLOG_WARN("Stepper [%s]: Unknown action: '%s'", _id.c_str(), action.c_str());
+        MLOG_WARN("Stepper [%s]: Unknown action: '%s'", _id.c_str(), action.c_str());
         return false;
     }
 }
@@ -339,7 +349,8 @@ String Stepper::getState()
 std::vector<int> Stepper::getPins() const
 {
     std::vector<int> pins;
-    if (_configured) {
+    if (_configured)
+    {
         pins.push_back(_pin1);
         pins.push_back(_pin2);
         if (_is4Pin)
@@ -361,7 +372,7 @@ std::vector<int> Stepper::getPins() const
 void Stepper::configure2Pin(int stepPin, int dirPin, float maxSpeed, float acceleration)
 {
     cleanupAccelStepper();
-    
+
     _is4Pin = false;
     _pin1 = stepPin;
     _pin2 = dirPin;
@@ -370,10 +381,10 @@ void Stepper::configure2Pin(int stepPin, int dirPin, float maxSpeed, float accel
     _maxSpeed = maxSpeed;
     _maxAcceleration = acceleration;
     _stepperType = "DRIVER";
-    
+
     initializeAccelStepper();
     _configured = true;
-    
+
     MLOG_INFO("Stepper [%s]: Configured as DRIVER type on pins %d (step), %d (dir)", _id.c_str(), _pin1, _pin2);
 }
 
@@ -389,7 +400,7 @@ void Stepper::configure2Pin(int stepPin, int dirPin, float maxSpeed, float accel
 void Stepper::configure4Pin(int pin1, int pin2, int pin3, int pin4, float maxSpeed, float acceleration)
 {
     cleanupAccelStepper();
-    
+
     _is4Pin = true;
     _pin1 = pin1;
     _pin2 = pin2;
@@ -398,10 +409,10 @@ void Stepper::configure4Pin(int pin1, int pin2, int pin3, int pin4, float maxSpe
     _maxSpeed = maxSpeed;
     _maxAcceleration = acceleration;
     _stepperType = "HALF4WIRE";
-    
+
     initializeAccelStepper();
     _configured = true;
-    
+
     MLOG_INFO("Stepper [%s]: Configured as HALF4WIRE type on pins %d, %d, %d, %d", _id.c_str(), _pin1, _pin2, _pin3, _pin4);
 }
 
@@ -410,14 +421,18 @@ void Stepper::configure4Pin(int pin1, int pin2, int pin3, int pin4, float maxSpe
  */
 void Stepper::initializeAccelStepper()
 {
-    if (_stepper) {
+    if (_stepper)
+    {
         delete _stepper;
         _stepper = nullptr;
     }
-    
-    if (_is4Pin) {
+
+    if (_is4Pin)
+    {
         _stepper = new AccelStepper(AccelStepper::HALF4WIRE, _pin1, _pin3, _pin2, _pin4);
-    } else {
+    }
+    else
+    {
         _stepper = new AccelStepper(AccelStepper::DRIVER, _pin1, _pin2);
     }
 }
@@ -427,7 +442,8 @@ void Stepper::initializeAccelStepper()
  */
 void Stepper::cleanupAccelStepper()
 {
-    if (_stepper) {
+    if (_stepper)
+    {
         delete _stepper;
         _stepper = nullptr;
     }
@@ -441,27 +457,31 @@ String Stepper::getConfig() const
 {
     JsonDocument doc;
     JsonObject config = doc.to<JsonObject>();
-    
+
     config["configured"] = _configured;
-    if (_configured) {
+    if (_configured)
+    {
         config["stepperType"] = _stepperType;
         config["is4Pin"] = _is4Pin;
         config["maxSpeed"] = _maxSpeed;
         config["acceleration"] = _maxAcceleration;
-        
-        if (_is4Pin) {
+
+        if (_is4Pin)
+        {
             JsonArray pins = config["pins"].to<JsonArray>();
             pins.add(_pin1);
             pins.add(_pin2);
             pins.add(_pin3);
             pins.add(_pin4);
-        } else {
+        }
+        else
+        {
             JsonObject pinConfig = config["pins"].to<JsonObject>();
             pinConfig["stepPin"] = _pin1;
             pinConfig["dirPin"] = _pin2;
         }
     }
-    
+
     String result;
     serializeJson(config, result);
     return result;
@@ -473,31 +493,40 @@ String Stepper::getConfig() const
  */
 void Stepper::setConfig(JsonObject *config)
 {
-    if (!config) {
+    if (!config)
+    {
         MLOG_WARN("Stepper [%s]: Null config provided", _id.c_str());
         return;
     }
-    
+
     // Check if we should configure as 2-pin or 4-pin
-    if ((*config)["stepperType"].is<String>()) {
+    if ((*config)["stepperType"].is<String>())
+    {
         String stepperType = (*config)["stepperType"].as<String>();
-        
-        if (stepperType == "DRIVER") {
+
+        if (stepperType == "DRIVER")
+        {
             // Configure as 2-pin
-            if ((*config)["pins"]["stepPin"].is<int>() && (*config)["pins"]["dirPin"].is<int>()) {
+            if ((*config)["pins"]["stepPin"].is<int>() && (*config)["pins"]["dirPin"].is<int>())
+            {
                 int stepPin = (*config)["pins"]["stepPin"].as<int>();
                 int dirPin = (*config)["pins"]["dirPin"].as<int>();
                 float maxSpeed = (*config)["maxSpeed"].is<float>() ? (*config)["maxSpeed"].as<float>() : 1000.0;
                 float acceleration = (*config)["acceleration"].is<float>() ? (*config)["acceleration"].as<float>() : 500.0;
-                
+
                 configure2Pin(stepPin, dirPin, maxSpeed, acceleration);
                 MLOG_INFO("Stepper [%s]: Configured from JSON as DRIVER", _id.c_str());
-            } else {
+            }
+            else
+            {
                 MLOG_WARN("Stepper [%s]: Invalid 2-pin configuration in JSON", _id.c_str());
             }
-        } else if (stepperType == "HALF4WIRE") {
+        }
+        else if (stepperType == "HALF4WIRE")
+        {
             // Configure as 4-pin
-            if ((*config)["pins"].is<JsonArray>() && (*config)["pins"].size() == 4) {
+            if ((*config)["pins"].is<JsonArray>() && (*config)["pins"].size() == 4)
+            {
                 JsonArray pins = (*config)["pins"].as<JsonArray>();
                 int pin1 = pins[0].as<int>();
                 int pin2 = pins[1].as<int>();
@@ -505,16 +534,22 @@ void Stepper::setConfig(JsonObject *config)
                 int pin4 = pins[3].as<int>();
                 float maxSpeed = (*config)["maxSpeed"].is<float>() ? (*config)["maxSpeed"].as<float>() : 500.0;
                 float acceleration = (*config)["acceleration"].is<float>() ? (*config)["acceleration"].as<float>() : 250.0;
-                
+
                 configure4Pin(pin1, pin2, pin3, pin4, maxSpeed, acceleration);
                 MLOG_INFO("Stepper [%s]: Configured from JSON as HALF4WIRE", _id.c_str());
-            } else {
+            }
+            else
+            {
                 MLOG_WARN("Stepper [%s]: Invalid 4-pin configuration in JSON", _id.c_str());
             }
-        } else {
+        }
+        else
+        {
             MLOG_WARN("Stepper [%s]: Unknown stepperType '%s'", _id.c_str(), stepperType.c_str());
         }
-    } else {
+    }
+    else
+    {
         MLOG_WARN("Stepper [%s]: No stepperType specified in config", _id.c_str());
     }
 }

@@ -23,14 +23,12 @@ void Led::setup()
 
     if (_pin == -1)
     {
-        MLOG_WARN("Led [%s]: Pin not configured - call configurePin() first", _id.c_str());
+        MLOG_WARN("Led [%s]: Pin not configured", _id.c_str());
         return;
     }
 
     pinMode(_pin, OUTPUT);
-    digitalWrite(_pin, LOW);
-
-    Led::blink(100, 300);
+    // digitalWrite(_pin, LOW);
 }
 
 /**
@@ -75,7 +73,8 @@ bool Led::control(const String &action, JsonObject *args)
             MLOG_ERROR("Led [%s]: Invalid 'set' payload", _id.c_str());
             return false;
         }
-        set((*args)["value"].as<bool>());
+        boolean on = (*args)["value"].as<bool>();
+        set(on);
         return true;
     }
     else if (action == "blink")
@@ -171,22 +170,6 @@ void Led::loop()
 }
 
 /**
- * @brief Configure the LED pin
- * @param pin GPIO pin number for the LED
- */
-void Led::configurePin(int pin)
-{
-    if (pin < 0)
-    {
-        MLOG_WARN("Led [%s]: Invalid pin number %d", _id.c_str(), pin);
-        return;
-    }
-
-    _pin = pin;
-    MLOG_INFO("Led [%s]: Configured with pin %d", _id.c_str(), _pin);
-}
-
-/**
  * @brief Get configuration as JSON
  * @return JsonObject containing the current configuration
  */
@@ -227,7 +210,10 @@ void Led::setConfig(JsonObject *config)
     if ((*config)["pin"].is<int>())
     {
         int pin = (*config)["pin"].as<int>();
-        configurePin(pin);
-        // ESP_LOGI(TAG, "Led [%s]: Configured from JSON with pin %d", _id.c_str(), pin);
+        _pin = pin;
     }
+
+    // set pinMode
+    // Define an unsetup function?
+    Led:setup();
 }

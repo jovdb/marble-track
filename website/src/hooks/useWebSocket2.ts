@@ -173,11 +173,12 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
 
   // Create reconnecting WebSocket with heartbeat
   const reconnectingWS = makeReconnectingWS(wsUrl);
-  const websocket = makeHeartbeatWS(reconnectingWS, {
+  /*const websocket = makeHeartbeatWS(reconnectingWS, {
     message: JSON.stringify({ type: "ping" }),
     interval: 10000, // 10 seconds
     wait: 5000, // 10 seconds wait for response
-  });
+  });*/
+  const websocket = reconnectingWS;
   const wsState = createWSState(websocket);
 
   // Message subscribers

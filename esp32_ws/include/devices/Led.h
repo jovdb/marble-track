@@ -48,13 +48,9 @@ public:
     // Non-blocking blink
     void blink(unsigned long onTime = 500, unsigned long offTime = 500);
 
-    // Configuration
-    void configurePin(int pin);
-    bool isConfigured() const { return _pin != -1; }
-
 private:
-    int _pin = 2;        ///< GPIO pin number for the LED
-    LedMode _mode = LedMode::OFF; ///< Current mode of the LED
+    int _pin = -1;
+    LedMode _mode = LedMode::OFF;
     // Blink state
     unsigned long _blinkOnTime = 500;
     unsigned long _blinkOffTime = 500;

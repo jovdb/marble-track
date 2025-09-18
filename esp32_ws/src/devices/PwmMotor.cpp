@@ -48,7 +48,7 @@ bool PwmMotor::setupMotor(int pin, int pwmChannel, uint32_t frequency, uint8_t r
     }
 
     MLOG_INFO("PwmMotor [%s]: Setup - pin:%d, channel:%d, freq:%d Hz, resolution:%d bits",
-             _id.c_str(), _pin, _pwmChannel, _frequency, _resolutionBits);
+              _id.c_str(), _pin, _pwmChannel, _frequency, _resolutionBits);
 
     return configureMCPWM();
 }
@@ -144,7 +144,7 @@ void PwmMotor::setDutyCycleAnimated(float dutyCycle, uint32_t durationMs)
     _isAnimating = true;
 
     MLOG_INFO("PwmMotor [%s]: Starting animated transition from %.1f%% to %.1f%% over %dms",
-             _id.c_str(), _startDutyCycle, _targetDutyCycle, durationMs);
+              _id.c_str(), _startDutyCycle, _targetDutyCycle, durationMs);
 
     // Notify that animation has started with target value and duration
     notifyStateChange();
@@ -162,7 +162,7 @@ void PwmMotor::setup()
 
     if (_pin == -1)
     {
-        MLOG_WARN("PwmMotor [%s]: No pin configured. Use setupMotor() to configure.", _id.c_str());
+        // MLOG_WARN("PwmMotor [%s]: No pin configured. Use setupMotor() to configure.", _id.c_str());
         return;
     }
 
@@ -278,7 +278,7 @@ void PwmMotor::updateAnimation()
         _isAnimating = false;
         setDutyCycle(_targetDutyCycle, true); // Final notify like normal setDutyCycle
         MLOG_INFO("PwmMotor [%s]: Animation complete, final duty cycle: %.1f%%",
-                 _id.c_str(), _targetDutyCycle);
+                  _id.c_str(), _targetDutyCycle);
         return;
     }
 

@@ -13,9 +13,7 @@
 
 
 #include "devices/Stepper.h"
-#include "esp_log.h"
-
-static const char *TAG = "Stepper";
+#include "Logging.h"
 
 /**
  * @brief Constructor for Stepper motor
@@ -28,7 +26,7 @@ static const char *TAG = "Stepper";
 Stepper::Stepper(const String &id, const String &name)
     : Device(id, "stepper")
 {
-    ESP_LOGI(TAG, "Stepper [%s]: Created (not configured yet)", _id.c_str());
+    MLOG_INFO("Stepper [%s]: Created (not configured yet)", _id.c_str());
 }
 
 /**
@@ -46,12 +44,12 @@ Stepper::~Stepper()
 void Stepper::setup()
 {
     if (!_configured) {
-        ESP_LOGW(TAG, "Stepper [%s]: Not configured yet - call configure2Pin() or configure4Pin() first", _id.c_str());
+        MLOG_WARN("Stepper [%s]: Not configured yet - call configure2Pin() or configure4Pin() first", _id.c_str());
         return;
     }
 
     if (!_stepper) {
-        ESP_LOGE(TAG, "Stepper [%s]: AccelStepper instance not initialized", _id.c_str());
+        MLOG_ERROR("Stepper [%s]: AccelStepper instance not initialized", _id.c_str());
         return;
     }
 
@@ -93,7 +91,7 @@ void Stepper::loop()
 void Stepper::move(long steps)
 {
     if (!_configured || !_stepper) {
-        ESP_LOGW(TAG, "Stepper [%s]: Not configured - cannot move", _id.c_str());
+        MLOG_WARN("Stepper [%s]: Not configured - cannot move", _id.c_str());
         return;
     }
 
@@ -110,11 +108,11 @@ void Stepper::move(long steps)
 void Stepper::moveTo(long position)
 {
     if (!_configured || !_stepper) {
-        ESP_LOGW(TAG, "Stepper [%s]: Not configured - cannot move to position", _id.c_str());
+        MLOG_WARN("Stepper [%s]: Not configured - cannot move to position", _id.c_str());
         return;
     }
 
-    ESP_LOGI(TAG, "Stepper [%s]: Moving to position %ld", _id.c_str(), position);
+    MLOG_INFO("Stepper [%s]: Moving to position %ld", _id.c_str(), position);
     _stepper->moveTo(position);
     _isMoving = true;
     // notifyStateChange();
@@ -126,11 +124,11 @@ void Stepper::moveTo(long position)
 void Stepper::setCurrentPosition(long position)
 {
     if (!_configured || !_stepper) {
-        ESP_LOGW(TAG, "Stepper [%s]: Not configured - cannot set current position", _id.c_str());
+        MLOG_WARN("Stepper [%s]: Not configured - cannot set current position", _id.c_str());
         return;
     }
 
-    ESP_LOGI(TAG, "Stepper [%s]: Resetting current position to %ld", _id.c_str(), position);
+    MLOG_INFO("Stepper [%s]: Resetting current position to %ld", _id.c_str(), position);
     _stepper->setCurrentPosition(position);
     // Optionally, update state or notify if needed
     // notifyStateChange();
@@ -148,7 +146,7 @@ void Stepper::setMaxSpeed(float maxSpeed)
     if (_stepper) {
         _stepper->setMaxSpeed(maxSpeed);
     }
-    ESP_LOGI(TAG, "Stepper [%s]: Max speed set to %.2f steps/s", _id.c_str(), maxSpeed);
+    MLOG_INFO("Stepper [%s]: Max speed set to %.2f steps/s", _id.c_str(), maxSpeed);
 }
 
 /**
@@ -163,7 +161,7 @@ void Stepper::setAcceleration(float maxAcceleration)
     if (_stepper) {
         _stepper->setAcceleration(maxAcceleration);
     }
-    ESP_LOGI(TAG, "Stepper [%s]: Acceleration set to %.2f steps/s^2", _id.c_str(), maxAcceleration);
+    MLOG_INFO("Stepper [%s]: Acceleration set to %.2f steps/s^2", _id.c_str(), maxAcceleration);
 }
 
 /**
@@ -204,7 +202,7 @@ bool Stepper::isMoving() const
  */
 void Stepper::stop()
 {
-    ESP_LOGW(TAG, "Stepper [%s]: Emergency stop", _id.c_str());
+    MLOG_WARN("Stepper [%s]: Emergency stop", _id.c_str());
     if (_stepper) {
         _stepper->stop();
     }
@@ -241,7 +239,7 @@ bool Stepper::control(const String &action, JsonObject *payload)
         }
 
         long steps = (*payload)["steps"].as<long>();
-    ESP_LOGI(TAG, "Stepper [%s]: Move %ld steps (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), steps, _maxSpeed, _maxAcceleration);
+    MLOG_INFO("Stepper [%s]: Move %ld steps (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), steps, _maxSpeed, _maxAcceleration);
         move(steps);
         return true;
     }
@@ -305,7 +303,7 @@ bool Stepper::control(const String &action, JsonObject *payload)
     */
     else
     {
-    ESP_LOGW(TAG, "Stepper [%s]: Unknown action: '%s'", _id.c_str(), action.c_str());
+    MLOG_WARN("Stepper [%s]: Unknown action: '%s'", _id.c_str(), action.c_str());
         return false;
     }
 }
@@ -376,7 +374,7 @@ void Stepper::configure2Pin(int stepPin, int dirPin, float maxSpeed, float accel
     initializeAccelStepper();
     _configured = true;
     
-    ESP_LOGI(TAG, "Stepper [%s]: Configured as DRIVER type on pins %d (step), %d (dir)", _id.c_str(), _pin1, _pin2);
+    MLOG_INFO("Stepper [%s]: Configured as DRIVER type on pins %d (step), %d (dir)", _id.c_str(), _pin1, _pin2);
 }
 
 /**
@@ -404,7 +402,7 @@ void Stepper::configure4Pin(int pin1, int pin2, int pin3, int pin4, float maxSpe
     initializeAccelStepper();
     _configured = true;
     
-    ESP_LOGI(TAG, "Stepper [%s]: Configured as HALF4WIRE type on pins %d, %d, %d, %d", _id.c_str(), _pin1, _pin2, _pin3, _pin4);
+    MLOG_INFO("Stepper [%s]: Configured as HALF4WIRE type on pins %d, %d, %d, %d", _id.c_str(), _pin1, _pin2, _pin3, _pin4);
 }
 
 /**
@@ -439,7 +437,7 @@ void Stepper::cleanupAccelStepper()
  * @brief Get configuration as JSON
  * @return JsonObject containing the current configuration
  */
-JsonObject Stepper::getConfig() const
+String Stepper::getConfig() const
 {
     JsonDocument doc;
     JsonObject config = doc.to<JsonObject>();
@@ -464,7 +462,9 @@ JsonObject Stepper::getConfig() const
         }
     }
     
-    return config;
+    String result;
+    serializeJson(config, result);
+    return result;
 }
 
 /**
@@ -474,7 +474,7 @@ JsonObject Stepper::getConfig() const
 void Stepper::setConfig(JsonObject *config)
 {
     if (!config) {
-        ESP_LOGW(TAG, "Stepper [%s]: Null config provided", _id.c_str());
+        MLOG_WARN("Stepper [%s]: Null config provided", _id.c_str());
         return;
     }
     
@@ -491,9 +491,9 @@ void Stepper::setConfig(JsonObject *config)
                 float acceleration = (*config)["acceleration"].is<float>() ? (*config)["acceleration"].as<float>() : 500.0;
                 
                 configure2Pin(stepPin, dirPin, maxSpeed, acceleration);
-                ESP_LOGI(TAG, "Stepper [%s]: Configured from JSON as DRIVER", _id.c_str());
+                MLOG_INFO("Stepper [%s]: Configured from JSON as DRIVER", _id.c_str());
             } else {
-                ESP_LOGW(TAG, "Stepper [%s]: Invalid 2-pin configuration in JSON", _id.c_str());
+                MLOG_WARN("Stepper [%s]: Invalid 2-pin configuration in JSON", _id.c_str());
             }
         } else if (stepperType == "HALF4WIRE") {
             // Configure as 4-pin
@@ -507,14 +507,14 @@ void Stepper::setConfig(JsonObject *config)
                 float acceleration = (*config)["acceleration"].is<float>() ? (*config)["acceleration"].as<float>() : 250.0;
                 
                 configure4Pin(pin1, pin2, pin3, pin4, maxSpeed, acceleration);
-                ESP_LOGI(TAG, "Stepper [%s]: Configured from JSON as HALF4WIRE", _id.c_str());
+                MLOG_INFO("Stepper [%s]: Configured from JSON as HALF4WIRE", _id.c_str());
             } else {
-                ESP_LOGW(TAG, "Stepper [%s]: Invalid 4-pin configuration in JSON", _id.c_str());
+                MLOG_WARN("Stepper [%s]: Invalid 4-pin configuration in JSON", _id.c_str());
             }
         } else {
-            ESP_LOGW(TAG, "Stepper [%s]: Unknown stepperType '%s'", _id.c_str(), stepperType.c_str());
+            MLOG_WARN("Stepper [%s]: Unknown stepperType '%s'", _id.c_str(), stepperType.c_str());
         }
     } else {
-        ESP_LOGW(TAG, "Stepper [%s]: No stepperType specified in config", _id.c_str());
+        MLOG_WARN("Stepper [%s]: No stepperType specified in config", _id.c_str());
     }
 }

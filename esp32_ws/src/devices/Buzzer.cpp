@@ -12,9 +12,7 @@
 #include "devices/Buzzer.h"
 #include <NonBlockingRtttl.h>
 #include <Arduino.h> // Needed for tone, noTone, delay
-#include "esp_log.h"
-
-static const char *TAG = "Buzzer";
+#include "Logging.h"
 
 /**
  * @brief Play a startup tone sequence
@@ -93,7 +91,6 @@ void Buzzer::loop()
         _mode = BuzzerMode::IDLE;
         _currentTune = "";
 
-        ESP_LOGI(TAG, "Buzzer [%s]: Tune playback finished", _id.c_str());
         notifyStateChange();
     }
 
@@ -112,7 +109,6 @@ void Buzzer::loop()
             // TODO: Stop hardware tone generation here
             // ::noTone(_pin);
 
-            ESP_LOGI(TAG, "Buzzer [%s]: Tone playback finished", _id.c_str());
             notifyStateChange();
         }
     }
@@ -125,7 +121,7 @@ void Buzzer::loop()
  */
 void Buzzer::tone(int frequency, int duration)
 {
-    ESP_LOGI(TAG, "Buzzer [%s]: Playing tone %dHz for %dms", _id.c_str(), frequency, duration);
+    MLOG_INFO("Buzzer [%s]: Playing tone %dHz for %dms", _id.c_str(), frequency, duration);
     ::tone(_pin, frequency, duration);
 
     _isPlaying = true;
@@ -143,7 +139,7 @@ void Buzzer::tone(int frequency, int duration)
  */
 void Buzzer::tune(const String &rtttl)
 {
-    ESP_LOGI(TAG, "Buzzer [%s]: Playing RTTTL tune: %s", _id.c_str(), rtttl.c_str());
+    MLOG_INFO("Buzzer [%s]: Playing RTTTL tune: %s", _id.c_str(), rtttl.c_str());
 
     rtttl::begin(_pin, rtttl.c_str());
 
@@ -167,19 +163,19 @@ bool Buzzer::control(const String &action, JsonObject *args)
     {
         if (!args)
         {
-            ESP_LOGE(TAG, "Buzzer [%s]: args missing", _id.c_str());
+            MLOG_ERROR("Buzzer [%s]: args missing", _id.c_str());
             return false;
         }
 
         if (!(*args)["frequency"].is<int>())
         {
-            ESP_LOGE(TAG, "Buzzer [%s]: Invalid 'tone' args - frequency missing", _id.c_str());
+            MLOG_ERROR("Buzzer [%s]: Invalid 'tone' args - frequency missing", _id.c_str());
             return false;
         }
 
         if (!(*args)["duration"].is<int>())
         {
-            ESP_LOGE(TAG, "Buzzer [%s]: Invalid 'tone' args - duration missing", _id.c_str());
+            MLOG_ERROR("Buzzer [%s]: Invalid 'tone' args - duration missing", _id.c_str());
             return false;
         }
 
@@ -189,14 +185,14 @@ bool Buzzer::control(const String &action, JsonObject *args)
         // Validate frequency range
         if (frequency < 20 || frequency > 20000)
         {
-            ESP_LOGE(TAG, "Buzzer [%s]: Invalid frequency %dHz (range: 20-20000)", _id.c_str(), frequency);
+            MLOG_ERROR("Buzzer [%s]: Invalid frequency %dHz (range: 20-20000)", _id.c_str(), frequency);
             return false;
         }
 
         // Validate duration
         if (duration < 1 || duration > 10000)
         {
-            ESP_LOGE(TAG, "Buzzer [%s]: Invalid duration %dms (range: 1-10000)", _id.c_str(), duration);
+            MLOG_ERROR("Buzzer [%s]: Invalid duration %dms (range: 1-10000)", _id.c_str(), duration);
             return false;
         }
 
@@ -207,20 +203,20 @@ bool Buzzer::control(const String &action, JsonObject *args)
     {
         if (!args)
         {
-            ESP_LOGE(TAG, "Buzzer [%s]: Invalid 'tune' - args missing", _id.c_str());
+            MLOG_ERROR("Buzzer [%s]: Invalid 'tune' - args missing", _id.c_str());
             return false;
         }
 
         if (!(*args)["rtttl"].is<String>())
         {
-            ESP_LOGE(TAG, "Buzzer [%s]: Invalid 'tune' args - need rtttl string", _id.c_str());
+            MLOG_ERROR("Buzzer [%s]: Invalid 'tune' args - need rtttl string", _id.c_str());
             return false;
         }
 
         String rtttl = (*args)["rtttl"].as<String>();
         if (rtttl.length() == 0)
         {
-            ESP_LOGE(TAG, "Buzzer [%s]: Empty RTTTL string", _id.c_str());
+            MLOG_ERROR("Buzzer [%s]: Empty RTTTL string", _id.c_str());
             return false;
         }
 
@@ -229,7 +225,7 @@ bool Buzzer::control(const String &action, JsonObject *args)
     }
     else
     {
-        ESP_LOGW(TAG, "Buzzer [%s]: Unknown action: %s", _id.c_str(), action.c_str());
+        MLOG_WARN("Buzzer [%s]: Unknown action: %s", _id.c_str(), action.c_str());
         return false;
     }
 }

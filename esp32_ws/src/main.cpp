@@ -24,8 +24,6 @@
 #include "OTA_Support.h"
 #include <devices/Wheel.h>
 
-static const char *TAG = "main";
-
 // Service instances
 OTAService otaService;
 
@@ -138,7 +136,7 @@ void setup()
 
   // Initialize Network (will try WiFi, fall back to AP if needed)
   bool networkInitialized = network.setup();
-  
+
   if (!networkInitialized)
   {
     MLOG_ERROR("Network initialization failed! System may not be accessible.");
@@ -208,7 +206,8 @@ void setup()
 
   // Startup sound
   Buzzer *buzzer = deviceManager.getDeviceByTypeAs<Buzzer>("buzzer");
-  if (buzzer) {
+  if (buzzer)
+  {
     buzzer->startupTone(); // Play startup tone sequence
     MLOG_INFO("Startup tone played");
   }
@@ -218,7 +217,7 @@ void setup()
 
   // Initialize in MANUAL mode
   MLOG_INFO("Operation mode: MANUAL");
-  
+
   MLOG_INFO("System initialization complete!");
 }
 
@@ -325,12 +324,10 @@ void checkSerialCommands()
 
             // Parse and pretty-print JSON
             String state = deviceList[i]->getState();
-            Serial.printf("     JSON State: %s\n", state.c_str());
+            Serial.printf("     State: %s\n", state.c_str());
 
-            JsonDocument configDoc = deviceList[i]->getConfig();
-            Serial.println("     JSON Config:");
-            serializeJsonPretty(configDoc, Serial);
-            Serial.println();
+            String config = deviceList[i]->getConfig();
+            Serial.printf("     Config: %s\n", config.c_str());
 
             Serial.println();
           }
@@ -372,7 +369,7 @@ void setOperationMode(OperationMode mode)
     currentMode = mode;
 
     const char *modeString = (mode == OperationMode::MANUAL) ? "MANUAL" : "AUTOMATIC";
-    
+
     MLOG_INFO("Operation mode changed to: %s", modeString);
 
     // Optional: broadcast mode change via WebSocket

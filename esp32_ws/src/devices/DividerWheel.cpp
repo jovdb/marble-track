@@ -1,6 +1,6 @@
 
 #include "devices/DividerWheel.h"
-static const char *TAG = "DividerWheel";
+#include "Logging.h"
 
 DividerWheel::DividerWheel(int stepPin1, int stepPin2, int stepPin3, int stepPin4, int buttonPin, const String &id, const String &name)
     : Device(id, "wheel")
@@ -29,7 +29,7 @@ void DividerWheel::loop()
     case wheelState::CALIBRATING:
         if (_button->wasReleased())
         {
-            ESP_LOGI(TAG, "Wheel [%s]: Calibration complete.", getId().c_str());
+            MLOG_INFO("Wheel [%s]: Calibration complete.", getId().c_str());
             _stepper->setCurrentPosition(0);
             _stepper->stop();
             _state = wheelState::IDLE;
@@ -71,7 +71,7 @@ void DividerWheel::calibrate()
 
     if (_stepper)
     {
-        ESP_LOGI(TAG, "Wheel [%s]: Calibration started.", getId().c_str());
+        MLOG_INFO("Wheel [%s]: Calibration started.", getId().c_str());
         _state = wheelState::CALIBRATING;
         _stepper->setMaxSpeed(calibrationSpeed);
         _stepper->setAcceleration(calibrationAcceleration);
@@ -96,7 +96,7 @@ bool DividerWheel::control(const String &action, JsonObject *payload)
     }
     else if (action == "stop")
     {
-        ESP_LOGI(TAG, "Wheel [%s]: Stopping.", getId().c_str());
+        MLOG_INFO("Wheel [%s]: Stopping.", getId().c_str());
         _stepper->stop();
         return true;
     }

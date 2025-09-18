@@ -1,6 +1,4 @@
-#include "esp_log.h"
-
-static const char *TAG = "Button";
+#include "Logging.h"
 /**
  * @file Button.cpp
  * @brief Implementation of Button input class
@@ -95,7 +93,7 @@ void Button::loop()
                 // Button was pressed
                 _pressedFlag = true;
                 _pressStartTime = millis();
-                ESP_LOGI(TAG, "Button [%s]: PRESSED", _id.c_str());
+                MLOG_INFO("Button [%s]: PRESSED", _id.c_str());
                 notifyStateChange(); // Notify state change
             }
             else if (!_currentState && previousState)
@@ -103,7 +101,7 @@ void Button::loop()
                 // Button was released
                 _releasedFlag = true;
                 unsigned long pressDuration = millis() - _pressStartTime;
-                ESP_LOGI(TAG, "Button [%s]: RELEASED (held for %lu ms)", _id.c_str(), pressDuration);
+                MLOG_INFO("Button [%s]: RELEASED (held for %lu ms)", _id.c_str(), pressDuration);
                 notifyStateChange(); // Notify state change
             }
         }
@@ -170,13 +168,13 @@ bool Button::control(const String &action, JsonObject *args)
             _pressedFlag = true;
             _pressStartTime = millis();
             _virtualPress = true; // Mark as virtual press to prevent physical override
-            ESP_LOGI(TAG, "Button [%s]: Simulated PRESS", _id.c_str());
+            MLOG_INFO("Button [%s]: Simulated PRESS", _id.c_str());
             notifyStateChange();
             return true;
         }
         else
         {
-            ESP_LOGW(TAG, "Button [%s]: Already pressed, ignoring simulated press", _id.c_str());
+            MLOG_WARN("Button [%s]: Already pressed, ignoring simulated press", _id.c_str());
             return false;
         }
     }
@@ -189,19 +187,19 @@ bool Button::control(const String &action, JsonObject *args)
             _releasedFlag = true;
             _virtualPress = false; // Clear virtual press flag
             unsigned long pressDuration = millis() - _pressStartTime;
-            ESP_LOGI(TAG, "Button [%s]: Simulated RELEASE (held for %lu ms)", _id.c_str(), pressDuration);
+            MLOG_INFO("Button [%s]: Simulated RELEASE (held for %lu ms)", _id.c_str(), pressDuration);
             notifyStateChange();
             return true;
         }
         else
         {
-            ESP_LOGW(TAG, "Button [%s]: Already released, ignoring simulated release", _id.c_str());
+            MLOG_WARN("Button [%s]: Already released, ignoring simulated release", _id.c_str());
             return false;
         }
     }
     else
     {
-        ESP_LOGW(TAG, "Button [%s]: Unknown action: %s", _id.c_str(), action.c_str());
+        MLOG_WARN("Button [%s]: Unknown action: %s", _id.c_str(), action.c_str());
         return false;
     }
 }

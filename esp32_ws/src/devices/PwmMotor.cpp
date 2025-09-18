@@ -1,7 +1,5 @@
 #include "devices/PwmMotor.h"
-#include "esp_log.h"
-
-static const char *TAG = "PwmMotor";
+#include "Logging.h"
 
 PwmMotor::PwmMotor(const String &id, const String &name)
     : Device(id, "pwmmotor"),
@@ -45,11 +43,11 @@ bool PwmMotor::setupMotor(int pin, int pwmChannel, uint32_t frequency, uint8_t r
     }
     else
     {
-        ESP_LOGE(TAG, "PwmMotor [%s]: Invalid PWM channel %d. Must be 0 or 1.", _id.c_str(), _pwmChannel);
+        MLOG_ERROR("PwmMotor [%s]: Invalid PWM channel %d. Must be 0 or 1.", _id.c_str(), _pwmChannel);
         return false;
     }
 
-    ESP_LOGI(TAG, "PwmMotor [%s]: Setup - pin:%d, channel:%d, freq:%d Hz, resolution:%d bits",
+    MLOG_INFO("PwmMotor [%s]: Setup - pin:%d, channel:%d, freq:%d Hz, resolution:%d bits",
              _id.c_str(), _pin, _pwmChannel, _frequency, _resolutionBits);
 
     return configureMCPWM();
@@ -72,12 +70,12 @@ bool PwmMotor::configureMCPWM()
     esp_err_t err = mcpwm_init(_mcpwmUnit, _mcpwmTimer, &pwm_config);
     if (err != ESP_OK)
     {
-        ESP_LOGE(TAG, "PwmMotor [%s]: MCPWM initialization failed: %s", _id.c_str(), esp_err_to_name(err));
+        MLOG_ERROR("PwmMotor [%s]: MCPWM initialization failed: %s", _id.c_str(), esp_err_to_name(err));
         return false;
     }
 
     _isSetup = true;
-    ESP_LOGI(TAG, "PwmMotor [%s]: MCPWM configured successfully on pin %d", _id.c_str(), _pin);
+    MLOG_INFO("PwmMotor [%s]: MCPWM configured successfully on pin %d", _id.c_str(), _pin);
     return true;
 }
 
@@ -85,7 +83,7 @@ void PwmMotor::setDutyCycle(float dutyCycle, bool notifyChange)
 {
     if (!_isSetup)
     {
-        ESP_LOGE(TAG, "PwmMotor [%s]: Not setup. Call setupMotor() first.", _id.c_str());
+        MLOG_ERROR("PwmMotor [%s]: Not setup. Call setupMotor() first.", _id.c_str());
         return;
     }
 
@@ -101,14 +99,14 @@ void PwmMotor::setDutyCycle(float dutyCycle, bool notifyChange)
     esp_err_t err = mcpwm_set_duty(_mcpwmUnit, _mcpwmTimer, MCPWM_OPR_A, dutyCycle);
     if (err != ESP_OK)
     {
-        ESP_LOGE(TAG, "PwmMotor [%s]: Failed to set duty cycle: %s", _id.c_str(), esp_err_to_name(err));
+        MLOG_ERROR("PwmMotor [%s]: Failed to set duty cycle: %s", _id.c_str(), esp_err_to_name(err));
         return;
     }
 
     // Update duty cycle type to percentage
     mcpwm_set_duty_type(_mcpwmUnit, _mcpwmTimer, MCPWM_OPR_A, MCPWM_DUTY_MODE_0);
 
-    ESP_LOGD(TAG, "PwmMotor [%s]: Duty cycle set to %.1f%%", _id.c_str(), dutyCycle);
+    MLOG_INFO("PwmMotor [%s]: Duty cycle set to %.1f%%", _id.c_str(), dutyCycle);
 
     // Notify state change for WebSocket updates
     if (notifyChange)
@@ -121,7 +119,7 @@ void PwmMotor::setDutyCycleAnimated(float dutyCycle, uint32_t durationMs)
 {
     if (!_isSetup)
     {
-        ESP_LOGE(TAG, "PwmMotor [%s]: Not setup. Call setupMotor() first.", _id.c_str());
+        MLOG_ERROR("PwmMotor [%s]: Not setup. Call setupMotor() first.", _id.c_str());
         return;
     }
 
@@ -145,7 +143,7 @@ void PwmMotor::setDutyCycleAnimated(float dutyCycle, uint32_t durationMs)
     _animationDuration = durationMs;
     _isAnimating = true;
 
-    ESP_LOGI(TAG, "PwmMotor [%s]: Starting animated transition from %.1f%% to %.1f%% over %dms",
+    MLOG_INFO("PwmMotor [%s]: Starting animated transition from %.1f%% to %.1f%% over %dms",
              _id.c_str(), _startDutyCycle, _targetDutyCycle, durationMs);
 
     // Notify that animation has started with target value and duration
@@ -155,7 +153,7 @@ void PwmMotor::setDutyCycleAnimated(float dutyCycle, uint32_t durationMs)
 void PwmMotor::stop()
 {
     setDutyCycle(0.0);
-    ESP_LOGI(TAG, "PwmMotor [%s]: Motor stopped", _id.c_str());
+    MLOG_INFO("PwmMotor [%s]: Motor stopped", _id.c_str());
 }
 
 void PwmMotor::setup()
@@ -164,7 +162,7 @@ void PwmMotor::setup()
 
     if (_pin == -1)
     {
-        ESP_LOGW(TAG, "PwmMotor [%s]: No pin configured. Use setupMotor() to configure.", _id.c_str());
+        MLOG_WARN("PwmMotor [%s]: No pin configured. Use setupMotor() to configure.", _id.c_str());
         return;
     }
 
@@ -192,7 +190,7 @@ bool PwmMotor::control(const String &action, JsonObject *args)
     {
         if (!args || !(*args)["value"].is<float>())
         {
-            ESP_LOGE(TAG, "PwmMotor [%s]: Invalid 'setDutyCycle' payload", _id.c_str());
+            MLOG_ERROR("PwmMotor [%s]: Invalid 'setDutyCycle' payload", _id.c_str());
             return false;
         }
         float dutyCycle = (*args)["value"].as<float>();
@@ -218,7 +216,7 @@ bool PwmMotor::control(const String &action, JsonObject *args)
     {
         if (!args)
         {
-            ESP_LOGE(TAG, "PwmMotor [%s]: 'setup' requires parameters", _id.c_str());
+            MLOG_ERROR("PwmMotor [%s]: 'setup' requires parameters", _id.c_str());
             return false;
         }
 
@@ -231,7 +229,7 @@ bool PwmMotor::control(const String &action, JsonObject *args)
     }
     else
     {
-        ESP_LOGW(TAG, "PwmMotor [%s]: Unknown action: %s", _id.c_str(), action.c_str());
+        MLOG_WARN("PwmMotor [%s]: Unknown action: %s", _id.c_str(), action.c_str());
         return false;
     }
 }
@@ -279,7 +277,7 @@ void PwmMotor::updateAnimation()
     {
         _isAnimating = false;
         setDutyCycle(_targetDutyCycle, true); // Final notify like normal setDutyCycle
-        ESP_LOGI(TAG, "PwmMotor [%s]: Animation complete, final duty cycle: %.1f%%",
+        MLOG_INFO("PwmMotor [%s]: Animation complete, final duty cycle: %.1f%%",
                  _id.c_str(), _targetDutyCycle);
         return;
     }
@@ -300,7 +298,7 @@ void PwmMotor::updateAnimation()
     esp_err_t err = mcpwm_set_duty(_mcpwmUnit, _mcpwmTimer, MCPWM_OPR_A, currentDutyCycle);
     if (err != ESP_OK)
     {
-        ESP_LOGE(TAG, "PwmMotor [%s]: Failed to set animated duty cycle: %s", _id.c_str(), esp_err_to_name(err));
+        MLOG_ERROR("PwmMotor [%s]: Failed to set animated duty cycle: %s", _id.c_str(), esp_err_to_name(err));
         _isAnimating = false;
         return;
     }

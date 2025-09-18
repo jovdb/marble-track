@@ -1,7 +1,5 @@
-#include "esp_log.h"
+#include "Logging.h"
 #include "devices/Led.h"
-
-static const char *TAG = "Led";
 
 /**
  * @brief Constructor for Led class
@@ -25,7 +23,7 @@ void Led::setup()
 
     if (_pin == -1)
     {
-        ESP_LOGW(TAG, "Led [%s]: Pin not configured - call configurePin() first", _id.c_str());
+        MLOG_WARN("Led [%s]: Pin not configured - call configurePin() first", _id.c_str());
         return;
     }
 
@@ -43,7 +41,7 @@ void Led::set(bool state)
 {
     if (_pin == -1)
     {
-        ESP_LOGW(TAG, "Led [%s]: Pin not configured - cannot set state", _id.c_str());
+        MLOG_WARN("Led [%s]: Pin not configured - cannot set state", _id.c_str());
         return;
     }
 
@@ -74,7 +72,7 @@ bool Led::control(const String &action, JsonObject *args)
     {
         if (!args || !(*args)["value"].is<bool>())
         {
-            ESP_LOGE(TAG, "Led [%s]: Invalid 'set' payload", _id.c_str());
+            MLOG_ERROR("Led [%s]: Invalid 'set' payload", _id.c_str());
             return false;
         }
         set((*args)["value"].as<bool>());
@@ -96,7 +94,7 @@ bool Led::control(const String &action, JsonObject *args)
     }
     else
     {
-        ESP_LOGW(TAG, "Led [%s]: Unknown action: %s", _id.c_str(), action.c_str());
+        MLOG_WARN("Led [%s]: Unknown action: %s", _id.c_str(), action.c_str());
         return false;
     }
 }
@@ -180,34 +178,30 @@ void Led::configurePin(int pin)
 {
     if (pin < 0)
     {
-        ESP_LOGW(TAG, "Led [%s]: Invalid pin number %d", _id.c_str(), pin);
+        MLOG_WARN("Led [%s]: Invalid pin number %d", _id.c_str(), pin);
         return;
     }
 
     _pin = pin;
-    ESP_LOGI(TAG, "Led [%s]: Configured with pin %d", _id.c_str(), _pin);
+    MLOG_INFO("Led [%s]: Configured with pin %d", _id.c_str(), _pin);
 }
 
 /**
  * @brief Get configuration as JSON
  * @return JsonObject containing the current configuration
  */
-JsonObject Led::getConfig() const
+String Led::getConfig() const
 {
-    JsonDocument doc;
-    JsonObject config = doc.to<JsonObject>();
+    JsonDocument config;
+    deserializeJson(config, Device::getConfig());
 
-    if (_pin != -1)
-    {
-        config["pin"] = _pin;
-    }
     config["name"] = _name;
+    config["pin"] = _pin;
 
     String message;
     serializeJson(config, message);
 
-    ESP_LOGI("LED", "getConfig", message);
-    return config;
+    return message;
 }
 
 /**
@@ -218,7 +212,7 @@ void Led::setConfig(JsonObject *config)
 {
     if (!config)
     {
-        ESP_LOGW(TAG, "Led [%s]: Null config provided", _id.c_str());
+        MLOG_WARN("Led [%s]: Null config provided", _id.c_str());
         return;
     }
 

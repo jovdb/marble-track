@@ -46,7 +46,7 @@ public:
     virtual void setStateChangeCallback(StateChangeCallback callback);
 
     virtual void setConfig(JsonObject *config);
-    virtual JsonObject getConfig() const;
+    virtual String getConfig() const;
 
 protected:
     String _id;

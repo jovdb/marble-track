@@ -5,6 +5,7 @@
 #include "devices/Device.h"
 #include "devices/Device.h"
 #include <vector>
+#include "Logging.h"
 
 Device::Device(const String &id, const String &type) : _id(id), _name(""), _type(type) {}
 
@@ -110,12 +111,10 @@ void Device::notifyStateChange()
     }
 }
 
-JsonObject Device::getConfig() const
+String Device::getConfig() const
 {
-    // Default implementation: return null JsonObject
-
-    ESP_LOGI("DEVICE", "getConfig");
-    return JsonObject();
+    // Default implementation: return empty JSON object
+    return "{}";
 }
 
 void Device::setConfig(JsonObject *config)

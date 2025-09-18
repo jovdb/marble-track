@@ -1,8 +1,11 @@
 #include <ArduinoJson.h>
 #include <vector>
 #include "LittleFS.h"
-#include "esp_log.h"
+#include "Logging.h"
+#include "TimeManager.h"
 #include "DeviceManager.h"
+#include "Network.h"
+#include "WebSocketManager.h"
 #include "devices/Led.h"
 #include "devices/Buzzer.h"
 #include "devices/Button.h"
@@ -11,14 +14,13 @@
 #include "devices/Wheel.h"
 #include "devices/PwmMotor.h"
 
-static const char *TAG = "DeviceManager";
 static constexpr const char *DEVICES_LIST_FILE = "/devices.json";
 
 void DeviceManager::loadDevicesFromJsonFile()
 {
     if (!LittleFS.exists(DEVICES_LIST_FILE))
     {
-        ESP_LOGI(TAG, "Devices JSON file not found.");
+        MLOG_INFO("Devices JSON file not found.");
         return;
     }
 
@@ -67,7 +69,7 @@ void DeviceManager::loadDevicesFromJsonFile()
                         // Log obj[config] as json string
                         String configStr;
                         serializeJson(obj["config"], configStr);
-                        ESP_LOGI(TAG, "LED device config: %s", configStr.c_str());
+                        MLOG_INFO("LED device config: %s", configStr.c_str());
 
                         // Apply configuration from JSON config property if it exists
                         if (obj["config"].is<JsonObject>())
@@ -145,25 +147,25 @@ void DeviceManager::loadDevicesFromJsonFile()
                     }
                     else
                     {
-                        ESP_LOGW(TAG, "Unknown device type: %s", type.c_str());
+                        MLOG_WARN("Unknown device type: %s", type.c_str());
                     }
                 }
                 else
                 {
-                    ESP_LOGW(TAG, "Maximum device limit reached, cannot load more devices");
+                    MLOG_WARN("Maximum device limit reached, cannot load more devices");
                     break;
                 }
             }
-            ESP_LOGI(TAG, "Loaded devices from %s", DEVICES_LIST_FILE);
+            MLOG_INFO("Loaded devices from %s", DEVICES_LIST_FILE);
         }
         else
         {
-            ESP_LOGE(TAG, "Failed to parse devices JSON file");
+            MLOG_ERROR("Failed to parse devices JSON file");
         }
     }
     else
     {
-        ESP_LOGE(TAG, "Failed to open devices JSON file for reading");
+        MLOG_ERROR("Failed to open devices JSON file for reading");
     }
 }
 
@@ -192,11 +194,11 @@ void DeviceManager::saveDevicesToJsonFile()
         }
         serializeJson(devicesArray, file);
         file.close();
-        ESP_LOGI(TAG, "Saved devices list to %s", DEVICES_LIST_FILE);
+        MLOG_INFO("Saved devices list to %s", DEVICES_LIST_FILE);
     }
     else
     {
-        ESP_LOGE(TAG, "Failed to open %s for writing", DEVICES_LIST_FILE);
+        MLOG_ERROR("Failed to open %s for writing", DEVICES_LIST_FILE);
     }
 }
 
@@ -215,17 +217,17 @@ bool DeviceManager::addDevice(Device *device)
     {
         devices[devicesCount] = device;
         devicesCount++;
-        ESP_LOGI(TAG, "Added device: %s (%s)", device->getId().c_str(), device->getName().c_str());
+        MLOG_INFO("Added device: %s (%s)", device->getId().c_str(), device->getName().c_str());
         return true;
     }
 
     if (device == nullptr)
     {
-        ESP_LOGE(TAG, "Error: Cannot add null device");
+        MLOG_ERROR("Error: Cannot add null device");
     }
     else
     {
-        ESP_LOGE(TAG, "Error: Device array is full, cannot add device: %s", device->getId().c_str());
+        MLOG_ERROR("Error: Device array is full, cannot add device: %s", device->getId().c_str());
     }
     return false;
 }

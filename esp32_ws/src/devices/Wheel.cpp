@@ -1,7 +1,5 @@
-#include "esp_log.h"
-
-static const char *TAG = "Wheel";
 #include "devices/Wheel.h"
+#include "Logging.h"
 
 Wheel::Wheel(int stepPin1, int dirPin, int buttonPin, const String &id, const String &name)
     : Device(id, "wheel"),
@@ -45,7 +43,7 @@ void Wheel::loop()
     case wheelState::CALIBRATING:
         if (_sensor->wasPressed())
         {
-            ESP_LOGI(TAG, "Wheel [%s]: Calibration complete.", getId().c_str());
+            MLOG_INFO("Wheel [%s]: Calibration complete.", getId().c_str());
             _stepper->setCurrentPosition(0);
             _stepper->stop();
         }
@@ -68,7 +66,7 @@ void Wheel::calibrate()
 {
     if (_stepper)
     {
-        ESP_LOGI(TAG, "Wheel [%s]: Calibration started.", getId().c_str());
+        MLOG_INFO("Wheel [%s]: Calibration started.", getId().c_str());
         _state = wheelState::CALIBRATING;
         _stepper->move(100000);
         notifyStateChange();
@@ -91,7 +89,7 @@ bool Wheel::control(const String &action, JsonObject *payload)
     }
     else if (action == "stop")
     {
-        ESP_LOGI(TAG, "Wheel [%s]: Stopping.", getId().c_str());
+        MLOG_INFO("Wheel [%s]: Stopping.", getId().c_str());
         _stepper->stop();
         return true;
     }

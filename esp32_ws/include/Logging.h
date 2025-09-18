@@ -41,8 +41,8 @@
     #define MLOG_WARN(format, ...) \
         Serial.printf("[%lu] WARN: " format "\n", millis(), ##__VA_ARGS__)
     
-    #define MLOG_WS_SEND(format, ...) \
-        Serial.printf("[%lu] WS_SEND: " format "\n", millis(), ##__VA_ARGS__)
+    #define MLOG_WS_SEND(format, ...)
+        // Serial.printf("[%lu] WS_SEND: " format "\n", millis(), ##__VA_ARGS__)
     
     #define MLOG_WS_RECEIVE(format, ...) \
         Serial.printf("[%lu] WS_RECV: " format "\n", millis(), ##__VA_ARGS__)

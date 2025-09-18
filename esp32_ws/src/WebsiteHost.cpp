@@ -1,6 +1,4 @@
-#include "esp_log.h"
-
-static const char *TAG = "WebsiteHost";
+#include "Logging.h"
 #include "WebsiteHost.h"
 
 WebsiteHost::WebsiteHost(Network *networkInstance)
@@ -17,43 +15,43 @@ void WebsiteHost::setupRoutes()
     // These routes handle the automatic connectivity checks that devices make
     server->on("/generate_204", HTTP_GET, [this](AsyncWebServerRequest *request)
                {
-    ESP_LOGI(TAG, "Android captive portal check - redirecting to main page");
+    MLOG_INFO("Android captive portal check - redirecting to main page");
         request->redirect("http://" + network->getIPAddress().toString() + "/"); });
 
     server->on("/fwlink", HTTP_GET, [this](AsyncWebServerRequest *request)
                {
-    ESP_LOGI(TAG, "Windows captive portal check - redirecting to main page");
+    MLOG_INFO("Windows captive portal check - redirecting to main page");
         request->redirect("http://" + network->getIPAddress().toString() + "/"); });
 
     server->on("/hotspot-detect.html", HTTP_GET, [this](AsyncWebServerRequest *request)
                {
-    ESP_LOGI(TAG, "iOS captive portal check - redirecting to main page");
+    MLOG_INFO("iOS captive portal check - redirecting to main page");
         request->redirect("http://" + network->getIPAddress().toString() + "/"); });
 
     server->on("/connectivity-check.html", HTTP_GET, [this](AsyncWebServerRequest *request)
                {
-    ESP_LOGI(TAG, "Generic captive portal check - redirecting to main page");
+    MLOG_INFO("Generic captive portal check - redirecting to main page");
         request->redirect("http://" + network->getIPAddress().toString() + "/"); });
 
     // Windows/Proxy probe files: short-circuit to avoid LittleFS and watchdog resets
     server->on("/connecttest.txt", HTTP_ANY, [](AsyncWebServerRequest *request)
                {
-    ESP_LOGI(TAG, "Windows connecttest.txt probe - short-circuit 200 OK");
+    MLOG_INFO("Windows connecttest.txt probe - short-circuit 200 OK");
         request->send(200, "text/plain", "OK"); });
     server->on("/wpad.dat", HTTP_ANY, [](AsyncWebServerRequest *request)
                {
-    ESP_LOGI(TAG, "Windows wpad.dat probe - short-circuit 200 OK");
+    MLOG_INFO("Windows wpad.dat probe - short-circuit 200 OK");
         request->send(200, "text/plain", "OK"); });
 
     // Web Server Root URL with debugging
     server->on("/", HTTP_GET, [this](AsyncWebServerRequest *request)
                {
-    ESP_LOGI(TAG, "Root page requested");
+    MLOG_INFO("Root page requested");
         if (LittleFS.exists("/index.html")) {
-            ESP_LOGI(TAG, "index.html found, serving file");
+            MLOG_INFO("index.html found, serving file");
             request->send(LittleFS, "/index.html", "text/html");
         } else {
-            ESP_LOGW(TAG, "index.html NOT found in LittleFS");
+            MLOG_WARN("index.html NOT found in LittleFS");
             
             // Create a simple fallback page with network status
             String html = "<!DOCTYPE html><html><head><title>Marble Track Control</title></head><body>";
@@ -137,7 +135,7 @@ void WebsiteHost::setupRoutes()
     server->onNotFound([this](AsyncWebServerRequest *request)
                        {
         String url = request->url();
-    ESP_LOGW(TAG, "404 - File not found: %s - redirecting to root", url.c_str());
+    MLOG_WARN("404 - File not found: %s - redirecting to root", url.c_str());
         
         // If it's a captive portal check we missed, redirect to root
         if (url.indexOf("204") != -1 || 

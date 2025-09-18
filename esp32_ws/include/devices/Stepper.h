@@ -60,7 +60,7 @@ public:
     // Controllable functionality
     bool control(const String &action, JsonObject *payload = nullptr) override;
     String getState() override;
-    JsonObject getConfig() const override;
+    String getConfig() const override;
     void setConfig(JsonObject *config) override;
 
     // Stepper-specific operations

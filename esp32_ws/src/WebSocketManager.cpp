@@ -72,7 +72,7 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
 
     String message;
     serializeJson(response, message);
-    // ESP_LOGI(TAG, "WebSocket sent devices list: %s", message.c_str());
+    // MLOG_WS_SEND("WebSocket sent devices list: %s", message.c_str());
 
     notifyClients(message);
 }
@@ -233,10 +233,10 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
     deviceManager->saveDevicesToJsonFile();
     // notifyClients(createJsonResponse(true, "Config saved", "", ""));
 
-    JsonDocument config = device->getConfig();
+    String configStr = device->getConfig();
+    JsonDocument config;
+    deserializeJson(config, configStr);
 
-    String configStr;
-    serializeJson(config, configStr);
     JsonDocument response;
     response["type"] = "device-config";
     response["deviceId"] = deviceId;
@@ -263,9 +263,10 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
         return;
     }
 
-    JsonDocument config = device->getConfig();
-    String configStr;
-    serializeJson(config, configStr);
+    String configStr = device->getConfig();
+    JsonDocument config;
+    deserializeJson(config, configStr);
+
     JsonDocument response;
     response["type"] = "device-config";
     response["deviceId"] = deviceId;
@@ -349,6 +350,7 @@ String WebSocketManager::getStatus() const
 
 void WebSocketManager::notifyClients(String state)
 {
+    MLOG_WS_SEND("%s", state.c_str());
     ws.textAll(state);
 }
 
@@ -460,7 +462,6 @@ void WebSocketManager::broadcastState(const String &deviceId, const String &stat
 
     String message;
     serializeJson(doc, message);
-    MLOG_WS_SEND("%s", message.c_str());
 
     notifyClients(message);
 }

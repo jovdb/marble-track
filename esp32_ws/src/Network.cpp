@@ -2,7 +2,7 @@
 #include <mdns.h>
 #endif
 #include "Network.h"
-static const char *TAG = "Network";
+#include "Logging.h"
 
 Network::Network(const char *wifi_ssid, const char *wifi_password)
     : _wifi_ssid(wifi_ssid), _wifi_password(wifi_password), _currentMode(NetworkMode::DISCONNECTED), _dnsServer(nullptr)
@@ -59,34 +59,34 @@ bool Network::setup()
                 // Add HTTP service
                 if (mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0) == ESP_OK)
                 {
-                    ESP_LOGI(TAG, "mDNS: http://marble-track.local : OK");
+                    MLOG_INFO("mDNS: http://marble-track.local : OK");
                 }
                 else
                 {
-                    ESP_LOGW(TAG, "mDNS: HTTP service registration failed");
+                    MLOG_WARN("mDNS: HTTP service registration failed");
                 }
             }
             else
             {
-                ESP_LOGE(TAG, "mDNS: hostname setup failed");
+                MLOG_ERROR("mDNS: hostname setup failed");
             }
         }
         else
         {
-            ESP_LOGE(TAG, "mDNS: initialization failed");
+            MLOG_ERROR("mDNS: initialization failed");
         }
 
         return true; // Allow successful setup if mDNS fails
     }
 
     _currentMode = NetworkMode::DISCONNECTED;
-    ESP_LOGE(TAG, "No network connection!");
+    MLOG_ERROR("No network connection!");
     return false;
 }
 
 bool Network::connectToWiFi()
 {
-    ESP_LOGI(TAG, "Connect to WiFi network '%s' ..", _wifi_ssid);
+    MLOG_INFO("Connect to WiFi network '%s' ..", _wifi_ssid);
 
     WiFi.mode(WIFI_STA);
     WiFi.begin(_wifi_ssid, _wifi_password);
@@ -101,13 +101,13 @@ bool Network::connectToWiFi()
 
     if (WiFi.status() == WL_CONNECTED)
     {
-        ESP_LOGI(TAG, ": OK, http://%s", WiFi.localIP().toString().c_str());
+        MLOG_INFO(": OK, http://%s", WiFi.localIP().toString().c_str());
         // ESP_LOGI(TAG, "Signal Strength: %d dBm", WiFi.RSSI());
         return true;
     }
     else
     {
-        ESP_LOGE(TAG, ": ERROR: Could not connect");
+        MLOG_ERROR(": ERROR: Could not connect");
         WiFi.disconnect();
         return false;
     }
@@ -115,7 +115,7 @@ bool Network::connectToWiFi()
 
 bool Network::startAccessPoint()
 {
-    ESP_LOGI(TAG, "Creating own network '%s' ...", AP_SSID);
+    MLOG_INFO("Creating own network '%s' ...", AP_SSID);
 
     WiFi.mode(WIFI_AP);
     bool result = WiFi.softAP(AP_SSID, AP_PASSWORD);
@@ -134,14 +134,14 @@ bool Network::startAccessPoint()
         _dnsServer->start(53, "*", IP);
 
         // ESP_LOGI(TAG, "Password: %s", AP_PASSWORD);
-        ESP_LOGI(TAG, ": OK: http://%s", IP.toString().c_str());
-        ESP_LOGI(TAG, "AP mode SSID: %s, IP: %s, StationCount: %d", AP_SSID, IP.toString().c_str(), WiFi.softAPgetStationNum());
-        ESP_LOGI(TAG, "Captive portal enabled - all web requests will redirect here");
+        MLOG_INFO(": OK: http://%s", IP.toString().c_str());
+        MLOG_INFO("AP mode SSID: %s, IP: %s, StationCount: %d", AP_SSID, IP.toString().c_str(), WiFi.softAPgetStationNum());
+        MLOG_INFO("Captive portal enabled - all web requests will redirect here");
         return true;
     }
     else
     {
-        ESP_LOGE(TAG, ": ERROR: Failed to start Access Point!");
+        MLOG_ERROR(": ERROR: Failed to start Access Point!");
         return false;
     }
 }

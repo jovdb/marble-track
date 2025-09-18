@@ -1,6 +1,4 @@
-#include "esp_log.h"
-
-static const char *TAG = "TimeManager";
+#include "Logging.h"
 #include "TimeManager.h"
 
 // Static member initialization
@@ -12,7 +10,7 @@ const int TimeManager::daylightOffset_sec = 0;
 
 void TimeManager::setup()
 {
-    ESP_LOGI(TAG, "Time synchronization..");
+    MLOG_INFO("Time synchronization..");
 
     // Configure NTP time synchronization
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
@@ -26,28 +24,28 @@ void TimeManager::setup()
     {
         delay(250);
         time(&now);
-    ESP_LOGI(TAG, ".");
+    MLOG_INFO(".");
         attempts++;
     }
 
     if (now >= 8 * 3600 * 2)
     {
         timeSynced = true;
-    ESP_LOGI(TAG, ": OK!");
+    MLOG_INFO(": OK!");
 
         /*
         // Print current time for verification
         struct tm timeinfo;
         if (getLocalTime(&timeinfo))
         {
-        ESP_LOGI(TAG, "Current time: %04d-%02d-%02d %02d:%02d:%02d", timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+        MLOG_INFO("Current time: %04d-%02d-%02d %02d:%02d:%02d", timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
         }
         */
     }
     else
     {
-    ESP_LOGE(TAG, ": ERROR");
-    ESP_LOGW(TAG, "Continuing without NTP sync - timestamps will be relative");
+    MLOG_ERROR(": ERROR");
+    MLOG_WARN("Continuing without NTP sync - timestamps will be relative");
     }
 }
 
@@ -62,7 +60,7 @@ unsigned long long TimeManager::getCurrentTimestamp()
     else
     {
         // Fallback to millis() if time sync failed
-    ESP_LOGW(TAG, "Warning: Using millis() fallback - time not synchronized");
+    MLOG_WARN("Warning: Using millis() fallback - time not synchronized");
         return (unsigned long long)millis();
     }
 }

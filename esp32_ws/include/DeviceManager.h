@@ -3,7 +3,6 @@
 #define DEVICEMANAGER_H
 
 #include <ArduinoJson.h>
-#include "esp_log.h"
 
 #include "devices/Device.h"
 #include <functional>

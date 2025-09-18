@@ -37,7 +37,7 @@ public:
     // Controllable functionality
     bool control(const String &action, JsonObject *payload = nullptr) override;
     String getState() override;
-    JsonObject getConfig() const override;
+    String getConfig() const override;
     void setConfig(JsonObject *config) override;
     std::vector<int> getPins() const override { return _pin != -1 ? std::vector<int>{_pin} : std::vector<int>{}; }
 

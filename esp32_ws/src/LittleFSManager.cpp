@@ -1,22 +1,20 @@
 #include "LittleFSManager.h"
 #include <LittleFS.h>
-#include "esp_log.h"
-
-static const char *TAG = "LittleFSManager";
+#include "Logging.h"
 
 LittleFSManager::LittleFSManager() {}
 
 bool LittleFSManager::setup()
 {
-    ESP_LOGI(TAG, "Mounting file system...");
+    MLOG_INFO("Mounting file system...");
     if (!LittleFS.begin(true))
     {
-        ESP_LOGE(TAG, ": ERROR mounting");
+        MLOG_ERROR(": ERROR mounting");
         return false;
     }
     else
     {
-        ESP_LOGI(TAG, ": OK");
+        MLOG_INFO(": OK");
         return true;
     }
 }

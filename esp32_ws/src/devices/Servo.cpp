@@ -1,6 +1,4 @@
-#include "esp_log.h"
-
-static const char *TAG = "Servo";
+#include "Logging.h"
 /**
  * @file Servo.cpp
  * @brief Implementation of ServoDevice control class using ESP32 AnalogWrite
@@ -21,7 +19,7 @@ ServoDevice::ServoDevice(const String &id, const String &name)
 {
     _name = name;
     // Defaults set in member initializers
-    ESP_LOGI(TAG, "Servo [%s]: Created (defaults: pin %d, angle %d, pwm %d)", _id.c_str(), _pin, _currentAngle, _pwmChannel);
+    MLOG_INFO("Servo [%s]: Created (defaults: pin %d, angle %d, pwm %d)", _id.c_str(), _pin, _currentAngle, _pwmChannel);
 }
 
 void ServoDevice::setup()
@@ -69,7 +67,7 @@ void ServoDevice::setAngle(int angle, float speed)
             _servoPwm.writeServo(_pin, _currentAngle);
         }
 
-        ESP_LOGI(TAG, "Servo [%s]: Moving from %d deg to %d deg at %.2f deg/s", _id.c_str(), _currentAngle, _targetAngle, _speed);
+        MLOG_INFO("Servo [%s]: Moving from %d deg to %d deg at %.2f deg/s", _id.c_str(), _currentAngle, _targetAngle, _speed);
         notifyStateChange();
     }
 }
@@ -77,7 +75,7 @@ void ServoDevice::setAngle(int angle, float speed)
 void ServoDevice::setSpeed(float speed)
 {
     _speed = max(1.0f, speed); // Minimum speed of 1 degree per second
-    ESP_LOGI(TAG, "Servo [%s]: Speed set to %.2f deg/s", _id.c_str(), _speed);
+    MLOG_INFO("Servo [%s]: Speed set to %.2f deg/s", _id.c_str(), _speed);
 }
 
 void ServoDevice::updateMovement()
@@ -105,14 +103,14 @@ void ServoDevice::updateMovement()
         if (_currentAngle != previousAngle)
         {
             _servoPwm.writeServo(_pin, _currentAngle);
-            ESP_LOGI(TAG, "Servo [%s]: Moving to %d deg (target: %d deg)", _id.c_str(), _currentAngle, _targetAngle);
+            MLOG_INFO("Servo [%s]: Moving to %d deg (target: %d deg)", _id.c_str(), _currentAngle, _targetAngle);
         }
 
         // Check if movement is complete
         if (_currentAngle == _targetAngle)
         {
             _isMoving = false;
-            ESP_LOGI(TAG, "Servo [%s]: Reached target angle %d deg", _id.c_str(), _currentAngle);
+            MLOG_INFO("Servo [%s]: Reached target angle %d deg", _id.c_str(), _currentAngle);
             notifyStateChange();
         }
 
@@ -126,7 +124,7 @@ bool ServoDevice::control(const String &action, JsonObject *args)
     {
         if (!args || !(*args)["angle"].is<int>())
         {
-            ESP_LOGE(TAG, "Servo [%s]: Missing angle parameter", _id.c_str());
+            MLOG_ERROR("Servo [%s]: Missing angle parameter", _id.c_str());
             return false;
         }
 
@@ -147,7 +145,7 @@ bool ServoDevice::control(const String &action, JsonObject *args)
     {
         if (!args || !(*args)["speed"].is<float>())
         {
-            ESP_LOGE(TAG, "Servo [%s]: Missing speed parameter", _id.c_str());
+            MLOG_ERROR("Servo [%s]: Missing speed parameter", _id.c_str());
             return false;
         }
         setSpeed((*args)["speed"].as<float>());
@@ -157,12 +155,12 @@ bool ServoDevice::control(const String &action, JsonObject *args)
     {
         _targetAngle = _currentAngle;
         _isMoving = false;
-        ESP_LOGI(TAG, "Servo [%s]: Movement stopped at angle %d deg", _id.c_str(), _currentAngle);
+        MLOG_INFO("Servo [%s]: Movement stopped at angle %d deg", _id.c_str(), _currentAngle);
         notifyStateChange();
         return true;
     }
 
-    ESP_LOGW(TAG, "Servo [%s]: Unknown action: %s", _id.c_str(), action.c_str());
+    MLOG_WARN("Servo [%s]: Unknown action: %s", _id.c_str(), action.c_str());
     return false;
 }
 

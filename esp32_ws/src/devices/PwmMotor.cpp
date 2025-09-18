@@ -173,8 +173,6 @@ void PwmMotor::setup()
     {
         configureMCPWM();
     }
-
-    ESP_LOGI(TAG, "PwmMotor [%s]: Device setup complete", _id.c_str());
 }
 
 void PwmMotor::loop()

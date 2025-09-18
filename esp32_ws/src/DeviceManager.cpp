@@ -63,73 +63,84 @@ void DeviceManager::loadDevicesFromJsonFile()
                     {
                         Led *led = new Led(id);
                         led->setName(name);
-                        
+                       
+                        // Log obj[config] as json string
+                        String configStr;
+                        serializeJson(obj["config"], configStr);
+                        ESP_LOGI(TAG, "LED device config: %s", configStr.c_str());
+
                         // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>()) {
+                        if (obj["config"].is<JsonObject>())
+                        {
                             JsonObject config = obj["config"];
                             led->setConfig(&config);
                         }
-                        
+
                         devices[devicesCount++] = led;
                     }
                     else if (type == "buzzer")
                     {
                         Buzzer *buzzer = new Buzzer(id, name);
-                        
+
                         // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>()) {
+                        if (obj["config"].is<JsonObject>())
+                        {
                             JsonObject config = obj["config"];
                             buzzer->setConfig(&config);
                         }
-                        
+
                         devices[devicesCount++] = buzzer;
                     }
                     else if (type == "button")
                     {
                         Button *button = new Button(id, name);
-                        
+
                         // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>()) {
+                        if (obj["config"].is<JsonObject>())
+                        {
                             JsonObject config = obj["config"];
                             button->setConfig(&config);
                         }
-                        
+
                         devices[devicesCount++] = button;
                     }
                     else if (type == "servo")
                     {
                         ServoDevice *servo = new ServoDevice(id, name);
-                        
+
                         // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>()) {
+                        if (obj["config"].is<JsonObject>())
+                        {
                             JsonObject config = obj["config"];
                             servo->setConfig(&config);
                         }
-                        
+
                         devices[devicesCount++] = servo;
                     }
                     else if (type == "stepper")
                     {
                         Stepper *stepper = new Stepper(id, name);
-                        
+
                         // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>()) {
+                        if (obj["config"].is<JsonObject>())
+                        {
                             JsonObject config = obj["config"];
                             stepper->setConfig(&config);
                         }
-                        
+
                         devices[devicesCount++] = stepper;
                     }
                     else if (type == "pwmmotor")
                     {
                         PwmMotor *motor = new PwmMotor(id, name);
-                        
+
                         // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>()) {
+                        if (obj["config"].is<JsonObject>())
+                        {
                             JsonObject config = obj["config"];
                             motor->setConfig(&config);
                         }
-                        
+
                         devices[devicesCount++] = motor;
                     }
                     else

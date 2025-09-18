@@ -91,7 +91,8 @@ export function createDevicesStore({
             produce((draft) => {
               const draftDevice = draft.devices[message.deviceId];
               if (draftDevice) {
-                draftDevice.state = message.state;
+                const { id, type, ...rest } = message.state;
+                draftDevice.state = rest;
               }
             })
           );
@@ -139,11 +140,15 @@ export function useDevices() {
   ] as const;
 }
 
-export function useDevice(deviceId: string) {
+export function useDevice<TState extends IDeviceState, TConfig extends IDeviceConfig>(
+  deviceId: string
+) {
   const store = useContext(DevicesContext);
   const [, { sendMessage }] = useWebSocket2();
 
   const getDeviceConfig = () => sendMessage({ type: "device-read-config", deviceId });
+  const setDeviceConfig = (config: TConfig) =>
+    sendMessage({ type: "device-save-config", deviceId, config });
   const getDeviceState = () => sendMessage({ type: "device-get-state", deviceId });
 
   // tracking only needed once
@@ -152,5 +157,8 @@ export function useDevice(deviceId: string) {
     getDeviceState();
   });
 
-  return [store.devices[deviceId], { getDeviceConfig, getDeviceState, sendMessage }] as const;
+  return [
+    store.devices[deviceId] as IDevice<TState, TConfig> | undefined,
+    { getDeviceConfig, getDeviceState, setDeviceConfig, sendMessage },
+  ] as const;
 }

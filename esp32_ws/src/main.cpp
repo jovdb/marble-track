@@ -307,7 +307,6 @@ void checkSerialCommands()
         {
           if (deviceList[i] != nullptr)
           {
-            String state = deviceList[i]->getState();
 
             // Display device info with styled JSON state
             Serial.printf("  %d. %s [%s] %s\n",
@@ -317,19 +316,14 @@ void checkSerialCommands()
                           deviceList[i]->getName().c_str());
 
             // Parse and pretty-print JSON
-            JsonDocument stateDoc;
-            DeserializationError error = deserializeJson(stateDoc, state);
+            String state = deviceList[i]->getState();
+            Serial.printf("     JSON State: %s\n", state.c_str());
 
-            if (error)
-            {
-              Serial.printf("     JSON State: %s\n", state.c_str());
-            }
-            else
-            {
-              Serial.println("     JSON State:");
-              serializeJsonPretty(stateDoc, Serial);
-              Serial.println();
-            }
+            JsonDocument configDoc = deviceList[i]->getConfig();
+            Serial.println("     JSON Config:");
+            serializeJsonPretty(configDoc, Serial);
+            Serial.println();
+
             Serial.println();
           }
         }

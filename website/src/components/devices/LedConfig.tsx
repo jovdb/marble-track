@@ -1,19 +1,29 @@
-import { createSignal } from "solid-js";
+import { createSignal, onMount } from "solid-js";
 import DeviceConfig from "./DeviceConfig";
+import { useDevice } from "../../stores/Devices";
+import { useLed } from "../../stores/Led";
 
 interface LedConfigProps {
   id: string;
 }
 
 export default function LedConfig(props: LedConfigProps) {
-  const [name, setName] = createSignal("Led");
-  const [pin, setPin] = createSignal(1);
+  const [device, { getDeviceConfig, setDeviceConfig }] = useLed(props.id);
+  //const [name, setName] = createSignal("Led");
+  //const [pin, setPin] = createSignal(device.config?.pin || "");
+
+  onMount(() => {
+    getDeviceConfig();
+  });
 
   return (
     <DeviceConfig
       id={props.id}
       onSave={() => {
-        alert("TODO: Implement LED setup");
+        setDeviceConfig({
+          name: "Jo",
+          pin: 3,
+        });
       }}
     >
       <>
@@ -22,7 +32,7 @@ export default function LedConfig(props: LedConfigProps) {
             Name:
             <input
               type="text"
-              value={name()}
+              value={device.config?.name || ""}
               onInput={(e) => setName(e.currentTarget.value)}
               style={{ "margin-left": "0.5rem" }}
             />
@@ -33,7 +43,7 @@ export default function LedConfig(props: LedConfigProps) {
             Pin number:
             <input
               type="number"
-              value={pin()}
+              value={device.config?.pin || ""}
               min={0}
               onInput={(e) => setPin(Number(e.currentTarget.value))}
               style={{ "margin-left": "0.5rem" }}

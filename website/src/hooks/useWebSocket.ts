@@ -16,7 +16,7 @@ export const [availableDevices, setAvailableDevices] = createSignal<DeviceInfo[]
 export const [devicesLoaded, setDevicesLoaded] = createSignal(false);
 export const [devicesLoading, setDevicesLoading] = createSignal(false);
 
-const url = (import.meta.env.VITE_MARBLE_WS || `ws://${window.location.hostname}/ws`) + "jkkjk";
+const url = (import.meta.env.VITE_MARBLE_WS || `ws://${window.location.hostname}/ws`);
 
 // console.log("Connecting to WebSocket:", url);
 // const websocket = makeHeartbeatWS(makeReconnectingWS(url), {

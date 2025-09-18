@@ -8,7 +8,7 @@ import { useLed } from "../../stores/Led";
 export function Led(props: { id: string }) {
   const [device, { setLed, blink }] = useLed(props.id);
 
-  console.log("LED DEVICE", device);
+  console.log("LED DEVICE", JSON.stringify(device, null, 2));
   return (
     <Device
       id={props.id}
@@ -29,18 +29,21 @@ export function Led(props: { id: string }) {
         <span class={styles["device__status-text"]}>Status: {device.state?.mode}</span>
       </div>
       <div class={styles.device__controls}>
-        <button class={styles.device__button} onClick={() => setLed(true)}>
+        <button
+          class={`${styles.device__button} ${device.state?.mode === "ON" ? styles["device__button--secondary"] : ""}`}
+          onClick={() => setLed(true)}
+        >
           Turn On
         </button>
         <button
-          class={`${styles.device__button} ${styles["device__button--secondary"]}`}
+          class={`${styles.device__button} ${device.state?.mode === "OFF" ? styles["device__button--secondary"] : ""}`}
           onClick={() => setLed(false)}
         >
           Turn Off
         </button>
         <button
-          class={`${styles.device__button} ${styles["device__button--secondary"]}`}
-          onClick={() => blink?.()}
+          class={`${styles.device__button} ${device.state?.mode === "BLINKING" ? styles["device__button--secondary"] : ""}`}
+          onClick={() => blink()}
         >
           Blink
         </button>

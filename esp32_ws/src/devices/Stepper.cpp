@@ -61,17 +61,6 @@ void Stepper::setup()
 
     // Set current position to 0
     _stepper->setCurrentPosition(0);
-
-    if (_is4Pin)
-    {
-        ESP_LOGI(TAG, "Stepper [%s]: Setup complete (HALF4WIRE) on pins %d, %d, %d, %d", _id.c_str(), _pin1, _pin2, _pin3, _pin4);
-    }
-    else
-    {
-        ESP_LOGI(TAG, "Stepper [%s]: Setup complete (DRIVER) on pins %d (step), %d (dir)", _id.c_str(), _pin1, _pin2);
-    }
-
-    ESP_LOGI(TAG, "Stepper [%s]: Max speed: %.2f steps/s, Acceleration: %.2f steps/s^2", _id.c_str(), _maxSpeed, _maxAcceleration);
 }
 
 /**

@@ -55,26 +55,23 @@ bool Device::control(const String &action, JsonObject *payload)
 String Device::getState()
 {
     JsonDocument doc;
-    doc["id"] = _id;
-    doc["id"] = _id;
-    doc["type"] = _type;
-    doc["name"] = _name;
-
-    // If there are children, add their states to a 'children' array
-    if (!children.empty())
-    {
-        JsonArray childrenArr = doc["children"].to<JsonArray>();
-        for (Device *child : children)
-        {
-            if (child)
-            {
-                String childStateStr = child->getState();
-                JsonDocument childDoc;
-                deserializeJson(childDoc, childStateStr);
-                childrenArr.add(childDoc.as<JsonObject>());
-            }
-        }
-    }
+    /*
+      // If there are children, add their states to a 'children' array
+      if (!children.empty())
+      {
+          JsonArray childrenArr = doc["children"].to<JsonArray>();
+          for (Device *child : children)
+          {
+              if (child)
+              {
+                  String childStateStr = child->getState();
+                  JsonDocument childDoc;
+                  deserializeJson(childDoc, childStateStr);
+                  childrenArr.add(childDoc.as<JsonObject>());
+              }
+          }
+      }
+  */
 
     String result;
     serializeJson(doc, result);
@@ -116,6 +113,8 @@ void Device::notifyStateChange()
 JsonObject Device::getConfig() const
 {
     // Default implementation: return null JsonObject
+
+    ESP_LOGI("DEVICE", "getConfig");
     return JsonObject();
 }
 

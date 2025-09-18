@@ -31,7 +31,6 @@ void Led::setup()
 
     pinMode(_pin, OUTPUT);
     digitalWrite(_pin, LOW);
-    ESP_LOGI(TAG, "Led [%s]: Setup on pin %d", _id.c_str(), _pin);
 
     Led::blink(100, 300);
 }
@@ -198,13 +197,16 @@ JsonObject Led::getConfig() const
     JsonDocument doc;
     JsonObject config = doc.to<JsonObject>();
 
-    config["configured"] = (_pin != -1);
     if (_pin != -1)
     {
         config["pin"] = _pin;
     }
     config["name"] = _name;
 
+    String message;
+    serializeJson(config, message);
+
+    ESP_LOGI("LED", "getConfig", message);
     return config;
 }
 
@@ -224,7 +226,7 @@ void Led::setConfig(JsonObject *config)
     if ((*config)["name"].is<String>())
     {
         _name = (*config)["name"].as<String>();
-        ESP_LOGI(TAG, "Led [%s]: Name updated to '%s'", _id.c_str(), _name.c_str());
+        //  ESP_LOGI(TAG, "Led [%s]: Name updated to '%s'", _id.c_str(), _name.c_str());
     }
 
     // Set pin if provided
@@ -232,6 +234,6 @@ void Led::setConfig(JsonObject *config)
     {
         int pin = (*config)["pin"].as<int>();
         configurePin(pin);
-        ESP_LOGI(TAG, "Led [%s]: Configured from JSON with pin %d", _id.c_str(), pin);
+        // ESP_LOGI(TAG, "Led [%s]: Configured from JSON with pin %d", _id.c_str(), pin);
     }
 }

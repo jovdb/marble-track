@@ -118,3 +118,5 @@ export type IWsSendMessage =
   | IWsSendDeviceReadConfigMessage
   | IWsSendDeviceSaveConfigMessage
   | IWsSendPingMessage;
+
+export 

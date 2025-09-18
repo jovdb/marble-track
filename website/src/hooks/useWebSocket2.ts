@@ -2,6 +2,8 @@ import { createWSState, makeReconnectingWS, makeHeartbeatWS } from "@solid-primi
 import { createContext, createMemo, onCleanup, onMount, useContext } from "solid-js";
 import { createStore } from "solid-js/store";
 import { IWsReceiveMessage, IWsSendMessage } from "../interfaces/WebSockets";
+import { pipe } from "../utils/pipe";
+import { withCombineAsync } from "../utils/withCombine";
 
 // WebSocket Store Interface
 export interface IWebSocketStore {
@@ -295,19 +297,22 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
     });
   });
 
+  const sendMessage = (message: IWsSendMessage): boolean => {
+    if (websocket.readyState === WebSocket.OPEN) {
+      console.debug("WebSocket message sent:", message);
+      websocket.send(JSON.stringify(message));
+      return true;
+    } else {
+      console.error("WebSocket is not open, cannot send message:", message);
+      setStore({ error: "WebSocket is not connected" });
+      return false;
+    }
+  };
+
   // Actions object
   const actions: IWebSocketActions = {
-    sendMessage: (message: IWsSendMessage): boolean => {
-      if (websocket.readyState === WebSocket.OPEN) {
-        console.debug("WebSocket message sent:", message);
-        websocket.send(JSON.stringify(message));
-        return true;
-      } else {
-        console.error("WebSocket is not open, cannot send message:", message);
-        setStore({ error: "WebSocket is not connected" });
-        return false;
-      }
-    },
+    // TODO: deduplicate calls
+    sendMessage: pipe(sendMessage),
 
     clearMessages: () => {
       setStore("lastMessages", []);

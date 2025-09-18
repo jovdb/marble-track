@@ -13,7 +13,7 @@ interface ILedConfig extends IDeviceConfig {
 }
 
 export function useLed(deviceId: string) {
-  const [device, { sendMessage, ...actions }] = useDevice(deviceId);
+  const [device, { sendMessage, ...actions }] = useDevice<ILedState, ILedConfig>(deviceId);
 
   function setLed(deviceId: string, value: any) {
     sendMessage({
@@ -36,7 +36,7 @@ export function useLed(deviceId: string) {
   }
 
   return [
-    device as IDevice<ILedState, ILedConfig>,
+    device,
     {
       ...actions,
       setLed: (value: Parameters<typeof setLed>[1]) => setLed(deviceId, value),

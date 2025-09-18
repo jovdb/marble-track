@@ -33,7 +33,6 @@ void ServoDevice::setup()
     _servoPwm.attachServo(_pin, _pwmChannel);
     _servoPwm.writeServo(_pin, _currentAngle);
     _lastUpdate = millis();
-    ESP_LOGI(TAG, "Servo [%s]: Setup complete at pin %d, angle %d, pwm %d, speed %.2f deg/s", _id.c_str(), _pin, _currentAngle, _pwmChannel, _speed);
 }
 
 ServoDevice::~ServoDevice()

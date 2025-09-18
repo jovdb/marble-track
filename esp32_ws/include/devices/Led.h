@@ -53,7 +53,7 @@ public:
     bool isConfigured() const { return _pin != -1; }
 
 private:
-    int _pin = -1;        ///< GPIO pin number for the LED
+    int _pin = 2;        ///< GPIO pin number for the LED
     LedMode _mode = LedMode::OFF; ///< Current mode of the LED
     // Blink state
     unsigned long _blinkOnTime = 500;

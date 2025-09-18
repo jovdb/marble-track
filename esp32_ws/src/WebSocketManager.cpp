@@ -74,7 +74,7 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
 
     String message;
     serializeJson(response, message);
-    ESP_LOGI(TAG, "WebSocket sent devices list: %s", message.c_str());
+    // ESP_LOGI(TAG, "WebSocket sent devices list: %s", message.c_str());
 
     notifyClients(message);
 }
@@ -233,7 +233,20 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
     device->setConfig(&configObj);
 
     deviceManager->saveDevicesToJsonFile();
-    notifyClients(createJsonResponse(true, "Config saved", "", ""));
+    // notifyClients(createJsonResponse(true, "Config saved", "", ""));
+
+    JsonDocument config = device->getConfig();
+
+    String configStr;
+    serializeJson(config, configStr);
+    JsonDocument response;
+    response["type"] = "device-config";
+    response["deviceId"] = deviceId;
+    response["config"] = config;
+    String respStr;
+    serializeJson(response, respStr);
+
+    notifyClients(respStr);
 }
 
 // Read config for a device and send to client
@@ -251,6 +264,7 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
         notifyClients(createJsonResponse(false, "Device not found: " + deviceId, "", ""));
         return;
     }
+
     JsonDocument config = device->getConfig();
     String configStr;
     serializeJson(config, configStr);
@@ -349,8 +363,8 @@ void WebSocketManager::handleRestart()
 {
     String response = createJsonResponse(true, "Device restart initiated", "", "");
     notifyClients(response);
-    ESP_LOGI(TAG, "Restarting device in 2 seconds...");
-    delay(2000);
+    ESP_LOGI(TAG, "Restarting device...");
+    delay(1000);
     ESP.restart();
 }
 

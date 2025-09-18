@@ -3,6 +3,7 @@
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include "Config.h"
+#include "Logging.h"
 #include "Network.h"
 #include "WebsiteHost.h"
 #include "WebSocketManager.h"
@@ -66,6 +67,7 @@ void runManualMode()
 
   if (testButton && testBuzzer && wheel && testButton->isPressed())
   {
+    MLOG_INFO("Button test-button pressed - triggering buzzer and wheel");
     testBuzzer->tone(200, 100);
     wheel->move(8000); // Move stepper 100 steps on button press
   }
@@ -73,6 +75,7 @@ void runManualMode()
   // Check for second button press to trigger buzzer
   if (testButton2 && testBuzzer && testButton2->wasPressed())
   {
+    MLOG_INFO("Button test-button2 pressed - playing tone (1000Hz, 200ms)");
     testBuzzer->tone(1000, 200); // Play 1000Hz tone for 200ms
   }
 
@@ -130,17 +133,20 @@ void setup()
   // esp_log_level_set("main", ESP_LOG_DEBUG);
   // esp_log_level_set("Network", ESP_LOG_DEBUG);
 
-  ESP_LOGI(TAG, "Starting Marble Track");
+  // Using simplified logging macros
+  MLOG_INFO("Starting Marble Track System");
 
   // Initialize Network (will try WiFi, fall back to AP if needed)
   bool networkInitialized = network.setup();
+  
   if (!networkInitialized)
   {
-    ESP_LOGE(TAG, "ERROR: Network initialization failed! System may not be accessible.");
+    MLOG_ERROR("Network initialization failed! System may not be accessible.");
   }
   else
   {
     String hostnameStr = network.getHostname();
+    MLOG_INFO("Network ready, hostname: %s", hostnameStr.c_str());
     otaService.setup(hostnameStr.c_str()); // <-- OTA setup only after network is ready
   }
 
@@ -202,16 +208,18 @@ void setup()
 
   // Startup sound
   Buzzer *buzzer = deviceManager.getDeviceByTypeAs<Buzzer>("buzzer");
-  if (buzzer)
+  if (buzzer) {
     buzzer->startupTone(); // Play startup tone sequence
+    MLOG_INFO("Startup tone played");
+  }
 
-  ESP_LOGI(TAG, "Device management:");
-  ESP_LOGI(TAG, "  Total devices: %d", deviceManager.getDeviceCount());
-  ESP_LOGI(TAG, "State change broadcasting enabled");
+  MLOG_INFO("Device management initialized - Total devices: %d", deviceManager.getDeviceCount());
+  MLOG_INFO("State change broadcasting enabled");
 
   // Initialize in MANUAL mode
-  ESP_LOGI(TAG, "Operation mode: MANUAL");
-  ESP_LOGI(TAG, "Use setOperationMode() to switch between MANUAL and AUTOMATIC");
+  MLOG_INFO("Operation mode: MANUAL");
+  
+  MLOG_INFO("System initialization complete!");
 }
 
 void loop()
@@ -364,7 +372,8 @@ void setOperationMode(OperationMode mode)
     currentMode = mode;
 
     const char *modeString = (mode == OperationMode::MANUAL) ? "MANUAL" : "AUTOMATIC";
-    ESP_LOGI(TAG, "Operation mode changed to: %s", modeString);
+    
+    MLOG_INFO("Operation mode changed to: %s", modeString);
 
     // Optional: broadcast mode change via WebSocket
     // You could add WebSocket message broadcasting here if needed

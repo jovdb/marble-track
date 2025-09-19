@@ -163,26 +163,26 @@ void setup()
   // Try to load devices from JSON file
   deviceManager.loadDevicesFromJsonFile();
 
-  // If no devices loaded, use hardcoded devices and save to disk
-  if (deviceManager.getDeviceCount() == 0)
-  {
+  // // If no devices loaded, use hardcoded devices and save to disk
+  // if (deviceManager.getDeviceCount() == 0)
+  // {
 
-    Led *led = new Led("test-led");
-    led->setName("Test LED");
+  //   Led *led = new Led("test-led");
+  //   led->setName("Test LED");
 
-    Device *devices[] = {
-        led,
-        new Button("test-button2", "Test Button 2"),
-        new Buzzer("test-buzzer", "Test Buzzer"),
-        new DividerWheel(10, 11, 12, 13, 15, "wheel", "Divider Wheel")};
+  //   Device *devices[] = {
+  //       led,
+  //       new Button("test-button2", "Test Button 2"),
+  //       new Buzzer("test-buzzer", "Test Buzzer"),
+  //       new DividerWheel(10, 11, 12, 13, 15, "wheel", "Divider Wheel")};
 
-    const int numDevices = sizeof(devices) / sizeof(devices[0]);
-    for (int i = 0; i < numDevices; ++i)
-    {
-      deviceManager.addDevice(devices[i]);
-    }
-    deviceManager.saveDevicesToJsonFile();
-  }
+  //   const int numDevices = sizeof(devices) / sizeof(devices[0]);
+  //   for (int i = 0; i < numDevices; ++i)
+  //   {
+  //     deviceManager.addDevice(devices[i]);
+  //   }
+  //   deviceManager.saveDevicesToJsonFile();
+  // }
 /*
   // Add development/test devices (these are not saved to JSON)
   ServoDevice *testServo = new ServoDevice("test-servo", "SG90");
@@ -286,7 +286,7 @@ void checkSerialCommands()
     if (input.length() == 0)
     {
       // Enter key pressed - show network info
-      logNetworkInfo();
+      Serial.println();
       Serial.println("💡 Commands: 'devices', 'network', 'memory', 'restart'");
       Serial.println();
     }
@@ -324,7 +324,7 @@ void checkSerialCommands()
 
             // Parse and pretty-print JSON
             String state = deviceList[i]->getState();
-            Serial.printf("     State: %s\n", state.c_str());
+            Serial.printf("     State:  %s\n", state.c_str());
 
             String config = deviceList[i]->getConfig();
             Serial.printf("     Config: %s\n", config.c_str());

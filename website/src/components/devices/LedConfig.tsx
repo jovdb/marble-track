@@ -1,6 +1,5 @@
-import { createSignal, onMount } from "solid-js";
+import { createSignal } from "solid-js";
 import DeviceConfig from "./DeviceConfig";
-import { useDevice } from "../../stores/Devices";
 import { useLed } from "../../stores/Led";
 
 interface LedConfigProps {
@@ -41,7 +40,7 @@ export default function LedConfig(props: LedConfigProps) {
               type="number"
               value={pin() || "1"}
               min={1}
-              max={40}
+              max={50}
               onInput={(e) => setPin(Number(e.currentTarget.value))}
               style={{ "margin-left": "0.5rem" }}
             />

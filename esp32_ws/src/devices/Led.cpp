@@ -39,11 +39,13 @@ void Led::set(bool state)
 {
     if (_pin == -1)
     {
-        MLOG_WARN("Led [%s]: Pin not configured - cannot set state", _id.c_str());
-        return;
+        MLOG_WARN("Led [%s]: Pin not configured", _id.c_str());
+    }
+    else
+    {
+        digitalWrite(_pin, state ? HIGH : LOW);
     }
 
-    digitalWrite(_pin, state ? HIGH : LOW);
     _mode = state ? LedMode::ON : LedMode::OFF;
 
     // Notify state change for real-time updates
@@ -215,5 +217,5 @@ void Led::setConfig(JsonObject *config)
 
     // set pinMode
     // Define an unsetup function?
-    Led:setup();
+    setup();
 }

@@ -1,10 +1,10 @@
-import { JSX, onMount } from "solid-js";
+import { onMount } from "solid-js";
 import { useDevice } from "../../stores/Devices";
 
 interface DeviceConfigProps {
   id: string;
   onSave: () => void;
-  children?: JSX.Element | JSX.Element[];
+  children?: any;
 }
 
 export default function DeviceConfig(props: DeviceConfigProps) {
@@ -22,11 +22,28 @@ export default function DeviceConfig(props: DeviceConfigProps) {
           props.onSave();
         }}
       >
-        <div>{props.children}</div>
+        {props.children}
         <div style={{ display: "flex", gap: "1rem", "justify-content": "flex-end" }}>
           <button type="submit">Save</button>
         </div>
       </form>
     </div>
+  );
+}
+
+export function DeviceConfigTable(props: { children?: any }) {
+  return <table>{props.children}</table>;
+}
+
+export function DeviceConfigRow(props: { children: any }) {
+  return <tr>{props.children}</tr>;
+}
+
+export function DeviceConfigItem(props: { name: string; children: any }) {
+  return (
+    <>
+      <td>{props.name}</td>
+      <td>{props.children}</td>
+    </>
   );
 }

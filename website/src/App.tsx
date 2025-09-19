@@ -46,7 +46,7 @@ const App: Component = () => {
     <div class={styles.app}>
       <Providers>
         <Header />
-        <main class={styles.app__main}>
+        <main class="container">
           <section class={styles.app__section}>
             <CollapsibleSection
               title="Available Devices"

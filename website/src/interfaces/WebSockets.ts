@@ -80,6 +80,14 @@ export type IWsReceiveRemoveDeviceMessage =
   | (IWsMessageBase<"remove-device"> & { error: string })
   | (IWsMessageBase<"remove-device"> & { success: boolean; deviceId: string });
 
+export type IWsReceiveGetNetworkConfigMessage =
+  | (IWsMessageBase<"get-network-config"> & { error: string })
+  | (IWsMessageBase<"get-network-config"> & { ssid: string; password: string });
+
+export type IWsReceiveSetNetworkConfigMessage =
+  | (IWsMessageBase<"set-network-config"> & { error: string })
+  | (IWsMessageBase<"set-network-config"> & { success: boolean });
+
 export type IWsReceiveMessage =
   | IWsReceiveDevicesListMessage
   | IWsReceiveDeviceStateMessage
@@ -88,6 +96,8 @@ export type IWsReceiveMessage =
   | IWsReceiveDeviceSaveConfigMessage
   | IWsReceiveAddDeviceMessage
   | IWsReceiveRemoveDeviceMessage
+  | IWsReceiveGetNetworkConfigMessage
+  | IWsReceiveSetNetworkConfigMessage
   | IWsReceivePongMessage;
 
 export type IWsSendRestartMessage = IWsMessageBase<"restart">;
@@ -128,6 +138,13 @@ export type IWsSendRemoveDeviceMessage = IWsMessageBase<"remove-device"> & {
   deviceId: string;
 };
 
+export type IWsSendGetNetworkConfigMessage = IWsMessageBase<"get-network-config">;
+
+export type IWsSendSetNetworkConfigMessage = IWsMessageBase<"set-network-config"> & {
+  ssid: string;
+  password: string;
+};
+
 export type IWsSendMessage =
   | IWsSendRestartMessage
   | IWsSendGetDevicesMessage
@@ -139,4 +156,6 @@ export type IWsSendMessage =
   | IWsSendDeviceSaveConfigMessage
   | IWsSendAddDeviceMessage
   | IWsSendRemoveDeviceMessage
+  | IWsSendGetNetworkConfigMessage
+  | IWsSendSetNetworkConfigMessage
   | IWsSendPingMessage;

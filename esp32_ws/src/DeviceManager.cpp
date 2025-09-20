@@ -202,6 +202,117 @@ void DeviceManager::saveDevicesToJsonFile()
     }
 }
 
+NetworkSettings DeviceManager::loadNetworkSettings()
+{
+    NetworkSettings settings;
+    
+    if (!LittleFS.exists(DEVICES_LIST_FILE))
+    {
+        MLOG_INFO("Configuration file not found, returning default network settings");
+        return settings;
+    }
+
+    File file = LittleFS.open(DEVICES_LIST_FILE, FILE_READ);
+    if (file)
+    {
+        JsonDocument doc;
+        DeserializationError err = deserializeJson(doc, file);
+        file.close();
+        
+        if (!err && doc.is<JsonObject>())
+        {
+            JsonObject rootObj = doc.as<JsonObject>();
+            
+            // Check if network settings exist
+            if (rootObj["network"].is<JsonObject>())
+            {
+                JsonObject networkObj = rootObj["network"];
+                settings.ssid = networkObj["ssid"] | "";
+                settings.password = networkObj["password"] | "";
+                
+                MLOG_INFO("Loaded network settings from config: SSID='%s'", settings.ssid.c_str());
+            }
+            else
+            {
+                MLOG_INFO("No network settings found in config file");
+            }
+        }
+        else
+        {
+            MLOG_ERROR("Failed to parse configuration JSON file");
+        }
+    }
+    else
+    {
+        MLOG_ERROR("Failed to open configuration file for reading");
+    }
+    
+    return settings;
+}
+
+bool DeviceManager::saveNetworkSettings(const NetworkSettings& settings)
+{
+    // First, read the existing configuration
+    JsonDocument doc;
+    bool fileExists = LittleFS.exists(DEVICES_LIST_FILE);
+    
+    if (fileExists)
+    {
+        File file = LittleFS.open(DEVICES_LIST_FILE, FILE_READ);
+        if (file)
+        {
+            DeserializationError err = deserializeJson(doc, file);
+            file.close();
+            
+            if (err)
+            {
+                MLOG_ERROR("Failed to parse existing configuration file, creating new one");
+                doc.clear();
+                doc.to<JsonObject>(); // Create empty object
+            }
+        }
+        else
+        {
+            MLOG_ERROR("Failed to read existing configuration file, creating new one");
+            doc.clear();
+            doc.to<JsonObject>(); // Create empty object
+        }
+    }
+    else
+    {
+        doc.to<JsonObject>(); // Create empty object
+    }
+    
+    // Ensure we have a root object
+    if (!doc.is<JsonObject>())
+    {
+        doc.clear();
+        doc.to<JsonObject>();
+    }
+    
+    JsonObject rootObj = doc.as<JsonObject>();
+    
+    // Add/update network settings
+    JsonObject networkObj = rootObj["network"].to<JsonObject>();
+    networkObj["ssid"] = settings.ssid;
+    networkObj["password"] = settings.password;
+    
+    // Save back to file
+    File file = LittleFS.open(DEVICES_LIST_FILE, FILE_WRITE);
+    if (file)
+    {
+        serializeJson(doc, file);
+        file.close();
+        MLOG_INFO("Saved network settings to config: SSID='%s'", settings.ssid.c_str());
+        return true;
+    }
+    else
+    {
+        MLOG_ERROR("Failed to open configuration file for writing network settings");
+        return false;
+    }
+}
+
 DeviceManager::DeviceManager() : devicesCount(0)
 {
     // Initialize device array to nullptr

@@ -16,6 +16,7 @@
 #include <WiFi.h>
 #include <DNSServer.h>
 #include "Config.h"
+#include "NetworkSettings.h"
 
 enum class NetworkMode
 {
@@ -33,11 +34,17 @@ public:
      */
     String getHostname() const;
     /**
-     * @brief Constructor
+     * @brief Constructor with individual WiFi credentials
      * @param wifi_ssid WiFi network SSID to connect to
      * @param wifi_password WiFi network password
      */
     Network(const char *wifi_ssid, const char *wifi_password);
+
+    /**
+     * @brief Constructor with NetworkSettings object
+     * @param settings NetworkSettings object containing SSID and password
+     */
+    Network(const NetworkSettings& settings);
 
     /**
      * @brief Destructor - cleans up DNS server

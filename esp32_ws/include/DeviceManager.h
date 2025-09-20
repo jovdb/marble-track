@@ -7,6 +7,7 @@
 #include "devices/Device.h"
 #include <functional>
 #include <Arduino.h>
+#include "NetworkSettings.h"
 
 using StateChangeCallback = std::function<void(const String &deviceId, const String &stateJson)>;
 
@@ -19,6 +20,19 @@ private:
     int devicesCount;
 
 public:
+    /**
+     * @brief Load network settings from the configuration file
+     * @return NetworkSettings object with loaded settings, or empty settings if not found
+     */
+    NetworkSettings loadNetworkSettings();
+
+    /**
+     * @brief Save network settings to the configuration file
+     * @param settings The network settings to save
+     * @return true if saved successfully, false otherwise
+     */
+    bool saveNetworkSettings(const NetworkSettings& settings);
+
     /**
      * @brief Recursively search for the first device of the given type
      * @param deviceType The type string to search for

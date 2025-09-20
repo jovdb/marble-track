@@ -9,6 +9,11 @@ Network::Network(const char *wifi_ssid, const char *wifi_password)
 {
 }
 
+Network::Network(const NetworkSettings& settings)
+    : _wifi_ssid(settings.ssid.c_str()), _wifi_password(settings.password.c_str()), _currentMode(NetworkMode::DISCONNECTED), _dnsServer(nullptr)
+{
+}
+
 String Network::getHostname() const
 {
     // If you want to make this configurable, use a member variable

@@ -38,11 +38,15 @@ OperationMode currentMode = OperationMode::MANUAL;
 // Timing variable for automatic mode
 unsigned long lastAutoToggleTime = 0;
 
+#include "NetworkSettings.h"
+
 // Create network and server instances
-Network network("telenet-182FE", "cPQdRWmFx1eM");
+// Network network("telenet-182FE", "cPQdRWmFx1eM");
+Network *network = nullptr; // Will be created after loading settings
 AsyncWebServer server(80);
 LittleFSManager littleFSManager;
-WebsiteHost websiteHost(&network);
+// WebsiteHost websiteHost(&network);
+WebsiteHost *websiteHost = nullptr; // Will be created after network initialization
 DeviceManager deviceManager;
 WebSocketManager wsManager(&deviceManager, "/ws");
 
@@ -134,8 +138,20 @@ void setup()
   // Using simplified logging macros
   MLOG_INFO("Starting Marble Track System");
 
+  // Load network settings from configuration
+  NetworkSettings networkSettings = deviceManager.loadNetworkSettings();
+  
+  // Use default settings if none found in config
+  if (!networkSettings.isValid()) {
+    MLOG_INFO("No network settings found in config, using defaults");
+    networkSettings = NetworkSettings("telenet-182FE", "cPQdRWmFx1eM");
+  }
+  
+  // Create network instance with loaded settings
+  network = new Network(networkSettings);
+
   // Initialize Network (will try WiFi, fall back to AP if needed)
-  bool networkInitialized = network.setup();
+  bool networkInitialized = network->setup();
 
   if (!networkInitialized)
   {
@@ -143,15 +159,18 @@ void setup()
   }
   else
   {
-    String hostnameStr = network.getHostname();
+    String hostnameStr = network->getHostname();
     MLOG_INFO("Network ready, hostname: %s.local", hostnameStr.c_str());
     otaService.setup(hostnameStr.c_str()); // <-- OTA setup only after network is ready
   }
 
+  // Create WebsiteHost instance after network is initialized
+  websiteHost = new WebsiteHost(network);
+
   littleFSManager.setup();
 
   // Initialize WebsiteHost with the network instance
-  websiteHost.setup(server);
+  websiteHost->setup(server);
 
   // Setup WebSocket with message handler
   wsManager.setup(server);
@@ -231,7 +250,9 @@ void loop()
   littleFSManager.loop();
 
   // Process captive portal for access point mode
-  network.processCaptivePortal();
+  if (network) {
+    network->processCaptivePortal();
+  }
 
   // Keep the WebSocket alive
   wsManager.loop();

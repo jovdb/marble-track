@@ -2,6 +2,7 @@
 #include <LittleFS.h>
 #include "WebSocketManager.h"
 #include "DeviceManager.h"
+#include "NetworkSettings.h"
 #include "TimeManager.h"
 
 // Static instance for callback access (simplified to single instance)
@@ -213,6 +214,16 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
     if (type == "remove-device")
     {
         handleRemoveDevice(doc);
+        return;
+    }
+    if (type == "get-network-config")
+    {
+        handleGetNetworkConfig(doc);
+        return;
+    }
+    if (type == "set-network-config")
+    {
+        handleSetNetworkConfig(doc);
         return;
     }
 }
@@ -564,6 +575,81 @@ void WebSocketManager::handleRemoveDevice(JsonDocument &doc)
     handleGetDevices(emptyDoc);
     
     MLOG_INFO("Removed device: %s", deviceId.c_str());
+}
+
+void WebSocketManager::handleGetNetworkConfig(JsonDocument &doc)
+{
+    JsonDocument response;
+    response["type"] = "get-network-config";
+
+    if (!deviceManager)
+    {
+        response["error"] = "DeviceManager not available";
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
+        return;
+    }
+
+    NetworkSettings settings = deviceManager->loadNetworkSettings();
+    
+    if (settings.isValid())
+    {
+        response["ssid"] = settings.ssid;
+        // Password is not sent for security reasons
+    }
+    else
+    {
+        response["error"] = "No network settings found";
+    }
+
+    String respStr;
+    serializeJson(response, respStr);
+    notifyClients(respStr);
+    
+    MLOG_INFO("Sent network config to client");
+}
+
+void WebSocketManager::handleSetNetworkConfig(JsonDocument &doc)
+{
+    String ssid = doc["ssid"] | "";
+    String password = doc["password"] | "";
+    
+    JsonDocument response;
+    response["type"] = "set-network-config";
+
+    if (ssid.isEmpty())
+    {
+        response["error"] = "SSID cannot be empty";
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
+        return;
+    }
+
+    if (!deviceManager)
+    {
+        response["error"] = "DeviceManager not available";
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
+        return;
+    }
+
+    NetworkSettings settings(ssid, password);
+    if (deviceManager->saveNetworkSettings(settings))
+    {
+        response["success"] = true;
+        MLOG_INFO("Network settings saved: SSID='%s'", ssid.c_str());
+    }
+    else
+    {
+        response["error"] = "Failed to save network settings";
+    }
+
+    String respStr;
+    serializeJson(response, respStr);
+    notifyClients(respStr);
 }
 
 void WebSocketManager::broadcastState(const String &deviceId, const String &stateJson, const String &error)

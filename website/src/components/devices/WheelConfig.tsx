@@ -95,7 +95,6 @@ export function WheelConfig(props: { id: string }) {
                 <span class={wheelStyles["wheel-config__value"]}>{bp}</span>
 
                 <button
-                  class={wheelStyles["wheel-config__button"]}
                   disabled={index() === 0}
                   title="Move Up"
                   onClick={() => {
@@ -111,7 +110,6 @@ export function WheelConfig(props: { id: string }) {
                   ↑
                 </button>
                 <button
-                  class={wheelStyles["wheel-config__button"]}
                   disabled={index() === (config()?.breakPoints?.length ?? 0) - 1}
                   title="Move Down"
                   onClick={() => {
@@ -127,7 +125,6 @@ export function WheelConfig(props: { id: string }) {
                   ↓
                 </button>
                 <button
-                  class={`${wheelStyles["wheel-config__button"]} ${wheelStyles["wheel-config__button--delete"]}`}
                   title="Delete"
                   onClick={() => {
                     const cfg = config() || ({} as IWheelConfig);
@@ -143,7 +140,6 @@ export function WheelConfig(props: { id: string }) {
           </For>
         </ul>
         <button
-          class={`${wheelStyles["wheel-config__button"]} ${wheelStyles["wheel-config__button--add"]}`}
           onClick={() => {
             const cfg = config() || ({} as IWheelConfig);
             cfg.breakPoints = cfg.breakPoints?.slice() || [];

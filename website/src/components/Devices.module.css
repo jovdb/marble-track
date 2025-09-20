@@ -16,14 +16,6 @@
   border-radius: var(--radius-md);
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .app__devices-grid {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-4);
-  }
-}
-
 @media (max-width: 480px) {
   .app__devices-grid {
     gap: var(--spacing-3);

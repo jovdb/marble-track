@@ -115,66 +115,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-3);
-}
-
-.device__button {
-  padding: var(--spacing-3) var(--spacing-4);
-  background-color: var(--color-primary-600);
-  color: var(--color-text-inverse);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  min-width: 80px;
-  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: var(--spacing-2);
-}
-
-.device__button-small {
-  min-width: 30px;
-}
-
-.device__button:hover:not(:disabled) {
-  background-color: var(--color-primary-700);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-.device__button:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: var(--shadow-sm);
-}
-
-.device__button:focus-visible {
-  outline: 2px solid var(--color-primary-500);
-  outline-offset: 2px;
-}
-
-.device__button--secondary {
-  background-color: var(--color-gray-600);
-}
-
-.device__button--secondary:hover:not(:disabled) {
-  background-color: var(--color-gray-700);
-}
-
-.device__button--danger {
-  background-color: var(--color-danger-600);
-}
-
-.device__button--danger:hover:not(:disabled) {
-  background-color: var(--color-danger-700);
-}
-
-.device__button:disabled {
-  background-color: var(--color-gray-400);
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
 .device__input-group {
@@ -251,23 +192,6 @@
   gap: var(--spacing-4);
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .device__header {
-    flex-direction: column;
-    gap: var(--spacing-2);
-    align-items: flex-start;
-  }
-
-  .device__controls {
-    flex-direction: column;
-  }
-
-  .device__button {
-    width: 100%;
-  }
-}
-
 .device__header-button {
   background-color: rgba(0, 0, 0, 0.05);
   border: none;
@@ -281,6 +205,7 @@
   display: flex; /* no padding */
   box-shadow: var(--shadow-sm);
   border-radius: 5px;
+  color: #999;
 }
 
 .device__header-button--active {
@@ -292,5 +217,5 @@
   background-color: rgba(0, 0, 0, 0.1);
   background-color: var(--color-primary-600);
   box-shadow: var(--inset-shadow-sm);
-  color: #bbbbee;
+  color: #ddd;
 }

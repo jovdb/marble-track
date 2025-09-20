@@ -81,22 +81,6 @@
   }
 }
 
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .header {
-    padding: var(--spacing-3) var(--spacing-5);
-  }
-
-  .header__title {
-    font-size: var(--font-size-lg);
-  }
-
-  .header__status {
-    font-size: var(--font-size-xs);
-    padding: var(--spacing-2) var(--spacing-3);
-  }
-}
-
 @media (max-width: 400px) {
   .header__status-text {
     display: none;

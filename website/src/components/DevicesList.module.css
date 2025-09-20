@@ -125,6 +125,7 @@
   width: 100%;
   border-collapse: collapse;
   background-color: var(--color-background);
+  margin-bottom: 0;
 }
 
 .devices-list__table-header {
@@ -133,14 +134,7 @@
 }
 
 .devices-list__table-th {
-  padding: var(--spacing-4) var(--spacing-5);
-  text-align: left;
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-sm);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid var(--color-border);
 }
 
 .devices-list__table-body {
@@ -160,39 +154,20 @@
   border-bottom: none;
 }
 
-.devices-list__table-td {
-  padding: var(--spacing-4) var(--spacing-5);
-  vertical-align: middle;
-  font-size: var(--font-size-sm);
-}
-
 .devices-list__device-cell {
   display: flex;
   align-items: center;
   gap: var(--spacing-3);
 }
 
-.devices-list__device-icon {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-
-.devices-list__device-name {
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text-primary);
-}
-
 .devices-list__type-badge {
   background-color: var(--color-primary-100);
-  color: var(--color-primary-800);
   padding: var(--spacing-1) var(--spacing-3);
   border-radius: var(--radius-base);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
   display: inline-block;
 }
 
@@ -219,6 +194,13 @@
   font-style: italic;
 }
 
+.device-list__buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: var(--spacing-4);
+}
+
 /* Animations */
 @keyframes spin {
   0% {
@@ -226,40 +208,5 @@
   }
   100% {
     transform: rotate(360deg);
-  }
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .devices-list__header {
-    flex-direction: column;
-    gap: var(--spacing-3);
-    align-items: stretch;
-  }
-
-  .devices-list__title {
-    text-align: center;
-  }
-
-  .devices-list__table-container {
-    overflow-x: auto;
-  }
-
-  .devices-list__table {
-    min-width: 600px; /* Ensure table doesn't get too cramped */
-  }
-
-  .devices-list__table-th,
-  .devices-list__table-td {
-    padding: var(--spacing-3);
-  }
-
-  .devices-list__device-cell {
-    gap: var(--spacing-2);
-  }
-
-  .devices-list__device-icon {
-    width: 20px;
-    height: 20px;
   }
 }

@@ -88,14 +88,6 @@ export default function DevicesList() {
 
   return (
     <>
-      <div class={styles["app__config-buttons"]}>
-        {/* <button class={styles["app__config-button"]} onClick={handleDownloadConfig}>
-          Download
-        </button> */}
-        <button class={styles["app__config-button"]} onClick={handleUploadConfig}>
-          Upload
-        </button>
-      </div>
       <div class={styles["devices-list"]}>
         <div>
           {Object.values(devicesState.devices).length === 0 && (
@@ -146,6 +138,14 @@ export default function DevicesList() {
             </div>
           )}
         </div>
+      </div>
+      <div class={styles["device-list__buttons"]}>
+        {/* <button class={styles["app__config-button"]} onClick={handleDownloadConfig}>
+          Download
+        </button> */}
+        <button class={styles["app__config-button"]} onClick={handleUploadConfig}>
+          Upload
+        </button>
       </div>
     </>
   );

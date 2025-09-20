@@ -5,7 +5,7 @@
 .websocket-messages__header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--spacing-4);
   padding: 0 0 var(--spacing-4) 0;
 }
@@ -89,34 +89,6 @@
   width: 20px;
   height: 20px;
   object-fit: contain;
-}
-
-.websocket-messages__clear-button {
-  padding: var(--spacing-2) var(--spacing-4);
-  background-color: var(--color-primary-600);
-  color: var(--color-text-inverse);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.websocket-messages__clear-button:hover {
-  background-color: var(--color-primary-700);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
-}
-
-.websocket-messages__clear-button:active {
-  transform: translateY(0);
-  box-shadow: var(--shadow-sm);
-}
-
-.websocket-messages__clear-button:focus-visible {
-  outline: 2px solid var(--color-primary-500);
-  outline-offset: 2px;
 }
 
 .websocket-messages__item {
@@ -322,30 +294,4 @@
 
 .websocket-messages__scrollable-content::-webkit-scrollbar-thumb:hover {
   background: var(--color-gray-500);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .websocket-messages__header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .websocket-messages__filters {
-    flex-direction: column;
-    gap: var(--spacing-3);
-  }
-
-  .websocket-messages__filter-input,
-  .websocket-messages__filter-select {
-    min-width: auto;
-  }
-
-  .websocket-messages__title {
-    text-align: center;
-  }
-
-  .websocket-messages__scrollable-content {
-    max-height: 200px;
-  }
 }

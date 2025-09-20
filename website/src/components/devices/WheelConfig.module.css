@@ -31,32 +31,3 @@
   flex: 1;
   font-weight: 500;
 }
-
-.wheel-config__button {
-  min-width: 30px;
-  padding: var(--spacing-2) var(--spacing-3);
-  border-radius: var(--radius-md);
-  border: none;
-  cursor: pointer;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  transition: background var(--transition-fast);
-  background: var(--color-primary-600);
-  color: var(--color-text-inverse);
-}
-
-.wheel-config__button--delete {
-  background: var(--color-danger-600);
-  color: white;
-}
-
-.wheel-config__button--add {
-  background: var(--color-success-600);
-  color: white;
-  margin-top: 0.5em;
-}
-
-.wheel-config__button:disabled {
-  background: var(--color-gray-400);
-  cursor: not-allowed;
-}

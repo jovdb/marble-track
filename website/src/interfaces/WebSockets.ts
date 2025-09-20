@@ -72,12 +72,22 @@ export type IWsReceivePongMessage = IWsMessageBase<"pong"> & {
   timestamp?: number;
 };
 
+export type IWsReceiveAddDeviceMessage =
+  | (IWsMessageBase<"add-device"> & { error: string })
+  | (IWsMessageBase<"add-device"> & { success: boolean; deviceId: string });
+
+export type IWsReceiveRemoveDeviceMessage =
+  | (IWsMessageBase<"remove-device"> & { error: string })
+  | (IWsMessageBase<"remove-device"> & { success: boolean; deviceId: string });
+
 export type IWsReceiveMessage =
   | IWsReceiveDevicesListMessage
   | IWsReceiveDeviceStateMessage
   | IWsReceiveDeviceConfigMessage
   | IWsReceiveDeviceReadConfigMessage
   | IWsReceiveDeviceSaveConfigMessage
+  | IWsReceiveAddDeviceMessage
+  | IWsReceiveRemoveDeviceMessage
   | IWsReceivePongMessage;
 
 export type IWsSendRestartMessage = IWsMessageBase<"restart">;
@@ -108,6 +118,16 @@ export type IWsSendPingMessage = IWsMessageBase<"ping"> & {
   timestamp?: number;
 };
 
+export type IWsSendAddDeviceMessage = IWsMessageBase<"add-device"> & {
+  deviceType: string;
+  deviceId: string;
+  config?: any;
+};
+
+export type IWsSendRemoveDeviceMessage = IWsMessageBase<"remove-device"> & {
+  deviceId: string;
+};
+
 export type IWsSendMessage =
   | IWsSendRestartMessage
   | IWsSendGetDevicesMessage
@@ -117,6 +137,6 @@ export type IWsSendMessage =
   | IWsSendDeviceGetStateMessage
   | IWsSendDeviceReadConfigMessage
   | IWsSendDeviceSaveConfigMessage
+  | IWsSendAddDeviceMessage
+  | IWsSendRemoveDeviceMessage
   | IWsSendPingMessage;
-
-export 

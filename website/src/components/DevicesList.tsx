@@ -1,9 +1,23 @@
-import { createEffect, For } from "solid-js";
+import { createEffect, For, createSignal } from "solid-js";
 import { requestDevices } from "../hooks/useWebSocket";
 import { getDeviceIcon } from "./icons/Icons";
 import styles from "./DevicesList.module.css";
 import { useDevices } from "../stores/Devices";
 import { useWebSocket2 } from "../hooks/useWebSocket2";
+import { IWsSendAddDeviceMessage, IWsSendRemoveDeviceMessage } from "../interfaces/WebSockets";
+
+// Available device types
+const DEVICE_TYPES = [
+  "Button",
+  "Buzzer", 
+  "DividerWheel",
+  "GateWithSensor",
+  "Led",
+  "PwmMotor",
+  "Servo",
+  "Stepper",
+  "Wheel"
+] as const;
 
 // Export refresh function for use in parent components
 export const refreshDevices = () => {
@@ -12,7 +26,12 @@ export const refreshDevices = () => {
 
 export default function DevicesList() {
   const [devicesState, { loadDevices }] = useDevices();
-  const [socketState] = useWebSocket2();
+  const [socketState, { sendMessage }] = useWebSocket2();
+
+  // Signals for add device modal
+  const [showAddModal, setShowAddModal] = createSignal(false);
+  const [newDeviceType, setNewDeviceType] = createSignal("");
+  const [newDeviceId, setNewDeviceId] = createSignal("");
 
   // const [webSocket, { sendMessage }] = useWebSocket2();
 
@@ -22,6 +41,49 @@ export default function DevicesList() {
     sendMessage({ type: "get-devices-config" });
   };
 */
+
+  // Add device handler
+  const handleAddDevice = () => {
+    const deviceType = newDeviceType();
+    const deviceId = newDeviceId().trim();
+    
+    if (!deviceType || !deviceId) {
+      alert("Please select a device type and enter a device ID");
+      return;
+    }
+
+    const message: IWsSendAddDeviceMessage = {
+      type: "add-device",
+      deviceType,
+      deviceId,
+      config: {}
+    };
+
+    if (sendMessage(message)) {
+      setShowAddModal(false);
+      setNewDeviceType("");
+      setNewDeviceId("");
+      // Device list will be refreshed automatically via WebSocket response
+    } else {
+      alert("Failed to send add device message");
+    }
+  };
+
+  // Remove device handler
+  const handleRemoveDevice = (deviceId: string) => {
+    if (!confirm(`Are you sure you want to remove device "${deviceId}"?`)) {
+      return;
+    }
+
+    const message: IWsSendRemoveDeviceMessage = {
+      type: "remove-device",
+      deviceId
+    };
+
+    if (!sendMessage(message)) {
+      alert("Failed to send remove device message");
+    }
+  };
   /*
   onMount(() => {
     // Listen for devices-config response and trigger download
@@ -102,6 +164,7 @@ export default function DevicesList() {
                     <th class={styles["devices-list__table-th"]}></th>
                     <th class={styles["devices-list__table-th"]}>Type</th>
                     <th class={styles["devices-list__table-th"]}>ID</th>
+                    <th class={styles["devices-list__table-th"]}>Actions</th>
                   </tr>
                 </thead>
                 <tbody class={styles["devices-list__table-body"]}>
@@ -121,6 +184,15 @@ export default function DevicesList() {
                         <td class={styles["devices-list__table-td"]}>
                           <code class={styles["devices-list__device-id"]}>{device.id}</code>
                         </td>
+                        <td class={styles["devices-list__table-td"]}>
+                          <button 
+                            class={styles["devices-list__remove-button"]}
+                            onClick={() => handleRemoveDevice(device.id)}
+                            title="Remove device"
+                          >
+                            🗑️
+                          </button>
+                        </td>
                         {/* <td class={styles["devices-list__table-td"]}>
                         {device.pins && device.pins.length > 0 ? (
                           <code class={styles["devices-list__pins-list"]}>
@@ -139,6 +211,68 @@ export default function DevicesList() {
           )}
         </div>
       </div>
+
+      {/* Add Device Button */}
+      <div class={styles["device-list__actions"]}>
+        <button 
+          class={styles["app__config-button"]}
+          onClick={() => setShowAddModal(true)}
+        >
+          Add Device
+        </button>
+      </div>
+
+      {/* Add Device Modal */}
+      {showAddModal() && (
+        <div class={styles["modal-overlay"]} onClick={() => setShowAddModal(false)}>
+          <div class={styles["modal-content"]} onClick={(e) => e.stopPropagation()}>
+            <h3>Add New Device</h3>
+            
+            <div class={styles["modal-field"]}>
+              <label for="device-type">Device Type:</label>
+              <select 
+                id="device-type"
+                value={newDeviceType()}
+                onChange={(e) => setNewDeviceType(e.target.value)}
+                class={styles["modal-select"]}
+              >
+                <option value="">Select a device type...</option>
+                <For each={DEVICE_TYPES}>
+                  {(type) => <option value={type}>{type}</option>}
+                </For>
+              </select>
+            </div>
+
+            <div class={styles["modal-field"]}>
+              <label for="device-id">Device ID:</label>
+              <input
+                id="device-id"
+                type="text"
+                value={newDeviceId()}
+                onInput={(e) => setNewDeviceId(e.target.value)}
+                placeholder="Enter device ID"
+                class={styles["modal-input"]}
+              />
+            </div>
+
+            <div class={styles["modal-buttons"]}>
+              <button 
+                class={styles["modal-button"]}
+                onClick={() => setShowAddModal(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                class={styles["modal-button modal-button--primary"]}
+                onClick={handleAddDevice}
+              >
+                Add Device
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div class={styles["device-list__buttons"]}>
         {/* <button class={styles["app__config-button"]} onClick={handleDownloadConfig}>
           Download

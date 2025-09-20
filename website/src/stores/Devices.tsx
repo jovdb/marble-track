@@ -72,6 +72,26 @@ export function createDevicesStore({
         }
         break;
       }
+      case "add-device": {
+        if ("error" in message) {
+          console.error("Failed to add device:", message.error);
+          alert(`Failed to add device: ${message.error}`);
+        } else if ("success" in message) {
+          console.log("Device added successfully:", message.deviceId);
+          // Device list will be refreshed automatically via devices-list message
+        }
+        break;
+      }
+      case "remove-device": {
+        if ("error" in message) {
+          console.error("Failed to remove device:", message.error);
+          alert(`Failed to remove device: ${message.error}`);
+        } else if ("success" in message) {
+          console.log("Device removed successfully:", message.deviceId);
+          // Device list will be refreshed automatically via devices-list message
+        }
+        break;
+      }
       case "device-config": {
         if ("config" in message) {
           setStore(

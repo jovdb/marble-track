@@ -205,6 +205,16 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
         handleDeviceReadConfig(doc);
         return;
     }
+    if (type == "add-device")
+    {
+        handleAddDevice(doc);
+        return;
+    }
+    if (type == "remove-device")
+    {
+        handleRemoveDevice(doc);
+        return;
+    }
 }
 
 // Save config from client for a device
@@ -438,6 +448,122 @@ void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
     }
 
     notifyClients(response);
+}
+
+void WebSocketManager::handleAddDevice(JsonDocument &doc)
+{
+    String deviceType = doc["deviceType"] | "";
+    String deviceId = doc["deviceId"] | "";
+    JsonDocument response;
+    response["type"] = "add-device";
+
+    if (deviceType.isEmpty() || deviceId.isEmpty())
+    {
+        response["error"] = "Missing deviceType or deviceId";
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
+        return;
+    }
+
+    if (!deviceManager)
+    {
+        response["error"] = "DeviceManager not available";
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
+        return;
+    }
+
+    // Check if device already exists
+    if (deviceManager->getDeviceById(deviceId) != nullptr)
+    {
+        response["error"] = "Device with ID '" + deviceId + "' already exists";
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
+        return;
+    }
+
+    if (!deviceManager->addDevice(deviceType, deviceId, doc["config"]))
+    {
+        response["error"] = "Failed to create and add device of type '" + deviceType + "' with ID '" + deviceId + "'";
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
+        return;
+    }
+
+    // Setup the new device
+    Device* newDevice = deviceManager->getDeviceById(deviceId);
+    if (newDevice != nullptr) 
+    {
+        newDevice->setup();
+    }
+    
+    // Save devices to file
+    deviceManager->saveDevicesToJsonFile();
+
+    response["success"] = true;
+    response["deviceId"] = deviceId;
+    String respStr;
+    serializeJson(response, respStr);
+    notifyClients(respStr);
+    
+    // Broadcast updated device list to all clients
+    JsonDocument emptyDoc;
+    handleGetDevices(emptyDoc);
+    
+    MLOG_INFO("Added device: %s (%s)", deviceId.c_str(), deviceType.c_str());
+}
+
+void WebSocketManager::handleRemoveDevice(JsonDocument &doc)
+{
+    String deviceId = doc["deviceId"] | "";
+    JsonDocument response;
+    response["type"] = "remove-device";
+
+    if (deviceId.isEmpty())
+    {
+        response["error"] = "Missing deviceId";
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
+        return;
+    }
+
+    if (!deviceManager)
+    {
+        response["error"] = "DeviceManager not available";
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
+        return;
+    }
+
+    if (!deviceManager->removeDevice(deviceId))
+    {
+        response["error"] = "Device not found or failed to remove: " + deviceId;
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
+        return;
+    }
+
+    // Save devices to file
+    deviceManager->saveDevicesToJsonFile();
+
+    response["success"] = true;
+    response["deviceId"] = deviceId;
+    String respStr;
+    serializeJson(response, respStr);
+    notifyClients(respStr);
+    
+    // Broadcast updated device list to all clients
+    JsonDocument emptyDoc;
+    handleGetDevices(emptyDoc);
+    
+    MLOG_INFO("Removed device: %s", deviceId.c_str());
 }
 
 void WebSocketManager::broadcastState(const String &deviceId, const String &stateJson, const String &error)

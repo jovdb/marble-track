@@ -325,3 +325,106 @@ Device *DeviceManager::getDeviceByType(const String &deviceType) const
     }
     return nullptr;
 }
+bool DeviceManager::removeDevice(const String &deviceId)
+{
+    for (int i = 0; i < devicesCount; i++)
+    {
+        if (devices[i] != nullptr && devices[i]->getId() == deviceId)
+        {
+            MLOG_INFO("Removing device: %s (%s)", devices[i]->getId().c_str(), devices[i]->getType().c_str());
+            delete devices[i];
+            
+            // Shift remaining devices down
+            for (int j = i; j < devicesCount - 1; j++)
+            {
+                devices[j] = devices[j + 1];
+            }
+            devices[devicesCount - 1] = nullptr;
+            devicesCount--;
+            
+            return true;
+        }
+    }
+    
+    MLOG_WARN("Device not found for removal: %s", deviceId.c_str());
+    return false;
+}
+
+Device *DeviceManager::createDevice(const String &deviceType, const String &deviceId, JsonVariant config)
+{
+    Device *newDevice = nullptr;
+    String lowerType = deviceType;
+    lowerType.toLowerCase();
+    
+    if (lowerType == "led")
+    {
+        newDevice = new Led(deviceId);
+    }
+    else if (lowerType == "buzzer")
+    {
+        newDevice = new Buzzer(deviceId, deviceId); // Using deviceId as name too
+    }
+    else if (lowerType == "button")
+    {
+        newDevice = new Button(deviceId, deviceId);
+    }
+    else if (lowerType == "servo")
+    {
+        newDevice = new ServoDevice(deviceId, deviceId);
+    }
+    else if (lowerType == "stepper")
+    {
+        newDevice = new Stepper(deviceId, deviceId);
+    }
+    else if (lowerType == "pwmmotor")
+    {
+        newDevice = new PwmMotor(deviceId, deviceId);
+    }
+    else
+    {
+        MLOG_ERROR("Unknown device type: %s", deviceType.c_str());
+        return nullptr;
+    }
+    
+    if (newDevice != nullptr)
+    {
+        // Apply configuration if provided
+        if (config.is<JsonObject>())
+        {
+            JsonObject configObj = config.as<JsonObject>();
+            newDevice->setConfig(&configObj);
+        }
+        
+        MLOG_INFO("Created device: %s (%s)", deviceId.c_str(), deviceType.c_str());
+    }
+    
+    return newDevice;
+}
+
+bool DeviceManager::addDevice(const String &deviceType, const String &deviceId, JsonVariant config)
+{
+    if (devicesCount >= MAX_DEVICES)
+    {
+        MLOG_ERROR("Cannot add device: Maximum device limit reached (%d)", MAX_DEVICES);
+        return false;
+    }
+    
+    // Check if device with same ID already exists
+    if (getDeviceById(deviceId) != nullptr)
+    {
+        MLOG_ERROR("Cannot add device: Device with ID '%s' already exists", deviceId.c_str());
+        return false;
+    }
+    
+    Device *newDevice = createDevice(deviceType, deviceId, config);
+    if (newDevice == nullptr)
+    {
+        return false;
+    }
+    
+    devices[devicesCount] = newDevice;
+    devicesCount++;
+    
+    MLOG_INFO("Added device to array: %s (%s)", deviceId.c_str(), deviceType.c_str());
+    return true;
+}

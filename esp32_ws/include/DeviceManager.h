@@ -69,6 +69,31 @@ public:
     bool addDevice(Device *device);
 
     /**
+     * @brief Remove a device from the management system
+     * @param deviceId The ID of the device to remove
+     * @return true if device was found and removed successfully, false otherwise
+     */
+    bool removeDevice(const String &deviceId);
+
+    /**
+     * @brief Create a new device of the specified type
+     * @param deviceType The type of device to create (led, button, servo, etc.)
+     * @param deviceId The unique ID for the new device
+     * @param config Optional JSON configuration object
+     * @return Pointer to the created device, or nullptr if creation failed
+     */
+    Device *createDevice(const String &deviceType, const String &deviceId, JsonVariant config = JsonVariant());
+
+    /**
+     * @brief Create and add a new device to the management system
+     * @param deviceType The type of device to create (led, button, servo, etc.)
+     * @param deviceId The unique ID for the new device
+     * @param config Optional JSON configuration object
+     * @return true if device was created and added successfully, false otherwise
+     */
+    bool addDevice(const String &deviceType, const String &deviceId, JsonVariant config = JsonVariant());
+
+    /**
      * @brief Get all devices
      * @param deviceList Array to store pointers to devices
      * @param count Reference to store the number of devices found

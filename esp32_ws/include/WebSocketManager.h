@@ -48,6 +48,7 @@ public:
     // Network config handlers
     void handleGetNetworkConfig(JsonDocument &doc);
     void handleSetNetworkConfig(JsonDocument &doc);
+    void handleGetNetworks(JsonDocument &doc);
 };
 
 #endif

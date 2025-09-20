@@ -226,6 +226,11 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
         handleSetNetworkConfig(doc);
         return;
     }
+    if (type == "get-networks")
+    {
+        handleGetNetworks(doc);
+        return;
+    }
 }
 
 // Save config from client for a device
@@ -650,6 +655,47 @@ void WebSocketManager::handleSetNetworkConfig(JsonDocument &doc)
     String respStr;
     serializeJson(response, respStr);
     notifyClients(respStr);
+}
+
+void WebSocketManager::handleGetNetworks(JsonDocument &doc)
+{
+    JsonDocument response;
+    response["type"] = "get-networks";
+
+    MLOG_INFO("Scanning for available WiFi networks...");
+
+    // Start WiFi scan
+    int numNetworks = WiFi.scanNetworks();
+    
+    if (numNetworks == WIFI_SCAN_FAILED)
+    {
+        response["error"] = "WiFi scan failed";
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
+        return;
+    }
+
+    JsonArray networksArray = response["networks"].to<JsonArray>();
+    
+    for (int i = 0; i < numNetworks; i++)
+    {
+        JsonObject networkObj = networksArray.add<JsonObject>();
+        networkObj["ssid"] = WiFi.SSID(i);
+        networkObj["rssi"] = WiFi.RSSI(i);
+        networkObj["encryption"] = WiFi.encryptionType(i);
+        networkObj["channel"] = WiFi.channel(i);
+        networkObj["bssid"] = WiFi.BSSIDstr(i);
+        networkObj["hidden"] = WiFi.SSID(i).isEmpty();
+    }
+
+    response["count"] = numNetworks;
+    
+    String respStr;
+    serializeJson(response, respStr);
+    notifyClients(respStr);
+    
+    MLOG_INFO("Found %d WiFi networks", numNetworks);
 }
 
 void WebSocketManager::broadcastState(const String &deviceId, const String &stateJson, const String &error)

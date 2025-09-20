@@ -44,7 +44,7 @@ export function createDevicesStore({
             produce((draft) => {
               const { devices } = message;
               // Remove unknown devices
-              Object.keys(draft).forEach((key) => {
+              Object.keys(draft.devices).forEach((key) => {
                 if (!devices.find((d) => d.id === key)) {
                   delete draft.devices[key];
                 }

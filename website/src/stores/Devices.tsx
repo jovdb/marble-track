@@ -99,6 +99,30 @@ export function createDevicesStore({
         }
         break;
       }
+      case "add-device": {
+        if ("success" in message && message.success) {
+          // Device was successfully added, refresh the device list
+          sendMessage({ type: "get-devices" });
+        } else if ("error" in message) {
+          console.error("Failed to add device:", message.error);
+          alert(`Failed to add device: ${message.error}`);
+        }
+        break;
+      }
+      case "remove-device": {
+        if ("success" in message && message.success) {
+          // Device was successfully removed, update the store
+          setStore(
+            produce((draft) => {
+              delete draft.devices[message.deviceId];
+            })
+          );
+        } else if ("error" in message) {
+          console.error("Failed to remove device:", message.error);
+          alert(`Failed to remove device: ${message.error}`);
+        }
+        break;
+      }
     }
   };
 

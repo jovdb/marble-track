@@ -1,9 +1,11 @@
-import { createEffect, For } from "solid-js";
+import { createEffect, For, createSignal } from "solid-js";
 import { requestDevices } from "../hooks/useWebSocket";
 import { getDeviceIcon } from "./icons/Icons";
 import styles from "./DevicesList.module.css";
 import { useDevices } from "../stores/Devices";
 import { useWebSocket2 } from "../hooks/useWebSocket2";
+import AddDeviceModal from "./devices/AddDeviceModal";
+import { IWsSendRemoveDeviceMessage } from "../interfaces/WebSockets";
 
 // Export refresh function for use in parent components
 export const refreshDevices = () => {
@@ -12,9 +14,25 @@ export const refreshDevices = () => {
 
 export default function DevicesList() {
   const [devicesState, { loadDevices }] = useDevices();
-  const [socketState] = useWebSocket2();
+  const [socketState, { sendMessage }] = useWebSocket2();
+  const [isAddModalOpen, setIsAddModalOpen] = createSignal(false);
 
-  // const [webSocket, { sendMessage }] = useWebSocket2();
+  // Handle device removal
+  const handleRemoveDevice = (deviceId: string) => {
+    if (confirm(`Are you sure you want to remove device "${deviceId}"?`)) {
+      const message: IWsSendRemoveDeviceMessage = {
+        type: "remove-device",
+        deviceId: deviceId,
+      };
+      sendMessage(message);
+    }
+  };
+
+  // Handle device addition completion
+  const handleDeviceAdded = () => {
+    // Refresh device list after a short delay
+    setTimeout(() => loadDevices(), 500);
+  };
 
   // Download devices config handler
   /*
@@ -68,7 +86,7 @@ export default function DevicesList() {
       try {
         const text = await file.text();
         const json = JSON.parse(text);
-        //    sendMessage({ type: "set-devices-config", config: json });
+        sendMessage({ type: "set-devices-config", config: json });
         alert("Config uploaded. Please refresh devices after upload.");
       } catch {
         alert("Invalid JSON file.");
@@ -102,6 +120,7 @@ export default function DevicesList() {
                     <th class={styles["devices-list__table-th"]}></th>
                     <th class={styles["devices-list__table-th"]}>Type</th>
                     <th class={styles["devices-list__table-th"]}>ID</th>
+                    <th class={styles["devices-list__table-th"]}>Actions</th>
                   </tr>
                 </thead>
                 <tbody class={styles["devices-list__table-body"]}>
@@ -121,15 +140,20 @@ export default function DevicesList() {
                         <td class={styles["devices-list__table-td"]}>
                           <code class={styles["devices-list__device-id"]}>{device.id}</code>
                         </td>
-                        {/* <td class={styles["devices-list__table-td"]}>
-                        {device.pins && device.pins.length > 0 ? (
-                          <code class={styles["devices-list__pins-list"]}>
-                            {device.pins.join(", ")}
-                          </code>
-                        ) : (
-                          <span class={styles["devices-list__no-pins"]}>-</span>
-                        )}
-                      </td> */}
+                        <td class={styles["devices-list__table-td"]}>
+                          <button
+                            class="outline"
+                            onClick={() => handleRemoveDevice(device.id)}
+                            title={`Remove ${device.id}`}
+                            disabled={!socketState.isConnected}
+                            style={{
+                              color: "var(--color-danger-600)",
+                              "border-color": "var(--color-danger-600)",
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </td>
                       </tr>
                     )}
                   </For>
@@ -140,13 +164,22 @@ export default function DevicesList() {
         </div>
       </div>
       <div class={styles["device-list__buttons"]}>
+        <button onClick={() => setIsAddModalOpen(true)} disabled={!socketState.isConnected}>
+          + Add Device
+        </button>
         {/* <button class={styles["app__config-button"]} onClick={handleDownloadConfig}>
           Download
         </button> */}
-        <button class={styles["app__config-button"]} onClick={handleUploadConfig}>
-          Upload
+        <button class="secondary" onClick={handleUploadConfig}>
+          Upload Config
         </button>
       </div>
+
+      <AddDeviceModal
+        isOpen={isAddModalOpen()}
+        onClose={() => setIsAddModalOpen(false)}
+        onDeviceAdded={handleDeviceAdded}
+      />
     </>
   );
 }

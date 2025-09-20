@@ -78,7 +78,9 @@ export type IWsReceiveMessage =
   | IWsReceiveDeviceConfigMessage
   | IWsReceiveDeviceReadConfigMessage
   | IWsReceiveDeviceSaveConfigMessage
-  | IWsReceivePongMessage;
+  | IWsReceivePongMessage
+  | IWsReceiveAddDeviceMessage
+  | IWsReceiveRemoveDeviceMessage;
 
 export type IWsSendRestartMessage = IWsMessageBase<"restart">;
 
@@ -108,6 +110,25 @@ export type IWsSendPingMessage = IWsMessageBase<"ping"> & {
   timestamp?: number;
 };
 
+// Device management messages
+export type IWsSendAddDeviceMessage = IWsMessageBase<"add-device"> & {
+  deviceType: string;
+  deviceId: string;
+  config?: any;
+};
+
+export type IWsSendRemoveDeviceMessage = IWsMessageBase<"remove-device"> & {
+  deviceId: string;
+};
+
+export type IWsReceiveAddDeviceMessage =
+  | (IWsMessageBase<"add-device"> & { error: string })
+  | (IWsMessageBase<"add-device"> & { success: true; deviceId: string });
+
+export type IWsReceiveRemoveDeviceMessage =
+  | (IWsMessageBase<"remove-device"> & { error: string })
+  | (IWsMessageBase<"remove-device"> & { success: true; deviceId: string });
+
 export type IWsSendMessage =
   | IWsSendRestartMessage
   | IWsSendGetDevicesMessage
@@ -117,6 +138,6 @@ export type IWsSendMessage =
   | IWsSendDeviceGetStateMessage
   | IWsSendDeviceReadConfigMessage
   | IWsSendDeviceSaveConfigMessage
-  | IWsSendPingMessage;
-
-export 
+  | IWsSendPingMessage
+  | IWsSendAddDeviceMessage
+  | IWsSendRemoveDeviceMessage;

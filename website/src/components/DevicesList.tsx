@@ -24,7 +24,7 @@ export const refreshDevices = () => {
   requestDevices();
 };
 
-export default function DevicesList() {
+export function DevicesList() {
   const [devicesState, { loadDevices }] = useDevices();
   const [socketState, { sendMessage }] = useWebSocket2();
 

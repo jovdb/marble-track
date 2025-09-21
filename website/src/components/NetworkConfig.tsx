@@ -1,6 +1,6 @@
 import { type Component, createSignal, onMount, onCleanup } from "solid-js";
 import { useWebSocket2 } from "../hooks/useWebSocket2";
-import Popup from "./Popup";
+import { Popup } from "./Popup";
 import PopupHeader from "./PopupHeader";
 import PopupContent from "./PopupContent";
 import PopupFooter from "./PopupFooter";

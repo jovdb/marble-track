@@ -226,4 +226,4 @@ const WebSocketMessages: Component = () => {
   );
 };
 
-export default WebSocketMessages;
+export { WebSocketMessages };

@@ -1,9 +1,9 @@
 import { type Component, onMount, onCleanup, For } from "solid-js";
 
-import Header from "./components/Header";
-import DevicesList, { refreshDevices } from "./components/DevicesList";
-import WebSocketMessages from "./components/WebSocketMessages";
-import CollapsibleSection from "./components/CollapsibleSection";
+import { Header } from "./components/Header";
+import { DevicesList, refreshDevices } from "./components/DevicesList";
+import { WebSocketMessages } from "./components/WebSocketMessages";
+import { CollapsibleSection } from "./components/CollapsibleSection";
 import { ClipboardIcon, RadioIcon } from "./components/icons/Icons";
 import AnimatedFavicon from "./utils/animatedFavicon";
 import logo from "./assets/logo-64.png";

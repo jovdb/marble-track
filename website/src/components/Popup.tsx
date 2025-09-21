@@ -45,4 +45,4 @@ const Popup: Component<PopupProps> = (props) => {
   );
 };
 
-export default Popup;
+export { Popup };

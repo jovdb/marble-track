@@ -9,7 +9,7 @@ interface CollapsibleSectionProps {
   headerAction?: JSX.Element;
 }
 
-export default function CollapsibleSection(props: CollapsibleSectionProps) {
+export function CollapsibleSection(props: CollapsibleSectionProps) {
   const [isCollapsed, setIsCollapsed] = createSignal(props.defaultCollapsed || false);
 
   const toggleCollapse = () => {

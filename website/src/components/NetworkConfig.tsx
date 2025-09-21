@@ -1,4 +1,4 @@
-import { type Component, createSignal, onMount, onCleanup } from "solid-js";
+import { type Component, createSignal, onMount, onCleanup, createEffect } from "solid-js";
 import { useWebSocket2 } from "../hooks/useWebSocket2";
 import { Popup } from "./Popup";
 import PopupHeader from "./PopupHeader";
@@ -76,7 +76,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
   });
 
   // Load network config when popup opens
-  onMount(() => {
+  createEffect(() => {
     if (props.isOpen) {
       setNetworkInfo(null);
       setNetworkError(null);

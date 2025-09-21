@@ -62,19 +62,10 @@ export function createDeviceStore<TDeviceType extends keyof IDeviceStates>(
   };
 
   function getChildStateByType<TDeviceType extends keyof IDeviceStates>(
-    deviceType: TDeviceType
+    _deviceType: TDeviceType
   ): Accessor<IDeviceStates[TDeviceType] | undefined> {
-    const findChild: (state: IDeviceState | undefined) => IDeviceState | undefined = (state) => {
-      for (const child of state?.children || []) {
-        if (child.type === deviceType) {
-          return child;
-        }
-        const result = findChild(child);
-        if (result) return result;
-      }
-    };
-    return undefined;
-    // return createMemo(() => findChild(state));
+    // TODO: Implement child device lookup
+    return () => undefined;
   }
 
   // Listen for state updates from WebSocket
@@ -144,16 +135,18 @@ export function createDeviceStore<TDeviceType extends keyof IDeviceStates>(
   };
 }
 
-export interface IDeviceState {}
+export interface IDeviceState {
+  type?: string;
+  children?: IDeviceState[];
+}
 
 export type IDeviceConfig = object;
 
 declare global {
-  export interface IDeviceStates {
-    [key: string]: IDeviceState;
-  }
+  // These interfaces are augmented by device-specific files
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  export interface IDeviceStates {}
 
-  export interface IDeviceConfigs {
-    [key: string]: IDeviceConfig;
-  }
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  export interface IDeviceConfigs extends Record<string, any> {}
 }

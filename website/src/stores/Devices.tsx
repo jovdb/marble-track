@@ -20,16 +20,6 @@ export interface IDevice<
 export type IDevices = Record<string, IDevice>;
 export type IDevicesStore = { devices: IDevices };
 
-declare global {
-  export interface IDeviceStates {
-    [key: string]: IDeviceState;
-  }
-
-  export interface IDeviceConfigs {
-    [key: string]: IDeviceConfig;
-  }
-}
-
 export function createDevicesStore({
   sendMessage,
   subscribe,

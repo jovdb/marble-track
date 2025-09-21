@@ -5,25 +5,26 @@ import { createWheelStore, IWheelConfig } from "../../stores/Wheel";
 import { createMemo, For, onMount } from "solid-js";
 import DeviceConfig from "./DeviceConfig";
 import { IWsSendMessage } from "../../interfaces/WebSockets";
+import { useDevice } from "../../stores/Devices";
 
 // Update the import path below to the correct location of IWheelState
 
 export function WheelConfig(props: { id: string }) {
-  const { state, error, calibrate, getChildStateByType, config, saveConfig, loadConfig } =
+  const { error, calibrate, config, saveConfig, loadConfig } =
     createWheelStore(props.id);
-  const currentPosition = createMemo(() => getChildStateByType("stepper")()?.currentPosition);
+  const [stepperDevice] = useDevice(`${props.id}-stepper`);
+  const currentPosition = createMemo(() => (stepperDevice?.state as any)?.currentPosition);
 
   onMount(() => {
     loadConfig();
   });
 
   const moveSteps = (steps: number) => {
-    const stepper = state()?.children?.find((c) => c.type === "stepper");
-    if (!stepper) return;
+    // For now, assume the stepper device ID is wheelId + "-stepper"
+    const stepperDeviceId = `${props.id}-stepper`;
+
     sendMessage({
-      type: "device-fn",
-      deviceType: "stepper",
-      deviceId: stepper.id,
+      deviceId: stepperDeviceId,
       fn: "move",
       args: {
         steps,

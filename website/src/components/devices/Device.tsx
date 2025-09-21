@@ -21,7 +21,7 @@ export function Device(props: DeviceProps) {
     getDeviceConfig();
   });
 
-  const name = createMemo(() => device.config?.name || device.deviceId);
+  const name = createMemo(() => (device?.config as any)?.name || device?.id || "Unknown Device");
 
   return (
     <div class={styles.device}>
@@ -32,8 +32,8 @@ export function Device(props: DeviceProps) {
         </div>
         <div class={styles["device__header-right"]}>
           <span style={{ display: "flex", gap: "var(--spacing-2)", "align-items": "center" }}>
-            {props.deviceState?.type && (
-              <span class={styles["device__type-badge"]}>{props.deviceState?.type}</span>
+            {device?.type && (
+              <span class={styles["device__type-badge"]}>{device.type}</span>
             )}
             {/*             
             {props.deviceState?.children?.length && (

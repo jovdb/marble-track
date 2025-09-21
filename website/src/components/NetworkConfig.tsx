@@ -142,28 +142,11 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
         {isEditing() ? (
           <div>
             <div style={{ "margin-bottom": "1rem" }}>
-              <div style={{ display: "flex", "align-items": "center", "margin-bottom": "0.5rem" }}>
-                <label style={{ display: "block", "margin-right": "0.5rem" }}>
-                  <strong>SSID:</strong>
-                </label>
-                <button
-                  onClick={loadAvailableSSIDs}
-                  disabled={loadingSSIDs()}
-                  style={{
-                    padding: "0.25rem 0.5rem",
-                    "font-size": "0.8rem",
-                    border: "1px solid #ccc",
-                    "border-radius": "3px",
-                    background: "#f8f9fa",
-                    cursor: loadingSSIDs() ? "not-allowed" : "pointer"
-                  }}
-                  title="Refresh available networks"
-                >
-                  {loadingSSIDs() ? "⟳" : "🔄"}
-                </button>
-              </div>
+              <label style={{ display: "block", "margin-bottom": "0.5rem" }}>
+                <strong>SSID:</strong>
+              </label>
               {availableSSIDs().length > 0 && (
-                <div style={{ "margin-bottom": "0.5rem" }}>
+                <div style={{ "margin-bottom": "0.5rem", display: "flex", gap: "0.5rem", "align-items": "center" }}>
                   <select
                     onChange={(e) => {
                       const selectedSsid = e.currentTarget.value;
@@ -174,7 +157,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
                       e.currentTarget.value = "";
                     }}
                     style={{
-                      width: "100%",
+                      flex: 1,
                       padding: "0.5rem",
                       "border-radius": "4px",
                       border: "1px solid #ccc",
@@ -195,6 +178,22 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
                       }}
                     </For>
                   </select>
+                  <button
+                    onClick={loadAvailableSSIDs}
+                    disabled={loadingSSIDs()}
+                    style={{
+                      padding: "0.25rem 0.5rem",
+                      "font-size": "0.8rem",
+                      border: "1px solid #ccc",
+                      "border-radius": "3px",
+                      background: "#f8f9fa",
+                      cursor: loadingSSIDs() ? "not-allowed" : "pointer",
+                      "white-space": "nowrap"
+                    }}
+                    title="Refresh available networks"
+                  >
+                    {loadingSSIDs() ? "⟳" : "🔄"}
+                  </button>
                 </div>
               )}
               {loadingSSIDs() && availableSSIDs().length === 0 ? (

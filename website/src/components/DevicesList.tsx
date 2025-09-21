@@ -1,9 +1,9 @@
-import { createEffect, For, createSignal } from "solid-js";
+import { createEffect, For, createSignal, onMount, onCleanup } from "solid-js";
 import { getDeviceIcon } from "./icons/Icons";
 import styles from "./DevicesList.module.css";
 import { useDevices } from "../stores/Devices";
 import { useWebSocket2 } from "../hooks/useWebSocket2";
-import { IWsSendAddDeviceMessage, IWsSendRemoveDeviceMessage } from "../interfaces/WebSockets";
+import { IWsSendAddDeviceMessage, IWsSendRemoveDeviceMessage, IWsReceiveMessage } from "../interfaces/WebSockets";
 
 // Available device types
 const DEVICE_TYPES = [
@@ -20,21 +20,17 @@ const DEVICE_TYPES = [
 
 export function DevicesList() {
   const [devicesState, { loadDevices }] = useDevices();
-  const [socketState, { sendMessage }] = useWebSocket2();
+  const [socketState, socketActions] = useWebSocket2();
 
   // Signals for add device modal
   const [showAddModal, setShowAddModal] = createSignal(false);
   const [newDeviceType, setNewDeviceType] = createSignal("");
   const [newDeviceId, setNewDeviceId] = createSignal("");
 
-  // const [webSocket, { sendMessage }] = useWebSocket2();
-
   // Download devices config handler
-  /*
   const handleDownloadConfig = () => {
-    sendMessage({ type: "get-devices-config" });
+    socketActions.sendMessage({ type: "get-devices-config" });
   };
-*/
 
   // Add device handler
   const handleAddDevice = () => {
@@ -53,7 +49,7 @@ export function DevicesList() {
       config: {},
     };
 
-    if (sendMessage(message)) {
+    if (socketActions.sendMessage(message)) {
       setShowAddModal(false);
       setNewDeviceType("");
       setNewDeviceId("");
@@ -74,7 +70,7 @@ export function DevicesList() {
       deviceId,
     };
 
-    if (!sendMessage(message)) {
+    if (!socketActions.sendMessage(message)) {
       alert("Failed to send remove device message");
     }
   };
@@ -140,6 +136,29 @@ export function DevicesList() {
     if (socketState.isConnected) {
       loadDevices();
     }
+  });
+
+  // Subscribe to WebSocket messages for config download
+  const unsubscribe = socketActions.subscribe((message: IWsReceiveMessage) => {
+    if (message.type === "devices-config" && "config" in message) {
+      const blob = new Blob([JSON.stringify(message.config, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "config.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  });
+
+  onMount(() => {
+    onCleanup(() => {
+      unsubscribe();
+    });
   });
 
   return (
@@ -262,11 +281,11 @@ export function DevicesList() {
       )}
 
       <div class={styles["device-list__buttons"]}>
-        {/* <button class={styles["app__config-button"]} onClick={handleDownloadConfig}>
-          Download
-        </button> */}
+        <button class={styles["app__config-button"]} onClick={handleDownloadConfig}>
+          Download Config
+        </button>
         <button class={styles["app__config-button"]} onClick={handleUploadConfig}>
-          Upload
+          Upload Config
         </button>
       </div>
     </>

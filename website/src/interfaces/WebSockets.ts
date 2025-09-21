@@ -115,6 +115,10 @@ export type IWsReceiveGetNetworkStatusMessage =
       };
     });
 
+export type IWsReceiveDevicesConfigMessage =
+  | (IWsMessageBase<"devices-config"> & { error: string })
+  | (IWsMessageBase<"devices-config"> & { config: any });
+
 export type IWsReceiveMessage =
   | IWsReceiveDevicesListMessage
   | IWsReceiveDeviceStateMessage
@@ -127,6 +131,7 @@ export type IWsReceiveMessage =
   | IWsReceiveSetNetworkConfigMessage
   | IWsReceiveGetNetworksMessage
   | IWsReceiveGetNetworkStatusMessage
+  | IWsReceiveDevicesConfigMessage
   | IWsReceivePongMessage;
 
 export type IWsSendRestartMessage = IWsMessageBase<"restart">;

@@ -1,5 +1,4 @@
 import { createEffect, For, createSignal } from "solid-js";
-import { requestDevices } from "../hooks/useWebSocket";
 import { getDeviceIcon } from "./icons/Icons";
 import styles from "./DevicesList.module.css";
 import { useDevices } from "../stores/Devices";
@@ -18,11 +17,6 @@ const DEVICE_TYPES = [
   "Stepper",
   "Wheel"
 ] as const;
-
-// Export refresh function for use in parent components
-export const refreshDevices = () => {
-  requestDevices();
-};
 
 export function DevicesList() {
   const [devicesState, { loadDevices }] = useDevices();

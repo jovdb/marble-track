@@ -1,16 +1,16 @@
 import { Device } from "./Device";
 import { createSignal, onCleanup } from "solid-js";
-import { createDeviceState, sendMessage } from "../../hooks/useWebSocket";
 import styles from "./Device.module.css";
-import { IDeviceState } from "../../stores/Device";
+import { IDeviceState, IDeviceConfig } from "../../stores/Device";
 import { IWsSendMessage } from "../../interfaces/WebSockets";
+import { useDevice } from "../../stores/Devices";
 
 interface IGateState extends IDeviceState {
   gateState: "Closed" | "IsOpening" | "Opened" | "Closing";
 }
 
 export function Gate(props: { id: string }) {
-  const [deviceState, connectedState, disabled, error] = createDeviceState<IGateState>(props.id);
+  const [device, { sendMessage }] = useDevice<IGateState, IDeviceConfig>(props.id);
   const closedAngle = 0;
   const openedAngle = -110;
   const [angle, setAngle] = createSignal(closedAngle);
@@ -47,7 +47,7 @@ export function Gate(props: { id: string }) {
   });
 
   return (
-    <Device id={props.id} deviceState={deviceState()}>
+    <Device id={props.id} deviceState={device?.state}>
       <div>
         <svg viewBox="18 18 80 70">
           <g style="transform-origin: 50px 50px;" transform={`rotate(-3)`}>
@@ -103,32 +103,23 @@ export function Gate(props: { id: string }) {
           </g>
         </svg>
       </div>
-      {disabled() && (
-        <div class={styles.device__error}>
-          {error() || (connectedState() === "Disconnected" ? "Disconnected" : connectedState())}
-        </div>
-      )}
-      {!disabled() && (
-        <>
-          <div class={styles.device__status}>
-            <div
-              class={`${styles["device__status-indicator"]} ${deviceState()?.gateState === "Opened" ? styles["device__status-indicator--on"] : styles["device__status-indicator--off"]}`}
-            ></div>
-            <span class={styles["device__status-text"]}>
-              Status: {deviceState()?.gateState || "Unknown"}
-            </span>
-          </div>
-          <div class={styles.device__controls}>
-            <button
-              class={styles.device__button}
-              onClick={openGate}
-              disabled={disabled() || deviceState()?.gateState !== "Closed"}
-            >
-              Open
-            </button>
-          </div>
-        </>
-      )}
+      <div class={styles.device__status}>
+        <div
+          class={`${styles["device__status-indicator"]} ${device?.state?.gateState === "Opened" ? styles["device__status-indicator--on"] : styles["device__status-indicator--off"]}`}
+        ></div>
+        <span class={styles["device__status-text"]}>
+          Status: {device?.state?.gateState || "Unknown"}
+        </span>
+      </div>
+      <div class={styles.device__controls}>
+        <button
+          class={styles.device__button}
+          onClick={openGate}
+          disabled={!device || device?.state?.gateState !== "Closed"}
+        >
+          Open
+        </button>
+      </div>
     </Device>
   );
 }

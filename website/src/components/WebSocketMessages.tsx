@@ -1,5 +1,6 @@
 import { type Component, For, createSignal, createMemo } from "solid-js";
-import { clearMessages, lastMessages, availableDevices } from "../hooks/useWebSocket";
+import { useWebSocket2 } from "../hooks/useWebSocket2";
+import { useDevices } from "../stores/Devices";
 import { MessageIcon } from "./icons/Icons";
 import styles from "./WebSocketMessages.module.css";
 
@@ -127,6 +128,9 @@ const ExpandableMessage: Component<{ message: string }> = (props) => {
 };
 
 const WebSocketMessages: Component = () => {
+  const [devicesState] = useDevices();
+  const [wsStore, wsActions] = useWebSocket2();
+
   const [messageTypeFilter, setMessageTypeFilter] = createSignal("");
   const [deviceIdFilter, setDeviceIdFilter] = createSignal("");
 
@@ -152,7 +156,7 @@ const WebSocketMessages: Component = () => {
 
   // Filter messages based on the current filters
   const filteredMessages = createMemo(() => {
-    const messages = lastMessages().map(parseMessage);
+    const messages = wsStore.lastMessages.map(parseMessage);
     const typeFilter = messageTypeFilter().toLowerCase().trim();
     const deviceFilter = deviceIdFilter().trim();
 
@@ -165,9 +169,7 @@ const WebSocketMessages: Component = () => {
 
   // Get unique device IDs from available devices
   const deviceOptions = createMemo(() => {
-    return availableDevices()
-      .map((device) => device.id)
-      .sort();
+    return Object.keys(devicesState.devices).sort();
   });
   return (
     <div class={styles["websocket-messages"]}>
@@ -205,14 +207,14 @@ const WebSocketMessages: Component = () => {
           </div>
         </div>
 
-        <button onClick={() => clearMessages()}>Clear Messages</button>
+        <button onClick={() => wsActions.clearMessages()}>Clear Messages</button>
       </div>
 
       <div class={styles["websocket-messages__scrollable-content"]}>
         {filteredMessages().length === 0 ? (
           <div class={styles["websocket-messages__empty"]}>
             <MessageIcon class={styles["websocket-messages__empty-icon"]} />
-            {lastMessages().length === 0 ? "No messages yet" : "No messages match filters"}
+            {wsStore.lastMessages.length === 0 ? "No messages yet" : "No messages match filters"}
           </div>
         ) : (
           <div class={styles["websocket-messages__list"]}>

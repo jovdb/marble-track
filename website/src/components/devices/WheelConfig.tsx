@@ -1,6 +1,5 @@
 import styles from "./Device.module.css";
 import wheelStyles from "./WheelConfig.module.css";
-import { sendMessage } from "../../hooks/useWebSocket";
 import { createWheelStore, IWheelConfig } from "../../stores/Wheel";
 import { createMemo, For, onMount } from "solid-js";
 import DeviceConfig from "./DeviceConfig";
@@ -12,7 +11,7 @@ import { useDevice } from "../../stores/Devices";
 export function WheelConfig(props: { id: string }) {
   const { error, calibrate, config, saveConfig, loadConfig } =
     createWheelStore(props.id);
-  const [stepperDevice] = useDevice(`${props.id}-stepper`);
+  const [stepperDevice, { sendMessage }] = useDevice(`${props.id}-stepper`);
   const currentPosition = createMemo(() => (stepperDevice?.state as any)?.currentPosition);
 
   onMount(() => {

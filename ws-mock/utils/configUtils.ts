@@ -9,7 +9,9 @@ export const readConfig = (): any => {
       return JSON.parse(fs.readFileSync(configFileName, "utf-8"));
     } catch {}
   }
-  const config = getDevices();
+  // Return default config format with devices array
+  const defaultMessage = getDevices();
+  const config = { devices: defaultMessage.devices };
   saveConfig(config);
   return config;
 };

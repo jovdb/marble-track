@@ -138,15 +138,19 @@ void setup()
   // Using simplified logging macros
   MLOG_INFO("Starting Marble Track System");
 
+  // First maount so config file can be loaded
+  littleFSManager.setup();
+
   // Load network settings from configuration
   NetworkSettings networkSettings = deviceManager.loadNetworkSettings();
-  
+
   // Use default settings if none found in config
-  if (!networkSettings.isValid()) {
+  if (!networkSettings.isValid())
+  {
     MLOG_INFO("No network settings found in config, using defaults");
     networkSettings = NetworkSettings("telenet-182FE", "cPQdRWmFx1eM");
   }
-  
+
   // Create network instance with loaded settings
   network = new Network(networkSettings);
 
@@ -166,8 +170,6 @@ void setup()
 
   // Create WebsiteHost instance after network is initialized
   websiteHost = new WebsiteHost(network);
-
-  littleFSManager.setup();
 
   // Initialize WebsiteHost with the network instance
   websiteHost->setup(server);
@@ -203,23 +205,23 @@ void setup()
   //   }
   //   deviceManager.saveDevicesToJsonFile();
   // }
-/*
-  // Add development/test devices (these are not saved to JSON)
-  ServoDevice *testServo = new ServoDevice("test-servo", "SG90");
-  testServo->setPin(42);
-  testServo->setPwmChannel(1);
-  deviceManager.addDevice(testServo);
+  /*
+    // Add development/test devices (these are not saved to JSON)
+    ServoDevice *testServo = new ServoDevice("test-servo", "SG90");
+    testServo->setPin(42);
+    testServo->setPwmChannel(1);
+    deviceManager.addDevice(testServo);
 
-  PwmMotor *testPwmMotor = new PwmMotor("test-pwm-motor", "Test PWM Motor");
-  testPwmMotor->setupMotor(15, 0, 1000, 10); // pin 14, channel 0, 1kHz, 10-bit resolution
-  deviceManager.addDevice(testPwmMotor);
+    PwmMotor *testPwmMotor = new PwmMotor("test-pwm-motor", "Test PWM Motor");
+    testPwmMotor->setupMotor(15, 0, 1000, 10); // pin 14, channel 0, 1kHz, 10-bit resolution
+    deviceManager.addDevice(testPwmMotor);
 
-  Stepper *testStepper = new Stepper("test-stepper", "Test Stepper");
-  testStepper->configure2Pin(17, 18, 1000, 500);
-  testStepper->setMaxSpeed(2000);
-  // TODO: setMaxAcceleration(1000);
-  deviceManager.addDevice(testStepper);
-*/
+    Stepper *testStepper = new Stepper("test-stepper", "Test Stepper");
+    testStepper->configure2Pin(17, 18, 1000, 500);
+    testStepper->setMaxSpeed(2000);
+    // TODO: setMaxAcceleration(1000);
+    deviceManager.addDevice(testStepper);
+  */
   // Setup  Devices
   deviceManager.setup([&](const String &deviceId, const String &stateJson)
                       { wsManager.broadcastState(deviceId, stateJson, ""); });
@@ -251,7 +253,8 @@ void loop()
   littleFSManager.loop();
 
   // Process captive portal for access point mode
-  if (network) {
+  if (network)
+  {
     network->processCaptivePortal();
   }
 

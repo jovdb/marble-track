@@ -14,17 +14,17 @@
 #include "devices/Wheel.h"
 #include "devices/PwmMotor.h"
 
-static constexpr const char *DEVICES_LIST_FILE = "/devices.json";
+static constexpr const char *CONFIG_FILE = "/config.json";
 
 void DeviceManager::loadDevicesFromJsonFile()
 {
-    if (!LittleFS.exists(DEVICES_LIST_FILE))
+    if (!LittleFS.exists(CONFIG_FILE))
     {
-        MLOG_INFO("Devices JSON file not found.");
+        MLOG_INFO("File %s not found.", CONFIG_FILE);
         return;
     }
 
-    File file = LittleFS.open(DEVICES_LIST_FILE, FILE_READ);
+    File file = LittleFS.open(CONFIG_FILE, FILE_READ);
     if (file)
     {
         JsonDocument doc;
@@ -35,177 +35,229 @@ void DeviceManager::loadDevicesFromJsonFile()
         serializeJsonPretty(doc, prettyJson);
         MLOG_INFO("Loaded JSON from config file:\n%s", prettyJson.c_str());
 
-        if (!err && doc.is<JsonArray>())
+        if (!err && doc.is<JsonObject>())
         {
-            JsonArray arr = doc.as<JsonArray>();
-            // loadDevicesFromJson implementation (re-add here if needed)
-            // Clear current devices
-            for (int i = 0; i < devicesCount; i++)
+            JsonObject rootObj = doc.as<JsonObject>();
+
+            // Check if devices array exists
+            if (rootObj["devices"].is<JsonArray>())
             {
-                if (devices[i])
+                JsonArray arr = rootObj["devices"];
+                // loadDevicesFromJson implementation (re-add here if needed)
+                // Clear current devices
+                for (int i = 0; i < devicesCount; i++)
                 {
-                    delete devices[i];
-                    devices[i] = nullptr;
+                    if (devices[i])
+                    {
+                        delete devices[i];
+                        devices[i] = nullptr;
+                    }
                 }
-            }
-            devicesCount = 0;
-            for (JsonObject obj : arr)
-            {
-                String id = obj["id"] | "";
-                String name = obj["name"] | "";
-                String type = obj["type"] | "";
-
-                if (devicesCount < MAX_DEVICES)
+                devicesCount = 0;
+                for (JsonObject obj : arr)
                 {
-                    if (type == "led")
+                    String id = obj["id"] | "";
+                    String name = obj["name"] | "";
+                    String type = obj["type"] | "";
+
+                    if (devicesCount < MAX_DEVICES)
                     {
-                        Led *led = new Led(id);
-                        led->setName(name);
-
-                        // Log obj[config] as json string
-                        String configStr;
-                        serializeJson(obj["config"], configStr);
-                        MLOG_INFO("LED device config: %s", configStr.c_str());
-
-                        // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>())
+                        if (type == "led")
                         {
-                            JsonObject config = obj["config"];
-                            led->setConfig(&config);
+                            Led *led = new Led(id);
+                            led->setName(name);
+
+                            // Log obj[config] as json string
+                            String configStr;
+                            serializeJson(obj["config"], configStr);
+                            MLOG_INFO("LED device config: %s", configStr.c_str());
+
+                            // Apply configuration from JSON config property if it exists
+                            if (obj["config"].is<JsonObject>())
+                            {
+                                JsonObject config = obj["config"];
+                                led->setConfig(&config);
+                            }
+
+                            devices[devicesCount++] = led;
                         }
-
-                        devices[devicesCount++] = led;
-                    }
-                    else if (type == "buzzer")
-                    {
-                        Buzzer *buzzer = new Buzzer(id, name);
-
-                        // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>())
+                        else if (type == "buzzer")
                         {
-                            JsonObject config = obj["config"];
-                            buzzer->setConfig(&config);
+                            Buzzer *buzzer = new Buzzer(id, name);
+
+                            // Apply configuration from JSON config property if it exists
+                            if (obj["config"].is<JsonObject>())
+                            {
+                                JsonObject config = obj["config"];
+                                buzzer->setConfig(&config);
+                            }
+
+                            devices[devicesCount++] = buzzer;
                         }
-
-                        devices[devicesCount++] = buzzer;
-                    }
-                    else if (type == "button")
-                    {
-                        Button *button = new Button(id, name);
-
-                        // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>())
+                        else if (type == "button")
                         {
-                            JsonObject config = obj["config"];
-                            button->setConfig(&config);
+                            Button *button = new Button(id, name);
+
+                            // Apply configuration from JSON config property if it exists
+                            if (obj["config"].is<JsonObject>())
+                            {
+                                JsonObject config = obj["config"];
+                                button->setConfig(&config);
+                            }
+
+                            devices[devicesCount++] = button;
                         }
-
-                        devices[devicesCount++] = button;
-                    }
-                    else if (type == "servo")
-                    {
-                        ServoDevice *servo = new ServoDevice(id, name);
-
-                        // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>())
+                        else if (type == "servo")
                         {
-                            JsonObject config = obj["config"];
-                            servo->setConfig(&config);
+                            ServoDevice *servo = new ServoDevice(id, name);
+
+                            // Apply configuration from JSON config property if it exists
+                            if (obj["config"].is<JsonObject>())
+                            {
+                                JsonObject config = obj["config"];
+                                servo->setConfig(&config);
+                            }
+
+                            devices[devicesCount++] = servo;
                         }
-
-                        devices[devicesCount++] = servo;
-                    }
-                    else if (type == "stepper")
-                    {
-                        Stepper *stepper = new Stepper(id, name);
-
-                        // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>())
+                        else if (type == "stepper")
                         {
-                            JsonObject config = obj["config"];
-                            stepper->setConfig(&config);
+                            Stepper *stepper = new Stepper(id, name);
+
+                            // Apply configuration from JSON config property if it exists
+                            if (obj["config"].is<JsonObject>())
+                            {
+                                JsonObject config = obj["config"];
+                                stepper->setConfig(&config);
+                            }
+
+                            devices[devicesCount++] = stepper;
                         }
-
-                        devices[devicesCount++] = stepper;
-                    }
-                    else if (type == "pwmmotor")
-                    {
-                        PwmMotor *motor = new PwmMotor(id, name);
-
-                        // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>())
+                        else if (type == "pwmmotor")
                         {
-                            JsonObject config = obj["config"];
-                            motor->setConfig(&config);
-                        }
+                            PwmMotor *motor = new PwmMotor(id, name);
 
-                        devices[devicesCount++] = motor;
+                            // Apply configuration from JSON config property if it exists
+                            if (obj["config"].is<JsonObject>())
+                            {
+                                JsonObject config = obj["config"];
+                                motor->setConfig(&config);
+                            }
+
+                            devices[devicesCount++] = motor;
+                        }
+                        else
+                        {
+                            MLOG_WARN("Unknown device type: %s", type.c_str());
+                        }
                     }
                     else
                     {
-                        MLOG_WARN("Unknown device type: %s", type.c_str());
+                        MLOG_WARN("Maximum device limit reached, cannot load more devices");
+                        break;
                     }
                 }
-                else
-                {
-                    MLOG_WARN("Maximum device limit reached, cannot load more devices");
-                    break;
-                }
+                MLOG_INFO("Loaded devices from %s", CONFIG_FILE);
             }
-            MLOG_INFO("Loaded devices from %s", DEVICES_LIST_FILE);
+            else
+            {
+                MLOG_INFO("No devices array found in config file");
+            }
         }
         else
         {
-            MLOG_ERROR("Failed to parse devices JSON file");
+            MLOG_ERROR("Failed to parse config JSON file");
         }
     }
     else
     {
-        MLOG_ERROR("Failed to open devices JSON file for reading");
+        MLOG_ERROR("Failed to open config JSON file for reading");
     }
 }
 
 void DeviceManager::saveDevicesToJsonFile()
 {
-    File file = LittleFS.open(DEVICES_LIST_FILE, FILE_WRITE);
-    if (file)
-    {
-        JsonDocument doc;
-        JsonArray devicesArray = doc.to<JsonArray>();
-        for (int i = 0; i < devicesCount; i++)
-        {
-            if (devices[i])
-            {
-                JsonObject deviceObj = devicesArray.add<JsonObject>();
-                deviceObj["id"] = devices[i]->getId();
-                deviceObj["name"] = devices[i]->getName();
-                deviceObj["type"] = devices[i]->getType();
+    // First, read the existing configuration to preserve other properties
+    JsonDocument doc;
+    bool fileExists = LittleFS.exists(CONFIG_FILE);
 
-                // Save device configuration
-                String configStr = devices[i]->getConfig();
-                if (configStr.length() > 0)
-                {
-                    JsonDocument configDoc;
-                    DeserializationError err = deserializeJson(configDoc, configStr);
-                    if (!err && configDoc.is<JsonObject>())
-                    {
-                        deviceObj["config"] = configDoc.as<JsonObject>();
-                    }
-                }
+    if (fileExists)
+    {
+        File file = LittleFS.open(CONFIG_FILE, FILE_READ);
+        if (file)
+        {
+            DeserializationError err = deserializeJson(doc, file);
+            file.close();
+
+            if (err)
+            {
+                MLOG_ERROR("Failed to parse existing configuration file, creating new one");
+                doc.clear();
+                doc.to<JsonObject>(); // Create empty object
             }
         }
-        serializeJson(devicesArray, file);
-        file.close();
-        MLOG_INFO("Saved devices list to %s", DEVICES_LIST_FILE);
-
-        // Log the saved JSON in pretty format
-        String prettyJson;
-        serializeJsonPretty(devicesArray, prettyJson);
-        MLOG_INFO("Saved devices JSON:\n%s", prettyJson.c_str());
+        else
+        {
+            MLOG_ERROR("Failed to read existing configuration file, creating new one");
+            doc.clear();
+            doc.to<JsonObject>(); // Create empty object
+        }
     }
     else
     {
-        MLOG_ERROR("Failed to open %s for writing", DEVICES_LIST_FILE);
+        doc.to<JsonObject>(); // Create empty object
+    }
+
+    // Ensure we have a root object
+    if (!doc.is<JsonObject>())
+    {
+        doc.clear();
+        doc.to<JsonObject>();
+    }
+
+    JsonObject rootObj = doc.as<JsonObject>();
+
+    // Update the devices array
+    JsonArray devicesArray = rootObj["devices"].to<JsonArray>();
+    for (int i = 0; i < devicesCount; i++)
+    {
+        if (devices[i])
+        {
+            JsonObject deviceObj = devicesArray.add<JsonObject>();
+            deviceObj["id"] = devices[i]->getId();
+            deviceObj["name"] = devices[i]->getName();
+            deviceObj["type"] = devices[i]->getType();
+
+            // Save device configuration
+            String configStr = devices[i]->getConfig();
+            if (configStr.length() > 0)
+            {
+                JsonDocument configDoc;
+                DeserializationError err = deserializeJson(configDoc, configStr);
+                if (!err && configDoc.is<JsonObject>())
+                {
+                    deviceObj["config"] = configDoc.as<JsonObject>();
+                }
+            }
+        }
+    }
+
+    // Save back to file
+    File file = LittleFS.open(CONFIG_FILE, FILE_WRITE);
+    if (file)
+    {
+        serializeJson(doc, file);
+        file.close();
+        MLOG_INFO("Saved devices list to %s", CONFIG_FILE);
+
+        // Log the saved JSON in pretty format
+        String prettyJson;
+        serializeJsonPretty(doc, prettyJson);
+        MLOG_INFO("Saved config JSON:\n%s", prettyJson.c_str());
+    }
+    else
+    {
+        MLOG_ERROR("Failed to open %s for writing", CONFIG_FILE);
     }
 }
 
@@ -213,13 +265,13 @@ NetworkSettings DeviceManager::loadNetworkSettings()
 {
     NetworkSettings settings;
 
-    if (!LittleFS.exists(DEVICES_LIST_FILE))
+    if (!LittleFS.exists(CONFIG_FILE))
     {
         MLOG_INFO("Configuration file not found, returning default network settings");
         return settings;
     }
 
-    File file = LittleFS.open(DEVICES_LIST_FILE, FILE_READ);
+    File file = LittleFS.open(CONFIG_FILE, FILE_READ);
     if (file)
     {
         JsonDocument doc;
@@ -261,11 +313,11 @@ bool DeviceManager::saveNetworkSettings(const NetworkSettings &settings)
 {
     // First, read the existing configuration
     JsonDocument doc;
-    bool fileExists = LittleFS.exists(DEVICES_LIST_FILE);
+    bool fileExists = LittleFS.exists(CONFIG_FILE);
 
     if (fileExists)
     {
-        File file = LittleFS.open(DEVICES_LIST_FILE, FILE_READ);
+        File file = LittleFS.open(CONFIG_FILE, FILE_READ);
         if (file)
         {
             DeserializationError err = deserializeJson(doc, file);
@@ -305,7 +357,7 @@ bool DeviceManager::saveNetworkSettings(const NetworkSettings &settings)
     networkObj["password"] = settings.password;
 
     // Save back to file
-    File file = LittleFS.open(DEVICES_LIST_FILE, FILE_WRITE);
+    File file = LittleFS.open(CONFIG_FILE, FILE_WRITE);
     if (file)
     {
         serializeJson(doc, file);

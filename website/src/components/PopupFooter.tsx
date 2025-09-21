@@ -23,11 +23,7 @@ interface PopupFooterProps {
  * ```
  */
 const PopupFooter: Component<PopupFooterProps> = (props) => {
-  return (
-    <div class={`${styles.popup__footer} ${props.class || ""}`}>
-      {props.children}
-    </div>
-  );
+  return <div class={`${styles.popup__footer} ${props.class || ""}`}>{props.children}</div>;
 };
 
 export default PopupFooter;

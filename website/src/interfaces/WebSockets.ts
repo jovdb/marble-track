@@ -90,8 +90,8 @@ export type IWsReceiveSetNetworkConfigMessage =
 
 export type IWsReceiveGetNetworksMessage =
   | (IWsMessageBase<"get-networks"> & { error: string })
-  | (IWsMessageBase<"get-networks"> & { 
-      count: number; 
+  | (IWsMessageBase<"get-networks"> & {
+      count: number;
       networks: Array<{
         ssid: string;
         rssi: number;

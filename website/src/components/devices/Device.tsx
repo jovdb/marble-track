@@ -31,9 +31,7 @@ export function Device(props: DeviceProps) {
         </div>
         <div class={styles["device__header-right"]}>
           <span style={{ display: "flex", gap: "var(--spacing-2)", "align-items": "center" }}>
-            {device?.type && (
-              <span class={styles["device__type-badge"]}>{device.type}</span>
-            )}
+            {device?.type && <span class={styles["device__type-badge"]}>{device.type}</span>}
             {/*             
             {props.deviceState?.children?.length && (
               <button
@@ -84,7 +82,7 @@ export function Device(props: DeviceProps) {
       </div>
       <div class={styles.device__content}>
         {!showChildren() && !showConfig() && props.children}
-      
+
         {/* {showChildren() && props.deviceState?.children?.length && (
           <div class={styles.device__children}>
             <For each={props.deviceState.children}>

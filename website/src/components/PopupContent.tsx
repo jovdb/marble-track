@@ -23,11 +23,7 @@ interface PopupContentProps {
  * ```
  */
 const PopupContent: Component<PopupContentProps> = (props) => {
-  return (
-    <div class={`${styles.popup__body} ${props.class || ""}`}>
-      {props.children}
-    </div>
-  );
+  return <div class={`${styles.popup__body} ${props.class || ""}`}>{props.children}</div>;
 };
 
 export default PopupContent;

@@ -4,10 +4,12 @@ import { getWebSocketContextValue, initializeWebSocket } from "./useWebSocket2";
 import type { IWebSocketStore, IWebSocketActions } from "./useWebSocket2";
 
 // WebSocket Context type
-type WebSocketContextType = {
-  store: IWebSocketStore;
-  actions: IWebSocketActions;
-} | undefined;
+type WebSocketContextType =
+  | {
+      store: IWebSocketStore;
+      actions: IWebSocketActions;
+    }
+  | undefined;
 
 // Create WebSocket Context (re-export for external use)
 export const WebSocketContext = createContext<WebSocketContextType>(undefined);
@@ -15,7 +17,7 @@ export const WebSocketContext = createContext<WebSocketContextType>(undefined);
 /**
  * WebSocket Provider Component
  * Creates a single WebSocket instance that can be shared across components
- * 
+ *
  * @example
  * ```tsx
  * function App() {
@@ -31,13 +33,11 @@ export const WebSocketContext = createContext<WebSocketContextType>(undefined);
 export const WebSocketProvider: ParentComponent<{ url?: string }> = (props) => {
   // Initialize WebSocket on first render
   initializeWebSocket(props.url);
-  
+
   // Get the initialized context value
   const contextValue = getWebSocketContextValue();
-  
+
   return (
-    <WebSocketContext.Provider value={contextValue}>
-      {props.children}
-    </WebSocketContext.Provider>
+    <WebSocketContext.Provider value={contextValue}>{props.children}</WebSocketContext.Provider>
   );
 };

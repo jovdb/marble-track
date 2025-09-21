@@ -8,14 +8,14 @@ import { IWsSendAddDeviceMessage, IWsSendRemoveDeviceMessage } from "../interfac
 // Available device types
 const DEVICE_TYPES = [
   "Button",
-  "Buzzer", 
+  "Buzzer",
   "DividerWheel",
   "GateWithSensor",
   "Led",
   "PwmMotor",
   "Servo",
   "Stepper",
-  "Wheel"
+  "Wheel",
 ] as const;
 
 export function DevicesList() {
@@ -40,7 +40,7 @@ export function DevicesList() {
   const handleAddDevice = () => {
     const deviceType = newDeviceType();
     const deviceId = newDeviceId().trim();
-    
+
     if (!deviceType || !deviceId) {
       alert("Please select a device type and enter a device ID");
       return;
@@ -50,7 +50,7 @@ export function DevicesList() {
       type: "add-device",
       deviceType,
       deviceId,
-      config: {}
+      config: {},
     };
 
     if (sendMessage(message)) {
@@ -71,7 +71,7 @@ export function DevicesList() {
 
     const message: IWsSendRemoveDeviceMessage = {
       type: "remove-device",
-      deviceId
+      deviceId,
     };
 
     if (!sendMessage(message)) {
@@ -179,7 +179,7 @@ export function DevicesList() {
                           <code class={styles["devices-list__device-id"]}>{device.id}</code>
                         </td>
                         <td class={styles["devices-list__table-td"]}>
-                          <button 
+                          <button
                             class={styles["devices-list__remove-button"]}
                             onClick={() => handleRemoveDevice(device.id)}
                             title="Remove device"
@@ -208,10 +208,7 @@ export function DevicesList() {
 
       {/* Add Device Button */}
       <div class={styles["device-list__actions"]}>
-        <button 
-          class={styles["app__config-button"]}
-          onClick={() => setShowAddModal(true)}
-        >
+        <button class={styles["app__config-button"]} onClick={() => setShowAddModal(true)}>
           Add Device
         </button>
       </div>
@@ -221,19 +218,17 @@ export function DevicesList() {
         <div class={styles["modal-overlay"]} onClick={() => setShowAddModal(false)}>
           <div class={styles["modal-content"]} onClick={(e) => e.stopPropagation()}>
             <h3>Add New Device</h3>
-            
+
             <div class={styles["modal-field"]}>
               <label for="device-type">Device Type:</label>
-              <select 
+              <select
                 id="device-type"
                 value={newDeviceType()}
                 onChange={(e) => setNewDeviceType(e.target.value)}
                 class={styles["modal-select"]}
               >
                 <option value="">Select a device type...</option>
-                <For each={DEVICE_TYPES}>
-                  {(type) => <option value={type}>{type}</option>}
-                </For>
+                <For each={DEVICE_TYPES}>{(type) => <option value={type}>{type}</option>}</For>
               </select>
             </div>
 
@@ -250,13 +245,10 @@ export function DevicesList() {
             </div>
 
             <div class={styles["modal-buttons"]}>
-              <button 
-                class={styles["modal-button"]}
-                onClick={() => setShowAddModal(false)}
-              >
+              <button class={styles["modal-button"]} onClick={() => setShowAddModal(false)}>
                 Cancel
               </button>
-              <button 
+              <button
                 class={styles["modal-button modal-button--primary"]}
                 onClick={handleAddDevice}
               >

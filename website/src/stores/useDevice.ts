@@ -39,4 +39,3 @@ export function useDevice<TState, TConfig>(deviceId: string) {
   dynamicStores[deviceId] = [store, actions];
   return [store, actions] as const;
 }
-

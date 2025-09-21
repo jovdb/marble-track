@@ -93,10 +93,7 @@ const Header: Component = () => {
         </div>
       </header>
 
-      <NetworkConfig
-        isOpen={isNetworkPopupOpen()}
-        onClose={() => setIsNetworkPopupOpen(false)}
-      />
+      <NetworkConfig isOpen={isNetworkPopupOpen()} onClose={() => setIsNetworkPopupOpen(false)} />
     </>
   );
 };

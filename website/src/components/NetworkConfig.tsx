@@ -13,20 +13,24 @@ interface NetworkConfigProps {
 
 export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
   const [, { sendMessage, subscribe }] = useWebSocket2();
-  const [networkInfo, setNetworkInfo] = createSignal<{ ssid: string; password: string } | null>(null);
+  const [networkInfo, setNetworkInfo] = createSignal<{ ssid: string; password: string } | null>(
+    null
+  );
   const [networkError, setNetworkError] = createSignal<string | null>(null);
   const [isEditing, setIsEditing] = createSignal(false);
   const [editSsid, setEditSsid] = createSignal("");
   const [editPassword, setEditPassword] = createSignal("");
   const [availableSSIDs, setAvailableSSIDs] = createSignal<string[]>([]);
-  const [availableNetworks, setAvailableNetworks] = createSignal<Array<{
-    ssid: string;
-    rssi: number;
-    encryption: number;
-    channel: number;
-    bssid: string;
-    hidden: boolean;
-  }>>([]);
+  const [availableNetworks, setAvailableNetworks] = createSignal<
+    Array<{
+      ssid: string;
+      rssi: number;
+      encryption: number;
+      channel: number;
+      bssid: string;
+      hidden: boolean;
+    }>
+  >([]);
   const [loadingSSIDs, setLoadingSSIDs] = createSignal(false);
 
   // Computed signal for sorted networks (best signal first)
@@ -107,7 +111,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
         } else {
           // Store full network objects and extract SSIDs for backward compatibility
           setAvailableNetworks(message.networks);
-          const ssids = message.networks.map(network => network.ssid);
+          const ssids = message.networks.map((network) => network.ssid);
           setAvailableSSIDs(ssids);
         }
       }
@@ -146,7 +150,14 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
                 <strong>SSID:</strong>
               </label>
               {availableSSIDs().length > 0 && (
-                <div style={{ "margin-bottom": "0.5rem", display: "flex", gap: "0.5rem", "align-items": "center" }}>
+                <div
+                  style={{
+                    "margin-bottom": "0.5rem",
+                    display: "flex",
+                    gap: "0.5rem",
+                    "align-items": "center",
+                  }}
+                >
                   <select
                     onChange={(e) => {
                       const selectedSsid = e.currentTarget.value;
@@ -162,7 +173,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
                       "border-radius": "4px",
                       border: "1px solid #ccc",
                       "font-size": "0.9rem",
-                      "background-color": "#f8f9fa"
+                      "background-color": "#f8f9fa",
                     }}
                   >
                     <option value="">Select a network to autofill...</option>
@@ -188,7 +199,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
                       "border-radius": "3px",
                       background: "#f8f9fa",
                       cursor: loadingSSIDs() ? "not-allowed" : "pointer",
-                      "white-space": "nowrap"
+                      "white-space": "nowrap",
                     }}
                     title="Refresh available networks"
                   >
@@ -197,16 +208,18 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
                 </div>
               )}
               {loadingSSIDs() && availableSSIDs().length === 0 ? (
-                <div style={{
-                  width: "100%",
-                  padding: "0.5rem",
-                  "border-radius": "4px",
-                  border: "1px solid #ccc",
-                  "background-color": "#f8f9fa",
-                  "text-align": "center",
-                  color: "#666",
-                  "margin-bottom": "0.5rem"
-                }}>
+                <div
+                  style={{
+                    width: "100%",
+                    padding: "0.5rem",
+                    "border-radius": "4px",
+                    border: "1px solid #ccc",
+                    "background-color": "#f8f9fa",
+                    "text-align": "center",
+                    color: "#666",
+                    "margin-bottom": "0.5rem",
+                  }}
+                >
                   🔄 Scanning for networks...
                 </div>
               ) : null}
@@ -220,7 +233,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
                   padding: "0.5rem",
                   "border-radius": "4px",
                   border: "1px solid #ccc",
-                  "font-size": "1rem"
+                  "font-size": "1rem",
                 }}
               />
             </div>
@@ -238,7 +251,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
                   padding: "0.5rem",
                   "border-radius": "4px",
                   border: "1px solid #ccc",
-                  "font-size": "1rem"
+                  "font-size": "1rem",
                 }}
               />
             </div>
@@ -249,8 +262,12 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
           </div>
         ) : networkInfo() ? (
           <div>
-            <p><strong>SSID:</strong> {networkInfo()?.ssid}</p>
-            <p><strong>Password:</strong> {networkInfo()?.password ? "••••••••" : "Not set"}</p>
+            <p>
+              <strong>SSID:</strong> {networkInfo()?.ssid}
+            </p>
+            <p>
+              <strong>Password:</strong> {networkInfo()?.password ? "••••••••" : "Not set"}
+            </p>
           </div>
         ) : (
           <div>
@@ -271,13 +288,8 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
           </>
         ) : (
           <>
-            <button onClick={handleConfigure}>
-              Configure
-            </button>
-            <button
-              onClick={props.onClose}
-              style={{ "margin-left": "0.5rem" }}
-            >
+            <button onClick={handleConfigure}>Configure</button>
+            <button onClick={props.onClose} style={{ "margin-left": "0.5rem" }}>
               Close
             </button>
           </>

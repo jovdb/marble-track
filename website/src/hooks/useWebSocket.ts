@@ -16,7 +16,7 @@ export const [availableDevices, setAvailableDevices] = createSignal<DeviceInfo[]
 export const [devicesLoaded, setDevicesLoaded] = createSignal(false);
 export const [devicesLoading, setDevicesLoading] = createSignal(false);
 
-const url = (import.meta.env.VITE_MARBLE_WS || `ws://${window.location.hostname}/ws`);
+const url = import.meta.env.VITE_MARBLE_WS || `ws://${window.location.hostname}/ws`;
 
 // console.log("Connecting to WebSocket:", url);
 // const websocket = makeHeartbeatWS(makeReconnectingWS(url), {
@@ -52,7 +52,7 @@ websocket.addEventListener("error", (e) => {
 });
 */
 websocket.addEventListener("message", (e) => {
- //  console.log("WebSocket message received:", JSON.parse(e.data));
+  //  console.log("WebSocket message received:", JSON.parse(e.data));
 
   const data = e.data;
   setLastMessage(data);
@@ -68,7 +68,7 @@ websocket.addEventListener("message", (e) => {
     const parsedData = JSON.parse(data);
     if (parsedData.type === "devices-list") {
       if (parsedData.error) {
-       // console.error("Error getting devices:", parsedData.error);
+        // console.error("Error getting devices:", parsedData.error);
         setDevicesLoading(false);
         return;
       }
@@ -78,7 +78,7 @@ websocket.addEventListener("message", (e) => {
       setDevicesLoaded(true);
       setDevicesLoading(false);
 
-     //  console.log(`Loaded ${devices.length} devices:`, devices.map((d) => d.id).join(", "));
+      //  console.log(`Loaded ${devices.length} devices:`, devices.map((d) => d.id).join(", "));
     }
   } catch (error) {
     // Ignore non-JSON messages or other parsing errors
@@ -104,10 +104,10 @@ export const sendMessage = (message: IWsSendMessage): boolean => {
 export const requestDevices = (): boolean => {
   if (sendMessage({ type: "get-devices" })) {
     setDevicesLoading(true);
-   //  console.log("Requested device list from server");
+    //  console.log("Requested device list from server");
     return true;
   } else {
-   // console.error("Failed to request device list - WebSocket not connected");
+    // console.error("Failed to request device list - WebSocket not connected");
     return false;
   }
 };

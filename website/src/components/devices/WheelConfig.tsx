@@ -9,8 +9,7 @@ import { useDevice } from "../../stores/Devices";
 // Update the import path below to the correct location of IWheelState
 
 export function WheelConfig(props: { id: string }) {
-  const { error, calibrate, config, saveConfig, loadConfig } =
-    createWheelStore(props.id);
+  const { error, calibrate, config, saveConfig, loadConfig } = createWheelStore(props.id);
   const [stepperDevice, { sendMessage }] = useDevice(`${props.id}-stepper`);
   const currentPosition = createMemo(() => (stepperDevice?.state as any)?.currentPosition);
 

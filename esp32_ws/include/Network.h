@@ -15,6 +15,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <DNSServer.h>
+#include <ArduinoJson.h>
 #include "Config.h"
 #include "NetworkSettings.h"
 
@@ -106,8 +107,8 @@ public:
 
 private:
     // WiFi credentials
-    const char *_wifi_ssid;
-    const char *_wifi_password;
+    String _wifi_ssid;
+    String _wifi_password;
 
     // Current network state
     NetworkMode _currentMode;

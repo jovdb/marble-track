@@ -2,6 +2,7 @@
 #include <LittleFS.h>
 #include "WebSocketManager.h"
 #include "DeviceManager.h"
+#include "Network.h"
 #include "NetworkSettings.h"
 #include "TimeManager.h"
 
@@ -231,6 +232,11 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
         handleGetNetworks(doc);
         return;
     }
+    if (type == "get-network-status")
+    {
+        handleGetNetworkStatus(doc);
+        return;
+    }
 }
 
 // Save config from client for a device
@@ -344,8 +350,8 @@ void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
     }
 }
 
-WebSocketManager::WebSocketManager(DeviceManager *deviceManager, const char *path)
-    : ws(path), deviceManager(deviceManager)
+WebSocketManager::WebSocketManager(DeviceManager *deviceManager, Network *network, const char *path)
+    : ws(path), deviceManager(deviceManager), network(network)
 {
     instance = this;
 }
@@ -383,6 +389,11 @@ void WebSocketManager::notifyClients(String state)
 void WebSocketManager::setDeviceManager(DeviceManager *deviceManager)
 {
     this->deviceManager = deviceManager;
+}
+
+void WebSocketManager::setNetwork(Network *network)
+{
+    this->network = network;
 }
 
 void WebSocketManager::handleRestart()
@@ -700,6 +711,41 @@ void WebSocketManager::handleGetNetworks(JsonDocument &doc)
     notifyClients(respStr);
     
     MLOG_INFO("Found %d WiFi networks", numNetworks);
+}
+
+void WebSocketManager::handleGetNetworkStatus(JsonDocument &doc)
+{
+    JsonDocument response;
+    response["type"] = "get-network-status";
+
+    if (!network)
+    {
+        response["error"] = "Network not available";
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
+        return;
+    }
+
+    String statusJson = network->getStatusJSON();
+
+    // Parse the status JSON and add it to the response
+    JsonDocument statusDoc;
+    if (deserializeJson(statusDoc, statusJson) == DeserializationError::Ok)
+    {
+        response["status"] = statusDoc.as<JsonObject>();
+    }
+    else
+    {
+        response["error"] = "Failed to parse network status";
+    }
+
+    String respStr;
+    serializeJson(response, respStr);
+
+    notifyClients(respStr);
+    
+    MLOG_INFO("Sent network status to client");
 }
 
 void WebSocketManager::broadcastState(const String &deviceId, const String &stateJson, const String &error)

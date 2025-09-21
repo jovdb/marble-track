@@ -10,7 +10,7 @@ Network::Network(const char *wifi_ssid, const char *wifi_password)
 }
 
 Network::Network(const NetworkSettings& settings)
-    : _wifi_ssid(settings.ssid.c_str()), _wifi_password(settings.password.c_str()), _currentMode(NetworkMode::DISCONNECTED), _dnsServer(nullptr)
+    : _wifi_ssid(settings.ssid), _wifi_password(settings.password), _currentMode(NetworkMode::DISCONNECTED), _dnsServer(nullptr)
 {
 }
 
@@ -91,10 +91,10 @@ bool Network::setup()
 
 bool Network::connectToWiFi()
 {
-    MLOG_INFO("Connect to WiFi network '%s' ..", _wifi_ssid);
+    MLOG_INFO("Connect to WiFi network '%s' ..", _wifi_ssid.c_str());
 
     WiFi.mode(WIFI_STA);
-    WiFi.begin(_wifi_ssid, _wifi_password);
+    WiFi.begin(_wifi_ssid.c_str(), _wifi_password.c_str());
 
     unsigned long startTime = millis();
 
@@ -185,41 +185,40 @@ IPAddress Network::getIPAddress() const
 
 String Network::getStatusJSON() const
 {
-    String json = "{";
+    JsonDocument doc;
 
     // Mode information
     switch (_currentMode)
     {
     case NetworkMode::WIFI_CLIENT:
-        json += "\"mode\":\"client\",";
-        json += "\"connected\":true,";
-        json += "\"ssid\":\"" + String(_wifi_ssid) + "\",";
-        json += "\"ip\":\"" + WiFi.localIP().toString() + "\",";
-        json += "\"rssi\":" + String(WiFi.RSSI());
+        doc["mode"] = "client";
+        doc["connected"] = true;
+        doc["ssid"] = _wifi_ssid;
+        doc["ip"] = WiFi.localIP().toString();
+        doc["rssi"] = WiFi.RSSI();
         break;
 
     case NetworkMode::ACCESS_POINT:
-        json += "\"mode\":\"ap\",";
-        json += "\"connected\":true,";
-        json += "\"ssid\":\"" + String(AP_SSID) + "\",";
-        json += "\"ip\":\"" + WiFi.softAPIP().toString() + "\",";
-        json += "\"clients\":" + String(WiFi.softAPgetStationNum());
+        doc["mode"] = "ap";
+        doc["connected"] = true;
+        doc["ssid"] = AP_SSID;
+        doc["ip"] = WiFi.softAPIP().toString();
+        doc["clients"] = WiFi.softAPgetStationNum();
         break;
 
     case NetworkMode::DISCONNECTED:
     default:
-        json += "\"mode\":\"disconnected\",";
-        json += "\"connected\":false,";
-        json += "\"ssid\":\"\",";
-        json += "\"ip\":\"0.0.0.0\"";
+        doc["mode"] = "disconnected";
+        doc["connected"] = false;
+        doc["ssid"] = "";
+        doc["ip"] = "0.0.0.0";
         break;
     }
 
-    json += "}";
+    String json;
+    serializeJson(doc, json);
     return json;
-}
-
-void Network::processCaptivePortal()
+}void Network::processCaptivePortal()
 {
     if (_currentMode == NetworkMode::ACCESS_POINT && _dnsServer != nullptr)
     {

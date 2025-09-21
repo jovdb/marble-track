@@ -48,7 +48,7 @@ LittleFSManager littleFSManager;
 // WebsiteHost websiteHost(&network);
 WebsiteHost *websiteHost = nullptr; // Will be created after network initialization
 DeviceManager deviceManager;
-WebSocketManager wsManager(&deviceManager, "/ws");
+WebSocketManager wsManager(&deviceManager, nullptr, "/ws");
 
 // Device instances
 // ...existing code...
@@ -175,6 +175,7 @@ void setup()
   // Setup WebSocket with message handler
   wsManager.setup(server);
   wsManager.setDeviceManager(&deviceManager);
+  wsManager.setNetwork(network);
 
   // Start server
   server.begin();

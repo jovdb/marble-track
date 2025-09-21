@@ -102,6 +102,19 @@ export type IWsReceiveGetNetworksMessage =
       }>;
     });
 
+export type IWsReceiveGetNetworkStatusMessage =
+  | (IWsMessageBase<"get-network-status"> & { error: string })
+  | (IWsMessageBase<"get-network-status"> & {
+      status: {
+        mode: string;
+        connected: boolean;
+        ssid: string;
+        ip: string;
+        rssi?: number;
+        clients?: number;
+      };
+    });
+
 export type IWsReceiveMessage =
   | IWsReceiveDevicesListMessage
   | IWsReceiveDeviceStateMessage
@@ -113,6 +126,7 @@ export type IWsReceiveMessage =
   | IWsReceiveGetNetworkConfigMessage
   | IWsReceiveSetNetworkConfigMessage
   | IWsReceiveGetNetworksMessage
+  | IWsReceiveGetNetworkStatusMessage
   | IWsReceivePongMessage;
 
 export type IWsSendRestartMessage = IWsMessageBase<"restart">;
@@ -162,6 +176,8 @@ export type IWsSendSetNetworkConfigMessage = IWsMessageBase<"set-network-config"
   password: string;
 };
 
+export type IWsSendGetNetworkStatusMessage = IWsMessageBase<"get-network-status">;
+
 export type IWsSendMessage =
   | IWsSendRestartMessage
   | IWsSendGetDevicesMessage
@@ -176,4 +192,5 @@ export type IWsSendMessage =
   | IWsSendGetNetworkConfigMessage
   | IWsSendSetNetworkConfigMessage
   | IWsSendGetNetworksMessage
+  | IWsSendGetNetworkStatusMessage
   | IWsSendPingMessage;

@@ -16,6 +16,14 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
   const [networkInfo, setNetworkInfo] = createSignal<{ ssid: string; password: string } | null>(
     null
   );
+  const [networkStatus, setNetworkStatus] = createSignal<{
+    mode: string;
+    connected: boolean;
+    ssid: string;
+    ip: string;
+    rssi?: number;
+    clients?: number;
+  } | null>(null);
   const [networkError, setNetworkError] = createSignal<string | null>(null);
   const [isEditing, setIsEditing] = createSignal(false);
   const [editSsid, setEditSsid] = createSignal("");
@@ -114,6 +122,12 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
           const ssids = message.networks.map((network) => network.ssid);
           setAvailableSSIDs(ssids);
         }
+      } else if (message.type === "get-network-status") {
+        if ("error" in message) {
+          console.warn("Failed to load network status:", message.error);
+        } else {
+          setNetworkStatus(message.status);
+        }
       }
     });
 
@@ -126,9 +140,11 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
   createEffect(() => {
     if (props.isOpen) {
       setNetworkInfo(null);
+      setNetworkStatus(null);
       setNetworkError(null);
       setIsEditing(false);
       sendMessage({ type: "get-network-config" });
+      sendMessage({ type: "get-network-status" });
     }
   });
 
@@ -143,6 +159,61 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
         </button>
       </PopupHeader>
       <PopupContent>
+        {/* Network Status Section - only show when not editing */}
+        {!isEditing() && (
+          <div
+            style={{
+              "margin-bottom": "1rem",
+              padding: "1rem",
+              "background-color": "#f8f9fa",
+              "border-radius": "4px",
+            }}
+          >
+            <h3 style={{ margin: "0 0 0.5rem 0", "font-size": "1.1rem" }}>Network Status</h3>
+            {networkStatus() ? (
+              <div>
+                <p
+                  style={{
+                    margin: "0.25rem 0",
+                    "font-weight": networkStatus()?.connected ? "normal" : "bold",
+                  }}
+                >
+                  <strong>Mode:</strong>{" "}
+                  {networkStatus()?.mode === "client"
+                    ? "WiFi Client"
+                    : networkStatus()?.mode === "ap"
+                      ? "Access Point"
+                      : "Disconnected"}
+                </p>
+                {networkStatus()?.connected && (
+                  <>
+                    <p style={{ margin: "0.25rem 0" }}>
+                      <strong>Network:</strong> {networkStatus()?.ssid}
+                    </p>
+                    <p style={{ margin: "0.25rem 0" }}>
+                      <strong>IP Address:</strong> {networkStatus()?.ip}
+                    </p>
+                    {networkStatus()?.rssi !== undefined && (
+                      <p style={{ margin: "0.25rem 0" }}>
+                        <strong>Signal Strength:</strong> {networkStatus()?.rssi} dBm
+                      </p>
+                    )}
+                    {networkStatus()?.clients !== undefined && (
+                      <p style={{ margin: "0.25rem 0" }}>
+                        <strong>Connected Clients:</strong> {networkStatus()?.clients}
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            ) : (
+              <p style={{ margin: "0", "font-style": "italic", color: "#666" }}>
+                Loading network status...
+              </p>
+            )}
+          </div>
+        )}
+
         {isEditing() ? (
           <div>
             <div style={{ "margin-bottom": "1rem" }}>
@@ -176,7 +247,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
                       "background-color": "#f8f9fa",
                     }}
                   >
-                    <option value="">Select a network to autofill...</option>
+                    <option value="">Select a network to use...</option>
                     <For each={sortedNetworks()}>
                       {(network) => {
                         const signal = getSignalStrength(network.rssi);
@@ -228,6 +299,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
                 value={editSsid()}
                 onInput={(e) => setEditSsid(e.currentTarget.value)}
                 placeholder="Enter WiFi network name"
+                autocomplete="off"
                 style={{
                   width: "100%",
                   padding: "0.5rem",
@@ -245,7 +317,8 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
                 type="password"
                 value={editPassword()}
                 onInput={(e) => setEditPassword(e.currentTarget.value)}
-                placeholder="Enter WiFi password (optional)"
+                placeholder="Enter WiFi password"
+                autocomplete="new-password"
                 style={{
                   width: "100%",
                   padding: "0.5rem",

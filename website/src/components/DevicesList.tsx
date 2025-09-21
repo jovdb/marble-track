@@ -158,7 +158,6 @@ export function DevicesList() {
                     <th class={styles["devices-list__table-th"]}></th>
                     <th class={styles["devices-list__table-th"]}>Type</th>
                     <th class={styles["devices-list__table-th"]}>ID</th>
-                    <th class={styles["devices-list__table-th"]}>Actions</th>
                   </tr>
                 </thead>
                 <tbody class={styles["devices-list__table-body"]}>
@@ -178,7 +177,7 @@ export function DevicesList() {
                         <td class={styles["devices-list__table-td"]}>
                           <code class={styles["devices-list__device-id"]}>{device.id}</code>
                         </td>
-                        <td class={styles["devices-list__table-td"]}>
+                        <td class={styles["devices-list__table-td"]} style={{ "text-align": "right" }}>
                           <button
                             class={styles["devices-list__remove-button"]}
                             onClick={() => handleRemoveDevice(device.id)}

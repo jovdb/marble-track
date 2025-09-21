@@ -11,6 +11,9 @@ export interface IWebSocketStore {
   connectionStateName: string;
   isConnected: boolean;
 
+  // Connection details
+  url: string;
+
   // Messages
   lastMessage: string | null;
   lastMessages: string[];
@@ -190,6 +193,9 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
       readyState: websocket.readyState,
       connectionStateName: wsStates[websocket.readyState] || "Disconnected",
       isConnected: false,
+
+      // Connection details
+      url: wsUrl,
 
       // Messages
       lastMessage: null,

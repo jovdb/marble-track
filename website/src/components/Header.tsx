@@ -2,7 +2,7 @@ import { type Component, createSignal } from "solid-js";
 import styles from "./Header.module.css";
 import logo from "../assets/logo-64.png";
 import { useWebSocket2 } from "../hooks/useWebSocket2";
-import { ConnectedIcon, DisconnectedIcon, RestartIcon } from "./icons/Icons";
+import { ConnectedIcon, DisconnectedIcon, RestartIcon, WifiConnectedIcon } from "./icons/Icons";
 import { TransparentButton } from "./TransparentButton";
 import { NetworkConfig } from "./NetworkConfig";
 
@@ -75,18 +75,23 @@ const Header: Component = () => {
           <h1 class={styles.header__title}>Marble Manager</h1>
         </div>
         <div class={styles.header__right}>
-          {webSocket.isConnected ? <ConnectedIcon /> : <DisconnectedIcon />}
+          <span title={`Connected to ${webSocket.url}`} class={styles.header__button}>
+            {webSocket.isConnected ? <ConnectedIcon /> : <DisconnectedIcon />}
+          </span>
           <TransparentButton
             disabled={!webSocket.isConnected}
-            title="Show network info"
+            title="Wifi connection"
             onClick={handleNetworkClick}
+            class={styles.header__button}
           >
-            <NetworkIcon />
+            <WifiConnectedIcon />
           </TransparentButton>
+
           <TransparentButton
             disabled={!webSocket.isConnected}
             title="Restart device"
             onClick={handleReset}
+            class={styles.header__button}
           >
             <RestartIcon />
           </TransparentButton>

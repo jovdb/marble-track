@@ -265,9 +265,6 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
             <p>
               <strong>SSID:</strong> {networkInfo()?.ssid}
             </p>
-            <p>
-              <strong>Password:</strong> {networkInfo()?.password ? "••••••••" : "Not set"}
-            </p>
           </div>
         ) : (
           <div>

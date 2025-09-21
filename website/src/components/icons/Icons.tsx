@@ -208,3 +208,49 @@ export const getDeviceIcon = (type: string, props?: IconProps) => {
       return <LedIcon {...props} />; // Default fallback
   }
 };
+// Add a icon for wifi_connected and wifi_disconnected
+
+export const WifiConnectedIcon = (props: IconProps) => (
+  <svg
+    width={props.width || 24}
+    height={props.height || 24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class={props.class}
+    style={props.style}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+    <path d="M12 18l.01 0" />
+    <path d="M9.172 15.172a4 4 0 0 1 5.656 0" />
+    <path d="M6.343 12.343a8 8 0 0 1 11.314 0" />
+    <path d="M3.515 9.515c4.686 -4.687 12.284 -4.687 17 0" />
+  </svg>
+);
+
+export const WifiDisconnectedIcon = (props: IconProps) => (
+  <svg
+    width={props.width || 24}
+    height={props.height || 24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class={props.class}
+    style={props.style}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+    <path d="M12 18l.01 0" />
+    <path d="M9.172 15.172a4 4 0 0 1 5.656 0" />
+    <path d="M6.343 12.343a7.963 7.963 0 0 1 3.864 -2.14m4.163 .155a7.965 7.965 0 0 1 3.287 2" />
+    <path d="M3.515 9.515a12 12 0 0 1 3.544 -2.455m3.101 -.92a12 12 0 0 1 10.325 3.374" />
+    <path d="M3 3l18 18" />
+  </svg>
+);

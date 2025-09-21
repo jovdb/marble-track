@@ -3,7 +3,11 @@ import { getDeviceIcon } from "./icons/Icons";
 import styles from "./DevicesList.module.css";
 import { useDevices } from "../stores/Devices";
 import { useWebSocket2 } from "../hooks/useWebSocket2";
-import { IWsSendAddDeviceMessage, IWsSendRemoveDeviceMessage, IWsReceiveMessage } from "../interfaces/WebSockets";
+import {
+  IWsSendAddDeviceMessage,
+  IWsSendRemoveDeviceMessage,
+  IWsReceiveMessage,
+} from "../interfaces/WebSockets";
 
 // Available device types
 const DEVICE_TYPES = [
@@ -119,9 +123,10 @@ export function DevicesList() {
       if (!file) return;
       try {
         const text = await file.text();
-        const _json = JSON.parse(text);
-        //    sendMessage({ type: "set-devices-config", config: _json });
-        alert("Config uploaded. Please refresh devices after upload.");
+        const json = JSON.parse(text);
+        if (!socketActions.sendMessage({ type: "set-devices-config", config: json })) {
+          alert("Failed to upload config. Please check your connection.");
+        }
       } catch {
         alert("Invalid JSON file.");
       }
@@ -150,6 +155,7 @@ export function DevicesList() {
       a.download = "config.json";
       document.body.appendChild(a);
       a.click();
+
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }

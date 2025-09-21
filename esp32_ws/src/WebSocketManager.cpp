@@ -646,6 +646,10 @@ void WebSocketManager::handleSetNetworkConfig(JsonDocument &doc)
     {
         response["success"] = true;
         MLOG_INFO("Network settings saved: SSID='%s'", ssid.c_str());
+        
+        // Notify clients with updated network config
+        JsonDocument emptyDoc;
+        handleGetNetworkConfig(emptyDoc);
     }
     else
     {

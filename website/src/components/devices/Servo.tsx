@@ -24,8 +24,8 @@ export function Servo(props: { id: string }) {
             ></div>
             <span class={styles["device__status-text"]}>
               {state()?.isMoving
-                ? `Moving to ${state()?.targetAngle}\u00b0`
-                : `At ${state()?.angle || 0}\u00b0`}
+                ? `Moving to ${state()?.targetAngle}°`
+                : `At ${state()?.angle || 0}°`}
             </span>
             {state()?.isMoving && (
               <button
@@ -41,7 +41,7 @@ export function Servo(props: { id: string }) {
           </div>
           <div class={styles["device__input-group"]}>
             <label class={styles.device__label} for={`angle-${props.id}`}>
-              Angle: {state()?.angle || 0}\u00b0
+              Angle: {state()?.angle || 0}°
             </label>
             <input
               id={`angle-${props.id}`}
@@ -92,7 +92,7 @@ export function Servo(props: { id: string }) {
           </div>
           <div class={styles["device__input-group"]}>
             <label class={styles.device__label} for={`speed-${props.id}`}>
-              Speed: {currentSpeed()}\u00b0/s
+              Speed: {currentSpeed()}°/s
             </label>
             <input
               id={`speed-${props.id}`}

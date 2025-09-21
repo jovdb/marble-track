@@ -30,6 +30,11 @@ void DeviceManager::loadDevicesFromJsonFile()
         JsonDocument doc;
         DeserializationError err = deserializeJson(doc, file);
         file.close();
+
+        String prettyJson;
+        serializeJsonPretty(doc, prettyJson);
+        MLOG_INFO("Loaded JSON from config file:\n%s", prettyJson.c_str());
+
         if (!err && doc.is<JsonArray>())
         {
             JsonArray arr = doc.as<JsonArray>();
@@ -49,23 +54,14 @@ void DeviceManager::loadDevicesFromJsonFile()
                 String id = obj["id"] | "";
                 String name = obj["name"] | "";
                 String type = obj["type"] | "";
-                /*
-                std::vector<int> pins;
-                if (obj["pins"].is<JsonArray>())
-                {
-                    for (int pin : obj["pins"].as<JsonArray>())
-                    {
-                        pins.push_back(pin);
-                    }
-                }
-                    */
+
                 if (devicesCount < MAX_DEVICES)
                 {
                     if (type == "led")
                     {
                         Led *led = new Led(id);
                         led->setName(name);
-                       
+
                         // Log obj[config] as json string
                         String configStr;
                         serializeJson(obj["config"], configStr);
@@ -184,17 +180,28 @@ void DeviceManager::saveDevicesToJsonFile()
                 deviceObj["id"] = devices[i]->getId();
                 deviceObj["name"] = devices[i]->getName();
                 deviceObj["type"] = devices[i]->getType();
-                std::vector<int> pins = devices[i]->getPins();
-                JsonArray pinsArray = deviceObj["pins"].to<JsonArray>();
-                for (int pin : pins)
+
+                // Save device configuration
+                String configStr = devices[i]->getConfig();
+                if (configStr.length() > 0)
                 {
-                    pinsArray.add(pin);
+                    JsonDocument configDoc;
+                    DeserializationError err = deserializeJson(configDoc, configStr);
+                    if (!err && configDoc.is<JsonObject>())
+                    {
+                        deviceObj["config"] = configDoc.as<JsonObject>();
+                    }
                 }
             }
         }
         serializeJson(devicesArray, file);
         file.close();
         MLOG_INFO("Saved devices list to %s", DEVICES_LIST_FILE);
+
+        // Log the saved JSON in pretty format
+        String prettyJson;
+        serializeJsonPretty(devicesArray, prettyJson);
+        MLOG_INFO("Saved devices JSON:\n%s", prettyJson.c_str());
     }
     else
     {
@@ -205,7 +212,7 @@ void DeviceManager::saveDevicesToJsonFile()
 NetworkSettings DeviceManager::loadNetworkSettings()
 {
     NetworkSettings settings;
-    
+
     if (!LittleFS.exists(DEVICES_LIST_FILE))
     {
         MLOG_INFO("Configuration file not found, returning default network settings");
@@ -218,18 +225,18 @@ NetworkSettings DeviceManager::loadNetworkSettings()
         JsonDocument doc;
         DeserializationError err = deserializeJson(doc, file);
         file.close();
-        
+
         if (!err && doc.is<JsonObject>())
         {
             JsonObject rootObj = doc.as<JsonObject>();
-            
+
             // Check if network settings exist
             if (rootObj["network"].is<JsonObject>())
             {
                 JsonObject networkObj = rootObj["network"];
                 settings.ssid = networkObj["ssid"] | "";
                 settings.password = networkObj["password"] | "";
-                
+
                 MLOG_INFO("Loaded network settings from config: SSID='%s'", settings.ssid.c_str());
             }
             else
@@ -246,16 +253,16 @@ NetworkSettings DeviceManager::loadNetworkSettings()
     {
         MLOG_ERROR("Failed to open configuration file for reading");
     }
-    
+
     return settings;
 }
 
-bool DeviceManager::saveNetworkSettings(const NetworkSettings& settings)
+bool DeviceManager::saveNetworkSettings(const NetworkSettings &settings)
 {
     // First, read the existing configuration
     JsonDocument doc;
     bool fileExists = LittleFS.exists(DEVICES_LIST_FILE);
-    
+
     if (fileExists)
     {
         File file = LittleFS.open(DEVICES_LIST_FILE, FILE_READ);
@@ -263,7 +270,7 @@ bool DeviceManager::saveNetworkSettings(const NetworkSettings& settings)
         {
             DeserializationError err = deserializeJson(doc, file);
             file.close();
-            
+
             if (err)
             {
                 MLOG_ERROR("Failed to parse existing configuration file, creating new one");
@@ -282,21 +289,21 @@ bool DeviceManager::saveNetworkSettings(const NetworkSettings& settings)
     {
         doc.to<JsonObject>(); // Create empty object
     }
-    
+
     // Ensure we have a root object
     if (!doc.is<JsonObject>())
     {
         doc.clear();
         doc.to<JsonObject>();
     }
-    
+
     JsonObject rootObj = doc.as<JsonObject>();
-    
+
     // Add/update network settings
     JsonObject networkObj = rootObj["network"].to<JsonObject>();
     networkObj["ssid"] = settings.ssid;
     networkObj["password"] = settings.password;
-    
+
     // Save back to file
     File file = LittleFS.open(DEVICES_LIST_FILE, FILE_WRITE);
     if (file)
@@ -444,7 +451,7 @@ bool DeviceManager::removeDevice(const String &deviceId)
         {
             MLOG_INFO("Removing device: %s (%s)", devices[i]->getId().c_str(), devices[i]->getType().c_str());
             delete devices[i];
-            
+
             // Shift remaining devices down
             for (int j = i; j < devicesCount - 1; j++)
             {
@@ -452,11 +459,11 @@ bool DeviceManager::removeDevice(const String &deviceId)
             }
             devices[devicesCount - 1] = nullptr;
             devicesCount--;
-            
+
             return true;
         }
     }
-    
+
     MLOG_WARN("Device not found for removal: %s", deviceId.c_str());
     return false;
 }
@@ -466,7 +473,7 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
     Device *newDevice = nullptr;
     String lowerType = deviceType;
     lowerType.toLowerCase();
-    
+
     if (lowerType == "led")
     {
         newDevice = new Led(deviceId);
@@ -496,7 +503,7 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
         MLOG_ERROR("Unknown device type: %s", deviceType.c_str());
         return nullptr;
     }
-    
+
     if (newDevice != nullptr)
     {
         // Apply configuration if provided
@@ -505,10 +512,10 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
             JsonObject configObj = config.as<JsonObject>();
             newDevice->setConfig(&configObj);
         }
-        
+
         MLOG_INFO("Created device: %s (%s)", deviceId.c_str(), deviceType.c_str());
     }
-    
+
     return newDevice;
 }
 
@@ -519,23 +526,23 @@ bool DeviceManager::addDevice(const String &deviceType, const String &deviceId, 
         MLOG_ERROR("Cannot add device: Maximum device limit reached (%d)", MAX_DEVICES);
         return false;
     }
-    
+
     // Check if device with same ID already exists
     if (getDeviceById(deviceId) != nullptr)
     {
         MLOG_ERROR("Cannot add device: Device with ID '%s' already exists", deviceId.c_str());
         return false;
     }
-    
+
     Device *newDevice = createDevice(deviceType, deviceId, config);
     if (newDevice == nullptr)
     {
         return false;
     }
-    
+
     devices[devicesCount] = newDevice;
     devicesCount++;
-    
+
     MLOG_INFO("Added device to array: %s (%s)", deviceId.c_str(), deviceType.c_str());
     return true;
 }

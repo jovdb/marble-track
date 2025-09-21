@@ -177,7 +177,10 @@ export function DevicesList() {
                         <td class={styles["devices-list__table-td"]}>
                           <code class={styles["devices-list__device-id"]}>{device.id}</code>
                         </td>
-                        <td class={styles["devices-list__table-td"]} style={{ "text-align": "right" }}>
+                        <td
+                          class={styles["devices-list__table-td"]}
+                          style={{ "text-align": "right" }}
+                        >
                           <button
                             class={styles["devices-list__remove-button"]}
                             onClick={() => handleRemoveDevice(device.id)}

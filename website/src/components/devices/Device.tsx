@@ -1,7 +1,6 @@
-import { createMemo, createSignal, For, JSX, onMount } from "solid-js";
+import { createMemo, createSignal, JSX, onMount } from "solid-js";
 import styles from "./Device.module.css";
 import { IDeviceState } from "../../stores/Device";
-import { renderDeviceComponent } from "../Devices";
 import { useDevice } from "../../stores/Devices";
 
 interface DeviceProps {

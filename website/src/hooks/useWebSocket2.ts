@@ -1,9 +1,8 @@
-import { createWSState, makeReconnectingWS, makeHeartbeatWS } from "@solid-primitives/websocket";
+import { createWSState, makeReconnectingWS } from "@solid-primitives/websocket";
 import { createContext, createMemo, onCleanup, onMount, useContext } from "solid-js";
 import { createStore } from "solid-js/store";
 import { IWsReceiveMessage, IWsSendMessage } from "../interfaces/WebSockets";
 import { pipe } from "../utils/pipe";
-import { withCombineAsync } from "../utils/withCombine";
 
 // WebSocket Store Interface
 export interface IWebSocketStore {

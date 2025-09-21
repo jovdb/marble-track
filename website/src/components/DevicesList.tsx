@@ -129,8 +129,8 @@ export function DevicesList() {
       if (!file) return;
       try {
         const text = await file.text();
-        const json = JSON.parse(text);
-        //    sendMessage({ type: "set-devices-config", config: json });
+        const _json = JSON.parse(text);
+        //    sendMessage({ type: "set-devices-config", config: _json });
         alert("Config uploaded. Please refresh devices after upload.");
       } catch {
         alert("Invalid JSON file.");

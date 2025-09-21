@@ -1,4 +1,4 @@
-import { Accessor, createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { Accessor, createSignal, onCleanup, onMount } from "solid-js";
 import { sendMessage, websocket } from "../hooks/useWebSocket";
 import { IWsReceiveMessage } from "../interfaces/WebSockets";
 

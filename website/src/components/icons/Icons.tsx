@@ -10,8 +10,6 @@ import stepperIcon from "../../assets/icons/stepper.png";
 import devicesIcon from "../../assets/icons/devices.png";
 import websocketIcon from "../../assets/icons/websocket.png";
 import dotsIcon from "../../assets/icons/dots.png";
-import connectedIcon from "../../assets/icons/connected.svg";
-import disconnectedIcon from "../../assets/icons/disconnected.svg";
 
 // Icon component props
 export interface IconProps {

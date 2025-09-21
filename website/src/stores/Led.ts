@@ -1,5 +1,5 @@
 import { IDeviceConfig, IDeviceState } from "./Device";
-import { IDevice, useDevice } from "./Devices";
+import { useDevice } from "./Devices";
 
 const deviceType = "led";
 

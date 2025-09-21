@@ -181,5 +181,6 @@ export function createDeviceState<T>(deviceId: string) {
 
 // Extensible message interface: other files can augment this via declaration merging
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   export interface IMessages {}
 }

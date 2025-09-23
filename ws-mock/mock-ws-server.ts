@@ -1,9 +1,11 @@
 import http from "http";
 import { WebSocketServer } from "ws";
-import { getDevicesHandler } from "./handlers/getDevicesHandler.ts";
-import { deviceSaveConfigHandler } from "./handlers/deviceSaveConfigHandler.ts";
-import { deviceReadConfigHandler } from "./handlers/deviceLoadConfigHandler.ts";
-import { getDevicesListHandler } from "./handlers/getDevicesListHandler.ts";
+import {
+  getDevicesHandler,
+  deviceSaveConfigHandler,
+  deviceReadConfigHandler,
+  getDevicesListHandler
+} from "./handlers/devicesHandlers.ts";
 
 const PORT: number = 5173;
 const WS_PATH: string = "/ws";
@@ -33,9 +35,9 @@ wss.on(
         const data = JSON.parse(jsonStr);
         switch (data.type) {
           case "get-devices":
-            sendMessage(ws, getDevicesHandler());
-            break;
-          case "get-devices-list":
+//            sendMessage(ws, getDevicesHandler());
+//            break;
+//          case "get-devices-list":
             sendMessage(ws, getDevicesListHandler());
             break;
           case "device-save-config":

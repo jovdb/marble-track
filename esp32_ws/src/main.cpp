@@ -285,7 +285,15 @@ void logNetworkInfo()
   if (WiFi.status() == WL_CONNECTED)
   {
     Serial.printf("  ✅ WiFi: %s\n", WiFi.SSID().c_str());
-    Serial.printf("  🏠 mDNS: http://marble-track.local\n");
+    if (network)
+    {
+      String hostname = network->getHostname();
+      Serial.printf("  🏠 mDNS: http://%s.local\n", hostname.c_str());
+    }
+    else
+    {
+      Serial.println("  🏠 mDNS: http://marble-track.local");
+    }
     Serial.printf("  🌍 Web: http://%s\n", WiFi.localIP().toString().c_str());
   }
   else

@@ -7,15 +7,13 @@ export function getDevicesHandler(ws: import("ws").WebSocket) {
     // Send in the format expected by the frontend: {type: "devices-list", devices: [...]}
     const response = {
       type: "devices-list",
-      devices: config.devices || []
+      devices: config.devices || [],
     };
-    ws.send(JSON.stringify(response));
+    return JSON.stringify(response);
   } else {
-    ws.send(
-      JSON.stringify({
-        type: "error",
-        msg: "Config file not found",
-      })
-    );
+    return JSON.stringify({
+      type: "error",
+      msg: "Config file not found",
+    });
   }
 }

@@ -8,6 +8,12 @@ import { getDevicesListHandler } from "./handlers/getDevicesListHandler.ts";
 const PORT: number = 5173;
 const WS_PATH: string = "/ws";
 
+// Helper function to log and send WebSocket messages
+function sendMessage(ws: import("ws").WebSocket, message: string) {
+  console.log("Sending: ", message);
+  ws.send(message);
+}
+
 const server = http.createServer((req, res) => {
   res.writeHead(404);
   res.end();
@@ -27,29 +33,31 @@ wss.on(
         const data = JSON.parse(jsonStr);
         switch (data.type) {
           case "get-devices":
-            getDevicesHandler(ws);
+            sendMessage(ws, getDevicesHandler(ws));
             break;
           case "get-devices-list":
-            getDevicesListHandler(ws);
+            sendMessage(ws, getDevicesListHandler(ws));
             break;
           case "device-save-config":
-            deviceSaveConfigHandler(ws, data.deviceId, data.config);
+            sendMessage(
+              ws,
+              deviceSaveConfigHandler(ws, data.deviceId, data.config)
+            );
             break;
           case "device-read-config":
-            deviceReadConfigHandler(ws, data.deviceId);
+            sendMessage(ws, deviceReadConfigHandler(ws, data.deviceId));
             break;
           default:
-            ws.send(
-              JSON.stringify({ type: "info", msg: `Unknown type ${data.type}` })
-            );
+            console.log("Unknown message: ", data);
         }
       } catch {
-        ws.send(
+        sendMessage(
+          ws,
           JSON.stringify({ type: "error", msg: `Invalid JSON: ${jsonStr}` })
         );
       }
     });
-    ws.send(JSON.stringify({ type: "hello", msg: "Mock server ready" }));
+    // sendMessage(ws, JSON.stringify({ type: "hello", msg: "Mock server ready" }));
   }
 );
 

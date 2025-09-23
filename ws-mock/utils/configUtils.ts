@@ -7,7 +7,9 @@ export const readConfig = (): any => {
   if (fs.existsSync(configFileName)) {
     try {
       return JSON.parse(fs.readFileSync(configFileName, "utf-8"));
-    } catch {}
+    } catch {
+      console.log("Error reading config file, generating new one.")
+    }
   }
   // Return default config format with devices array
   const defaultMessage = getDevices();

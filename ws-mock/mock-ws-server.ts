@@ -33,19 +33,19 @@ wss.on(
         const data = JSON.parse(jsonStr);
         switch (data.type) {
           case "get-devices":
-            sendMessage(ws, getDevicesHandler(ws));
+            sendMessage(ws, getDevicesHandler());
             break;
           case "get-devices-list":
-            sendMessage(ws, getDevicesListHandler(ws));
+            sendMessage(ws, getDevicesListHandler());
             break;
           case "device-save-config":
             sendMessage(
               ws,
-              deviceSaveConfigHandler(ws, data.deviceId, data.config)
+              deviceSaveConfigHandler(data.deviceId, data.config)
             );
             break;
           case "device-read-config":
-            sendMessage(ws, deviceReadConfigHandler(ws, data.deviceId));
+            sendMessage(ws, deviceReadConfigHandler(data.deviceId));
             break;
           default:
             console.log("Unknown message: ", data);

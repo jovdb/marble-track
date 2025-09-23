@@ -1,7 +1,6 @@
-import fs from "fs";
 import { readConfig } from "../utils/configUtils.ts";
 
-export function getDevicesHandler(ws: import("ws").WebSocket) {
+export function getDevicesHandler() {
   const config = readConfig();
   if (config) {
     // Send in the format expected by the frontend: {type: "devices-list", devices: [...]}

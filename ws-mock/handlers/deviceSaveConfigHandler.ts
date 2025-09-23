@@ -1,7 +1,6 @@
 import { readConfig, saveConfig, findDevice } from "../utils/configUtils.ts";
 
 export function deviceSaveConfigHandler(
-  ws: import("ws").WebSocket,
   deviceId: string,
   deviceConfig: object
 ) {

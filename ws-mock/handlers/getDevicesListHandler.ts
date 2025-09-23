@@ -1,6 +1,6 @@
 import { readConfig } from "../utils/configUtils.ts";
 
-export function getDevicesListHandler(ws: import("ws").WebSocket) {
+export function getDevicesListHandler() {
   // Simulate a devices-list response
   const config = readConfig();
   return JSON.stringify({

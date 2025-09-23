@@ -1,9 +1,6 @@
 import { readConfig, findDevice } from "../utils/configUtils.ts";
 
-export function deviceReadConfigHandler(
-  ws: import("ws").WebSocket,
-  deviceId: string
-) {
+export function deviceReadConfigHandler(deviceId: string) {
   if (!deviceId) {
     return JSON.stringify({
       type: "error",

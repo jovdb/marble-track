@@ -159,3 +159,37 @@ export function addDeviceHandler(deviceType: string, deviceId: string, deviceCon
 
   return getDevicesHandler();
 }
+
+export function removeDeviceHandler(deviceId: string) {
+  if (!deviceId) {
+    return JSON.stringify({
+      type: "error",
+      msg: "Missing deviceId in remove-device",
+    });
+  }
+
+  const config = readConfig();
+
+  // Find device index
+  const deviceIndex = config.devices?.findIndex((device: any) => device.id === deviceId) ?? -1;
+  if (deviceIndex === -1) {
+    return JSON.stringify({
+      type: "error",
+      msg: `DeviceId ${deviceId} not found.`,
+    });
+  }
+
+  // Remove device from array
+  config.devices.splice(deviceIndex, 1);
+
+  // Save Config
+  saveConfig(config);
+
+  // Return success response
+  // return JSON.stringify({
+  //   type: "device-removed",
+  //   deviceId: deviceId,
+  // });
+
+  return getDevicesHandler();
+}

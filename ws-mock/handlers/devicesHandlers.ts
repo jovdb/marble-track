@@ -87,3 +87,27 @@ export function deviceReadConfigHandler(deviceId: string) {
     config: device.config ?? null,
   });
 }
+
+export function deviceGetStateHandler(deviceId: string) {
+  if (!deviceId) {
+    return JSON.stringify({
+      type: "error",
+      msg: "Missing deviceId in device-get-state",
+    });
+  }
+
+  const config = readConfig();
+  const device = findDevice(config.devices, deviceId);
+  if (!device) {
+    return JSON.stringify({
+      type: "error",
+      msg: `DeviceId ${deviceId} not found.`,
+    });
+  }
+
+  return JSON.stringify({
+    type: "device-state",
+    deviceId: deviceId,
+    state: {},
+  });
+}

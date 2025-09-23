@@ -12,7 +12,7 @@ const WS_PATH: string = "/ws";
 
 // Helper function to log and send WebSocket messages
 function sendMessage(ws: import("ws").WebSocket, message: string) {
-  console.log("Sending: ", message);
+  console.log("\x1b[34mSending:\x1b[0m", message);
   ws.send(message);
 }
 
@@ -30,14 +30,11 @@ wss.on(
     ws.on("message", (message: Buffer | string) => {
       const jsonStr =
         typeof message === "string" ? message : message.toString();
-      console.log("Received:", jsonStr);
+      console.log("\x1b[32mReceived:\x1b[0m", jsonStr);
       try {
         const data = JSON.parse(jsonStr);
         switch (data.type) {
           case "get-devices":
-//            sendMessage(ws, getDevicesHandler());
-//            break;
-//          case "get-devices-list":
             sendMessage(ws, getDevicesListHandler());
             break;
           case "device-save-config":
@@ -50,7 +47,7 @@ wss.on(
             sendMessage(ws, deviceReadConfigHandler(data.deviceId));
             break;
           default:
-            console.log("Unknown message: ", data);
+            console.log("\x1b[31mUnknown message:\x1b[0m", data);
         }
       } catch {
         sendMessage(

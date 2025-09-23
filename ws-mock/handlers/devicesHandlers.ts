@@ -111,3 +111,51 @@ export function deviceGetStateHandler(deviceId: string) {
     state: {},
   });
 }
+
+export function addDeviceHandler(deviceType: string, deviceId: string, deviceConfig: object) {
+  if (!deviceType || !deviceId) {
+    return JSON.stringify({
+      type: "error",
+      msg: "Missing deviceType or deviceId in add-device",
+    });
+  }
+
+  const config = readConfig();
+
+  // Check if device already exists
+  const existingDevice = findDevice(config.devices, deviceId);
+  if (existingDevice) {
+    return JSON.stringify({
+      type: "error",
+      msg: `DeviceId ${deviceId} already exists.`,
+    });
+  }
+
+  // Create new device
+  const newDevice = {
+    id: deviceId,
+    name: `${deviceType} ${deviceId}`,
+    type: deviceType.toLowerCase(),
+    config: deviceConfig || {},
+  };
+
+  // Add to devices array
+  if (!config.devices) {
+    config.devices = [];
+  }
+  config.devices.push(newDevice);
+
+  // Save Config
+  saveConfig(config);
+
+  // Return success response
+  /*
+  return JSON.stringify({
+    type: "device-added",
+    deviceId: deviceId,
+    device: newDevice,
+  });
+  */
+
+  return getDevicesHandler();
+}

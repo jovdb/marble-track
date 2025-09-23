@@ -5,7 +5,8 @@ import {
   deviceSaveConfigHandler,
   deviceReadConfigHandler,
   getDevicesListHandler,
-  deviceGetStateHandler
+  deviceGetStateHandler,
+  addDeviceHandler
 } from "./handlers/devicesHandlers.ts";
 
 const PORT: number = 5173;
@@ -49,6 +50,9 @@ wss.on(
             break;
           case "device-get-state":
             sendMessage(ws, deviceGetStateHandler(data.deviceId));
+            break;
+          case "add-device":
+            sendMessage(ws, addDeviceHandler(data.deviceType, data.deviceId, data.config));
             break;
           default:
             console.log("\x1b[31mUnknown message:\x1b[0m", data);

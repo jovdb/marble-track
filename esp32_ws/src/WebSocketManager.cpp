@@ -382,6 +382,46 @@ void WebSocketManager::setup(AsyncWebServer &server)
 void WebSocketManager::loop()
 {
     ws.cleanupClients();
+
+    // Check if async WiFi scan is complete
+    if (scanInProgress)
+    {
+        int16_t numNetworks = WiFi.scanComplete();
+        if (numNetworks >= 0)
+        {
+            scanInProgress = false;
+
+            JsonDocument response;
+            response["type"] = "get-networks";
+
+            if (numNetworks == WIFI_SCAN_FAILED)
+            {
+                response["error"] = "WiFi scan failed";
+            }
+            else
+            {
+                JsonArray networksArray = response["networks"].to<JsonArray>();
+                
+                for (int i = 0; i < numNetworks; i++)
+                {
+                    JsonObject networkObj = networksArray.add<JsonObject>();
+                    networkObj["ssid"] = WiFi.SSID(i);
+                    networkObj["rssi"] = WiFi.RSSI(i);
+                    networkObj["encryption"] = WiFi.encryptionType(i);
+                    networkObj["channel"] = WiFi.channel(i);
+                    networkObj["bssid"] = WiFi.BSSIDstr(i);
+                    networkObj["hidden"] = WiFi.SSID(i).isEmpty();
+                }
+
+                response["count"] = numNetworks;
+                MLOG_INFO("Found %d WiFi networks", numNetworks);
+            }
+
+            String respStr;
+            serializeJson(response, respStr);
+            notifyClients(respStr);
+        }
+    }
 }
 
 String WebSocketManager::getStatus() const
@@ -683,43 +723,21 @@ void WebSocketManager::handleSetNetworkConfig(JsonDocument &doc)
 
 void WebSocketManager::handleGetNetworks(JsonDocument &doc)
 {
-    JsonDocument response;
-    response["type"] = "get-networks";
-
-    MLOG_INFO("Scanning for available WiFi networks...");
-
-    // Start WiFi scan
-    int numNetworks = WiFi.scanNetworks();
-    
-    if (numNetworks == WIFI_SCAN_FAILED)
+    if (scanInProgress)
     {
-        response["error"] = "WiFi scan failed";
+        JsonDocument response;
+        response["type"] = "get-networks";
+        response["error"] = "Scan already in progress";
         String respStr;
         serializeJson(response, respStr);
         notifyClients(respStr);
         return;
     }
 
-    JsonArray networksArray = response["networks"].to<JsonArray>();
-    
-    for (int i = 0; i < numNetworks; i++)
-    {
-        JsonObject networkObj = networksArray.add<JsonObject>();
-        networkObj["ssid"] = WiFi.SSID(i);
-        networkObj["rssi"] = WiFi.RSSI(i);
-        networkObj["encryption"] = WiFi.encryptionType(i);
-        networkObj["channel"] = WiFi.channel(i);
-        networkObj["bssid"] = WiFi.BSSIDstr(i);
-        networkObj["hidden"] = WiFi.SSID(i).isEmpty();
-    }
+    MLOG_INFO("Starting async WiFi network scan...");
 
-    response["count"] = numNetworks;
-    
-    String respStr;
-    serializeJson(response, respStr);
-    notifyClients(respStr);
-    
-    MLOG_INFO("Found %d WiFi networks", numNetworks);
+    scanInProgress = true;
+    WiFi.scanNetworks(true); // Start async scan
 }
 
 void WebSocketManager::handleGetNetworkStatus(JsonDocument &doc)

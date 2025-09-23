@@ -16,6 +16,7 @@ private:
     AsyncWebSocket ws;
     DeviceManager *deviceManager;
     Network *network;
+    bool scanInProgress = false;
 
     // Helper methods for cleaner message handling
     void handleRestart();

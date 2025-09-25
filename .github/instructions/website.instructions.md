@@ -1,3 +1,7 @@
+---
+applyTo: "website/**"
+---
+
 # GitHub Copilot Instructions for website
 
 ## Project Overview
@@ -18,6 +22,7 @@ This is the frontend web application for the marble track system. It is built wi
 ## File Structure
 
 - `src/`: Main source code
+  - `assets/`: file that must be publicly accessible from the web (favicon, images)
   - `components/`: UI components (Header, WebSocketMessages, WebSocketSender, devices)
   - `hooks/`: Custom SolidJS hooks
   - `interfaces/`: TypeScript interfaces
@@ -37,19 +42,9 @@ This is the frontend web application for the marble track system. It is built wi
 - Preview production build: `npm run preview`
 - Validating formatting and linting rules: `npm run check`
 - Fixing formatting and lint rules: `npm run fix`
-- Upload website: `../deploydeploy-website.ps1`
-
-## Troubleshooting
-
-- If build or lint errors occur, check TypeScript types and ESLint output.
-- Use the browser console .
+- Deploy website on esp32: `../deploy-website.ps1`
 
 ## Best Practices
 
-- Use descriptive names for components, props, and state variables.
-- Document new device types and UI patterns in this file.
-- Keep UI responsive and accessible.
+- Keep readme and instructions up to date.
 
----
-
-For further assistance, use GitHub Copilot in VS Code and refer to this file for project-specific instructions.

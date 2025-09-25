@@ -1,5 +1,5 @@
 import { createEffect, For, createSignal, onMount, onCleanup } from "solid-js";
-import { getDeviceIcon } from "./icons/Icons";
+import { getDeviceIcon, TrashIcon } from "./icons/Icons";
 import styles from "./DevicesList.module.css";
 import { useDevices } from "../stores/Devices";
 import { useWebSocket2 } from "../hooks/useWebSocket2";
@@ -210,8 +210,9 @@ export function DevicesList() {
                             class={styles["devices-list__remove-button"]}
                             onClick={() => handleRemoveDevice(device.id)}
                             title="Remove device"
+                            aria-label={`Remove device ${device.id}`}
                           >
-                            🗑️
+                            <TrashIcon />
                           </button>
                         </td>
                         {/* <td class={styles["devices-list__table-td"]}>

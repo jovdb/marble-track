@@ -225,3 +225,29 @@ String Network::getStatusJSON() const
         _dnsServer->processNextRequest();
     }
 }
+
+NetworkMode Network::applySettings(const NetworkSettings &settings)
+{
+    _wifi_ssid = settings.ssid;
+    _wifi_password = settings.password;
+
+    if (_dnsServer != nullptr)
+    {
+        _dnsServer->stop();
+        delete _dnsServer;
+        _dnsServer = nullptr;
+    }
+
+    WiFi.disconnect(true, true);
+    WiFi.softAPdisconnect(true);
+
+#ifdef ESP32
+    mdns_free();
+#endif
+
+    _currentMode = NetworkMode::DISCONNECTED;
+
+    setup();
+
+    return _currentMode;
+}

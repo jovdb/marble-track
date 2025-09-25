@@ -59,6 +59,13 @@ public:
     bool setup();
 
     /**
+     * @brief Apply new WiFi credentials, reconnecting or falling back to AP mode
+     * @param settings Network settings to apply
+     * @return Resulting network mode after attempting to apply the settings
+     */
+    NetworkMode applySettings(const NetworkSettings &settings);
+
+    /**
      * @brief Get current network mode
      * @return Current NetworkMode (WIFI_CLIENT, ACCESS_POINT, or DISCONNECTED)
      */

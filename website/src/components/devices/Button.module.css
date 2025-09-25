@@ -1,0 +1,23 @@
+.button__status-indicator {
+  --button-indicator-off: var(--color-gray-400);
+  --button-indicator-pressed: var(--color-primary-500);
+  --button-indicator-glow: rgba(14, 165, 233, 0.5);
+
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  background-color: var(--button-indicator-off);
+  box-shadow: none;
+  transition: background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.button__status-indicator--pressed {
+  background-color: var(--button-indicator-pressed);
+  box-shadow: 0 0 8px var(--button-indicator-glow);
+}
+
+.button__status-indicator--off {
+  background-color: var(--button-indicator-off);
+  box-shadow: none;
+}

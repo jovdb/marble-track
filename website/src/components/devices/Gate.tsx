@@ -1,6 +1,7 @@
 import { Device } from "./Device";
 import { createSignal, onCleanup } from "solid-js";
-import styles from "./Device.module.css";
+import deviceStyles from "./Device.module.css";
+import gateStyles from "./Gate.module.css";
 import { IDeviceState, IDeviceConfig } from "../../stores/Device";
 import { IWsSendMessage } from "../../interfaces/WebSockets";
 import { useDevice } from "../../stores/Devices";
@@ -103,17 +104,21 @@ export function Gate(props: { id: string }) {
           </g>
         </svg>
       </div>
-      <div class={styles.device__status}>
+      <div class={deviceStyles.device__status}>
         <div
-          class={`${styles["device__status-indicator"]} ${device?.state?.gateState === "Opened" ? styles["device__status-indicator--on"] : styles["device__status-indicator--off"]}`}
+          classList={{
+            [gateStyles["gate__status-indicator"]]: true,
+            [gateStyles["gate__status-indicator--open"]]: device?.state?.gateState === "Opened",
+            [gateStyles["gate__status-indicator--closed"]]: device?.state?.gateState !== "Opened",
+          }}
         ></div>
-        <span class={styles["device__status-text"]}>
+        <span class={deviceStyles["device__status-text"]}>
           Status: {device?.state?.gateState || "Unknown"}
         </span>
       </div>
-      <div class={styles.device__controls}>
+      <div class={deviceStyles.device__controls}>
         <button
-          class={styles.device__button}
+          class={deviceStyles.device__button}
           onClick={openGate}
           disabled={!device || device?.state?.gateState !== "Closed"}
         >

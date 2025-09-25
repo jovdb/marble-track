@@ -1,7 +1,8 @@
 import { Device } from "./Device";
 import { debounce } from "@solid-primitives/scheduled";
 import { createSignal } from "solid-js";
-import styles from "./Device.module.css";
+import deviceStyles from "./Device.module.css";
+import pwmMotorStyles from "./PwmMotor.module.css";
 import { createPwmMotorStore } from "../../stores/PwmMotor";
 import { StepperIcon } from "../icons/Icons"; // Using stepper icon as closest to motor
 import PwmMotorConfig from "./PwmMotorConfig";
@@ -23,31 +24,33 @@ export function PwmMotor(props: { id: string }) {
       configComponent={<PwmMotorConfig id={props.id} />}
       icon={<StepperIcon />}
     >
-      {error() && <div class={styles.device__error}>{error()}</div>}
+      {error() && <div class={deviceStyles.device__error}>{error()}</div>}
       {!error() && (
         <>
-          <div class={styles.device__status}>
+          <div class={deviceStyles.device__status}>
             <div
-              class={`${styles["device__status-indicator"]} ${
-                state()?.running
-                  ? styles["device__status-indicator--moving"]
-                  : styles["device__status-indicator--off"]
-              }`}
+              classList={{
+                [pwmMotorStyles["pwm-motor__status-indicator"]]: true,
+                [pwmMotorStyles["pwm-motor__status-indicator--moving"]]: Boolean(
+                  state()?.running
+                ),
+                [pwmMotorStyles["pwm-motor__status-indicator--off"]]: !state()?.running,
+              }}
             ></div>
-            <span class={styles["device__status-text"]}>
+            <span class={deviceStyles["device__status-text"]}>
               {state()?.running
                 ? `Running at ${state()?.dutyCycle?.toFixed(1) || 0}%`
                 : `Stopped (${state()?.dutyCycle?.toFixed(1) || 0}%)`}
             </span>
           </div>
 
-          <div class={styles["device__input-group"]}>
-            <label class={styles.device__label} for={`dutyCycle-${props.id}`}>
+          <div class={deviceStyles["device__input-group"]}>
+            <label class={deviceStyles.device__label} for={`dutyCycle-${props.id}`}>
               Duty Cycle: {(currentDutyCycle() || state()?.dutyCycle || 0).toFixed(0)}%
             </label>
             <input
               id={`dutyCycle-${props.id}`}
-              class={styles.device__input}
+              class={deviceStyles.device__input}
               type="range"
               min="0"
               max="100"
@@ -61,14 +64,14 @@ export function PwmMotor(props: { id: string }) {
             />
           </div>
 
-          <div class={styles["device__input-group"]}>
-            <label class={styles.device__label} for={`duration-${props.id}`}>
+          <div class={deviceStyles["device__input-group"]}>
+            <label class={deviceStyles.device__label} for={`duration-${props.id}`}>
               Animation Duration: {animationDuration().toFixed(1)}s
               {animationDuration() === 0 && " (Instant)"}
             </label>
             <input
               id={`duration-${props.id}`}
-              class={styles.device__input}
+              class={deviceStyles.device__input}
               type="range"
               min="0"
               max="10"
@@ -81,9 +84,9 @@ export function PwmMotor(props: { id: string }) {
             />
           </div>
 
-          <div class={styles.device__controls}>
+          <div class={deviceStyles.device__controls}>
             <button
-              class={styles.device__button}
+              class={deviceStyles.device__button}
               onClick={() => {
                 const durationMs = animationDuration() * 1000;
                 setCurrentDutyCycle(0);
@@ -93,7 +96,7 @@ export function PwmMotor(props: { id: string }) {
               0%
             </button>
             <button
-              class={styles.device__button}
+              class={deviceStyles.device__button}
               onClick={() => {
                 const durationMs = animationDuration() * 1000;
                 setCurrentDutyCycle(25);
@@ -103,7 +106,7 @@ export function PwmMotor(props: { id: string }) {
               25%
             </button>
             <button
-              class={styles.device__button}
+              class={deviceStyles.device__button}
               onClick={() => {
                 const durationMs = animationDuration() * 1000;
                 setCurrentDutyCycle(50);
@@ -113,7 +116,7 @@ export function PwmMotor(props: { id: string }) {
               50%
             </button>
             <button
-              class={styles.device__button}
+              class={deviceStyles.device__button}
               onClick={() => {
                 const durationMs = animationDuration() * 1000;
                 setCurrentDutyCycle(75);
@@ -123,7 +126,7 @@ export function PwmMotor(props: { id: string }) {
               75%
             </button>
             <button
-              class={styles.device__button}
+              class={deviceStyles.device__button}
               onClick={() => {
                 const durationMs = animationDuration() * 1000;
                 setCurrentDutyCycle(100);

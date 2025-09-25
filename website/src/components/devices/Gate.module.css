@@ -1,0 +1,23 @@
+.gate__status-indicator {
+  --gate-indicator-closed: var(--color-gray-400);
+  --gate-indicator-open: var(--color-success-500);
+  --gate-indicator-glow: rgba(34, 197, 94, 0.5);
+
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  background-color: var(--gate-indicator-closed);
+  box-shadow: none;
+  transition: background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.gate__status-indicator--open {
+  background-color: var(--gate-indicator-open);
+  box-shadow: 0 0 8px var(--gate-indicator-glow);
+}
+
+.gate__status-indicator--closed {
+  background-color: var(--gate-indicator-closed);
+  box-shadow: none;
+}

@@ -1,5 +1,6 @@
 import { Device } from "./Device";
-import styles from "./Device.module.css";
+import deviceStyles from "./Device.module.css";
+import buttonStyles from "./Button.module.css";
 import { createButtonStore } from "../../stores/Button";
 import ButtonConfig from "./ButtonConfig";
 import { ButtonIcon } from "../icons/Icons";
@@ -22,24 +23,24 @@ export function Button(props: { id: string }) {
       configComponent={<ButtonConfig id={props.id} />}
       icon={<ButtonIcon />}
     >
-      {error() && <div class={styles.device__error}>{error()}</div>}
+      {error() && <div class={deviceStyles.device__error}>{error()}</div>}
       {!error() && (
         <>
-          <div class={styles.device__status}>
+          <div class={deviceStyles.device__status}>
             <div
-              class={`${styles["device__status-indicator"]} ${
-                state()?.pressed
-                  ? styles["device__status-indicator--pressed"]
-                  : styles["device__status-indicator--off"]
-              }`}
+              classList={{
+                [buttonStyles["button__status-indicator"]]: true,
+                [buttonStyles["button__status-indicator--pressed"]]: state()?.pressed,
+                [buttonStyles["button__status-indicator--off"]]: !state()?.pressed,
+              }}
             ></div>
-            <span class={styles["device__status-text"]}>
+            <span class={deviceStyles["device__status-text"]}>
               Status: {state()?.pressed ? "Pressed" : "Released"}
             </span>
           </div>
-          <div class={styles.device__controls}>
+          <div class={deviceStyles.device__controls}>
             <button
-              class={styles.device__button}
+              class={deviceStyles.device__button}
               onMouseDown={handlePress}
               onMouseUp={handleRelease}
             >

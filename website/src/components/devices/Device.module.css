@@ -104,42 +104,6 @@
   border: 1px solid var(--color-border);
 }
 
-.device__status-indicator {
-  --device-indicator-off: var(--color-gray-400);
-  --device-indicator-on: var(--color-success-500);
-  --device-indicator-move: var(--color-warning-500);
-  --device-indicator-pressed: var(--color-primary-500);
-  --device-indicator-glow: rgba(34, 197, 94, 0.5);
-
-  width: 16px;
-  height: 16px;
-  border-radius: var(--radius-full);
-  flex-shrink: 0;
-  background-color: var(--device-indicator-off);
-  box-shadow: none;
-  transition: background-color 0.25s ease, box-shadow 0.25s ease;
-}
-
-.device__status-indicator--on {
-  background-color: var(--device-indicator-on);
-  box-shadow: 0 0 8px var(--device-indicator-glow);
-}
-
-.device__status-indicator--off {
-  background-color: var(--device-indicator-off);
-  box-shadow: none;
-}
-
-.device__status-indicator--pressed {
-  background-color: var(--device-indicator-pressed);
-  box-shadow: 0 0 8px rgba(14, 165, 233, 0.5);
-}
-
-.device__status-indicator--moving {
-  background-color: var(--device-indicator-move);
-  box-shadow: 0 0 8px rgba(234, 179, 8, 0.45);
-}
-
 .device__status-text {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);

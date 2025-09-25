@@ -1,6 +1,7 @@
 import { createSignal, For } from "solid-js";
 import { BuzzerIcon } from "../icons/Icons";
-import styles from "./Device.module.css";
+import deviceStyles from "./Device.module.css";
+import buzzerStyles from "./Buzzer.module.css";
 import { createBuzzerStore } from "../../stores/Buzzer";
 import { Device } from "./Device";
 import BuzzerConfig from "./BuzzerConfig";
@@ -44,31 +45,31 @@ export function Buzzer(props: { id: string }) {
       configComponent={<BuzzerConfig id={props.id} />}
       icon={<BuzzerIcon />}
     >
-      {error() && <div class={styles.device__error}>{error()}</div>}
+      {error() && <div class={deviceStyles.device__error}>{error()}</div>}
 
       {!error() && (
         <>
-          <div class={styles.device__status}>
+          <div class={deviceStyles.device__status}>
             <div
-              class={`${styles["device__status-indicator"]} ${
-                state()?.playing
-                  ? styles["device__status-indicator--on"]
-                  : styles["device__status-indicator--off"]
-              }`}
+              classList={{
+                [buzzerStyles["buzzer__status-indicator"]]: true,
+                [buzzerStyles["buzzer__status-indicator--on"]]: state()?.playing,
+                [buzzerStyles["buzzer__status-indicator--off"]]: !state()?.playing,
+              }}
             ></div>
-            <span class={styles["device__status-text"]}>
+            <span class={deviceStyles["device__status-text"]}>
               {state()?.playing ? "Playing" : "Idle"}
               {state()?.currentTune && state()?.playing && " (Melody)"}
             </span>
           </div>
 
-          <div class={styles["device__input-group"]}>
-            <label class={styles.device__label} for={`freq-${props.id}`}>
+          <div class={deviceStyles["device__input-group"]}>
+            <label class={deviceStyles.device__label} for={`freq-${props.id}`}>
               Tone Frequency: {frequency()}Hz
             </label>
             <input
               id={`freq-${props.id}`}
-              class={styles.device__input}
+              class={deviceStyles.device__input}
               type="range"
               min="40"
               max="5000"
@@ -76,20 +77,24 @@ export function Buzzer(props: { id: string }) {
               value={frequency()}
               onInput={(e) => setFrequency(Number(e.currentTarget.value))}
             />
-            <div class={styles.device__controls}>
-              <button class={styles.device__button} onClick={playTone} disabled={state()?.playing}>
+            <div class={deviceStyles.device__controls}>
+              <button
+                class={deviceStyles.device__button}
+                onClick={playTone}
+                disabled={state()?.playing}
+              >
                 Play Tone
               </button>
             </div>
           </div>
 
-          <div class={styles["device__input-group"]}>
-            <label class={styles.device__label} for={`rtttl-${props.id}`}>
+          <div class={deviceStyles["device__input-group"]}>
+            <label class={deviceStyles.device__label} for={`rtttl-${props.id}`}>
               RTTTL Melody:
             </label>
             <textarea
               id={`rtttl-${props.id}`}
-              class={styles.device__input}
+              class={deviceStyles.device__input}
               value={rtttl()}
               onInput={(e) => setRtttl(e.currentTarget.value)}
               placeholder="Enter RTTTL string..."
@@ -101,16 +106,16 @@ export function Buzzer(props: { id: string }) {
                 "min-height": "60px",
               }}
             />
-            <div class={styles.device__controls}>
+            <div class={deviceStyles.device__controls}>
               <button
-                class={styles.device__button}
+                class={deviceStyles.device__button}
                 onClick={playTune}
                 disabled={state()?.playing || rtttl().trim().length === 0}
               >
                 Play Melody
               </button>
               <select
-                class={styles.device__select}
+                class={deviceStyles.device__select}
                 onChange={(e) => {
                   const selectedTune = e.currentTarget.value;
                   if (selectedTune && rtttlTunes[selectedTune as keyof typeof rtttlTunes]) {

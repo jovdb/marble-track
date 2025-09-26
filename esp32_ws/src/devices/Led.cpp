@@ -8,7 +8,7 @@
  * @param id Unique identifier string for the LED
  */
 Led::Led(const String &id)
-    : Device(id, "led"), _mode(LedMode::OFF)
+    : Device(id, "led"), _mode(LedMode::OFF), _initialMode(LedMode::OFF)
 {
     // Name can be set later using setName()
 }
@@ -21,14 +21,16 @@ void Led::setup()
 {
     Device::setup();
 
-    if (_pin == -1)
+    if (_pin != -1)
     {
-        MLOG_WARN("Led [%s]: Pin not configured", _id.c_str());
-        return;
+        pinMode(_pin, OUTPUT);
     }
 
-    pinMode(_pin, OUTPUT);
-    // digitalWrite(_pin, LOW);
+    if (!_didSetup)
+    {
+        applyInitialState();
+        _didSetup = true;
+    }
 }
 
 /**
@@ -47,17 +49,21 @@ void Led::set(bool state)
     }
 
     _mode = state ? LedMode::ON : LedMode::OFF;
+    _isOn = state;
 
     // Notify state change for real-time updates
     notifyStateChange();
 }
 
-/**
- * @brief Toggle LED state
- */
-void Led::toggle()
+void Led::blink(unsigned long onTime, unsigned long offTime)
 {
-    set(_mode != LedMode::ON);
+    _mode = LedMode::BLINKING;
+    _blinkOnTime = onTime;
+    _blinkOffTime = offTime;
+    _lastToggleTime = millis() - 1000000;
+
+    // Notify state change for real-time updates
+    notifyStateChange();
 }
 
 /**
@@ -106,6 +112,7 @@ bool Led::control(const String &action, JsonObject *args)
  */
 String Led::getState()
 {
+
     JsonDocument doc;
     // Copy base Device state fields
     JsonDocument baseDoc;
@@ -130,17 +137,6 @@ String Led::getState()
     String result;
     serializeJson(doc, result);
     return result;
-}
-
-void Led::blink(unsigned long onTime, unsigned long offTime)
-{
-    _mode = LedMode::BLINKING;
-    _blinkOnTime = onTime;
-    _blinkOffTime = offTime;
-    _lastToggleTime = millis() - 1000000;
-
-    // Notify state change for real-time updates
-    notifyStateChange();
 }
 
 void Led::loop()
@@ -171,6 +167,18 @@ void Led::loop()
     }
 }
 
+std::vector<int> Led::getPins() const
+{
+    if (_pin == -1)
+    {
+        return {};
+    }
+
+    std::vector<int> pins;
+    pins.push_back(_pin);
+    return pins;
+}
+
 /**
  * @brief Get configuration as JSON
  * @return JsonObject containing the current configuration
@@ -182,6 +190,7 @@ String Led::getConfig() const
 
     config["name"] = _name;
     config["pin"] = _pin;
+    config["initialState"] = modeToString(_initialMode);
 
     String message;
     serializeJson(config, message);
@@ -195,6 +204,8 @@ String Led::getConfig() const
  */
 void Led::setConfig(JsonObject *config)
 {
+    Device::setConfig(config);
+
     if (!config)
     {
         MLOG_WARN("Led [%s]: Null config provided", _id.c_str());
@@ -215,7 +226,54 @@ void Led::setConfig(JsonObject *config)
         _pin = pin;
     }
 
-    // set pinMode
-    // Define an unsetup function?
+    if ((*config)["initialState"].is<String>())
+    {
+        const String initial = (*config)["initialState"].as<String>();
+        _initialMode = modeFromString(initial);
+    }
+
+    // Apply pin mode and initial behaviour
     setup();
+}
+
+void Led::applyInitialState()
+{
+    switch (_initialMode)
+    {
+    case LedMode::ON:
+        set(true);
+        break;
+    case LedMode::OFF:
+        set(false);
+        break;
+    case LedMode::BLINKING:
+        blink(_blinkOnTime, _blinkOffTime);
+        break;
+    }
+}
+
+Led::LedMode Led::modeFromString(const String &value) const
+{
+    if (value.equalsIgnoreCase("ON"))
+    {
+        return LedMode::ON;
+    }
+    if (value.equalsIgnoreCase("BLINKING"))
+    {
+        return LedMode::BLINKING;
+    }
+    return LedMode::OFF;
+}
+
+String Led::modeToString(LedMode mode) const
+{
+    switch (mode)
+    {
+    case LedMode::ON:
+        return "ON";
+    case LedMode::BLINKING:
+        return "BLINKING";
+    default:
+        return "OFF";
+    }
 }

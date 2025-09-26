@@ -76,7 +76,7 @@ void SerialConsole::loop()
 
             if (input.length() == 0)
             {
-                Serial.println("💡 Commands: 'devices', 'network', 'memory', 'restart', 'set-network'");
+                Serial.println("💡 Commands: 'devices', 'network', 'memory', 'restart'");
                 Serial.println();
                 continue;
             }

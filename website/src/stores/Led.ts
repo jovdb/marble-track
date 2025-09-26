@@ -7,9 +7,13 @@ interface ILedState extends IDeviceState {
   mode: "ON" | "OFF" | "BLINKING";
 }
 
+export const LED_INITIAL_STATES = ["OFF", "ON", "BLINKING"] as const;
+export type LedInitialState = (typeof LED_INITIAL_STATES)[number];
+
 interface ILedConfig extends IDeviceConfig {
   name: string;
   pin: number;
+  initialState?: LedInitialState;
 }
 
 export function useLed(deviceId: string) {
@@ -48,5 +52,9 @@ export function useLed(deviceId: string) {
 declare global {
   export interface IDeviceStates {
     [deviceType]: ILedState;
+  }
+
+  export interface IDeviceConfigs {
+    [deviceType]: ILedConfig;
   }
 }

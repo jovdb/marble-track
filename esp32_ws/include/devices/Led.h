@@ -13,7 +13,6 @@
  */
 class Led : public Device
 {
-
     enum class LedMode
     {
         BLINKING, ///< LED is blinking
@@ -39,7 +38,7 @@ public:
     String getState() override;
     String getConfig() const override;
     void setConfig(JsonObject *config) override;
-    std::vector<int> getPins() const override { return _pin != -1 ? std::vector<int>{_pin} : std::vector<int>{}; }
+    std::vector<int> getPins() const override;
 
     // LED-specific operations
     void set(bool state);
@@ -51,11 +50,20 @@ public:
 private:
     int _pin = -1;
     LedMode _mode = LedMode::OFF;
+    LedMode _initialMode = LedMode::OFF;
+
     // Blink state
     unsigned long _blinkOnTime = 500;
     unsigned long _blinkOffTime = 500;
     unsigned long _lastToggleTime = 0;
+
+    // When in blinking mode we need to know if the LED is currently on or off to toggle it
     bool _isOn = false;
+    bool _didSetup = false;
+
+    void applyInitialState();
+    LedMode modeFromString(const String &value) const;
+    String modeToString(LedMode mode) const;
 };
 
 #endif // LED_H

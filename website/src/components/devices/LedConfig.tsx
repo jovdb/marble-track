@@ -1,6 +1,6 @@
-import { createSignal } from "solid-js";
+import { For, createEffect, createSignal } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
-import { useLed } from "../../stores/Led";
+import { LED_INITIAL_STATES, LedInitialState, useLed } from "../../stores/Led";
 
 interface LedConfigProps {
   id: string;
@@ -8,8 +8,32 @@ interface LedConfigProps {
 
 export default function LedConfig(props: LedConfigProps) {
   const [device, { setDeviceConfig }] = useLed(props.id);
-  const [name, setName] = createSignal(device?.config?.name || "Led");
-  const [pin, setPin] = createSignal(device?.config?.pin || 1);
+  const normalizeInitialState = (value: unknown): LedInitialState => {
+    const candidate = value as LedInitialState;
+    return LED_INITIAL_STATES.includes(candidate) ? candidate : "OFF";
+  };
+
+  const [name, setName] = createSignal(device?.config?.name ?? "Led");
+  const [pin, setPin] = createSignal(device?.config?.pin ?? -1);
+  const [initialState, setInitialState] = createSignal<LedInitialState>(
+    normalizeInitialState(device?.config?.initialState)
+  );
+
+  createEffect(() => {
+    const config = device?.config;
+    if (!config) {
+      return;
+    }
+
+    if (typeof config.name === "string") {
+      setName(config.name);
+    }
+    if (typeof config.pin === "number") {
+      setPin(config.pin);
+    }
+    const nextInitialState = normalizeInitialState(config.initialState);
+    setInitialState(nextInitialState);
+  });
 
   return (
     <DeviceConfig
@@ -18,6 +42,7 @@ export default function LedConfig(props: LedConfigProps) {
         setDeviceConfig({
           name: name(),
           pin: pin(),
+          initialState: initialState(),
         });
       }}
     >
@@ -42,6 +67,21 @@ export default function LedConfig(props: LedConfigProps) {
               onInput={(e) => setPin(Number(e.currentTarget.value))}
               style={{ "margin-left": "0.5rem" }}
             />
+          </DeviceConfigItem>
+        </DeviceConfigRow>
+        <DeviceConfigRow>
+          <DeviceConfigItem name="Initial state:">
+            <select
+              value={initialState()}
+              onChange={(event) =>
+                setInitialState(normalizeInitialState(event.currentTarget.value))
+              }
+              style={{ "margin-left": "0.5rem" }}
+            >
+              <For each={LED_INITIAL_STATES}>
+                {(option) => <option value={option}>{option}</option>}
+              </For>
+            </select>
           </DeviceConfigItem>
         </DeviceConfigRow>
       </DeviceConfigTable>

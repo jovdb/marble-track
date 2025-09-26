@@ -25,7 +25,6 @@
 Stepper::Stepper(const String &id, const String &name)
     : Device(id, "stepper")
 {
-
 }
 
 /**
@@ -493,6 +492,8 @@ String Stepper::getConfig() const
  */
 void Stepper::setConfig(JsonObject *config)
 {
+    Device::setConfig(config);
+
     if (!config)
     {
         MLOG_WARN("Stepper [%s]: Null config provided", _id.c_str());

@@ -38,6 +38,12 @@ Button::Button(const String &id, const String &name)
  */
 void Button::setup()
 {
+    if (_pin < 0)
+    {
+        MLOG_WARN("Button [%s]: Pin not configured, skipping setup", _id.c_str());
+        return;
+    }
+
     // Configure pin mode based on pull-up/pull-down setting
     if (_pullUp)
     {
@@ -232,6 +238,92 @@ String Button::getState()
     return result;
 }
 
+String Button::getConfig() const
+{
+    DynamicJsonDocument config(256);
+    deserializeJson(config, Device::getConfig());
+
+    config["name"] = _name;
+    config["pin"] = _pin;
+    config["pullUp"] = _pullUp;
+    config["debounceMs"] = _debounceMs;
+    config["buttonType"] = buttonTypeToString(_buttonType);
+
+    String message;
+    serializeJson(config, message);
+    return message;
+}
+
+void Button::setConfig(JsonObject *config)
+{
+    Device::setConfig(config);
+
+    if (!config)
+    {
+        MLOG_WARN("Button [%s]: Null config provided", _id.c_str());
+        return;
+    }
+
+    JsonVariant nameVar = (*config)["name"];
+    if (!nameVar.isNull())
+    {
+        _name = nameVar.as<String>();
+    }
+
+    JsonVariant pinVar = (*config)["pin"];
+    if (!pinVar.isNull())
+    {
+        _pin = pinVar.as<int>();
+    }
+
+    JsonVariant pullUpVar = (*config)["pullUp"];
+    if (!pullUpVar.isNull())
+    {
+        if (pullUpVar.is<bool>())
+        {
+            _pullUp = pullUpVar.as<bool>();
+        }
+        else if (pullUpVar.is<int>() || pullUpVar.is<long>())
+        {
+            _pullUp = pullUpVar.as<int>() != 0;
+        }
+        else if (pullUpVar.is<String>())
+        {
+            String value = pullUpVar.as<String>();
+            value.toLowerCase();
+            _pullUp = (value == "true" || value == "1" || value == "yes");
+        }
+    }
+
+    JsonVariant debounceVar = (*config)["debounceMs"];
+    if (!debounceVar.isNull())
+    {
+        long debounceValue = debounceVar.as<long>();
+        if (debounceValue < 0)
+        {
+            debounceValue = 0;
+        }
+        _debounceMs = static_cast<unsigned long>(debounceValue);
+    }
+
+    JsonVariant buttonTypeVar = (*config)["buttonType"];
+    if (!buttonTypeVar.isNull())
+    {
+        if (buttonTypeVar.is<String>())
+        {
+            _buttonType = buttonTypeFromString(buttonTypeVar.as<String>());
+        }
+        else if (buttonTypeVar.is<int>() || buttonTypeVar.is<long>())
+        {
+            int value = buttonTypeVar.as<int>();
+            _buttonType = (value == 1) ? ButtonType::NormalClosed : ButtonType::NormalOpen;
+        }
+    }
+
+    // Apply pin mode after updating config
+    setup();
+}
+
 /**
  * @brief Read the raw pin state accounting for pull-up/pull-down configuration
  * @return true if button is physically pressed, false otherwise
@@ -248,4 +340,18 @@ bool Button::readRawState()
         pressed = !pressed;
     }
     return pressed;
+}
+
+Button::ButtonType Button::buttonTypeFromString(const String &value) const
+{
+    if (value.equalsIgnoreCase("NormalClosed") || value.equalsIgnoreCase("NC"))
+    {
+        return ButtonType::NormalClosed;
+    }
+    return ButtonType::NormalOpen;
+}
+
+String Button::buttonTypeToString(ButtonType type) const
+{
+    return (type == ButtonType::NormalClosed) ? "NormalClosed" : "NormalOpen";
 }

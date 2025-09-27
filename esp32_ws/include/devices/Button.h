@@ -44,6 +44,8 @@ public:
 
     bool control(const String &action, JsonObject *payload = nullptr) override;
     String getState() override;
+    String getConfig() const override;
+    void setConfig(JsonObject *config) override;
     std::vector<int> getPins() const override { return {_pin}; }
 
     // Button-specific operations
@@ -76,6 +78,8 @@ private:
      * @return true if button is physically pressed, false otherwise
      */
     bool readRawState();
+    ButtonType buttonTypeFromString(const String &value) const;
+    String buttonTypeToString(ButtonType type) const;
 };
 
 #endif // BUTTON_H

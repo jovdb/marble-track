@@ -49,7 +49,8 @@ export function deviceSaveConfigHandler(
   }
 
   // Override config
-  device.config = deviceConfig;
+  //   device.config = deviceConfig;
+  device.setConfig(deviceConfig);
 
   // Save Config
   saveConfig(config);
@@ -112,7 +113,11 @@ export function deviceGetStateHandler(deviceId: string) {
   });
 }
 
-export function addDeviceHandler(deviceType: string, deviceId: string, deviceConfig: object) {
+export function addDeviceHandler(
+  deviceType: string,
+  deviceId: string,
+  deviceConfig: object
+) {
   if (!deviceType || !deviceId) {
     return JSON.stringify({
       type: "error",
@@ -171,7 +176,8 @@ export function removeDeviceHandler(deviceId: string) {
   const config = readConfig();
 
   // Find device index
-  const deviceIndex = config.devices?.findIndex((device: any) => device.id === deviceId) ?? -1;
+  const deviceIndex =
+    config.devices?.findIndex((device: any) => device.id === deviceId) ?? -1;
   if (deviceIndex === -1) {
     return JSON.stringify({
       type: "error",

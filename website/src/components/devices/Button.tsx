@@ -1,54 +1,50 @@
+import { createMemo } from "solid-js";
 import { Device } from "./Device";
 import deviceStyles from "./Device.module.css";
 import buttonStyles from "./Button.module.css";
-import { createButtonStore } from "../../stores/Button";
+import { useButton } from "../../stores/Button";
 import ButtonConfig from "./ButtonConfig";
 import { ButtonIcon } from "../icons/Icons";
 
 export function Button(props: { id: string }) {
-  const { state, error, press, release } = createButtonStore(props.id);
+  const buttonStore = useButton(props.id);
+  const device = () => buttonStore[0];
+  const actions = buttonStore[1];
 
-  const handlePress = () => {
-    press();
-  };
+  const isPressed = createMemo(() => Boolean(device()?.state?.pressed));
+  const statusLabel = createMemo(() => `Status: ${isPressed() ? "Pressed" : "Released"}`);
 
-  const handleRelease = () => {
-    release();
-  };
+  const handlePress = () => actions.press();
+  const handleRelease = () => actions.release();
 
   return (
     <Device
       id={props.id}
-      deviceState={state()}
+      deviceState={device()?.state}
       configComponent={(onClose) => <ButtonConfig id={props.id} onClose={onClose} />}
       icon={<ButtonIcon />}
     >
-      {error() && <div class={deviceStyles.device__error}>{error()}</div>}
-      {!error() && (
-        <>
-          <div class={deviceStyles.device__status}>
-            <div
-              classList={{
-                [buttonStyles["button__status-indicator"]]: true,
-                [buttonStyles["button__status-indicator--pressed"]]: state()?.pressed,
-                [buttonStyles["button__status-indicator--off"]]: !state()?.pressed,
-              }}
-            ></div>
-            <span class={deviceStyles["device__status-text"]}>
-              Status: {state()?.pressed ? "Pressed" : "Released"}
-            </span>
-          </div>
-          <div class={deviceStyles.device__controls}>
-            <button
-              class={deviceStyles.device__button}
-              onMouseDown={handlePress}
-              onMouseUp={handleRelease}
-            >
-              Hold to Press
-            </button>
-          </div>
-        </>
-      )}
+      <div class={deviceStyles.device__status}>
+        <div
+          classList={{
+            [buttonStyles["button__status-indicator"]]: true,
+            [buttonStyles["button__status-indicator--pressed"]]: isPressed(),
+            [buttonStyles["button__status-indicator--off"]]: !isPressed(),
+          }}
+        ></div>
+        <span class={deviceStyles["device__status-text"]}>{statusLabel()}</span>
+      </div>
+      <div class={deviceStyles.device__controls}>
+        <button
+          class={deviceStyles.device__button}
+          onPointerDown={handlePress}
+          onPointerUp={handleRelease}
+          onPointerLeave={handleRelease}
+          onPointerCancel={handleRelease}
+        >
+          Hold to Press
+        </button>
+      </div>
     </Device>
   );
 }

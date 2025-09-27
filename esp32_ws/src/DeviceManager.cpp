@@ -217,7 +217,8 @@ void DeviceManager::saveDevicesToJsonFile()
 
     JsonObject rootObj = doc.as<JsonObject>();
 
-    // Update the devices array
+    // Replace devices array with current snapshot to avoid stale entries
+    rootObj.remove("devices");
     JsonArray devicesArray = rootObj["devices"].to<JsonArray>();
     for (int i = 0; i < devicesCount; i++)
     {

@@ -1,47 +1,56 @@
-import { createDeviceStore, IDeviceState } from "./Device";
-import { sendMessage } from "../hooks/useWebSocket";
-import { IWsDeviceMessage } from "../interfaces/WebSockets";
+import { IDeviceConfig, IDeviceState } from "./Device";
+import { useDevice } from "./Devices";
 
 const deviceType = "buzzer";
 
 interface IBuzzerState extends IDeviceState {
-  playing: boolean;
-  currentTune: string;
-  mode: string;
+  playing?: boolean;
+  currentTune?: string;
+  mode?: string;
 }
 
-export function playTone(deviceId: string, args: { frequency: number; duration: number }) {
-  sendMessage({
-    type: "device-fn",
-    deviceId,
-    deviceType,
-    fn: "tone",
-    args,
-  } as IWsDeviceMessage);
+export interface IBuzzerConfig extends IDeviceConfig {
+  name?: string;
+  pin?: number;
 }
 
-export function playTune(deviceId: string, rtttl: string) {
-  sendMessage({
-    type: "device-fn",
-    deviceId,
-    deviceType,
-    fn: "tune",
-    args: { rtttl },
-  } as IWsDeviceMessage);
-}
+export function useBuzzer(deviceId: string) {
+  const [device, { sendMessage, ...actions }] = useDevice<IBuzzerState, IBuzzerConfig>(deviceId);
 
-export function createBuzzerStore(deviceId: string) {
-  const base = createDeviceStore(deviceId, deviceType);
+  const tone = (args: { frequency: number; duration: number }) =>
+    sendMessage({
+      type: "device-fn",
+      deviceId,
+      deviceType,
+      fn: "tone",
+      args,
+    });
 
-  return {
-    ...base,
-    tone: (args: Parameters<typeof playTone>[1]) => playTone(deviceId, args),
-    tune: (rtttl: string) => playTune(deviceId, rtttl),
-  };
+  const tune = (rtttl: string) =>
+    sendMessage({
+      type: "device-fn",
+      deviceId,
+      deviceType,
+      fn: "tune",
+      args: { rtttl },
+    });
+
+  return [
+    device,
+    {
+      ...actions,
+      tone,
+      tune,
+    },
+  ] as const;
 }
 
 declare global {
   export interface IDeviceStates {
     [deviceType]: IBuzzerState;
+  }
+
+  export interface IDeviceConfigs {
+    [deviceType]: IBuzzerConfig;
   }
 }

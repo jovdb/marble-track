@@ -15,18 +15,6 @@
 #include "Logging.h"
 
 /**
- * @brief Play a startup tone sequence
- */
-void Buzzer::startupTone()
-{
-    for (int frequency = 200; frequency <= 1000; frequency += 200)
-    {
-        this->tone(frequency, 80); // Play tone for 80ms using Buzzer::tone
-        delay(20);                 // Small delay to separate tones
-    }
-    noTone(_pin); // Ensure tone is off before the next loop
-}
-/**
  * @file Buzzer.cpp
  * @brief Implementation of Buzzer control class
  *
@@ -60,15 +48,42 @@ Buzzer::Buzzer(const String &id, const String &name)
 }
 
 /**
+ * @brief Play a startup tone sequence
+ */
+void Buzzer::startupTone()
+{
+    if (_pin < 0)
+    {
+        MLOG_WARN("Buzzer [%s]: Pin not configured, skipping startup tone", _id.c_str());
+        return;
+    }
+
+    for (int frequency = 200; frequency <= 1000; frequency += 200)
+    {
+        this->tone(frequency, 80); // Play tone for 80ms using Buzzer::tone
+        delay(20);                 // Small delay to separate tones
+    }
+    noTone(_pin); // Ensure tone is off before the next loop
+}
+
+/**
  * @brief Setup function to initialize the buzzer
  * Must be called in setup() before using the buzzer
  */
 void Buzzer::setup()
 {
-    _pin = 2;
+    if (_pin < 0)
+    {
+        MLOG_WARN("Buzzer [%s]: Pin not configured, defaulting to pin 2", _id.c_str());
+        _pin = 2;
+    }
 
     pinMode(_pin, OUTPUT);
     digitalWrite(_pin, LOW);
+    _isPlaying = false;
+    _mode = BuzzerMode::IDLE;
+    _currentTune.clear();
+    noTone(_pin);
 }
 
 /**
@@ -121,6 +136,12 @@ void Buzzer::loop()
  */
 void Buzzer::tone(int frequency, int duration)
 {
+    if (_pin < 0)
+    {
+        MLOG_WARN("Buzzer [%s]: Pin not configured, ignoring tone command", _id.c_str());
+        return;
+    }
+
     MLOG_INFO("Buzzer [%s]: Playing tone %dHz for %dms", _id.c_str(), frequency, duration);
     ::tone(_pin, frequency, duration);
 
@@ -139,6 +160,12 @@ void Buzzer::tone(int frequency, int duration)
  */
 void Buzzer::tune(const String &rtttl)
 {
+    if (_pin < 0)
+    {
+        MLOG_WARN("Buzzer [%s]: Pin not configured, ignoring tune command", _id.c_str());
+        return;
+    }
+
     MLOG_INFO("Buzzer [%s]: Playing RTTTL tune: %s", _id.c_str(), rtttl.c_str());
 
     rtttl::begin(_pin, rtttl.c_str());
@@ -270,4 +297,51 @@ String Buzzer::getState()
     String result;
     serializeJson(doc, result);
     return result;
+}
+
+String Buzzer::getConfig() const
+{
+    DynamicJsonDocument config(256);
+    deserializeJson(config, Device::getConfig());
+
+    config["name"] = _name;
+    config["pin"] = _pin;
+
+    String message;
+    serializeJson(config, message);
+    return message;
+}
+
+void Buzzer::setConfig(JsonObject *config)
+{
+    Device::setConfig(config);
+
+    if (!config)
+    {
+        MLOG_WARN("Buzzer [%s]: Null config provided", _id.c_str());
+        return;
+    }
+
+    JsonVariant nameVariant = (*config)["name"];
+    if (!nameVariant.isNull())
+    {
+        _name = nameVariant.as<String>();
+    }
+
+    JsonVariant pinVariant = (*config)["pin"];
+    if (!pinVariant.isNull())
+    {
+        _pin = pinVariant.as<int>();
+    }
+
+    setup();
+}
+
+std::vector<int> Buzzer::getPins() const
+{
+    if (_pin < 0)
+    {
+        return {};
+    }
+    return {_pin};
 }

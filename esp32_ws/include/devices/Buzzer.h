@@ -14,6 +14,7 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <vector>
 #include "Device.h"
 
 /**
@@ -58,7 +59,9 @@ public:
     // Controllable functionality
     bool control(const String &action, JsonObject *payload = nullptr) override;
     String getState() override;
-    std::vector<int> getPins() const override { return {_pin}; }
+    String getConfig() const override;
+    void setConfig(JsonObject *config) override;
+    std::vector<int> getPins() const override;
 
     // Buzzer-specific operations
     /**

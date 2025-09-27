@@ -1,5 +1,6 @@
 #include "devices/PwmMotor.h"
 #include "Logging.h"
+#include <ArduinoJson.h>
 
 PwmMotor::PwmMotor(const String &id, const String &name)
     : Device(id, "pwmmotor"),
@@ -23,6 +24,42 @@ PwmMotor::PwmMotor(const String &id, const String &name)
 
 bool PwmMotor::setupMotor(int pin, int pwmChannel, uint32_t frequency, uint8_t resolutionBits)
 {
+    if (pin < 0)
+    {
+        MLOG_ERROR("PwmMotor [%s]: Invalid pin %d. Pin must be >= 0.", _id.c_str(), pin);
+        _isSetup = false;
+        _pin = -1;
+        return false;
+    }
+
+    if (pwmChannel < 0 || pwmChannel > 1)
+    {
+        MLOG_ERROR("PwmMotor [%s]: Invalid PWM channel %d. Must be 0 or 1.", _id.c_str(), pwmChannel);
+        _isSetup = false;
+        return false;
+    }
+
+    if (frequency == 0)
+    {
+        MLOG_WARN("PwmMotor [%s]: Frequency cannot be 0. Falling back to 5000 Hz.", _id.c_str());
+        frequency = 5000;
+    }
+
+    if (resolutionBits < 1 || resolutionBits > 16)
+    {
+        MLOG_WARN("PwmMotor [%s]: Resolution %d out of range. Clamping between 1 and 16.", _id.c_str(), resolutionBits);
+        int clamped = static_cast<int>(resolutionBits);
+        if (clamped < 1)
+        {
+            clamped = 1;
+        }
+        else if (clamped > 16)
+        {
+            clamped = 16;
+        }
+        resolutionBits = static_cast<uint8_t>(clamped);
+    }
+
     _pin = pin;
     _pwmChannel = pwmChannel;
     _frequency = frequency;
@@ -41,22 +78,36 @@ bool PwmMotor::setupMotor(int pin, int pwmChannel, uint32_t frequency, uint8_t r
         _mcpwmTimer = MCPWM_TIMER_1;
         _mcpwmSignal = MCPWM1A;
     }
-    else
-    {
-        MLOG_ERROR("PwmMotor [%s]: Invalid PWM channel %d. Must be 0 or 1.", _id.c_str(), _pwmChannel);
-        return false;
-    }
 
     MLOG_INFO("PwmMotor [%s]: Setup - pin:%d, channel:%d, freq:%d Hz, resolution:%d bits",
               _id.c_str(), _pin, _pwmChannel, _frequency, _resolutionBits);
 
-    return configureMCPWM();
+    bool configured = configureMCPWM();
+    if (configured)
+    {
+        notifyStateChange();
+    }
+
+    return configured;
 }
 
 bool PwmMotor::configureMCPWM()
 {
+    if (_pin < 0)
+    {
+        MLOG_WARN("PwmMotor [%s]: Cannot configure MCPWM without a valid pin.", _id.c_str());
+        _isSetup = false;
+        return false;
+    }
+
     // Configure GPIO for MCPWM
-    ESP_ERROR_CHECK(mcpwm_gpio_init(_mcpwmUnit, _mcpwmSignal, _pin));
+    esp_err_t gpioErr = mcpwm_gpio_init(_mcpwmUnit, _mcpwmSignal, _pin);
+    if (gpioErr != ESP_OK)
+    {
+        MLOG_ERROR("PwmMotor [%s]: Failed to initialize MCPWM GPIO: %s", _id.c_str(), esp_err_to_name(gpioErr));
+        _isSetup = false;
+        return false;
+    }
 
     // Configure MCPWM
     mcpwm_config_t pwm_config = {
@@ -71,6 +122,7 @@ bool PwmMotor::configureMCPWM()
     if (err != ESP_OK)
     {
         MLOG_ERROR("PwmMotor [%s]: MCPWM initialization failed: %s", _id.c_str(), esp_err_to_name(err));
+        _isSetup = false;
         return false;
     }
 
@@ -252,6 +304,7 @@ String PwmMotor::getState()
     doc["frequency"] = _frequency;
     doc["resolutionBits"] = _resolutionBits;
     doc["dutyCycle"] = _currentDutyCycle;
+    doc["running"] = (_currentDutyCycle > 0.0f) || _isAnimating;
 
     if (_isAnimating)
     {
@@ -262,6 +315,82 @@ String PwmMotor::getState()
     String result;
     serializeJson(doc, result);
     return result;
+}
+
+String PwmMotor::getConfig() const
+{
+    JsonDocument config;
+    deserializeJson(config, Device::getConfig());
+
+    config["name"] = _name;
+    config["pin"] = _pin;
+    config["pwmChannel"] = _pwmChannel;
+    config["frequency"] = _frequency;
+    config["resolutionBits"] = _resolutionBits;
+
+    String message;
+    serializeJson(config, message);
+    return message;
+}
+
+void PwmMotor::setConfig(JsonObject *config)
+{
+    Device::setConfig(config);
+
+    if (!config)
+    {
+        MLOG_WARN("PwmMotor [%s]: Null config provided", _id.c_str());
+        return;
+    }
+
+    if ((*config)["name"].is<String>())
+    {
+        _name = (*config)["name"].as<String>();
+    }
+
+    int nextPin = _pin;
+    if ((*config)["pin"].is<int>())
+    {
+        nextPin = (*config)["pin"].as<int>();
+    }
+
+    int nextChannel = _pwmChannel;
+    if ((*config)["pwmChannel"].is<int>())
+    {
+        nextChannel = (*config)["pwmChannel"].as<int>();
+    }
+    else if ((*config)["channel"].is<int>())
+    {
+        nextChannel = (*config)["channel"].as<int>();
+    }
+
+    uint32_t nextFrequency = _frequency;
+    if ((*config)["frequency"].is<uint32_t>())
+    {
+        nextFrequency = (*config)["frequency"].as<uint32_t>();
+    }
+    else if ((*config)["frequency"].is<int>())
+    {
+        nextFrequency = static_cast<uint32_t>((*config)["frequency"].as<int>());
+    }
+
+    uint8_t nextResolution = _resolutionBits;
+    if ((*config)["resolutionBits"].is<int>())
+    {
+        nextResolution = static_cast<uint8_t>((*config)["resolutionBits"].as<int>());
+    }
+
+    _pin = nextPin;
+    _pwmChannel = nextChannel;
+    _frequency = nextFrequency;
+    _resolutionBits = nextResolution;
+
+    if (_pin >= 0)
+    {
+        setupMotor(_pin, _pwmChannel, _frequency, _resolutionBits);
+    }
+
+    notifyStateChange();
 }
 
 void PwmMotor::updateAnimation()
@@ -327,4 +456,14 @@ float PwmMotor::easeInOutQuad(float t)
     {
         return 1.0f - 2.0f * (1.0f - t) * (1.0f - t);
     }
+}
+
+std::vector<int> PwmMotor::getPins() const
+{
+    if (_pin < 0)
+    {
+        return {};
+    }
+
+    return {_pin};
 }

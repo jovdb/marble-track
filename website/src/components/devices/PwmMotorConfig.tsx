@@ -1,10 +1,10 @@
-import { createSignal, onMount } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
 import DeviceConfig, {
   DeviceConfigItem,
   DeviceConfigRow,
   DeviceConfigTable,
 } from "./DeviceConfig";
-import { createPwmMotorStore } from "../../stores/PwmMotor";
+import { usePwmMotor } from "../../stores/PwmMotor";
 
 interface PwmMotorConfigProps {
   id: string;
@@ -12,32 +12,68 @@ interface PwmMotorConfigProps {
 }
 
 export default function PwmMotorConfig(props: PwmMotorConfigProps) {
-  const { state, setupMotor } = createPwmMotorStore(props.id);
+  const pwmMotorStore = usePwmMotor(props.id);
+  const device = () => pwmMotorStore[0];
+  const actions = pwmMotorStore[1];
 
-  // Configuration signals with default values
-  const [pin, setPin] = createSignal(14);
-  const [pwmChannel, setPwmChannel] = createSignal(0);
-  const [frequency, setFrequency] = createSignal(1000);
-  const [resolutionBits, setResolutionBits] = createSignal(10);
+  const [name, setName] = createSignal(device()?.config?.name ?? device()?.id ?? "PWM Motor");
+  const [pin, setPin] = createSignal<number>(device()?.config?.pin ?? -1);
+  const [pwmChannel, setPwmChannel] = createSignal<number>(device()?.config?.pwmChannel ?? 0);
+  const [frequency, setFrequency] = createSignal<number>(device()?.config?.frequency ?? 5000);
+  const [resolutionBits, setResolutionBits] = createSignal<number>(device()?.config?.resolutionBits ?? 12);
 
-  // Load current configuration on mount
-  onMount(() => {
-    const currentState = state();
-    if (currentState) {
-      if (currentState.pin !== undefined && currentState.pin !== -1) setPin(currentState.pin);
-      if (currentState.pwmChannel !== undefined) setPwmChannel(currentState.pwmChannel);
-      if (currentState.frequency !== undefined) setFrequency(currentState.frequency);
-      if (currentState.resolutionBits !== undefined) setResolutionBits(currentState.resolutionBits);
+  createEffect(() => {
+    const config = device()?.config;
+    if (!config) {
+      return;
+    }
+
+    if (typeof config.name === "string") {
+      setName(config.name);
+    }
+
+    if (typeof config.pin === "number") {
+      setPin(config.pin);
+    }
+
+    if (typeof config.pwmChannel === "number") {
+      setPwmChannel(config.pwmChannel);
+    }
+
+    if (typeof config.frequency === "number") {
+      setFrequency(config.frequency);
+    }
+
+    if (typeof config.resolutionBits === "number") {
+      setResolutionBits(config.resolutionBits);
     }
   });
 
-  const handleSave = () => {
-    setupMotor(pin(), pwmChannel(), frequency(), resolutionBits());
-  };
-
   return (
-    <DeviceConfig id={props.id} onSave={handleSave} onClose={props.onClose}>
+    <DeviceConfig
+      id={props.id}
+      onSave={() =>
+        actions.setDeviceConfig({
+          name: name()?.trim() || device()?.id,
+          pin: pin(),
+          pwmChannel: pwmChannel(),
+          frequency: frequency(),
+          resolutionBits: resolutionBits(),
+        })
+      }
+      onClose={props.onClose}
+    >
       <DeviceConfigTable>
+        <DeviceConfigRow>
+          <DeviceConfigItem name="Name:">
+            <input
+              type="text"
+              value={name() || ""}
+              onInput={(event) => setName(event.currentTarget.value)}
+              style={{ "margin-left": "0.5rem" }}
+            />
+          </DeviceConfigItem>
+        </DeviceConfigRow>
         <DeviceConfigRow>
           <DeviceConfigItem name="GPIO Pin:">
             <input
@@ -75,6 +111,7 @@ export default function PwmMotorConfig(props: PwmMotorConfigProps) {
               style={{ width: "6em", "margin-left": "0.5rem" }}
               title="PWM frequency in Hz (1-40000)"
             />
+            (10Hz to 40MHz)
           </DeviceConfigItem>
         </DeviceConfigRow>
         <DeviceConfigRow>

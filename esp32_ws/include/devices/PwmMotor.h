@@ -66,6 +66,9 @@ public:
     void loop() override;
     bool control(const String &action, JsonObject *args) override;
     String getState() override;
+    String getConfig() const override;
+    void setConfig(JsonObject *config) override;
+    std::vector<int> getPins() const override;
 
 private:
     int _pin;

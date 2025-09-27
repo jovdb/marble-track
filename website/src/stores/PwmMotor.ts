@@ -1,79 +1,80 @@
-import { createDeviceStore, IDeviceState } from "./Device";
-import { sendMessage } from "../hooks/useWebSocket";
-import { IWsDeviceMessage } from "../interfaces/WebSockets";
+import { IDeviceConfig, IDeviceState } from "./Device";
+import { useDevice } from "./Devices";
 
 const deviceType = "pwmmotor";
 
 interface IPwmMotorState extends IDeviceState {
-  pin: number;
-  pwmChannel: number;
-  frequency: number;
-  resolutionBits: number;
-  dutyCycle: number;
-  /** Available when animating */
+  pin?: number;
+  pwmChannel?: number;
+  frequency?: number;
+  resolutionBits?: number;
+  dutyCycle?: number;
   targetDutyCycle?: number;
-  /** Available when animating */
   targetDurationMs?: number;
-
   running?: boolean;
 }
 
-export function setDutyCycle(deviceId: string, value: number, durationMs?: number) {
-  const args: { value: number; durationMs?: number } = { value };
-
-  if (durationMs !== undefined && durationMs > 0) {
-    args.durationMs = durationMs;
-  }
-
-  sendMessage({
-    type: "device-fn",
-    deviceId,
-    deviceType,
-    fn: "setDutyCycle",
-    args,
-  } as IWsDeviceMessage);
+export interface IPwmMotorConfig extends IDeviceConfig {
+  name?: string;
+  pin?: number;
+  pwmChannel?: number;
+  frequency?: number;
+  resolutionBits?: number;
 }
 
-export function stop(deviceId: string) {
-  sendMessage({
-    type: "device-fn",
-    deviceId,
-    deviceType,
-    fn: "stop",
-    args: {},
-  } as IWsDeviceMessage);
-}
+export function usePwmMotor(deviceId: string) {
+  const [device, { sendMessage, ...actions }] = useDevice<IPwmMotorState, IPwmMotorConfig>(deviceId);
 
-export function setupMotor(
-  deviceId: string,
-  pin: number,
-  channel: number,
-  frequency: number,
-  resolutionBits: number
-) {
-  sendMessage({
-    type: "device-fn",
-    deviceId,
-    deviceType,
-    fn: "setup",
-    args: { pin, channel, frequency, resolutionBits },
-  } as IWsDeviceMessage);
-}
+  const setDutyCycle = (value: number, durationMs?: number) => {
+    const args: { value: number; durationMs?: number } = { value };
+    if (durationMs !== undefined && durationMs > 0) {
+      args.durationMs = durationMs;
+    }
 
-export function createPwmMotorStore(deviceId: string) {
-  const base = createDeviceStore(deviceId, deviceType);
-
-  return {
-    ...base,
-    setDutyCycle: (value: number, durationMs?: number) => setDutyCycle(deviceId, value, durationMs),
-    stop: () => stop(deviceId),
-    setupMotor: (pin: number, channel: number, frequency: number, resolutionBits: number) =>
-      setupMotor(deviceId, pin, channel, frequency, resolutionBits),
+    sendMessage({
+      type: "device-fn",
+      deviceId,
+      deviceType,
+      fn: "setDutyCycle",
+      args,
+    });
   };
+
+  const stop = () =>
+    sendMessage({
+      type: "device-fn",
+      deviceId,
+      deviceType,
+      fn: "stop",
+      args: {},
+    });
+
+  const setupMotor = (pin: number, channel: number, frequency: number, resolutionBits: number) =>
+    sendMessage({
+      type: "device-fn",
+      deviceId,
+      deviceType,
+      fn: "setup",
+      args: { pin, channel, frequency, resolutionBits },
+    });
+
+  return [
+    device,
+    {
+      ...actions,
+      setDutyCycle,
+      stop,
+      setupMotor,
+    },
+  ] as const;
 }
 
 declare global {
   export interface IDeviceStates {
     [deviceType]: IPwmMotorState;
+  }
+
+  export interface IDeviceConfigs {
+    [deviceType]: IPwmMotorConfig;
   }
 }

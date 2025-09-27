@@ -4,6 +4,7 @@ import { createPwmMotorStore } from "../../stores/PwmMotor";
 
 interface PwmMotorConfigProps {
   id: string;
+  onClose: () => void;
 }
 
 export default function PwmMotorConfig(props: PwmMotorConfigProps) {
@@ -31,7 +32,7 @@ export default function PwmMotorConfig(props: PwmMotorConfigProps) {
   };
 
   return (
-    <DeviceConfig id={props.id} onSave={handleSave}>
+    <DeviceConfig id={props.id} onSave={handleSave} onClose={props.onClose}>
       <div style={{ display: "grid", "grid-template-columns": "1fr 1fr", gap: "1rem" }}>
         {/* GPIO Pin Configuration */}
         <label style={{ display: "flex", "align-items": "center", gap: "0.5rem" }}>

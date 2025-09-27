@@ -8,7 +8,7 @@ interface DeviceProps {
   icon?: JSX.Element;
   deviceState: IDeviceState | undefined;
   children?: JSX.Element | JSX.Element[];
-  configComponent?: JSX.Element;
+  configComponent?: (onClose: () => void) => JSX.Element;
 }
 
 export function Device(props: DeviceProps) {
@@ -106,7 +106,7 @@ export function Device(props: DeviceProps) {
         )} */}
         <Show when={showConfig() && props.configComponent}>
           <div class={styles.device__children} id={configPanelId} role="region" aria-live="polite">
-            {props.configComponent}
+            {props.configComponent!(() => setShowConfig(false))}
           </div>
         </Show>
       </div>

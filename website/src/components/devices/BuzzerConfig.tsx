@@ -3,13 +3,14 @@ import DeviceConfig from "./DeviceConfig";
 
 interface BuzzerConfigProps {
   id: string;
+  onClose: () => void;
 }
 
 export default function BuzzerConfig(props: BuzzerConfigProps) {
   const [pin, setPin] = createSignal(1);
 
   return (
-    <DeviceConfig id={props.id} onSave={() => alert(`TODO: save`)}>
+    <DeviceConfig id={props.id} onSave={() => alert(`TODO: save`)} onClose={props.onClose}>
       <label>
         PWM Pin number:
         <input

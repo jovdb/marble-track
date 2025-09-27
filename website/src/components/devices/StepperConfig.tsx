@@ -3,6 +3,7 @@ import DeviceConfig from "./DeviceConfig";
 
 interface StepperConfigProps {
   id: string;
+  onClose: () => void;
 }
 
 export default function StepperConfig(props: StepperConfigProps) {
@@ -12,7 +13,7 @@ export default function StepperConfig(props: StepperConfigProps) {
   const [acceleration, setAcceleration] = createSignal(100);
 
   return (
-    <DeviceConfig id={props.id} onSave={() => alert(`TODO: save`)}>
+    <DeviceConfig id={props.id} onSave={() => alert(`TODO: save`)} onClose={props.onClose}>
       <label>
         Step pin:
         <input

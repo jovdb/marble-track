@@ -4,6 +4,7 @@ import { LED_INITIAL_STATES, LedInitialState, useLed } from "../../stores/Led";
 
 interface LedConfigProps {
   id: string;
+  onClose: () => void;
 }
 
 export default function LedConfig(props: LedConfigProps) {
@@ -45,6 +46,7 @@ export default function LedConfig(props: LedConfigProps) {
           initialState: initialState(),
         });
       }}
+      onClose={props.onClose}
     >
       <DeviceConfigTable>
         <DeviceConfigRow>

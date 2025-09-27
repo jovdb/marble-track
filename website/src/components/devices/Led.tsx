@@ -33,7 +33,7 @@ export function Led(props: { id: string }) {
     <Device
       id={props.id}
       deviceState={device()?.state}
-      configComponent={<LedConfig id={props.id} />}
+      configComponent={(onClose) => <LedConfig id={props.id} onClose={onClose} />}
       icon={<LedIcon />}
     >
       <div class={styles.device__status}>

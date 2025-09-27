@@ -3,6 +3,7 @@ import DeviceConfig from "./DeviceConfig";
 
 interface ButtonConfigProps {
   id: string;
+  onClose: () => void;
 }
 
 export default function ButtonConfig(props: ButtonConfigProps) {
@@ -11,7 +12,7 @@ export default function ButtonConfig(props: ButtonConfigProps) {
   const [debounce, setDebounce] = createSignal(50);
 
   return (
-    <DeviceConfig id={props.id} onSave={() => alert(`TODO: save`)}>
+    <DeviceConfig id={props.id} onSave={() => alert(`TODO: save`)} onClose={props.onClose}>
       <label>
         Pin number:
         <input

@@ -5,6 +5,7 @@ import styles from "./DeviceConfig.module.css";
 interface DeviceConfigProps {
   id: string;
   onSave: () => void;
+  onClose?: () => void;
   children?: JSX.Element | JSX.Element[];
 }
 
@@ -19,7 +20,6 @@ export default function DeviceConfig(props: DeviceConfigProps) {
   return (
     <section class={styles["device-config"]}>
       <form
-        class={styles["device-config__form"]}
         onSubmit={(event) => {
           event.preventDefault();
           props.onSave();
@@ -27,6 +27,15 @@ export default function DeviceConfig(props: DeviceConfigProps) {
       >
         <div class={styles["device-config__fields"]}>{props.children}</div>
         <div class={styles["device-config__actions"]}>
+          {props.onClose && (
+            <button
+              type="button"
+              class={styles["device-config__close"]}
+              onClick={props.onClose}
+            >
+              Close
+            </button>
+          )}
           <button type="submit" class={styles["device-config__submit"]}>
             Save
           </button>

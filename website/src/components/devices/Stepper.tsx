@@ -28,7 +28,7 @@ export function Stepper(props: { id: string }) {
     <Device
       id={props.id}
       deviceState={state()}
-      configComponent={<StepperConfig id={props.id} />}
+      configComponent={(onClose) => <StepperConfig id={props.id} onClose={onClose} />}
       icon={<StepperIcon />}
     >
       {error() && <div class={styles.device__error}>{error()}</div>}

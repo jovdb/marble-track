@@ -20,7 +20,7 @@ export function Button(props: { id: string }) {
     <Device
       id={props.id}
       deviceState={state()}
-      configComponent={<ButtonConfig id={props.id} />}
+      configComponent={(onClose) => <ButtonConfig id={props.id} onClose={onClose} />}
       icon={<ButtonIcon />}
     >
       {error() && <div class={deviceStyles.device__error}>{error()}</div>}

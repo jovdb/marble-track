@@ -21,7 +21,7 @@ export function PwmMotor(props: { id: string }) {
     <Device
       id={props.id}
       deviceState={state()}
-      configComponent={<PwmMotorConfig id={props.id} />}
+      configComponent={(onClose) => <PwmMotorConfig id={props.id} onClose={onClose} />}
       icon={<StepperIcon />}
     >
       {error() && <div class={deviceStyles.device__error}>{error()}</div>}

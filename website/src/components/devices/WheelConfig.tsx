@@ -8,7 +8,7 @@ import { useDevice } from "../../stores/Devices";
 
 // Update the import path below to the correct location of IWheelState
 
-export function WheelConfig(props: { id: string }) {
+export function WheelConfig(props: { id: string; onClose: () => void }) {
   const { error, calibrate, config, saveConfig, loadConfig } = createWheelStore(props.id);
   const [stepperDevice, { sendMessage }] = useDevice(`${props.id}-stepper`);
   const currentPosition = createMemo(() => (stepperDevice?.state as any)?.currentPosition);
@@ -31,7 +31,7 @@ export function WheelConfig(props: { id: string }) {
   };
 
   return (
-    <DeviceConfig id={props.id} onSave={() => alert(`TODO: save`)}>
+    <DeviceConfig id={props.id} onSave={() => alert(`TODO: save`)} onClose={props.onClose}>
       <button
         class={styles.device__button}
         onClick={() => {

@@ -196,6 +196,7 @@
   justify-content: center;
   gap: var(--spacing-1);
   padding: var(--spacing-1) var(--spacing-2);
+  margin-bottom: 0;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   background-color: var(--color-surface-elevated);

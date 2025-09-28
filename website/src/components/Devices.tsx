@@ -11,6 +11,7 @@ import { Servo } from "./devices/Servo";
 import { Stepper } from "./devices/Stepper";
 import { Wheel } from "./devices/Wheel";
 import { Pwm } from "./devices/Pwm";
+import { PwdDevice } from "./devices/PwdDevice";
 
 import styles from "./Devices.module.css";
 
@@ -62,6 +63,8 @@ export function renderDeviceComponent(device: { id: string; type: string }) {
       return <PwmMotor id={device.id} />;
     case "pwm":
       return <Pwm id={device.id} />;
+    case "pwddevice":
+      return <PwdDevice id={device.id} />;
 
     default:
       logger.error(`Unknown device type: ${device.type}`);

@@ -21,7 +21,6 @@ const DEVICE_TYPES = [
   "Servo",
   "Stepper",
   "Wheel",
-  "PwdDevice",
 ] as const;
 
 export function DevicesList() {

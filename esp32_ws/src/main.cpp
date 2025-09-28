@@ -120,7 +120,6 @@ void runAutomaticMode()
   // Currently not implemented - system runs in MANUAL mode
 }
 
-
 void setup()
 {
   // Initialize serial communication
@@ -181,43 +180,6 @@ void setup()
   // Try to load devices from JSON file
   deviceManager.loadDevicesFromJsonFile();
 
-  // // If no devices loaded, use hardcoded devices and save to disk
-  // if (deviceManager.getDeviceCount() == 0)
-  // {
-
-  //   Led *led = new Led("test-led");
-  //   led->setName("Test LED");
-
-  //   Device *devices[] = {
-  //       led,
-  //       new Button("test-button2", "Test Button 2"),
-  //       new Buzzer("test-buzzer", "Test Buzzer"),
-  //       new DividerWheel(10, 11, 12, 13, 15, "wheel", "Divider Wheel")};
-
-  //   const int numDevices = sizeof(devices) / sizeof(devices[0]);
-  //   for (int i = 0; i < numDevices; ++i)
-  //   {
-  //     deviceManager.addDevice(devices[i]);
-  //   }
-  //   deviceManager.saveDevicesToJsonFile();
-  // }
-  /*
-    // Add development/test devices (these are not saved to JSON)
-    ServoDevice *testServo = new ServoDevice("test-servo", "SG90");
-    testServo->setPin(42);
-    testServo->setPwmChannel(1);
-    deviceManager.addDevice(testServo);
-
-    PwmMotor *testPwmMotor = new PwmMotor("test-pwm-motor", "Test PWM Motor");
-    testPwmMotor->setupMotor(15, 0, 1000, 10); // pin 14, channel 0, 1kHz, 10-bit resolution
-    deviceManager.addDevice(testPwmMotor);
-
-    Stepper *testStepper = new Stepper("test-stepper", "Test Stepper");
-    testStepper->configure2Pin(17, 18, 1000, 500);
-    testStepper->setMaxSpeed(2000);
-    // TODO: setMaxAcceleration(1000);
-    deviceManager.addDevice(testStepper);
-  */
   // Setup  Devices
   deviceManager.setup([&](const String &deviceId, const String &stateJson)
                       { wsManager.broadcastState(deviceId, stateJson, ""); });
@@ -272,7 +234,6 @@ void loop()
     break;
   }
 }
-
 
 void setOperationMode(OperationMode mode)
 {

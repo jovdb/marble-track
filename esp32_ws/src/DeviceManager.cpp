@@ -13,6 +13,7 @@
 #include "devices/Stepper.h"
 #include "devices/Wheel.h"
 #include "devices/PwmMotor.h"
+#include "devices/Pwm.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
 
@@ -145,6 +146,19 @@ void DeviceManager::loadDevicesFromJsonFile()
                             }
 
                             devices[devicesCount++] = motor;
+                        }
+                        else if (type == "pwm")
+                        {
+                            Pwm *pwm = new Pwm(id, name);
+
+                            // Apply configuration from JSON config property if it exists
+                            if (obj["config"].is<JsonObject>())
+                            {
+                                JsonObject config = obj["config"];
+                                pwm->setConfig(&config);
+                            }
+
+                            devices[devicesCount++] = pwm;
                         }
                         else
                         {
@@ -550,6 +564,10 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
     else if (lowerType == "pwmmotor")
     {
         newDevice = new PwmMotor(deviceId, deviceId);
+    }
+    else if (lowerType == "pwm")
+    {
+        newDevice = new Pwm(deviceId, deviceId);
     }
     else
     {

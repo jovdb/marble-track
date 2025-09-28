@@ -1,0 +1,23 @@
+.pwm__status-indicator {
+  --pwm-indicator-off: var(--color-gray-400);
+  --pwm-indicator-active: var(--color-warning-500);
+  --pwm-indicator-glow: rgba(234, 179, 8, 0.45);
+
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  background-color: var(--pwm-indicator-off);
+  box-shadow: none;
+  transition: background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.pwm__status-indicator--running {
+  background-color: var(--pwm-indicator-active);
+  box-shadow: 0 0 8px var(--pwm-indicator-glow);
+}
+
+.pwm__status-indicator--stopped {
+  background-color: var(--pwm-indicator-off);
+  box-shadow: none;
+}

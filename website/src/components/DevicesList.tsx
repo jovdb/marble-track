@@ -17,6 +17,7 @@ const DEVICE_TYPES = [
   "GateWithSensor",
   "Led",
   "PwmMotor",
+  "Pwm",
   "Servo",
   "Stepper",
   "Wheel",

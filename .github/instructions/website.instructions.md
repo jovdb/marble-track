@@ -48,3 +48,8 @@ This is the frontend web application for the marble track system. It is built wi
 
 - Keep readme and instructions up to date.
 
+## Testing
+
+- The website started with `npm run dev` is running on `localhost:3000`.
+- The website when uploaded to the ESP32 with `../deploy-website.ps1` is available on the ESP32 device on `marble-track.local`.
+- To debug the website, you can test the website and debug it with the MCP Chrome Devtools.

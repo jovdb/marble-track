@@ -1,8 +1,8 @@
-#include "devices/Pwm.h"
+#include "devices/PwmDevice.h"
 #include "Logging.h"
 #include <ArduinoJson.h>
 
-Pwm::Pwm(const String &id, const String &name)
+PwmDevice::PwmDevice(const String &id, const String &name)
     : Device(id, "pwm"),
       _pin(-1),
       _pwmChannel(0),
@@ -22,7 +22,7 @@ Pwm::Pwm(const String &id, const String &name)
     _name = name;
 }
 
-bool Pwm::setupMotor(int pin, int pwmChannel, uint32_t frequency, uint8_t resolutionBits)
+bool PwmDevice::setupMotor(int pin, int pwmChannel, uint32_t frequency, uint8_t resolutionBits)
 {
     if (pin < 0)
     {
@@ -90,7 +90,7 @@ bool Pwm::setupMotor(int pin, int pwmChannel, uint32_t frequency, uint8_t resolu
     return configured;
 }
 
-bool Pwm::configureMCPWM()
+bool PwmDevice::configureMCPWM()
 {
     if (_pin < 0)
     {
@@ -128,7 +128,7 @@ bool Pwm::configureMCPWM()
     return true;
 }
 
-void Pwm::setDutyCycle(float dutyCycle, bool notifyChange)
+void PwmDevice::setDutyCycle(float dutyCycle, bool notifyChange)
 {
     if (!_isSetup)
     {
@@ -160,7 +160,7 @@ void Pwm::setDutyCycle(float dutyCycle, bool notifyChange)
     }
 }
 
-void Pwm::setDutyCycleAnimated(float dutyCycle, uint32_t durationMs)
+void PwmDevice::setDutyCycleAnimated(float dutyCycle, uint32_t durationMs)
 {
     if (!_isSetup)
     {
@@ -191,13 +191,13 @@ void Pwm::setDutyCycleAnimated(float dutyCycle, uint32_t durationMs)
     notifyStateChange();
 }
 
-void Pwm::stop()
+void PwmDevice::stop()
 {
     setDutyCycle(0.0);
     MLOG_INFO("Pwm [%s]: Output stopped", _id.c_str());
 }
 
-void Pwm::setup()
+void PwmDevice::setup()
 {
     Device::setup();
 
@@ -212,7 +212,7 @@ void Pwm::setup()
     }
 }
 
-void Pwm::loop()
+void PwmDevice::loop()
 {
     Device::loop();
 
@@ -222,7 +222,7 @@ void Pwm::loop()
     }
 }
 
-bool Pwm::control(const String &action, JsonObject *args)
+bool PwmDevice::control(const String &action, JsonObject *args)
 {
     if (action == "setDutyCycle")
     {
@@ -271,7 +271,7 @@ bool Pwm::control(const String &action, JsonObject *args)
     }
 }
 
-String Pwm::getState()
+String PwmDevice::getState()
 {
     JsonDocument doc;
 
@@ -300,7 +300,7 @@ String Pwm::getState()
     return result;
 }
 
-String Pwm::getConfig() const
+String PwmDevice::getConfig() const
 {
     JsonDocument config;
     deserializeJson(config, Device::getConfig());
@@ -316,7 +316,7 @@ String Pwm::getConfig() const
     return message;
 }
 
-void Pwm::setConfig(JsonObject *config)
+void PwmDevice::setConfig(JsonObject *config)
 {
     Device::setConfig(config);
 
@@ -376,7 +376,7 @@ void Pwm::setConfig(JsonObject *config)
     notifyStateChange();
 }
 
-void Pwm::updateAnimation()
+void PwmDevice::updateAnimation()
 {
     if (!_isAnimating)
         return;
@@ -409,7 +409,7 @@ void Pwm::updateAnimation()
     mcpwm_set_duty_type(_mcpwmUnit, _mcpwmTimer, MCPWM_OPR_A, MCPWM_DUTY_MODE_0);
 }
 
-float Pwm::easeInOutQuad(float t)
+float PwmDevice::easeInOutQuad(float t)
 {
     if (t < 0.0f)
         t = 0.0f;
@@ -426,7 +426,7 @@ float Pwm::easeInOutQuad(float t)
     }
 }
 
-std::vector<int> Pwm::getPins() const
+std::vector<int> PwmDevice::getPins() const
 {
     if (_pin < 0)
     {

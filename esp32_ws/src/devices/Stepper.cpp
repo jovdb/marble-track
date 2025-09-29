@@ -17,14 +17,14 @@
 /**
  * @brief Constructor for Stepper motor
  *
- * Initializes the Stepper object with just ID and name.
+ * Initializes the Stepper object with just an identifier.
  * Configuration must be done separately using configure2Pin() or configure4Pin()
  * @param id Unique identifier string for the stepper
- * @param name Human-readable name string for the stepper
  */
-Stepper::Stepper(const String &id, const String &name)
+Stepper::Stepper(const String &id)
     : Device(id, "stepper")
 {
+    _name = id;
 }
 
 /**
@@ -335,10 +335,8 @@ String Stepper::getState()
     doc["currentPosition"] = getCurrentPosition();
     doc["targetPosition"] = getTargetPosition();
     doc["isMoving"] = isMoving();
-    doc["maxSpeed"] = _maxSpeed;
+    doc["speed"] = _maxSpeed;
     doc["acceleration"] = _maxAcceleration;
-    doc["stepperType"] = _stepperType;
-    doc["is4Pin"] = _is4Pin;
 
     String result;
     serializeJson(doc, result);
@@ -368,7 +366,7 @@ std::vector<int> Stepper::getPins() const
  * @param maxSpeed Maximum speed in steps per second
  * @param acceleration Acceleration in steps per second per second
  */
-void Stepper::configure2Pin(int stepPin, int dirPin, float maxSpeed, float acceleration)
+void Stepper::configure2Pin(int stepPin, int dirPin, float maxSpeed, float maxAcceleration)
 {
     cleanupAccelStepper();
 
@@ -378,7 +376,7 @@ void Stepper::configure2Pin(int stepPin, int dirPin, float maxSpeed, float accel
     _pin3 = -1;
     _pin4 = -1;
     _maxSpeed = maxSpeed;
-    _maxAcceleration = acceleration;
+    _maxAcceleration = maxAcceleration;
     _stepperType = "DRIVER";
 
     initializeAccelStepper();
@@ -396,7 +394,7 @@ void Stepper::configure2Pin(int stepPin, int dirPin, float maxSpeed, float accel
  * @param maxSpeed Maximum speed in steps per second
  * @param acceleration Acceleration in steps per second per second
  */
-void Stepper::configure4Pin(int pin1, int pin2, int pin3, int pin4, float maxSpeed, float acceleration)
+void Stepper::configure4Pin(int pin1, int pin2, int pin3, int pin4, float maxSpeed, float maxAcceleration)
 {
     cleanupAccelStepper();
 
@@ -406,7 +404,7 @@ void Stepper::configure4Pin(int pin1, int pin2, int pin3, int pin4, float maxSpe
     _pin3 = pin3;
     _pin4 = pin4;
     _maxSpeed = maxSpeed;
-    _maxAcceleration = acceleration;
+    _maxAcceleration = maxAcceleration;
     _stepperType = "HALF4WIRE";
 
     initializeAccelStepper();
@@ -457,13 +455,13 @@ String Stepper::getConfig() const
     JsonDocument doc;
     JsonObject config = doc.to<JsonObject>();
 
-    config["configured"] = _configured;
+    config["name"] = _name;
     if (_configured)
     {
         config["stepperType"] = _stepperType;
         config["is4Pin"] = _is4Pin;
         config["maxSpeed"] = _maxSpeed;
-        config["acceleration"] = _maxAcceleration;
+        config["maxAcceleration"] = _maxAcceleration;
 
         if (_is4Pin)
         {
@@ -500,6 +498,11 @@ void Stepper::setConfig(JsonObject *config)
         return;
     }
 
+    if ((*config)["name"].is<String>())
+    {
+        _name = (*config)["name"].as<String>();
+    }
+
     // Check if we should configure as 2-pin or 4-pin
     if ((*config)["stepperType"].is<String>())
     {
@@ -513,10 +516,9 @@ void Stepper::setConfig(JsonObject *config)
                 int stepPin = (*config)["pins"]["stepPin"].as<int>();
                 int dirPin = (*config)["pins"]["dirPin"].as<int>();
                 float maxSpeed = (*config)["maxSpeed"].is<float>() ? (*config)["maxSpeed"].as<float>() : 1000.0;
-                float acceleration = (*config)["acceleration"].is<float>() ? (*config)["acceleration"].as<float>() : 500.0;
+                float maxAcceleration = (*config)["maxAcceleration"].is<float>() ? (*config)["maxAcceleration"].as<float>() : ((*config)["acceleration"].is<float>() ? (*config)["acceleration"].as<float>() : 500.0);
 
-                configure2Pin(stepPin, dirPin, maxSpeed, acceleration);
-                MLOG_INFO("Stepper [%s]: Configured from JSON as DRIVER", _id.c_str());
+                configure2Pin(stepPin, dirPin, maxSpeed, maxAcceleration);
             }
             else
             {
@@ -534,10 +536,9 @@ void Stepper::setConfig(JsonObject *config)
                 int pin3 = pins[2].as<int>();
                 int pin4 = pins[3].as<int>();
                 float maxSpeed = (*config)["maxSpeed"].is<float>() ? (*config)["maxSpeed"].as<float>() : 500.0;
-                float acceleration = (*config)["acceleration"].is<float>() ? (*config)["acceleration"].as<float>() : 250.0;
+                float maxAcceleration = (*config)["maxAcceleration"].is<float>() ? (*config)["maxAcceleration"].as<float>() : ((*config)["acceleration"].is<float>() ? (*config)["acceleration"].as<float>() : 250.0);
 
-                configure4Pin(pin1, pin2, pin3, pin4, maxSpeed, acceleration);
-                MLOG_INFO("Stepper [%s]: Configured from JSON as HALF4WIRE", _id.c_str());
+                configure4Pin(pin1, pin2, pin3, pin4, maxSpeed, maxAcceleration);
             }
             else
             {

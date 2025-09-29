@@ -1,49 +1,84 @@
-import { createDeviceStore, IDeviceState } from "./Device";
-import { sendMessage } from "../hooks/useWebSocket";
-import { IWsDeviceMessage } from "../interfaces/WebSockets";
+import { IDeviceConfig, IDeviceState } from "./Device";
+import { useDevice } from "./Devices";
 
 const deviceType = "stepper";
+
+export const STEPPER_TYPES = ["DRIVER", "HALF4WIRE"] as const;
+export type StepperType = (typeof STEPPER_TYPES)[number];
+
 export interface IStepperState extends IDeviceState {
+  currentPosition?: number;
+  targetPosition?: number;
+  isMoving?: boolean;
+  maxSpeed?: number;
+  maxAcceleration?: number;
+  stepperType?: StepperType;
+  is4Pin?: boolean;
+  configured?: boolean;
+}
+
+export interface IStepperDriverPins {
+  stepPin: number;
+  dirPin: number;
+}
+
+export type IStepperFourWirePins = [number, number, number, number];
+
+export type IStepperPins = IStepperDriverPins | IStepperFourWirePins;
+
+export interface IStepperConfig extends IDeviceConfig {
+  name?: string;
+  configured?: boolean;
+  stepperType?: StepperType;
+  is4Pin?: boolean;
+  maxSpeed?: number;
+  maxAcceleration?: number;
+  pins?: IStepperPins;
+}
+
+export interface IStepperMoveArgs {
   steps: number;
-  maxSpeed: number;
-  maxAcceleration: number;
-  currentPosition: number;
+  maxSpeed?: number;
+  maxAcceleration?: number;
 }
 
-export function move(
-  deviceId: string,
-  args: { steps: number; maxSpeed?: number; maxAcceleration?: number }
-) {
-  sendMessage({
-    type: "device-fn",
-    deviceType,
-    deviceId,
-    fn: "move",
-    args,
-  } as IWsDeviceMessage);
-}
+export function useStepper(deviceId: string) {
+  const [device, { sendMessage, ...actions }] = useDevice<IStepperState, IStepperConfig>(deviceId);
 
-export function stop(deviceId: string) {
-  sendMessage({
-    type: "device-fn",
-    deviceType,
-    deviceId,
-    fn: "stop",
-  } as IWsDeviceMessage);
-}
+  const move = (args: IStepperMoveArgs) =>
+    sendMessage({
+      type: "device-fn",
+      deviceType,
+      deviceId,
+      fn: "move",
+      args,
+    });
 
-export function createStepperStore(deviceId: string) {
-  const base = createDeviceStore(deviceId, deviceType);
+  const stop = () =>
+    sendMessage({
+      type: "device-fn",
+      deviceType,
+      deviceId,
+      fn: "stop",
+      args: {},
+    });
 
-  return {
-    ...base,
-    move: (args: Parameters<typeof move>[1]) => move(deviceId, args),
-    stop: () => stop(deviceId),
-  };
+  return [
+    device,
+    {
+      ...actions,
+      move,
+      stop,
+    },
+  ] as const;
 }
 
 declare global {
   export interface IDeviceStates {
     [deviceType]: IStepperState;
+  }
+
+  export interface IDeviceConfigs {
+    [deviceType]: IStepperConfig;
   }
 }

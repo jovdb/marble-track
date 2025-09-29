@@ -13,7 +13,7 @@
 #include "devices/Stepper.h"
 #include "devices/Wheel.h"
 #include "devices/PwmMotor.h"
-#include "devices/Pwm.h"
+#include "devices/PwmDevice.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
 
@@ -123,7 +123,7 @@ void DeviceManager::loadDevicesFromJsonFile()
                         }
                         else if (type == "stepper")
                         {
-                            Stepper *stepper = new Stepper(id, name);
+                            Stepper *stepper = new Stepper(id);
 
                             // Apply configuration from JSON config property if it exists
                             if (obj["config"].is<JsonObject>())
@@ -149,7 +149,7 @@ void DeviceManager::loadDevicesFromJsonFile()
                         }
                         else if (type == "pwm")
                         {
-                            Pwm *pwm = new Pwm(id, name);
+                            PwmDevice *pwm = new PwmDevice(id, name);
 
                             // Apply configuration from JSON config property if it exists
                             if (obj["config"].is<JsonObject>())
@@ -559,7 +559,7 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
     }
     else if (lowerType == "stepper")
     {
-        newDevice = new Stepper(deviceId, deviceId);
+    newDevice = new Stepper(deviceId);
     }
     else if (lowerType == "pwmmotor")
     {
@@ -567,7 +567,7 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
     }
     else if (lowerType == "pwm")
     {
-        newDevice = new Pwm(deviceId, deviceId);
+    newDevice = new PwmDevice(deviceId, deviceId);
     }
     else
     {

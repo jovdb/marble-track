@@ -40,9 +40,8 @@ public:
     /**
      * @brief Constructor for Stepper motor
      * @param id Unique identifier string for the stepper
-     * @param name Human-readable name string for the stepper
      */
-    Stepper(const String &id, const String &name);
+    Stepper(const String &id);
     
     /**
      * @brief Destructor - cleans up AccelStepper instance
@@ -119,7 +118,7 @@ public:
      * @param maxSpeed Maximum speed in steps per second (default: 1000)
      * @param acceleration Acceleration in steps per second per second (default: 500)
      */
-    void configure2Pin(int stepPin, int dirPin, float maxSpeed = 1000.0, float acceleration = 500.0);
+    void configure2Pin(int stepPin, int dirPin, float maxSpeed = 1000.0, float maxAcceleration = 500.0);
 
     /**
      * @brief Configure stepper for 4-pin mode (HALF4WIRE - 28BYJ-48)
@@ -130,7 +129,7 @@ public:
      * @param maxSpeed Maximum speed in steps per second (default: 500)
      * @param acceleration Acceleration in steps per second per second (default: 250)
      */
-    void configure4Pin(int pin1, int pin2, int pin3, int pin4, float maxSpeed = 500.0, float acceleration = 250.0);
+    void configure4Pin(int pin1, int pin2, int pin3, int pin4, float maxSpeed = 500.0, float maxAcceleration = 250.0);
 
     /**
      * @brief Get maximum speed

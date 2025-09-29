@@ -1,59 +1,206 @@
-import { createSignal } from "solid-js";
-import DeviceConfig from "./DeviceConfig";
+import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
+import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
+import {
+  IStepperConfig,
+  IStepperDriverPins,
+  IStepperFourWirePins,
+  StepperType,
+  useStepper,
+} from "../../stores/Stepper";
 
-interface StepperConfigProps {
-  id: string;
-  onClose: () => void;
-}
+const STEPPER_TYPE_OPTIONS: { value: StepperType; label: string }[] = [
+  { value: "DRIVER", label: "Driver (2-pin)" },
+  { value: "HALF4WIRE", label: "Half 4-wire" },
+];
 
-export default function StepperConfig(props: StepperConfigProps) {
+export default function StepperConfig(props: { id: string; onClose: () => void }) {
+  const stepperStore = useStepper(props.id);
+  const device = () => stepperStore[0];
+  const { setDeviceConfig } = stepperStore[1];
+  const config = createMemo(() => device()?.config as IStepperConfig | undefined);
+
+  const [name, setName] = createSignal("Stepper");
+  const [stepperType, setStepperType] = createSignal<StepperType>("DRIVER");
   const [stepPin, setStepPin] = createSignal(1);
   const [dirPin, setDirPin] = createSignal(2);
+  const [pin1, setPin1] = createSignal(1);
+  const [pin2, setPin2] = createSignal(2);
+  const [pin3, setPin3] = createSignal(3);
+  const [pin4, setPin4] = createSignal(4);
   const [maxSpeed, setMaxSpeed] = createSignal(1000);
-  const [acceleration, setAcceleration] = createSignal(100);
+  const [maxAcceleration, setMaxAcceleration] = createSignal(300);
+
+  createEffect(() => {
+    const cfg = config();
+    if (!cfg) {
+      return;
+    }
+
+    if (typeof cfg.name === "string" && cfg.name.length > 0) {
+      setName(cfg.name);
+    }
+
+    if (cfg.stepperType === "HALF4WIRE" || cfg.is4Pin) {
+      setStepperType("HALF4WIRE");
+    } else if (cfg.stepperType === "DRIVER") {
+      setStepperType("DRIVER");
+    }
+
+    if (Array.isArray(cfg.pins)) {
+      const pins = cfg.pins as IStepperFourWirePins;
+      setPin1(typeof pins[0] === "number" ? pins[0] : pin1());
+      setPin2(typeof pins[1] === "number" ? pins[1] : pin2());
+      setPin3(typeof pins[2] === "number" ? pins[2] : pin3());
+      setPin4(typeof pins[3] === "number" ? pins[3] : pin4());
+    } else if (cfg.pins && typeof cfg.pins === "object") {
+      const pins = cfg.pins as IStepperDriverPins;
+      setStepPin(typeof pins.stepPin === "number" ? pins.stepPin : stepPin());
+      setDirPin(typeof pins.dirPin === "number" ? pins.dirPin : dirPin());
+    }
+
+    if (typeof cfg.maxSpeed === "number") {
+      setMaxSpeed(cfg.maxSpeed);
+    }
+    const cfgMaxAcceleration =
+      typeof cfg.maxAcceleration === "number"
+        ? cfg.maxAcceleration
+        : (cfg as { acceleration?: number } | undefined)?.acceleration;
+    if (typeof cfgMaxAcceleration === "number") {
+      setMaxAcceleration(cfgMaxAcceleration);
+    }
+  });
+
+  const isFourPin = createMemo(() => stepperType() === "HALF4WIRE");
+
+  const handleSave = () => {
+    const payload: IStepperConfig = {
+      name: name().trim() || device()?.id,
+      stepperType: stepperType(),
+      maxSpeed: Number(maxSpeed()),
+      maxAcceleration: Number(maxAcceleration()),
+      pins: isFourPin()
+        ? ([pin1(), pin2(), pin3(), pin4()] as IStepperFourWirePins)
+        : ({ stepPin: stepPin(), dirPin: dirPin() } as IStepperDriverPins),
+    };
+
+    setDeviceConfig(payload);
+  };
 
   return (
-    <DeviceConfig id={props.id} onSave={() => alert(`TODO: save`)} onClose={props.onClose}>
-      <label>
-        Step pin:
-        <input
-          type="number"
-          value={stepPin()}
-          min={0}
-          onInput={(e) => setStepPin(Number(e.currentTarget.value))}
-          style={{ "margin-left": "0.5rem", width: "4em" }}
-        />
-      </label>
-      <label style={{ display: "block", "margin-top": "1em" }}>
-        Direction pin:
-        <input
-          type="number"
-          value={dirPin()}
-          min={0}
-          onInput={(e) => setDirPin(Number(e.currentTarget.value))}
-          style={{ "margin-left": "0.5rem", width: "4em" }}
-        />
-      </label>
-      <label style={{ display: "block", "margin-top": "1em" }}>
-        Max speed:
-        <input
-          type="number"
-          value={maxSpeed()}
-          min={0}
-          onInput={(e) => setMaxSpeed(Number(e.currentTarget.value))}
-          style={{ "margin-left": "0.5rem", width: "6em" }}
-        />
-      </label>
-      <label style={{ display: "block", "margin-top": "1em" }}>
-        Max acceleration:
-        <input
-          type="number"
-          value={acceleration()}
-          min={0}
-          onInput={(e) => setAcceleration(Number(e.currentTarget.value))}
-          style={{ "margin-left": "0.5rem", width: "6em" }}
-        />
-      </label>
+    <DeviceConfig id={props.id} onSave={handleSave} onClose={props.onClose}>
+      <DeviceConfigTable>
+        <DeviceConfigRow>
+          <DeviceConfigItem name="Name">
+            <input
+              type="text"
+              value={name()}
+              onInput={(event) => setName(event.currentTarget.value)}
+            />
+          </DeviceConfigItem>
+        </DeviceConfigRow>
+        <DeviceConfigRow>
+          <DeviceConfigItem name="Stepper type">
+            <select
+              value={stepperType()}
+              onChange={(event) => setStepperType(event.currentTarget.value as StepperType)}
+            >
+              <For each={STEPPER_TYPE_OPTIONS}>
+                {(option) => <option value={option.value}>{option.label}</option>}
+              </For>
+            </select>
+          </DeviceConfigItem>
+        </DeviceConfigRow>
+        <Show when={!isFourPin()}>
+          <DeviceConfigRow>
+            <DeviceConfigItem name="Step pin">
+              <input
+                type="number"
+                min={0}
+                value={stepPin()}
+                onInput={(event) => setStepPin(Number(event.currentTarget.value))}
+              />
+            </DeviceConfigItem>
+          </DeviceConfigRow>
+          <DeviceConfigRow>
+            <DeviceConfigItem name="Direction pin">
+              <input
+                type="number"
+                min={0}
+                value={dirPin()}
+                onInput={(event) => setDirPin(Number(event.currentTarget.value))}
+              />
+            </DeviceConfigItem>
+          </DeviceConfigRow>
+        </Show>
+        <Show when={isFourPin()}>
+          <DeviceConfigRow>
+            <DeviceConfigItem name="Pin 1">
+              <input
+                type="number"
+                min={0}
+                value={pin1()}
+                onInput={(event) => setPin1(Number(event.currentTarget.value))}
+              />
+            </DeviceConfigItem>
+          </DeviceConfigRow>
+          <DeviceConfigRow>
+            <DeviceConfigItem name="Pin 2">
+              <input
+                type="number"
+                min={0}
+                value={pin2()}
+                onInput={(event) => setPin2(Number(event.currentTarget.value))}
+              />
+            </DeviceConfigItem>
+          </DeviceConfigRow>
+          <DeviceConfigRow>
+            <DeviceConfigItem name="Pin 3">
+              <input
+                type="number"
+                min={0}
+                value={pin3()}
+                onInput={(event) => setPin3(Number(event.currentTarget.value))}
+              />
+            </DeviceConfigItem>
+          </DeviceConfigRow>
+          <DeviceConfigRow>
+            <DeviceConfigItem name="Pin 4">
+              <input
+                type="number"
+                min={0}
+                value={pin4()}
+                onInput={(event) => setPin4(Number(event.currentTarget.value))}
+              />
+            </DeviceConfigItem>
+          </DeviceConfigRow>
+        </Show>
+        <DeviceConfigRow>
+          <DeviceConfigItem name="Max speed">
+            <div>
+              <input
+                type="number"
+                min={0}
+                value={maxSpeed()}
+                onInput={(event) => setMaxSpeed(Number(event.currentTarget.value))}
+              />
+              <span style={{ "margin-left": "0.5rem" }}>steps/s</span>
+            </div>
+          </DeviceConfigItem>
+        </DeviceConfigRow>
+        <DeviceConfigRow>
+          <DeviceConfigItem name="Max acceleration">
+            <div>
+              <input
+                type="number"
+                min={0}
+                value={maxAcceleration()}
+                onInput={(event) => setMaxAcceleration(Number(event.currentTarget.value))}
+              />
+              <span style={{ "margin-left": "0.5rem" }}>steps/s²</span>
+            </div>
+          </DeviceConfigItem>
+        </DeviceConfigRow>
+      </DeviceConfigTable>
     </DeviceConfig>
   );
 }

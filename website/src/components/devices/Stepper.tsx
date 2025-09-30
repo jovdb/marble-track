@@ -93,7 +93,7 @@ export function Stepper(props: { id: string }) {
       </div>
       <div class={styles["device__input-group"]}>
         <label class={styles.device__label} for={`maxSpeed-${props.id}`}>
-          Max Speed: {maxSpeed()} steps/s
+          Speed: {maxSpeed()} steps/s
         </label>
         <input
           id={`maxSpeed-${props.id}`}
@@ -107,7 +107,7 @@ export function Stepper(props: { id: string }) {
       </div>
       <div class={styles["device__input-group"]}>
         <label class={styles.device__label} for={`maxAcceleration-${props.id}`}>
-          Max Acceleration: {maxAcceleration()} steps/s²
+          Acceleration: {maxAcceleration()} steps/s²
         </label>
         <input
           id={`maxAcceleration-${props.id}`}

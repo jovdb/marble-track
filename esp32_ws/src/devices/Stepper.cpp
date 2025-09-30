@@ -336,7 +336,7 @@ String Stepper::getState()
     doc["targetPosition"] = getTargetPosition();
     doc["isMoving"] = isMoving();
     doc["speed"] = _maxSpeed;
-    doc["acceleration"] = _maxAcceleration;
+    doc["maxAcceleration"] = _maxAcceleration;
 
     String result;
     serializeJson(doc, result);

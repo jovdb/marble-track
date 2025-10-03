@@ -66,14 +66,18 @@ public:
     /**
      * @brief Move the stepper motor by a specified number of steps
      * @param steps Number of steps to move (positive = forward, negative = backward)
+     * @param speed Optional maximum speed in steps per second (uses configured speed if not provided)
+     * @param acceleration Optional acceleration in steps per second per second (uses configured acceleration if not provided)
      */
-    void move(long steps);
+    void move(long steps, float speed = -1, float acceleration = -1);
 
     /**
      * @brief Move the stepper motor to an absolute position
      * @param position Absolute position to move to
+     * @param speed Optional maximum speed in steps per second (uses configured speed if not provided)
+     * @param acceleration Optional acceleration in steps per second per second (uses configured acceleration if not provided)
      */
-    void moveTo(long position);
+    void moveTo(long position, float speed = -1, float acceleration = -1);
 
     /**
      * @brief Set the maximum speed of the stepper motor
@@ -107,8 +111,9 @@ public:
 
     /**
      * @brief Stop the stepper motor immediately
+     * @param acceleration Optional deceleration rate in steps per second per second (uses configured acceleration if not provided)
      */
-    void stop();
+    void stop(float acceleration = -1);
 
     // Configuration setters/getters
     /**

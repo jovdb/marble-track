@@ -54,8 +54,8 @@ void Stepper::setup()
     }
 
     // Set maximum speed and acceleration
-    _stepper->setMaxSpeed(_maxSpeed);
-    _stepper->setAcceleration(_maxAcceleration);
+    this->_maxSpeed = _maxSpeed;
+    this->_maxAcceleration = _maxAcceleration;
 
     // Set current position to 0
     _stepper->setCurrentPosition(0);
@@ -99,24 +99,18 @@ void Stepper::move(long steps, float speed, float acceleration)
         return;
     }
 
-    // Apply optional speed and acceleration if provided
-    if (speed > 0)
+    if (speed <= 0 || speed > this->_maxSpeed)
     {
-        setMaxSpeed(speed);
+        speed = this->_maxSpeed;
     }
-    if (acceleration > 0)
-    {
-        setAcceleration(acceleration);
-    }
-
-    if (acceleration > this->_maxAcceleration)
+    if (acceleration <= 0 || acceleration > this->_maxAcceleration)
     {
         acceleration = this->_maxAcceleration;
     }
 
-    Serial.println("Stepper [" + _id + "]: Moving " + String(steps) + " steps");
-    _stepper->setSpeed(speed > 0 ? speed : _maxSpeed);
-    _stepper->setAcceleration(acceleration > 0 ? acceleration : _maxAcceleration);
+    MLOG_INFO("Stepper [%s]: Moving %ld steps (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), steps, speed, acceleration);
+    _stepper->setSpeed(speed);
+    _stepper->setAcceleration(acceleration);
     _stepper->move(steps);
     _isMoving = true;
     notifyStateChange();
@@ -136,16 +130,43 @@ void Stepper::moveTo(long position, float speed, float acceleration)
         return;
     }
 
-    if (acceleration > this->_maxAcceleration)
+    if (speed <= 0 || speed > this->_maxSpeed)
+    {
+        speed = this->_maxSpeed;
+    }
+    if (acceleration <= 0 || acceleration > this->_maxAcceleration)
     {
         acceleration = this->_maxAcceleration;
     }
 
-    MLOG_INFO("Stepper [%s]: Moving to position %ld", _id.c_str(), position);
-    _stepper->setSpeed(speed > 0 ? speed : _maxSpeed);
-    _stepper->setAcceleration(acceleration > 0 ? acceleration : _maxAcceleration);
+    MLOG_INFO("Stepper [%s]: Moving to position %ld (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), position, speed, acceleration);
+    _stepper->setSpeed(speed);
+    _stepper->setAcceleration(acceleration);
     _stepper->moveTo(position);
     _isMoving = true;
+    notifyStateChange();
+}
+
+/**
+ * @brief Stop the stepper motor immediately
+ * @param acceleration Optional deceleration rate in steps per second per second (uses configured acceleration if not provided)
+ */
+void Stepper::stop(float acceleration)
+{
+    if (!_configured || !_stepper)
+    {
+        return;
+    }
+
+    if (acceleration <= 0 || acceleration > this->_maxAcceleration)
+    {
+        acceleration = this->_maxAcceleration;
+    }
+
+    MLOG_WARN("Stepper [%s]: Stop (Deceleration: %.2f)", _id.c_str(), acceleration);
+    _stepper->setAcceleration(acceleration);
+    _stepper->stop();
+    _isMoving = false;
     notifyStateChange();
 }
 
@@ -187,7 +208,7 @@ void Stepper::setMaxSpeed(float maxSpeed)
  * @brief Set the acceleration of the stepper motor
  * @param maxAcceleration Acceleration in steps per second per second
  */
-void Stepper::setAcceleration(float maxAcceleration)
+void Stepper::setMaxAcceleration(float maxAcceleration)
 {
     if (_maxAcceleration == maxAcceleration)
         return;
@@ -231,31 +252,8 @@ bool Stepper::isMoving() const
 }
 
 /**
- * @brief Stop the stepper motor immediately
- * @param acceleration Optional deceleration rate in steps per second per second (uses configured acceleration if not provided)
- */
-void Stepper::stop(float acceleration)
-{
-    if (!_configured || !_stepper)
-    {
-        return;
-    }
-
-    // Apply optional acceleration if provided
-    if (acceleration > this->_maxAcceleration)
-    {
-        acceleration = this->_maxAcceleration;
-    }
-
-    MLOG_WARN("Stepper [%s]: Stop with deceleration %.2f", _id.c_str(), acceleration > 0 ? acceleration : _maxAcceleration);
-    _stepper->stop();
-    _isMoving = false;
-    notifyStateChange();
-}
-
-/**
  * @brief Dynamic control function for stepper motor operations
- * @param action The action to perform (e.g., "move", "moveTo", "stop", "setSpeed", "setAcceleration")
+ * @param action The action to perform (e.g., "move", "moveTo", "stop", "setSpeed", "setMaxAcceleration")
  * @param payload Pointer to JSON object containing action parameters (can be nullptr)
  * @return true if action was successful, false otherwise
  */
@@ -345,11 +343,11 @@ bool Stepper::control(const String &action, JsonObject *payload)
         setMaxSpeed(speed);
         return true;
     }
-    else if (action == "setAcceleration")
+    else if (action == "setMaxAcceleration")
     {
         if (!payload || !(*payload)["maxAcceleration"].is<float>())
         {
-            Serial.println("Stepper [" + _id + "]: Invalid 'setAcceleration' payload - need maxAcceleration");
+            Serial.println("Stepper [" + _id + "]: Invalid 'setMaxAcceleration' payload - need maxAcceleration");
             return false;
         }
 
@@ -360,7 +358,7 @@ bool Stepper::control(const String &action, JsonObject *payload)
             return false;
         }
 
-        setAcceleration(maxAcceleration);
+        setMaxAcceleration(maxAcceleration);
         return true;
     }
     */

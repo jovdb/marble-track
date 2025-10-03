@@ -74,7 +74,7 @@ void DividerWheel::calibrate()
         MLOG_INFO("Wheel [%s]: Calibration started.", getId().c_str());
         _state = wheelState::CALIBRATING;
         _stepper->setMaxSpeed(calibrationSpeed);
-        _stepper->setAcceleration(calibrationAcceleration);
+        _stepper->setMaxAcceleration(calibrationAcceleration);
         _stepper->move(5000);
         notifyStateChange();
     }

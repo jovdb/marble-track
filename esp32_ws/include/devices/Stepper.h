@@ -89,7 +89,7 @@ public:
      * @brief Set the acceleration of the stepper motor
      * @param maxAcceleration Acceleration in steps per second per second
      */
-    void setAcceleration(float maxAcceleration);
+    void setMaxAcceleration(float maxAcceleration);
 
     /**
      * @brief Get current position of the stepper motor

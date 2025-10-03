@@ -103,18 +103,18 @@ void Stepper::move(long steps, float speed, float acceleration)
         return;
     }
 
-    if (speed <= 0 || speed > this->_maxSpeed)
+    if (speed <= 0 || speed > _maxSpeed)
     {
-        speed = this->_maxSpeed;
+        speed = _maxSpeed;
     }
-    if (acceleration <= 0 || acceleration > this->_maxAcceleration)
+    if (acceleration <= 0 || acceleration > _maxAcceleration)
     {
-        acceleration = this->_maxAcceleration;
+        acceleration = _maxAcceleration;
     }
 
     MLOG_INFO("Stepper [%s]: Moving %ld steps (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), steps, speed, acceleration);
-    _stepper->setSpeed(speed);
     _stepper->setAcceleration(acceleration);
+    _stepper->setSpeed(speed);
     MLOG_INFO("Stepper [%s]: JO (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), _stepper->speed(), _stepper->acceleration());
 
     _stepper->move(steps);
@@ -136,13 +136,13 @@ void Stepper::moveTo(long position, float speed, float acceleration)
         return;
     }
 
-    if (speed <= 0 || speed > this->_maxSpeed)
+    if (speed <= 0 || speed > _maxSpeed)
     {
-        speed = this->_maxSpeed;
+        speed = _maxSpeed;
     }
-    if (acceleration <= 0 || acceleration > this->_maxAcceleration)
+    if (acceleration <= 0 || acceleration > _maxAcceleration)
     {
-        acceleration = this->_maxAcceleration;
+        acceleration = _maxAcceleration;
     }
 
     MLOG_INFO("Stepper [%s]: Moving to position %ld (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), position, speed, acceleration);
@@ -165,9 +165,9 @@ void Stepper::stop(float acceleration)
         return;
     }
 
-    if (acceleration <= 0 || acceleration > this->_maxAcceleration)
+    if (acceleration <= 0 || acceleration > _maxAcceleration)
     {
-        acceleration = this->_maxAcceleration;
+        acceleration = _maxAcceleration;
     }
 
     MLOG_WARN("Stepper [%s]: Stop (Deceleration: %.2f)", _id.c_str(), acceleration);
@@ -275,17 +275,17 @@ bool Stepper::control(const String &action, JsonObject *payload)
         }
 
         long steps = (*payload)["steps"].as<long>();
+
         float speed = -1;
         float acceleration = -1;
-
-        if (payload && (*payload)["maxSpeed"].is<long>())
+        if (payload && (*payload)["speed"].is<float>())
         {
-            speed = (*payload)["maxSpeed"].as<long>();
+            speed = (*payload)["speed"].as<float>();
         }
 
-        if (payload && (*payload)["maxAcceleration"].is<long>())
+        if (payload && (*payload)["acceleration"].is<float>())
         {
-            acceleration = (*payload)["maxAcceleration"].as<long>();
+            acceleration = (*payload)["acceleration"].as<long>();
         }
 
         MLOG_INFO("Stepper [%s]: Move %ld steps (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), steps,
@@ -304,16 +304,29 @@ bool Stepper::control(const String &action, JsonObject *payload)
         }
 
         long position = (*payload)["position"].as<long>();
-        moveTo(position);
+        float speed = -1;
+        float acceleration = -1;
+
+        if (payload && (*payload)["speed"].is<long>())
+        {
+            speed = (*payload)["speed"].as<long>();
+        }
+
+        if (payload && (*payload)["acceleration"].is<long>())
+        {
+            acceleration = (*payload)["acceleration"].as<long>();
+        }
+
+        moveTo(position, speed, acceleration);
         return true;
     }
         */
     else if (action == "stop")
     {
         float acceleration = -1;
-        if (payload && (*payload)["maxAcceleration"].is<float>())
+        if (payload && (*payload)["acceleration"].is<float>())
         {
-            acceleration = (*payload)["maxAcceleration"].as<float>();
+            acceleration = (*payload)["acceleration"].as<float>();
         }
         stop(acceleration);
         return true;

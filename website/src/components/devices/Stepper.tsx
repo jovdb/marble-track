@@ -59,8 +59,8 @@ export function Stepper(props: { id: string }) {
   const handleMove = () =>
     actions.move({
       steps: Math.trunc(steps()),
-      maxSpeed: maxSpeed(),
-      maxAcceleration: Math.trunc(maxAcceleration()),
+      speed: maxSpeed(),
+      acceleration: Math.trunc(maxAcceleration()),
     });
 
   const handleStop = () => actions.stop();

@@ -38,8 +38,8 @@ export interface IStepperConfig extends IDeviceConfig {
 
 export interface IStepperMoveArgs {
   steps: number;
-  maxSpeed?: number;
-  maxAcceleration?: number;
+  speed?: number;
+  acceleration?: number;
 }
 
 export function useStepper(deviceId: string) {

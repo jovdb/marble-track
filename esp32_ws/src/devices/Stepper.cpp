@@ -84,7 +84,7 @@ void Stepper::loop()
     // If stepper just stopped moving, notify state change
     if (wasMoving && !_isMoving)
     {
-        // Serial.println("Stepper [" + _id + "]: Movement completed at position " + String(_stepper->currentPosition()));
+        MLOG_INFO("Stepper [%s]: Movement completed at position %ld", _id.c_str(), _stepper->currentPosition());
         notifyStateChange();
     }
 }
@@ -114,9 +114,7 @@ void Stepper::move(long steps, float speed, float acceleration)
 
     MLOG_INFO("Stepper [%s]: Moving %ld steps (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), steps, speed, acceleration);
     _stepper->setAcceleration(acceleration);
-    _stepper->setSpeed(speed);
-    MLOG_INFO("Stepper [%s]: JO (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), _stepper->speed(), _stepper->acceleration());
-
+    _stepper->setMaxSpeed(speed);
     _stepper->move(steps);
     _isMoving = true;
     notifyStateChange();
@@ -146,9 +144,8 @@ void Stepper::moveTo(long position, float speed, float acceleration)
     }
 
     MLOG_INFO("Stepper [%s]: Moving to position %ld (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), position, speed, acceleration);
-    _stepper->setSpeed(speed);
+    _stepper->setMaxSpeed(speed);
     _stepper->setAcceleration(acceleration);
-    MLOG_INFO("Stepper [%s]: JO (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), _stepper->speed(), _stepper->acceleration());
     _stepper->moveTo(position);
     _isMoving = true;
     notifyStateChange();
@@ -172,7 +169,6 @@ void Stepper::stop(float acceleration)
 
     MLOG_WARN("Stepper [%s]: Stop (Deceleration: %.2f)", _id.c_str(), acceleration);
     _stepper->setAcceleration(acceleration);
-    MLOG_INFO("Stepper [%s]: JO (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), _stepper->speed(), _stepper->acceleration());
     _stepper->stop();
     _isMoving = false;
     notifyStateChange();
@@ -285,7 +281,7 @@ bool Stepper::control(const String &action, JsonObject *payload)
 
         if (payload && (*payload)["acceleration"].is<float>())
         {
-            acceleration = (*payload)["acceleration"].as<long>();
+            acceleration = (*payload)["acceleration"].as<float>();
         }
 
         MLOG_INFO("Stepper [%s]: Move %ld steps (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), steps,
@@ -294,12 +290,11 @@ bool Stepper::control(const String &action, JsonObject *payload)
         return true;
     }
 
-    /*
     else if (action == "moveTo")
     {
         if (!payload || !(*payload)["position"].is<long>())
         {
-            Serial.println("Stepper [" + _id + "]: Invalid 'moveTo' payload - need position");
+            MLOG_WARN("Stepper [%s]: Invalid 'moveTo' payload - need position", _id.c_str());
             return false;
         }
 
@@ -307,20 +302,21 @@ bool Stepper::control(const String &action, JsonObject *payload)
         float speed = -1;
         float acceleration = -1;
 
-        if (payload && (*payload)["speed"].is<long>())
+        if (payload && (*payload)["speed"].is<float>())
         {
-            speed = (*payload)["speed"].as<long>();
+            speed = (*payload)["speed"].as<float>();
         }
 
-        if (payload && (*payload)["acceleration"].is<long>())
+        if (payload && (*payload)["acceleration"].is<float>())
         {
-            acceleration = (*payload)["acceleration"].as<long>();
+            acceleration = (*payload)["acceleration"].as<float>();
         }
 
+        MLOG_INFO("Stepper [%s]: Move to position %ld (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), position,
+                  speed > 0 ? speed : _maxSpeed, acceleration > 0 ? acceleration : _maxAcceleration);
         moveTo(position, speed, acceleration);
         return true;
     }
-        */
     else if (action == "stop")
     {
         float acceleration = -1;
@@ -408,8 +404,6 @@ String Stepper::getState()
     doc["currentPosition"] = getCurrentPosition();
     doc["targetPosition"] = getTargetPosition();
     doc["isMoving"] = isMoving();
-    doc["speed"] = _maxSpeed;
-    doc["maxAcceleration"] = _maxAcceleration;
 
     String result;
     serializeJson(doc, result);

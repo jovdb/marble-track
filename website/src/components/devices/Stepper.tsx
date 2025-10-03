@@ -101,7 +101,7 @@ export function Stepper(props: { id: string }) {
           id={`maxSpeed-${props.id}`}
           class={styles.device__input}
           type="range"
-          min="10"
+          min="1"
           max={config()?.maxSpeed ?? 1800}
           value={maxSpeed()}
           onInput={(event) => setMaxSpeed(Number(event.currentTarget.value))}
@@ -115,7 +115,7 @@ export function Stepper(props: { id: string }) {
           id={`maxAcceleration-${props.id}`}
           class={styles.device__input}
           type="range"
-          min="10"
+          min="1"
           max={config()?.maxAcceleration ?? 5800}
           value={maxAcceleration()}
           onInput={(event) => setMaxAcceleration(Number(event.currentTarget.value))}

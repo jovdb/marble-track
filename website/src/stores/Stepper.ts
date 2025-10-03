@@ -10,11 +10,6 @@ export interface IStepperState extends IDeviceState {
   currentPosition?: number;
   targetPosition?: number;
   isMoving?: boolean;
-  maxSpeed?: number;
-  maxAcceleration?: number;
-  stepperType?: StepperType;
-  is4Pin?: boolean;
-  configured?: boolean;
 }
 
 export interface IStepperDriverPins {

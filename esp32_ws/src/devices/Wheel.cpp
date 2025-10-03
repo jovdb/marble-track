@@ -8,7 +8,7 @@ Wheel::Wheel(int stepPin1, int dirPin, int buttonPin, const String &id, const St
       _state(wheelState::IDLE)
 {
     _name = name;
-    _stepper->configure2Pin(stepPin1, dirPin, 100, 1000);
+    _stepper->configure2Pin(stepPin1, dirPin);
     addChild(_stepper);
     addChild(_sensor);
 }

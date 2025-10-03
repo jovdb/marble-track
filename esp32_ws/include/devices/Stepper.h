@@ -42,7 +42,7 @@ public:
      * @param id Unique identifier string for the stepper
      */
     Stepper(const String &id);
-    
+
     /**
      * @brief Destructor - cleans up AccelStepper instance
      */
@@ -120,10 +120,8 @@ public:
      * @brief Configure stepper for 2-pin mode (DRIVER - NEMA 17 with driver)
      * @param stepPin GPIO pin number for the step signal
      * @param dirPin GPIO pin number for the direction signal
-     * @param maxSpeed Maximum speed in steps per second (default: 1000)
-     * @param acceleration Acceleration in steps per second per second (default: 500)
      */
-    void configure2Pin(int stepPin, int dirPin, float maxSpeed = 1000.0, float maxAcceleration = 500.0);
+    void configure2Pin(int stepPin, int dirPin);
 
     /**
      * @brief Configure stepper for 4-pin mode (HALF4WIRE - 28BYJ-48)
@@ -131,10 +129,8 @@ public:
      * @param pin2 GPIO pin number for motor pin 2
      * @param pin3 GPIO pin number for motor pin 3
      * @param pin4 GPIO pin number for motor pin 4
-     * @param maxSpeed Maximum speed in steps per second (default: 500)
-     * @param acceleration Acceleration in steps per second per second (default: 250)
      */
-    void configure4Pin(int pin1, int pin2, int pin3, int pin4, float maxSpeed = 500.0, float maxAcceleration = 250.0);
+    void configure4Pin(int pin1, int pin2, int pin3, int pin4);
 
     /**
      * @brief Get maximum speed
@@ -168,9 +164,9 @@ private:
     bool _configured = false;         ///< True if stepper has been configured
 
     // Pin configuration
-    bool _is4Pin = false;           ///< True if 4-pin configuration, false if 2-pin
+    bool _is4Pin = false;                               ///< True if 4-pin configuration, false if 2-pin
     int _pin1 = -1, _pin2 = -1, _pin3 = -1, _pin4 = -1; ///< Pin numbers (all used for 4-pin, only pin1&pin2 for 2-pin)
-    String _stepperType = "";       ///< Type string for debugging ("DRIVER" or "HALF4WIRE")
+    String _stepperType = "";                           ///< Type string for debugging ("DRIVER" or "HALF4WIRE")
 
     /**
      * @brief Initialize the AccelStepper instance based on current configuration

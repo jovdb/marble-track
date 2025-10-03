@@ -25,6 +25,8 @@ Stepper::Stepper(const String &id)
     : Device(id, "stepper")
 {
     _name = id;
+    _maxSpeed = 1000;
+    _maxAcceleration = 500;
 }
 
 /**
@@ -53,9 +55,11 @@ void Stepper::setup()
         return;
     }
 
-    // Set maximum speed and acceleration
-    this->_maxSpeed = _maxSpeed;
-    this->_maxAcceleration = _maxAcceleration;
+    if (_stepper)
+    {
+        _stepper->setMaxSpeed(_maxSpeed);
+        _stepper->setAcceleration(_maxAcceleration);
+    }
 
     // Set current position to 0
     _stepper->setCurrentPosition(0);
@@ -111,6 +115,8 @@ void Stepper::move(long steps, float speed, float acceleration)
     MLOG_INFO("Stepper [%s]: Moving %ld steps (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), steps, speed, acceleration);
     _stepper->setSpeed(speed);
     _stepper->setAcceleration(acceleration);
+    MLOG_INFO("Stepper [%s]: JO (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), _stepper->speed(), _stepper->acceleration());
+
     _stepper->move(steps);
     _isMoving = true;
     notifyStateChange();
@@ -142,6 +148,7 @@ void Stepper::moveTo(long position, float speed, float acceleration)
     MLOG_INFO("Stepper [%s]: Moving to position %ld (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), position, speed, acceleration);
     _stepper->setSpeed(speed);
     _stepper->setAcceleration(acceleration);
+    MLOG_INFO("Stepper [%s]: JO (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), _stepper->speed(), _stepper->acceleration());
     _stepper->moveTo(position);
     _isMoving = true;
     notifyStateChange();
@@ -165,6 +172,7 @@ void Stepper::stop(float acceleration)
 
     MLOG_WARN("Stepper [%s]: Stop (Deceleration: %.2f)", _id.c_str(), acceleration);
     _stepper->setAcceleration(acceleration);
+    MLOG_INFO("Stepper [%s]: JO (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), _stepper->speed(), _stepper->acceleration());
     _stepper->stop();
     _isMoving = false;
     notifyStateChange();
@@ -418,7 +426,7 @@ std::vector<int> Stepper::getPins() const
  * @param maxSpeed Maximum speed in steps per second
  * @param acceleration Acceleration in steps per second per second
  */
-void Stepper::configure2Pin(int stepPin, int dirPin, float maxSpeed, float maxAcceleration)
+void Stepper::configure2Pin(int stepPin, int dirPin)
 {
     cleanupAccelStepper();
 
@@ -427,8 +435,6 @@ void Stepper::configure2Pin(int stepPin, int dirPin, float maxSpeed, float maxAc
     _pin2 = dirPin;
     _pin3 = -1;
     _pin4 = -1;
-    _maxSpeed = maxSpeed;
-    _maxAcceleration = maxAcceleration;
     _stepperType = "DRIVER";
 
     initializeAccelStepper();
@@ -443,10 +449,8 @@ void Stepper::configure2Pin(int stepPin, int dirPin, float maxSpeed, float maxAc
  * @param pin2 GPIO pin number for motor pin 2
  * @param pin3 GPIO pin number for motor pin 3
  * @param pin4 GPIO pin number for motor pin 4
- * @param maxSpeed Maximum speed in steps per second
- * @param acceleration Acceleration in steps per second per second
  */
-void Stepper::configure4Pin(int pin1, int pin2, int pin3, int pin4, float maxSpeed, float maxAcceleration)
+void Stepper::configure4Pin(int pin1, int pin2, int pin3, int pin4)
 {
     cleanupAccelStepper();
 
@@ -455,8 +459,6 @@ void Stepper::configure4Pin(int pin1, int pin2, int pin3, int pin4, float maxSpe
     _pin2 = pin2;
     _pin3 = pin3;
     _pin4 = pin4;
-    _maxSpeed = maxSpeed;
-    _maxAcceleration = maxAcceleration;
     _stepperType = "HALF4WIRE";
 
     initializeAccelStepper();
@@ -567,10 +569,8 @@ void Stepper::setConfig(JsonObject *config)
             {
                 int stepPin = (*config)["pins"]["stepPin"].as<int>();
                 int dirPin = (*config)["pins"]["dirPin"].as<int>();
-                float maxSpeed = (*config)["maxSpeed"].is<float>() ? (*config)["maxSpeed"].as<float>() : 1000.0;
-                float maxAcceleration = (*config)["maxAcceleration"].is<float>() ? (*config)["maxAcceleration"].as<float>() : ((*config)["acceleration"].is<float>() ? (*config)["acceleration"].as<float>() : 500.0);
 
-                configure2Pin(stepPin, dirPin, maxSpeed, maxAcceleration);
+                configure2Pin(stepPin, dirPin);
             }
             else
             {
@@ -587,10 +587,8 @@ void Stepper::setConfig(JsonObject *config)
                 int pin2 = pins[1].as<int>();
                 int pin3 = pins[2].as<int>();
                 int pin4 = pins[3].as<int>();
-                float maxSpeed = (*config)["maxSpeed"].is<float>() ? (*config)["maxSpeed"].as<float>() : 500.0;
-                float maxAcceleration = (*config)["maxAcceleration"].is<float>() ? (*config)["maxAcceleration"].as<float>() : ((*config)["acceleration"].is<float>() ? (*config)["acceleration"].as<float>() : 250.0);
 
-                configure4Pin(pin1, pin2, pin3, pin4, maxSpeed, maxAcceleration);
+                configure4Pin(pin1, pin2, pin3, pin4);
             }
             else
             {
@@ -605,5 +603,17 @@ void Stepper::setConfig(JsonObject *config)
     else
     {
         MLOG_WARN("Stepper [%s]: No stepperType specified in config", _id.c_str());
+    }
+    // Extract speed and acceleration values first
+    float maxSpeed = (*config)["maxSpeed"].is<float>() ? (*config)["maxSpeed"].as<float>() : 1000.0;
+    float maxAcceleration = (*config)["maxAcceleration"].is<float>() ? (*config)["maxAcceleration"].as<float>() : ((*config)["acceleration"].is<float>() ? (*config)["acceleration"].as<float>() : 500.0);
+
+    _maxSpeed = maxSpeed;
+    _maxAcceleration = maxAcceleration;
+
+    if (_stepper)
+    {
+        _stepper->setMaxSpeed(_maxSpeed);
+        _stepper->setAcceleration(_maxAcceleration);
     }
 }

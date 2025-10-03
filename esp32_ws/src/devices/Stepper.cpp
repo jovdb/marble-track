@@ -134,8 +134,9 @@ void Stepper::setCurrentPosition(long position)
 
     MLOG_INFO("Stepper [%s]: Resetting current position to %ld", _id.c_str(), position);
     _stepper->setCurrentPosition(position);
-    // Optionally, update state or notify if needed
-    // notifyStateChange();
+
+    // notify the new values
+    notifyStateChange();
 }
 /**
  * @brief Set the maximum speed of the stepper motor
@@ -270,6 +271,20 @@ bool Stepper::control(const String &action, JsonObject *payload)
     else if (action == "stop")
     {
         stop();
+        return true;
+    }
+    else if (action == "setCurrentPosition")
+    {
+        if (!payload || !(*payload)["position"].is<long>())
+        {
+            MLOG_WARN("Stepper [%s]: Invalid 'setCurrentPosition' payload - need position", _id.c_str());
+            return false;
+        }
+
+        long position = (*payload)["position"].as<long>();
+        MLOG_INFO("Stepper [%s]: Reset position to %ld", _id.c_str(), position);
+        setCurrentPosition(position);
+        notifyStateChange();
         return true;
     }
     /*

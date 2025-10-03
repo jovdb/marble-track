@@ -65,6 +65,8 @@ export function Stepper(props: { id: string }) {
 
   const handleStop = () => actions.stop();
 
+  const handleReset = () => actions.resetPosition();
+
   return (
     <Device
       id={props.id}
@@ -100,7 +102,7 @@ export function Stepper(props: { id: string }) {
           class={styles.device__input}
           type="range"
           min="10"
-          max="2000"
+          max={config()?.maxSpeed ?? 1800}
           value={maxSpeed()}
           onInput={(event) => setMaxSpeed(Number(event.currentTarget.value))}
         />
@@ -114,7 +116,7 @@ export function Stepper(props: { id: string }) {
           class={styles.device__input}
           type="range"
           min="10"
-          max="2000"
+          max={config()?.maxAcceleration ?? 5800}
           value={maxAcceleration()}
           onInput={(event) => setMaxAcceleration(Number(event.currentTarget.value))}
         />
@@ -125,6 +127,9 @@ export function Stepper(props: { id: string }) {
         </button>
         <button class={styles.device__button} onClick={handleStop}>
           Stop
+        </button>
+        <button class={styles.device__button} onClick={handleReset}>
+          Reset Position
         </button>
       </div>
     </Device>

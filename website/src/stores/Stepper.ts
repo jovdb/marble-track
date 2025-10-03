@@ -63,12 +63,22 @@ export function useStepper(deviceId: string) {
       args: {},
     });
 
+  const resetPosition = () =>
+    sendMessage({
+      type: "device-fn",
+      deviceType,
+      deviceId,
+      fn: "setCurrentPosition",
+      args: { position: 0 },
+    });
+
   return [
     device,
     {
       ...actions,
       move,
       stop,
+      resetPosition,
     },
   ] as const;
 }

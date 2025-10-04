@@ -62,6 +62,7 @@ void Buzzer::startupTone()
     {
         this->tone(frequency, 80); // Play tone for 80ms using Buzzer::tone
         delay(20);                 // Small delay to separate tones
+        yield();                   // Feed watchdog during blocking operations
     }
     noTone(_pin); // Ensure tone is off before the next loop
 }

@@ -46,12 +46,11 @@ void WebsiteHost::setupRoutes()
     // Web Server Root URL with debugging
     server->on("/", HTTP_GET, [this](AsyncWebServerRequest *request)
                {
-    MLOG_INFO("Root page requested");
+    MLOG_INFO("Website accessed");
         if (LittleFS.exists("/index.html")) {
-            MLOG_INFO("index.html found, serving file");
             request->send(LittleFS, "/index.html", "text/html");
         } else {
-            MLOG_WARN("index.html NOT found in LittleFS");
+            MLOG_WARN("index.html NOT found in LittleFS. Did you upload the website?");
             
             // Create a simple fallback page with network status
             String html = "<!DOCTYPE html><html><head><title>Marble Track Control</title></head><body>";
@@ -87,28 +86,6 @@ void WebsiteHost::setupRoutes()
         }
         request->send(200, "text/plain", message); });
 
-    // Network status endpoint (enhanced to use Network class)
-    server->on("/network-status", HTTP_GET, [this](AsyncWebServerRequest *request)
-               { request->send(200, "application/json", network->getStatusJSON()); });
-
-    // WebSocket configuration endpoint for frontend
-    server->on("/ws-config", HTTP_GET, [this](AsyncWebServerRequest *request)
-               {
-        String wsConfig = "{";
-        wsConfig += "\"wsUrl\":\"ws://" + network->getIPAddress().toString() + "/ws\",";
-        wsConfig += "\"ip\":\"" + network->getIPAddress().toString() + "\",";
-        wsConfig += "\"mode\":\"";
-        wsConfig += network->isAccessPointMode() ? "ap" : "client";
-        wsConfig += "\"}";
-        request->send(200, "application/json", wsConfig); });
-
-    // WebSocket status endpoint for debugging
-    server->on("/ws-status", HTTP_GET, [this](AsyncWebServerRequest *request)
-               {
-        // Get WebSocket manager status (we need to get a reference to it)
-        String wsStatus = "{\"status\":\"WebSocket endpoint active\",\"path\":\"/ws\"}";
-        request->send(200, "application/json", wsStatus); });
-
     // Test WebSocket connectivity endpoint
     server->on("/test-ws", HTTP_GET, [this](AsyncWebServerRequest *request)
                {
@@ -126,10 +103,6 @@ void WebsiteHost::setupRoutes()
         html += "ws.onmessage = (e) => { messages.innerHTML += '<div>Received: ' + e.data + '</div>'; };";
         html += "</script></body></html>";
         request->send(200, "text/html", html); });
-
-    // Backwards compatibility for WiFi status endpoint
-    server->on("/wifi-status", HTTP_GET, [this](AsyncWebServerRequest *request)
-               { request->send(200, "application/json", network->getStatusJSON()); });
 
     // Catch-all handler for any other requests (prevents LittleFS errors)
     server->onNotFound([this](AsyncWebServerRequest *request)

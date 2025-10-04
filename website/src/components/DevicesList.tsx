@@ -245,7 +245,14 @@ export function DevicesList() {
       {/* Add Device Modal */}
       {showAddModal() && (
         <div class={styles["modal-overlay"]} onClick={() => setShowAddModal(false)}>
-          <div class={styles["modal-content"]} onClick={(e) => e.stopPropagation()}>
+          <form
+            class={styles["modal-content"]}
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleAddDevice();
+            }}
+          >
             <h3>Add New Device</h3>
 
             <div class={styles["modal-field"]}>
@@ -274,17 +281,18 @@ export function DevicesList() {
             </div>
 
             <div class={styles["modal-buttons"]}>
-              <button class={styles["modal-button"]} onClick={() => setShowAddModal(false)}>
+              <button
+                type="reset"
+                class={styles["modal-button"]}
+                onClick={() => setShowAddModal(false)}
+              >
                 Cancel
               </button>
-              <button
-                class={styles["modal-button modal-button--primary"]}
-                onClick={handleAddDevice}
-              >
+              <button type="submit" class={styles["modal-button modal-button--primary"]}>
                 Add Device
               </button>
             </div>
-          </div>
+          </form>
         </div>
       )}
 

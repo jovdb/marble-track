@@ -23,7 +23,7 @@ function normalizeName(value: unknown): string {
   if (typeof value === "string" && value.trim().length > 0) {
     return value;
   }
-  return "Button";
+  return "";
 }
 
 function normalizePin(value: unknown): number {

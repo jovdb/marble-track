@@ -76,7 +76,7 @@ void SerialConsole::loop()
 
             if (input.length() == 0)
             {
-                Serial.println("💡 Commands: 'devices', 'network', 'memory', 'restart'");
+                Serial.println("💡 Commands: 'devices', 'devices-del', 'network', 'memory', 'restart'");
                 Serial.println();
                 continue;
             }
@@ -176,6 +176,12 @@ void SerialConsole::handleCommand(const String &input)
         return;
     }
 
+    if (input.equalsIgnoreCase("devices-del"))
+    {
+        startDeleteDeviceFlow();
+        return;
+    }
+
     Serial.printf("❓ Unknown command: '%s'\n", input.c_str());
     Serial.println();
 }
@@ -186,7 +192,14 @@ void SerialConsole::handleInteractiveInput(char incoming)
 
     if (isEscape(incoming))
     {
-        cancelSetNetworkFlow();
+        if (m_session.state == State::DeletingDevice)
+        {
+            cancelDeviceDeletion();
+        }
+        else
+        {
+            cancelSetNetworkFlow();
+        }
         return;
     }
 
@@ -208,6 +221,9 @@ void SerialConsole::handleInteractiveInput(char incoming)
         break;
     case State::Confirming:
         handleConfirmationInput(incoming);
+        break;
+    case State::DeletingDevice:
+        handleDeviceDeletionInput(incoming);
         break;
     case State::Idle:
     default:
@@ -321,6 +337,60 @@ void SerialConsole::handleConfirmationInput(char incoming)
     if (isLineFeed(incoming))
     {
         saveAndApplyNetworkSettings();
+    }
+}
+
+void SerialConsole::handleDeviceDeletionInput(char incoming)
+{
+    if (isLineFeed(incoming))
+    {
+        Serial.println();
+
+        if (m_session.stageBuffer.isEmpty())
+        {
+            Serial.print("Select device #: ");
+            return;
+        }
+
+        int choice = m_session.stageBuffer.toInt();
+        m_session.stageBuffer = "";
+
+        if (choice < 1 || choice > static_cast<int>(m_session.deviceIds.size()))
+        {
+            Serial.println("❌ Invalid selection. Try again.");
+            Serial.print("Select device #: ");
+            return;
+        }
+
+        const String &deviceId = m_session.deviceIds[static_cast<size_t>(choice - 1)];
+
+        if (!m_deviceManager.removeDevice(deviceId))
+        {
+            Serial.printf("❌ Failed to remove device '%s'.\n", deviceId.c_str());
+            Serial.println();
+            m_session.reset();
+            return;
+        }
+
+        m_deviceManager.saveDevicesToJsonFile();
+
+        Serial.printf("✅ Device '%s' removed and saved.\n", deviceId.c_str());
+        Serial.println();
+
+        m_session.reset();
+        return;
+    }
+
+    if (isBackspace(incoming))
+    {
+        handleBackspace(m_session.stageBuffer);
+        return;
+    }
+
+    if (isDigit(incoming))
+    {
+        m_session.stageBuffer += incoming;
+        Serial.print(incoming);
     }
 }
 
@@ -534,5 +604,52 @@ void SerialConsole::saveAndApplyNetworkSettings()
     Serial.println("Use the 'network' command to check current status.");
     Serial.println();
 
+    m_session.reset();
+}
+
+void SerialConsole::startDeleteDeviceFlow()
+{
+    Device *deviceList[20];
+    int deviceCount = 0;
+    m_deviceManager.getDevices(deviceList, deviceCount, 20);
+
+    Serial.println();
+
+    if (deviceCount == 0)
+    {
+        Serial.println("⚠️  No devices configured. Nothing to delete.");
+        Serial.println();
+        return;
+    }
+
+    m_session.reset();
+    m_session.stageBuffer = "";
+
+    Serial.println("🗑️  Delete a device:");
+    for (int i = 0; i < deviceCount; ++i)
+    {
+        if (deviceList[i] != nullptr)
+        {
+            m_session.deviceIds.push_back(deviceList[i]->getId());
+            Serial.printf("  %d. %s [%s]\n",
+                          i + 1,
+                          deviceList[i]->getType().c_str(),
+                          deviceList[i]->getId().c_str());
+        }
+    }
+
+    Serial.println();
+    Serial.println("Type the number of the device to remove and press Enter.");
+    Serial.println("Press Esc to cancel.");
+    Serial.print("Select device #: ");
+
+    m_session.state = Session::State::DeletingDevice;
+}
+
+void SerialConsole::cancelDeviceDeletion()
+{
+    Serial.println();
+    Serial.println("❎ Device deletion cancelled.");
+    Serial.println();
     m_session.reset();
 }

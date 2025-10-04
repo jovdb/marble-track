@@ -37,11 +37,13 @@ private:
             SelectingNetwork,
             EnteringCustomSsid,
             EnteringPassword,
-            Confirming
+            Confirming,
+            DeletingDevice
         };
 
         State state = State::Idle;
         std::vector<NetworkOption> networks;
+        std::vector<String> deviceIds;
         String stageBuffer;
         String selectedSsid;
         String password;
@@ -50,6 +52,7 @@ private:
         {
             state = State::Idle;
             networks.clear();
+            deviceIds.clear();
             stageBuffer = "";
             selectedSsid = "";
             password = "";
@@ -66,12 +69,15 @@ private:
     void handleCustomSsidInput(char incoming);
     void handlePasswordInput(char incoming);
     void handleConfirmationInput(char incoming);
+    void handleDeviceDeletionInput(char incoming);
 
     void startSetNetworkFlow();
     void cancelSetNetworkFlow(const char *reason = nullptr);
     void showConfirmationPrompt();
     void finishNetworkSelection(size_t selectedIndex);
     void saveAndApplyNetworkSettings();
+    void startDeleteDeviceFlow();
+    void cancelDeviceDeletion();
 
     static bool isBackspace(char incoming);
     static bool isLineFeed(char incoming);

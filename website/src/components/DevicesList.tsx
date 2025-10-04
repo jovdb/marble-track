@@ -216,15 +216,15 @@ export function DevicesList() {
                             <TrashIcon />
                           </button>
                         </td>
-                        {/* <td class={styles["devices-list__table-td"]}>
-                        {device.pins && device.pins.length > 0 ? (
+                        <td class={styles["devices-list__table-td"]}>
+                          {/* {device.pins && device.pins.length > 0 ? (
                           <code class={styles["devices-list__pins-list"]}>
                             {device.pins.join(", ")}
                           </code>
                         ) : (
                           <span class={styles["devices-list__no-pins"]}>-</span>
-                        )}
-                      </td> */}
+                        )} */}
+                        </td>
                       </tr>
                     )}
                   </For>

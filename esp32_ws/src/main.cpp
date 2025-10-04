@@ -52,6 +52,12 @@ WebSocketManager wsManager(&deviceManager, nullptr, "/ws");
 // Function declarations
 void setOperationMode(OperationMode mode);
 
+// Global callback function for state changes
+void globalStateChangeCallback(const String &deviceId, const String &stateJson)
+{
+  wsManager.broadcastState(deviceId, stateJson, "");
+}
+
 // SerialConsole will be initialized after network is created
 SerialConsole *serialConsole = nullptr;
 
@@ -185,9 +191,8 @@ void setup()
   // Try to load devices from JSON file
   deviceManager.loadDevicesFromJsonFile();
 
-  // Setup  Devices
-  deviceManager.setup([&](const String &deviceId, const String &stateJson)
-                      { wsManager.broadcastState(deviceId, stateJson, ""); });
+  // Setup  Devices - callback will be set after setup to avoid issues during initialization
+  deviceManager.setup(nullptr);
 
   // Startup sound
   Buzzer *buzzer = deviceManager.getDeviceByTypeAs<Buzzer>("buzzer");
@@ -198,6 +203,19 @@ void setup()
   }
 
   MLOG_INFO("Device management initialized - Total devices: %d", deviceManager.getDeviceCount());
+  
+  // Now set the state change callback after everything is initialized using global function
+  Device *deviceList[20];
+  int count;
+  deviceManager.getDevices(deviceList, count, 20);
+  for (int i = 0; i < count; i++)
+  {
+    if (deviceList[i])
+    {
+      deviceList[i]->setStateChangeCallback(globalStateChangeCallback);
+    }
+  }
+  
   MLOG_INFO("State change broadcasting enabled");
 
   // Initialize in MANUAL mode

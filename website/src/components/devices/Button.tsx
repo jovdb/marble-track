@@ -1,4 +1,4 @@
-import { createMemo } from "solid-js";
+import { createMemo, createSignal } from "solid-js";
 import { Device } from "./Device";
 import deviceStyles from "./Device.module.css";
 import buttonStyles from "./Button.module.css";
@@ -14,8 +14,21 @@ export function Button(props: { id: string }) {
   const isPressed = createMemo(() => Boolean(device()?.state?.pressed));
   const statusLabel = createMemo(() => `Status: ${isPressed() ? "Pressed" : "Released"}`);
 
-  const handlePress = () => actions.press();
-  const handleRelease = () => actions.release();
+  const [isPressing, setIsPressing] = createSignal(false);
+
+  const handlePress = () => {
+    if (!isPressing()) {
+      setIsPressing(true);
+      actions.press();
+    }
+  };
+
+  const handleRelease = () => {
+    if (isPressing()) {
+      setIsPressing(false);
+      actions.release();
+    }
+  };
 
   return (
     <Device

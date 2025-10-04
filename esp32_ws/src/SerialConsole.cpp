@@ -76,7 +76,7 @@ void SerialConsole::loop()
 
             if (input.length() == 0)
             {
-                Serial.println("💡 Commands: 'devices', 'devices-del', 'network', 'memory', 'restart'");
+                Serial.println("💡 Commands: 'devices', 'network', 'memory', 'restart'");
                 Serial.println();
                 continue;
             }
@@ -141,6 +141,8 @@ void SerialConsole::handleCommand(const String &input)
                     Serial.println();
                 }
             }
+
+            Serial.printf("To remove a device, type 'devices-del'.\n");
         }
         else
         {
@@ -447,9 +449,8 @@ void SerialConsole::startSetNetworkFlow()
                 continue;
             }
 
-            const bool duplicate = std::any_of(m_session.networks.begin(), m_session.networks.end(), [&](const NetworkOption &existing) {
-                return existing.ssid == option.ssid;
-            });
+            const bool duplicate = std::any_of(m_session.networks.begin(), m_session.networks.end(), [&](const NetworkOption &existing)
+                                               { return existing.ssid == option.ssid; });
 
             if (!duplicate)
             {
@@ -457,13 +458,13 @@ void SerialConsole::startSetNetworkFlow()
             }
         }
 
-        std::sort(m_session.networks.begin(), m_session.networks.end(), [](const NetworkOption &a, const NetworkOption &b) {
+        std::sort(m_session.networks.begin(), m_session.networks.end(), [](const NetworkOption &a, const NetworkOption &b)
+                  {
             if (a.rssi == b.rssi)
             {
                 return a.ssid < b.ssid;
             }
-            return a.rssi > b.rssi;
-        });
+            return a.rssi > b.rssi; });
     }
 
     WiFi.scanDelete();

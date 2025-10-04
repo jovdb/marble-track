@@ -32,7 +32,7 @@ public:
         NormalClosed
     };
 
-    Button(const String &id, const String &name);
+    Button(const String &id);
 
     /**
      * @brief Setup function to initialize the button

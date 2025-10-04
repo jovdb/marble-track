@@ -7,8 +7,8 @@ DividerWheel::DividerWheel(int stepPin1, int stepPin2, int stepPin3, int stepPin
 {
     _name = name;
     _stepper = new Stepper(id + "-stepper");
-    _stepper->configure4Pin(stepPin1, stepPin2, stepPin3, stepPin4);
-    _button = new Button(id + "-button", name + " Button");
+    // _stepper->configure4Pin(stepPin1, stepPin2, stepPin3, stepPin4);
+    _button = new Button(id + "-button");
     _calibrationState = CalibrationState::NO;
     addChild(_stepper);
     addChild(_button);

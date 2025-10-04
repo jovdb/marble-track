@@ -15,17 +15,12 @@
 /**
  * @brief Constructor for Button class
  *
- * Initializes the Button object with pin, id, name, and configuration parameters.
- * @param pin GPIO pin number for the button
+ * Initializes the Button object with just the ID parameter.
  * @param id Unique identifier string for the button
- * @param name Human-readable name string for the button
- * @param pullUp true for internal pull-up (button connects to ground), false for pull-down
- * @param debounceMs Debounce time in milliseconds
  */
-Button::Button(const String &id, const String &name)
+Button::Button(const String &id)
     : Device(id, "button")
 {
-    _name = name;
     _pin = -1;
     _pullUp = true;
     _debounceMs = 50;

@@ -4,7 +4,7 @@
 Wheel::Wheel(int stepPin1, int dirPin, int buttonPin, const String &id, const String &name)
         : Device(id, "wheel"),
             _stepper(new Stepper(id + "-stepper")),
-      _sensor(new Button(id + "-sensor", name + " Sensor")),
+      _sensor(new Button(id + "-sensor")),
       _state(wheelState::IDLE)
 {
     _name = name;

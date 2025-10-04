@@ -148,6 +148,7 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
             File file = LittleFS.open("/config.json", "w");
             if (!file)
             {
+                
                 response["success"] = false;
                 response["error"] = "Failed to open config.json for writing";
             }

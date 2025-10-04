@@ -58,7 +58,6 @@ void DeviceManager::loadDevicesFromJsonFile()
                 for (JsonObject obj : arr)
                 {
                     String id = obj["id"] | "";
-                    String name = obj["name"] | "";
                     String type = obj["type"] | "";
 
                     if (devicesCount < MAX_DEVICES)
@@ -66,7 +65,6 @@ void DeviceManager::loadDevicesFromJsonFile()
                         if (type == "led")
                         {
                             Led *led = new Led(id);
-                            led->setName(name);
 
                             // Log obj[config] as json string
                             String configStr;
@@ -84,7 +82,7 @@ void DeviceManager::loadDevicesFromJsonFile()
                         }
                         else if (type == "buzzer")
                         {
-                            Buzzer *buzzer = new Buzzer(id, name);
+                            Buzzer *buzzer = new Buzzer(id, "remove");
 
                             // Apply configuration from JSON config property if it exists
                             if (obj["config"].is<JsonObject>())
@@ -97,7 +95,7 @@ void DeviceManager::loadDevicesFromJsonFile()
                         }
                         else if (type == "button")
                         {
-                            Button *button = new Button(id, name);
+                            Button *button = new Button(id);
 
                             // Apply configuration from JSON config property if it exists
                             if (obj["config"].is<JsonObject>())
@@ -110,7 +108,7 @@ void DeviceManager::loadDevicesFromJsonFile()
                         }
                         else if (type == "servo")
                         {
-                            ServoDevice *servo = new ServoDevice(id, name);
+                            ServoDevice *servo = new ServoDevice(id, "remove");
 
                             // Apply configuration from JSON config property if it exists
                             if (obj["config"].is<JsonObject>())
@@ -136,7 +134,7 @@ void DeviceManager::loadDevicesFromJsonFile()
                         }
                         else if (type == "pwmmotor")
                         {
-                            PwmMotor *motor = new PwmMotor(id, name);
+                            PwmMotor *motor = new PwmMotor(id, "remove");
 
                             // Apply configuration from JSON config property if it exists
                             if (obj["config"].is<JsonObject>())
@@ -149,7 +147,7 @@ void DeviceManager::loadDevicesFromJsonFile()
                         }
                         else if (type == "pwm")
                         {
-                            PwmDevice *pwm = new PwmDevice(id, name);
+                            PwmDevice *pwm = new PwmDevice(id, "remove");
 
                             // Apply configuration from JSON config property if it exists
                             if (obj["config"].is<JsonObject>())
@@ -240,7 +238,6 @@ void DeviceManager::saveDevicesToJsonFile()
         {
             JsonObject deviceObj = devicesArray.add<JsonObject>();
             deviceObj["id"] = devices[i]->getId();
-            deviceObj["name"] = devices[i]->getName();
             deviceObj["type"] = devices[i]->getType();
 
             // Save device configuration
@@ -551,7 +548,7 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
     }
     else if (lowerType == "button")
     {
-        newDevice = new Button(deviceId, deviceId);
+        newDevice = new Button(deviceId);
     }
     else if (lowerType == "servo")
     {
@@ -559,7 +556,7 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
     }
     else if (lowerType == "stepper")
     {
-    newDevice = new Stepper(deviceId);
+        newDevice = new Stepper(deviceId);
     }
     else if (lowerType == "pwmmotor")
     {
@@ -567,7 +564,7 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
     }
     else if (lowerType == "pwm")
     {
-    newDevice = new PwmDevice(deviceId, deviceId);
+        newDevice = new PwmDevice(deviceId, deviceId);
     }
     else
     {

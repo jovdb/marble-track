@@ -108,6 +108,8 @@ void Device::notifyStateChange()
     if (stateChangeCallback)
     {
         stateChangeCallback(getId(), getState());
+    } else {
+        MLOG_WARN("Device [%s]: State change callback not set", _id.c_str());
     }
 }
 

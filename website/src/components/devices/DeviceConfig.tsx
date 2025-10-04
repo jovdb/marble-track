@@ -23,16 +23,13 @@ export default function DeviceConfig(props: DeviceConfigProps) {
         onSubmit={(event) => {
           event.preventDefault();
           props.onSave();
+          props.onClose?.();
         }}
       >
         <div class={styles["device-config__fields"]}>{props.children}</div>
         <div class={styles["device-config__actions"]}>
           {props.onClose && (
-            <button
-              type="button"
-              class={styles["device-config__close"]}
-              onClick={props.onClose}
-            >
+            <button type="button" class={styles["device-config__close"]} onClick={props.onClose}>
               Close
             </button>
           )}
@@ -66,9 +63,7 @@ export function DeviceConfigItem(props: { name: string; children: JSX.Element | 
       >
         {props.name}
       </th>
-      <td
-        class={`${styles["device-config__cell"]} ${styles["device-config__cell--value"]}`}
-      >
+      <td class={`${styles["device-config__cell"]} ${styles["device-config__cell--value"]}`}>
         <div class={styles["device-config__value"]}>{props.children}</div>
       </td>
     </>

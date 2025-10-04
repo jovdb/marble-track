@@ -51,7 +51,9 @@ WebSocketManager wsManager(&deviceManager, nullptr, "/ws");
 
 // Function declarations
 void setOperationMode(OperationMode mode);
-SerialConsole serialConsole(deviceManager, network, currentMode);
+
+// SerialConsole will be initialized after network is created
+SerialConsole *serialConsole = nullptr;
 
 void runManualMode()
 {
@@ -148,6 +150,9 @@ void setup()
 
   // Create network instance with loaded settings
   network = new Network(networkSettings);
+  
+  // Now create SerialConsole after network is initialized
+  serialConsole = new SerialConsole(deviceManager, network, currentMode);
 
   // Initialize Network (will try WiFi, fall back to AP if needed)
   bool networkInitialized = network->setup();
@@ -204,7 +209,9 @@ void setup()
 void loop()
 {
   // Check for serial input commands
-  serialConsole.loop();
+  if (serialConsole) {
+    serialConsole->loop();
+  }
 
   otaService.loop();
 

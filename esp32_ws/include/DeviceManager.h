@@ -18,6 +18,7 @@ private:
     static const int MAX_DEVICES = 20;
     Device *devices[MAX_DEVICES];
     int devicesCount;
+    StateChangeCallback stateChangeCallback;
 
 public:
     /**

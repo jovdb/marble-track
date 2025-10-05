@@ -22,7 +22,7 @@ Button::Button(const String &id)
     : Device(id, "button")
 {
     _pin = -1;
-    _pullUp = true;
+    _pinMode = PinModeOption::Floating;
     _debounceMs = 50;
     _buttonType = ButtonType::NormalOpen;
 }
@@ -39,14 +39,19 @@ void Button::setup()
         return;
     }
 
-    // Configure pin mode based on pull-up/pull-down setting
-    if (_pullUp)
+    // Configure pin mode based on configuration
+    switch (_pinMode)
     {
+    case PinModeOption::PullUp:
         pinMode(_pin, INPUT_PULLUP);
-    }
-    else
-    {
+        break;
+    case PinModeOption::PullDown:
+        pinMode(_pin, INPUT_PULLDOWN);
+        break;
+    case PinModeOption::Floating:
+    default:
         pinMode(_pin, INPUT);
+        break;
     }
 
     // Initialize state variables
@@ -62,6 +67,11 @@ void Button::setup()
  */
 void Button::loop()
 {
+    if (_pin < 0)
+    {
+        return;
+    }
+
     // If we have a virtual press active, don't process physical button state
     if (_virtualPress)
     {
@@ -77,6 +87,7 @@ void Button::loop()
         // Reset debounce timer and update raw state
         _lastDebounceTime = millis();
         _rawState = newRawState;
+        MLOG_INFO("CHANGED");
     }
 
     // Check if enough time has passed for debouncing
@@ -224,7 +235,7 @@ String Button::getState()
     // Add Button-specific fields
     doc["pressed"] = _currentState;
     doc["pressedTime"] = getPressedTime();
-    doc["pullUp"] = _pullUp;
+    doc["pinMode"] = pinModeToString(_pinMode);
     doc["debounceMs"] = _debounceMs;
     doc["buttonType"] = (_buttonType == ButtonType::NormalOpen) ? "NormalOpen" : "NormalClosed";
 
@@ -240,7 +251,7 @@ String Button::getConfig() const
 
     config["name"] = _name;
     config["pin"] = _pin;
-    config["pullUp"] = _pullUp;
+    config["pinMode"] = pinModeToString(_pinMode);
     config["debounceMs"] = _debounceMs;
     config["buttonType"] = buttonTypeToString(_buttonType);
 
@@ -271,25 +282,31 @@ void Button::setConfig(JsonObject *config)
         _pin = pinVar.as<int>();
     }
 
-    JsonVariant pullUpVar = (*config)["pullUp"];
-    if (!pullUpVar.isNull())
+    JsonVariant pinModeVar = (*config)["pinMode"];
+    if (!pinModeVar.isNull())
     {
-        if (pullUpVar.is<bool>())
+        if (pinModeVar.is<String>())
         {
-            _pullUp = pullUpVar.as<bool>();
+            _pinMode = pinModeFromString(pinModeVar.as<String>());
         }
-        else if (pullUpVar.is<int>() || pullUpVar.is<long>())
+        else if (pinModeVar.is<int>() || pinModeVar.is<long>())
         {
-            _pullUp = pullUpVar.as<int>() != 0;
-        }
-        else if (pullUpVar.is<String>())
-        {
-            String value = pullUpVar.as<String>();
-            value.toLowerCase();
-            _pullUp = (value == "true" || value == "1" || value == "yes");
+            int value = pinModeVar.as<int>();
+            switch (value)
+            {
+            case 1:
+                _pinMode = PinModeOption::PullUp;
+                break;
+            case 2:
+                _pinMode = PinModeOption::PullDown;
+                break;
+            case 0:
+            default:
+                _pinMode = PinModeOption::Floating;
+                break;
+            }
         }
     }
-
     JsonVariant debounceVar = (*config)["debounceMs"];
     if (!debounceVar.isNull())
     {
@@ -325,16 +342,19 @@ void Button::setConfig(JsonObject *config)
  */
 bool Button::readRawState()
 {
-    bool pinState = digitalRead(_pin);
-
-    // Invert logic for pull-up configuration (pin is LOW when button is pressed)
-    bool pressed = _pullUp ? !pinState : pinState;
-    // If NormalClosed, invert the pressed logic
-    if (_buttonType == ButtonType::NormalClosed)
+    if (_pin < 0)
     {
-        pressed = !pressed;
+        return false;
     }
-    return pressed;
+
+    bool pinState = digitalRead(_pin);
+    MLOG_INFO("pinState: %d, pin: %d", pinState, _pin);
+
+    // Determine pressed state depending on pin mode
+    bool pressed;
+    pressed = !pinState;
+
+        return pressed;
 }
 
 Button::ButtonType Button::buttonTypeFromString(const String &value) const
@@ -344,6 +364,33 @@ Button::ButtonType Button::buttonTypeFromString(const String &value) const
         return ButtonType::NormalClosed;
     }
     return ButtonType::NormalOpen;
+}
+
+Button::PinModeOption Button::pinModeFromString(const String &value) const
+{
+    if (value.equalsIgnoreCase("pullup"))
+    {
+        return PinModeOption::PullUp;
+    }
+    if (value.equalsIgnoreCase("pulldown"))
+    {
+        return PinModeOption::PullDown;
+    }
+    return PinModeOption::Floating;
+}
+
+String Button::pinModeToString(PinModeOption mode) const
+{
+    switch (mode)
+    {
+    case PinModeOption::PullUp:
+        return "pullup";
+    case PinModeOption::PullDown:
+        return "pulldown";
+    case PinModeOption::Floating:
+    default:
+        return "floating";
+    }
 }
 
 String Button::buttonTypeToString(ButtonType type) const

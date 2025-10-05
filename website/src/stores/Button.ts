@@ -10,7 +10,7 @@ interface IButtonState extends IDeviceState {
 export interface IButtonConfig extends IDeviceConfig {
   name?: string;
   pin?: number;
-  pullUp?: boolean;
+  pinMode?: "floating" | "pullup" | "pulldown";
   debounceMs?: number;
   buttonType?: "NormalOpen" | "NormalClosed";
 }

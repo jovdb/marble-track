@@ -1,10 +1,6 @@
 import { For, createEffect, createSignal } from "solid-js";
-import DeviceConfig, {
-  DeviceConfigItem,
-  DeviceConfigRow,
-  DeviceConfigTable,
-} from "./DeviceConfig";
-import { IButtonConfig, useButton } from "../../stores/Button";
+import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
+import { useButton } from "../../stores/Button";
 
 interface ButtonConfigProps {
   id: string;
@@ -40,17 +36,9 @@ function normalizeDebounce(value: unknown): number {
   return 50;
 }
 
-function normalizePinMode(config: IButtonConfig | undefined): ButtonPinMode {
-  if (!config) {
-    return "floating";
-  }
-
-  if (config.pullUp) {
-    return "pullup";
-  }
-
-  if (config.buttonType === "NormalClosed") {
-    return "pulldown";
+function normalizePinMode(pinModeValue: unknown): ButtonPinMode {
+  if (pinModeValue === "floating" || pinModeValue === "pullup" || pinModeValue === "pulldown") {
+    return pinModeValue;
   }
 
   return "floating";
@@ -61,7 +49,9 @@ export default function ButtonConfig(props: ButtonConfigProps) {
 
   const [name, setName] = createSignal(normalizeName(device?.config?.name));
   const [pin, setPin] = createSignal(normalizePin(device?.config?.pin));
-  const [pinMode, setPinMode] = createSignal<ButtonPinMode>(normalizePinMode(device?.config));
+  const [pinMode, setPinMode] = createSignal<ButtonPinMode>(
+    normalizePinMode(device?.config?.pinMode)
+  );
   const [debounce, setDebounce] = createSignal(normalizeDebounce(device?.config?.debounceMs));
 
   createEffect(() => {
@@ -72,7 +62,7 @@ export default function ButtonConfig(props: ButtonConfigProps) {
 
     setName(normalizeName(config.name));
     setPin(normalizePin(config.pin));
-    setPinMode(normalizePinMode(config));
+    setPinMode(normalizePinMode(config.pinMode));
     setDebounce(normalizeDebounce(config.debounceMs));
   });
 
@@ -82,7 +72,7 @@ export default function ButtonConfig(props: ButtonConfigProps) {
       name: name(),
       pin: pin(),
       debounceMs: debounce(),
-      pullUp: selectedMode === "pullup",
+      pinMode: selectedMode,
       buttonType: selectedMode === "pulldown" ? "NormalClosed" : "NormalOpen",
     });
   };
@@ -119,11 +109,7 @@ export default function ButtonConfig(props: ButtonConfigProps) {
               style={{ "margin-left": "0.5rem" }}
             >
               <For each={BUTTON_PIN_MODE_OPTIONS}>
-                {(option) => (
-                  <option value={option.value}>
-                    {option.label}
-                  </option>
-                )}
+                {(option) => <option value={option.value}>{option.label}</option>}
               </For>
             </select>
           </DeviceConfigItem>

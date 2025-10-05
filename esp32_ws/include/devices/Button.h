@@ -32,6 +32,13 @@ public:
         NormalClosed
     };
 
+    enum class PinModeOption
+    {
+        Floating,
+        PullUp,
+        PullDown
+    };
+
     Button(const String &id);
 
     /**
@@ -56,7 +63,7 @@ public:
 
 private:
     int _pin;                                        ///< GPIO pin number for the button
-    bool _pullUp;                                    ///< Pull-up configuration (true = internal pull-up)
+    PinModeOption _pinMode;                          ///< Pin mode configuration (floating/pull-up/pull-down)
     unsigned long _debounceMs;                       ///< Debounce time in milliseconds
     ButtonType _buttonType = ButtonType::NormalOpen; ///< Button type (NO/NC)
 
@@ -79,6 +86,8 @@ private:
      */
     bool readRawState();
     ButtonType buttonTypeFromString(const String &value) const;
+    PinModeOption pinModeFromString(const String &value) const;
+    String pinModeToString(PinModeOption mode) const;
     String buttonTypeToString(ButtonType type) const;
 };
 

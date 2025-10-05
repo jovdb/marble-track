@@ -21,13 +21,11 @@
 #include "devices/Stepper.h"
 #include "devices/PwmMotor.h"
 
-#include "OTA_Support.h"
+#include <ArduinoOTA.h>
+#include <Update.h>
 #include <devices/Wheel.h>
 #include "OperationMode.h"
 #include "SerialConsole.h"
-
-// Service instances
-OTAService otaService;
 
 OperationMode currentMode = OperationMode::MANUAL;
 
@@ -60,6 +58,120 @@ void globalStateChangeCallback(const String &deviceId, const String &stateJson)
 
 // SerialConsole will be initialized after network is created
 SerialConsole *serialConsole = nullptr;
+
+namespace
+{
+  struct HttpOtaContext
+  {
+    bool authenticated = false;
+    bool started = false;
+    bool completed = false;
+    bool success = false;
+  };
+}
+
+static constexpr const char *OTA_HTTP_USER = "ota";
+static constexpr const char *OTA_HTTP_PASS = "marbletrack";
+
+void setupHttpOtaEndpoint(AsyncWebServer &server)
+{
+  server.on(
+      "/ota",
+      HTTP_POST,
+      [](AsyncWebServerRequest *request)
+      {
+        HttpOtaContext *ctx = static_cast<HttpOtaContext *>(request->_tempObject);
+        if (!ctx || !ctx->authenticated)
+        {
+          request->requestAuthentication();
+          if (ctx)
+          {
+            delete ctx;
+            request->_tempObject = nullptr;
+          }
+          return;
+        }
+
+        if (!ctx->completed)
+        {
+          ctx->success = false;
+        }
+
+        AsyncWebServerResponse *response = request->beginResponse(
+            ctx->success ? 200 : 500,
+            "text/plain",
+            ctx->success ? "Update OK" : "Update failed");
+        response->addHeader("Connection", "close");
+        request->send(response);
+
+        bool shouldRestart = ctx->success;
+        delete ctx;
+        request->_tempObject = nullptr;
+
+        if (shouldRestart)
+        {
+          Serial.println("HTTP OTA update successful, rebooting");
+          delay(100);
+          ESP.restart();
+        }
+        else
+        {
+          Serial.println("HTTP OTA update failed");
+        }
+      },
+      [](AsyncWebServerRequest *request, const String &filename, size_t index, uint8_t *data, size_t len, bool final)
+      {
+        HttpOtaContext *ctx = static_cast<HttpOtaContext *>(request->_tempObject);
+        if (!ctx)
+        {
+          ctx = new HttpOtaContext();
+          ctx->authenticated = request->authenticate(OTA_HTTP_USER, OTA_HTTP_PASS);
+          request->_tempObject = ctx;
+        }
+
+        if (!ctx->authenticated)
+        {
+          return;
+        }
+
+        if (index == 0)
+        {
+          Serial.printf("HTTP OTA upload start: %s\n", filename.c_str());
+          ctx->started = Update.begin(UPDATE_SIZE_UNKNOWN);
+          if (!ctx->started)
+          {
+            Update.printError(Serial);
+          }
+        }
+
+        if (!ctx->started)
+        {
+          return;
+        }
+
+        if (len)
+        {
+          if (Update.write(data, len) != len)
+          {
+            Update.printError(Serial);
+          }
+        }
+
+        if (final)
+        {
+          ctx->completed = true;
+          ctx->success = Update.end(true) && !Update.hasError();
+          if (ctx->success)
+          {
+            Serial.println("HTTP OTA upload complete");
+          }
+          else
+          {
+            Update.printError(Serial);
+          }
+        }
+      });
+}
 
 void runManualMode()
 {
@@ -171,7 +283,28 @@ void setup()
   {
     String hostnameStr = network->getHostname();
     MLOG_INFO("Network ready, hostname: %s.local", hostnameStr.c_str());
-    otaService.setup(hostnameStr.c_str()); // <-- OTA setup only after network is ready
+    
+    // Wait a bit for network to be fully established
+    delay(1000);
+    
+    // Setup ArduinoOTA directly
+    ArduinoOTA.setHostname(hostnameStr.c_str());
+    ArduinoOTA.setPassword("marbletrack");
+    ArduinoOTA.onStart([]() { Serial.println("OTA Update Start"); });
+    ArduinoOTA.onEnd([]() { Serial.println("OTA Update End"); });
+    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) { 
+      Serial.printf("OTA Progress: %u%%\r", (progress / (total / 100))); 
+    });
+    ArduinoOTA.onError([](ota_error_t error) {
+      Serial.printf("OTA Error[%u]: ", error);
+      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+      else if (error == OTA_END_ERROR) Serial.println("End Failed");
+    });
+    
+    MLOG_INFO("OTA service configured");
   }
 
   // Create WebsiteHost instance after network is initialized
@@ -184,6 +317,13 @@ void setup()
   wsManager.setup(server);
   wsManager.setDeviceManager(&deviceManager);
   wsManager.setNetwork(network);
+
+  // Expose HTTP-based OTA endpoint for PlatformIO uploads
+  setupHttpOtaEndpoint(server);
+
+  // Start ArduinoOTA before starting the web server
+  ArduinoOTA.begin();
+  Serial.println("ArduinoOTA service started");
 
   // Start server
   server.begin();
@@ -231,7 +371,7 @@ void loop()
     serialConsole->loop();
   }
 
-  otaService.loop();
+  ArduinoOTA.handle();
 
   littleFSManager.loop();
 

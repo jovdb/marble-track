@@ -21,13 +21,10 @@
 #include "devices/Stepper.h"
 #include "devices/PwmMotor.h"
 
-#include "OTA_Support.h"
 #include <devices/Wheel.h>
 #include "OperationMode.h"
 #include "SerialConsole.h"
-
-// Service instances
-OTAService otaService;
+#include "OtaUpload.h"
 
 OperationMode currentMode = OperationMode::MANUAL;
 
@@ -171,7 +168,8 @@ void setup()
   {
     String hostnameStr = network->getHostname();
     MLOG_INFO("Network ready, hostname: %s.local", hostnameStr.c_str());
-    otaService.setup(hostnameStr.c_str()); // <-- OTA setup only after network is ready
+
+    OtaUpload::setup(*network, server);
   }
 
   // Create WebsiteHost instance after network is initialized
@@ -231,7 +229,7 @@ void loop()
     serialConsole->loop();
   }
 
-  otaService.loop();
+  OtaUpload::loop();
 
   littleFSManager.loop();
 

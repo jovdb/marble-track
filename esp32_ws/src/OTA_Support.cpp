@@ -12,14 +12,9 @@ void OTAService::setup(const char *hostname)
     }
     else
     {
-        _hostname = "esp32-ota";
+        _hostname = "marble-track.local";
     }
-    // Try without setting hostname to see if that helps
-    // ArduinoOTA.setHostname(_hostname);
-    
-    // Add authentication for security (optional but recommended)
-    ArduinoOTA.setPassword("marbletrack");
-    
+    ArduinoOTA.setHostname(_hostname);
     ArduinoOTA.onStart([]()
                        { Serial.println("OTA Update Start"); });
     ArduinoOTA.onEnd([]()
@@ -34,10 +29,7 @@ void OTAService::setup(const char *hostname)
             else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
             else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
             else if (error == OTA_END_ERROR) Serial.println("End Failed"); });
-    
-    // ArduinoOTA.begin() will be called in main.cpp after all initialization
-    Serial.printf("OTA service configured (hostname: %s)\n", _hostname);
-    Serial.println("OTA service configuration complete");
+    ArduinoOTA.begin();
 }
 
 void OTAService::loop()

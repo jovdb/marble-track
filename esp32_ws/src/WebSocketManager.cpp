@@ -252,7 +252,7 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
 void WebSocketManager::handleSetDevicesConfig(JsonDocument &doc)
 {
     JsonDocument response;
-    response["type"] = "set-devices-config-result";
+    response["type"] = "set-devices-config";
     if (!doc["config"].is<JsonObject>())
     {
         response["success"] = false;

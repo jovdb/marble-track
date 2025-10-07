@@ -19,7 +19,7 @@ let messageHandler: ((event: MessageEvent) => void) | null = null;
 export function useDeviceStore() {
   // Request devices from the server
   const requestDevices = () => {
-    if (sendMessage({ type: "get-devices" })) {
+    if (sendMessage({ type: "devices-list" })) {
       setDevicesLoading(true);
       console.log("Requested device list from server");
     } else {

@@ -102,7 +102,7 @@ export const sendMessage = (message: IWsSendMessage): boolean => {
 
 // Request devices from the server
 export const requestDevices = (): boolean => {
-  if (sendMessage({ type: "get-devices" })) {
+  if (sendMessage({ type: "devices-list" })) {
     setDevicesLoading(true);
     //  console.log("Requested device list from server");
     return true;

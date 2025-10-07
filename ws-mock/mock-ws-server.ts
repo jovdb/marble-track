@@ -37,7 +37,7 @@ wss.on(
       try {
         const data = JSON.parse(jsonStr);
         switch (data.type) {
-          case "get-devices":
+          case "devices-list":
             sendMessage(ws, getDevicesListHandler());
             break;
           case "device-save-config":

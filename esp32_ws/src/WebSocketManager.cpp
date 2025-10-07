@@ -118,7 +118,7 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
         return;
     }
 
-    if (type == "get-devices")
+    if (type == "devices-list")
     {
         handleGetDevices(doc);
         return;

@@ -120,8 +120,8 @@ export function addDeviceHandler(
 ) {
   if (!deviceType || !deviceId) {
     return JSON.stringify({
-      type: "error",
-      msg: "Missing deviceType or deviceId in add-device",
+      type: "add-device",
+      error: "Missing deviceType or deviceId",
     });
   }
 
@@ -131,8 +131,9 @@ export function addDeviceHandler(
   const existingDevice = findDevice(config.devices, deviceId);
   if (existingDevice) {
     return JSON.stringify({
-      type: "error",
-      msg: `DeviceId ${deviceId} already exists.`,
+      type: "add-device",
+      error: `DeviceId ${deviceId} already exists.`,
+      deviceId: deviceId,
     });
   }
 
@@ -154,22 +155,18 @@ export function addDeviceHandler(
   saveConfig(config);
 
   // Return success response
-  /*
   return JSON.stringify({
-    type: "device-added",
+    type: "add-device",
+    success: true,
     deviceId: deviceId,
-    device: newDevice,
   });
-  */
-
-  return getDevicesHandler();
 }
 
 export function removeDeviceHandler(deviceId: string) {
   if (!deviceId) {
     return JSON.stringify({
-      type: "error",
-      msg: "Missing deviceId in remove-device",
+      type: "remove-device",
+      error: "Missing deviceId",
     });
   }
 
@@ -180,8 +177,9 @@ export function removeDeviceHandler(deviceId: string) {
     config.devices?.findIndex((device: any) => device.id === deviceId) ?? -1;
   if (deviceIndex === -1) {
     return JSON.stringify({
-      type: "error",
-      msg: `DeviceId ${deviceId} not found.`,
+      type: "remove-device",
+      error: `DeviceId ${deviceId} not found.`,
+      deviceId: deviceId,
     });
   }
 
@@ -192,10 +190,9 @@ export function removeDeviceHandler(deviceId: string) {
   saveConfig(config);
 
   // Return success response
-  // return JSON.stringify({
-  //   type: "device-removed",
-  //   deviceId: deviceId,
-  // });
-
-  return getDevicesHandler();
+  return JSON.stringify({
+    type: "remove-device",
+    success: true,
+    deviceId: deviceId,
+  });
 }

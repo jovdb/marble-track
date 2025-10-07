@@ -127,74 +127,14 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
     // Handler for replacing config.json via websocket upload
     if (type == "set-devices-config")
     {
-        JsonDocument response;
-        response["type"] = "set-devices-config-result";
-        if (!doc["config"].is<JsonObject>())
-        {
-            response["success"] = false;
-            response["error"] = "Missing or invalid config object";
-        }
-        else
-        {
-            File file = LittleFS.open("/config.json", "w");
-            if (!file)
-            {
-                
-                response["success"] = false;
-                response["error"] = "Failed to open config.json for writing";
-            }
-            else
-            {
-                serializeJson(doc["config"], file);
-                file.close();
-                response["success"] = true;
-                response["message"] = "config.json updated";
-                
-                // Reload devices from the new config
-                if (deviceManager)
-                {
-                    deviceManager->loadDevicesFromJsonFile();
-                    // Broadcast updated device list to all clients
-                    JsonDocument emptyDoc;
-                    handleGetDevices(emptyDoc);
-                }
-            }
-        }
-        String respStr;
-        serializeJson(response, respStr);
-        notifyClients(respStr);
+        handleSetDevicesConfig(doc);
         return;
     }
 
     // New handler for downloading devices.json config
     if (type == "get-devices-config")
     {
-        JsonDocument response;
-        response["type"] = "devices-config";
-        // Read config.json from LittleFS
-        File file = LittleFS.open("/config.json", "r");
-        if (!file)
-        {
-            response["error"] = "config.json not found";
-        }
-        else
-        {
-            // Parse file contents as JSON
-            JsonDocument configDoc;
-            DeserializationError err = deserializeJson(configDoc, file);
-            if (err)
-            {
-                response["error"] = "Failed to parse config.json";
-            }
-            else
-            {
-                response["config"] = configDoc;
-            }
-            file.close();
-        }
-        String respStr;
-        serializeJson(response, respStr);
-        notifyClients(respStr);
+        handleGetDevicesConfig(doc);
         return;
     }
 
@@ -304,6 +244,76 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
     response["type"] = "device-config";
     response["deviceId"] = deviceId;
     response["config"] = config;
+    String respStr;
+    serializeJson(response, respStr);
+    notifyClients(respStr);
+}
+
+void WebSocketManager::handleSetDevicesConfig(JsonDocument &doc)
+{
+    JsonDocument response;
+    response["type"] = "set-devices-config-result";
+    if (!doc["config"].is<JsonObject>())
+    {
+        response["success"] = false;
+        response["error"] = "Missing or invalid config object";
+    }
+    else
+    {
+        File file = LittleFS.open("/config.json", "w");
+        if (!file)
+        {
+            
+            response["success"] = false;
+            response["error"] = "Failed to open config.json for writing";
+        }
+        else
+        {
+            serializeJson(doc["config"], file);
+            file.close();
+            response["success"] = true;
+            response["message"] = "config.json updated";
+            
+            // Reload devices from the new config
+            if (deviceManager)
+            {
+                deviceManager->loadDevicesFromJsonFile();
+                // Broadcast updated device list to all clients
+                JsonDocument emptyDoc;
+                handleGetDevices(emptyDoc);
+            }
+        }
+    }
+    String respStr;
+    serializeJson(response, respStr);
+    notifyClients(respStr);
+}
+
+void WebSocketManager::handleGetDevicesConfig(JsonDocument &doc)
+{
+    JsonDocument response;
+    response["type"] = "devices-config";
+    // Read config.json from LittleFS
+    File file = LittleFS.open("/config.json", "r");
+    if (!file)
+    {
+        response["error"] = "config.json not found";
+    }
+    else
+    {
+        // Parse file contents as JSON
+        JsonDocument configDoc;
+        DeserializationError err = deserializeJson(configDoc, file);
+        if (err)
+        {
+            response["error"] = "Failed to parse config.json";
+        }
+        else
+        {
+            response["config"] = configDoc;
+        }
+        file.close();
+    }
     String respStr;
     serializeJson(response, respStr);
     notifyClients(respStr);

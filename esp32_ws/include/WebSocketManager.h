@@ -44,6 +44,8 @@ public:
     // Device config handlers
     void handleDeviceSaveConfig(JsonDocument &doc);
     void handleDeviceReadConfig(JsonDocument &doc);
+    void handleSetDevicesConfig(JsonDocument &doc);
+    void handleGetDevicesConfig(JsonDocument &doc);
     
     // Device management handlers
     void handleAddDevice(JsonDocument &doc);

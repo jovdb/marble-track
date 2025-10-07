@@ -196,3 +196,20 @@ export function removeDeviceHandler(deviceId: string) {
     deviceId: deviceId,
   });
 }
+
+export function getDevicesConfigHandler() {
+  const config = readConfig();
+  if (config) {
+    // Send in the format expected by the frontend: {type: "devices-config", config: {...}}
+    const response = {
+      type: "devices-config",
+      config: config,
+    };
+    return JSON.stringify(response);
+  } else {
+    return JSON.stringify({
+      type: "devices-config",
+      error: "Config file not found",
+    });
+  }
+}

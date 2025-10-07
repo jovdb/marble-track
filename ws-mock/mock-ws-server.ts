@@ -7,7 +7,8 @@ import {
   getDevicesListHandler,
   deviceGetStateHandler,
   addDeviceHandler,
-  removeDeviceHandler
+  removeDeviceHandler,
+  getDevicesConfigHandler
 } from "./handlers/devicesHandlers.ts";
 
 const PORT: number = 5173;
@@ -39,6 +40,9 @@ wss.on(
         switch (data.type) {
           case "devices-list":
             sendMessage(ws, getDevicesListHandler());
+            break;
+          case "devices-config":
+            sendMessage(ws, getDevicesConfigHandler());
             break;
           case "device-save-config":
             sendMessage(

@@ -132,7 +132,7 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
     }
 
     // New handler for downloading devices.json config
-    if (type == "get-devices-config")
+    if (type == "devices-config")
     {
         handleGetDevicesConfig(doc);
         return;

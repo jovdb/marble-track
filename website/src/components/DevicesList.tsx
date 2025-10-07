@@ -34,7 +34,7 @@ export function DevicesList() {
 
   // Download devices config handler
   const handleDownloadConfig = () => {
-    socketActions.sendMessage({ type: "get-devices-config" });
+    socketActions.sendMessage({ type: "devices-config" });
   };
 
   // Add device handler

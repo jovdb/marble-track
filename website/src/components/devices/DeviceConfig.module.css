@@ -5,6 +5,29 @@
   margin-bottom: 0;
 }
 
+.device-config__title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-4) 0;
+}
+
+.device-config__loading {
+  text-align: center;
+  padding: var(--spacing-4);
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.device-config__error {
+  background-color: var(--color-error-bg, #fef2f2);
+  color: var(--color-error-text, #dc2626);
+  padding: var(--spacing-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-error-border, #fecaca);
+  font-size: var(--font-size-sm);
+}
+
 .device-config__fields {
   display: flex;
   flex-direction: column;

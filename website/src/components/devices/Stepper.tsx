@@ -19,13 +19,14 @@ export function Stepper(props: { id: string }) {
   const [steps, setSteps] = createSignal(1000);
   const [maxSpeed, setMaxSpeed] = createSignal(1000);
   const [maxAcceleration, setMaxAcceleration] = createSignal(300);
-
+/*
   createEffect(() => {
     const next = state()?.maxSpeed;
     if (typeof next === "number") {
       setMaxSpeed(next);
     }
   });
+  */
 
   createEffect(() => {
     const fallback = config()?.maxSpeed;
@@ -34,16 +35,18 @@ export function Stepper(props: { id: string }) {
     }
   });
 
+  /*
   createEffect(() => {
     const s = state();
     const next =
-      typeof s?.maxAcceleration === "number"
-        ? s.maxAcceleration
+      typeof s?.acceleration === "number"
+        ? s.acceleration
         : (s as { acceleration?: number } | undefined)?.acceleration;
     if (typeof next === "number") {
       setMaxAcceleration(next);
     }
   });
+  */
 
   createEffect(() => {
     const cfg = config();

@@ -572,6 +572,10 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
     {
         newDevice = new PwmDevice(deviceId, deviceId);
     }
+    else if (lowerType == "wheel")
+    {
+        newDevice = new Wheel(deviceId);
+    }
     else
     {
         MLOG_ERROR("Unknown device type: %s", deviceType.c_str());

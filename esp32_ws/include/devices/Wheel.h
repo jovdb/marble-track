@@ -19,7 +19,7 @@ public:
         IDLE,
         MOVING
     };
-    Wheel(int stepPin1, int dirPin, int buttonPin, const String &id, const String &name);
+    Wheel(const String &id);
     String getState() override;
     void loop() override;
     bool control(const String &action, JsonObject *payload = nullptr) override;
@@ -30,6 +30,8 @@ private:
     Stepper *_stepper;
     Button *_sensor;
     wheelState _state;
+    /* -1 = CCW, 1 = CW */
+    byte _direction = -1;
 };
 
 #endif // WHEEL_H

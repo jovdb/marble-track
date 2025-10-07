@@ -1,16 +1,16 @@
 #include "devices/Wheel.h"
 #include "Logging.h"
 
-Wheel::Wheel(int stepPin1, int dirPin, int buttonPin, const String &id, const String &name)
-        : Device(id, "wheel"),
-            _stepper(new Stepper(id + "-stepper")),
-      _sensor(new Button(id + "-sensor")),
-      _state(wheelState::IDLE)
+Wheel::Wheel(const String &id)
+    : Device(id, "wheel")
 {
-    _name = name;
-    _stepper->configure2Pin(stepPin1, dirPin);
+    _stepper = new Stepper(id + "-stepper");
+    _sensor = new Button(id + "-sensor");
     addChild(_stepper);
     addChild(_sensor);
+
+    _direction = -1;
+    _state = wheelState::IDLE;
 }
 
 // Array of breakpoints values
@@ -27,12 +27,17 @@ void Wheel::loop()
 {
     Device::loop();
 
-    if (_stepper && _stepper->isMoving() && _state != wheelState::MOVING)
+    if (!_stepper || !_sensor)
+        return;
+
+    // Started moving ?
+    if (_stepper->isMoving() && _state != wheelState::MOVING)
     {
-        //        _state = wheelState::MOVING;
-        //        notifyStateChange();
+        _state = wheelState::MOVING;
+        notifyStateChange();
     }
-    else if (_stepper && !_stepper->isMoving() && _state == wheelState::MOVING)
+    // Stoped moving?
+    else if (!_stepper->isMoving() && _state == wheelState::MOVING)
     {
         _state = wheelState::IDLE;
         notifyStateChange();
@@ -44,8 +49,8 @@ void Wheel::loop()
         if (_sensor->wasPressed())
         {
             MLOG_INFO("Wheel [%s]: Calibration complete.", getId().c_str());
+            _stepper->stop(1000000);
             _stepper->setCurrentPosition(0);
-            _stepper->stop();
         }
         break;
 
@@ -64,13 +69,13 @@ void Wheel::move(long steps)
 
 void Wheel::calibrate()
 {
-    if (_stepper)
-    {
-        MLOG_INFO("Wheel [%s]: Calibration started.", getId().c_str());
-        _state = wheelState::CALIBRATING;
-        _stepper->move(100000);
-        notifyStateChange();
-    }
+    if (!_stepper)
+        return;
+
+    MLOG_INFO("Wheel [%s]: Calibration started.", getId().c_str());
+    _state = wheelState::CALIBRATING;
+    notifyStateChange();
+    _stepper->move(100000 * _direction); // Move a large number of steps in the current direction
 }
 
 bool Wheel::control(const String &action, JsonObject *payload)

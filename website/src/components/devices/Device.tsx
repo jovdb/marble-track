@@ -18,7 +18,10 @@ export function Device(props: DeviceProps) {
   const device = () => deviceStore[0];
 
   const name = createMemo(
-    () => (device()?.config as Record<string, string | undefined>)?.name || device()?.id || "Unknown Device"
+    () =>
+      (device()?.config as Record<string, string | undefined>)?.name ||
+      device()?.id ||
+      "Unknown Device"
   );
   const deviceType = createMemo(() => device()?.type || props.deviceState?.type);
   const hasConfig = createMemo(() => Boolean(props.configComponent));
@@ -40,8 +43,7 @@ export function Device(props: DeviceProps) {
             <Show when={deviceType()}>
               <span class={styles["device__type-badge"]}>{deviceType()}</span>
             </Show>
-            {/*             
-            {props.deviceState?.children?.length && (
+            {/* {props.deviceState?.children?.length && (
               <button
                 class={`${styles["device__header-button"]} ${showChildren() ? styles["device__header-button--active"] : ""}`}
                 type="button"

@@ -210,7 +210,7 @@ void setup()
   {
     if (deviceList[i])
     {
-      deviceList[i]->setStateChangeCallback(globalStateChangeCallback);
+      deviceList[i]->setOnStateChange(globalStateChangeCallback);
     }
   }
   

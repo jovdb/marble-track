@@ -9,7 +9,7 @@
 #include <Arduino.h>
 #include "NetworkSettings.h"
 
-using StateChangeCallback = std::function<void(const String &deviceId, const String &stateJson)>;
+using OnStateChange = std::function<void(const String &deviceId, const String &stateJson)>;
 
 class DeviceManager
 {
@@ -18,7 +18,7 @@ private:
     static const int MAX_DEVICES = 20;
     Device *devices[MAX_DEVICES];
     int devicesCount;
-    StateChangeCallback stateChangeCallback;
+    OnStateChange onStateChange;
 
 public:
     /**
@@ -120,7 +120,7 @@ public:
      * @brief Setup all devices and assign state change callback
      * @param callback The callback to assign to each device
      */
-    void setup(StateChangeCallback callback);
+    void setup(OnStateChange callback);
 
     /**
      * @brief Call loop() function on all registered devices

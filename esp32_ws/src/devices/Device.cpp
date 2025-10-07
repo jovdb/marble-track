@@ -93,21 +93,21 @@ std::vector<int> Device::getPins() const
     return pins;
 }
 
-void Device::setStateChangeCallback(StateChangeCallback callback)
+void Device::setOnStateChange(OnStateChange callback)
 {
-    stateChangeCallback = callback;
+    onStateChange = callback;
     for (Device *child : children)
     {
         if (child)
-            child->setStateChangeCallback(callback);
+            child->setOnStateChange(callback);
     }
 }
 
 void Device::notifyStateChange()
 {
-    if (stateChangeCallback)
+    if (onStateChange)
     {
-        stateChangeCallback(getId(), getState());
+        onStateChange(getId(), getState());
     } else {
         MLOG_WARN("Device [%s]: State change callback not set", _id.c_str());
     }

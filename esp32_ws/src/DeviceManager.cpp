@@ -400,9 +400,9 @@ bool DeviceManager::addDevice(Device *device)
         devices[devicesCount] = device;
         devicesCount++;
         // Set the callback on the newly added device if we have one
-        if (stateChangeCallback)
+        if (onStateChange)
         {
-            device->setStateChangeCallback(stateChangeCallback);
+            device->setOnStateChange(onStateChange);
         }
         MLOG_INFO("Added device: %s (%s)", device->getId().c_str(), device->getName().c_str());
         return true;
@@ -432,14 +432,14 @@ void DeviceManager::getDevices(Device **deviceList, int &count, int maxResults)
     }
 }
 
-void DeviceManager::setup(StateChangeCallback callback)
+void DeviceManager::setup(OnStateChange callback)
 {
-    stateChangeCallback = callback;
+    onStateChange = callback;
     for (int i = 0; i < devicesCount; i++)
     {
         if (devices[i])
         {
-            devices[i]->setStateChangeCallback(callback);
+            devices[i]->setOnStateChange(callback);
             devices[i]->setup();
         }
     }
@@ -622,9 +622,9 @@ bool DeviceManager::addDevice(const String &deviceType, const String &deviceId, 
     devicesCount++;
 
     // Set the callback on the newly added device if we have one
-    if (stateChangeCallback)
+    if (onStateChange)
     {
-        newDevice->setStateChangeCallback(stateChangeCallback);
+        newDevice->setOnStateChange(onStateChange);
     }
 
     MLOG_INFO("Added device to array: %s (%s)", deviceId.c_str(), deviceType.c_str());

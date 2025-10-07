@@ -49,7 +49,7 @@ wss.on(
           case "device-read-config":
             sendMessage(ws, deviceReadConfigHandler(data.deviceId));
             break;
-          case "device-get-state":
+          case "device-state":
             sendMessage(ws, deviceGetStateHandler(data.deviceId));
             break;
           case "add-device":

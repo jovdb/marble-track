@@ -93,7 +93,7 @@ export function deviceGetStateHandler(deviceId: string) {
   if (!deviceId) {
     return JSON.stringify({
       type: "error",
-      msg: "Missing deviceId in device-get-state",
+      msg: "Missing deviceId in device-state",
     });
   }
 

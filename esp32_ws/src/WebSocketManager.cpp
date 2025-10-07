@@ -112,7 +112,7 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
         handleDeviceFunction(doc);
         return;
     }
-    if (type == "device-get-state")
+    if (type == "device-state")
     {
         handleDeviceGetState(doc);
         return;

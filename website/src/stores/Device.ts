@@ -58,7 +58,7 @@ export function createDeviceStore<TDeviceType extends keyof IDeviceStates>(
 
   // Load device state from backend
   const loadState = () => {
-    sendMessage({ type: "device-get-state", deviceId });
+    sendMessage({ type: "device-state", deviceId });
   };
 
   function getChildStateByType<TDeviceType extends keyof IDeviceStates>(

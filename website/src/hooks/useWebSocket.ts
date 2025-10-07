@@ -123,7 +123,7 @@ export function createDeviceState<T>(deviceId: string) {
     if (websocket.readyState === WebSocket.OPEN) {
       setConnectionState(4); // Fetching state
       sendMessage({
-        type: "device-get-state",
+        type: "device-state",
         deviceId,
       });
     }
@@ -148,7 +148,7 @@ export function createDeviceState<T>(deviceId: string) {
       // Request state
       setConnectionState(4); // Fetching state
       sendMessage({
-        type: "device-get-state",
+        type: "device-state",
         deviceId,
       });
     }

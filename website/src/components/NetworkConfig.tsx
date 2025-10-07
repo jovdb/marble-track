@@ -80,7 +80,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
     setIsEditing(false);
     // Refresh network config after saving
     setTimeout(() => {
-      sendMessage({ type: "get-network-config" });
+      sendMessage({ type: "network-config" });
     }, 1000);
   };
 
@@ -98,7 +98,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
   // Subscribe to network config messages
   onMount(() => {
     const unsubscribe = subscribe((message: IWsReceiveMessage) => {
-      if (message.type === "get-network-config") {
+      if (message.type === "network-config") {
         if ("error" in message) {
           setNetworkError(message.error);
         } else {
@@ -143,7 +143,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
       setNetworkStatus(null);
       setNetworkError(null);
       setIsEditing(false);
-      sendMessage({ type: "get-network-config" });
+      sendMessage({ type: "network-config" });
       sendMessage({ type: "get-network-status" });
     }
   });

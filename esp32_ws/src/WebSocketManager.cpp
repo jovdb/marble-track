@@ -158,7 +158,7 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
         handleRemoveDevice(doc);
         return;
     }
-    if (type == "get-network-config")
+    if (type == "network-config")
     {
         handleGetNetworkConfig(doc);
         return;
@@ -647,7 +647,7 @@ void WebSocketManager::handleRemoveDevice(JsonDocument &doc)
 void WebSocketManager::handleGetNetworkConfig(JsonDocument &doc)
 {
     JsonDocument response;
-    response["type"] = "get-network-config";
+    response["type"] = "network-config";
 
     if (!deviceManager)
     {

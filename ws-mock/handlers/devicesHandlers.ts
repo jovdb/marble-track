@@ -213,3 +213,13 @@ export function getDevicesConfigHandler() {
     });
   }
 }
+
+export function getNetworkConfigHandler() {
+  // Mock network config response
+  const response = {
+    type: "network-config",
+    ssid: "MockNetwork",
+    password: "mockpassword123",
+  };
+  return JSON.stringify(response);
+}

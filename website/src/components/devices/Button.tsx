@@ -33,7 +33,6 @@ export function Button(props: { id: string }) {
   return (
     <Device
       id={props.id}
-      deviceState={device()?.state}
       configComponent={(onClose) => <ButtonConfig id={props.id} onClose={onClose} />}
       icon={<ButtonIcon />}
     >

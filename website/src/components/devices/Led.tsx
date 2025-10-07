@@ -32,7 +32,6 @@ export function Led(props: { id: string }) {
   return (
     <Device
       id={props.id}
-      deviceState={device()?.state}
       configComponent={(onClose) => <LedConfig id={props.id} onClose={onClose} />}
       icon={<LedIcon />}
     >

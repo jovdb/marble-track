@@ -47,7 +47,6 @@ export function Buzzer(props: { id: string }) {
   return (
     <Device
       id={props.id}
-      deviceState={deviceState()}
       configComponent={(onClose) => <BuzzerConfig id={props.id} onClose={onClose} />}
       icon={<BuzzerIcon />}
     >

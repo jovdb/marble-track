@@ -1,12 +1,10 @@
 import { createMemo, createSignal, JSX, Show } from "solid-js";
 import styles from "./Device.module.css";
-import { IDeviceState } from "../../stores/Device";
 import { useDevice } from "../../stores/Devices";
 
 interface DeviceProps {
   id: string;
   icon?: JSX.Element;
-  deviceState: IDeviceState | undefined;
   children?: JSX.Element | JSX.Element[];
   configComponent?: (onClose: () => void) => JSX.Element;
 }
@@ -23,7 +21,7 @@ export function Device(props: DeviceProps) {
       device()?.id ||
       "Unknown Device"
   );
-  const deviceType = createMemo(() => device()?.type || props.deviceState?.type);
+  const deviceType = createMemo(() => device()?.type);
   const hasConfig = createMemo(() => Boolean(props.configComponent));
   const configPanelId = `device-config-${props.id}`;
 

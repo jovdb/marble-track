@@ -11,7 +11,7 @@ export function Servo(props: { id: string }) {
   const [currentSpeed, setCurrentSpeed] = createSignal(60);
 
   return (
-    <Device id={props.id} deviceState={state()} icon={<ServoIcon />}>
+    <Device id={props.id} icon={<ServoIcon />}>
       {error() && <div class={deviceStyles.device__error}>{error()}</div>}
       {!error() && (
         <>

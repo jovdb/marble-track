@@ -73,7 +73,6 @@ export function Stepper(props: { id: string }) {
   return (
     <Device
       id={props.id}
-      deviceState={device()?.state}
       configComponent={(onClose) => <StepperConfig id={props.id} onClose={onClose} />}
       icon={<StepperIcon />}
     >

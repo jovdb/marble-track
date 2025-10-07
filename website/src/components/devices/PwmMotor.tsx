@@ -37,7 +37,6 @@ export function PwmMotor(props: { id: string }) {
   return (
     <Device
       id={props.id}
-      deviceState={deviceState()}
       configComponent={(onClose) => <PwmMotorConfig id={props.id} onClose={onClose} />}
       icon={<StepperIcon />}
     >

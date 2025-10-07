@@ -58,16 +58,7 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
             {
                 JsonObject deviceObj = devicesArray.add<JsonObject>();
                 deviceObj["id"] = deviceList[i]->getId();
-                deviceObj["name"] = deviceList[i]->getName();
                 deviceObj["type"] = deviceList[i]->getType();
-
-                // Add pins array
-                std::vector<int> pins = deviceList[i]->getPins();
-                JsonArray pinsArray = deviceObj["pins"].to<JsonArray>();
-                for (int pin : pins)
-                {
-                    pinsArray.add(pin);
-                }
             }
         }
     }

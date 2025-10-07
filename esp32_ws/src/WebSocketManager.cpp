@@ -173,7 +173,7 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
         handleGetNetworks(doc);
         return;
     }
-    if (type == "get-network-status")
+    if (type == "network-status")
     {
         handleGetNetworkStatus(doc);
         return;
@@ -745,7 +745,7 @@ void WebSocketManager::handleGetNetworks(JsonDocument &doc)
 void WebSocketManager::handleGetNetworkStatus(JsonDocument &doc)
 {
     JsonDocument response;
-    response["type"] = "get-network-status";
+    response["type"] = "network-status";
 
     if (!network)
     {

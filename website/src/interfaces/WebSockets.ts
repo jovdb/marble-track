@@ -73,24 +73,24 @@ export type IWsReceivePongMessage = IWsMessageBase<"pong"> & {
 };
 
 export type IWsReceiveAddDeviceMessage =
-  | (IWsMessageBase<"add-device"> & { error: string })
+  | (IWsMessageBase<"add-device"> & { error: string; deviceId?: string })
   | (IWsMessageBase<"add-device"> & { success: boolean; deviceId: string });
 
 export type IWsReceiveRemoveDeviceMessage =
-  | (IWsMessageBase<"remove-device"> & { error: string })
+  | (IWsMessageBase<"remove-device"> & { error: string; deviceId?: string })
   | (IWsMessageBase<"remove-device"> & { success: boolean; deviceId: string });
 
 export type IWsReceiveGetNetworkConfigMessage =
-  | (IWsMessageBase<"get-network-config"> & { error: string })
-  | (IWsMessageBase<"get-network-config"> & { ssid: string; password: string });
+  | (IWsMessageBase<"network-config"> & { error: string })
+  | (IWsMessageBase<"network-config"> & { ssid: string; password: string });
 
 export type IWsReceiveSetNetworkConfigMessage =
   | (IWsMessageBase<"set-network-config"> & { error: string })
   | (IWsMessageBase<"set-network-config"> & { success: boolean });
 
 export type IWsReceiveGetNetworksMessage =
-  | (IWsMessageBase<"get-networks"> & { error: string })
-  | (IWsMessageBase<"get-networks"> & {
+  | (IWsMessageBase<"networks"> & { error: string })
+  | (IWsMessageBase<"networks"> & {
       count: number;
       networks: Array<{
         ssid: string;
@@ -103,8 +103,8 @@ export type IWsReceiveGetNetworksMessage =
     });
 
 export type IWsReceiveGetNetworkStatusMessage =
-  | (IWsMessageBase<"get-network-status"> & { error: string })
-  | (IWsMessageBase<"get-network-status"> & {
+  | (IWsMessageBase<"network-status"> & { error: string })
+  | (IWsMessageBase<"network-status"> & {
       status: {
         mode: string;
         connected: boolean;
@@ -172,16 +172,16 @@ export type IWsSendRemoveDeviceMessage = IWsMessageBase<"remove-device"> & {
   deviceId: string;
 };
 
-export type IWsSendGetNetworkConfigMessage = IWsMessageBase<"get-network-config">;
+export type IWsSendGetNetworkConfigMessage = IWsMessageBase<"network-config">;
 
-export type IWsSendGetNetworksMessage = IWsMessageBase<"get-networks">;
+export type IWsSendGetNetworksMessage = IWsMessageBase<"networks">;
 
 export type IWsSendSetNetworkConfigMessage = IWsMessageBase<"set-network-config"> & {
   ssid: string;
   password: string;
 };
 
-export type IWsSendGetNetworkStatusMessage = IWsMessageBase<"get-network-status">;
+export type IWsSendGetNetworkStatusMessage = IWsMessageBase<"network-status">;
 
 export type IWsSendMessage =
   | IWsSendRestartMessage

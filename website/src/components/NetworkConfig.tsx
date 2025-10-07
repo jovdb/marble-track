@@ -122,7 +122,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
           const ssids = message.networks.map((network) => network.ssid);
           setAvailableSSIDs(ssids);
         }
-      } else if (message.type === "get-network-status") {
+      } else if (message.type === "network-status") {
         if ("error" in message) {
           console.warn("Failed to load network status:", message.error);
         } else {
@@ -144,7 +144,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
       setNetworkError(null);
       setIsEditing(false);
       sendMessage({ type: "network-config" });
-      sendMessage({ type: "get-network-status" });
+      sendMessage({ type: "network-status" });
     }
   });
 

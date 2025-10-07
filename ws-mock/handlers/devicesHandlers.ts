@@ -250,3 +250,19 @@ export function getNetworksHandler() {
   };
   return JSON.stringify(response);
 }
+
+export function getNetworkStatusHandler() {
+  // Mock network status response
+  const response = {
+    type: "network-status",
+    status: {
+      mode: "client",
+      connected: true,
+      ssid: "MockNetwork",
+      ip: "192.168.1.100",
+      rssi: -45,
+      clients: 0,
+    },
+  };
+  return JSON.stringify(response);
+}

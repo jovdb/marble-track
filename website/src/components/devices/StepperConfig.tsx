@@ -5,12 +5,14 @@ import {
   IStepperDriverPins,
   IStepperFourWirePins,
   StepperType,
+  STEPPER_TYPES,
   useStepper,
 } from "../../stores/Stepper";
 
 const STEPPER_TYPE_OPTIONS: { value: StepperType; label: string }[] = [
   { value: "DRIVER", label: "Driver (2-pin)" },
   { value: "HALF4WIRE", label: "Half 4-wire" },
+  { value: "FULL4WIRE", label: "Full 4-wire" },
 ];
 
 export default function StepperConfig(props: { id: string; onClose: () => void }) {
@@ -40,9 +42,9 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
       setName(cfg.name);
     }
 
-    if (cfg.stepperType === "HALF4WIRE" || cfg.is4Pin) {
-      setStepperType("HALF4WIRE");
-    } else if (cfg.stepperType === "DRIVER") {
+    if (cfg.stepperType && STEPPER_TYPES.some((type) => type === cfg.stepperType)) {
+      setStepperType(cfg.stepperType as StepperType);
+    } else {
       setStepperType("DRIVER");
     }
 
@@ -70,7 +72,10 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
     }
   });
 
-  const isFourPin = createMemo(() => stepperType() === "HALF4WIRE");
+  const isFourPin = createMemo(() => {
+    const type = stepperType();
+    return type === "HALF4WIRE" || type === "FULL4WIRE";
+  });
 
   const handleSave = () => {
     const payload: IStepperConfig = {

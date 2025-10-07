@@ -348,13 +348,12 @@ bool Button::readRawState()
     }
 
     bool pinState = digitalRead(_pin);
-    MLOG_INFO("pinState: %d, pin: %d", pinState, _pin);
 
     // Determine pressed state depending on pin mode
     bool pressed;
     pressed = !pinState;
 
-        return pressed;
+    return pressed;
 }
 
 Button::ButtonType Button::buttonTypeFromString(const String &value) const

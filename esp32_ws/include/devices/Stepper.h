@@ -23,7 +23,7 @@
  *
  * Provides stepper motor control functionality with acceleration, deceleration,
  * and precise positioning using the AccelStepper library.
- * Supports both 2-pin (DRIVER for NEMA 17) and 4-pin (HALF4WIRE for 28BYJ-48) configurations.
+ * Supports both 2-pin (DRIVER for NEMA 17) and 4-pin (HALF4WIRE / FULL4WIRE) configurations.
  */
 class Stepper : public Device
 {
@@ -124,13 +124,15 @@ public:
     void configure2Pin(int stepPin, int dirPin);
 
     /**
-     * @brief Configure stepper for 4-pin mode (HALF4WIRE - 28BYJ-48)
+     * @brief Configure stepper for 4-pin mode (HALF4WIRE or FULL4WIRE)
      * @param pin1 GPIO pin number for motor pin 1
      * @param pin2 GPIO pin number for motor pin 2
      * @param pin3 GPIO pin number for motor pin 3
      * @param pin4 GPIO pin number for motor pin 4
      */
-    void configure4Pin(int pin1, int pin2, int pin3, int pin4);
+    void configure4Pin(int pin1, int pin2, int pin3, int pin4,
+                       AccelStepper::MotorInterfaceType mode = AccelStepper::HALF4WIRE,
+                       const char *typeLabel = "HALF4WIRE");
 
     /**
      * @brief Get maximum speed
@@ -145,8 +147,8 @@ public:
     float getAcceleration() const { return _maxAcceleration; }
 
     /**
-     * @brief Get stepper type
-     * @return Type string ("DRIVER" or "HALF4WIRE")
+    * @brief Get stepper type
+    * @return Type string ("DRIVER", "HALF4WIRE", or "FULL4WIRE")
      */
     String getStepperType() const { return _stepperType; }
 
@@ -166,7 +168,8 @@ private:
     // Pin configuration
     bool _is4Pin = false;                               ///< True if 4-pin configuration, false if 2-pin
     int _pin1 = -1, _pin2 = -1, _pin3 = -1, _pin4 = -1; ///< Pin numbers (all used for 4-pin, only pin1&pin2 for 2-pin)
-    String _stepperType = "";                           ///< Type string for debugging ("DRIVER" or "HALF4WIRE")
+    String _stepperType = "";                           ///< Type string for reporting ("DRIVER", "HALF4WIRE", "FULL4WIRE")
+    AccelStepper::MotorInterfaceType _interfaceType = AccelStepper::DRIVER; ///< Current motor interface
 
     /**
      * @brief Initialize the AccelStepper instance based on current configuration

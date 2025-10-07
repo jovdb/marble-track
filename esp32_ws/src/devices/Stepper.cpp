@@ -27,6 +27,7 @@ Stepper::Stepper(const String &id)
     _name = id;
     _maxSpeed = 1000;
     _maxAcceleration = 500;
+    _interfaceType = AccelStepper::DRIVER;
 }
 
 /**
@@ -443,6 +444,7 @@ void Stepper::configure2Pin(int stepPin, int dirPin)
     _pin3 = -1;
     _pin4 = -1;
     _stepperType = "DRIVER";
+    _interfaceType = AccelStepper::DRIVER;
 
     initializeAccelStepper();
     _configured = true;
@@ -451,13 +453,15 @@ void Stepper::configure2Pin(int stepPin, int dirPin)
 }
 
 /**
- * @brief Configure stepper for 4-pin mode (HALF4WIRE - 28BYJ-48)
+ * @brief Configure stepper for 4-pin mode (HALF4WIRE or FULL4WIRE)
  * @param pin1 GPIO pin number for motor pin 1
  * @param pin2 GPIO pin number for motor pin 2
  * @param pin3 GPIO pin number for motor pin 3
  * @param pin4 GPIO pin number for motor pin 4
  */
-void Stepper::configure4Pin(int pin1, int pin2, int pin3, int pin4)
+void Stepper::configure4Pin(int pin1, int pin2, int pin3, int pin4,
+                            AccelStepper::MotorInterfaceType mode,
+                            const char *typeLabel)
 {
     cleanupAccelStepper();
 
@@ -466,12 +470,14 @@ void Stepper::configure4Pin(int pin1, int pin2, int pin3, int pin4)
     _pin2 = pin2;
     _pin3 = pin3;
     _pin4 = pin4;
-    _stepperType = "HALF4WIRE";
+    _interfaceType = mode;
+    _stepperType = String(typeLabel ? typeLabel : "HALF4WIRE");
 
     initializeAccelStepper();
     _configured = true;
 
-    MLOG_INFO("Stepper [%s]: Configured as HALF4WIRE type on pins %d, %d, %d, %d", _id.c_str(), _pin1, _pin2, _pin3, _pin4);
+    MLOG_INFO("Stepper [%s]: Configured as %s type on pins %d, %d, %d, %d",
+              _id.c_str(), _stepperType.c_str(), _pin1, _pin2, _pin3, _pin4);
 }
 
 /**
@@ -485,13 +491,18 @@ void Stepper::initializeAccelStepper()
         _stepper = nullptr;
     }
 
-    if (_is4Pin)
+    switch (_interfaceType)
     {
+    case AccelStepper::FULL4WIRE:
+        _stepper = new AccelStepper(AccelStepper::FULL4WIRE, _pin1, _pin3, _pin2, _pin4);
+        break;
+    case AccelStepper::HALF4WIRE:
         _stepper = new AccelStepper(AccelStepper::HALF4WIRE, _pin1, _pin3, _pin2, _pin4);
-    }
-    else
-    {
+        break;
+    case AccelStepper::DRIVER:
+    default:
         _stepper = new AccelStepper(AccelStepper::DRIVER, _pin1, _pin2);
+        break;
     }
 }
 
@@ -595,7 +606,24 @@ void Stepper::setConfig(JsonObject *config)
                 int pin3 = pins[2].as<int>();
                 int pin4 = pins[3].as<int>();
 
-                configure4Pin(pin1, pin2, pin3, pin4);
+                configure4Pin(pin1, pin2, pin3, pin4, AccelStepper::HALF4WIRE, "HALF4WIRE");
+            }
+            else
+            {
+                MLOG_WARN("Stepper [%s]: Invalid 4-pin configuration in JSON", _id.c_str());
+            }
+        }
+        else if (stepperType == "FULL4WIRE")
+        {
+            if ((*config)["pins"].is<JsonArray>() && (*config)["pins"].size() == 4)
+            {
+                JsonArray pins = (*config)["pins"].as<JsonArray>();
+                int pin1 = pins[0].as<int>();
+                int pin2 = pins[1].as<int>();
+                int pin3 = pins[2].as<int>();
+                int pin4 = pins[3].as<int>();
+
+                configure4Pin(pin1, pin2, pin3, pin4, AccelStepper::FULL4WIRE, "FULL4WIRE");
             }
             else
             {

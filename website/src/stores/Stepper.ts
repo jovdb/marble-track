@@ -3,7 +3,7 @@ import { useDevice } from "./Devices";
 
 const deviceType = "stepper";
 
-export const STEPPER_TYPES = ["DRIVER", "HALF4WIRE"] as const;
+export const STEPPER_TYPES = ["DRIVER", "HALF4WIRE", "FULL4WIRE"] as const;
 export type StepperType = (typeof STEPPER_TYPES)[number];
 
 export interface IStepperState extends IDeviceState {
@@ -25,7 +25,6 @@ export interface IStepperConfig extends IDeviceConfig {
   name?: string;
   configured?: boolean;
   stepperType?: StepperType;
-  is4Pin?: boolean;
   maxSpeed?: number;
   maxAcceleration?: number;
   pins?: IStepperPins;

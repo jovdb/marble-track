@@ -237,7 +237,7 @@ export function DevicesList() {
 
       {/* Add Device Button */}
       <div class={styles["device-list__actions"]}>
-        <button class={styles["app__config-button"]} onClick={() => setShowAddModal(true)}>
+        <button class={styles["app__config-button"]} onClick={() => setShowAddModal(true)} disabled={!socketState.isConnected}>
           Add Device
         </button>
       </div>
@@ -288,7 +288,7 @@ export function DevicesList() {
               >
                 Cancel
               </button>
-              <button type="submit" class={styles["modal-button modal-button--primary"]}>
+              <button type="submit" class={styles["modal-button modal-button--primary"]} disabled={!socketState.isConnected}>
                 Add Device
               </button>
             </div>
@@ -297,10 +297,10 @@ export function DevicesList() {
       )}
 
       <div class={styles["device-list__buttons"]}>
-        <button class={styles["app__config-button"]} onClick={handleDownloadConfig}>
+        <button class={styles["app__config-button"]} onClick={handleDownloadConfig} disabled={!socketState.isConnected}>
           Download Config
         </button>
-        <button class={styles["app__config-button"]} onClick={handleUploadConfig}>
+        <button class={styles["app__config-button"]} onClick={handleUploadConfig} disabled={!socketState.isConnected}>
           Upload Config
         </button>
       </div>

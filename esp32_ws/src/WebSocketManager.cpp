@@ -168,7 +168,7 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
         handleSetNetworkConfig(doc);
         return;
     }
-    if (type == "get-networks")
+    if (type == "networks")
     {
         handleGetNetworks(doc);
         return;
@@ -394,7 +394,7 @@ void WebSocketManager::loop()
             scanInProgress = false;
 
             JsonDocument response;
-            response["type"] = "get-networks";
+            response["type"] = "networks";
 
             if (numNetworks == WIFI_SCAN_FAILED)
             {
@@ -728,7 +728,7 @@ void WebSocketManager::handleGetNetworks(JsonDocument &doc)
     if (scanInProgress)
     {
         JsonDocument response;
-        response["type"] = "get-networks";
+        response["type"] = "networks";
         response["error"] = "Scan already in progress";
         String respStr;
         serializeJson(response, respStr);

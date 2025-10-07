@@ -223,3 +223,30 @@ export function getNetworkConfigHandler() {
   };
   return JSON.stringify(response);
 }
+
+export function getNetworksHandler() {
+  // Mock networks response
+  const response = {
+    type: "networks",
+    count: 2,
+    networks: [
+      {
+        ssid: "MockNetwork1",
+        rssi: -50,
+        encryption: 3,
+        channel: 6,
+        bssid: "AA:BB:CC:DD:EE:FF",
+        hidden: false,
+      },
+      {
+        ssid: "MockNetwork2",
+        rssi: -60,
+        encryption: 3,
+        channel: 11,
+        bssid: "11:22:33:44:55:66",
+        hidden: false,
+      },
+    ],
+  };
+  return JSON.stringify(response);
+}

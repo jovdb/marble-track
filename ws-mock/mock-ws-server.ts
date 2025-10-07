@@ -9,7 +9,8 @@ import {
   addDeviceHandler,
   removeDeviceHandler,
   getDevicesConfigHandler,
-  getNetworkConfigHandler
+  getNetworkConfigHandler,
+  getNetworksHandler
 } from "./handlers/devicesHandlers.ts";
 
 const PORT: number = 5173;
@@ -47,6 +48,9 @@ wss.on(
             break;
           case "network-config":
             sendMessage(ws, getNetworkConfigHandler());
+            break;
+          case "networks":
+            sendMessage(ws, getNetworksHandler());
             break;
           case "device-save-config":
             sendMessage(

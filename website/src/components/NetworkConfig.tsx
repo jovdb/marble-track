@@ -92,7 +92,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
   // Load available SSIDs
   const loadAvailableSSIDs = () => {
     setLoadingSSIDs(true);
-    sendMessage({ type: "get-networks" });
+    sendMessage({ type: "networks" });
   };
 
   // Subscribe to network config messages
@@ -111,7 +111,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
           // Success - the network config was updated
           setNetworkError(null);
         }
-      } else if (message.type === "get-networks") {
+      } else if (message.type === "networks") {
         setLoadingSSIDs(false);
         if ("error" in message) {
           // Handle error - maybe just ignore or show a warning

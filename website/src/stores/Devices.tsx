@@ -117,7 +117,7 @@ export function createDevicesStore({
     const cleanup = subscribe(handleMessage);
 
     sendMessage({
-      type: "get-devices",
+      type: "devices-list",
     });
 
     onCleanup(() => {
@@ -139,7 +139,7 @@ export function DevicesProvider(props: { children: any }) {
 export function useDevices() {
   const store = useContext(DevicesContext);
   const [, { sendMessage }] = useWebSocket2();
-  const loadDevices = () => sendMessage({ type: "get-devices" });
+  const loadDevices = () => sendMessage({ type: "devices-list" });
 
   return [
     /** Don't destructure! */
@@ -159,7 +159,7 @@ export function useDevice<TState extends IDeviceState, TConfig extends IDeviceCo
   const getDeviceConfig = () => sendMessage({ type: "device-read-config", deviceId });
   const setDeviceConfig = (config: TConfig) =>
     sendMessage({ type: "device-save-config", deviceId, config });
-  const getDeviceState = () => sendMessage({ type: "device-get-state", deviceId });
+  const getDeviceState = () => sendMessage({ type: "device-state", deviceId });
 
   // tracking only needed once
   onMount(() => {

@@ -136,15 +136,15 @@ export type IWsReceiveMessage =
 
 export type IWsSendRestartMessage = IWsMessageBase<"restart">;
 
-export type IWsSendGetDevicesMessage = IWsMessageBase<"get-devices">;
+export type IWsSendGetDevicesMessage = IWsMessageBase<"devices-list">;
 
-export type IWsSendGetDevicesConfigMessage = IWsMessageBase<"get-devices-config">;
+export type IWsSendGetDevicesConfigMessage = IWsMessageBase<"devices-config">;
 
 export type IWsSendSetDevicesConfigMessage = IWsMessageBase<"set-devices-config"> & { config: any };
 
 export type IWsSendDeviceFunctionMessage = IWsDeviceMessage;
 
-export type IWsSendDeviceGetStateMessage = IWsMessageBase<"device-get-state"> & {
+export type IWsSendDeviceGetStateMessage = IWsMessageBase<"device-state"> & {
   deviceId: string;
 };
 

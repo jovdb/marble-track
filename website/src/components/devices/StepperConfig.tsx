@@ -25,6 +25,7 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
   const [stepperType, setStepperType] = createSignal<StepperType>("DRIVER");
   const [stepPin, setStepPin] = createSignal(1);
   const [dirPin, setDirPin] = createSignal(2);
+  const [enablePin, setEnablePin] = createSignal(-1);
   const [pin1, setPin1] = createSignal(1);
   const [pin2, setPin2] = createSignal(2);
   const [pin3, setPin3] = createSignal(3);
@@ -60,6 +61,10 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
       setDirPin(typeof pins.dirPin === "number" ? pins.dirPin : dirPin());
     }
 
+    if (typeof cfg.enablePin === "number") {
+      setEnablePin(cfg.enablePin);
+    }
+
     if (typeof cfg.maxSpeed === "number") {
       setMaxSpeed(cfg.maxSpeed);
     }
@@ -86,6 +91,7 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
       pins: isFourPin()
         ? ([pin1(), pin2(), pin3(), pin4()] as IStepperFourWirePins)
         : ({ stepPin: stepPin(), dirPin: dirPin() } as IStepperDriverPins),
+      enablePin: enablePin() >= 0 ? enablePin() : undefined,
     };
 
     setDeviceConfig(payload);
@@ -134,6 +140,19 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
                 value={dirPin()}
                 onInput={(event) => setDirPin(Number(event.currentTarget.value))}
               />
+            </DeviceConfigItem>
+          </DeviceConfigRow>
+          <DeviceConfigRow>
+            <DeviceConfigItem name="Enable pin">
+              <input
+                type="number"
+                min={-1}
+                value={enablePin()}
+                onInput={(event) => setEnablePin(Number(event.currentTarget.value))}
+              />
+              <span style={{ "margin-left": "0.5rem", "font-size": "0.8rem", color: "#666" }}>
+                (-1 to disable)
+              </span>
             </DeviceConfigItem>
           </DeviceConfigRow>
         </Show>

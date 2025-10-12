@@ -16,7 +16,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "fix": "npm run format && npm run lint:fix",
-    "all": "npm run type-check && npm run build && npm run lint && npm run format:check"
+    "all": "npm run type-check && npm run build && npm run lint && npm run format:check",
+    "deploy": "../build-website.sh"
   },
   "license": "MIT",
   "devDependencies": {

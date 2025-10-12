@@ -82,10 +82,11 @@ void Stepper::loop()
     bool wasMoving = _isMoving;
     _isMoving = _stepper->run();
 
-    // If stepper just stopped moving, notify state change
+    // If stepper just stopped moving, notify state change and disable stepper
     if (wasMoving && !_isMoving)
     {
         MLOG_INFO("Stepper [%s]: Movement completed at position %ld", _id.c_str(), _stepper->currentPosition());
+        disableStepper(); // Disable stepper after movement completes
         notifyStateChange();
     }
 }
@@ -114,6 +115,7 @@ void Stepper::move(long steps, float speed, float acceleration)
     }
 
     MLOG_INFO("Stepper [%s]: Moving %ld steps (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), steps, speed, acceleration);
+    enableStepper(); // Enable stepper before movement
     _stepper->setAcceleration(acceleration);
     _stepper->setMaxSpeed(speed);
     _stepper->move(steps);
@@ -145,6 +147,7 @@ void Stepper::moveTo(long position, float speed, float acceleration)
     }
 
     MLOG_INFO("Stepper [%s]: Moving to position %ld (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), position, speed, acceleration);
+    enableStepper(); // Enable stepper before movement
     _stepper->setMaxSpeed(speed);
     _stepper->setAcceleration(acceleration);
     _stepper->moveTo(position);
@@ -171,6 +174,7 @@ void Stepper::stop(float acceleration)
     MLOG_WARN("Stepper [%s]: Stop (Deceleration: %.2f)", _id.c_str(), acceleration);
     _stepper->setAcceleration(acceleration);
     _stepper->stop();
+    disableStepper(); // Disable stepper immediately when stopped
     _isMoving = false;
     notifyStateChange();
 }
@@ -423,6 +427,10 @@ std::vector<int> Stepper::getPins() const
             pins.push_back(_pin3);
             pins.push_back(_pin4);
         }
+        if (_enablePin >= 0)
+        {
+            pins.push_back(_enablePin);
+        }
     }
     return pins;
 }
@@ -434,7 +442,7 @@ std::vector<int> Stepper::getPins() const
  * @param maxSpeed Maximum speed in steps per second
  * @param acceleration Acceleration in steps per second per second
  */
-void Stepper::configure2Pin(int stepPin, int dirPin)
+void Stepper::configure2Pin(int stepPin, int dirPin, int enablePin)
 {
     cleanupAccelStepper();
 
@@ -443,13 +451,21 @@ void Stepper::configure2Pin(int stepPin, int dirPin)
     _pin2 = dirPin;
     _pin3 = -1;
     _pin4 = -1;
+    _enablePin = enablePin;
     _stepperType = "DRIVER";
     _interfaceType = AccelStepper::DRIVER;
 
     initializeAccelStepper();
     _configured = true;
 
-    MLOG_INFO("Stepper [%s]: Configured as DRIVER type on pins %d (step), %d (dir)", _id.c_str(), _pin1, _pin2);
+    MLOG_INFO("Stepper [%s]: Configured as DRIVER type on pins %d (step), %d (dir), %d (enable)", _id.c_str(), _pin1, _pin2, _enablePin);
+
+    // Set up enable pin if configured
+    if (_enablePin >= 0)
+    {
+        pinMode(_enablePin, OUTPUT);
+        disableStepper(); // Start disabled
+    }
 }
 
 /**
@@ -461,7 +477,8 @@ void Stepper::configure2Pin(int stepPin, int dirPin)
  */
 void Stepper::configure4Pin(int pin1, int pin2, int pin3, int pin4,
                             AccelStepper::MotorInterfaceType mode,
-                            const char *typeLabel)
+                            const char *typeLabel,
+                            int enablePin)
 {
     cleanupAccelStepper();
 
@@ -470,14 +487,22 @@ void Stepper::configure4Pin(int pin1, int pin2, int pin3, int pin4,
     _pin2 = pin2;
     _pin3 = pin3;
     _pin4 = pin4;
+    _enablePin = enablePin;
     _interfaceType = mode;
     _stepperType = String(typeLabel ? typeLabel : "HALF4WIRE");
 
     initializeAccelStepper();
     _configured = true;
 
-    MLOG_INFO("Stepper [%s]: Configured as %s type on pins %d, %d, %d, %d",
-              _id.c_str(), _stepperType.c_str(), _pin1, _pin2, _pin3, _pin4);
+    MLOG_INFO("Stepper [%s]: Configured as %s type on pins %d, %d, %d, %d, %d (enable)",
+              _id.c_str(), _stepperType.c_str(), _pin1, _pin2, _pin3, _pin4, _enablePin);
+
+    // Set up enable pin if configured
+    if (_enablePin >= 0)
+    {
+        pinMode(_enablePin, OUTPUT);
+        disableStepper(); // Start disabled
+    }
 }
 
 /**
@@ -549,6 +574,12 @@ String Stepper::getConfig() const
             pinConfig["stepPin"] = _pin1;
             pinConfig["dirPin"] = _pin2;
         }
+
+        // Add enable pin if configured
+        if (_enablePin >= 0)
+        {
+            config["enablePin"] = _enablePin;
+        }
     }
 
     String result;
@@ -587,8 +618,9 @@ void Stepper::setConfig(JsonObject *config)
             {
                 int stepPin = (*config)["pins"]["stepPin"].as<int>();
                 int dirPin = (*config)["pins"]["dirPin"].as<int>();
+                int enablePin = (*config)["enablePin"].is<int>() ? (*config)["enablePin"].as<int>() : -1;
 
-                configure2Pin(stepPin, dirPin);
+                configure2Pin(stepPin, dirPin, enablePin);
             }
             else
             {
@@ -605,8 +637,9 @@ void Stepper::setConfig(JsonObject *config)
                 int pin2 = pins[1].as<int>();
                 int pin3 = pins[2].as<int>();
                 int pin4 = pins[3].as<int>();
+                int enablePin = (*config)["enablePin"].is<int>() ? (*config)["enablePin"].as<int>() : -1;
 
-                configure4Pin(pin1, pin2, pin3, pin4, AccelStepper::HALF4WIRE, "HALF4WIRE");
+                configure4Pin(pin1, pin2, pin3, pin4, AccelStepper::HALF4WIRE, "HALF4WIRE", enablePin);
             }
             else
             {
@@ -622,8 +655,9 @@ void Stepper::setConfig(JsonObject *config)
                 int pin2 = pins[1].as<int>();
                 int pin3 = pins[2].as<int>();
                 int pin4 = pins[3].as<int>();
+                int enablePin = (*config)["enablePin"].is<int>() ? (*config)["enablePin"].as<int>() : -1;
 
-                configure4Pin(pin1, pin2, pin3, pin4, AccelStepper::FULL4WIRE, "FULL4WIRE");
+                configure4Pin(pin1, pin2, pin3, pin4, AccelStepper::FULL4WIRE, "FULL4WIRE", enablePin);
             }
             else
             {
@@ -651,4 +685,26 @@ void Stepper::setConfig(JsonObject *config)
         _stepper->setMaxSpeed(_maxSpeed);
         _stepper->setAcceleration(_maxAcceleration);
     }
+}
+
+/**
+ * @brief Enable the stepper motor (set enable pin high if configured)
+ */
+void Stepper::enableStepper()
+{
+    if (_enablePin >= 0)
+    {
+        digitalWrite(_enablePin, HIGH);
+    }
+}
+
+/**
+ * @brief Disable the stepper motor (set enable pin low if configured)
+ */
+void Stepper::disableStepper()
+{
+    if (_enablePin >= 0)
+    {
+        digitalWrite(_enablePin, LOW);
+        }
 }

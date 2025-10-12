@@ -120,8 +120,9 @@ public:
      * @brief Configure stepper for 2-pin mode (DRIVER - NEMA 17 with driver)
      * @param stepPin GPIO pin number for the step signal
      * @param dirPin GPIO pin number for the direction signal
+     * @param enablePin GPIO pin number for the enable signal (-1 to disable)
      */
-    void configure2Pin(int stepPin, int dirPin);
+    void configure2Pin(int stepPin, int dirPin, int enablePin = -1);
 
     /**
      * @brief Configure stepper for 4-pin mode (HALF4WIRE or FULL4WIRE)
@@ -129,10 +130,12 @@ public:
      * @param pin2 GPIO pin number for motor pin 2
      * @param pin3 GPIO pin number for motor pin 3
      * @param pin4 GPIO pin number for motor pin 4
+     * @param enablePin GPIO pin number for the enable signal (-1 to disable)
      */
     void configure4Pin(int pin1, int pin2, int pin3, int pin4,
                        AccelStepper::MotorInterfaceType mode = AccelStepper::HALF4WIRE,
-                       const char *typeLabel = "HALF4WIRE");
+                       const char *typeLabel = "HALF4WIRE",
+                       int enablePin = -1);
 
     /**
      * @brief Get maximum speed
@@ -158,6 +161,12 @@ public:
      */
     bool isConfigured() const { return _configured; }
 
+    /**
+     * @brief Get enable pin number
+     * @return Enable pin number (-1 if not configured)
+     */
+    int getEnablePin() const { return _enablePin; }
+
 private:
     AccelStepper *_stepper = nullptr; ///< AccelStepper library instance
     float _maxSpeed = 1000.0;         ///< Maximum speed in steps per second
@@ -168,6 +177,7 @@ private:
     // Pin configuration
     bool _is4Pin = false;                               ///< True if 4-pin configuration, false if 2-pin
     int _pin1 = -1, _pin2 = -1, _pin3 = -1, _pin4 = -1; ///< Pin numbers (all used for 4-pin, only pin1&pin2 for 2-pin)
+    int _enablePin = -1;                                ///< Enable pin number (-1 if not used)
     String _stepperType = "";                           ///< Type string for reporting ("DRIVER", "HALF4WIRE", "FULL4WIRE")
     AccelStepper::MotorInterfaceType _interfaceType = AccelStepper::DRIVER; ///< Current motor interface
 
@@ -180,6 +190,16 @@ private:
      * @brief Clean up existing AccelStepper instance
      */
     void cleanupAccelStepper();
+
+    /**
+     * @brief Enable the stepper motor (set enable pin high if configured)
+     */
+    void enableStepper();
+
+    /**
+     * @brief Disable the stepper motor (set enable pin low if configured)
+     */
+    void disableStepper();
 };
 
 #endif // STEPPER_H

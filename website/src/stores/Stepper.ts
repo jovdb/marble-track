@@ -10,6 +10,7 @@ export interface IStepperState extends IDeviceState {
   currentPosition?: number;
   targetPosition?: number;
   isMoving?: boolean;
+  [key: string]: unknown;
 }
 
 export interface IStepperDriverPins {
@@ -28,6 +29,7 @@ export interface IStepperConfig extends IDeviceConfig {
   maxSpeed?: number;
   maxAcceleration?: number;
   pins?: IStepperPins;
+  [key: string]: unknown;
 }
 
 export interface IStepperMoveArgs {
@@ -45,7 +47,7 @@ export function useStepper(deviceId: string) {
       deviceType,
       deviceId,
       fn: "move",
-      args,
+      args: args as unknown as Record<string, unknown>,
     });
 
   const stop = () =>

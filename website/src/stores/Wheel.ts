@@ -6,10 +6,12 @@ const deviceType = "wheel";
 export interface IWheelState extends IDeviceState {
   state: "CALIBRATING" | "IDLE";
   calibrationState: "YES" | "NO" | "FAILED";
+  [key: string]: unknown;
 }
 
 export interface IWheelConfig extends IDeviceConfig {
   breakPoints: number[];
+  [key: string]: unknown;
 }
 
 export function calibrateWheel(deviceId: string) {

@@ -137,7 +137,7 @@ export function createDeviceState<T>(deviceId: string) {
           setDeviceState(undefined);
           setConnectionState(6);
         } else {
-          setDeviceState(data.state);
+          setDeviceState(data.state as any);
           setError(undefined);
           setConnectionState(5);
         }

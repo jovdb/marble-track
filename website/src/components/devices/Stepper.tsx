@@ -19,7 +19,7 @@ export function Stepper(props: { id: string }) {
   const [steps, setSteps] = createSignal(1000);
   const [maxSpeed, setMaxSpeed] = createSignal(1000);
   const [maxAcceleration, setMaxAcceleration] = createSignal(300);
-/*
+  /*
   createEffect(() => {
     const next = state()?.maxSpeed;
     if (typeof next === "number") {

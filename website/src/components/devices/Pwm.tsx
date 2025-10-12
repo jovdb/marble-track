@@ -31,7 +31,9 @@ export function Pwm(props: { id: string }) {
   const sliderValue = createMemo(() => currentDutyCycle() ?? deviceState()?.dutyCycle ?? 0);
   const statusText = createMemo(() => {
     const duty = deviceState()?.dutyCycle ?? 0;
-    return deviceState()?.running ? `Running at ${duty.toFixed(1)}%` : `Stopped (${duty.toFixed(1)}%)`;
+    return deviceState()?.running
+      ? `Running at ${duty.toFixed(1)}%`
+      : `Stopped (${duty.toFixed(1)}%)`;
   });
 
   return (

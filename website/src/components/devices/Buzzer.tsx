@@ -79,11 +79,7 @@ export function Buzzer(props: { id: string }) {
           onInput={(e) => setFrequency(Number(e.currentTarget.value))}
         />
         <div class={deviceStyles.device__controls}>
-          <button
-            class={deviceStyles.device__button}
-            onClick={playTone}
-            disabled={isPlaying()}
-          >
+          <button class={deviceStyles.device__button} onClick={playTone} disabled={isPlaying()}>
             Play Tone
           </button>
         </div>

@@ -12,6 +12,7 @@ interface IPwmMotorState extends IDeviceState {
   targetDutyCycle?: number;
   targetDurationMs?: number;
   running?: boolean;
+  [key: string]: unknown;
 }
 
 export interface IPwmMotorConfig extends IDeviceConfig {
@@ -20,10 +21,13 @@ export interface IPwmMotorConfig extends IDeviceConfig {
   pwmChannel?: number;
   frequency?: number;
   resolutionBits?: number;
+  [key: string]: unknown;
 }
 
 export function usePwmMotor(deviceId: string) {
-  const [device, { sendMessage, ...actions }] = useDevice<IPwmMotorState, IPwmMotorConfig>(deviceId);
+  const [device, { sendMessage, ...actions }] = useDevice<IPwmMotorState, IPwmMotorConfig>(
+    deviceId
+  );
 
   const setDutyCycle = (value: number, durationMs?: number) => {
     const args: { value: number; durationMs?: number } = { value };

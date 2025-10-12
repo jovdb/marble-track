@@ -16,7 +16,10 @@ export default function DeviceConfig(props: DeviceConfigProps) {
 
   const deviceData = () => device;
   const isLoading = () => !deviceData()?.config;
-  const deviceName = () => (deviceData()?.config as Record<string, unknown>)?.name as string || deviceData()?.id || "Device";
+  const deviceName = () =>
+    ((deviceData()?.config as Record<string, unknown>)?.name as string) ||
+    deviceData()?.id ||
+    "Device";
 
   onMount(() => {
     // Config is fetched automatically by useDevice
@@ -43,9 +46,7 @@ export default function DeviceConfig(props: DeviceConfigProps) {
       </Show>
 
       <Show when={isLoading()}>
-        <div class={styles["device-config__loading"]}>
-          Loading configuration...
-        </div>
+        <div class={styles["device-config__loading"]}>Loading configuration...</div>
       </Show>
 
       <Show when={!isLoading()}>
@@ -60,18 +61,11 @@ export default function DeviceConfig(props: DeviceConfigProps) {
 
           <div class={styles["device-config__actions"]}>
             {props.onClose && (
-              <button
-                type="button"
-                class={styles["device-config__close"]}
-                onClick={props.onClose}
-              >
+              <button type="button" class={styles["device-config__close"]} onClick={props.onClose}>
                 Cancel
               </button>
             )}
-            <button
-              type="submit"
-              class={styles["device-config__submit"]}
-            >
+            <button type="submit" class={styles["device-config__submit"]}>
               Save
             </button>
           </div>

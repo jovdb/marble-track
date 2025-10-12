@@ -5,6 +5,7 @@ const deviceType = "button";
 
 interface IButtonState extends IDeviceState {
   pressed: boolean;
+  [key: string]: unknown;
 }
 
 export interface IButtonConfig extends IDeviceConfig {
@@ -13,6 +14,7 @@ export interface IButtonConfig extends IDeviceConfig {
   pinMode?: "floating" | "pullup" | "pulldown";
   debounceMs?: number;
   buttonType?: "NormalOpen" | "NormalClosed";
+  [key: string]: unknown;
 }
 
 export function useButton(deviceId: string) {

@@ -1,70 +1,107 @@
+// Base types for better type safety
+export type DeviceType =
+  | "button"
+  | "buzzer"
+  | "dividerwheel"
+  | "gate"
+  | "gatewithsensor"
+  | "led"
+  | "pwmmotor"
+  | "pwm"
+  | "servo"
+  | "stepper"
+  | "wheel";
+export type NetworkMode = "ap" | "sta" | "apsta";
+export type EncryptionType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+
+// Common response patterns
+interface _IWsErrorResponse {
+  error: string;
+}
+
+interface _IWsSuccessResponse {
+  success: boolean;
+}
+
+// Device-related types
+export interface DeviceInfo {
+  id: string;
+  type: DeviceType;
+}
+
+export interface NetworkInfo {
+  ssid: string;
+  rssi: number;
+  encryption: EncryptionType;
+  channel: number;
+  bssid: string;
+  hidden: boolean;
+}
+
+export interface NetworkStatus {
+  mode: NetworkMode;
+  connected: boolean;
+  ssid: string;
+  ip: string;
+  rssi?: number;
+  clients?: number;
+}
+
 interface IWsMessageBase<TType extends string = string> {
   type: TType;
 }
 
 export interface IWsDeviceMessage extends IWsMessageBase<"device-fn"> {
-  deviceType: string;
+  deviceType: DeviceType;
   deviceId: string;
   fn: string;
-  args: object;
+  args?: Record<string, unknown>;
 }
 
 export type IWsReceiveDevicesListMessage =
-  | (IWsMessageBase<"devices-list"> & { error: string })
+  | (IWsMessageBase<"devices-list"> & _IWsErrorResponse)
   | (IWsMessageBase<"devices-list"> & {
-      devices: {
-        id: string;
-        type: string;
-      }[];
+      devices: DeviceInfo[];
     });
 
 export type IWsReceiveDeviceStateMessage =
+  | (IWsMessageBase<"device-state"> &
+      _IWsErrorResponse & {
+        deviceId: string;
+      })
   | (IWsMessageBase<"device-state"> & {
       deviceId: string;
-      type: string;
-      error: string;
-    })
-  | (IWsMessageBase<"device-state"> & {
-      deviceId: string;
-      type: string;
-      state: any;
+      state: Record<string, unknown>;
     });
 
 export type IWsReceiveDeviceConfigMessage =
+  | (IWsMessageBase<"device-config"> &
+      _IWsErrorResponse & {
+        deviceId: string;
+      })
   | (IWsMessageBase<"device-config"> & {
       deviceId: string;
-      type: string;
-      error: string;
-    })
-  | (IWsMessageBase<"device-config"> & {
-      deviceId: string;
-      type: string;
-      config: any;
+      config: Record<string, unknown>;
     });
 
 export type IWsReceiveDeviceReadConfigMessage =
+  | (IWsMessageBase<"device-read-config"> &
+      _IWsErrorResponse & {
+        deviceId: string;
+      })
   | (IWsMessageBase<"device-read-config"> & {
       deviceId: string;
-      type: string;
-      error: string;
-    })
-  | (IWsMessageBase<"device-read-config"> & {
-      deviceId: string;
-      type: string;
-      config: any;
+      config: Record<string, unknown>;
     });
 
 export type IWsReceiveDeviceSaveConfigMessage =
+  | (IWsMessageBase<"device-save-config"> &
+      _IWsErrorResponse & {
+        deviceId: string;
+      })
   | (IWsMessageBase<"device-save-config"> & {
       deviceId: string;
-      type: string;
-      error: string;
-      // TODO: config?
-    })
-  | (IWsMessageBase<"device-save-config"> & {
-      deviceId: string;
-      type: string;
-      config: any;
+      config: Record<string, unknown>;
     });
 
 // Heartbeat messages
@@ -73,51 +110,37 @@ export type IWsReceivePongMessage = IWsMessageBase<"pong"> & {
 };
 
 export type IWsReceiveAddDeviceMessage =
-  | (IWsMessageBase<"add-device"> & { error: string; deviceId?: string })
-  | (IWsMessageBase<"add-device"> & { success: boolean; deviceId: string });
+  | (IWsMessageBase<"add-device"> & _IWsErrorResponse & { deviceId?: string })
+  | (IWsMessageBase<"add-device"> & _IWsSuccessResponse & { deviceId: string });
 
 export type IWsReceiveRemoveDeviceMessage =
-  | (IWsMessageBase<"remove-device"> & { error: string; deviceId?: string })
-  | (IWsMessageBase<"remove-device"> & { success: boolean; deviceId: string });
+  | (IWsMessageBase<"remove-device"> & _IWsErrorResponse & { deviceId?: string })
+  | (IWsMessageBase<"remove-device"> & _IWsSuccessResponse & { deviceId: string });
 
 export type IWsReceiveGetNetworkConfigMessage =
-  | (IWsMessageBase<"network-config"> & { error: string })
-  | (IWsMessageBase<"network-config"> & { ssid: string; password: string });
+  | (IWsMessageBase<"network-config"> & _IWsErrorResponse)
+  | (IWsMessageBase<"network-config"> & { ssid: string }); // Note: password omitted for security
 
 export type IWsReceiveSetNetworkConfigMessage =
-  | (IWsMessageBase<"set-network-config"> & { error: string })
-  | (IWsMessageBase<"set-network-config"> & { success: boolean });
+  | (IWsMessageBase<"set-network-config"> & _IWsErrorResponse)
+  | (IWsMessageBase<"set-network-config"> & _IWsSuccessResponse);
 
 export type IWsReceiveGetNetworksMessage =
-  | (IWsMessageBase<"networks"> & { error: string })
+  | (IWsMessageBase<"networks"> & _IWsErrorResponse)
   | (IWsMessageBase<"networks"> & {
       count: number;
-      networks: Array<{
-        ssid: string;
-        rssi: number;
-        encryption: number;
-        channel: number;
-        bssid: string;
-        hidden: boolean;
-      }>;
+      networks: NetworkInfo[];
     });
 
 export type IWsReceiveGetNetworkStatusMessage =
-  | (IWsMessageBase<"network-status"> & { error: string })
+  | (IWsMessageBase<"network-status"> & _IWsErrorResponse)
   | (IWsMessageBase<"network-status"> & {
-      status: {
-        mode: string;
-        connected: boolean;
-        ssid: string;
-        ip: string;
-        rssi?: number;
-        clients?: number;
-      };
+      status: NetworkStatus;
     });
 
 export type IWsReceiveDevicesConfigMessage =
-  | (IWsMessageBase<"devices-config"> & { error: string })
-  | (IWsMessageBase<"devices-config"> & { config: any });
+  | (IWsMessageBase<"devices-config"> & _IWsErrorResponse)
+  | (IWsMessageBase<"devices-config"> & { config: Record<string, unknown> });
 
 export type IWsReceiveMessage =
   | IWsReceiveDevicesListMessage
@@ -140,7 +163,9 @@ export type IWsSendGetDevicesMessage = IWsMessageBase<"devices-list">;
 
 export type IWsSendGetDevicesConfigMessage = IWsMessageBase<"devices-config">;
 
-export type IWsSendSetDevicesConfigMessage = IWsMessageBase<"set-devices-config"> & { config: any };
+export type IWsSendSetDevicesConfigMessage = IWsMessageBase<"set-devices-config"> & {
+  config: Record<string, unknown>;
+};
 
 export type IWsSendDeviceFunctionMessage = IWsDeviceMessage;
 
@@ -154,7 +179,7 @@ export type IWsSendDeviceReadConfigMessage = IWsMessageBase<"device-read-config"
 
 export type IWsSendDeviceSaveConfigMessage = IWsMessageBase<"device-save-config"> & {
   deviceId: string;
-  config: any;
+  config: Record<string, unknown>;
 };
 
 // Heartbeat message
@@ -163,9 +188,9 @@ export type IWsSendPingMessage = IWsMessageBase<"ping"> & {
 };
 
 export type IWsSendAddDeviceMessage = IWsMessageBase<"add-device"> & {
-  deviceType: string;
+  deviceType: DeviceType;
   deviceId: string;
-  config?: any;
+  config?: Record<string, unknown>;
 };
 
 export type IWsSendRemoveDeviceMessage = IWsMessageBase<"remove-device"> & {

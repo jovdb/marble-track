@@ -9,6 +9,7 @@ interface IServoState extends IDeviceState {
   isMoving: boolean;
   pin: number;
   pwmChannel: number;
+  [key: string]: unknown;
 }
 
 const deviceType = "servo";

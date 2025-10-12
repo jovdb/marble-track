@@ -9,7 +9,9 @@
   flex-shrink: 0;
   background-color: var(--buzzer-indicator-off);
   box-shadow: none;
-  transition: background-color 0.25s ease, box-shadow 0.25s ease;
+  transition:
+    background-color 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .buzzer__status-indicator--on {

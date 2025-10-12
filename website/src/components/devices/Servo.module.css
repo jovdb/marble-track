@@ -9,7 +9,9 @@
   flex-shrink: 0;
   background-color: var(--servo-indicator-off);
   box-shadow: none;
-  transition: background-color 0.25s ease, box-shadow 0.25s ease;
+  transition:
+    background-color 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .servo__status-indicator--moving {

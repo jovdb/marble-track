@@ -1,9 +1,5 @@
 import { createEffect, createSignal } from "solid-js";
-import DeviceConfig, {
-  DeviceConfigItem,
-  DeviceConfigRow,
-  DeviceConfigTable,
-} from "./DeviceConfig";
+import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { usePwmMotor } from "../../stores/PwmMotor";
 
 interface PwmMotorConfigProps {
@@ -20,7 +16,9 @@ export default function PwmMotorConfig(props: PwmMotorConfigProps) {
   const [pin, setPin] = createSignal<number>(device()?.config?.pin ?? -1);
   const [pwmChannel, setPwmChannel] = createSignal<number>(device()?.config?.pwmChannel ?? 0);
   const [frequency, setFrequency] = createSignal<number>(device()?.config?.frequency ?? 5000);
-  const [resolutionBits, setResolutionBits] = createSignal<number>(device()?.config?.resolutionBits ?? 12);
+  const [resolutionBits, setResolutionBits] = createSignal<number>(
+    device()?.config?.resolutionBits ?? 12
+  );
 
   createEffect(() => {
     const config = device()?.config;

@@ -1,9 +1,5 @@
 import { createEffect, createSignal } from "solid-js";
-import DeviceConfig, {
-  DeviceConfigItem,
-  DeviceConfigRow,
-  DeviceConfigTable,
-} from "./DeviceConfig";
+import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { useBuzzer } from "../../stores/Buzzer";
 
 interface BuzzerConfigProps {

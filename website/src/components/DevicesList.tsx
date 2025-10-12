@@ -7,6 +7,7 @@ import {
   IWsSendAddDeviceMessage,
   IWsSendRemoveDeviceMessage,
   IWsReceiveMessage,
+  DeviceType,
 } from "../interfaces/WebSockets";
 
 // Available device types
@@ -49,7 +50,7 @@ export function DevicesList() {
 
     const message: IWsSendAddDeviceMessage = {
       type: "add-device",
-      deviceType,
+      deviceType: deviceType.toLowerCase() as DeviceType,
       deviceId,
       config: {},
     };
@@ -228,7 +229,11 @@ export function DevicesList() {
 
       {/* Add Device Button */}
       <div class={styles["device-list__actions"]}>
-        <button class={styles["app__config-button"]} onClick={() => setShowAddModal(true)} disabled={!socketState.isConnected}>
+        <button
+          class={styles["app__config-button"]}
+          onClick={() => setShowAddModal(true)}
+          disabled={!socketState.isConnected}
+        >
           Add Device
         </button>
       </div>
@@ -279,7 +284,11 @@ export function DevicesList() {
               >
                 Cancel
               </button>
-              <button type="submit" class={styles["modal-button modal-button--primary"]} disabled={!socketState.isConnected}>
+              <button
+                type="submit"
+                class={styles["modal-button modal-button--primary"]}
+                disabled={!socketState.isConnected}
+              >
                 Add Device
               </button>
             </div>
@@ -288,10 +297,18 @@ export function DevicesList() {
       )}
 
       <div class={styles["device-list__buttons"]}>
-        <button class={styles["app__config-button"]} onClick={handleDownloadConfig} disabled={!socketState.isConnected}>
+        <button
+          class={styles["app__config-button"]}
+          onClick={handleDownloadConfig}
+          disabled={!socketState.isConnected}
+        >
           Download Config
         </button>
-        <button class={styles["app__config-button"]} onClick={handleUploadConfig} disabled={!socketState.isConnected}>
+        <button
+          class={styles["app__config-button"]}
+          onClick={handleUploadConfig}
+          disabled={!socketState.isConnected}
+        >
           Upload Config
         </button>
       </div>

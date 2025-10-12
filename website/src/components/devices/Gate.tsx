@@ -2,12 +2,13 @@ import { Device } from "./Device";
 import { createSignal, onCleanup } from "solid-js";
 import deviceStyles from "./Device.module.css";
 import gateStyles from "./Gate.module.css";
-import { IDeviceState, IDeviceConfig } from "../../stores/Device";
+import { IDeviceState, IDeviceConfig } from "../../stores/Devices";
 import { IWsSendMessage } from "../../interfaces/WebSockets";
 import { useDevice } from "../../stores/Devices";
 
 interface IGateState extends IDeviceState {
   gateState: "Closed" | "IsOpening" | "Opened" | "Closing";
+  [key: string]: unknown;
 }
 
 export function Gate(props: { id: string }) {

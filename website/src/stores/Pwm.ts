@@ -12,6 +12,7 @@ interface IPwmState extends IDeviceState {
   targetDutyCycle?: number;
   targetDurationMs?: number;
   running?: boolean;
+  [key: string]: unknown;
 }
 
 export interface IPwmConfig extends IDeviceConfig {
@@ -20,6 +21,7 @@ export interface IPwmConfig extends IDeviceConfig {
   pwmChannel?: number;
   frequency?: number;
   resolutionBits?: number;
+  [key: string]: unknown;
 }
 
 export function usePwm(deviceId: string) {

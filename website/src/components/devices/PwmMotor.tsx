@@ -31,7 +31,9 @@ export function PwmMotor(props: { id: string }) {
   const sliderValue = createMemo(() => currentDutyCycle() ?? deviceState()?.dutyCycle ?? 0);
   const statusText = createMemo(() => {
     const duty = deviceState()?.dutyCycle ?? 0;
-    return deviceState()?.running ? `Running at ${(duty).toFixed(1)}%` : `Stopped (${duty.toFixed(1)}%)`;
+    return deviceState()?.running
+      ? `Running at ${duty.toFixed(1)}%`
+      : `Stopped (${duty.toFixed(1)}%)`;
   });
 
   return (
@@ -44,7 +46,9 @@ export function PwmMotor(props: { id: string }) {
         <div
           classList={{
             [pwmMotorStyles["pwm-motor__status-indicator"]]: true,
-            [pwmMotorStyles["pwm-motor__status-indicator--moving"]]: Boolean(deviceState()?.running),
+            [pwmMotorStyles["pwm-motor__status-indicator--moving"]]: Boolean(
+              deviceState()?.running
+            ),
             [pwmMotorStyles["pwm-motor__status-indicator--off"]]: !deviceState()?.running,
           }}
         ></div>

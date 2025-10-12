@@ -102,7 +102,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
         if ("error" in message) {
           setNetworkError(message.error);
         } else {
-          setNetworkInfo({ ssid: message.ssid, password: message.password });
+          setNetworkInfo({ ssid: message.ssid, password: "" }); // Password not sent for security
         }
       } else if (message.type === "set-network-config") {
         if ("error" in message) {

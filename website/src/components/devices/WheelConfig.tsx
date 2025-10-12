@@ -3,7 +3,6 @@ import wheelStyles from "./WheelConfig.module.css";
 import { createWheelStore, IWheelConfig } from "../../stores/Wheel";
 import { createMemo, For, onMount } from "solid-js";
 import DeviceConfig from "./DeviceConfig";
-import { IWsSendMessage } from "../../interfaces/WebSockets";
 import { useDevice } from "../../stores/Devices";
 
 // Update the import path below to the correct location of IWheelState
@@ -22,12 +21,14 @@ export function WheelConfig(props: { id: string; onClose: () => void }) {
     const stepperDeviceId = `${props.id}-stepper`;
 
     sendMessage({
+      type: "device-fn",
+      deviceType: "stepper",
       deviceId: stepperDeviceId,
       fn: "move",
       args: {
         steps,
       },
-    } as IWsSendMessage);
+    });
   };
 
   return (

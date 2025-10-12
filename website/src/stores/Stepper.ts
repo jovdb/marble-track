@@ -30,6 +30,7 @@ export interface IStepperConfig extends IDeviceConfig {
   maxAcceleration?: number;
   pins?: IStepperPins;
   enablePin?: number;
+  invertEnable?: boolean;
   [key: string]: unknown;
 }
 

@@ -26,6 +26,7 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
   const [stepPin, setStepPin] = createSignal(1);
   const [dirPin, setDirPin] = createSignal(2);
   const [enablePin, setEnablePin] = createSignal(-1);
+  const [invertEnable, setInvertEnable] = createSignal(false);
   const [pin1, setPin1] = createSignal(1);
   const [pin2, setPin2] = createSignal(2);
   const [pin3, setPin3] = createSignal(3);
@@ -65,6 +66,10 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
       setEnablePin(cfg.enablePin);
     }
 
+    if (typeof cfg.invertEnable === "boolean") {
+      setInvertEnable(cfg.invertEnable);
+    }
+
     if (typeof cfg.maxSpeed === "number") {
       setMaxSpeed(cfg.maxSpeed);
     }
@@ -92,6 +97,7 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
         ? ([pin1(), pin2(), pin3(), pin4()] as IStepperFourWirePins)
         : ({ stepPin: stepPin(), dirPin: dirPin() } as IStepperDriverPins),
       enablePin: enablePin() >= 0 ? enablePin() : undefined,
+      invertEnable: invertEnable(),
     };
 
     setDeviceConfig(payload);
@@ -150,9 +156,18 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
                 value={enablePin()}
                 onInput={(event) => setEnablePin(Number(event.currentTarget.value))}
               />
-              <span style={{ "margin-left": "0.5rem", "font-size": "0.8rem", color: "#666" }}>
-                (-1 to disable)
-              </span>
+              <span
+                style={{ "margin-left": "0.5rem", "font-size": "0.8rem", color: "#666" }}
+              ></span>
+            </DeviceConfigItem>
+          </DeviceConfigRow>
+          <DeviceConfigRow>
+            <DeviceConfigItem name="Invert enable">
+              <input
+                type="checkbox"
+                checked={invertEnable()}
+                onChange={(event) => setInvertEnable(event.currentTarget.checked)}
+              />
             </DeviceConfigItem>
           </DeviceConfigRow>
         </Show>

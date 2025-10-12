@@ -579,6 +579,7 @@ String Stepper::getConfig() const
         if (_enablePin >= 0)
         {
             config["enablePin"] = _enablePin;
+            config["invertEnable"] = _invertEnable;
         }
     }
 
@@ -680,6 +681,16 @@ void Stepper::setConfig(JsonObject *config)
     _maxSpeed = maxSpeed;
     _maxAcceleration = maxAcceleration;
 
+    // Load invert enable setting
+    if ((*config)["invertEnable"].is<bool>())
+    {
+        _invertEnable = (*config)["invertEnable"].as<bool>();
+    }
+    else
+    {
+        _invertEnable = false; // Default to false
+    }
+
     if (_stepper)
     {
         _stepper->setMaxSpeed(_maxSpeed);
@@ -688,23 +699,23 @@ void Stepper::setConfig(JsonObject *config)
 }
 
 /**
- * @brief Enable the stepper motor (set enable pin high if configured)
+ * @brief Enable the stepper motor (set enable pin appropriately based on inversion)
  */
 void Stepper::enableStepper()
 {
     if (_enablePin >= 0)
     {
-        digitalWrite(_enablePin, HIGH);
+        digitalWrite(_enablePin, _invertEnable ? LOW : HIGH);
     }
 }
 
 /**
- * @brief Disable the stepper motor (set enable pin low if configured)
+ * @brief Disable the stepper motor (set enable pin appropriately based on inversion)
  */
 void Stepper::disableStepper()
 {
     if (_enablePin >= 0)
     {
-        digitalWrite(_enablePin, LOW);
-        }
+        digitalWrite(_enablePin, _invertEnable ? HIGH : LOW);
+    }
 }

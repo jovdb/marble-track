@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <limits>
+#include <ArduinoJson.h>
+#include <LittleFS.h>
 
 #include "DeviceManager.h"
 #include "Network.h"
@@ -76,7 +78,7 @@ void SerialConsole::loop()
 
             if (input.length() == 0)
             {
-                Serial.println("💡 Commands: 'devices', 'network', 'memory', 'restart'");
+                Serial.println("💡 Commands: 'devices', 'network', 'memory', 'config', 'restart'");
                 Serial.println();
                 continue;
             }
@@ -168,6 +170,38 @@ void SerialConsole::handleCommand(const String &input)
         uint32_t percent = (freeHeap * 100) / totalHeap;
         Serial.printf("   ⚡ Free: %d%% (%d bytes) | Total: %d bytes\n", percent, freeHeap, totalHeap);
         Serial.printf("   📈 Min Free: %d bytes | CPU: %d MHz\n", ESP.getMinFreeHeap(), ESP.getCpuFreqMHz());
+        Serial.println();
+        return;
+    }
+
+    if (input.equalsIgnoreCase("config"))
+    {
+        Serial.println("📄 Configuration File:");
+        
+        // Read config.json from LittleFS
+        File file = LittleFS.open("/config.json", "r");
+        if (!file)
+        {
+            Serial.println("❌ config.json not found");
+        }
+        else
+        {
+            // Parse file contents as JSON
+            JsonDocument configDoc;
+            DeserializationError err = deserializeJson(configDoc, file);
+            if (err)
+            {
+                Serial.println("❌ Failed to parse config.json");
+            }
+            else
+            {
+                // Pretty print the JSON
+                String configStr;
+                serializeJsonPretty(configDoc, configStr);
+                Serial.println(configStr);
+            }
+            file.close();
+        }
         Serial.println();
         return;
     }

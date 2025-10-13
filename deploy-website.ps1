@@ -54,7 +54,7 @@ try {
     $platformioPath = "C:\Users\vandenberghej\.platformio\penv\Scripts\platformio.exe"
 
     Write-Host "Uploading data folder to ESP32..." -ForegroundColor Green
-    & $platformioPath run --target uploadfs
+    & $platformioPath run --target uploadfs --environment 4d_systems_esp32s3_gen4_r8n16_ota
     
     if ($LASTEXITCODE -eq 0) {
         Write-Host "SUCCESS: Upload complete!" -ForegroundColor Green

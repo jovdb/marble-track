@@ -2,15 +2,33 @@
 #include "Logging.h"
 
 Wheel::Wheel(const String &id)
-    : Device(id, "wheel")
+    : Device(id, "wheel"), _stepper(nullptr), _sensor(nullptr)
 {
-    _stepper = new Stepper(id + "-stepper");
-    _sensor = new Button(id + "-sensor");
-    addChild(_stepper);
-    addChild(_sensor);
-
     _direction = -1;
     _state = wheelState::IDLE;
+}
+
+void Wheel::setup()
+{
+    if (getChildren().empty())
+    {
+        // Create children if not loaded from config
+        _stepper = new Stepper(getId() + "-stepper");
+        _sensor = new Button(getId() + "-sensor");
+        addChild(_stepper);
+        addChild(_sensor);
+    }
+    else
+    {
+        // Set pointers from loaded children
+        auto children = getChildren();
+        if (children.size() >= 1)
+            _stepper = static_cast<Stepper*>(children[0]);
+        if (children.size() >= 2)
+            _sensor = static_cast<Button*>(children[1]);
+    }
+
+    Device::setup(); // Call base setup to setup children
 }
 
 // Array of breakpoints values

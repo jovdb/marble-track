@@ -44,6 +44,9 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
     }
     else
     {
+
+        MLOG_INFO("JO");
+
         // Get devices from DeviceManager
         Device *deviceList[20]; // MAX_DEVICES from DeviceManager
         int count;
@@ -59,6 +62,33 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
                 JsonObject deviceObj = devicesArray.add<JsonObject>();
                 deviceObj["id"] = deviceList[i]->getId();
                 deviceObj["type"] = deviceList[i]->getType();
+
+                // Temporary logging of children
+                auto children = deviceList[i]->getChildren();
+                MLOG_INFO("CHILDREN: %d", children.size());
+                if (!children.empty())
+                {
+                    MLOG_INFO("Device %s has %d children:", deviceList[i]->getId().c_str(), children.size());
+                    for (Device *child : children)
+                    {
+                        if (child)
+                        {
+                            MLOG_INFO("  Child: %s (%s)", child->getId().c_str(), child->getType().c_str());
+                        }
+                    }
+                }
+
+                // Add children array
+                JsonArray childrenArr = deviceObj["children"].to<JsonArray>();
+                for (Device *child : deviceList[i]->getChildren())
+                {
+                    if (child)
+                    {
+                        JsonObject childObj = childrenArr.add<JsonObject>();
+                        childObj["id"] = child->getId();
+                        childObj["type"] = child->getType();
+                    }
+                }
             }
         }
     }
@@ -263,7 +293,7 @@ void WebSocketManager::handleSetDevicesConfig(JsonDocument &doc)
         File file = LittleFS.open("/config.json", "w");
         if (!file)
         {
-            
+
             response["success"] = false;
             response["error"] = "Failed to open config.json for writing";
         }
@@ -273,7 +303,7 @@ void WebSocketManager::handleSetDevicesConfig(JsonDocument &doc)
             file.close();
             response["success"] = true;
             response["message"] = "config.json updated";
-            
+
             // Reload devices from the new config
             if (deviceManager)
             {
@@ -403,7 +433,7 @@ void WebSocketManager::loop()
             else
             {
                 JsonArray networksArray = response["networks"].to<JsonArray>();
-                
+
                 for (int i = 0; i < numNetworks; i++)
                 {
                     JsonObject networkObj = networksArray.add<JsonObject>();
@@ -573,12 +603,12 @@ void WebSocketManager::handleAddDevice(JsonDocument &doc)
     }
 
     // Setup the new device
-    Device* newDevice = deviceManager->getDeviceById(deviceId);
-    if (newDevice != nullptr) 
+    Device *newDevice = deviceManager->getDeviceById(deviceId);
+    if (newDevice != nullptr)
     {
         newDevice->setup();
     }
-    
+
     // Save devices to file
     deviceManager->saveDevicesToJsonFile();
 
@@ -587,11 +617,11 @@ void WebSocketManager::handleAddDevice(JsonDocument &doc)
     String respStr;
     serializeJson(response, respStr);
     notifyClients(respStr);
-    
+
     // Broadcast updated device list to all clients
     JsonDocument emptyDoc;
     handleGetDevices(emptyDoc);
-    
+
     MLOG_INFO("Added device: %s (%s)", deviceId.c_str(), deviceType.c_str());
 }
 
@@ -636,11 +666,11 @@ void WebSocketManager::handleRemoveDevice(JsonDocument &doc)
     String respStr;
     serializeJson(response, respStr);
     notifyClients(respStr);
-    
+
     // Broadcast updated device list to all clients
     JsonDocument emptyDoc;
     handleGetDevices(emptyDoc);
-    
+
     MLOG_INFO("Removed device: %s", deviceId.c_str());
 }
 
@@ -659,7 +689,7 @@ void WebSocketManager::handleGetNetworkConfig(JsonDocument &doc)
     }
 
     NetworkSettings settings = deviceManager->loadNetworkSettings();
-    
+
     if (settings.isValid())
     {
         response["ssid"] = settings.ssid;
@@ -673,7 +703,7 @@ void WebSocketManager::handleGetNetworkConfig(JsonDocument &doc)
     String respStr;
     serializeJson(response, respStr);
     notifyClients(respStr);
-    
+
     MLOG_INFO("Sent network config to client");
 }
 
@@ -681,7 +711,7 @@ void WebSocketManager::handleSetNetworkConfig(JsonDocument &doc)
 {
     String ssid = doc["ssid"] | "";
     String password = doc["password"] | "";
-    
+
     JsonDocument response;
     response["type"] = "set-network-config";
 
@@ -708,7 +738,7 @@ void WebSocketManager::handleSetNetworkConfig(JsonDocument &doc)
     {
         response["success"] = true;
         MLOG_INFO("Network settings saved: SSID='%s'", ssid.c_str());
-        
+
         // Notify clients with updated network config
         JsonDocument emptyDoc;
         handleGetNetworkConfig(emptyDoc);
@@ -773,7 +803,7 @@ void WebSocketManager::handleGetNetworkStatus(JsonDocument &doc)
     serializeJson(response, respStr);
 
     notifyClients(respStr);
-    
+
     MLOG_INFO("Sent network status to client");
 }
 

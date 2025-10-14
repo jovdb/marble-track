@@ -20,6 +20,7 @@ public:
         MOVING
     };
     Wheel(const String &id);
+    void setup() override;
     String getState() override;
     void loop() override;
     bool control(const String &action, JsonObject *payload = nullptr) override;

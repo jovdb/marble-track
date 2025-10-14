@@ -140,6 +140,25 @@ void SerialConsole::handleCommand(const String &input)
                     String config = deviceList[i]->getConfig();
                     Serial.printf("     Config: %s\n", config.c_str());
 
+                    // Show children IDs
+                    auto children = deviceList[i]->getChildren();
+                    if (!children.empty())
+                    {
+                        Serial.printf("     Children: ");
+                        for (size_t j = 0; j < children.size(); ++j)
+                        {
+                            if (children[j])
+                            {
+                                Serial.printf("%s", children[j]->getId().c_str());
+                                if (j < children.size() - 1)
+                                {
+                                    Serial.printf(", ");
+                                }
+                            }
+                        }
+                        Serial.println();
+                    }
+
                     Serial.println();
                 }
             }

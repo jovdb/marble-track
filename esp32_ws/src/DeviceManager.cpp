@@ -1,5 +1,7 @@
 #include <ArduinoJson.h>
 #include <vector>
+#include <map>
+#include <set>
 #include "LittleFS.h"
 #include "Logging.h"
 #include "TimeManager.h"
@@ -16,6 +18,30 @@
 #include "devices/PwmDevice.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
+
+enum class DeviceType {
+    LED,
+    BUZZER,
+    BUTTON,
+    SERVO,
+    STEPPER,
+    PWMMOTOR,
+    PWM,
+    WHEEL,
+    UNKNOWN
+};
+
+DeviceType stringToDeviceType(const String& type) {
+    if (type == "led") return DeviceType::LED;
+    if (type == "buzzer") return DeviceType::BUZZER;
+    if (type == "button") return DeviceType::BUTTON;
+    if (type == "servo") return DeviceType::SERVO;
+    if (type == "stepper") return DeviceType::STEPPER;
+    if (type == "pwmmotor") return DeviceType::PWMMOTOR;
+    if (type == "pwm") return DeviceType::PWM;
+    if (type == "wheel") return DeviceType::WHEEL;
+    return DeviceType::UNKNOWN;
+}
 
 void DeviceManager::loadDevicesFromJsonFile()
 {
@@ -44,7 +70,6 @@ void DeviceManager::loadDevicesFromJsonFile()
             if (rootObj["devices"].is<JsonArray>())
             {
                 JsonArray arr = rootObj["devices"];
-                // loadDevicesFromJson implementation (re-add here if needed)
                 // Clear current devices
                 for (int i = 0; i < devicesCount; i++)
                 {
@@ -55,121 +80,174 @@ void DeviceManager::loadDevicesFromJsonFile()
                     }
                 }
                 devicesCount = 0;
+
+                std::map<String, Device*> loadedDevices;
                 for (JsonObject obj : arr)
                 {
                     String id = obj["id"] | "";
                     String type = obj["type"] | "";
 
-                    if (devicesCount < MAX_DEVICES)
+                    if (loadedDevices.find(id) != loadedDevices.end())
                     {
-                        if (type == "led")
-                        {
-                            Led *led = new Led(id);
+                        MLOG_WARN("Duplicate device ID '%s' in config, skipping", id.c_str());
+                        continue;
+                    }
 
+                    Device* newDevice = nullptr;
+                    DeviceType devType = stringToDeviceType(type);
+                    switch (devType) {
+                        case DeviceType::LED: {
+                            Led *led = new Led(id);
                             // Log obj[config] as json string
                             String configStr;
                             serializeJson(obj["config"], configStr);
                             MLOG_INFO("LED device config: %s", configStr.c_str());
-
                             // Apply configuration from JSON config property if it exists
-                            if (obj["config"].is<JsonObject>())
-                            {
+                            if (obj["config"].is<JsonObject>()) {
                                 JsonObject config = obj["config"];
                                 led->setConfig(&config);
                             }
-
-                            devices[devicesCount++] = led;
+                            newDevice = led;
+                            break;
                         }
-                        else if (type == "buzzer")
-                        {
+                        case DeviceType::BUZZER: {
                             Buzzer *buzzer = new Buzzer(id, "remove");
-
                             // Apply configuration from JSON config property if it exists
-                            if (obj["config"].is<JsonObject>())
-                            {
+                            if (obj["config"].is<JsonObject>()) {
                                 JsonObject config = obj["config"];
                                 buzzer->setConfig(&config);
                             }
-
-                            devices[devicesCount++] = buzzer;
+                            newDevice = buzzer;
+                            break;
                         }
-                        else if (type == "button")
-                        {
+                        case DeviceType::BUTTON: {
                             Button *button = new Button(id);
-
                             // Apply configuration from JSON config property if it exists
-                            if (obj["config"].is<JsonObject>())
-                            {
+                            if (obj["config"].is<JsonObject>()) {
                                 JsonObject config = obj["config"];
                                 button->setConfig(&config);
                             }
-
-                            devices[devicesCount++] = button;
+                            newDevice = button;
+                            break;
                         }
-                        else if (type == "servo")
-                        {
+                        case DeviceType::SERVO: {
                             ServoDevice *servo = new ServoDevice(id, "remove");
-
                             // Apply configuration from JSON config property if it exists
-                            if (obj["config"].is<JsonObject>())
-                            {
+                            if (obj["config"].is<JsonObject>()) {
                                 JsonObject config = obj["config"];
                                 servo->setConfig(&config);
                             }
-
-                            devices[devicesCount++] = servo;
+                            newDevice = servo;
+                            break;
                         }
-                        else if (type == "stepper")
-                        {
+                        case DeviceType::STEPPER: {
                             Stepper *stepper = new Stepper(id);
-
                             // Apply configuration from JSON config property if it exists
-                            if (obj["config"].is<JsonObject>())
-                            {
+                            if (obj["config"].is<JsonObject>()) {
                                 JsonObject config = obj["config"];
                                 stepper->setConfig(&config);
                             }
-
-                            devices[devicesCount++] = stepper;
+                            newDevice = stepper;
+                            break;
                         }
-                        else if (type == "pwmmotor")
-                        {
+                        case DeviceType::PWMMOTOR: {
                             PwmMotor *motor = new PwmMotor(id, "remove");
-
                             // Apply configuration from JSON config property if it exists
-                            if (obj["config"].is<JsonObject>())
-                            {
+                            if (obj["config"].is<JsonObject>()) {
                                 JsonObject config = obj["config"];
                                 motor->setConfig(&config);
                             }
-
-                            devices[devicesCount++] = motor;
+                            newDevice = motor;
+                            break;
                         }
-                        else if (type == "pwm")
-                        {
+                        case DeviceType::PWM: {
                             PwmDevice *pwm = new PwmDevice(id, "remove");
-
                             // Apply configuration from JSON config property if it exists
-                            if (obj["config"].is<JsonObject>())
-                            {
+                            if (obj["config"].is<JsonObject>()) {
                                 JsonObject config = obj["config"];
                                 pwm->setConfig(&config);
                             }
+                            newDevice = pwm;
+                            break;
+                        }
+                        case DeviceType::WHEEL: {
+                            Wheel *wheel = new Wheel(id);
+                            // Apply configuration from JSON config property if it exists
+                            if (obj["config"].is<JsonObject>()) {
+                                JsonObject config = obj["config"];
+                                wheel->setConfig(&config);
+                            }
+                            newDevice = wheel;
+                            break;
+                        }
+                        default: {
+                            MLOG_WARN("Unknown device type: %s", type.c_str());
+                            continue;
+                        }
+                    }
 
-                            devices[devicesCount++] = pwm;
+                    if (newDevice)
+                    {
+                        loadedDevices[id] = newDevice;
+                    }
+                }
+
+                // Collect all child IDs
+                std::set<String> childIds;
+                for (JsonObject obj : arr)
+                {
+                    if (obj["children"].is<JsonArray>())
+                    {
+                        JsonArray childrenArr = obj["children"];
+                        for (String childId : childrenArr)
+                        {
+                            childIds.insert(childId);
+                        }
+                    }
+                }
+
+                // Identify top-level devices and add to devices array
+                for (auto& pair : loadedDevices)
+                {
+                    if (childIds.find(pair.first) == childIds.end())
+                    {
+                        if (devicesCount < MAX_DEVICES)
+                        {
+                            devices[devicesCount++] = pair.second;
                         }
                         else
                         {
-                            MLOG_WARN("Unknown device type: %s", type.c_str());
+                            MLOG_WARN("Maximum device limit reached, cannot add top-level device: %s", pair.first.c_str());
+                            delete pair.second;
                         }
                     }
-                    else
+                }
+
+                // Link children
+                for (JsonObject obj : arr)
+                {
+                    String id = obj["id"] | "";
+                    auto it = loadedDevices.find(id);
+                    if (it != loadedDevices.end() && obj["children"].is<JsonArray>())
                     {
-                        MLOG_WARN("Maximum device limit reached, cannot load more devices");
-                        break;
+                        Device* parent = it->second;
+                        JsonArray childrenArr = obj["children"];
+                        for (String childId : childrenArr)
+                        {
+                            auto childIt = loadedDevices.find(childId);
+                            if (childIt != loadedDevices.end())
+                            {
+                                parent->addChild(childIt->second);
+                            }
+                            else
+                            {
+                                MLOG_WARN("Child device '%s' not found for parent '%s'", childId.c_str(), id.c_str());
+                            }
+                        }
                     }
                 }
-                MLOG_INFO("Loaded devices from %s", CONFIG_FILE);
+
+                MLOG_INFO("Loaded %d devices from %s", loadedDevices.size(), CONFIG_FILE);
             }
             else
             {
@@ -232,24 +310,29 @@ void DeviceManager::saveDevicesToJsonFile()
     // Replace devices array with current snapshot to avoid stale entries
     rootObj.remove("devices");
     JsonArray devicesArray = rootObj["devices"].to<JsonArray>();
-    for (int i = 0; i < devicesCount; i++)
+    std::vector<Device*> allDevices = getAllDevices();
+    for (Device* device : allDevices)
     {
-        if (devices[i])
-        {
-            JsonObject deviceObj = devicesArray.add<JsonObject>();
-            deviceObj["id"] = devices[i]->getId();
-            deviceObj["type"] = devices[i]->getType();
+        JsonObject deviceObj = devicesArray.add<JsonObject>();
+        deviceObj["id"] = device->getId();
+        deviceObj["type"] = device->getType();
 
-            // Save device configuration
-            String configStr = devices[i]->getConfig();
-            if (configStr.length() > 0)
+        // Save children IDs
+        JsonArray childrenArray = deviceObj["children"].to<JsonArray>();
+        for (Device* child : device->getChildren())
+        {
+            childrenArray.add(child->getId());
+        }
+
+        // Save device configuration
+        String configStr = device->getConfig();
+        if (configStr.length() > 0)
+        {
+            JsonDocument configDoc;
+            DeserializationError err = deserializeJson(configDoc, configStr);
+            if (!err && configDoc.is<JsonObject>())
             {
-                JsonDocument configDoc;
-                DeserializationError err = deserializeJson(configDoc, configStr);
-                if (!err && configDoc.is<JsonObject>())
-                {
-                    deviceObj["config"] = configDoc.as<JsonObject>();
-                }
+                deviceObj["config"] = configDoc.as<JsonObject>();
             }
         }
     }
@@ -538,48 +621,62 @@ bool DeviceManager::removeDevice(const String &deviceId)
     return false;
 }
 
+std::vector<Device*> DeviceManager::getAllDevices()
+{
+    std::vector<Device*> allDevices;
+    
+    std::function<void(Device*)> collectRecursive = [&](Device* device) {
+        if (!device) return;
+        allDevices.push_back(device);
+        for (Device* child : device->getChildren()) {
+            collectRecursive(child);
+        }
+    };
+    
+    for (int i = 0; i < devicesCount; i++) {
+        if (devices[i]) {
+            collectRecursive(devices[i]);
+        }
+    }
+    
+    return allDevices;
+}
+
 Device *DeviceManager::createDevice(const String &deviceType, const String &deviceId, JsonVariant config)
 {
     Device *newDevice = nullptr;
     String lowerType = deviceType;
     lowerType.toLowerCase();
 
-    if (lowerType == "led")
-    {
-        newDevice = new Led(deviceId);
-    }
-    else if (lowerType == "buzzer")
-    {
-        newDevice = new Buzzer(deviceId, deviceId); // Using deviceId as name too
-    }
-    else if (lowerType == "button")
-    {
-        newDevice = new Button(deviceId);
-    }
-    else if (lowerType == "servo")
-    {
-        newDevice = new ServoDevice(deviceId, deviceId);
-    }
-    else if (lowerType == "stepper")
-    {
-        newDevice = new Stepper(deviceId);
-    }
-    else if (lowerType == "pwmmotor")
-    {
-        newDevice = new PwmMotor(deviceId, deviceId);
-    }
-    else if (lowerType == "pwm")
-    {
-        newDevice = new PwmDevice(deviceId, deviceId);
-    }
-    else if (lowerType == "wheel")
-    {
-        newDevice = new Wheel(deviceId);
-    }
-    else
-    {
-        MLOG_ERROR("Unknown device type: %s", deviceType.c_str());
-        return nullptr;
+    DeviceType devType = stringToDeviceType(lowerType);
+    switch (devType) {
+        case DeviceType::LED:
+            newDevice = new Led(deviceId);
+            break;
+        case DeviceType::BUZZER:
+            newDevice = new Buzzer(deviceId, deviceId); // Using deviceId as name too
+            break;
+        case DeviceType::BUTTON:
+            newDevice = new Button(deviceId);
+            break;
+        case DeviceType::SERVO:
+            newDevice = new ServoDevice(deviceId, deviceId);
+            break;
+        case DeviceType::STEPPER:
+            newDevice = new Stepper(deviceId);
+            break;
+        case DeviceType::PWMMOTOR:
+            newDevice = new PwmMotor(deviceId, deviceId);
+            break;
+        case DeviceType::PWM:
+            newDevice = new PwmDevice(deviceId, deviceId);
+            break;
+        case DeviceType::WHEEL:
+            newDevice = new Wheel(deviceId);
+            break;
+        default:
+            MLOG_ERROR("Unknown device type: %s", deviceType.c_str());
+            return nullptr;
     }
 
     if (newDevice != nullptr)

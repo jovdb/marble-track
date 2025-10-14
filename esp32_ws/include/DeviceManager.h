@@ -134,6 +134,12 @@ public:
      */
     int getDeviceCount() const { return devicesCount; }
 
+    /**
+     * @brief Get all devices recursively (including children)
+     * @return Vector of all devices
+     */
+    std::vector<Device*> getAllDevices();
+
         void loadDevicesFromJsonFile();
     void saveDevicesToJsonFile();
 };

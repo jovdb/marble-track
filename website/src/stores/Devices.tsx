@@ -14,7 +14,7 @@ export interface IDevice<
   type: string;
   state?: TState;
   config?: TConfig;
-  children?: IDevice[];
+  children?: string[]; // Array of child device IDs
 }
 
 export type IDevices = Record<string, IDevice>;
@@ -35,17 +35,18 @@ export function createDevicesStore({
               const { devices } = message;
               // Remove unknown devices
               Object.keys(draft.devices).forEach((key) => {
-                if (!devices.find((d) => d.id === key)) {
+                if (!devices.find((d) => d.id === key) && !devices.some((d) => d.children?.find((c) => c.id === key))) {
                   delete draft.devices[key];
                 }
               });
 
-              // Add update devices
+              // Add update devices and their children
               devices.forEach((device) => {
                 const deviceDraft = draft.devices[device.id];
                 if (deviceDraft) {
                   // Update device
                   deviceDraft.type = device.type;
+                  deviceDraft.children = device.children?.map(c => c.id) || [];
                 } else {
                   // Add device
                   draft.devices[device.id] = {
@@ -53,9 +54,28 @@ export function createDevicesStore({
                     type: device.type,
                     state: undefined,
                     config: undefined,
-                    children: device.children || [],
+                    children: device.children?.map(c => c.id) || [],
                   };
                 }
+
+                // Add child devices to the store
+                device.children?.forEach((child) => {
+                  const childDraft = draft.devices[child.id];
+                  if (childDraft) {
+                    // Update child device
+                    childDraft.type = child.type;
+                    childDraft.children = child.children?.map(c => c.id) || [];
+                  } else {
+                    // Add child device
+                    draft.devices[child.id] = {
+                      id: child.id,
+                      type: child.type,
+                      state: undefined,
+                      config: undefined,
+                      children: child.children?.map(c => c.id) || [],
+                    };
+                  }
+                });
               });
             })
           );

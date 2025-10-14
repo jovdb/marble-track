@@ -1,6 +1,37 @@
-import { createMemo, createSignal, JSX, Show } from "solid-js";
+import { createMemo, createSignal, For, JSX, Show } from "solid-js";
 import styles from "./Device.module.css";
 import { useDevice } from "../../stores/Devices";
+
+interface ChildDeviceProps {
+  id: string;
+}
+
+function ChildDevice(props: ChildDeviceProps) {
+  const [device] = useDevice(props.id);
+
+  if (!device) {
+    return <div class={styles.device__error}>Child device {props.id} not found</div>;
+  }
+
+  // Simple rendering for child devices - just show basic info
+  return (
+    <div class={styles.device} style={{ "margin-bottom": "1rem", "border": "1px solid var(--color-border)" }}>
+      <div class={styles.device__header}>
+        <div class={styles["device__header-left"]}>
+          <h4 class={styles.device__title}>{(device.config as any)?.name || device.id}</h4>
+        </div>
+        <div class={styles["device__header-right"]}>
+          <span class={styles["device__type-badge"]}>{device.type}</span>
+        </div>
+      </div>
+      <div class={styles.device__content}>
+        <div class={styles.device__status}>
+          <span class={styles["device__status-text"]}>Status: Connected</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface DeviceProps {
   id: string;
@@ -97,13 +128,11 @@ export function Device(props: DeviceProps) {
       <div class={styles.device__content}>
         <Show when={!showChildren() && !showConfig()}>{props.children}</Show>
 
-        {/* {showChildren() && props.deviceState?.children?.length && (
+        {showChildren() && device()?.children?.length && (
           <div class={styles.device__children}>
-            <For each={props.deviceState.children}>
-              {(child: IDeviceState) => renderDeviceComponent(child)}
-            </For>
+            <For each={device()?.children}>{(childId) => <ChildDevice id={childId} />}</For>
           </div>
-        )} */}
+        )}
         <Show when={showConfig() && props.configComponent}>
           <div class={styles.device__children} id={configPanelId} role="region" aria-live="polite">
             {props.configComponent!(() => setShowConfig(false))}

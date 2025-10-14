@@ -361,40 +361,6 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
 }
 
 /**
- * Hook for subscribing to WebSocket messages
- * Automatically subscribes onMount and unsubscribes onCleanup
- *
- * @param callback Function to call when a message is received
- *
- * @example
- * ```tsx
- * function MyComponent() {
- *   const [messages, setMessages] = createSignal<string[]>([]);
- *
- *   useWebSocketMessage((rawMessage, parsedMessage) => {
- *     console.log("Received:", parsedMessage);
- *     if (parsedMessage?.type === "device-state") {
- *       setMessages(prev => [...prev, rawMessage]);
- *     }
- *   });
- *
- *   return <div>Messages: {messages().length}</div>;
- * }
- * ```
- */
-export function useWebSocketMessage(callback: MessageCallback): void {
-  const [, wsActions] = useWebSocket2();
-
-  onMount(() => {
-    const unsubscribe = wsActions.subscribe(callback);
-
-    onCleanup(() => {
-      unsubscribe();
-    });
-  });
-}
-
-/**
  * Hook for monitoring WebSocket heartbeat health
  * Returns a signal indicating if the connection is healthy based on heartbeat
  *

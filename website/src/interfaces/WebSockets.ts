@@ -27,6 +27,7 @@ interface _IWsSuccessResponse {
 export interface DeviceInfo {
   id: string;
   type: DeviceType;
+  children?: DeviceInfo[];
 }
 
 export interface NetworkInfo {

@@ -53,7 +53,7 @@ export function createDevicesStore({
                     type: device.type,
                     state: undefined,
                     config: undefined,
-                    // children: device.children || [],
+                    children: device.children || [],
                   };
                 }
               });

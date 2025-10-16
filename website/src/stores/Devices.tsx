@@ -14,7 +14,10 @@ export interface IDevice<
   type: string;
   state?: TState;
   config?: TConfig;
-  children?: string[]; // Array of child device IDs
+  children?: {
+    id: string;
+    type: string;
+  }[]; // Array of child device IDs
 }
 
 export type IDevices = Record<string, IDevice>;
@@ -35,7 +38,10 @@ export function createDevicesStore({
               const { devices } = message;
               // Remove unknown devices
               Object.keys(draft.devices).forEach((key) => {
-                if (!devices.find((d) => d.id === key) && !devices.some((d) => d.children?.find((c) => c.id === key))) {
+                if (
+                  !devices.find((d) => d.id === key) &&
+                  !devices.some((d) => d.children?.find((c) => c.id === key))
+                ) {
                   delete draft.devices[key];
                 }
               });
@@ -46,7 +52,7 @@ export function createDevicesStore({
                 if (deviceDraft) {
                   // Update device
                   deviceDraft.type = device.type;
-                  deviceDraft.children = device.children?.map(c => c.id) || [];
+                  deviceDraft.children = device.children || [];
                 } else {
                   // Add device
                   draft.devices[device.id] = {
@@ -54,7 +60,7 @@ export function createDevicesStore({
                     type: device.type,
                     state: undefined,
                     config: undefined,
-                    children: device.children?.map(c => c.id) || [],
+                    children: device.children || [],
                   };
                 }
 
@@ -64,7 +70,7 @@ export function createDevicesStore({
                   if (childDraft) {
                     // Update child device
                     childDraft.type = child.type;
-                    childDraft.children = child.children?.map(c => c.id) || [];
+                    childDraft.children = child.children || [];
                   } else {
                     // Add child device
                     draft.devices[child.id] = {
@@ -72,7 +78,7 @@ export function createDevicesStore({
                       type: child.type,
                       state: undefined,
                       config: undefined,
-                      children: child.children?.map(c => c.id) || [],
+                      children: child.children || [],
                     };
                   }
                 });

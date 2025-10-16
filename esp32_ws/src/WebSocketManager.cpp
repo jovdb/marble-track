@@ -59,12 +59,19 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
         {
             if (deviceList[i] != nullptr)
             {
+                // Skip devices that are single children (have exactly one child with no children)
+                auto children = deviceList[i]->getChildren();
+                bool isSingleChildDevice = (children.size() == 1) && (children[0]->getChildren().empty());
+                if (isSingleChildDevice)
+                {
+                    continue; // Skip this device, it will be included as a child of its parent
+                }
+
                 JsonObject deviceObj = devicesArray.add<JsonObject>();
                 deviceObj["id"] = deviceList[i]->getId();
                 deviceObj["type"] = deviceList[i]->getType();
 
                 // Temporary logging of children
-                auto children = deviceList[i]->getChildren();
                 MLOG_INFO("CHILDREN: %d", children.size());
                 if (!children.empty())
                 {

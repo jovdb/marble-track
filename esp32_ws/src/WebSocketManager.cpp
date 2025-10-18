@@ -5,6 +5,8 @@
 #include "Network.h"
 #include "NetworkSettings.h"
 #include "TimeManager.h"
+#include <vector>
+#include <map>
 
 // Static instance for callback access (simplified to single instance)
 static WebSocketManager *instance = nullptr;
@@ -55,6 +57,8 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
         // Create devices array in JSON
         JsonArray devicesArray = response["devices"].to<JsonArray>();
 
+        // Get top-level devices (excluding child-only devices)
+        std::vector<Device*> topLevelDevices;
         for (int i = 0; i < count; i++)
         {
             if (deviceList[i] != nullptr)
@@ -62,39 +66,75 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
                 // Skip devices that are single children (have exactly one child with no children)
                 auto children = deviceList[i]->getChildren();
                 bool isSingleChildDevice = (children.size() == 1) && (children[0]->getChildren().empty());
-                if (isSingleChildDevice)
+                if (!isSingleChildDevice)
                 {
-                    continue; // Skip this device, it will be included as a child of its parent
+                    topLevelDevices.push_back(deviceList[i]);
                 }
+            }
+        }
 
-                JsonObject deviceObj = devicesArray.add<JsonObject>();
-                deviceObj["id"] = deviceList[i]->getId();
-                deviceObj["type"] = deviceList[i]->getType();
+        // Sort devices according to custom order if available
+        std::vector<String> customOrder = deviceManager->getDeviceOrder();
+        if (!customOrder.empty())
+        {
+            // Create a map for quick lookup
+            std::map<String, Device*> deviceMap;
+            for (Device* device : topLevelDevices)
+            {
+                deviceMap[device->getId()] = device;
+            }
 
-                // Temporary logging of children
-                MLOG_INFO("CHILDREN: %d", children.size());
-                if (!children.empty())
+            // Reorder devices according to custom order
+            std::vector<Device*> orderedDevices;
+            for (const String& id : customOrder)
+            {
+                auto it = deviceMap.find(id);
+                if (it != deviceMap.end())
                 {
-                    MLOG_INFO("Device %s has %d children:", deviceList[i]->getId().c_str(), children.size());
-                    for (Device *child : children)
-                    {
-                        if (child)
-                        {
-                            MLOG_INFO("  Child: %s (%s)", child->getId().c_str(), child->getType().c_str());
-                        }
-                    }
+                    orderedDevices.push_back(it->second);
+                    deviceMap.erase(it);
                 }
+            }
 
-                // Add children array
-                JsonArray childrenArr = deviceObj["children"].to<JsonArray>();
-                for (Device *child : deviceList[i]->getChildren())
+            // Add any remaining devices not in the custom order
+            for (auto& pair : deviceMap)
+            {
+                orderedDevices.push_back(pair.second);
+            }
+
+            topLevelDevices = orderedDevices;
+        }
+
+        // Add devices to JSON response
+        for (Device* device : topLevelDevices)
+        {
+            JsonObject deviceObj = devicesArray.add<JsonObject>();
+            deviceObj["id"] = device->getId();
+            deviceObj["type"] = device->getType();
+
+            // Temporary logging of children
+            MLOG_INFO("CHILDREN: %d", device->getChildren().size());
+            if (!device->getChildren().empty())
+            {
+                MLOG_INFO("Device %s has %d children:", device->getId().c_str(), device->getChildren().size());
+                for (Device *child : device->getChildren())
                 {
                     if (child)
                     {
-                        JsonObject childObj = childrenArr.add<JsonObject>();
-                        childObj["id"] = child->getId();
-                        childObj["type"] = child->getType();
+                        MLOG_INFO("  Child: %s (%s)", child->getId().c_str(), child->getType().c_str());
                     }
+                }
+            }
+
+            // Add children array
+            JsonArray childrenArr = deviceObj["children"].to<JsonArray>();
+            for (Device *child : device->getChildren())
+            {
+                if (child)
+                {
+                    JsonObject childObj = childrenArr.add<JsonObject>();
+                    childObj["id"] = child->getId();
+                    childObj["type"] = child->getType();
                 }
             }
         }
@@ -213,6 +253,11 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
     if (type == "network-status")
     {
         handleGetNetworkStatus(doc);
+        return;
+    }
+    if (type == "set-device-order")
+    {
+        handleSetDeviceOrder(doc);
         return;
     }
 }
@@ -840,7 +885,57 @@ void WebSocketManager::broadcastState(const String &deviceId, const String &stat
     notifyClients(message);
 }
 
-// Types of responses:
-// Info requested
-// Event (Button clicked)
-// State change (Led on/blinking)
+void WebSocketManager::handleSetDeviceOrder(JsonDocument &doc)
+{
+    JsonDocument response;
+    response["type"] = "set-device-order";
+
+    if (!doc["deviceOrder"].is<JsonArray>())
+    {
+        response["error"] = "Missing or invalid deviceOrder array";
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
+        return;
+    }
+
+    if (!deviceManager)
+    {
+        response["error"] = "DeviceManager not available";
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
+        return;
+    }
+
+    JsonArray orderArray = doc["deviceOrder"];
+    std::vector<String> deviceOrder;
+
+    for (JsonVariant item : orderArray)
+    {
+        if (item.is<String>())
+        {
+            deviceOrder.push_back(item.as<String>());
+        }
+    }
+
+    if (deviceManager->setDeviceOrder(deviceOrder))
+    {
+        response["success"] = true;
+        deviceManager->saveDevicesToJsonFile();
+
+        // Broadcast updated device list to all clients
+        JsonDocument emptyDoc;
+        handleGetDevices(emptyDoc);
+    }
+    else
+    {
+        response["error"] = "Failed to set device order";
+    }
+
+    String respStr;
+    serializeJson(response, respStr);
+    notifyClients(respStr);
+
+    MLOG_INFO("Set device order with %d devices", deviceOrder.size());
+}

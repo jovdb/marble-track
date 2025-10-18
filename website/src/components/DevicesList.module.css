@@ -160,6 +160,32 @@
   gap: var(--spacing-3);
 }
 
+.devices-list__drag-handle {
+  background: none;
+  border: none;
+  cursor: grab;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  user-select: none;
+}
+
+.devices-list__drag-handle:hover {
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.devices-list__drag-handle:active {
+  cursor: grabbing;
+}
+
 .devices-list__type-badge {
   background-color: var(--color-primary-100);
   padding: var(--spacing-1) var(--spacing-3);

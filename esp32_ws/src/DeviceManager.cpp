@@ -249,6 +249,21 @@ void DeviceManager::loadDevicesFromJsonFile()
 
                 MLOG_INFO("Loaded %d devices from %s", loadedDevices.size(), CONFIG_FILE);
             }
+
+            // Load device order if it exists
+            if (rootObj["deviceOrder"].is<JsonArray>())
+            {
+                JsonArray orderArray = rootObj["deviceOrder"];
+                deviceOrder.clear();
+                for (JsonVariant item : orderArray)
+                {
+                    if (item.is<String>())
+                    {
+                        deviceOrder.push_back(item.as<String>());
+                    }
+                }
+                MLOG_INFO("Loaded device order with %d devices", deviceOrder.size());
+            }
             else
             {
                 MLOG_INFO("No devices array found in config file");
@@ -334,6 +349,17 @@ void DeviceManager::saveDevicesToJsonFile()
             {
                 deviceObj["config"] = configDoc.as<JsonObject>();
             }
+        }
+    }
+
+    // Save device order if it exists
+    if (!deviceOrder.empty())
+    {
+        rootObj.remove("deviceOrder");
+        JsonArray orderArray = rootObj["deviceOrder"].to<JsonArray>();
+        for (const String& id : deviceOrder)
+        {
+            orderArray.add(id);
         }
     }
 
@@ -726,4 +752,31 @@ bool DeviceManager::addDevice(const String &deviceType, const String &deviceId, 
 
     MLOG_INFO("Added device to array: %s (%s)", deviceId.c_str(), deviceType.c_str());
     return true;
+}
+
+bool DeviceManager::setDeviceOrder(const std::vector<String>& order)
+{
+    // Validate that all device IDs in the order exist
+    std::set<String> existingDeviceIds;
+    std::vector<Device*> allDevices = getAllDevices();
+    for (Device* device : allDevices) {
+        existingDeviceIds.insert(device->getId());
+    }
+
+    // Check that all IDs in the order exist
+    for (const String& id : order) {
+        if (existingDeviceIds.find(id) == existingDeviceIds.end()) {
+            MLOG_WARN("Device ID '%s' in order does not exist, ignoring setDeviceOrder", id.c_str());
+            return false;
+        }
+    }
+
+    deviceOrder = order;
+    MLOG_INFO("Set device order with %d devices", order.size());
+    return true;
+}
+
+std::vector<String> DeviceManager::getDeviceOrder() const
+{
+    return deviceOrder;
 }

@@ -139,9 +139,9 @@ export type IWsReceiveGetNetworkStatusMessage =
       status: NetworkStatus;
     });
 
-export type IWsReceiveDevicesConfigMessage =
-  | (IWsMessageBase<"devices-config"> & _IWsErrorResponse)
-  | (IWsMessageBase<"devices-config"> & { config: Record<string, unknown> });
+export type IWsReceiveSetDeviceOrderMessage =
+  | (IWsMessageBase<"set-device-order"> & _IWsErrorResponse)
+  | (IWsMessageBase<"set-device-order"> & _IWsSuccessResponse);
 
 export type IWsReceiveMessage =
   | IWsReceiveDevicesListMessage
@@ -156,6 +156,7 @@ export type IWsReceiveMessage =
   | IWsReceiveGetNetworksMessage
   | IWsReceiveGetNetworkStatusMessage
   | IWsReceiveDevicesConfigMessage
+  | IWsReceiveSetDeviceOrderMessage
   | IWsReceivePongMessage;
 
 export type IWsSendRestartMessage = IWsMessageBase<"restart">;
@@ -202,18 +203,23 @@ export type IWsSendGetNetworkConfigMessage = IWsMessageBase<"network-config">;
 
 export type IWsSendGetNetworksMessage = IWsMessageBase<"networks">;
 
+export type IWsSendGetNetworkStatusMessage = IWsMessageBase<"network-status">;
+
 export type IWsSendSetNetworkConfigMessage = IWsMessageBase<"set-network-config"> & {
   ssid: string;
   password: string;
 };
 
-export type IWsSendGetNetworkStatusMessage = IWsMessageBase<"network-status">;
+export type IWsSendSetDeviceOrderMessage = IWsMessageBase<"set-device-order"> & {
+  deviceOrder: string[];
+};
 
 export type IWsSendMessage =
   | IWsSendRestartMessage
   | IWsSendGetDevicesMessage
   | IWsSendGetDevicesConfigMessage
   | IWsSendSetDevicesConfigMessage
+  | IWsSendSetDeviceOrderMessage
   | IWsSendDeviceFunctionMessage
   | IWsSendDeviceGetStateMessage
   | IWsSendDeviceReadConfigMessage

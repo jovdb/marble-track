@@ -145,6 +145,14 @@ export function DevicesList() {
     }
   });
 
+  // Compute top-level devices (exclude devices that are children of other devices)
+  const topLevelDevices = () =>
+    Object.values(devicesState.devices).filter((device) => {
+      return !Object.values(devicesState.devices).some((other) =>
+        other.children?.some((child) => child.id === device.id)
+      );
+    });
+
   // Subscribe to WebSocket messages for config download
   const unsubscribe = socketActions.subscribe((message: IWsReceiveMessage) => {
     if (message.type === "devices-config" && "config" in message) {
@@ -188,7 +196,7 @@ export function DevicesList() {
                   </tr>
                 </thead>
                 <tbody class={styles["devices-list__table-body"]}>
-                  <For each={Object.values(devicesState.devices)}>
+                  <For each={topLevelDevices()}>
                     {(device) => (
                       <tr class={styles["devices-list__table-row"]}>
                         <td class={styles["devices-list__table-td"]}>

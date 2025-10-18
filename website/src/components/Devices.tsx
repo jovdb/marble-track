@@ -1,4 +1,4 @@
-import { For, onMount } from "solid-js";
+import { For, onMount, createMemo } from "solid-js";
 import { useWebSocket2 } from "../hooks/useWebSocket2";
 import { useDevices } from "../stores/Devices";
 import { Led } from "./devices/Led";
@@ -18,6 +18,15 @@ export function Devices() {
   const [webSocket] = useWebSocket2();
   const [devicesState, { loadDevices }] = useDevices();
 
+  // Compute top-level devices (exclude devices that are children of other devices)
+  const topLevelDevices = createMemo(() =>
+    Object.values(devicesState.devices).filter((device) => {
+      return !Object.values(devicesState.devices).some((other) =>
+        other.children?.some((child) => child.id === device.id)
+      );
+    })
+  );
+
   onMount(() => {
     // Request devices on mount
     if (webSocket.isConnected) {
@@ -27,16 +36,14 @@ export function Devices() {
 
   return (
     <div class={styles["app__devices-grid"]}>
-      {Object.values(devicesState.devices).length === 0 ? (
+      {topLevelDevices().length === 0 ? (
         <div class={styles["app__no-devices"]}>
           {webSocket.isConnected
             ? "No devices available for control"
             : "Connect to see available devices"}
         </div>
       ) : (
-        <For each={Object.values(devicesState.devices)}>
-          {(device) => renderDeviceComponent(device)}
-        </For>
+        <For each={topLevelDevices()}>{(device) => renderDeviceComponent(device)}</For>
       )}
     </div>
   );

@@ -196,7 +196,7 @@ void SerialConsole::handleCommand(const String &input)
     if (input.equalsIgnoreCase("config"))
     {
         Serial.println("📄 Configuration File:");
-        
+
         // Read config.json from LittleFS
         File file = LittleFS.open("/config.json", "r");
         if (!file)
@@ -457,16 +457,18 @@ void SerialConsole::logNetworkInfo()
     if (WiFi.status() == WL_CONNECTED)
     {
         Serial.printf("  ✅ WiFi: %s\n", WiFi.SSID().c_str());
+        Serial.printf("  🏠 IP  : http://%s\n", WiFi.localIP().toString().c_str());
+        String hostname = m_network->getHostname();
         if (m_network != nullptr)
         {
-            String hostname = m_network->getHostname();
-            Serial.printf("  🏠 mDNS: http://%s.local\n", hostname.c_str());
+            Serial.printf("  🌍 URL : http://%s.local\n", hostname.c_str());
+            Serial.printf("  🔗 WS  : ws://%s.local/ws\n", hostname.c_str());
         }
         else
         {
-            Serial.println("  🏠 mDNS: http://marble-track.local");
+            Serial.println("  🌍 URL : http://marble-track.local");
+            Serial.printf("  🔗 WS  : ws://marble-track.local/ws\n", hostname.c_str());
         }
-        Serial.printf("  🌍 Web: http://%s\n", WiFi.localIP().toString().c_str());
     }
     else
     {

@@ -19,7 +19,6 @@ private:
     Device *devices[MAX_DEVICES];
     int devicesCount;
     OnStateChange onStateChange;
-    std::vector<String> deviceOrder; // Custom order for device display
 
 public:
     /**
@@ -136,25 +135,12 @@ public:
     int getDeviceCount() const { return devicesCount; }
 
     /**
-     * @brief Set the custom order of devices for display
-     * @param deviceOrder Vector of device IDs in the desired order
-     * @return true if order was set successfully, false otherwise
-     */
-    bool setDeviceOrder(const std::vector<String>& deviceOrder);
-
-    /**
-     * @brief Get the current device order
-     * @return Vector of device IDs in current order
-     */
-    std::vector<String> getDeviceOrder() const;
-
-    /**
      * @brief Get all devices recursively (including children)
      * @return Vector of all devices
      */
     std::vector<Device*> getAllDevices();
 
-    void loadDevicesFromJsonFile();
+        void loadDevicesFromJsonFile();
     void saveDevicesToJsonFile();
 };
 

@@ -6,7 +6,6 @@ import { useWebSocket2 } from "../hooks/useWebSocket2";
 import {
   IWsSendAddDeviceMessage,
   IWsSendRemoveDeviceMessage,
-  IWsSendSetDeviceOrderMessage,
   IWsReceiveMessage,
   DeviceType,
 } from "../interfaces/WebSockets";
@@ -25,89 +24,6 @@ const DEVICE_TYPES = [
   "Wheel",
 ] as const;
 
-// Sortable device row component
-function SortableDeviceRow(props: {
-  device: any;
-  onRemove: (deviceId: string) => void;
-  onDragStart: (deviceId: string | null) => void;
-  onDragOver: (deviceId: string | null) => void;
-  onDrop: (deviceId: string) => void;
-  isDragged?: boolean;
-  isDragOver?: boolean;
-}) {
-  return (
-    <tr
-      class={styles["devices-list__table-row"]}
-      classList={{
-        [styles["devices-list__table-row--dragging"]]: props.isDragged,
-        [styles["devices-list__table-row--drag-over"]]: props.isDragOver,
-      }}
-      onDragOver={(e) => {
-        e.preventDefault();
-        props.onDragOver(props.device.id);
-      }}
-      onDragLeave={() => {
-        // Reset drag over state when leaving the row
-        props.onDragOver(null);
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        props.onDrop(props.device.id);
-      }}
-      onDragEnd={() => {
-        // Reset all drag state when drag ends
-        props.onDragStart(null);
-        props.onDragOver(null);
-      }}
-    >
-      <td class={styles["devices-list__table-td"]}>
-        <div class={styles["devices-list__device-cell"]}>
-          <button
-            class={styles["devices-list__drag-handle"]}
-            title="Drag to reorder"
-            aria-label={`Reorder device ${props.device.id}`}
-            draggable={true}
-            onDragStart={(e) => {
-              if (e.dataTransfer) {
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/plain', props.device.id);
-              }
-              props.onDragStart(props.device.id);
-            }}
-            onDragEnd={() => {
-              // Reset drag state will be handled by the parent component
-            }}
-          >
-            ⋮⋮
-          </button>
-          {getDeviceIcon(props.device.type, {
-            class: styles["devices-list__device-icon"],
-          })}
-        </div>
-      </td>
-      <td class={styles["devices-list__table-td"]}>
-        <span class={styles["devices-list__type-badge"]}>{props.device.type}</span>
-      </td>
-      <td class={styles["devices-list__table-td"]}>
-        <code class={styles["devices-list__device-id"]}>{props.device.id}</code>
-      </td>
-      <td
-        class={styles["devices-list__table-td"]}
-        style={{ "text-align": "right" }}
-      >
-        <button
-          class={styles["devices-list__remove-button"]}
-          onClick={() => props.onRemove(props.device.id)}
-          title="Remove device"
-          aria-label={`Remove device ${props.device.id}`}
-        >
-          <TrashIcon />
-        </button>
-      </td>
-    </tr>
-  );
-}
-
 export function DevicesList() {
   const [devicesState, { loadDevices }] = useDevices();
   const [socketState, socketActions] = useWebSocket2();
@@ -116,52 +32,6 @@ export function DevicesList() {
   const [showAddModal, setShowAddModal] = createSignal(false);
   const [newDeviceType, setNewDeviceType] = createSignal("");
   const [newDeviceId, setNewDeviceId] = createSignal("");
-
-  // Drag and drop state
-  const [draggedDeviceId, setDraggedDeviceId] = createSignal<string | null>(null);
-  const [dragOverDeviceId, setDragOverDeviceId] = createSignal<string | null>(null);
-
-  // Handle drag start
-  const handleDragStart = (deviceId: string | null) => {
-    setDraggedDeviceId(deviceId);
-  };
-
-  // Handle drag over
-  const handleDragOver = (deviceId: string | null) => {
-    setDragOverDeviceId(deviceId);
-  };
-
-  // Handle drop
-  const handleDrop = (targetDeviceId: string) => {
-    const draggedId = draggedDeviceId();
-    if (!draggedId || draggedId === targetDeviceId) {
-      setDraggedDeviceId(null);
-      setDragOverDeviceId(null);
-      return;
-    }
-
-    const oldIndex = topLevelDevices().findIndex((device) => device.id === draggedId);
-    const newIndex = topLevelDevices().findIndex((device) => device.id === targetDeviceId);
-
-    if (oldIndex !== -1 && newIndex !== -1) {
-      // Create new order by moving the item
-      const devices = topLevelDevices();
-      const reorderedDevices = [...devices];
-      const [removed] = reorderedDevices.splice(oldIndex, 1);
-      reorderedDevices.splice(newIndex, 0, removed);
-
-      // Send the new order to the ESP32
-      const orderMessage: IWsSendSetDeviceOrderMessage = {
-        type: "set-device-order",
-        deviceOrder: reorderedDevices.map((device) => device.id),
-      };
-
-      socketActions.sendMessage(orderMessage);
-    }
-
-    setDraggedDeviceId(null);
-    setDragOverDeviceId(null);
-  };
 
   // Download devices config handler
   const handleDownloadConfig = () => {
@@ -275,6 +145,14 @@ export function DevicesList() {
     }
   });
 
+  // Compute top-level devices (exclude devices that are children of other devices)
+  const topLevelDevices = () =>
+    Object.values(devicesState.devices).filter((device) => {
+      return !Object.values(devicesState.devices).some((other) =>
+        other.children?.some((child) => child.id === device.id)
+      );
+    });
+
   // Subscribe to WebSocket messages for config download
   const unsubscribe = socketActions.subscribe((message: IWsReceiveMessage) => {
     if (message.type === "devices-config" && "config" in message) {
@@ -292,14 +170,6 @@ export function DevicesList() {
       URL.revokeObjectURL(url);
     }
   });
-
-  // Compute top-level devices (exclude devices that are children of other devices)
-  const topLevelDevices = () =>
-    Object.values(devicesState.devices).filter((device) => {
-      return !Object.values(devicesState.devices).some((other) =>
-        other.children?.some((child) => child.id === device.id)
-      );
-    });
 
   onMount(() => {
     onCleanup(() => {
@@ -328,15 +198,34 @@ export function DevicesList() {
                 <tbody class={styles["devices-list__table-body"]}>
                   <For each={topLevelDevices()}>
                     {(device) => (
-                      <SortableDeviceRow
-                        device={device}
-                        onRemove={handleRemoveDevice}
-                        onDragStart={handleDragStart}
-                        onDragOver={handleDragOver}
-                        onDrop={handleDrop}
-                        isDragged={draggedDeviceId() === device.id}
-                        isDragOver={dragOverDeviceId() === device.id}
-                      />
+                      <tr class={styles["devices-list__table-row"]}>
+                        <td class={styles["devices-list__table-td"]}>
+                          <div class={styles["devices-list__device-cell"]}>
+                            {getDeviceIcon(device.type, {
+                              class: styles["devices-list__device-icon"],
+                            })}
+                          </div>
+                        </td>
+                        <td class={styles["devices-list__table-td"]}>
+                          <span class={styles["devices-list__type-badge"]}>{device.type}</span>
+                        </td>
+                        <td class={styles["devices-list__table-td"]}>
+                          <code class={styles["devices-list__device-id"]}>{device.id}</code>
+                        </td>
+                        <td
+                          class={styles["devices-list__table-td"]}
+                          style={{ "text-align": "right" }}
+                        >
+                          <button
+                            class={styles["devices-list__remove-button"]}
+                            onClick={() => handleRemoveDevice(device.id)}
+                            title="Remove device"
+                            aria-label={`Remove device ${device.id}`}
+                          >
+                            <TrashIcon />
+                          </button>
+                        </td>
+                      </tr>
                     )}
                   </For>
                 </tbody>

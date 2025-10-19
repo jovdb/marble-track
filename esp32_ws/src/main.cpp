@@ -144,16 +144,9 @@ void setup()
   // Load network settings from configuration
   NetworkSettings networkSettings = deviceManager.loadNetworkSettings();
 
-  // Use default settings if none found in config
-  if (!networkSettings.isValid())
-  {
-    MLOG_INFO("No network settings found in config, using defaults");
-    networkSettings = NetworkSettings("telenet-182FE", "cPQdRWmFx1eM");
-  }
-
   // Create network instance with loaded settings
   network = new Network(networkSettings);
-  
+
   // Now create SerialConsole after network is initialized
   serialConsole = new SerialConsole(deviceManager, network, currentMode);
 
@@ -201,7 +194,7 @@ void setup()
   }
 
   MLOG_INFO("Device management initialized - Total devices: %d", deviceManager.getDeviceCount());
-  
+
   // Now set the state change callback after everything is initialized using global function
   Device *deviceList[20];
   int count;
@@ -213,7 +206,7 @@ void setup()
       deviceList[i]->setOnStateChange(globalStateChangeCallback);
     }
   }
-  
+
   MLOG_INFO("State change broadcasting enabled");
 
   // Initialize in MANUAL mode
@@ -225,7 +218,8 @@ void setup()
 void loop()
 {
   // Check for serial input commands
-  if (serialConsole) {
+  if (serialConsole)
+  {
     serialConsole->loop();
   }
 

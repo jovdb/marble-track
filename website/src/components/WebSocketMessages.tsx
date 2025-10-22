@@ -158,6 +158,7 @@ const WebSocketMessages: Component = () => {
 
   const [messageTypeFilter, setMessageTypeFilter] = createSignal("");
   const [deviceIdFilter, setDeviceIdFilter] = createSignal("");
+  const [directionFilter, setDirectionFilter] = createSignal("all");
 
   // Auto-scroll state
   let scrollContainerRef: HTMLDivElement | undefined;
@@ -242,11 +243,13 @@ const WebSocketMessages: Component = () => {
     const messages = wsStore.lastMessages.map(parseMessage);
     const typeFilter = messageTypeFilter().toLowerCase().trim();
     const deviceFilter = deviceIdFilter().trim();
+    const dirFilter = directionFilter();
 
     return messages.filter((msg) => {
       const typeMatch = !typeFilter || msg.type.toLowerCase().includes(typeFilter);
       const deviceMatch = !deviceFilter || msg.deviceId === deviceFilter;
-      return typeMatch && deviceMatch;
+      const directionMatch = dirFilter === "all" || msg.direction === dirFilter;
+      return typeMatch && deviceMatch && directionMatch;
     });
   });
 
@@ -286,6 +289,22 @@ const WebSocketMessages: Component = () => {
               <For each={deviceOptions()}>
                 {(deviceId) => <option value={deviceId}>{deviceId}</option>}
               </For>
+            </select>
+          </div>
+
+          <div class={styles["websocket-messages__filter-group"]}>
+            <label class={styles["websocket-messages__filter-label"]} for="direction-filter">
+              Direction:
+            </label>
+            <select
+              id="direction-filter"
+              class={styles["websocket-messages__filter-select"]}
+              value={directionFilter()}
+              onChange={(e) => setDirectionFilter(e.currentTarget.value)}
+            >
+              <option value="all">All</option>
+              <option value="incoming">Incoming</option>
+              <option value="outgoing">Outgoing</option>
             </select>
           </div>
         </div>

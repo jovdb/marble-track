@@ -61,7 +61,9 @@ export function Wheel(props: { id: string }) {
   return (
     <Device
       id={props.id}
-      configComponent={(onClose) => <WheelConfig id={props.id} onClose={onClose} />}
+      configComponent={(onClose) => (
+        <WheelConfig device={device()} actions={actions} onClose={onClose} />
+      )}
     >
       <div style={{ "max-width": "300px", margin: "0 auto" }}>
         <svg class={styles.svg} viewBox="0 0 100 100" style={{ "max-width": "300px" }}>

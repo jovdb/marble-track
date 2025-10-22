@@ -114,7 +114,7 @@ export function createDevicesStore({
             produce((draft) => {
               const draftDevice = draft.devices[message.deviceId];
               if (draftDevice) {
-                draftDevice.config = message.config;
+                draftDevice.config = message.config ?? {};
               }
             })
           );

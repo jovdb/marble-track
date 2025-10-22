@@ -1,20 +1,19 @@
 import styles from "./Device.module.css";
 import wheelStyles from "./WheelConfig.module.css";
-import { useWheel, IWheelConfig } from "../../stores/Wheel";
+import { IWheelConfig } from "../../stores/Wheel";
 import { createMemo, For, onMount, createSignal } from "solid-js";
 import DeviceConfig from "./DeviceConfig";
 import { useDevice } from "../../stores/Devices";
 
-export function WheelConfig(props: { id: string; onClose: () => void }) {
-  const wheelStore = useWheel(props.id);
-  const device = () => wheelStore[0];
-  const actions = wheelStore[1];
+export function WheelConfig(props: { device: any; actions: any; onClose: () => void }) {
+  const device = () => props.device;
+  const actions = props.actions;
 
   const config = () => device()?.config;
   // TODO: Handle error state - might need to be added to device state
   const error = () => undefined; // Placeholder until error handling is implemented
 
-  const [stepperDevice, { sendMessage }] = useDevice(`${props.id}-stepper`);
+  const [stepperDevice, { sendMessage }] = useDevice(`${device()?.id}-stepper`);
   const currentPosition = createMemo(() => (stepperDevice?.state as any)?.currentPosition);
   const [deviceName, setDeviceName] = createSignal("");
 
@@ -24,7 +23,7 @@ export function WheelConfig(props: { id: string; onClose: () => void }) {
 
   const moveSteps = (steps: number) => {
     // For now, assume the stepper device ID is wheelId + "-stepper"
-    const stepperDeviceId = `${props.id}-stepper`;
+    const stepperDeviceId = `${device()?.id}-stepper`;
 
     sendMessage({
       type: "device-fn",
@@ -42,7 +41,7 @@ export function WheelConfig(props: { id: string; onClose: () => void }) {
     if (currentConfig) {
       const updatedConfig = {
         ...currentConfig,
-        name: deviceName() || currentConfig.name || props.id,
+        name: deviceName() || currentConfig.name || device()?.id,
       };
       actions.setDeviceConfig(updatedConfig);
     }
@@ -58,9 +57,9 @@ export function WheelConfig(props: { id: string; onClose: () => void }) {
   });
 
   return (
-    <DeviceConfig id={props.id} onSave={handleSave} onClose={props.onClose}>
+    <DeviceConfig device={device()} onSave={handleSave} onClose={props.onClose}>
       <div style={{ "margin-bottom": "1em" }}>
-        <label style={{ display: "block", "margin-bottom": "0.5em" }}>Device Name:</label>
+        <label style={{ display: "block", "margin-bottom": "0.5em" }}>Name:</label>
         <input
           type="text"
           value={deviceName()}

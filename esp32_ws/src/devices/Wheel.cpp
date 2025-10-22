@@ -149,7 +149,13 @@ String Wheel::getConfig() const
     {
         doc[kv.key()] = kv.value();
     }
-    // Add wheel-specific config if any
+    // Add wheel-specific config
+    doc["name"] = _name;
+    JsonArray arr = doc["breakPoints"].to<JsonArray>();
+    for (long bp : _breakPoints)
+    {
+        arr.add(bp);
+    }
     String result;
     serializeJson(doc, result);
     return result;
@@ -159,5 +165,29 @@ void Wheel::setConfig(JsonObject *config)
 {
     Device::setConfig(config);
 
-    // Handle wheel-specific config here if needed
+    if (!config)
+    {
+        MLOG_WARN("Wheel [%s]: Null config provided", getId().c_str());
+        return;
+    }
+
+    // Set name if provided
+    if ((*config)["name"].is<String>())
+    {
+        _name = (*config)["name"].as<String>();
+    }
+
+    // Set breakPoints if provided
+    if ((*config)["breakPoints"].is<JsonArray>())
+    {
+        _breakPoints.clear();
+        JsonArray arr = (*config)["breakPoints"];
+        for (JsonVariant v : arr)
+        {
+            if (v.is<long>())
+            {
+                _breakPoints.push_back(v.as<long>());
+            }
+        }
+    }
 }

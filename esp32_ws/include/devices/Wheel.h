@@ -35,6 +35,7 @@ private:
     wheelState _state;
     /* -1 = CCW, 1 = CW */
     byte _direction = -1;
+    std::vector<long> _breakPoints;
 };
 
 #endif // WHEEL_H

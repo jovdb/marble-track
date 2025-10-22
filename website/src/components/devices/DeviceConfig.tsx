@@ -13,7 +13,7 @@ export default function DeviceConfig(props: DeviceConfigProps) {
   const [error, setError] = createSignal<string | null>(null);
 
   const deviceData = () => props.device;
-  const isLoading = () => !deviceData()?.config;
+  const isLoading = () => deviceData()?.config === undefined;
   const deviceName = () =>
     ((deviceData()?.config as Record<string, unknown>)?.name as string) ||
     deviceData()?.id ||

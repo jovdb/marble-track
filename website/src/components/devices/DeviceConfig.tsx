@@ -1,9 +1,8 @@
 import { JSX, onMount, createSignal, Show } from "solid-js";
-import { useDevice } from "../../stores/Devices";
 import styles from "./DeviceConfig.module.css";
 
 interface DeviceConfigProps {
-  id: string;
+  device?: { id: string; config?: Record<string, unknown> };
   onSave: () => void;
   onClose?: () => void;
   children?: JSX.Element | JSX.Element[];
@@ -11,10 +10,9 @@ interface DeviceConfigProps {
 }
 
 export default function DeviceConfig(props: DeviceConfigProps) {
-  const [device] = useDevice(props.id);
   const [error, setError] = createSignal<string | null>(null);
 
-  const deviceData = () => device;
+  const deviceData = () => props.device;
   const isLoading = () => !deviceData()?.config;
   const deviceName = () =>
     ((deviceData()?.config as Record<string, unknown>)?.name as string) ||
@@ -22,7 +20,7 @@ export default function DeviceConfig(props: DeviceConfigProps) {
     "Device";
 
   onMount(() => {
-    // Config is fetched automatically by useDevice
+    // Config is fetched by the parent component
   });
 
   const handleSubmit = (event: Event) => {

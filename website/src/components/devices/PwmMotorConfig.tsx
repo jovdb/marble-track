@@ -49,7 +49,7 @@ export default function PwmMotorConfig(props: PwmMotorConfigProps) {
 
   return (
     <DeviceConfig
-      id={props.id}
+      device={device()}
       onSave={() =>
         actions.setDeviceConfig({
           name: name()?.trim() || device()?.id,

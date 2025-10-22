@@ -38,7 +38,7 @@ export default function LedConfig(props: LedConfigProps) {
 
   return (
     <DeviceConfig
-      id={props.id}
+      device={device}
       onSave={() => {
         setDeviceConfig({
           name: name(),

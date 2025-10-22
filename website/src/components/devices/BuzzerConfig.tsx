@@ -29,7 +29,7 @@ export default function BuzzerConfig(props: BuzzerConfigProps) {
 
   return (
     <DeviceConfig
-      id={props.id}
+      device={device}
       onSave={() =>
         setDeviceConfig({
           name: name(),

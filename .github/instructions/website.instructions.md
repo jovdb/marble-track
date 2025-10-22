@@ -47,6 +47,7 @@ This is the frontend web application for the marble track system. It is built wi
 ## Best Practices
 
 - Keep readme and instructions up to date.
+- Always run `npm run fix` after a website change
 
 ## Testing
 

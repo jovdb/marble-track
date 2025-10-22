@@ -47,7 +47,7 @@ export function WheelConfig(props: { id: string; onClose: () => void }) {
   const currentConfig = createMemo(() => config());
   createMemo(() => {
     const cfg = currentConfig();
-    if (cfg && typeof cfg.name === 'string' && !deviceName()) {
+    if (cfg && typeof cfg.name === "string" && !deviceName()) {
       setDeviceName(cfg.name);
     }
   });

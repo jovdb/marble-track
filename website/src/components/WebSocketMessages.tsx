@@ -1,7 +1,7 @@
 import { type Component, For, createSignal, createMemo } from "solid-js";
-import { useWebSocket2 } from "../hooks/useWebSocket2";
+import { useWebSocket2, IWebSocketMessage } from "../hooks/useWebSocket2";
 import { useDevices } from "../stores/Devices";
-import { MessageIcon } from "./icons/Icons";
+import { IncomingMessageIcon, OutgoingMessageIcon, MessageIcon } from "./icons/Icons";
 import styles from "./WebSocketMessages.module.css";
 
 // JSON Tree Component
@@ -89,7 +89,9 @@ const JsonTree: Component<{ data: any; level?: number }> = (props) => {
 };
 
 // Expandable Message Component
-const ExpandableMessage: Component<{ message: string }> = (props) => {
+const ExpandableMessage: Component<{ message: string; direction: "incoming" | "outgoing" }> = (
+  props
+) => {
   const [isExpanded, setIsExpanded] = createSignal(false);
 
   const parsedData = createMemo(() => {
@@ -102,19 +104,29 @@ const ExpandableMessage: Component<{ message: string }> = (props) => {
 
   const isJsonMessage = () => parsedData() !== null;
 
+  const getTooltipText = () => {
+    const directionText = props.direction === 'incoming' ? 'Incoming' : 'Outgoing';
+    const jsonText = isJsonMessage()
+      ? isExpanded()
+        ? ' - Click to collapse JSON'
+        : ' - Click to expand JSON'
+      : '';
+
+    return `${directionText} message${jsonText}`;
+  };
+
   return (
     <div class={styles["websocket-messages__message"]}>
       <div
         class={`${styles["websocket-messages__message-header"]} ${isJsonMessage() ? styles["websocket-messages__message-header--clickable"] : ""}`}
         onClick={() => isJsonMessage() && setIsExpanded(!isExpanded())}
-        title={
-          isJsonMessage()
-            ? isExpanded()
-              ? "Click to collapse JSON"
-              : "Click to expand JSON"
-            : undefined
-        }
+        title={getTooltipText()}
       >
+        {props.direction === "incoming" ? (
+          <IncomingMessageIcon class={styles["websocket-messages__message-icon"]} />
+        ) : (
+          <OutgoingMessageIcon class={styles["websocket-messages__message-icon"]} />
+        )}
         <span class={styles["websocket-messages__message-text"]}>{props.message}</span>
       </div>
 
@@ -138,17 +150,35 @@ const WebSocketMessages: Component = () => {
   const parseMessage = (message: string) => {
     try {
       const parsed = JSON.parse(message);
-      return {
-        raw: message,
-        type: parsed.type || "",
-        deviceId: parsed.deviceId || "",
-        parsed,
-      };
+      // Check if this is our new message format with direction
+      if (parsed.data && parsed.direction && parsed.timestamp) {
+        const innerParsed = JSON.parse(parsed.data);
+        return {
+          raw: parsed.data,
+          type: innerParsed.type || "",
+          deviceId: innerParsed.deviceId || "",
+          direction: parsed.direction,
+          timestamp: parsed.timestamp,
+          parsed: innerParsed,
+        };
+      } else {
+        // Legacy format - assume incoming
+        return {
+          raw: message,
+          type: parsed.type || "",
+          deviceId: parsed.deviceId || "",
+          direction: "incoming" as const,
+          timestamp: Date.now(),
+          parsed,
+        };
+      }
     } catch {
       return {
         raw: message,
         type: "",
         deviceId: "",
+        direction: "incoming" as const,
+        timestamp: Date.now(),
         parsed: null,
       };
     }
@@ -219,7 +249,9 @@ const WebSocketMessages: Component = () => {
         ) : (
           <div class={styles["websocket-messages__list"]}>
             <For each={filteredMessages().slice().reverse()}>
-              {(message) => <ExpandableMessage message={message.raw} />}
+              {(message) => (
+                <ExpandableMessage message={message.raw} direction={message.direction} />
+              )}
             </For>
           </div>
         )}

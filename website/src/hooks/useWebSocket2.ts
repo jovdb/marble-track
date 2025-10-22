@@ -32,6 +32,13 @@ export interface IWebSocketStore {
   isHeartbeatEnabled: boolean;
 }
 
+// Message with direction type
+export interface IWebSocketMessage {
+  data: string;
+  direction: "incoming" | "outgoing";
+  timestamp: number;
+}
+
 // Message callback type
 export type MessageCallback = (message: IWsReceiveMessage) => void;
 
@@ -271,8 +278,13 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
     }
 
     // Update message history for non-heartbeat messages
+    const message: IWebSocketMessage = {
+      data,
+      direction: "incoming",
+      timestamp: Date.now(),
+    };
     setStore("lastMessage", data);
-    setStore("lastMessages", (prev) => [...prev, data].slice(-20)); // Keep only last 20 messages
+    setStore("lastMessages", (prev) => [...prev, JSON.stringify(message)].slice(-20)); // Keep only last 20 messages
 
     console.log("WebSocket message received:", data);
 
@@ -305,8 +317,18 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
 
   const sendMessage = (message: IWsSendMessage): boolean => {
     if (websocket.readyState === WebSocket.OPEN) {
+      const messageData = JSON.stringify(message);
       console.debug("WebSocket message sent:", message);
-      websocket.send(JSON.stringify(message));
+      websocket.send(messageData);
+
+      // Add outgoing message to history
+      const outgoingMessage: IWebSocketMessage = {
+        data: messageData,
+        direction: "outgoing",
+        timestamp: Date.now(),
+      };
+      setStore("lastMessages", (prev) => [...prev, JSON.stringify(outgoingMessage)].slice(-20));
+
       return true;
     } else {
       console.error("WebSocket is not open, cannot send message:", message);

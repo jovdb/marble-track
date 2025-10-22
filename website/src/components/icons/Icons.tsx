@@ -115,6 +115,40 @@ export const MessageIcon = (props: IconProps) => (
   </svg>
 );
 
+export const IncomingMessageIcon = (props: IconProps) => (
+  <svg
+    width={props.width || 20}
+    height={props.height || 20}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class={props.class}
+    style={props.style}
+  >
+    <path d="M9 18l6-6-6-6" />
+  </svg>
+);
+
+export const OutgoingMessageIcon = (props: IconProps) => (
+  <svg
+    width={props.width || 20}
+    height={props.height || 20}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class={props.class}
+    style={props.style}
+  >
+    <path d="M15 18l-6-6 6-6" />
+  </svg>
+);
+
 export const DotsIcon = (props: IconProps) => (
   <img
     src={dotsIcon}

@@ -164,9 +164,17 @@
 
 .websocket-messages__message-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: flex-start;
   gap: var(--spacing-2);
+}
+
+.websocket-messages__message-icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  color: var(--color-text-secondary);
 }
 
 .websocket-messages__message-header--clickable {

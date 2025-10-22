@@ -1,7 +1,7 @@
 import styles from "./Device.module.css";
 import wheelStyles from "./WheelConfig.module.css";
 import { createWheelStore, IWheelConfig } from "../../stores/Wheel";
-import { createMemo, For, onMount } from "solid-js";
+import { createMemo, For, onMount, createSignal } from "solid-js";
 import DeviceConfig from "./DeviceConfig";
 import { useDevice } from "../../stores/Devices";
 
@@ -11,6 +11,7 @@ export function WheelConfig(props: { id: string; onClose: () => void }) {
   const { error, calibrate, config, saveConfig, loadConfig } = createWheelStore(props.id);
   const [stepperDevice, { sendMessage }] = useDevice(`${props.id}-stepper`);
   const currentPosition = createMemo(() => (stepperDevice?.state as any)?.currentPosition);
+  const [deviceName, setDeviceName] = createSignal("");
 
   onMount(() => {
     loadConfig();
@@ -31,8 +32,37 @@ export function WheelConfig(props: { id: string; onClose: () => void }) {
     });
   };
 
+  const handleSave = () => {
+    const currentConfig = config();
+    if (currentConfig) {
+      const updatedConfig = {
+        ...currentConfig,
+        name: deviceName() || currentConfig.name || props.id,
+      };
+      saveConfig(updatedConfig);
+    }
+  };
+
+  // Update device name when config loads
+  const currentConfig = createMemo(() => config());
+  createMemo(() => {
+    const cfg = currentConfig();
+    if (cfg && typeof cfg.name === 'string' && !deviceName()) {
+      setDeviceName(cfg.name);
+    }
+  });
+
   return (
-    <DeviceConfig id={props.id} onSave={() => alert(`TODO: save`)} onClose={props.onClose}>
+    <DeviceConfig id={props.id} onSave={handleSave} onClose={props.onClose}>
+      <div style={{ "margin-bottom": "1em" }}>
+        <label style={{ display: "block", "margin-bottom": "0.5em" }}>Device Name:</label>
+        <input
+          type="text"
+          value={deviceName()}
+          onInput={(e) => setDeviceName(e.currentTarget.value)}
+          style={{ width: "100%", padding: "0.5em", "font-size": "1em" }}
+        />
+      </div>
       <button
         class={styles.device__button}
         onClick={() => {

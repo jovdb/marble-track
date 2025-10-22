@@ -123,3 +123,26 @@ String DividerWheel::getState()
     serializeJson(doc, result);
     return result;
 }
+
+String DividerWheel::getConfig() const
+{
+    JsonDocument doc;
+    // Copy base Device config fields
+    JsonDocument baseDoc;
+    deserializeJson(baseDoc, Device::getConfig());
+    for (JsonPair kv : baseDoc.as<JsonObject>())
+    {
+        doc[kv.key()] = kv.value();
+    }
+    // Add divider wheel-specific config if any
+    String result;
+    serializeJson(doc, result);
+    return result;
+}
+
+void DividerWheel::setConfig(JsonObject *config)
+{
+    Device::setConfig(config);
+
+    // Handle divider wheel-specific config here if needed
+}

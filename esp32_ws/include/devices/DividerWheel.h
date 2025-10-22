@@ -23,6 +23,8 @@ public:
     void calibrate();
     bool control(const String &action, JsonObject *payload);
     String getState() override;
+    String getConfig() const override;
+    void setConfig(JsonObject *config) override;
 
 public:
     enum CalibrationState { NO, YES, FAILED };

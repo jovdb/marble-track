@@ -22,6 +22,8 @@ public:
     Wheel(const String &id);
     void setup() override;
     String getState() override;
+    String getConfig() const override;
+    void setConfig(JsonObject *config) override;
     void loop() override;
     bool control(const String &action, JsonObject *payload = nullptr) override;
     bool move(long steps);

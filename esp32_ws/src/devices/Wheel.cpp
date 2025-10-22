@@ -138,3 +138,26 @@ String Wheel::getState()
     serializeJson(doc, result);
     return result;
 }
+
+String Wheel::getConfig() const
+{
+    JsonDocument doc;
+    // Copy base Device config fields
+    JsonDocument baseDoc;
+    deserializeJson(baseDoc, Device::getConfig());
+    for (JsonPair kv : baseDoc.as<JsonObject>())
+    {
+        doc[kv.key()] = kv.value();
+    }
+    // Add wheel-specific config if any
+    String result;
+    serializeJson(doc, result);
+    return result;
+}
+
+void Wheel::setConfig(JsonObject *config)
+{
+    Device::setConfig(config);
+
+    // Handle wheel-specific config here if needed
+}

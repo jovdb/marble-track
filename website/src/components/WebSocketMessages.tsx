@@ -1,5 +1,5 @@
-import { type Component, For, createSignal, createMemo } from "solid-js";
-import { useWebSocket2, IWebSocketMessage } from "../hooks/useWebSocket2";
+import { type Component, For, createSignal, createMemo, createEffect, onMount } from "solid-js";
+import { useWebSocket2 } from "../hooks/useWebSocket2";
 import { useDevices } from "../stores/Devices";
 import { IncomingMessageIcon, OutgoingMessageIcon, MessageIcon } from "./icons/Icons";
 import styles from "./WebSocketMessages.module.css";
@@ -105,12 +105,12 @@ const ExpandableMessage: Component<{ message: string; direction: "incoming" | "o
   const isJsonMessage = () => parsedData() !== null;
 
   const getTooltipText = () => {
-    const directionText = props.direction === 'incoming' ? 'Incoming' : 'Outgoing';
+    const directionText = props.direction === "incoming" ? "Incoming" : "Outgoing";
     const jsonText = isJsonMessage()
       ? isExpanded()
-        ? ' - Click to collapse JSON'
-        : ' - Click to expand JSON'
-      : '';
+        ? " - Click to collapse JSON"
+        : " - Click to expand JSON"
+      : "";
 
     return `${directionText} message${jsonText}`;
   };
@@ -145,6 +145,46 @@ const WebSocketMessages: Component = () => {
 
   const [messageTypeFilter, setMessageTypeFilter] = createSignal("");
   const [deviceIdFilter, setDeviceIdFilter] = createSignal("");
+
+  // Auto-scroll state
+  let scrollContainerRef: HTMLDivElement | undefined;
+  const [shouldAutoScroll, setShouldAutoScroll] = createSignal(true);
+
+  // Handle scroll events to detect if user is at bottom
+  const handleScroll = () => {
+    if (!scrollContainerRef) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef;
+    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10; // 10px tolerance
+
+    if (isAtBottom) {
+      setShouldAutoScroll(true);
+    } else {
+      setShouldAutoScroll(false);
+    }
+  };
+
+  // Auto-scroll to bottom when new messages arrive and user is at bottom
+  createEffect(() => {
+    // Watch for changes in filtered messages
+    const messages = filteredMessages();
+
+    if (shouldAutoScroll() && scrollContainerRef && messages.length > 0) {
+      // Use setTimeout to ensure DOM has updated
+      setTimeout(() => {
+        if (scrollContainerRef) {
+          scrollContainerRef.scrollTop = scrollContainerRef.scrollHeight;
+        }
+      }, 0);
+    }
+  });
+
+  // Set up scroll event listener
+  onMount(() => {
+    if (scrollContainerRef) {
+      scrollContainerRef.addEventListener("scroll", handleScroll);
+    }
+  });
 
   // Parse messages to extract deviceId and type
   const parseMessage = (message: string) => {
@@ -240,7 +280,7 @@ const WebSocketMessages: Component = () => {
         <button onClick={() => wsActions.clearMessages()}>Clear Messages</button>
       </div>
 
-      <div class={styles["websocket-messages__scrollable-content"]}>
+      <div ref={scrollContainerRef} class={styles["websocket-messages__scrollable-content"]}>
         {filteredMessages().length === 0 ? (
           <div class={styles["websocket-messages__empty"]}>
             <MessageIcon class={styles["websocket-messages__empty-icon"]} />
@@ -248,7 +288,7 @@ const WebSocketMessages: Component = () => {
           </div>
         ) : (
           <div class={styles["websocket-messages__list"]}>
-            <For each={filteredMessages().slice().reverse()}>
+            <For each={filteredMessages()}>
               {(message) => (
                 <ExpandableMessage message={message.raw} direction={message.direction} />
               )}

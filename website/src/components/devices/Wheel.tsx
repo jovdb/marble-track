@@ -1,15 +1,20 @@
 import { Device } from "./Device";
-import { createMemo, createSignal, onCleanup } from "solid-js";
+import { createSignal, onCleanup } from "solid-js";
 import styles from "./Device.module.css";
 import { WheelConfig } from "./WheelConfig";
-import { createWheelStore } from "../../stores/Wheel";
+import { useWheel } from "../../stores/Wheel";
 
 export function Wheel(props: { id: string }) {
-  const { state, error, nextBreakpoint, calibrate, getChildStateByType } = createWheelStore(
-    props.id
-  );
+  const wheelStore = useWheel(props.id);
+  const device = () => wheelStore[0];
+  const actions = wheelStore[1];
 
-  const currentPosition = createMemo(() => getChildStateByType("stepper")()?.currentPosition);
+  const state = () => device()?.state;
+  // TODO: Handle error state - might need to be added to device state
+  const error = () => undefined; // Placeholder until error handling is implemented
+
+  // TODO: Get child stepper position - need to access child devices
+  const currentPosition = () => undefined; // Placeholder
   const [steps] = createSignal<undefined | number>(undefined);
   const [direction, setDirection] = createSignal<-1 | 0 | 1>(0);
   const [uiAngle, setUiAngle] = createSignal<undefined | number>(undefined);
@@ -17,12 +22,12 @@ export function Wheel(props: { id: string }) {
   let lastTime: number | null = null;
 
   const onNextClicked = () => {
-    nextBreakpoint();
+    actions.nextBreakpoint();
   };
 
   const onCalibrateClicked = () => {
     lastTime = null;
-    calibrate();
+    actions.calibrate();
   };
 
   setDirection(state()?.state === "CALIBRATING" ? -1 : 0);

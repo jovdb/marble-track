@@ -1,6 +1,5 @@
-import { createDeviceStore, IDeviceConfig, IDeviceState } from "./Device";
-import { sendMessage } from "../hooks/useWebSocket";
-import { IWsDeviceMessage } from "../interfaces/WebSockets";
+import { IDeviceConfig, IDeviceState } from "./Device";
+import { useDevice } from "./Devices";
 
 const deviceType = "wheel";
 export interface IWheelState extends IDeviceState {
@@ -14,32 +13,33 @@ export interface IWheelConfig extends IDeviceConfig {
   [key: string]: unknown;
 }
 
-export function calibrateWheel(deviceId: string) {
-  sendMessage({
-    type: "device-fn",
-    deviceType,
-    deviceId,
-    fn: "calibrate",
-  } as IWsDeviceMessage);
-}
+export function useWheel(deviceId: string) {
+  const [device, { sendMessage, ...actions }] = useDevice<IWheelState, IWheelConfig>(deviceId);
 
-export function nextBreakpoint(deviceId: string) {
-  sendMessage({
-    type: "device-fn",
-    deviceType,
-    deviceId,
-    fn: "next-breakpoint",
-  } as IWsDeviceMessage);
-}
+  const calibrate = () =>
+    sendMessage({
+      type: "device-fn",
+      deviceId,
+      deviceType,
+      fn: "calibrate",
+    });
 
-export function createWheelStore(deviceId: string) {
-  const base = createDeviceStore(deviceId, deviceType);
+  const nextBreakpoint = () =>
+    sendMessage({
+      type: "device-fn",
+      deviceId,
+      deviceType,
+      fn: "next-breakpoint",
+    });
 
-  return {
-    ...base,
-    calibrate: () => calibrateWheel(deviceId),
-    nextBreakpoint: () => nextBreakpoint(deviceId),
-  };
+  return [
+    device,
+    {
+      ...actions,
+      calibrate,
+      nextBreakpoint,
+    },
+  ] as const;
 }
 
 declare global {

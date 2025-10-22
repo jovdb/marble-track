@@ -3,11 +3,17 @@ import { debounce } from "@solid-primitives/scheduled";
 import { createSignal } from "solid-js";
 import deviceStyles from "./Device.module.css";
 import servoStyles from "./Servo.module.css";
-import { createServoStore } from "../../stores/Servo";
+import { useServo } from "../../stores/Servo";
 import { ServoIcon } from "../icons/Icons";
 
 export function Servo(props: { id: string }) {
-  const { state, error, stop, setAngle } = createServoStore(props.id);
+  const servoStore = useServo(props.id);
+  const device = () => servoStore[0];
+  const actions = servoStore[1];
+
+  const state = () => device()?.state;
+  // TODO: Handle error state - might need to be added to device state
+  const error = () => undefined; // Placeholder until error handling is implemented
   const [currentSpeed, setCurrentSpeed] = createSignal(60);
 
   return (
@@ -32,7 +38,7 @@ export function Servo(props: { id: string }) {
               <button
                 class={`${deviceStyles.device__button} ${deviceStyles["device__button--danger"]}`}
                 onClick={() => {
-                  stop();
+                  actions.stop();
                 }}
                 style={{ "margin-left": "auto" }}
               >
@@ -53,7 +59,11 @@ export function Servo(props: { id: string }) {
               value={state()?.angle || 90}
               onInput={(e) =>
                 debounce(
-                  () => setAngle({ angle: Number(e.currentTarget.value), speed: currentSpeed() }),
+                  () =>
+                    actions.setAngle({
+                      angle: Number(e.currentTarget.value),
+                      speed: currentSpeed(),
+                    }),
                   100
                 )
               }
@@ -61,31 +71,31 @@ export function Servo(props: { id: string }) {
             <div class={deviceStyles.device__controls}>
               <button
                 class={deviceStyles.device__button}
-                onClick={() => setAngle({ angle: 0, speed: currentSpeed() })}
+                onClick={() => actions.setAngle({ angle: 0, speed: currentSpeed() })}
               >
                 0°
               </button>
               <button
                 class={deviceStyles.device__button}
-                onClick={() => setAngle({ angle: 45, speed: currentSpeed() })}
+                onClick={() => actions.setAngle({ angle: 45, speed: currentSpeed() })}
               >
                 45°
               </button>
               <button
                 class={deviceStyles.device__button}
-                onClick={() => setAngle({ angle: 90, speed: currentSpeed() })}
+                onClick={() => actions.setAngle({ angle: 90, speed: currentSpeed() })}
               >
                 90°
               </button>
               <button
                 class={deviceStyles.device__button}
-                onClick={() => setAngle({ angle: 135, speed: currentSpeed() })}
+                onClick={() => actions.setAngle({ angle: 135, speed: currentSpeed() })}
               >
                 135°
               </button>
               <button
                 class={deviceStyles.device__button}
-                onClick={() => setAngle({ angle: 180, speed: currentSpeed() })}
+                onClick={() => actions.setAngle({ angle: 180, speed: currentSpeed() })}
               >
                 180°
               </button>

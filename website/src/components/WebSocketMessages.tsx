@@ -89,9 +89,11 @@ const JsonTree: Component<{ data: any; level?: number }> = (props) => {
 };
 
 // Expandable Message Component
-const ExpandableMessage: Component<{ message: string; direction: "incoming" | "outgoing"; timestamp: number }> = (
-  props
-) => {
+const ExpandableMessage: Component<{
+  message: string;
+  direction: "incoming" | "outgoing";
+  timestamp: number;
+}> = (props) => {
   const [isExpanded, setIsExpanded] = createSignal(false);
 
   const parsedData = createMemo(() => {
@@ -117,11 +119,11 @@ const ExpandableMessage: Component<{ message: string; direction: "incoming" | "o
 
   const formatTimestamp = (timestamp: number) => {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString('en-US', {
+    return date.toLocaleTimeString("en-US", {
       hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
     });
   };
 
@@ -138,7 +140,9 @@ const ExpandableMessage: Component<{ message: string; direction: "incoming" | "o
           ) : (
             <OutgoingMessageIcon class={styles["websocket-messages__message-icon"]} />
           )}
-          <span class={styles["websocket-messages__timestamp"]}>{formatTimestamp(props.timestamp)}</span>
+          <span class={styles["websocket-messages__timestamp"]}>
+            {formatTimestamp(props.timestamp)}
+          </span>
         </div>
         <span class={styles["websocket-messages__message-text"]}>{props.message}</span>
       </div>
@@ -322,9 +326,9 @@ const WebSocketMessages: Component = () => {
           <div class={styles["websocket-messages__list"]}>
             <For each={filteredMessages()}>
               {(message) => (
-                <ExpandableMessage 
-                  message={message.raw} 
-                  direction={message.direction} 
+                <ExpandableMessage
+                  message={message.raw}
+                  direction={message.direction}
                   timestamp={message.timestamp}
                 />
               )}

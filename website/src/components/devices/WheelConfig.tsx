@@ -1,20 +1,25 @@
 import styles from "./Device.module.css";
 import wheelStyles from "./WheelConfig.module.css";
-import { createWheelStore, IWheelConfig } from "../../stores/Wheel";
+import { useWheel, IWheelConfig } from "../../stores/Wheel";
 import { createMemo, For, onMount, createSignal } from "solid-js";
 import DeviceConfig from "./DeviceConfig";
 import { useDevice } from "../../stores/Devices";
 
-// Update the import path below to the correct location of IWheelState
-
 export function WheelConfig(props: { id: string; onClose: () => void }) {
-  const { error, calibrate, config, saveConfig, loadConfig } = createWheelStore(props.id);
+  const wheelStore = useWheel(props.id);
+  const device = () => wheelStore[0];
+  const actions = wheelStore[1];
+
+  const config = () => device()?.config;
+  // TODO: Handle error state - might need to be added to device state
+  const error = () => undefined; // Placeholder until error handling is implemented
+
   const [stepperDevice, { sendMessage }] = useDevice(`${props.id}-stepper`);
   const currentPosition = createMemo(() => (stepperDevice?.state as any)?.currentPosition);
   const [deviceName, setDeviceName] = createSignal("");
 
   onMount(() => {
-    loadConfig();
+    actions.getDeviceConfig();
   });
 
   const moveSteps = (steps: number) => {
@@ -39,7 +44,7 @@ export function WheelConfig(props: { id: string; onClose: () => void }) {
         ...currentConfig,
         name: deviceName() || currentConfig.name || props.id,
       };
-      saveConfig(updatedConfig);
+      actions.setDeviceConfig(updatedConfig);
     }
   };
 
@@ -66,7 +71,7 @@ export function WheelConfig(props: { id: string; onClose: () => void }) {
       <button
         class={styles.device__button}
         onClick={() => {
-          calibrate();
+          actions.calibrate();
         }}
       >
         Calibrate
@@ -133,7 +138,7 @@ export function WheelConfig(props: { id: string; onClose: () => void }) {
                     if (index() > 0) {
                       [arr[index() - 1], arr[index()]] = [arr[index()], arr[index() - 1]];
                       cfg.breakPoints = arr;
-                      saveConfig(cfg);
+                      actions.setDeviceConfig(cfg);
                     }
                   }}
                 >
@@ -148,7 +153,7 @@ export function WheelConfig(props: { id: string; onClose: () => void }) {
                     if (index() < arr.length - 1) {
                       [arr[index() + 1], arr[index()]] = [arr[index()], arr[index() + 1]];
                       cfg.breakPoints = arr;
-                      saveConfig(cfg);
+                      actions.setDeviceConfig(cfg);
                     }
                   }}
                 >
@@ -160,7 +165,7 @@ export function WheelConfig(props: { id: string; onClose: () => void }) {
                     const cfg = config() || ({} as IWheelConfig);
                     cfg.breakPoints = cfg.breakPoints?.slice() || [];
                     cfg.breakPoints.splice(index(), 1);
-                    saveConfig(cfg);
+                    actions.setDeviceConfig(cfg);
                   }}
                 >
                   ✕
@@ -174,7 +179,7 @@ export function WheelConfig(props: { id: string; onClose: () => void }) {
             const cfg = config() || ({} as IWheelConfig);
             cfg.breakPoints = cfg.breakPoints?.slice() || [];
             cfg.breakPoints.push(Math.floor(Math.random() * 1000));
-            saveConfig(cfg);
+            actions.setDeviceConfig(cfg);
           }}
         >
           + Add Breakpoint

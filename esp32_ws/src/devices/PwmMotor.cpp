@@ -131,12 +131,12 @@ bool PwmMotor::configureMCPWM()
     return true;
 }
 
-void PwmMotor::setDutyCycle(float dutyCycle, bool notifyChange)
+bool PwmMotor::setDutyCycle(float dutyCycle, bool notifyChange)
 {
     if (!_isSetup)
     {
         MLOG_ERROR("PwmMotor [%s]: Not setup. Call setupMotor() first.", _id.c_str());
-        return;
+        return false;
     }
 
     // Clamp duty cycle to valid range
@@ -152,7 +152,7 @@ void PwmMotor::setDutyCycle(float dutyCycle, bool notifyChange)
     if (err != ESP_OK)
     {
         MLOG_ERROR("PwmMotor [%s]: Failed to set duty cycle: %s", _id.c_str(), esp_err_to_name(err));
-        return;
+        return false;
     }
 
     // Update duty cycle type to percentage
@@ -165,14 +165,15 @@ void PwmMotor::setDutyCycle(float dutyCycle, bool notifyChange)
     {
         notifyStateChange();
     }
+    return true;
 }
 
-void PwmMotor::setDutyCycleAnimated(float dutyCycle, uint32_t durationMs)
+bool PwmMotor::setDutyCycleAnimated(float dutyCycle, uint32_t durationMs)
 {
     if (!_isSetup)
     {
         MLOG_ERROR("PwmMotor [%s]: Not setup. Call setupMotor() first.", _id.c_str());
-        return;
+        return false;
     }
 
     // Clamp duty cycle to valid range
@@ -184,8 +185,7 @@ void PwmMotor::setDutyCycleAnimated(float dutyCycle, uint32_t durationMs)
     // If duration is 0, just set immediately
     if (durationMs == 0)
     {
-        setDutyCycle(dutyCycle);
-        return;
+        return setDutyCycle(dutyCycle);
     }
 
     // Setup animation
@@ -200,6 +200,7 @@ void PwmMotor::setDutyCycleAnimated(float dutyCycle, uint32_t durationMs)
 
     // Notify that animation has started with target value and duration
     notifyStateChange();
+    return true;
 }
 
 void PwmMotor::stop()

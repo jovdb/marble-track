@@ -128,12 +128,12 @@ bool PwmDevice::configureMCPWM()
     return true;
 }
 
-void PwmDevice::setDutyCycle(float dutyCycle, bool notifyChange)
+bool PwmDevice::setDutyCycle(float dutyCycle, bool notifyChange)
 {
     if (!_isSetup)
     {
         MLOG_ERROR("Pwm [%s]: Not setup. Call setupMotor() first.", _id.c_str());
-        return;
+        return false;
     }
 
     if (dutyCycle < 0.0)
@@ -147,7 +147,7 @@ void PwmDevice::setDutyCycle(float dutyCycle, bool notifyChange)
     if (err != ESP_OK)
     {
         MLOG_ERROR("Pwm [%s]: Failed to set duty cycle: %s", _id.c_str(), esp_err_to_name(err));
-        return;
+        return false;
     }
 
     mcpwm_set_duty_type(_mcpwmUnit, _mcpwmTimer, MCPWM_OPR_A, MCPWM_DUTY_MODE_0);
@@ -158,14 +158,16 @@ void PwmDevice::setDutyCycle(float dutyCycle, bool notifyChange)
     {
         notifyStateChange();
     }
+
+    return true;
 }
 
-void PwmDevice::setDutyCycleAnimated(float dutyCycle, uint32_t durationMs)
+bool PwmDevice::setDutyCycleAnimated(float dutyCycle, uint32_t durationMs)
 {
     if (!_isSetup)
     {
         MLOG_ERROR("Pwm [%s]: Not setup. Call setupMotor() first.", _id.c_str());
-        return;
+        return false;
     }
 
     if (dutyCycle < 0.0)
@@ -175,8 +177,7 @@ void PwmDevice::setDutyCycleAnimated(float dutyCycle, uint32_t durationMs)
 
     if (durationMs == 0)
     {
-        setDutyCycle(dutyCycle);
-        return;
+        return setDutyCycle(dutyCycle);
     }
 
     _startDutyCycle = _currentDutyCycle;
@@ -189,6 +190,8 @@ void PwmDevice::setDutyCycleAnimated(float dutyCycle, uint32_t durationMs)
               _id.c_str(), _startDutyCycle, _targetDutyCycle, durationMs);
 
     notifyStateChange();
+
+    return true;
 }
 
 void PwmDevice::stop()
@@ -236,11 +239,13 @@ bool PwmDevice::control(const String &action, JsonObject *args)
         if ((*args)["durationMs"].is<uint32_t>())
         {
             uint32_t durationMs = (*args)["durationMs"].as<uint32_t>();
-            setDutyCycleAnimated(dutyCycle, durationMs);
+            if (!setDutyCycleAnimated(dutyCycle, durationMs))
+                return false;
         }
         else
         {
-            setDutyCycle(dutyCycle);
+            if (!setDutyCycle(dutyCycle))
+                return false;
         }
         return true;
     }

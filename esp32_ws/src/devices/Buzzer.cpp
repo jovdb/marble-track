@@ -134,13 +134,14 @@ void Buzzer::loop()
  * @brief Play a tone with specified frequency and duration
  * @param frequency Frequency in Hz (20-20000)
  * @param duration Duration in milliseconds
+ * @return true if tone started, false if not configured
  */
-void Buzzer::tone(int frequency, int duration)
+bool Buzzer::tone(int frequency, int duration)
 {
     if (_pin < 0)
     {
         MLOG_WARN("Buzzer [%s]: Pin not configured, ignoring tone command", _id.c_str());
-        return;
+        return false;
     }
 
     MLOG_INFO("Buzzer [%s]: Playing tone %dHz for %dms", _id.c_str(), frequency, duration);
@@ -152,19 +153,21 @@ void Buzzer::tone(int frequency, int duration)
     _toneDuration = duration;
     _currentTune = "";
     notifyStateChange();
+    return true;
 }
 
 /**
  * @brief Play a tune from RTTTL string
  * @param rtttl RTTTL (Ring Tone Text Transfer Language) string
  * @note RTTTL format: "name:settings:notes"
+ * @return true if tune started, false if not configured
  */
-void Buzzer::tune(const String &rtttl)
+bool Buzzer::tune(const String &rtttl)
 {
     if (_pin < 0)
     {
         MLOG_WARN("Buzzer [%s]: Pin not configured, ignoring tune command", _id.c_str());
-        return;
+        return false;
     }
 
     MLOG_INFO("Buzzer [%s]: Playing RTTTL tune: %s", _id.c_str(), rtttl.c_str());
@@ -177,6 +180,7 @@ void Buzzer::tune(const String &rtttl)
     _playStartTime = millis();
     // Note: _toneDuration is not set for tunes - RTTTL library manages tune duration
     notifyStateChange();
+    return true;
 }
 
 /**

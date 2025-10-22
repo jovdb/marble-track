@@ -37,15 +37,17 @@ public:
      * @brief Set duty cycle immediately
      * @param dutyCycle Duty cycle percentage (0.0 to 100.0)
      * @param notifyChange Whether to broadcast state change (default: true)
+     * @return true if set successfully, false if not configured
      */
-    void setDutyCycle(float dutyCycle, bool notifyChange = true);
+    bool setDutyCycle(float dutyCycle, bool notifyChange = true);
 
     /**
      * @brief Animate duty cycle towards a target value
      * @param dutyCycle Target duty cycle percentage (0.0 to 100.0)
      * @param durationMs Duration of the animation in milliseconds
+     * @return true if animation started, false if not configured
      */
-    void setDutyCycleAnimated(float dutyCycle, uint32_t durationMs);
+    bool setDutyCycleAnimated(float dutyCycle, uint32_t durationMs);
 
     /**
      * @brief Current duty cycle percentage

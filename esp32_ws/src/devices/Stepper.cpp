@@ -96,13 +96,14 @@ void Stepper::loop()
  * @param steps Number of steps to move (positive = forward, negative = backward)
  * @param speed Optional maximum speed in steps per second (uses configured speed if not provided)
  * @param acceleration Optional acceleration in steps per second per second (uses configured acceleration if not provided)
+ * @return true if move was initiated, false if not configured
  */
-void Stepper::move(long steps, float speed, float acceleration)
+bool Stepper::move(long steps, float speed, float acceleration)
 {
     if (!_configured || !_stepper)
     {
         MLOG_WARN("Stepper [%s]: Not configured - cannot move", _id.c_str());
-        return;
+        return false;
     }
 
     if (speed <= 0 || speed > _maxSpeed)
@@ -121,6 +122,7 @@ void Stepper::move(long steps, float speed, float acceleration)
     _stepper->move(steps);
     _isMoving = true;
     notifyStateChange();
+    return true;
 }
 
 /**
@@ -128,13 +130,14 @@ void Stepper::move(long steps, float speed, float acceleration)
  * @param position Absolute position to move to
  * @param speed Optional maximum speed in steps per second (uses configured speed if not provided)
  * @param acceleration Optional acceleration in steps per second per second (uses configured acceleration if not provided)
+ * @return true if move was initiated, false if not configured
  */
-void Stepper::moveTo(long position, float speed, float acceleration)
+bool Stepper::moveTo(long position, float speed, float acceleration)
 {
     if (!_configured || !_stepper)
     {
         MLOG_WARN("Stepper [%s]: Not configured - cannot move to position", _id.c_str());
-        return;
+        return false;
     }
 
     if (speed <= 0 || speed > _maxSpeed)
@@ -153,17 +156,19 @@ void Stepper::moveTo(long position, float speed, float acceleration)
     _stepper->moveTo(position);
     _isMoving = true;
     notifyStateChange();
+    return true;
 }
 
 /**
  * @brief Stop the stepper motor immediately
  * @param acceleration Optional deceleration rate in steps per second per second (uses configured acceleration if not provided)
+ * @return true if stop was initiated, false if not configured
  */
-void Stepper::stop(float acceleration)
+bool Stepper::stop(float acceleration)
 {
     if (!_configured || !_stepper)
     {
-        return;
+        return false;
     }
 
     if (acceleration <= 0 || acceleration > _maxAcceleration)
@@ -177,17 +182,19 @@ void Stepper::stop(float acceleration)
     disableStepper(); // Disable stepper immediately when stopped
     _isMoving = false;
     notifyStateChange();
+    return true;
 }
 
 /**
  * @brief Reset the stepper motor's current position to zero
+ * @return true if position was set, false if not configured
  */
-void Stepper::setCurrentPosition(long position)
+bool Stepper::setCurrentPosition(long position)
 {
     if (!_configured || !_stepper)
     {
         MLOG_WARN("Stepper [%s]: Not configured - cannot set current position", _id.c_str());
-        return;
+        return false;
     }
 
     MLOG_INFO("Stepper [%s]: Resetting current position to %ld", _id.c_str(), position);
@@ -195,6 +202,7 @@ void Stepper::setCurrentPosition(long position)
 
     // notify the new values
     notifyStateChange();
+    return true;
 }
 /**
  * @brief Set the maximum speed of the stepper motor
@@ -291,8 +299,7 @@ bool Stepper::control(const String &action, JsonObject *payload)
 
         MLOG_INFO("Stepper [%s]: Move %ld steps (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), steps,
                   speed > 0 ? speed : _maxSpeed, acceleration > 0 ? acceleration : _maxAcceleration);
-        move(steps, speed, acceleration);
-        return true;
+        return move(steps, speed, acceleration);
     }
 
     else if (action == "moveTo")
@@ -319,8 +326,7 @@ bool Stepper::control(const String &action, JsonObject *payload)
 
         MLOG_INFO("Stepper [%s]: Move to position %ld (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), position,
                   speed > 0 ? speed : _maxSpeed, acceleration > 0 ? acceleration : _maxAcceleration);
-        moveTo(position, speed, acceleration);
-        return true;
+        return moveTo(position, speed, acceleration);
     }
     else if (action == "stop")
     {
@@ -329,8 +335,7 @@ bool Stepper::control(const String &action, JsonObject *payload)
         {
             acceleration = (*payload)["acceleration"].as<float>();
         }
-        stop(acceleration);
-        return true;
+        return stop(acceleration);
     }
     else if (action == "setCurrentPosition")
     {
@@ -342,9 +347,7 @@ bool Stepper::control(const String &action, JsonObject *payload)
 
         long position = (*payload)["position"].as<long>();
         MLOG_INFO("Stepper [%s]: Reset position to %ld", _id.c_str(), position);
-        setCurrentPosition(position);
-        notifyStateChange();
-        return true;
+        return setCurrentPosition(position);
     }
     /*
     else if (action == "setSpeed")

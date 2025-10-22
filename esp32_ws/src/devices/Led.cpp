@@ -36,27 +36,39 @@ void Led::setup()
 /**
  * @brief Set LED state
  * @param state true to turn LED on, false to turn LED off
+ * @return true if set successfully, false if not configured
  */
-void Led::set(bool state)
+bool Led::set(bool state)
 {
     if (_pin == -1)
     {
         MLOG_WARN("Led [%s]: Pin not configured", _id.c_str());
-    }
-    else
-    {
-        digitalWrite(_pin, state ? HIGH : LOW);
+        return false;
     }
 
+    digitalWrite(_pin, state ? HIGH : LOW);
     _mode = state ? LedMode::ON : LedMode::OFF;
     _isOn = state;
 
     // Notify state change for real-time updates
     notifyStateChange();
+    return true;
 }
 
-void Led::blink(unsigned long onTime, unsigned long offTime)
+/**
+ * @brief Non-blocking blink
+ * @param onTime time in ms LED is on
+ * @param offTime time in ms LED is off
+ * @return true if blink started, false if not configured
+ */
+bool Led::blink(unsigned long onTime, unsigned long offTime)
 {
+    if (_pin == -1)
+    {
+        MLOG_WARN("Led [%s]: Pin not configured", _id.c_str());
+        return false;
+    }
+
     _mode = LedMode::BLINKING;
     _blinkOnTime = onTime;
     _blinkOffTime = offTime;
@@ -64,6 +76,7 @@ void Led::blink(unsigned long onTime, unsigned long offTime)
 
     // Notify state change for real-time updates
     notifyStateChange();
+    return true;
 }
 
 /**

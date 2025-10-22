@@ -77,23 +77,24 @@ void Wheel::loop()
     }
 }
 
-void Wheel::move(long steps)
+bool Wheel::move(long steps)
 {
     if (_stepper)
     {
-        _stepper->move(steps);
+        return _stepper->move(steps);
     }
+    return false;
 }
 
-void Wheel::calibrate()
+bool Wheel::calibrate()
 {
     if (!_stepper)
-        return;
+        return false;
 
     MLOG_INFO("Wheel [%s]: Calibration started.", getId().c_str());
     _state = wheelState::CALIBRATING;
     notifyStateChange();
-    _stepper->move(100000 * _direction); // Move a large number of steps in the current direction
+    return _stepper->move(100000 * _direction); // Move a large number of steps in the current direction
 }
 
 bool Wheel::control(const String &action, JsonObject *payload)
@@ -102,12 +103,14 @@ bool Wheel::control(const String &action, JsonObject *payload)
     if (action == "next-breakpoint")
     {
         long steps = payload && (*payload)["steps"].is<long>() ? (*payload)["steps"].as<long>() : 5000;
-        move(steps);
+        if (!move(steps))
+            return false;
         return true;
     }
     else if (action == "calibrate")
     {
-        calibrate();
+        if (!calibrate())
+            return false;
         return true;
     }
     else if (action == "stop")

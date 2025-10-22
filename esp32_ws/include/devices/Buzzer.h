@@ -68,15 +68,17 @@ public:
      * @brief Play a tone with specified frequency and duration
      * @param frequency Frequency in Hz (20-20000)
      * @param duration Duration in milliseconds
+     * @return true if tone started, false if not configured
      */
-    void tone(int frequency, int duration);
+    bool tone(int frequency, int duration);
 
     /**
      * @brief Play a tune from RTTTL string
      * @param rtttl RTTTL (Ring Tone Text Transfer Language) string
      * @note RTTTL format: "name:settings:notes"
+     * @return true if tune started, false if not configured
      */
-    void tune(const String &rtttl);
+    bool tune(const String &rtttl);
 
 private:
     int _pin;                            ///< GPIO pin number for the buzzer

@@ -44,13 +44,19 @@ void ServoDevice::loop()
     }
 }
 
-void ServoDevice::setAngle(int angle)
+bool ServoDevice::setAngle(int angle)
 {
-    setAngle(angle, _speed);
+    return setAngle(angle, _speed);
 }
 
-void ServoDevice::setAngle(int angle, float speed)
+bool ServoDevice::setAngle(int angle, float speed)
 {
+    if (_pin < 0)
+    {
+        MLOG_WARN("Servo [%s]: Pin not configured", _id.c_str());
+        return false;
+    }
+
     int newAngle = constrainAngle(angle);
     if (newAngle != _targetAngle)
     {
@@ -68,12 +74,14 @@ void ServoDevice::setAngle(int angle, float speed)
         MLOG_INFO("Servo [%s]: Moving from %d deg to %d deg at %.2f deg/s", _id.c_str(), _currentAngle, _targetAngle, _speed);
         notifyStateChange();
     }
+    return true;
 }
 
-void ServoDevice::setSpeed(float speed)
+bool ServoDevice::setSpeed(float speed)
 {
     _speed = max(1.0f, speed); // Minimum speed of 1 degree per second
     MLOG_INFO("Servo [%s]: Speed set to %.2f deg/s", _id.c_str(), _speed);
+    return true;
 }
 
 void ServoDevice::updateMovement()

@@ -40,15 +40,17 @@ public:
      * @brief Set motor duty cycle
      * @param dutyCycle Duty cycle as percentage (0.0 to 100.0)
      * @param notifyChange Whether to send state change notification (default: true)
+     * @return true if set successfully, false if not configured
      */
-    void setDutyCycle(float dutyCycle, bool notifyChange = true);
+    bool setDutyCycle(float dutyCycle, bool notifyChange = true);
 
     /**
      * @brief Set motor duty cycle with animated transition
      * @param dutyCycle Target duty cycle as percentage (0.0 to 100.0)
      * @param durationMs Duration of animation in milliseconds
+     * @return true if animation started, false if not configured
      */
-    void setDutyCycleAnimated(float dutyCycle, uint32_t durationMs);
+    bool setDutyCycleAnimated(float dutyCycle, uint32_t durationMs);
 
     /**
      * @brief Get current duty cycle

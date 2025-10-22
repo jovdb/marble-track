@@ -24,8 +24,8 @@ public:
     String getState() override;
     void loop() override;
     bool control(const String &action, JsonObject *payload = nullptr) override;
-    void move(long steps);
-    void calibrate();
+    bool move(long steps);
+    bool calibrate();
 
 private:
     Stepper *_stepper;

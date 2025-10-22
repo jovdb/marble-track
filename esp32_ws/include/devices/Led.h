@@ -41,11 +41,11 @@ public:
     std::vector<int> getPins() const override;
 
     // LED-specific operations
-    void set(bool state);
+    bool set(bool state);
     void toggle(); // Toggle LED state
 
     // Non-blocking blink
-    void blink(unsigned long onTime = 500, unsigned long offTime = 500);
+    bool blink(unsigned long onTime = 500, unsigned long offTime = 500);
 
 private:
     int _pin = -1;

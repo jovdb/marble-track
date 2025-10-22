@@ -59,9 +59,9 @@ public:
     std::vector<int> getPins() const override { return {_pin}; }
 
     // Servo-specific operations
-    void setAngle(int angle);
-    void setAngle(int angle, float speed); // Speed in degrees per second
-    void setSpeed(float speed);            // Set default movement speed
+    bool setAngle(int angle);
+    bool setAngle(int angle, float speed); // Speed in degrees per second
+    bool setSpeed(float speed);            // Set default movement speed
     int getAngle() const { return _currentAngle; }
     int getTargetAngle() const { return _targetAngle; }
     float getSpeed() const { return _speed; }

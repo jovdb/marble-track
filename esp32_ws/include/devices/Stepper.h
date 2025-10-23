@@ -154,6 +154,18 @@ public:
     float getAcceleration() const { return _maxAcceleration; }
 
     /**
+     * @brief Get default speed
+     * @return Default speed in steps per second
+     */
+    float getDefaultSpeed() const { return _defaultSpeed; }
+
+    /**
+     * @brief Get default acceleration
+     * @return Default acceleration in steps per second per second
+     */
+    float getDefaultAcceleration() const { return _defaultAcceleration; }
+
+    /**
     * @brief Get stepper type
     * @return Type string ("DRIVER", "HALF4WIRE", or "FULL4WIRE")
      */
@@ -175,6 +187,8 @@ private:
     AccelStepper *_stepper = nullptr; ///< AccelStepper library instance
     float _maxSpeed = 1000.0;         ///< Maximum speed in steps per second
     float _maxAcceleration = 500.0;   ///< Acceleration in steps per second per second
+    float _defaultSpeed = 500.0;      ///< Default speed in steps per second
+    float _defaultAcceleration = 250.0; ///< Default acceleration in steps per second per second
     bool _isMoving = false;           ///< Current movement state
     bool _configured = false;         ///< True if stepper has been configured
 

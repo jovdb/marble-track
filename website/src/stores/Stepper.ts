@@ -19,6 +19,8 @@ export interface IStepperConfig extends IDeviceConfig {
   stepperType?: StepperType;
   maxSpeed?: number;
   maxAcceleration?: number;
+  defaultSpeed?: number;
+  defaultAcceleration?: number;
   // For DRIVER type
   stepPin?: number;
   dirPin?: number;
@@ -42,14 +44,26 @@ export interface IStepperMoveArgs {
 export function useStepper(deviceId: string) {
   const [device, { sendMessage, ...actions }] = useDevice<IStepperState, IStepperConfig>(deviceId);
 
-  const move = (args: IStepperMoveArgs) =>
-    sendMessage({
+  const move = (args: IStepperMoveArgs) => {
+    const config = device?.config;
+    const moveArgs = { ...args };
+
+    // Use default values from config if not provided
+    if (moveArgs.speed === undefined && config?.defaultSpeed !== undefined) {
+      moveArgs.speed = config.defaultSpeed;
+    }
+    if (moveArgs.acceleration === undefined && config?.defaultAcceleration !== undefined) {
+      moveArgs.acceleration = config.defaultAcceleration;
+    }
+
+    return sendMessage({
       type: "device-fn",
       deviceType,
       deviceId,
       fn: "move",
-      args: args as unknown as Record<string, unknown>,
+      args: moveArgs as unknown as Record<string, unknown>,
     });
+  };
 
   const stop = () =>
     sendMessage({

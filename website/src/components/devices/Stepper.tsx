@@ -17,8 +17,10 @@ export function Stepper(props: { id: string }) {
   const targetPosition = createMemo(() => state()?.targetPosition ?? 0);
 
   const [steps, setSteps] = createSignal(1000);
-  const [maxSpeed, setMaxSpeed] = createSignal(1000);
-  const [maxAcceleration, setMaxAcceleration] = createSignal(300);
+  const [speed, setSpeed] = createSignal(config()?.defaultSpeed ?? config()?.maxSpeed ?? 600);
+  const [acceleration, setAcceleration] = createSignal(
+    config()?.defaultAcceleration ?? config()?.maxAcceleration ?? 300
+  );
   /*
   createEffect(() => {
     const next = state()?.maxSpeed;
@@ -29,41 +31,20 @@ export function Stepper(props: { id: string }) {
   */
 
   createEffect(() => {
-    const fallback = config()?.maxSpeed;
-    if (typeof fallback === "number") {
-      setMaxSpeed(fallback);
-    }
+    const cfg = config();
+    setSpeed(cfg?.defaultSpeed ?? cfg?.maxSpeed ?? 600);
   });
-
-  /*
-  createEffect(() => {
-    const s = state();
-    const next =
-      typeof s?.acceleration === "number"
-        ? s.acceleration
-        : (s as { acceleration?: number } | undefined)?.acceleration;
-    if (typeof next === "number") {
-      setMaxAcceleration(next);
-    }
-  });
-  */
 
   createEffect(() => {
     const cfg = config();
-    const fallback =
-      typeof cfg?.maxAcceleration === "number"
-        ? cfg.maxAcceleration
-        : (cfg as { acceleration?: number } | undefined)?.acceleration;
-    if (typeof fallback === "number") {
-      setMaxAcceleration(fallback);
-    }
+    setAcceleration(cfg?.defaultAcceleration ?? cfg?.maxAcceleration ?? 300);
   });
 
   const handleMove = () =>
     actions.move({
       steps: Math.trunc(steps()),
-      speed: maxSpeed(),
-      acceleration: Math.trunc(maxAcceleration()),
+      speed: speed(),
+      acceleration: Math.trunc(acceleration()),
     });
 
   const handleStop = () => actions.stop();
@@ -97,30 +78,30 @@ export function Stepper(props: { id: string }) {
       </div>
       <div class={styles["device__input-group"]}>
         <label class={styles.device__label} for={`maxSpeed-${props.id}`}>
-          Speed: {maxSpeed()} steps/s
+          Speed: {speed()} steps/s
         </label>
         <input
-          id={`maxSpeed-${props.id}`}
+          id={`speed-${props.id}`}
           class={styles.device__input}
           type="range"
           min="1"
-          max={config()?.maxSpeed ?? 1800}
-          value={maxSpeed()}
-          onInput={(event) => setMaxSpeed(Number(event.currentTarget.value))}
+          max={config()?.maxSpeed ?? 1000}
+          value={speed()}
+          onInput={(event) => setSpeed(Number(event.currentTarget.value))}
         />
       </div>
       <div class={styles["device__input-group"]}>
         <label class={styles.device__label} for={`maxAcceleration-${props.id}`}>
-          Acceleration: {maxAcceleration()} steps/s²
+          Acceleration: {acceleration()} steps/s²
         </label>
         <input
-          id={`maxAcceleration-${props.id}`}
+          id={`acceleration-${props.id}`}
           class={styles.device__input}
           type="range"
           min="1"
-          max={config()?.maxAcceleration ?? 5800}
-          value={maxAcceleration()}
-          onInput={(event) => setMaxAcceleration(Number(event.currentTarget.value))}
+          max={config()?.maxAcceleration ?? 300}
+          value={acceleration()}
+          onInput={(event) => setAcceleration(Number(event.currentTarget.value))}
         />
       </div>
       <div class={styles.device__controls}>

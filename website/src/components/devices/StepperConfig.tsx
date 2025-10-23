@@ -26,6 +26,8 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
   const [pin4, setPin4] = createSignal(4);
   const [maxSpeed, setMaxSpeed] = createSignal(1000);
   const [maxAcceleration, setMaxAcceleration] = createSignal(300);
+  const [defaultSpeed, setDefaultSpeed] = createSignal(500);
+  const [defaultAcceleration, setDefaultAcceleration] = createSignal(150);
 
   createEffect(() => {
     const cfg = config();
@@ -85,6 +87,13 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
     if (typeof cfgMaxAcceleration === "number") {
       setMaxAcceleration(cfgMaxAcceleration);
     }
+
+    if (typeof cfg.defaultSpeed === "number") {
+      setDefaultSpeed(cfg.defaultSpeed);
+    }
+    if (typeof cfg.defaultAcceleration === "number") {
+      setDefaultAcceleration(cfg.defaultAcceleration);
+    }
   });
 
   const isFourPin = createMemo(() => {
@@ -98,6 +107,8 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
       stepperType: stepperType(),
       maxSpeed: Number(maxSpeed()),
       maxAcceleration: Number(maxAcceleration()),
+      defaultSpeed: Number(defaultSpeed()),
+      defaultAcceleration: Number(defaultAcceleration()),
       invertEnable: invertEnable(),
     };
 
@@ -250,6 +261,19 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
           </DeviceConfigRow>
         </Show>
         <DeviceConfigRow>
+          <DeviceConfigItem name="Default speed">
+            <div>
+              <input
+                type="number"
+                min={0}
+                value={defaultSpeed()}
+                onInput={(event) => setDefaultSpeed(Number(event.currentTarget.value))}
+              />
+              <span style={{ "margin-left": "0.5rem" }}>steps/s</span>
+            </div>
+          </DeviceConfigItem>
+        </DeviceConfigRow>
+        <DeviceConfigRow>
           <DeviceConfigItem name="Max speed">
             <div>
               <input
@@ -259,6 +283,19 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
                 onInput={(event) => setMaxSpeed(Number(event.currentTarget.value))}
               />
               <span style={{ "margin-left": "0.5rem" }}>steps/s</span>
+            </div>
+          </DeviceConfigItem>
+        </DeviceConfigRow>
+        <DeviceConfigRow>
+          <DeviceConfigItem name="Default acceleration">
+            <div>
+              <input
+                type="number"
+                min={0}
+                value={defaultAcceleration()}
+                onInput={(event) => setDefaultAcceleration(Number(event.currentTarget.value))}
+              />
+              <span style={{ "margin-left": "0.5rem" }}>steps/s²</span>
             </div>
           </DeviceConfigItem>
         </DeviceConfigRow>

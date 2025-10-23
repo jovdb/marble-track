@@ -108,11 +108,11 @@ bool Stepper::move(long steps, float speed, float acceleration)
 
     if (speed <= 0 || speed > _maxSpeed)
     {
-        speed = _maxSpeed;
+        speed = _defaultSpeed;
     }
     if (acceleration <= 0 || acceleration > _maxAcceleration)
     {
-        acceleration = _maxAcceleration;
+        acceleration = _defaultAcceleration;
     }
 
     MLOG_INFO("Stepper [%s]: Moving %ld steps (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), steps, speed, acceleration);
@@ -142,11 +142,11 @@ bool Stepper::moveTo(long position, float speed, float acceleration)
 
     if (speed <= 0 || speed > _maxSpeed)
     {
-        speed = _maxSpeed;
+        speed = _defaultSpeed;
     }
     if (acceleration <= 0 || acceleration > _maxAcceleration)
     {
-        acceleration = _maxAcceleration;
+        acceleration = _defaultAcceleration;
     }
 
     MLOG_INFO("Stepper [%s]: Moving to position %ld (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), position, speed, acceleration);
@@ -173,7 +173,7 @@ bool Stepper::stop(float acceleration)
 
     if (acceleration <= 0 || acceleration > _maxAcceleration)
     {
-        acceleration = _maxAcceleration;
+        acceleration = _defaultAcceleration;
     }
 
     MLOG_WARN("Stepper [%s]: Stop (Deceleration: %.2f)", _id.c_str(), acceleration);
@@ -298,7 +298,7 @@ bool Stepper::control(const String &action, JsonObject *payload)
         }
 
         MLOG_INFO("Stepper [%s]: Move %ld steps (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), steps,
-                  speed > 0 ? speed : _maxSpeed, acceleration > 0 ? acceleration : _maxAcceleration);
+                  speed > 0 ? speed : _defaultSpeed, acceleration > 0 ? acceleration : _defaultAcceleration);
         return move(steps, speed, acceleration);
     }
 
@@ -325,7 +325,7 @@ bool Stepper::control(const String &action, JsonObject *payload)
         }
 
         MLOG_INFO("Stepper [%s]: Move to position %ld (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), position,
-                  speed > 0 ? speed : _maxSpeed, acceleration > 0 ? acceleration : _maxAcceleration);
+                  speed > 0 ? speed : _defaultSpeed, acceleration > 0 ? acceleration : _defaultAcceleration);
         return moveTo(position, speed, acceleration);
     }
     else if (action == "stop")
@@ -559,6 +559,8 @@ String Stepper::getConfig() const
         config["stepperType"] = _stepperType;
         config["maxSpeed"] = _maxSpeed;
         config["maxAcceleration"] = _maxAcceleration;
+        config["defaultSpeed"] = _defaultSpeed;
+        config["defaultAcceleration"] = _defaultAcceleration;
 
         if (_stepperType == "HALF4WIRE" || _stepperType == "FULL4WIRE")
         {
@@ -657,9 +659,13 @@ void Stepper::setConfig(JsonObject *config)
     // Extract speed and acceleration values first
     float maxSpeed = (*config)["maxSpeed"].is<float>() ? (*config)["maxSpeed"].as<float>() : 1000.0;
     float maxAcceleration = (*config)["maxAcceleration"].is<float>() ? (*config)["maxAcceleration"].as<float>() : ((*config)["acceleration"].is<float>() ? (*config)["acceleration"].as<float>() : 500.0);
+    float defaultSpeed = (*config)["defaultSpeed"].is<float>() ? (*config)["defaultSpeed"].as<float>() : 500.0;
+    float defaultAcceleration = (*config)["defaultAcceleration"].is<float>() ? (*config)["defaultAcceleration"].as<float>() : 250.0;
 
     _maxSpeed = maxSpeed;
     _maxAcceleration = maxAcceleration;
+    _defaultSpeed = defaultSpeed;
+    _defaultAcceleration = defaultAcceleration;
 
     // Load invert enable setting
     if ((*config)["invertEnable"].is<bool>())

@@ -179,7 +179,6 @@ private:
     bool _configured = false;         ///< True if stepper has been configured
 
     // Pin configuration
-    bool _is4Pin = false;                               ///< True if 4-pin configuration, false if 2-pin
     int _pin1 = -1, _pin2 = -1, _pin3 = -1, _pin4 = -1; ///< Pin numbers (all used for 4-pin, only pin1&pin2 for 2-pin)
     int _enablePin = -1;                                ///< Enable pin number (-1 if not used)
     bool _invertEnable = false;                         ///< True if enable pin logic is inverted

@@ -1,13 +1,6 @@
 import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
-import {
-  IStepperConfig,
-  IStepperDriverPins,
-  IStepperFourWirePins,
-  StepperType,
-  STEPPER_TYPES,
-  useStepper,
-} from "../../stores/Stepper";
+import { IStepperConfig, StepperType, STEPPER_TYPES, useStepper } from "../../stores/Stepper";
 
 const STEPPER_TYPE_OPTIONS: { value: StepperType; label: string }[] = [
   { value: "DRIVER", label: "Driver (2-pin)" },
@@ -50,20 +43,32 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
       setStepperType("DRIVER");
     }
 
-    if (Array.isArray(cfg.pins)) {
-      const pins = cfg.pins as IStepperFourWirePins;
-      setPin1(typeof pins[0] === "number" ? pins[0] : pin1());
-      setPin2(typeof pins[1] === "number" ? pins[1] : pin2());
-      setPin3(typeof pins[2] === "number" ? pins[2] : pin3());
-      setPin4(typeof pins[3] === "number" ? pins[3] : pin4());
-    } else if (cfg.pins && typeof cfg.pins === "object") {
-      const pins = cfg.pins as IStepperDriverPins;
-      setStepPin(typeof pins.stepPin === "number" ? pins.stepPin : stepPin());
-      setDirPin(typeof pins.dirPin === "number" ? pins.dirPin : dirPin());
-    }
-
-    if (typeof cfg.enablePin === "number") {
-      setEnablePin(cfg.enablePin);
+    if (cfg.stepperType === "DRIVER") {
+      if (typeof cfg.stepPin === "number") {
+        setStepPin(cfg.stepPin);
+      }
+      if (typeof cfg.dirPin === "number") {
+        setDirPin(cfg.dirPin);
+      }
+      if (typeof cfg.enablePin === "number") {
+        setEnablePin(cfg.enablePin);
+      }
+    } else {
+      if (typeof cfg.pin1 === "number") {
+        setPin1(cfg.pin1);
+      }
+      if (typeof cfg.pin2 === "number") {
+        setPin2(cfg.pin2);
+      }
+      if (typeof cfg.pin3 === "number") {
+        setPin3(cfg.pin3);
+      }
+      if (typeof cfg.pin4 === "number") {
+        setPin4(cfg.pin4);
+      }
+      if (typeof cfg.enablePin === "number") {
+        setEnablePin(cfg.enablePin);
+      }
     }
 
     if (typeof cfg.invertEnable === "boolean") {
@@ -93,12 +98,24 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
       stepperType: stepperType(),
       maxSpeed: Number(maxSpeed()),
       maxAcceleration: Number(maxAcceleration()),
-      pins: isFourPin()
-        ? ([pin1(), pin2(), pin3(), pin4()] as IStepperFourWirePins)
-        : ({ stepPin: stepPin(), dirPin: dirPin() } as IStepperDriverPins),
-      enablePin: enablePin() >= 0 ? enablePin() : undefined,
       invertEnable: invertEnable(),
     };
+
+    if (isFourPin()) {
+      payload.pin1 = Number(pin1());
+      payload.pin2 = Number(pin2());
+      payload.pin3 = Number(pin3());
+      payload.pin4 = Number(pin4());
+      if (enablePin() >= 0) {
+        payload.enablePin = Number(enablePin());
+      }
+    } else {
+      payload.stepPin = Number(stepPin());
+      payload.dirPin = Number(dirPin());
+      if (enablePin() >= 0) {
+        payload.enablePin = Number(enablePin());
+      }
+    }
 
     setDeviceConfig(payload);
   };
@@ -209,6 +226,25 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
                 min={0}
                 value={pin4()}
                 onInput={(event) => setPin4(Number(event.currentTarget.value))}
+              />
+            </DeviceConfigItem>
+          </DeviceConfigRow>
+          <DeviceConfigRow>
+            <DeviceConfigItem name="Enable pin">
+              <input
+                type="number"
+                min={-1}
+                value={enablePin()}
+                onInput={(event) => setEnablePin(Number(event.currentTarget.value))}
+              />
+            </DeviceConfigItem>
+          </DeviceConfigRow>
+          <DeviceConfigRow>
+            <DeviceConfigItem name="Invert enable">
+              <input
+                type="checkbox"
+                checked={invertEnable()}
+                onChange={(event) => setInvertEnable(event.currentTarget.checked)}
               />
             </DeviceConfigItem>
           </DeviceConfigRow>

@@ -44,9 +44,6 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
     }
     else
     {
-
-        MLOG_INFO("JO");
-
         // Get devices from DeviceManager
         Device *deviceList[20]; // MAX_DEVICES from DeviceManager
         int count;
@@ -70,20 +67,6 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
                 JsonObject deviceObj = devicesArray.add<JsonObject>();
                 deviceObj["id"] = deviceList[i]->getId();
                 deviceObj["type"] = deviceList[i]->getType();
-
-                // Temporary logging of children
-                MLOG_INFO("CHILDREN: %d", children.size());
-                if (!children.empty())
-                {
-                    MLOG_INFO("Device %s has %d children:", deviceList[i]->getId().c_str(), children.size());
-                    for (Device *child : children)
-                    {
-                        if (child)
-                        {
-                            MLOG_INFO("  Child: %s (%s)", child->getId().c_str(), child->getType().c_str());
-                        }
-                    }
-                }
 
                 // Add children array
                 JsonArray childrenArr = deviceObj["children"].to<JsonArray>();
@@ -244,13 +227,35 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
     // notifyClients(createJsonResponse(true, "Config saved", "", ""));
 
     String configStr = device->getConfig();
-    JsonDocument config;
-    deserializeJson(config, configStr);
 
     JsonDocument response;
     response["type"] = "device-config";
     response["deviceId"] = deviceId;
-    response["config"] = config;
+    if (configStr.length() > 0)
+    {
+        JsonDocument configDoc;
+        DeserializationError err = deserializeJson(configDoc, configStr);
+        if (!err && configDoc.is<JsonObject>())
+        {
+            response["config"] = configDoc.as<JsonObject>();
+        }
+        else
+        {
+            if (err)
+            {
+                MLOG_WARN("Device %s: failed to deserialize config after save (%s)", deviceId.c_str(), err.c_str());
+            }
+            else
+            {
+                MLOG_WARN("Device %s: config after save is not a JSON object, returning raw string", deviceId.c_str());
+            }
+            response["config"] = serialized(configStr.c_str());
+        }
+    }
+    else
+    {
+        response["config"].to<JsonObject>();
+    }
     String respStr;
     serializeJson(response, respStr);
 
@@ -274,13 +279,35 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
     }
 
     String configStr = device->getConfig();
-    JsonDocument config;
-    deserializeJson(config, configStr);
 
     JsonDocument response;
     response["type"] = "device-config";
     response["deviceId"] = deviceId;
-    response["config"] = config;
+    if (configStr.length() > 0)
+    {
+        JsonDocument configDoc;
+        DeserializationError err = deserializeJson(configDoc, configStr);
+        if (!err && configDoc.is<JsonObject>())
+        {
+            response["config"] = configDoc.as<JsonObject>();
+        }
+        else
+        {
+            if (err)
+            {
+                MLOG_WARN("Device %s: failed to deserialize config on read (%s)", deviceId.c_str(), err.c_str());
+            }
+            else
+            {
+                MLOG_WARN("Device %s: config read is not a JSON object, returning raw string", deviceId.c_str());
+            }
+            response["config"] = serialized(configStr.c_str());
+        }
+    }
+    else
+    {
+        response["config"].to<JsonObject>();
+    }
     String respStr;
     serializeJson(response, respStr);
     notifyClients(respStr);

@@ -328,11 +328,23 @@ void DeviceManager::saveDevicesToJsonFile()
         String configStr = device->getConfig();
         if (configStr.length() > 0)
         {
-            JsonDocument configDoc;
+            DynamicJsonDocument configDoc(4096);
             DeserializationError err = deserializeJson(configDoc, configStr);
             if (!err && configDoc.is<JsonObject>())
             {
                 deviceObj["config"] = configDoc.as<JsonObject>();
+            }
+            else
+            {
+                if (err)
+                {
+                    MLOG_WARN("Device %s: failed to deserialize config for persistence (%s)", device->getId().c_str(), err.c_str());
+                }
+                else
+                {
+                    MLOG_WARN("Device %s: config is not a JSON object, preserving raw string", device->getId().c_str());
+                }
+                deviceObj["config"] = serialized(configStr.c_str());
             }
         }
     }

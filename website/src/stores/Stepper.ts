@@ -13,22 +13,21 @@ export interface IStepperState extends IDeviceState {
   [key: string]: unknown;
 }
 
-export interface IStepperDriverPins {
-  stepPin: number;
-  dirPin: number;
-}
-
-export type IStepperFourWirePins = [number, number, number, number];
-
-export type IStepperPins = IStepperDriverPins | IStepperFourWirePins;
-
 export interface IStepperConfig extends IDeviceConfig {
   name?: string;
   configured?: boolean;
   stepperType?: StepperType;
   maxSpeed?: number;
   maxAcceleration?: number;
-  pins?: IStepperPins;
+  // For DRIVER type
+  stepPin?: number;
+  dirPin?: number;
+  // For 4-wire types
+  pin1?: number;
+  pin2?: number;
+  pin3?: number;
+  pin4?: number;
+  // Common
   enablePin?: number;
   invertEnable?: boolean;
   [key: string]: unknown;

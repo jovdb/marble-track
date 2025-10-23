@@ -425,7 +425,7 @@ std::vector<int> Stepper::getPins() const
     {
         pins.push_back(_pin1);
         pins.push_back(_pin2);
-        if (_is4Pin)
+        if (_stepperType == "HALF4WIRE" || _stepperType == "FULL4WIRE")
         {
             pins.push_back(_pin3);
             pins.push_back(_pin4);
@@ -448,8 +448,7 @@ std::vector<int> Stepper::getPins() const
 void Stepper::configure2Pin(int stepPin, int dirPin, int enablePin)
 {
     cleanupAccelStepper();
-
-    _is4Pin = false;
+    MLOG_INFO("JO: NEW CODE");
     _pin1 = stepPin;
     _pin2 = dirPin;
     _pin3 = -1;
@@ -485,7 +484,6 @@ void Stepper::configure4Pin(int pin1, int pin2, int pin3, int pin4,
 {
     cleanupAccelStepper();
 
-    _is4Pin = true;
     _pin1 = pin1;
     _pin2 = pin2;
     _pin3 = pin3;
@@ -559,42 +557,31 @@ String Stepper::getConfig() const
     if (_configured)
     {
         config["stepperType"] = _stepperType;
-        config["is4Pin"] = _is4Pin;
         config["maxSpeed"] = _maxSpeed;
         config["maxAcceleration"] = _maxAcceleration;
 
-        if (_is4Pin)
+        if (_stepperType == "HALF4WIRE" || _stepperType == "FULL4WIRE")
         {
-            JsonArray pins = config["pins"].to<JsonArray>();
-            pins.add(_pin1);
-            pins.add(_pin2);
-            pins.add(_pin3);
-            pins.add(_pin4);
-            if (_enablePin >= 0)
-            {
-                pins.add(_enablePin);
-            }
+            config["stepPin"] = -1;
+            config["dirPin"] = -1;
+            config["pin1"] = _pin1;
+            config["pin2"] = _pin2;
+            config["pin3"] = _pin3;
+            config["pin4"] = _pin4;
         }
         else
         {
-            JsonArray pins = config["pins"].to<JsonArray>();
-            pins.add(_pin1);
-            pins.add(_pin2);
-            if (_enablePin >= 0)
-            {
-                pins.add(_enablePin);
-            }
+            config["stepPin"] = _pin1;
+            config["dirPin"] = _pin2;
+            config["pin1"] = -1;
+            config["pin2"] = -1;
+            config["pin3"] = -1;
+            config["pin4"] = -1;
         }
-
-        // Add enable pin if configured
-        // if (_enablePin >= 0)
-        // {
-        //     config["enablePin"] = _enablePin;
-        //     config["invertEnable"] = _invertEnable;
-        // }
 
         if (_enablePin >= 0)
         {
+            config["enablePin"] = _enablePin;
             config["invertEnable"] = _invertEnable;
         }
     }
@@ -631,56 +618,32 @@ void Stepper::setConfig(JsonObject *config)
         if (stepperType == "DRIVER")
         {
             // Configure as 2-pin
-            if ((*config)["pins"].is<JsonArray>() && (*config)["pins"].size() >= 2)
-            {
-                JsonArray pins = (*config)["pins"].as<JsonArray>();
-                int stepPin = pins[0].as<int>();
-                int dirPin = pins[1].as<int>();
-                int enablePin = pins.size() >= 3 ? pins[2].as<int>() : -1;
+            int stepPin = (*config)["stepPin"] | -1;
+            int dirPin = (*config)["dirPin"] | -1;
+            int enablePin = (*config)["enablePin"] | -1;
 
-                configure2Pin(stepPin, dirPin, enablePin);
-            }
-            else
-            {
-                MLOG_WARN("Stepper [%s]: Invalid 2-pin configuration in JSON", _id.c_str());
-            }
+            configure2Pin(stepPin, dirPin, enablePin);
         }
         else if (stepperType == "HALF4WIRE")
         {
             // Configure as 4-pin
-            if ((*config)["pins"].is<JsonArray>() && ((*config)["pins"].size() == 4 || (*config)["pins"].size() == 5))
-            {
-                JsonArray pins = (*config)["pins"].as<JsonArray>();
-                int pin1 = pins[0].as<int>();
-                int pin2 = pins[1].as<int>();
-                int pin3 = pins[2].as<int>();
-                int pin4 = pins[3].as<int>();
-                int enablePin = pins.size() == 5 ? pins[4].as<int>() : -1;
+            int pin1 = (*config)["pin1"] | -1;
+            int pin2 = (*config)["pin2"] | -1;
+            int pin3 = (*config)["pin3"] | -1;
+            int pin4 = (*config)["pin4"] | -1;
+            int enablePin = (*config)["enablePin"] | -1;
 
-                configure4Pin(pin1, pin2, pin3, pin4, AccelStepper::HALF4WIRE, "HALF4WIRE", enablePin);
-            }
-            else
-            {
-                MLOG_WARN("Stepper [%s]: Invalid 4-pin configuration in JSON", _id.c_str());
-            }
+            configure4Pin(pin1, pin2, pin3, pin4, AccelStepper::HALF4WIRE, "HALF4WIRE", enablePin);
         }
         else if (stepperType == "FULL4WIRE")
         {
-            if ((*config)["pins"].is<JsonArray>() && ((*config)["pins"].size() == 4 || (*config)["pins"].size() == 5))
-            {
-                JsonArray pins = (*config)["pins"].as<JsonArray>();
-                int pin1 = pins[0].as<int>();
-                int pin2 = pins[1].as<int>();
-                int pin3 = pins[2].as<int>();
-                int pin4 = pins[3].as<int>();
-                int enablePin = pins.size() == 5 ? pins[4].as<int>() : -1;
+            int pin1 = (*config)["pin1"] | -1;
+            int pin2 = (*config)["pin2"] | -1;
+            int pin3 = (*config)["pin3"] | -1;
+            int pin4 = (*config)["pin4"] | -1;
+            int enablePin = (*config)["enablePin"] | -1;
 
-                configure4Pin(pin1, pin2, pin3, pin4, AccelStepper::FULL4WIRE, "FULL4WIRE", enablePin);
-            }
-            else
-            {
-                MLOG_WARN("Stepper [%s]: Invalid 4-pin configuration in JSON", _id.c_str());
-            }
+            configure4Pin(pin1, pin2, pin3, pin4, AccelStepper::FULL4WIRE, "FULL4WIRE", enablePin);
         }
         else
         {

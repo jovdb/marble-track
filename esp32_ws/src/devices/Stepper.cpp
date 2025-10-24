@@ -176,11 +176,11 @@ bool Stepper::stop(float acceleration)
         acceleration = _defaultAcceleration;
     }
 
-    MLOG_WARN("Stepper [%s]: Stop (Deceleration: %.2f)", _id.c_str(), acceleration);
+    MLOG_WARN("Stepper [%s]: Stop initiated (Deceleration: %.2f)", _id.c_str(), acceleration);
     _stepper->setAcceleration(acceleration);
     _stepper->stop();
-    disableStepper(); // Disable stepper immediately when stopped
-    _isMoving = false;
+    // Note: Do not disable stepper here - let loop() handle it when movement actually completes
+    // Note: Do not set _isMoving = false here - let loop() determine when movement is complete
     notifyStateChange();
     return true;
 }

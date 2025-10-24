@@ -34,7 +34,6 @@ unsigned long lastAutoToggleTime = 0;
 #include "NetworkSettings.h"
 
 // Create network and server instances
-// Network network("telenet-182FE", "cPQdRWmFx1eM");
 Network *network = nullptr; // Will be created after loading settings
 AsyncWebServer server(80);
 LittleFSManager littleFSManager;

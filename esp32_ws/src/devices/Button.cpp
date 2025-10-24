@@ -235,9 +235,6 @@ String Button::getState()
     // Add Button-specific fields
     doc["pressed"] = _currentState;
     doc["pressedTime"] = getPressedTime();
-    doc["pinMode"] = pinModeToString(_pinMode);
-    doc["debounceMs"] = _debounceMs;
-    doc["buttonType"] = (_buttonType == ButtonType::NormalOpen) ? "NormalOpen" : "NormalClosed";
 
     String result;
     serializeJson(doc, result);

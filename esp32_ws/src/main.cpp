@@ -136,6 +136,7 @@ void setup()
 
   // Using simplified logging macros
   MLOG_INFO("Starting Marble Track System");
+  MLOG_INFO("Build timestamp: %s %s", __DATE__, __TIME__);
 
   // First maount so config file can be loaded
   littleFSManager.setup();

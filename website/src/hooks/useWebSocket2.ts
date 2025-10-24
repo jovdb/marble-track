@@ -177,7 +177,13 @@ export function useWebSocket2(): [IWebSocketStore, IWebSocketActions] {
  */
 function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions] {
   // Use provided URL or fallback to environment/default
-  const wsUrl = url || import.meta.env.VITE_MARBLE_WS || `ws://${window.location.hostname}/ws`;
+  let wsUrl = url || import.meta.env.VITE_MARBLE_WS || `ws://${window.location.hostname}/ws`;
+
+  // Parse WebSocket URL from query parameters or environment
+  const wsQueryParam = new URLSearchParams(window.location.search).get("ws");
+  if (wsQueryParam) {
+    wsUrl = `ws://${wsQueryParam}/ws`;
+  }
   console.log("Connecting to WebSocket:", wsUrl);
 
   // Create reconnecting WebSocket with heartbeat

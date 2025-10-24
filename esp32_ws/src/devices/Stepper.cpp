@@ -64,6 +64,7 @@ void Stepper::setup()
 
     // Set current position to 0
     _stepper->setCurrentPosition(0);
+    disableStepper(); // Disable stepper after setup
 }
 
 /**

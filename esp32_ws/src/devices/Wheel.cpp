@@ -23,9 +23,9 @@ void Wheel::setup()
         // Set pointers from loaded children
         auto children = getChildren();
         if (children.size() >= 1)
-            _stepper = static_cast<Stepper*>(children[0]);
+            _stepper = static_cast<Stepper *>(children[0]);
         if (children.size() >= 2)
-            _sensor = static_cast<Button*>(children[1]);
+            _sensor = static_cast<Button *>(children[1]);
     }
 
     Device::setup(); // Call base setup to setup children
@@ -49,14 +49,15 @@ void Wheel::loop()
         return;
 
     // Started moving ?
-    if (_stepper->isMoving() && _state != wheelState::MOVING)
+    if (_stepper->isMoving() && _state == wheelState::IDLE)
     {
         _state = wheelState::MOVING;
         notifyStateChange();
     }
-    // Stoped moving?
+    // Stopped moving?
     else if (!_stepper->isMoving() && _state == wheelState::MOVING)
     {
+        // TODO: detect if no reset found during calibration?
         _state = wheelState::IDLE;
         notifyStateChange();
     }
@@ -67,8 +68,10 @@ void Wheel::loop()
         if (_sensor->wasPressed())
         {
             MLOG_INFO("Wheel [%s]: Calibration complete.", getId().c_str());
-            _stepper->stop(1000000);
+            _stepper->stop(1000000); // Stop immediately
             _stepper->setCurrentPosition(0);
+            _state = wheelState::IDLE;
+            notifyStateChange();
         }
         break;
 
@@ -94,7 +97,8 @@ bool Wheel::calibrate()
     MLOG_INFO("Wheel [%s]: Calibration started.", getId().c_str());
     _state = wheelState::CALIBRATING;
     notifyStateChange();
-    return _stepper->move(100000 * _direction); // Move a large number of steps in the current direction
+    _stepper->setCurrentPosition(0);
+    return _stepper->move(50000 * _direction); // Move a large number of steps in the current direction
 }
 
 bool Wheel::control(const String &action, JsonObject *payload)
@@ -123,6 +127,21 @@ bool Wheel::control(const String &action, JsonObject *payload)
     return false;
 }
 
+String Wheel::stateToString(Wheel::wheelState state) const
+{
+    switch (state)
+    {
+    case Wheel::wheelState::CALIBRATING:
+        return "CALIBRATING";
+    case Wheel::wheelState::IDLE:
+        return "IDLE";
+    case Wheel::wheelState::MOVING:
+        return "MOVING";
+    default:
+        return "UNKNOWN";
+    }
+}
+
 String Wheel::getState()
 {
     JsonDocument doc;
@@ -133,7 +152,7 @@ String Wheel::getState()
     {
         doc[kv.key()] = kv.value();
     }
-    doc["state"] = _state == wheelState::CALIBRATING ? "CALIBRATING" : "IDLE";
+    doc["state"] = stateToString(_state);
     String result;
     serializeJson(doc, result);
     return result;

@@ -30,6 +30,7 @@ public:
     bool calibrate();
 
 private:
+    String stateToString(wheelState state) const;
     Stepper *_stepper;
     Button *_sensor;
     wheelState _state;

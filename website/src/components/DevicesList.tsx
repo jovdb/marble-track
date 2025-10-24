@@ -193,6 +193,7 @@ export function DevicesList() {
                     <th class={styles["devices-list__table-th"]}></th>
                     <th class={styles["devices-list__table-th"]}>Type</th>
                     <th class={styles["devices-list__table-th"]}>ID</th>
+                    <th class={styles["devices-list__table-th"]}></th>
                   </tr>
                 </thead>
                 <tbody class={styles["devices-list__table-body"]}>

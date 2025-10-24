@@ -4,7 +4,7 @@
 Wheel::Wheel(const String &id)
     : Device(id, "wheel"), _stepper(nullptr), _sensor(nullptr)
 {
-    _direction = -1;
+    _direction = 1;
     _state = wheelState::IDLE;
 }
 

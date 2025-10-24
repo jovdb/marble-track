@@ -34,7 +34,7 @@ private:
     Button *_sensor;
     wheelState _state;
     /* -1 = CCW, 1 = CW */
-    byte _direction = -1;
+    int _direction = -1;
     std::vector<long> _breakPoints;
 };
 

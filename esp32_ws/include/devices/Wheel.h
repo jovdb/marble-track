@@ -17,7 +17,8 @@ public:
     {
         CALIBRATING,
         IDLE,
-        MOVING
+        MOVING,
+        RESET
     };
     Wheel(const String &id);
     void setup() override;
@@ -28,6 +29,8 @@ public:
     bool control(const String &action, JsonObject *payload = nullptr) override;
     bool move(long steps);
     bool calibrate();
+    bool reset();
+    void notifyStepsPerRevolution(long steps);
 
 private:
     String stateToString(wheelState state) const;
@@ -37,6 +40,7 @@ private:
     /* -1 = CCW, 1 = CW */
     int _direction = -1;
     std::vector<long> _breakPoints;
+    byte _stateStep = 0;
 };
 
 #endif // WHEEL_H

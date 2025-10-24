@@ -93,23 +93,47 @@ std::vector<int> Device::getPins() const
     return pins;
 }
 
-void Device::setOnStateChange(OnStateChange callback)
+void Device::setNotifyClients(NotifyClients callback)
 {
-    onStateChange = callback;
+    notifyClients = callback;
     for (Device *child : children)
     {
         if (child)
-            child->setOnStateChange(callback);
+            child->setNotifyClients(callback);
     }
 }
 
 void Device::notifyStateChange()
 {
-    if (onStateChange)
+    if (notifyClients)
     {
-        onStateChange(getId(), getState());
-    } else {
-        MLOG_WARN("Device [%s]: State change callback not set", _id.c_str());
+        JsonDocument doc;
+        doc["type"] = "device-state";
+        doc["deviceId"] = this->getId();
+
+        String stateJson = this->getState();
+        JsonDocument stateDoc;
+        if (deserializeJson(stateDoc, stateJson) == DeserializationError::Ok)
+        {
+            doc["state"] = stateDoc.as<JsonObject>();
+        }
+        else
+        {
+            // Fallback: add the string directly if parsing fails
+            doc["state"] = stateJson;
+        }
+        /*
+        if (!error.isEmpty())
+            doc["error"] = error;
+        */
+        String message;
+        serializeJson(doc, message);
+
+        notifyClients(message);
+    }
+    else
+    {
+        MLOG_WARN("Device [%s]: notifyClients callback not set", _id.c_str());
     }
 }
 

@@ -573,19 +573,18 @@ void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
 
     if (!deviceManager)
     {
-        broadcastState(deviceId, "", "DeviceManager not available");
+        //    TODO: broadcastState(deviceId, "", "DeviceManager not available");
     }
     else
     {
         Device *device = deviceManager->getDeviceById(deviceId);
         if (!device)
         {
-            broadcastState(deviceId, "", "Device '" + deviceId + "' not found.");
+            // TODO: broadcastState(deviceId, "", "Device '" + deviceId + "' not found.");
         }
         else
         {
-            String state = device->getState();
-            broadcastState(deviceId, state, "");
+            device->notifyStateChange();
         }
     }
 
@@ -839,32 +838,6 @@ void WebSocketManager::handleGetNetworkStatus(JsonDocument &doc)
     notifyClients(respStr);
 
     MLOG_INFO("Sent network status to client");
-}
-
-void WebSocketManager::broadcastState(const String &deviceId, const String &stateJson, const String &error)
-{
-    JsonDocument doc;
-    doc["type"] = "device-state";
-    doc["deviceId"] = deviceId;
-
-    // Parse the state JSON string and add it to the document
-    JsonDocument stateDoc;
-    if (deserializeJson(stateDoc, stateJson) == DeserializationError::Ok)
-    {
-        doc["state"] = stateDoc.as<JsonObject>();
-    }
-    else
-    {
-        // Fallback: add the string directly if parsing fails
-        doc["state"] = stateJson;
-    }
-    if (!error.isEmpty())
-        doc["error"] = error;
-
-    String message;
-    serializeJson(doc, message);
-
-    notifyClients(message);
 }
 
 // Types of responses:

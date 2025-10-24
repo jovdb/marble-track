@@ -449,7 +449,7 @@ std::vector<int> Stepper::getPins() const
 void Stepper::configure2Pin(int stepPin, int dirPin, int enablePin)
 {
     cleanupAccelStepper();
-    MLOG_INFO("JO: NEW CODE");
+
     _pin1 = stepPin;
     _pin2 = dirPin;
     _pin3 = -1;

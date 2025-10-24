@@ -35,9 +35,6 @@ public:
     void setDeviceManager(DeviceManager *deviceManager);
     void setNetwork(Network *network);
 
-    // State change broadcasting
-    void broadcastState(const String &deviceId, const String &stateJson, const String &error);
-
     // Made public to allow global function access
     void handleWebSocketMessage(void *arg, uint8_t *data, size_t len);
 
@@ -46,11 +43,11 @@ public:
     void handleDeviceReadConfig(JsonDocument &doc);
     void handleSetDevicesConfig(JsonDocument &doc);
     void handleGetDevicesConfig(JsonDocument &doc);
-    
+
     // Device management handlers
     void handleAddDevice(JsonDocument &doc);
     void handleRemoveDevice(JsonDocument &doc);
-    
+
     // Network config handlers
     void handleGetNetworkConfig(JsonDocument &doc);
     void handleSetNetworkConfig(JsonDocument &doc);

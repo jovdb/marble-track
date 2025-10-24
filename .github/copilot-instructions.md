@@ -16,7 +16,7 @@
 - Styling uses CSS modules with BEM-style class names (`DevicesList.module.css`, `Device.module.css`). Create sibling `.module.css` files rather than global styles.
 
 ## Firmware essentials (`esp32_ws/`)
-- Entry point `src/main.cpp` wires WiFi (`Network`), OTA, LittleFS, and `WebSocketManager` on `server(80)`. Messages broadcast back via `wsManager.broadcastState`.
+- Entry point `src/main.cpp` wires WiFi (`Network`), OTA, LittleFS, and `WebSocketManager` on `server(80)`. Messages broadcast back via `wsManager.notifyClients`.
 - Device classes live under `src/devices/`; add new hardware by subclassing `Device`, registering it in `DeviceManager`, and updating JSON serialization in `DeviceManager.cpp`.
 - Build & upload with PlatformIO (`PlatformIO Build` task or `platformio run --target uploadfs` for data, plain `run` for firmware). Board is `4d_systems_esp32s3_gen4_r8n16` with PSRAM and LittleFS.
 

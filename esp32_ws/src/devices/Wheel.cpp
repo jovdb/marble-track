@@ -64,15 +64,38 @@ void Wheel::loop()
 
     switch (_state)
     {
-    case wheelState::CALIBRATING:
+    case wheelState::RESET:
         if (_sensor->wasPressed())
         {
             MLOG_INFO("Wheel [%s]: Calibration complete.", getId().c_str());
-            _stepper->stop(1000000); // Stop immediately
             _stepper->setCurrentPosition(0);
+            _stepper->stop(1000000); // Stop immediately
             _state = wheelState::IDLE;
             notifyStateChange();
         }
+        break;
+    case wheelState::CALIBRATING:
+        // Start wait for second click
+        if (_sensor->wasPressed())
+        {
+            if (_stateStep == 0)
+            {
+                MLOG_INFO("Wheel [%s]: Calibration reset.", getId().c_str());
+                _stepper->stop(50000); // Stop immediately
+                _stepper->setCurrentPosition(0);
+                _stateStep = 1;
+            }
+            else
+            {
+                long stepsPerRevolution = _stepper->getCurrentPosition();
+                MLOG_INFO("Wheel [%s]: Calibration complete, step per revolution: %d", getId().c_str(), stepsPerRevolution);
+                _stepper->setCurrentPosition(0);
+                _stepper->stop(1000000); // Stop immediately
+                // TODO: broadcast a message with steps per revolution to clients
+                notifyStepsPerRevolution(stepsPerRevolution);
+            }
+        }
+
         break;
 
     default:
@@ -89,6 +112,7 @@ bool Wheel::move(long steps)
     return false;
 }
 
+/** Goto the initial position, do one revolution to get the number of steps */
 bool Wheel::calibrate()
 {
     if (!_stepper)
@@ -98,7 +122,36 @@ bool Wheel::calibrate()
     _state = wheelState::CALIBRATING;
     notifyStateChange();
     _stepper->setCurrentPosition(0);
+    return _stepper->move(100000 * _direction); // Move a large number of steps in the current direction
+}
+
+/** Goto the initial position, until button is pressed*/
+bool Wheel::reset()
+{
+    if (!_stepper)
+        return false;
+
+    MLOG_INFO("Wheel [%s]: Reset started.", getId().c_str());
+    _state = wheelState::RESET;
+    notifyStateChange();
+    _stepper->setCurrentPosition(0);
+    _stateStep = 0;
     return _stepper->move(50000 * _direction); // Move a large number of steps in the current direction
+}
+
+void Wheel::notifyStepsPerRevolution(long steps)
+{
+    if (Device::notifyClients)
+    {
+        JsonDocument doc;
+        doc["type"] = "steps-per-revolution";
+        doc["deviceId"] = getId();
+        doc["steps"] = steps;
+
+        String message;
+        serializeJson(doc, message);
+        notifyClients(message);
+    }
 }
 
 bool Wheel::control(const String &action, JsonObject *payload)
@@ -113,13 +166,14 @@ bool Wheel::control(const String &action, JsonObject *payload)
     }
     else if (action == "calibrate")
     {
-        if (!calibrate())
-            return false;
-        return true;
+        return calibrate();
+    }
+    else if (action == "reset")
+    {
+        return reset();
     }
     else if (action == "stop")
     {
-        MLOG_INFO("Wheel [%s]: Stopping.", getId().c_str());
         _stepper->stop();
         return true;
     }
@@ -137,6 +191,8 @@ String Wheel::stateToString(Wheel::wheelState state) const
         return "IDLE";
     case Wheel::wheelState::MOVING:
         return "MOVING";
+    case Wheel::wheelState::RESET:
+        return "RESET";
     default:
         return "UNKNOWN";
     }

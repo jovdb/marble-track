@@ -17,8 +17,7 @@
 #include <functional>
 #include <vector>
 
-// Callback function type for state change notifications
-using OnStateChange = std::function<void(const String &deviceId, const String &stateJson)>;
+using NotifyClients = std::function<void(const String &message)>;
 
 /**
  * @class Device
@@ -43,7 +42,12 @@ public:
     virtual bool control(const String &action, JsonObject *payload = nullptr);
     virtual String getState();
     virtual std::vector<int> getPins() const;
-    virtual void setOnStateChange(OnStateChange callback);
+    virtual void setNotifyClients(NotifyClients callback);
+    virtual void notifyStateChange();
+    /**
+     * @brief Callback function for change notifications
+     */
+    NotifyClients notifyClients = nullptr;
 
     virtual void setConfig(JsonObject *config);
     virtual String getConfig() const;
@@ -53,16 +57,6 @@ protected:
     String _name;
     String _type;
     std::vector<Device *> children;
-    /**
-     * @brief Callback function for state change notifications
-     */
-    OnStateChange onStateChange = nullptr;
-
-    /**
-     * @brief Notify about state change if callback is set
-     * @param state Current state of the device
-     */
-    void notifyStateChange();
 };
 
 #endif // DEVICE_H

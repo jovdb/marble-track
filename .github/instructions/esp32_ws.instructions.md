@@ -13,7 +13,6 @@ applyTo: "esp32_ws/**"
 
 - Device classes live in `src/devices/` and derive from `Device`. Implement `setup`, `loop`, `getState`, `setConfig`, and expose pins via `getPins()`.
 - Register new devices inside `DeviceManager`: include the header, add creation logic in `loadDevicesFromJsonFile()`, ensure they serialize config/state correctly, and wire any custom JSON keys in `saveDevicesToJsonFile()`.
-- `DeviceManager::setup()` expects you to call `broadcastState(deviceId, stateJson, "")` on updates; reuse that callback for new devices so the UI stays in sync.
 - Persist config/state in LittleFS: the authoritative file is `/config.json`. `loadDevicesFromJsonFile()` and `saveDevicesToJsonFile()` already handle network credentials—preserve unknown JSON keys when writing.
 - Let device action return false if it could not be executed
 

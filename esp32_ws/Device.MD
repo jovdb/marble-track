@@ -31,7 +31,7 @@ classDiagram
         +getState(): String*
         +getPins(): vector<int>*
 
-        +setOnStateChange(callback: OnStateChange)
+        +setNotifyClients(callback: OnStateChange)
 
         +setConfig(config: JsonObject*)*
         +getConfig(): String*
@@ -68,7 +68,7 @@ classDiagram
 
 - **`getState()`**: Returns current device state as JSON string
 - **`notifyStateChange()`**: Triggers state change callback when state updates
-- **`setOnStateChange()`**: Registers callback for state change notifications
+- **`setNotifyClients()`**: Registers callback for broadcasting messages
 
 ### Configuration
 
@@ -100,14 +100,6 @@ myDevice->setup();
 Device* parent = new ParentDevice("parent", "parent_type");
 Device* child = new ChildDevice("child", "child_type");
 parent->addChild(child);
-```
-
-### State Change Notifications
-
-```cpp
-parent->setOnStateChange([](const String& id, const String& state) {
-    Serial.printf("Device %s state changed: %s\n", id.c_str(), state.c_str());
-});
 ```
 
 ## Implementation Notes

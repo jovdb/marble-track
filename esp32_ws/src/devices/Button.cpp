@@ -87,7 +87,6 @@ void Button::loop()
         // Reset debounce timer and update raw state
         _lastDebounceTime = millis();
         _rawState = newRawState;
-        MLOG_INFO("CHANGED");
     }
 
     // Check if enough time has passed for debouncing
@@ -129,6 +128,7 @@ bool Button::wasPressed()
 {
     if (_pressedFlag)
     {
+        // TODO: I assume this can be only checked once
         _pressedFlag = false;
         return true;
     }

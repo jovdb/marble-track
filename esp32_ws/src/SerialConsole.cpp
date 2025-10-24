@@ -114,34 +114,32 @@ void SerialConsole::handleCommand(const String &input)
 
     if (input.equalsIgnoreCase("devices"))
     {
+        std::vector<Device*> allDevices = m_deviceManager.getAllDevices();
+
         Serial.printf("⚙️  Devices: %d total | Mode: %s\n",
-                      m_deviceManager.getDeviceCount(),
+                      static_cast<int>(allDevices.size()),
                       (m_mode == OperationMode::MANUAL) ? "MANUAL" : "AUTOMATIC");
 
-        Device *deviceList[20];
-        int deviceCount = 0;
-        m_deviceManager.getDevices(deviceList, deviceCount, 20);
-
-        if (deviceCount > 0)
+        if (!allDevices.empty())
         {
-            for (int i = 0; i < deviceCount; i++)
+            for (size_t i = 0; i < allDevices.size(); i++)
             {
-                if (deviceList[i] != nullptr)
+                if (allDevices[i] != nullptr)
                 {
                     Serial.printf("  %d. %s [%s] %s\n",
-                                  i + 1,
-                                  deviceList[i]->getType().c_str(),
-                                  deviceList[i]->getId().c_str(),
-                                  deviceList[i]->getName().c_str());
+                                  static_cast<int>(i + 1),
+                                  allDevices[i]->getType().c_str(),
+                                  allDevices[i]->getId().c_str(),
+                                  allDevices[i]->getName().c_str());
 
-                    String state = deviceList[i]->getState();
+                    String state = allDevices[i]->getState();
                     Serial.printf("     State:  %s\n", state.c_str());
 
-                    String config = deviceList[i]->getConfig();
+                    String config = allDevices[i]->getConfig();
                     Serial.printf("     Config: %s\n", config.c_str());
 
                     // Show children IDs
-                    auto children = deviceList[i]->getChildren();
+                    auto children = allDevices[i]->getChildren();
                     if (!children.empty())
                     {
                         Serial.printf("     Children: ");

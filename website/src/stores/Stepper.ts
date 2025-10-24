@@ -65,14 +65,22 @@ export function useStepper(deviceId: string) {
     });
   };
 
-  const stop = () =>
-    sendMessage({
+  const stop = (acceleration?: number) => {
+    const stopArgs: { acceleration?: number } = {};
+
+    // Use provided acceleration, or fall back to default from config
+    if (acceleration !== undefined) {
+      stopArgs.acceleration = acceleration;
+    }
+
+    return sendMessage({
       type: "device-fn",
       deviceType,
       deviceId,
       fn: "stop",
-      args: {},
+      args: stopArgs,
     });
+  };
 
   const resetPosition = () =>
     sendMessage({

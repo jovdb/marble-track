@@ -47,7 +47,7 @@ export function Stepper(props: { id: string }) {
       acceleration: Math.trunc(acceleration()),
     });
 
-  const handleStop = () => actions.stop();
+  const handleStop = () => actions.stop(Math.trunc(acceleration()));
 
   const handleReset = () => actions.resetPosition();
 

@@ -174,7 +174,7 @@ void SerialConsole::handleCommand(const String &input)
     if (input.equalsIgnoreCase("network"))
     {
         logNetworkInfo();
-        Serial.println("  • Type 'set-network' to configure WiFi credentials via serial.");
+        Serial.println("  • Type 'network-set' to configure WiFi credentials via serial.");
         Serial.println();
         return;
     }
@@ -223,7 +223,7 @@ void SerialConsole::handleCommand(const String &input)
         return;
     }
 
-    if (input.equalsIgnoreCase("set-network") || input.equalsIgnoreCase("network-set"))
+    if (input.equalsIgnoreCase("network-set") || input.equalsIgnoreCase("set-network"))
     {
         startSetNetworkFlow();
         return;

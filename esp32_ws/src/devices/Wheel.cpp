@@ -67,7 +67,7 @@ void Wheel::loop()
     case wheelState::RESET:
         if (_sensor->wasPressed())
         {
-            MLOG_INFO("Wheel [%s]: Calibration complete.", getId().c_str());
+            MLOG_INFO("Wheel [%s]: Reset complete.", getId().c_str());
             _stepper->setCurrentPosition(0);
             _stepper->stop(1000000); // Stop immediately
             _state = wheelState::IDLE;
@@ -75,23 +75,24 @@ void Wheel::loop()
         }
         break;
     case wheelState::CALIBRATING:
-        // Start wait for second click
         if (_sensor->wasPressed())
         {
+            // First phase: find zero
             if (_stateStep == 0)
             {
-                MLOG_INFO("Wheel [%s]: Calibration reset.", getId().c_str());
-                _stepper->stop(50000); // Stop immediately
+                MLOG_INFO("Wheel [%s]: Calibration: zero found, counting steps per revolution...", getId().c_str());
                 _stepper->setCurrentPosition(0);
                 _stateStep = 1;
             }
+            // Second step: complete calibration
             else
             {
                 long stepsPerRevolution = _stepper->getCurrentPosition();
                 MLOG_INFO("Wheel [%s]: Calibration complete, step per revolution: %d", getId().c_str(), stepsPerRevolution);
                 _stepper->setCurrentPosition(0);
-                _stepper->stop(1000000); // Stop immediately
-                // TODO: broadcast a message with steps per revolution to clients
+                _stepper->stop();
+                // TODO: move to first breakpoint
+
                 notifyStepsPerRevolution(stepsPerRevolution);
             }
         }
@@ -120,9 +121,9 @@ bool Wheel::calibrate()
 
     MLOG_INFO("Wheel [%s]: Calibration started.", getId().c_str());
     _state = wheelState::CALIBRATING;
+    _stateStep = 0;
     notifyStateChange();
-    _stepper->setCurrentPosition(0);
-    return _stepper->move(100000 * _direction); // Move a large number of steps in the current direction
+    return _stepper->move(50000 * _direction); // Move a large number of steps in the current direction
 }
 
 /** Goto the initial position, until button is pressed*/
@@ -134,8 +135,6 @@ bool Wheel::reset()
     MLOG_INFO("Wheel [%s]: Reset started.", getId().c_str());
     _state = wheelState::RESET;
     notifyStateChange();
-    _stepper->setCurrentPosition(0);
-    _stateStep = 0;
     return _stepper->move(50000 * _direction); // Move a large number of steps in the current direction
 }
 

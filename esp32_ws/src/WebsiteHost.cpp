@@ -1,5 +1,6 @@
 #include "Logging.h"
 #include "WebsiteHost.h"
+#include <functional>
 
 WebsiteHost::WebsiteHost(Network *networkInstance)
     : network(networkInstance), server(nullptr)
@@ -85,6 +86,53 @@ void WebsiteHost::setupRoutes()
             file = root.openNextFile();
         }
         request->send(200, "text/plain", message); });
+
+    // LittleFS file browser
+    server->on("/littlefs", HTTP_GET, [this](AsyncWebServerRequest *request)
+               {
+        String html = "<!DOCTYPE html><html><head><title>LittleFS Files</title><style>table { border-collapse: collapse; } th, td { border: 1px solid black; padding: 5px; } .size-col { text-align: right; }</style></head><body>";
+        html += "<h1>LittleFS File System</h1>";
+        html += "<table><tr><th>Name</th><th class='size-col'>Size</th><th>Modified</th></tr>";
+        auto getDate = [](time_t t) -> String {
+            struct tm *tm = localtime(&t);
+            char buf[40];
+            strftime(buf, sizeof(buf), "%B %d, %Y %I:%M:%S %p", tm);
+            return String(buf);
+        };
+        std::function<void(const String&, int)> listFiles = [&](const String& path, int indent) {
+            File dir = LittleFS.open(path);
+            if (!dir || !dir.isDirectory()) return;
+            File file = dir.openNextFile();
+            while (file) {
+                String filePath = (path == "/") ? (String("/") + file.name()) : (path + "/" + file.name());
+                html += "<tr><td style='padding-left: " + String(indent * 20) + "px;'>";
+                if (file.isDirectory()) {
+                    html += String(file.name()) + "/";
+                } else {
+                    html += "<a href='../" + filePath.substring(1) + "'>" + String(file.name()) + "</a>";
+                }
+                html += "</td><td class='size-col'>";
+                if (file.isDirectory()) {
+                    html += "-";
+                } else {
+                    html += String(file.size()) + " bytes";
+                }
+                html += "</td><td>";
+                if (file.isDirectory()) {
+                    html += "-";
+                } else {
+                    html += getDate(file.getLastWrite());
+                }
+                html += "</td></tr>";
+                if (file.isDirectory()) {
+                    listFiles(filePath, indent + 1);
+                }
+                file = dir.openNextFile();
+            }
+        };
+        listFiles("/", 0);
+        html += "</table></body></html>";
+        request->send(200, "text/html", html); });
 
     // Test WebSocket connectivity endpoint
     server->on("/test-ws", HTTP_GET, [this](AsyncWebServerRequest *request)

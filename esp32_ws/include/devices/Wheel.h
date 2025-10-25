@@ -40,11 +40,12 @@ private:
     wheelState _state;
     /* -1 = CCW, 1 = CW */
     int _direction = -1;
-    std::vector<long> _breakPoints;
+    std::vector<float> _breakPoints;
     long _lastZeroPosition = 0;
     /** Average of the last X revolutions? */
     long _stepsInLastRevolution = 0;
     long _stepsPerRevolution = 0;
+    size_t _currentBreakpointIndex = 0;
 };
 
 #endif // WHEEL_H

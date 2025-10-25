@@ -1,9 +1,7 @@
 import styles from "./Device.module.css";
 import wheelStyles from "./WheelConfig.module.css";
-import { IWheelConfig } from "../../stores/Wheel";
 import { createMemo, For, onMount, createSignal, onCleanup } from "solid-js";
 import DeviceConfig from "./DeviceConfig";
-import { useDevice } from "../../stores/Devices";
 import { useWheel } from "../../stores/Wheel";
 import { useWebSocket2 } from "../../hooks/useWebSocket2";
 
@@ -13,11 +11,10 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
 
   const config = () => device()?.config;
 
-  const [stepperDevice] = useDevice(`${device()?.id}-stepper`);
-  const currentPosition = createMemo(() => (stepperDevice?.state as any)?.currentPosition);
   const [deviceName, setDeviceName] = createSignal("");
   const [stepsPerRevolution, setStepsPerRevolution] = createSignal(0);
   const [angle, setAngle] = createSignal(0);
+  const [breakpoints, setBreakpoints] = createSignal<number[]>([]);
 
   const [, { subscribe }] = useWebSocket2();
   const [, wheelActions] = useWheel(device()?.id);
@@ -47,12 +44,13 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
         ...currentConfig,
         name: deviceName() || currentConfig.name || device()?.id,
         stepsPerRevolution: stepsPerRevolution(),
+        breakPoints: breakpoints(),
       };
       actions.setDeviceConfig(updatedConfig);
     }
   };
 
-  // Update device name and steps per revolution when config loads
+  // Update device name, steps per revolution, and breakpoints when config loads
   const currentConfig = createMemo(() => config());
   createMemo(() => {
     const cfg = currentConfig();
@@ -61,6 +59,9 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
     }
     if (cfg && typeof cfg.stepsPerRevolution === "number" && stepsPerRevolution() === 0) {
       setStepsPerRevolution(cfg.stepsPerRevolution);
+    }
+    if (cfg && cfg.breakPoints && breakpoints().length === 0) {
+      setBreakpoints([...cfg.breakPoints]);
     }
   });
 
@@ -136,7 +137,11 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
               console.log(`Moving to angle ${targetAngle}°`);
             }}
             style={{ "flex-shrink": "0" }}
-            disabled={!stepsPerRevolution() || stepsPerRevolution() <= 0 || device()?.state?.lastZeroPosition === 0}
+            disabled={
+              !stepsPerRevolution() ||
+              stepsPerRevolution() <= 0 ||
+              device()?.state?.lastZeroPosition === 0
+            }
           >
             Move to
           </button>
@@ -145,7 +150,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
       <div class={wheelStyles["wheel-config__breakpoints"]}>
         <label class={wheelStyles["wheel-config__label"]}>Breakpoints:</label>
         <ul class={wheelStyles["wheel-config__list"]}>
-          <For each={config()?.breakPoints}>
+          <For each={breakpoints()}>
             {(bp, index) => (
               <li class={wheelStyles["wheel-config__item"]}>
                 <span class={wheelStyles["wheel-config__value"]}>{bp}</span>
@@ -153,28 +158,34 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                 <button
                   disabled={index() === 0}
                   title="Move Up"
-                  onClick={() => {
-                    const cfg = config() || ({} as IWheelConfig);
-                    const arr = cfg.breakPoints?.slice() || [];
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const currentBreakpoints = breakpoints();
+                    const newBreakpoints = [...currentBreakpoints];
                     if (index() > 0) {
-                      [arr[index() - 1], arr[index()]] = [arr[index()], arr[index() - 1]];
-                      cfg.breakPoints = arr;
-                      actions.setDeviceConfig(cfg);
+                      [newBreakpoints[index() - 1], newBreakpoints[index()]] = [
+                        newBreakpoints[index()],
+                        newBreakpoints[index() - 1],
+                      ];
+                      setBreakpoints(newBreakpoints);
                     }
                   }}
                 >
                   ↑
                 </button>
                 <button
-                  disabled={index() === (config()?.breakPoints?.length ?? 0) - 1}
+                  disabled={index() === breakpoints().length - 1}
                   title="Move Down"
-                  onClick={() => {
-                    const cfg = config() || ({} as IWheelConfig);
-                    const arr = cfg.breakPoints?.slice() || [];
-                    if (index() < arr.length - 1) {
-                      [arr[index() + 1], arr[index()]] = [arr[index()], arr[index() + 1]];
-                      cfg.breakPoints = arr;
-                      actions.setDeviceConfig(cfg);
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const currentBreakpoints = breakpoints();
+                    const newBreakpoints = [...currentBreakpoints];
+                    if (index() < newBreakpoints.length - 1) {
+                      [newBreakpoints[index() + 1], newBreakpoints[index()]] = [
+                        newBreakpoints[index()],
+                        newBreakpoints[index() + 1],
+                      ];
+                      setBreakpoints(newBreakpoints);
                     }
                   }}
                 >
@@ -182,11 +193,11 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                 </button>
                 <button
                   title="Delete"
-                  onClick={() => {
-                    const cfg = config() || ({} as IWheelConfig);
-                    cfg.breakPoints = cfg.breakPoints?.slice() || [];
-                    cfg.breakPoints.splice(index(), 1);
-                    actions.setDeviceConfig(cfg);
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const currentBreakpoints = breakpoints();
+                    const newBreakpoints = currentBreakpoints.filter((_, i) => i !== index());
+                    setBreakpoints(newBreakpoints);
                   }}
                 >
                   ✕
@@ -196,11 +207,10 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
           </For>
         </ul>
         <button
-          onClick={() => {
-            const cfg = config() || ({} as IWheelConfig);
-            cfg.breakPoints = cfg.breakPoints?.slice() || [];
-            cfg.breakPoints.push(Math.floor(Math.random() * 1000));
-            actions.setDeviceConfig(cfg);
+          onClick={(e) => {
+            e.preventDefault(); // prevent post
+            const currentBreakpoints = breakpoints();
+            setBreakpoints([...currentBreakpoints, angle()]);
           }}
         >
           + Add Breakpoint

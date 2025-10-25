@@ -6,8 +6,8 @@ long maxStepsPerRevolution = 50000;
 // 34587
 
 // Array of breakpoints values
-// these are the number of steps after the reset button
-static const long breakpoints[] = {2000, 4000, 10000, 1200, 15000};
+// these are the angle values for breakpoints
+static const float breakpoints[] = {45.0, 90.0, 180.0, 30.0, 270.0};
 
 Wheel::Wheel(const String &id)
     : Device(id, "wheel"), _stepper(nullptr), _sensor(nullptr), _stepsInLastRevolution(0)
@@ -255,10 +255,20 @@ bool Wheel::control(const String &action, JsonObject *payload)
     // Use if-else if chain for string actions (C++ does not support switch on String)
     if (action == "next-breakpoint")
     {
-        long steps = payload && (*payload)["steps"].is<long>() ? (*payload)["steps"].as<long>() : 5000;
-        if (!move(steps))
+        if (_breakPoints.empty())
+        {
+            MLOG_WARN("Wheel [%s]: No breakpoints configured", getId().c_str());
             return false;
-        return true;
+        }
+        
+        // Get the next breakpoint angle
+        float targetAngle = _breakPoints[_currentBreakpointIndex];
+        
+        // Move to the next breakpoint index (wrap around)
+        _currentBreakpointIndex = (_currentBreakpointIndex + 1) % _breakPoints.size();
+        
+        MLOG_INFO("Wheel [%s]: Moving to next breakpoint angle %.1f°", getId().c_str(), targetAngle);
+        return moveToAngle(targetAngle);
     }
     else if (action == "calibrate")
     {
@@ -335,7 +345,7 @@ String Wheel::getConfig() const
     doc["name"] = _name;
     doc["stepsPerRevolution"] = _stepsPerRevolution;
     JsonArray arr = doc["breakPoints"].to<JsonArray>();
-    for (long bp : _breakPoints)
+    for (float bp : _breakPoints)
     {
         arr.add(bp);
     }
@@ -373,9 +383,9 @@ void Wheel::setConfig(JsonObject *config)
         JsonArray arr = (*config)["breakPoints"];
         for (JsonVariant v : arr)
         {
-            if (v.is<long>())
+            if (v.is<float>() || v.is<long>())
             {
-                _breakPoints.push_back(v.as<long>());
+                _breakPoints.push_back(v.as<float>());
             }
         }
     }

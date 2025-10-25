@@ -24,6 +24,14 @@ export function useWheel(deviceId: string) {
       fn: "calibrate",
     });
 
+  const reset = () =>
+    sendMessage({
+      type: "device-fn",
+      deviceId,
+      deviceType,
+      fn: "reset",
+    });
+
   const nextBreakpoint = () =>
     sendMessage({
       type: "device-fn",
@@ -37,6 +45,7 @@ export function useWheel(deviceId: string) {
     {
       ...actions,
       calibrate,
+      reset,
       nextBreakpoint,
     },
   ] as const;

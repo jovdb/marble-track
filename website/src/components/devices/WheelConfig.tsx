@@ -75,6 +75,14 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
       >
         Calibrate
       </button>
+      <button
+        class={styles.device__button}
+        onClick={() => {
+          actions.reset();
+        }}
+      >
+        Reset
+      </button>
       Current: {currentPosition() ?? "?"}
       <div style={{ display: "flex", gap: "0.5em", "margin-top": "1em" }}>
         <button

@@ -9,8 +9,9 @@
     "web-dev": "npm run dev --prefix ./website",
     "web-build": "npm run type-check --prefix ./website && npm run fix --prefix ./website && npm run build --prefix ./website",
     "web-deploy": "powershell -ExecutionPolicy Bypass -File deploy-website.ps1",
+    "web-all": "npm run web-build && npm run web-deploy",
     "build": "npm run esp-build && npm run web-build",
     "upload": "npm run esp-deploy && npm run web-deploy",
-    "all": "npm run build && npm run upload"
+    "all": "npm run esp-all && npm run web-all && npm run esp-mon"
   }
 }

@@ -29,7 +29,9 @@ const Header: Component = () => {
             alt="Logo"
             class={`${styles.header__logo} ${webSocket.isConnected ? styles["header__logo--connected"] : ""}`}
           />
-          <h1 class={styles.header__title}>Marble Manager</h1>
+          <h1 class={styles.header__title} title={`Build: ${__BUILD_DATE__}`}>
+            Marble Manager
+          </h1>
         </div>
         <div class={styles.header__right}>
           <span title={`Connected to ${webSocket.url}`} class={styles.header__button}>

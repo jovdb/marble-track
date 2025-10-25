@@ -78,7 +78,7 @@ void SerialConsole::loop()
 
             if (input.length() == 0)
             {
-                Serial.println("💡 Commands: 'devices', 'network', 'memory', 'config', 'restart'");
+                Serial.println("💡 Commands: 'devices', 'network', 'memory', 'config', 'version', 'restart'");
                 Serial.println();
                 continue;
             }
@@ -187,6 +187,17 @@ void SerialConsole::handleCommand(const String &input)
         uint32_t percent = (freeHeap * 100) / totalHeap;
         Serial.printf("   ⚡ Free: %d%% (%d bytes) | Total: %d bytes\n", percent, freeHeap, totalHeap);
         Serial.printf("   📈 Min Free: %d bytes | CPU: %d MHz\n", ESP.getMinFreeHeap(), ESP.getCpuFreqMHz());
+        Serial.println();
+        return;
+    }
+
+    if (input.equalsIgnoreCase("version"))
+    {
+        Serial.println("🏗️  Build Information:");
+        Serial.printf("   📅 Build Date: %s\n", __DATE__);
+        Serial.printf("   🕐 Build Time: %s\n", __TIME__);
+        Serial.printf("   🔧 ESP32 Chip: %s\n", ESP.getChipModel());
+        Serial.printf("   📊 Flash Size: %d MB\n", ESP.getFlashChipSize() / (1024 * 1024));
         Serial.println();
         return;
     }

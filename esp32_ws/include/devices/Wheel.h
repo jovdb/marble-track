@@ -40,7 +40,8 @@ private:
     /* -1 = CCW, 1 = CW */
     int _direction = -1;
     std::vector<long> _breakPoints;
-    byte _stateStep = 0;
+    long _lastZeroPoint = 0;
+    long _stepsPerRevolution = 0;
 };
 
 #endif // WHEEL_H

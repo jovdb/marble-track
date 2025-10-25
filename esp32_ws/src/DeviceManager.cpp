@@ -68,9 +68,9 @@ void DeviceManager::loadDevicesFromJsonFile()
         DeserializationError err = deserializeJson(doc, file);
         file.close();
 
-        String prettyJson;
-        serializeJsonPretty(doc, prettyJson);
-        MLOG_INFO("Loaded JSON from config file:\n%s", prettyJson.c_str());
+        // String prettyJson;
+        // serializeJsonPretty(doc, prettyJson);
+        // MLOG_INFO("Loaded JSON from config file:\n%s", prettyJson.c_str());
 
         if (!err && doc.is<JsonObject>())
         {
@@ -386,9 +386,9 @@ void DeviceManager::saveDevicesToJsonFile()
         MLOG_INFO("Saved devices list to %s", CONFIG_FILE);
 
         // Log the saved JSON in pretty format
-        String prettyJson;
-        serializeJsonPretty(doc, prettyJson);
-        MLOG_INFO("Saved config JSON:\n%s", prettyJson.c_str());
+        // String prettyJson;
+        // serializeJsonPretty(doc, prettyJson);
+        // MLOG_INFO("Saved config JSON:\n%s", prettyJson.c_str());
     }
     else
     {

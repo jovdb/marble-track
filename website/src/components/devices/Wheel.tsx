@@ -1,8 +1,8 @@
 import { Device } from "./Device";
-import { createSignal, onCleanup } from "solid-js";
+import { createEffect, createSignal, onCleanup } from "solid-js";
 import styles from "./Device.module.css";
 import { WheelConfig } from "./WheelConfig";
-import { useWheel } from "../../stores/Wheel";
+import { IWheelState, useWheel } from "../../stores/Wheel";
 
 export function Wheel(props: { id: string }) {
   const wheelStore = useWheel(props.id);
@@ -14,7 +14,6 @@ export function Wheel(props: { id: string }) {
   const error = () => undefined; // Placeholder until error handling is implemented
 
   // TODO: Get child stepper position - need to access child devices
-  const currentPosition = () => undefined; // Placeholder
   const [steps] = createSignal<undefined | number>(undefined);
   const [direction, setDirection] = createSignal<-1 | 0 | 1>(0);
   const [uiAngle, setUiAngle] = createSignal<undefined | number>(undefined);
@@ -27,6 +26,15 @@ export function Wheel(props: { id: string }) {
 
   setDirection(state()?.state === "CALIBRATING" ? -1 : 0);
   let animationFrame: number | null = null;
+
+  createEffect(() => {
+    const currentState = state()?.state;
+    if (currentState !== "IDLE") {
+      setDirection(-1);
+    } else {
+      setDirection(0);
+    }
+  });
 
   function animateWheel(time: number) {
     if (lastTime === null) lastTime = time;
@@ -52,6 +60,23 @@ export function Wheel(props: { id: string }) {
   const angle2 = 120;
   const arrowAngle = 45 * direction(); // Angle for the arrow in degrees
   const arrowRadius = radius * 0.8; // Radius for the arrow path
+
+  function getStateString(state: IWheelState["state"] | undefined) {
+    switch (state) {
+      case "IDLE":
+        return "Idle";
+      case "CALIBRATING":
+        return "Calibrating...";
+      case "RESET":
+        return "Resetting...";
+      case "MOVING":
+        return "Moving...";
+      case undefined:
+        return "";
+      default:
+        return "Unknown";
+    }
+  }
 
   return (
     <Device
@@ -135,20 +160,26 @@ export function Wheel(props: { id: string }) {
           <div class={styles.device__status}>
             <div>
               <span class={styles["device__status-text"]}>
-                Status: {state()?.state === "CALIBRATING" ? "Calibrating..." : "Idle"}
+                Status: {getStateString(state()?.state)}
               </span>
             </div>
-            <div>
-              <span class={styles["device__status-text"]}>
-                Calibrated: {state()?.calibrationState}
-              </span>
-            </div>
-            <div>
-              <span class={styles["device__status-text"]}>Position: {currentPosition()}</span>
-            </div>
+            {state()?.angle !== null && state()?.angle !== undefined && (
+              <div>
+                <span class={styles["device__status-text"]}>
+                  Angle: {state()?.angle?.toFixed(1)}°
+                </span>
+              </div>
+            )}
           </div>
           <div class={styles.device__controls}>
-            <button class={styles.device__button} onClick={onNextClicked}>
+            <button class={styles.device__button} onClick={() => actions.reset()}>
+              Reset
+            </button>
+            <button
+              class={styles.device__button}
+              onClick={onNextClicked}
+              disabled={state()?.lastZeroPosition === 0}
+            >
               Next
             </button>
           </div>

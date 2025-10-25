@@ -74,23 +74,30 @@ void Wheel::loop()
         {
             _state = wheelState::IDLE;
 
-            // Reset position to avoid overflow
-            // if (_lastZeroPosition > 0)
-            // {
-            //     MLOG_INFO("Wheel [%s]: Resetting current position to avoid overflow.", getId().c_str());
-            //     long currentPos = _stepper->getCurrentPosition();
+            // Reset position to avoid overflow: No
 
-            //     // TODO: modulo when rotating in the negative direction
-            //     if (currentPos > _stepsInLastRevolution)
-            //     {
-            //         long newPosition = currentPos % _stepsInLastRevolution;
-
-            //         _stepper->setCurrentPosition(newPosition);
-            //         _lastZeroPosition = newPosition;
-            //     }
-            // }
             notifyStateChange();
         }
+
+        if (_sensor->wasPressed())
+        {
+            MLOG_INFO("Wheel [%s]: Zero position.", getId().c_str());
+            long currentPosition = _stepper->getCurrentPosition();
+            _stepsInLastRevolution = currentPosition - _lastZeroPosition;
+            _lastZeroPosition = currentPosition;
+
+            // Check if the measured steps per revolution differs significantly from configured value
+            if (_stepsPerRevolution > 0)
+            {
+                float percentDiff = abs(_stepsInLastRevolution - _stepsPerRevolution) / (float)_stepsPerRevolution * 100.0f;
+                if (percentDiff > 0.1f)
+                {
+                    MLOG_WARN("Wheel [%s]: Steps per revolution mismatch - measured: %ld, configured: %ld (%.2f%% difference). Update the wheel configuration.",
+                              getId().c_str(), _stepsInLastRevolution, _stepsPerRevolution, percentDiff);
+                }
+            }
+        }
+
         break;
     case wheelState::RESET:
         if (_sensor->wasPressed())
@@ -260,13 +267,13 @@ bool Wheel::control(const String &action, JsonObject *payload)
             MLOG_WARN("Wheel [%s]: No breakpoints configured", getId().c_str());
             return false;
         }
-        
+
         // Get the next breakpoint angle
         float targetAngle = _breakPoints[_currentBreakpointIndex];
-        
+
         // Move to the next breakpoint index (wrap around)
         _currentBreakpointIndex = (_currentBreakpointIndex + 1) % _breakPoints.size();
-        
+
         MLOG_INFO("Wheel [%s]: Moving to next breakpoint angle %.1f°", getId().c_str(), targetAngle);
         return moveToAngle(targetAngle);
     }
@@ -325,7 +332,24 @@ String Wheel::getState()
     }
     doc["state"] = stateToString(_state);
     doc["lastZeroPosition"] = _lastZeroPosition;
-    doc["stepsInLastRevolution"] = _stepsInLastRevolution;
+    
+    // Calculate angle if possible
+    if (_lastZeroPosition != 0 && _stepsPerRevolution > 0 && _stepper)
+    {
+        long currentPosition = _stepper->getCurrentPosition();
+        float angle = ((currentPosition - _lastZeroPosition) / (float)_stepsPerRevolution) * 360.0f;
+        // Normalize angle to 0-360 range
+        while (angle < 0)
+            angle += 360;
+        while (angle >= 360)
+            angle -= 360;
+        doc["angle"] = angle;
+    }
+    else
+    {
+        doc["angle"] = nullptr;
+    }
+
     String result;
     serializeJson(doc, result);
     return result;
@@ -374,6 +398,7 @@ void Wheel::setConfig(JsonObject *config)
     if ((*config)["stepsPerRevolution"].is<long>())
     {
         _stepsPerRevolution = (*config)["stepsPerRevolution"].as<long>();
+        _stepsInLastRevolution = _stepsPerRevolution;
     }
 
     // Set breakPoints if provided

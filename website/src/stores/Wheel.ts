@@ -3,8 +3,10 @@ import { useDevice } from "./Devices";
 
 const deviceType = "wheel";
 export interface IWheelState extends IDeviceState {
-  state: "CALIBRATING" | "IDLE";
-  calibrationState: "YES" | "NO" | "FAILED";
+  state: "CALIBRATING" | "IDLE" | "RESET" | "MOVING";
+  lastZeroPosition: number;
+  stepsInLastRevolution: number;
+  angle: number | null;
   [key: string]: unknown;
 }
 

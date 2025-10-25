@@ -25,11 +25,6 @@ export function Wheel(props: { id: string }) {
     actions.nextBreakpoint();
   };
 
-  const onCalibrateClicked = () => {
-    lastTime = null;
-    actions.calibrate();
-  };
-
   setDirection(state()?.state === "CALIBRATING" ? -1 : 0);
   let animationFrame: number | null = null;
 
@@ -153,9 +148,6 @@ export function Wheel(props: { id: string }) {
             </div>
           </div>
           <div class={styles.device__controls}>
-            <button class={styles.device__button} onClick={onCalibrateClicked}>
-              Calibrate
-            </button>
             <button class={styles.device__button} onClick={onNextClicked}>
               Next
             </button>

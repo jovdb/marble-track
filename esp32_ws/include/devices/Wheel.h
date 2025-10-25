@@ -41,7 +41,8 @@ private:
     int _direction = -1;
     std::vector<long> _breakPoints;
     long _lastZeroPoint = 0;
-    long _stepsPerRevolution = 0;
+    /** Average of the last X revolutions? */
+    long _stepsInLastRevolution = 0;
 };
 
 #endif // WHEEL_H

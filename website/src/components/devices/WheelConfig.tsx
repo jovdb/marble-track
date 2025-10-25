@@ -1,25 +1,40 @@
 import styles from "./Device.module.css";
 import wheelStyles from "./WheelConfig.module.css";
 import { IWheelConfig } from "../../stores/Wheel";
-import { createMemo, For, onMount, createSignal } from "solid-js";
+import { createMemo, For, onMount, createSignal, onCleanup } from "solid-js";
 import DeviceConfig from "./DeviceConfig";
 import { useDevice } from "../../stores/Devices";
+import { useWebSocket2 } from "../../hooks/useWebSocket2";
 
 export function WheelConfig(props: { device: any; actions: any; onClose: () => void }) {
   const device = () => props.device;
   const actions = props.actions;
 
   const config = () => device()?.config;
-  // TODO: Handle error state - might need to be added to device state
-  const error = () => undefined; // Placeholder until error handling is implemented
 
   const [stepperDevice, { sendMessage }] = useDevice(`${device()?.id}-stepper`);
   const currentPosition = createMemo(() => (stepperDevice?.state as any)?.currentPosition);
   const [deviceName, setDeviceName] = createSignal("");
   const [stepsPerRevolution, setStepsPerRevolution] = createSignal(0);
 
+  const [, { subscribe }] = useWebSocket2();
+
   onMount(() => {
     actions.getDeviceConfig();
+
+    // Subscribe to WebSocket messages for steps-per-revolution updates
+    const unsubscribe = subscribe((message: any) => {
+      if (message.type === "steps-per-revolution" && message.deviceId === device()?.id) {
+        const oldValue = stepsPerRevolution();
+        const newValue = message.steps;
+        setStepsPerRevolution(newValue);
+        console.log(`Steps per revolution updated from ${oldValue} to ${newValue}`);
+      }
+    });
+
+    onCleanup(() => {
+      unsubscribe();
+    });
   });
 
   const moveSteps = (steps: number) => {
@@ -97,7 +112,8 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
       </div>
       <button
         class={styles.device__button}
-        onClick={() => {
+        onClick={(e) => {
+          e.preventDefault(); // prevent post
           actions.reset();
         }}
       >

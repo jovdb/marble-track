@@ -137,6 +137,26 @@ void Device::notifyStateChange()
     }
 }
 
+void Device::notifyError(String messageType, String error)
+{
+    if (notifyClients)
+    {
+        JsonDocument doc;
+        doc["type"] = messageType;
+        doc["deviceId"] = this->getId();
+        doc["error"] = error;
+
+        String message;
+        serializeJson(doc, message);
+
+        notifyClients(message);
+    }
+    else
+    {
+        MLOG_WARN("Device [%s]: notifyClients callback not set", _id.c_str());
+    }
+}
+
 String Device::getConfig() const
 {
     // Default implementation: return empty JSON object

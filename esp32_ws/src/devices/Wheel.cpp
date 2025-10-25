@@ -10,7 +10,7 @@ long maxStepsPerRevolution = 50000;
 static const long breakpoints[] = {2000, 4000, 10000, 1200, 15000};
 
 Wheel::Wheel(const String &id)
-    : Device(id, "wheel"), _stepper(nullptr), _sensor(nullptr), _stepsPerRevolution(0)
+    : Device(id, "wheel"), _stepper(nullptr), _sensor(nullptr), _stepsInLastRevolution(0)
 {
     _direction = 1;
     _state = wheelState::IDLE;
@@ -52,41 +52,59 @@ void Wheel::loop()
     if (!_stepper || !_sensor)
         return;
 
-    // Started moving ?
-    if (_stepper->isMoving() && _state == wheelState::IDLE)
-    {
-        _state = wheelState::MOVING;
-        notifyStateChange();
-    }
-    // Stopped moving?
-    else if (!_stepper->isMoving() && _state == wheelState::MOVING)
-    {
-        // TODO: detect if no reset found during calibration?
-        _state = wheelState::IDLE;
-        notifyStateChange();
-
-        // Reset position to avoid overflow
-        if (_lastZeroPoint > 0)
-        {
-            MLOG_INFO("Wheel [%s]: Resetting current position to avoid overflow.", getId().c_str());
-            long currentPos = _stepper->getCurrentPosition();
-            long adjustedPos = currentPos - _lastZeroPoint;
-            _stepper->setCurrentPosition(adjustedPos);
-            _lastZeroPoint = 0;
-        }
-    }
-
     switch (_state)
     {
+    case wheelState::IDLE:
+    {
+        // Started moving
+        if (_stepper->isMoving())
+        {
+            _state = wheelState::MOVING;
+            notifyStateChange();
+        }
+        break;
+    }
+    case wheelState::MOVING:
+        // Stopped moving
+        if (!_stepper->isMoving())
+        {
+            _state = wheelState::IDLE;
+
+            // Reset position to avoid overflow
+            if (_lastZeroPoint > 0)
+            {
+                MLOG_INFO("Wheel [%s]: Resetting current position to avoid overflow.", getId().c_str());
+                long currentPos = _stepper->getCurrentPosition();
+                long adjustedPos = currentPos - _lastZeroPoint;
+                _stepper->setCurrentPosition(adjustedPos);
+                _lastZeroPoint = 0;
+            }
+            notifyStateChange();
+        }
+        break;
     case wheelState::RESET:
         if (_sensor->wasPressed())
         {
             MLOG_INFO("Wheel [%s]: Reset complete.", getId().c_str());
             _lastZeroPoint = _stepper->getCurrentPosition();
-            _stepper->stop();
+
             // TODO -> Move to first breakpoint?
+            _stepper->stop();
+
+            // Resting to moving
+            _state = wheelState::MOVING;
             notifyStateChange();
         }
+
+        // No zero found during calibration?
+        // TODO: Wait for started moving
+        // if (!_stepper->isMoving())
+        // {
+        //     _state = wheelState::IDLE;
+        //     notifyStateChange();
+        //     notifyError("reset-error", "No zero point found during reset.");
+        // }
+
         break;
     case wheelState::CALIBRATING:
         if (_sensor->wasPressed())
@@ -101,14 +119,28 @@ void Wheel::loop()
             else
             {
                 long currentPos = _stepper->getCurrentPosition();
-                _stepsPerRevolution = currentPos - _lastZeroPoint;
-                MLOG_INFO("Wheel [%s]: Calibration complete, step per revolution: %d", getId().c_str(), _stepsPerRevolution);
+                _stepsInLastRevolution = currentPos - _lastZeroPoint;
+                MLOG_INFO("Wheel [%s]: Calibration complete, step per revolution: %d", getId().c_str(), _stepsInLastRevolution);
                 _lastZeroPoint = currentPos;
                 _stepper->stop();
+
                 // TODO: move to first breakpoint
-                notifyStepsPerRevolution(_stepsPerRevolution);
+                notifyStepsPerRevolution(_stepsInLastRevolution);
+
+                // Calibrating to moving
+                _state = wheelState::MOVING;
+                notifyStateChange();
             }
         }
+
+        // No zero found during calibration?
+        // TODO: Wait for started moving
+        // if (!_stepper->isMoving())
+        // {
+        //     _state = wheelState::IDLE;
+        //     notifyStateChange();
+        //     notifyError("calibration-error", "No zero point found during calibration.");
+        // }
 
         break;
 
@@ -229,7 +261,7 @@ String Wheel::getState()
         doc[kv.key()] = kv.value();
     }
     doc["state"] = stateToString(_state);
-    doc["stepsPerRevolution"] = _stepsPerRevolution;
+    // doc["stepsInLastRevolution"] = _stepsInLastRevolution;
     String result;
     serializeJson(doc, result);
     return result;
@@ -247,7 +279,7 @@ String Wheel::getConfig() const
     }
     // Add wheel-specific config
     doc["name"] = _name;
-    doc["stepsPerRevolution"] = _stepsPerRevolution;
+    doc["stepsPerRevolution"] = _stepsInLastRevolution;
     JsonArray arr = doc["breakPoints"].to<JsonArray>();
     for (long bp : _breakPoints)
     {
@@ -277,7 +309,7 @@ void Wheel::setConfig(JsonObject *config)
     // Set stepsPerRevolution if provided
     if ((*config)["stepsPerRevolution"].is<long>())
     {
-        _stepsPerRevolution = (*config)["stepsPerRevolution"].as<long>();
+        _stepsInLastRevolution = (*config)["stepsPerRevolution"].as<long>();
     }
 
     // Set breakPoints if provided

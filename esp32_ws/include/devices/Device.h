@@ -44,6 +44,7 @@ public:
     virtual std::vector<int> getPins() const;
     virtual void setNotifyClients(NotifyClients callback);
     virtual void notifyStateChange();
+    virtual void notifyError(String messageType, String error);
     /**
      * @brief Callback function for change notifications
      */

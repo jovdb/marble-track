@@ -143,6 +143,11 @@ export type IWsReceiveDevicesConfigMessage =
   | (IWsMessageBase<"devices-config"> & _IWsErrorResponse)
   | (IWsMessageBase<"devices-config"> & { config: Record<string, unknown> });
 
+export type IWsReceiveStepsPerRevolutionMessage = IWsMessageBase<"steps-per-revolution"> & {
+  deviceId: string;
+  steps: number;
+};
+
 export type IWsReceiveMessage =
   | IWsReceiveDevicesListMessage
   | IWsReceiveDeviceStateMessage
@@ -156,6 +161,7 @@ export type IWsReceiveMessage =
   | IWsReceiveGetNetworksMessage
   | IWsReceiveGetNetworkStatusMessage
   | IWsReceiveDevicesConfigMessage
+  | IWsReceiveStepsPerRevolutionMessage
   | IWsReceivePongMessage;
 
 export type IWsSendRestartMessage = IWsMessageBase<"restart">;

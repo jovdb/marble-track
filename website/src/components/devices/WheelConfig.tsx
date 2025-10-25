@@ -4,6 +4,7 @@ import { IWheelConfig } from "../../stores/Wheel";
 import { createMemo, For, onMount, createSignal, onCleanup } from "solid-js";
 import DeviceConfig from "./DeviceConfig";
 import { useDevice } from "../../stores/Devices";
+import { useWheel } from "../../stores/Wheel";
 import { useWebSocket2 } from "../../hooks/useWebSocket2";
 
 export function WheelConfig(props: { device: any; actions: any; onClose: () => void }) {
@@ -12,12 +13,14 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
 
   const config = () => device()?.config;
 
-  const [stepperDevice, { sendMessage }] = useDevice(`${device()?.id}-stepper`);
+  const [stepperDevice] = useDevice(`${device()?.id}-stepper`);
   const currentPosition = createMemo(() => (stepperDevice?.state as any)?.currentPosition);
   const [deviceName, setDeviceName] = createSignal("");
   const [stepsPerRevolution, setStepsPerRevolution] = createSignal(0);
+  const [angle, setAngle] = createSignal(0);
 
   const [, { subscribe }] = useWebSocket2();
+  const [, wheelActions] = useWheel(device()?.id);
 
   onMount(() => {
     actions.getDeviceConfig();
@@ -36,21 +39,6 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
       unsubscribe();
     });
   });
-
-  const moveSteps = (steps: number) => {
-    // For now, assume the stepper device ID is wheelId + "-stepper"
-    const stepperDeviceId = `${device()?.id}-stepper`;
-
-    sendMessage({
-      type: "device-fn",
-      deviceType: "stepper",
-      deviceId: stepperDeviceId,
-      fn: "move",
-      args: {
-        steps,
-      },
-    });
-  };
 
   const handleSave = () => {
     const currentConfig = config();
@@ -110,16 +98,50 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
           </button>
         </div>
       </div>
-      <button
-        class={styles.device__button}
-        onClick={(e) => {
-          e.preventDefault(); // prevent post
-          actions.reset();
-        }}
-      >
-        Reset
-      </button>
-      Current: {currentPosition() ?? "?"}
+      <div style={{ "margin-bottom": "1em" }}>
+        <label style={{ display: "block", "margin-bottom": "0.5em" }}>Angle (0-359.9°):</label>
+        <div style={{ display: "flex", gap: "0.5em", "align-items": "flex-end" }}>
+          <input
+            type="number"
+            value={angle()}
+            onInput={(e) => {
+              const value = parseFloat(e.currentTarget.value);
+              if (!isNaN(value) && value >= 0 && value <= 359.9) {
+                setAngle(Math.round(value * 10) / 10); // Round to 1 decimal place
+              }
+            }}
+            style={{ flex: "1", padding: "0.5em", "font-size": "1em" }}
+            min="0"
+            max="359.9"
+            step="0.1"
+          />
+          <button
+            class={styles.device__button}
+            onClick={(e) => {
+              e.preventDefault(); // prevent post
+              wheelActions.reset();
+            }}
+            style={{ "flex-shrink": "0" }}
+            disabled={device()?.state?.state === "RESET"}
+          >
+            Reset
+          </button>
+          <button
+            class={styles.device__button}
+            onClick={(e) => {
+              e.preventDefault(); // prevent post
+              const targetAngle = angle();
+
+              wheelActions.moveToAngle(targetAngle);
+              console.log(`Moving to angle ${targetAngle}°`);
+            }}
+            style={{ "flex-shrink": "0" }}
+            disabled={!stepsPerRevolution() || stepsPerRevolution() <= 0 || device()?.state?.lastZeroPosition === 0}
+          >
+            Move to
+          </button>
+        </div>
+      </div>{" "}
       <div class={wheelStyles["wheel-config__breakpoints"]}>
         <label class={wheelStyles["wheel-config__label"]}>Breakpoints:</label>
         <ul class={wheelStyles["wheel-config__list"]}>

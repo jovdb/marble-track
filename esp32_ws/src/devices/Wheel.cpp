@@ -18,7 +18,9 @@ Wheel::Wheel(const String &id)
 
 void Wheel::setup()
 {
-    if (getChildren().empty())
+    auto children = getChildren();
+    MLOG_WARN("Wheel [%s]: Setup start, children count: %d", getId().c_str(), children.size());
+    if (children.empty())
     {
         // Create children if not loaded from config
         _stepper = new Stepper(getId() + "-stepper");
@@ -35,14 +37,16 @@ void Wheel::setup()
     else
     {
         // Set pointers from loaded children
-        auto children = getChildren();
         if (children.size() >= 1)
             _stepper = static_cast<Stepper *>(children[0]);
         if (children.size() >= 2)
             _sensor = static_cast<Button *>(children[1]);
     }
 
-    Device::setup(); // Call base setup to setup children
+    // Call base setup to setup children
+    Device::setup();
+
+    MLOG_WARN("Wheel [%s]: Setup end, children count: %d", getId().c_str(), children.size());
 }
 
 void Wheel::loop()
@@ -71,14 +75,20 @@ void Wheel::loop()
             _state = wheelState::IDLE;
 
             // Reset position to avoid overflow
-            if (_lastZeroPoint > 0)
-            {
-                MLOG_INFO("Wheel [%s]: Resetting current position to avoid overflow.", getId().c_str());
-                long currentPos = _stepper->getCurrentPosition();
-                long adjustedPos = currentPos - _lastZeroPoint;
-                _stepper->setCurrentPosition(adjustedPos);
-                _lastZeroPoint = 0;
-            }
+            // if (_lastZeroPosition > 0)
+            // {
+            //     MLOG_INFO("Wheel [%s]: Resetting current position to avoid overflow.", getId().c_str());
+            //     long currentPos = _stepper->getCurrentPosition();
+
+            //     // TODO: modulo when rotating in the negative direction
+            //     if (currentPos > _stepsInLastRevolution)
+            //     {
+            //         long newPosition = currentPos % _stepsInLastRevolution;
+
+            //         _stepper->setCurrentPosition(newPosition);
+            //         _lastZeroPosition = newPosition;
+            //     }
+            // }
             notifyStateChange();
         }
         break;
@@ -86,7 +96,7 @@ void Wheel::loop()
         if (_sensor->wasPressed())
         {
             MLOG_INFO("Wheel [%s]: Reset complete.", getId().c_str());
-            _lastZeroPoint = _stepper->getCurrentPosition();
+            _lastZeroPosition = _stepper->getCurrentPosition();
 
             // TODO -> Move to first breakpoint?
             _stepper->stop();
@@ -110,18 +120,18 @@ void Wheel::loop()
         if (_sensor->wasPressed())
         {
             // First phase: find zero
-            if (_lastZeroPoint == 0)
+            if (_lastZeroPosition == 0)
             {
                 MLOG_INFO("Wheel [%s]: Calibration: zero found, counting steps per revolution...", getId().c_str());
-                _lastZeroPoint = _stepper->getCurrentPosition();
+                _lastZeroPosition = _stepper->getCurrentPosition();
             }
             // Second step: complete calibration
             else
             {
                 long currentPos = _stepper->getCurrentPosition();
-                _stepsInLastRevolution = currentPos - _lastZeroPoint;
+                _stepsInLastRevolution = currentPos - _lastZeroPosition;
                 MLOG_INFO("Wheel [%s]: Calibration complete, step per revolution: %d", getId().c_str(), _stepsInLastRevolution);
-                _lastZeroPoint = currentPos;
+                _lastZeroPosition = currentPos;
                 _stepper->stop();
 
                 // TODO: move to first breakpoint
@@ -169,7 +179,7 @@ bool Wheel::calibrate()
 
     MLOG_INFO("Wheel [%s]: Calibration started.", getId().c_str());
     _state = wheelState::CALIBRATING;
-    _lastZeroPoint = 0;
+    _lastZeroPosition = 0;
     notifyStateChange();
     // Max 2 revolutions
     return _stepper->move(maxStepsPerRevolution * 2 * _direction); // Move a large number of steps in the current direction
@@ -185,6 +195,44 @@ bool Wheel::reset()
     _state = wheelState::RESET;
     notifyStateChange();
     return _stepper->move(maxStepsPerRevolution * _direction); // Move a large number of steps in the current direction
+}
+
+/** Move to a specific angle (0-359.9 degrees) - absolute positioning based on zero point */
+bool Wheel::moveToAngle(float angle)
+{
+    if (!_stepper)
+    {
+        MLOG_WARN("Wheel [%s]: Stepper not initialized", getId().c_str());
+        return false;
+    }
+
+    if (_stepsPerRevolution <= 0)
+    {
+        MLOG_WARN("Wheel [%s]: Cannot move to angle - steps per revolution not calibrated", getId().c_str());
+        return false;
+    }
+
+    if (_lastZeroPosition == 0)
+    {
+        MLOG_WARN("Wheel [%s]: Cannot move to angle - zero point not set (run calibration or reset first)", getId().c_str());
+        return false;
+    }
+
+    // Ensure angle is in valid range
+    while (angle < 0)
+        angle += 360;
+    while (angle >= 360)
+        angle -= 360;
+
+    // Calculate absolute target position relative to zero point
+    long targetPosition = _lastZeroPosition + (angle / 360.0) * _stepsPerRevolution;
+    long currentPosition = _stepper->getCurrentPosition();
+    long stepsToMove = targetPosition - currentPosition;
+
+    MLOG_INFO("Wheel [%s]: Moving to absolute angle %.1f° (target pos: %ld, current pos: %ld, steps: %ld)",
+              getId().c_str(), angle, targetPosition, currentPosition, stepsToMove);
+
+    return _stepper->move(stepsToMove);
 }
 
 void Wheel::notifyStepsPerRevolution(long steps)
@@ -219,6 +267,11 @@ bool Wheel::control(const String &action, JsonObject *payload)
     else if (action == "reset")
     {
         return reset();
+    }
+    else if (action == "move-to-angle")
+    {
+        float angle = payload && (*payload)["angle"].is<float>() ? (*payload)["angle"].as<float>() : 0.0f;
+        return moveToAngle(angle);
     }
     else if (action == "stop")
     {
@@ -261,7 +314,8 @@ String Wheel::getState()
         doc[kv.key()] = kv.value();
     }
     doc["state"] = stateToString(_state);
-    // doc["stepsInLastRevolution"] = _stepsInLastRevolution;
+    doc["lastZeroPosition"] = _lastZeroPosition;
+    doc["stepsInLastRevolution"] = _stepsInLastRevolution;
     String result;
     serializeJson(doc, result);
     return result;
@@ -279,7 +333,7 @@ String Wheel::getConfig() const
     }
     // Add wheel-specific config
     doc["name"] = _name;
-    doc["stepsPerRevolution"] = _stepsInLastRevolution;
+    doc["stepsPerRevolution"] = _stepsPerRevolution;
     JsonArray arr = doc["breakPoints"].to<JsonArray>();
     for (long bp : _breakPoints)
     {
@@ -309,7 +363,7 @@ void Wheel::setConfig(JsonObject *config)
     // Set stepsPerRevolution if provided
     if ((*config)["stepsPerRevolution"].is<long>())
     {
-        _stepsInLastRevolution = (*config)["stepsPerRevolution"].as<long>();
+        _stepsPerRevolution = (*config)["stepsPerRevolution"].as<long>();
     }
 
     // Set breakPoints if provided

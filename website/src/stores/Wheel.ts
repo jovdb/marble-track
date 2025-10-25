@@ -41,6 +41,17 @@ export function useWheel(deviceId: string) {
       fn: "next-breakpoint",
     });
 
+  const moveToAngle = (angle: number) =>
+    sendMessage({
+      type: "device-fn",
+      deviceId,
+      deviceType,
+      fn: "move-to-angle",
+      args: {
+        angle,
+      },
+    });
+
   return [
     device,
     {
@@ -48,6 +59,7 @@ export function useWheel(deviceId: string) {
       calibrate,
       reset,
       nextBreakpoint,
+      moveToAngle,
     },
   ] as const;
 }

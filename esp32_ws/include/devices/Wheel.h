@@ -30,6 +30,7 @@ public:
     bool move(long steps);
     bool calibrate();
     bool reset();
+    bool moveToAngle(float angle);
     void notifyStepsPerRevolution(long steps);
 
 private:
@@ -40,9 +41,10 @@ private:
     /* -1 = CCW, 1 = CW */
     int _direction = -1;
     std::vector<long> _breakPoints;
-    long _lastZeroPoint = 0;
+    long _lastZeroPosition = 0;
     /** Average of the last X revolutions? */
     long _stepsInLastRevolution = 0;
+    long _stepsPerRevolution = 0;
 };
 
 #endif // WHEEL_H

@@ -53,6 +53,12 @@ select {
   box-sizing: border-box;
 }
 
+input:not([type="checkbox"], [type="radio"]),
+select,
+textarea {
+  margin-bottom: unset;
+}
+
 /* Container adjustments to work well with Pico's container system */
 .container {
   max-width: 1200px;

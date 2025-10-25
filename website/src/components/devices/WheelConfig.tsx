@@ -16,6 +16,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
   const [stepperDevice, { sendMessage }] = useDevice(`${device()?.id}-stepper`);
   const currentPosition = createMemo(() => (stepperDevice?.state as any)?.currentPosition);
   const [deviceName, setDeviceName] = createSignal("");
+  const [stepsPerRevolution, setStepsPerRevolution] = createSignal(0);
 
   onMount(() => {
     actions.getDeviceConfig();
@@ -42,17 +43,21 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
       const updatedConfig = {
         ...currentConfig,
         name: deviceName() || currentConfig.name || device()?.id,
+        stepsPerRevolution: stepsPerRevolution(),
       };
       actions.setDeviceConfig(updatedConfig);
     }
   };
 
-  // Update device name when config loads
+  // Update device name and steps per revolution when config loads
   const currentConfig = createMemo(() => config());
   createMemo(() => {
     const cfg = currentConfig();
     if (cfg && typeof cfg.name === "string" && !deviceName()) {
       setDeviceName(cfg.name);
+    }
+    if (cfg && typeof cfg.stepsPerRevolution === "number" && stepsPerRevolution() === 0) {
+      setStepsPerRevolution(cfg.stepsPerRevolution);
     }
   });
 
@@ -67,14 +72,29 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
           style={{ width: "100%", padding: "0.5em", "font-size": "1em" }}
         />
       </div>
-      <button
-        class={styles.device__button}
-        onClick={() => {
-          actions.calibrate();
-        }}
-      >
-        Calibrate
-      </button>
+      <div style={{ "margin-bottom": "1em" }}>
+        <label style={{ display: "block", "margin-bottom": "0.5em" }}>Steps per Revolution:</label>
+        <div style={{ display: "flex", gap: "0.5em", "align-items": "flex-end" }}>
+          <input
+            type="number"
+            value={stepsPerRevolution()}
+            onInput={(e) => setStepsPerRevolution(parseInt(e.currentTarget.value) || 0)}
+            style={{ flex: "1", padding: "0.5em", "font-size": "1em" }}
+            min="0"
+          />
+          <button
+            class={styles.device__button}
+            onClick={(e) => {
+              e.preventDefault(); // prevent post
+              actions.calibrate();
+            }}
+            style={{ "flex-shrink": "0" }}
+            disabled={device()?.state?.state === "CALIBRATING"}
+          >
+            Calibrate
+          </button>
+        </div>
+      </div>
       <button
         class={styles.device__button}
         onClick={() => {
@@ -84,50 +104,6 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
         Reset
       </button>
       Current: {currentPosition() ?? "?"}
-      <div style={{ display: "flex", gap: "0.5em", "margin-top": "1em" }}>
-        <button
-          class={`${styles["device__button"]} ${styles["device__button-small"]}`}
-          onClick={() => moveSteps(-200)}
-          disabled={!!error()}
-        >
-          -200
-        </button>
-        <button
-          class={`${styles["device__button"]} ${styles["device__button-small"]}`}
-          onClick={() => moveSteps(-50)}
-          disabled={!!error()}
-        >
-          -50
-        </button>
-        <button
-          class={`${styles["device__button"]} ${styles["device__button-small"]}`}
-          onClick={() => moveSteps(-10)}
-          disabled={!!error()}
-        >
-          -10
-        </button>
-        <button
-          class={`${styles["device__button"]} ${styles["device__button-small"]}`}
-          onClick={() => moveSteps(10)}
-          disabled={!!error()}
-        >
-          +10
-        </button>
-        <button
-          class={`${styles["device__button"]} ${styles["device__button-small"]}`}
-          onClick={() => moveSteps(50)}
-          disabled={!!error()}
-        >
-          +50
-        </button>
-        <button
-          class={`${styles["device__button"]} ${styles["device__button-small"]}`}
-          onClick={() => moveSteps(200)}
-          disabled={!!error()}
-        >
-          +200
-        </button>
-      </div>
       <div class={wheelStyles["wheel-config__breakpoints"]}>
         <label class={wheelStyles["wheel-config__label"]}>Breakpoints:</label>
         <ul class={wheelStyles["wheel-config__list"]}>

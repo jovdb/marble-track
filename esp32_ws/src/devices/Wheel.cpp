@@ -68,6 +68,7 @@ void Wheel::loop()
         // Reset position to avoid overflow
         if (_lastZeroPoint > 0)
         {
+            MLOG_INFO("Wheel [%s]: Resetting current position to avoid overflow.", getId().c_str());
             long currentPos = _stepper->getCurrentPosition();
             long adjustedPos = currentPos - _lastZeroPoint;
             _stepper->setCurrentPosition(adjustedPos);
@@ -246,6 +247,7 @@ String Wheel::getConfig() const
     }
     // Add wheel-specific config
     doc["name"] = _name;
+    doc["stepsPerRevolution"] = _stepsPerRevolution;
     JsonArray arr = doc["breakPoints"].to<JsonArray>();
     for (long bp : _breakPoints)
     {
@@ -270,6 +272,12 @@ void Wheel::setConfig(JsonObject *config)
     if ((*config)["name"].is<String>())
     {
         _name = (*config)["name"].as<String>();
+    }
+
+    // Set stepsPerRevolution if provided
+    if ((*config)["stepsPerRevolution"].is<long>())
+    {
+        _stepsPerRevolution = (*config)["stepsPerRevolution"].as<long>();
     }
 
     // Set breakPoints if provided

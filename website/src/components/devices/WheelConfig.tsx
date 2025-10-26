@@ -105,7 +105,9 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
         </div>
       </div>
       <div style={{ "margin-bottom": "1em" }}>
-        <label style={{ display: "block", "margin-bottom": "0.5em" }}>Max Steps per Revolution:</label>
+        <label style={{ display: "block", "margin-bottom": "0.5em" }}>
+          Max Steps per Revolution:
+        </label>
         <input
           type="number"
           value={maxStepsPerRevolution()}

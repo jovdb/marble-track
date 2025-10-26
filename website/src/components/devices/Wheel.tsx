@@ -1,5 +1,5 @@
 import { Device } from "./Device";
-import { createEffect, createSignal, onCleanup } from "solid-js";
+import { createEffect, createSignal, onCleanup, For } from "solid-js";
 import styles from "./Device.module.css";
 import { WheelConfig } from "./WheelConfig";
 import { IWheelState, useWheel } from "../../stores/Wheel";
@@ -55,11 +55,14 @@ export function Wheel(props: { id: string }) {
   });
 
   const size = 100;
-  const radius = size / 2 - 1; // Radius of the wheel in pixels
+  const radius = size / 2 - 15; // Radius of the wheel in pixels - made even smaller
   const angle1 = 0;
   const angle2 = 120;
   const arrowAngle = 45 * direction(); // Angle for the arrow in degrees
   const arrowRadius = radius * 0.8; // Radius for the arrow path
+
+  // Get breakpoints from device config
+  const breakpoints = () => device()?.config?.breakPoints || [];
 
   function getStateString(state: IWheelState["state"] | undefined) {
     switch (state) {
@@ -94,6 +97,16 @@ export function Wheel(props: { id: string }) {
               r={radius}
               style={{ fill: "none", stroke: "currentColor", "stroke-width": "1" }}
             />
+            {/* Zero degree reference line (fixed, doesn't rotate) */}
+            <line
+              x1={size / 2}
+              y1={size / 2 - radius}
+              x2={size / 2}
+              y2={size / 2 - radius * 0.8}
+              style={{ stroke: "currentColor", "stroke-width": "1" }}
+            />
+          </g>
+          {/*
             {steps() !== undefined && (
               <>
                 <circle
@@ -110,48 +123,100 @@ export function Wheel(props: { id: string }) {
                 />
               </>
             )}
-            {!steps() && direction() !== 0 && (
-              <g
-                transform={`rotate(${120 + arrowAngle})`}
-                transform-origin={`${size / 2}px ${size / 2}px`}
-              >
-                <path
-                  d={`M ${size / 2 + Math.sin((0 / 180) * Math.PI) * arrowRadius} ${size / 2 + Math.cos((0 / 180) * Math.PI) * arrowRadius} A ${radius * 0.8} ${radius * 0.8} 0 0 ${arrowAngle < 0 ? 1 : 0} ${size / 2 + Math.sin((arrowAngle / 180) * Math.PI) * arrowRadius} ${size / 2 + Math.cos((arrowAngle / 180) * Math.PI) * arrowRadius}`}
-                  style={{ stroke: "currentColor", "stroke-width": "1", fill: "none" }}
-                />
-                <line
-                  x1={size / 2 + Math.sin((0 / 180) * Math.PI) * arrowRadius}
-                  y1={size / 2 + Math.cos((0 / 180) * Math.PI) * arrowRadius}
-                  x2={
-                    size / 2 +
-                    Math.sin((0 / 180) * Math.PI) * arrowRadius +
-                    (arrowAngle > 0 ? 5 : -5)
-                  }
-                  y2={
-                    size / 2 +
-                    Math.cos((0 / 180) * Math.PI) * arrowRadius +
-                    (arrowAngle > 0 ? 5 : -5)
-                  }
-                  style={{ stroke: "currentColor", "stroke-width": "1" }}
-                />
-                <line
-                  x1={size / 2 + Math.sin((0 / 180) * Math.PI) * arrowRadius}
-                  y1={size / 2 + Math.cos((0 / 180) * Math.PI) * arrowRadius}
-                  x2={
-                    size / 2 +
-                    Math.sin((0 / 180) * Math.PI) * arrowRadius +
-                    (arrowAngle > 0 ? 5 : -5)
-                  }
-                  y2={
-                    size / 2 +
-                    Math.cos((0 / 180) * Math.PI) * arrowRadius -
-                    (arrowAngle > 0 ? 5 : -5)
-                  }
-                  style={{ stroke: "currentColor", "stroke-width": "1" }}
-                />
-              </g>
-            )}
-          </g>
+            {/* Breakpoint indicators */}
+          {/* Zero degree outer marker */}
+          <line
+            x1={size / 2}
+            y1={size / 2 - radius}
+            x2={size / 2}
+            y2={size / 2 - radius * 1.15}
+            style={{ stroke: "grey", "stroke-width": "1" }}
+          />
+          {/* Zero degree label */}
+          <text
+            x={size / 2}
+            y={size / 2 - radius * 1.25}
+            text-anchor="middle"
+            dominant-baseline="middle"
+            style={{
+              fill: "grey",
+              "font-size": "6px",
+              "font-weight": "bold",
+              "font-family": "monospace",
+            }}
+          >
+            0
+          </text>
+          <For each={breakpoints()}>
+            {(breakpoint: number, index) => {
+              const angleRad = (breakpoint / 180) * Math.PI;
+              const innerRadius = radius * 1.0; // Start at circle edge
+              const outerRadius = radius * 1.15; // Extend outside the circle
+              const textRadius = radius * 1.25; // Position text further out
+              return (
+                <g>
+                  {/* Line marker */}
+                  <line
+                    x1={size / 2 + Math.sin(angleRad) * innerRadius}
+                    y1={size / 2 + Math.cos(angleRad) * innerRadius}
+                    x2={size / 2 + Math.sin(angleRad) * outerRadius}
+                    y2={size / 2 + Math.cos(angleRad) * outerRadius}
+                    style={{ stroke: "currentColor", "stroke-width": "1" }}
+                  />
+                  {/* Index number */}
+                  <text
+                    x={size / 2 + Math.sin(angleRad) * textRadius}
+                    y={size / 2 + Math.cos(angleRad) * textRadius}
+                    text-anchor="middle"
+                    dominant-baseline="middle"
+                    style={{
+                      fill: "currentColor",
+                      "font-size": "6px",
+                      "font-weight": "bold",
+                      "font-family": "monospace",
+                    }}
+                  >
+                    {index() + 1}
+                  </text>
+                </g>
+              );
+            }}
+          </For>
+          {/*}
+          {!steps() && direction() !== 0 && (
+            <g
+              transform={`rotate(${120 + arrowAngle})`}
+              transform-origin={`${size / 2}px ${size / 2}px`}
+            >
+              <path
+                d={`M ${size / 2 + Math.sin((0 / 180) * Math.PI) * arrowRadius} ${size / 2 + Math.cos((0 / 180) * Math.PI) * arrowRadius} A ${radius * 0.8} ${radius * 0.8} 0 0 ${arrowAngle < 0 ? 1 : 0} ${size / 2 + Math.sin((arrowAngle / 180) * Math.PI) * arrowRadius} ${size / 2 + Math.cos((arrowAngle / 180) * Math.PI) * arrowRadius}`}
+                style={{ stroke: "currentColor", "stroke-width": "1", fill: "none" }}
+              />
+              <line
+                x1={size / 2 + Math.sin((0 / 180) * Math.PI) * arrowRadius}
+                y1={size / 2 + Math.cos((0 / 180) * Math.PI) * arrowRadius}
+                x2={
+                  size / 2 + Math.sin((0 / 180) * Math.PI) * arrowRadius + (arrowAngle > 0 ? 5 : -5)
+                }
+                y2={
+                  size / 2 + Math.cos((0 / 180) * Math.PI) * arrowRadius + (arrowAngle > 0 ? 5 : -5)
+                }
+                style={{ stroke: "currentColor", "stroke-width": "1" }}
+              />
+              <line
+                x1={size / 2 + Math.sin((0 / 180) * Math.PI) * arrowRadius}
+                y1={size / 2 + Math.cos((0 / 180) * Math.PI) * arrowRadius}
+                x2={
+                  size / 2 + Math.sin((0 / 180) * Math.PI) * arrowRadius + (arrowAngle > 0 ? 5 : -5)
+                }
+                y2={
+                  size / 2 + Math.cos((0 / 180) * Math.PI) * arrowRadius - (arrowAngle > 0 ? 5 : -5)
+                }
+                style={{ stroke: "currentColor", "stroke-width": "1" }}
+              />
+            </g>
+          )}
+            */}
         </svg>
       </div>
       {error() && <div class={styles.device__error}>{error()}</div>}

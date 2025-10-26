@@ -1,5 +1,5 @@
 import { Device } from "./Device";
-import { createEffect, createSignal, onCleanup, For } from "solid-js";
+import { createEffect, createSignal, onCleanup, For, createMemo, Show } from "solid-js";
 import styles from "./Device.module.css";
 import { WheelConfig } from "./WheelConfig";
 import { IWheelState, useWheel } from "../../stores/Wheel";
@@ -17,6 +17,9 @@ export function Wheel(props: { id: string }) {
   const [steps] = createSignal<undefined | number>(undefined);
   const [direction, setDirection] = createSignal<-1 | 0 | 1>(0);
   const [uiAngle, setUiAngle] = createSignal<undefined | number>(undefined);
+
+  const isCalibrated = createMemo(() => !!state()?.lastZeroPosition);
+  const isSearchingZero = createMemo(() => !state()?.lastZeroPosition && state()?.state !== "IDLE");
 
   let lastTime: number | null = null;
 
@@ -97,14 +100,37 @@ export function Wheel(props: { id: string }) {
               r={radius}
               style={{ fill: "none", stroke: "currentColor", "stroke-width": "1" }}
             />
+
+            {/* Question mark at center */}
+            <Show when={!isCalibrated()}>
+              <text
+                x={size / 2}
+                y={size / 2}
+                text-anchor="middle"
+                dominant-baseline="middle"
+                style={{
+                  "animation-name": isSearchingZero() ? "wheel-spin" : undefined,
+                  fill: "currentColor",
+                  opacity: 0.5,
+                  "font-size": "16px",
+                  "font-weight": "bold",
+                  "font-family": "monospace",
+                }}
+              >
+                ?
+              </text>
+            </Show>
+
             {/* Zero degree reference line (fixed, doesn't rotate) */}
-            <line
-              x1={size / 2}
-              y1={size / 2 - radius}
-              x2={size / 2}
-              y2={size / 2 - radius * 0.8}
-              style={{ stroke: "currentColor", "stroke-width": "1" }}
-            />
+            <Show when={isCalibrated()}>
+              <line
+                x1={size / 2}
+                y1={size / 2 - radius}
+                x2={size / 2}
+                y2={size / 2 - radius * 0.8}
+                style={{ stroke: "currentColor", "stroke-width": "1" }}
+              />
+            </Show>
           </g>
           {/*
             {steps() !== undefined && (
@@ -130,7 +156,7 @@ export function Wheel(props: { id: string }) {
             y1={size / 2 - radius}
             x2={size / 2}
             y2={size / 2 - radius * 1.15}
-            style={{ stroke: "grey", "stroke-width": "1" }}
+            style={{ stroke: "currentColor", opacity: 0.5, "stroke-width": "1" }}
           />
           {/* Zero degree label */}
           <text
@@ -139,7 +165,8 @@ export function Wheel(props: { id: string }) {
             text-anchor="middle"
             dominant-baseline="middle"
             style={{
-              fill: "grey",
+              fill: "currentColor",
+              opacity: 0.5,
               "font-size": "6px",
               "font-weight": "bold",
               "font-family": "monospace",

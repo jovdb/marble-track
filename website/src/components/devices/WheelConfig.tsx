@@ -14,6 +14,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
   const [deviceName, setDeviceName] = createSignal("");
   const [stepsPerRevolution, setStepsPerRevolution] = createSignal(0);
   const [maxStepsPerRevolution, setMaxStepsPerRevolution] = createSignal(10000);
+  const [flipDirection, setFlipDirection] = createSignal(false);
   const [angle, setAngle] = createSignal(0);
   const [breakpoints, setBreakpoints] = createSignal<number[]>([]);
 
@@ -46,13 +47,14 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
         name: deviceName() || currentConfig.name || device()?.id,
         stepsPerRevolution: stepsPerRevolution(),
         maxStepsPerRevolution: maxStepsPerRevolution(),
+        direction: flipDirection() ? -1 : 1,
         breakPoints: breakpoints(),
       };
       actions.setDeviceConfig(updatedConfig);
     }
   };
 
-  // Update device name, steps per revolution, max steps per revolution, and breakpoints when config loads
+  // Update device name, steps per revolution, max steps per revolution, direction, and breakpoints when config loads
   const currentConfig = createMemo(() => config());
   createMemo(() => {
     const cfg = currentConfig();
@@ -64,6 +66,9 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
     }
     if (cfg && typeof cfg.maxStepsPerRevolution === "number" && maxStepsPerRevolution() === 10000) {
       setMaxStepsPerRevolution(cfg.maxStepsPerRevolution);
+    }
+    if (cfg && typeof cfg.direction === "number" && !flipDirection()) {
+      setFlipDirection(cfg.direction === -1);
     }
     if (cfg && cfg.breakPoints && breakpoints().length === 0) {
       setBreakpoints([...cfg.breakPoints]);
@@ -113,6 +118,16 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
           style={{ width: "100%", padding: "0.5em", "font-size": "1em" }}
           min="1"
         />
+      </div>
+      <div style={{ "margin-bottom": "1em" }}>
+        <label style={{ display: "flex", "align-items": "center", gap: "0.5em" }}>
+          <input
+            type="checkbox"
+            checked={flipDirection()}
+            onInput={(e) => setFlipDirection(e.currentTarget.checked)}
+          />
+          Flip direction
+        </label>
       </div>
       <div style={{ "margin-bottom": "1em" }}>
         <label style={{ display: "block", "margin-bottom": "0.5em" }}>Angle (0-359.9°):</label>

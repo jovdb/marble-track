@@ -365,6 +365,7 @@ String Wheel::getConfig() const
     doc["name"] = _name;
     doc["stepsPerRevolution"] = _stepsPerRevolution;
     doc["maxStepsPerRevolution"] = _maxStepsPerRevolution;
+    doc["direction"] = _direction;
     JsonArray arr = doc["breakPoints"].to<JsonArray>();
     for (float bp : _breakPoints)
     {
@@ -402,6 +403,12 @@ void Wheel::setConfig(JsonObject *config)
     if ((*config)["maxStepsPerRevolution"].is<long>())
     {
         _maxStepsPerRevolution = (*config)["maxStepsPerRevolution"].as<long>();
+    }
+
+    // Set direction if provided
+    if ((*config)["direction"].is<long>())
+    {
+        _direction = (*config)["direction"].as<long>();
     }
 
     // Set breakPoints if provided

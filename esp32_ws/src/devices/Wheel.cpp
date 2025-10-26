@@ -73,6 +73,7 @@ void Wheel::loop()
             // Reset position to avoid overflow: No
 
             notifyStateChange();
+            _targetAngle = -1.0f;
         }
 
         if (_sensor->wasPressed())
@@ -270,6 +271,8 @@ bool Wheel::control(const String &action, JsonObject *payload)
         // Move to the next breakpoint index (wrap around)
         _currentBreakpointIndex = (_currentBreakpointIndex + 1) % _breakPoints.size();
 
+        _targetAngle = targetAngle;
+
         MLOG_INFO("Wheel [%s]: Moving to next breakpoint angle %.1f°", getId().c_str(), targetAngle);
         return moveToAngle(targetAngle);
     }
@@ -284,6 +287,7 @@ bool Wheel::control(const String &action, JsonObject *payload)
     else if (action == "move-to-angle")
     {
         float angle = payload && (*payload)["angle"].is<float>() ? (*payload)["angle"].as<float>() : 0.0f;
+        _targetAngle = angle;
         return moveToAngle(angle);
     }
     else if (action == "stop")
@@ -344,6 +348,18 @@ String Wheel::getState()
     else
     {
         doc["angle"] = nullptr;
+    }
+
+    if (_state != wheelState::IDLE && _targetAngle >= 0)
+    {
+        doc["targetAngle"] = _targetAngle;
+        if (_stepper && _stepsPerRevolution > 0)
+        {
+            float speed = _stepper->getDefaultSpeed();
+            float accel = _stepper->getDefaultAcceleration();
+            doc["speedRpm"] = (speed / _stepsPerRevolution) * 60.0f;
+            doc["acceleration"] = (accel / _stepsPerRevolution) * 3600.0f;
+        }
     }
 
     String result;

@@ -47,6 +47,7 @@ private:
     long _stepsPerRevolution = 0;
     long _maxStepsPerRevolution = 10000;
     size_t _currentBreakpointIndex = 0;
+    float _targetAngle = -1.0f;
 };
 
 #endif // WHEEL_H

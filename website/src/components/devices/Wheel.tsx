@@ -258,10 +258,19 @@ export function Wheel(props: { id: string }) {
             {state()?.angle !== null && state()?.angle !== undefined && (
               <div>
                 <span class={styles["device__status-text"]}>
-                  Angle: {state()?.angle?.toFixed(1)}°
+                  {state()?.angle?.toFixed(1)}°
                 </span>
               </div>
             )}
+            {state()?.targetAngle !== undefined &&
+              state()?.targetAngle !== null &&
+              state()?.targetAngle !== state()?.angle && (
+                <div>
+                  <span class={styles["device__status-text"]}>
+                    -> {state()?.targetAngle?.toFixed(1)}°
+                  </span>
+                </div>
+              )}
           </div>
           <div class={styles.device__controls}>
             <button class={styles.device__button} onClick={() => actions.reset()}>

@@ -16,6 +16,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
   const [maxStepsPerRevolution, setMaxStepsPerRevolution] = createSignal(10000);
   const [angle, setAngle] = createSignal(0);
   const [breakpoints, setBreakpoints] = createSignal<number[]>([]);
+  const [zeroPointDegree, setZeroPointDegree] = createSignal(0);
 
   const [, { subscribe }] = useWebSocket2();
   const [, wheelActions] = useWheel(device()?.id);
@@ -47,6 +48,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
         stepsPerRevolution: stepsPerRevolution(),
         maxStepsPerRevolution: maxStepsPerRevolution(),
         breakPoints: breakpoints(),
+        zeroPointDegree: zeroPointDegree(),
       };
       actions.setDeviceConfig(updatedConfig);
     }
@@ -67,6 +69,9 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
     }
     if (cfg && cfg.breakPoints && breakpoints().length === 0) {
       setBreakpoints([...cfg.breakPoints]);
+    }
+    if (cfg && typeof cfg.zeroPointDegree === "number") {
+      setZeroPointDegree(cfg.zeroPointDegree);
     }
   });
 
@@ -114,6 +119,20 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
           onInput={(e) => setMaxStepsPerRevolution(parseInt(e.currentTarget.value) || 10000)}
           style={{ width: "100%", padding: "0.5em", "font-size": "1em" }}
           min="1"
+        />
+      </div>
+      <div style={{ "margin-bottom": "1em" }}>
+        <label style={{ display: "block", "margin-bottom": "0.5em" }}>
+          Zero Point Degree:
+        </label>
+        <input
+          type="number"
+          value={zeroPointDegree()}
+          onInput={(e) => setZeroPointDegree(parseFloat(e.currentTarget.value) || 0)}
+          style={{ width: "100%", padding: "0.5em", "font-size": "1em" }}
+          min="0"
+          max="359.9"
+          step="0.1"
         />
       </div>
       <div style={{ "margin-bottom": "1em" }}>

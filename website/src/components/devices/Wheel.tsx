@@ -34,7 +34,7 @@ export function Wheel(props: { id: string }) {
 
   function animateWheel(time: number) {
     if (lastAnimationTime === null) lastAnimationTime = time;
-    const dt = (time - lastAnimationTime) / 1000; // seconds
+    const _dt = (time - lastAnimationTime) / 1000; // seconds
     lastAnimationTime = time;
 
     // TODO
@@ -51,6 +51,7 @@ export function Wheel(props: { id: string }) {
 
   // Get breakpoints from device config
   const breakpoints = () => device()?.config?.breakPoints || [];
+  const zeroPointDegree = () => device()?.config?.zeroPointDegree || 0;
 
   function getStateString(state: IWheelState["state"] | undefined) {
     switch (state) {
@@ -78,7 +79,10 @@ export function Wheel(props: { id: string }) {
     >
       <div style={{ "max-width": "300px", margin: "0 auto" }}>
         <svg class={styles.svg} viewBox="0 0 100 100" style={{ "max-width": "300px" }}>
-          <g transform={`rotate(${- (uiAngle() ?? 0)})`} transform-origin={`${size / 2}px ${size / 2}px`}>
+          <g
+            transform={`rotate(${-(uiAngle() ?? 0)})`}
+            transform-origin={`${size / 2}px ${size / 2}px`}
+          >
             <circle
               cx={size / 2}
               cy={size / 2}
@@ -106,46 +110,62 @@ export function Wheel(props: { id: string }) {
               </text>
             </Show>
 
-            {/* Zero degree reference line (fixed, doesn't rotate) */}
+            {/* Zero degree reference line (fixed, at zero point) */}
             <Show when={isCalibrated()}>
-              <line
-                x1={size / 2}
-                y1={size / 2 - radius}
-                x2={size / 2}
-                y2={size / 2 - radius * 0.8}
-                style={{ stroke: "currentColor", "stroke-width": "1" }}
-              />
+              {(() => {
+                const angleRad = (-zeroPointDegree() / 180) * Math.PI;
+                const innerRadius = radius;
+                const outerRadius = radius * 0.8;
+                return (
+                  <line
+                    x1={size / 2 + Math.sin(angleRad) * outerRadius}
+                    y1={size / 2 - Math.cos(angleRad) * outerRadius}
+                    x2={size / 2 + Math.sin(angleRad) * innerRadius}
+                    y2={size / 2 - Math.cos(angleRad) * innerRadius}
+                    style={{ stroke: "currentColor", "stroke-width": "1" }}
+                  />
+                );
+              })()}
             </Show>
           </g>
 
           {/* Breakpoint indicators */}
           {/* Zero degree outer marker */}
-          <line
-            x1={size / 2}
-            y1={size / 2 - radius}
-            x2={size / 2}
-            y2={size / 2 - radius * 1.15}
-            style={{ stroke: "currentColor", opacity: 0.5, "stroke-width": "1" }}
-          />
-          {/* Zero degree label */}
-          <text
-            x={size / 2}
-            y={size / 2 - radius * 1.25}
-            text-anchor="middle"
-            dominant-baseline="middle"
-            style={{
-              fill: "currentColor",
-              opacity: 0.5,
-              "font-size": "6px",
-              "font-weight": "bold",
-              "font-family": "monospace",
-            }}
-          >
-            0
-          </text>
+          {(() => {
+            const angleRad = (-zeroPointDegree() / 180) * Math.PI;
+            const innerRadius = radius;
+            const outerRadius = radius * 1.15;
+            const textRadius = radius * 1.25;
+            return (
+              <g>
+                <line
+                  x1={size / 2 + Math.sin(angleRad) * innerRadius}
+                  y1={size / 2 - Math.cos(angleRad) * innerRadius}
+                  x2={size / 2 + Math.sin(angleRad) * outerRadius}
+                  y2={size / 2 - Math.cos(angleRad) * outerRadius}
+                  style={{ stroke: "currentColor", opacity: 0.5, "stroke-width": "1" }}
+                />
+                <text
+                  x={size / 2 + Math.sin(angleRad) * textRadius}
+                  y={size / 2 - Math.cos(angleRad) * textRadius}
+                  text-anchor="middle"
+                  dominant-baseline="middle"
+                  style={{
+                    fill: "currentColor",
+                    opacity: 0.5,
+                    "font-size": "6px",
+                    "font-weight": "bold",
+                    "font-family": "monospace",
+                  }}
+                >
+                  0
+                </text>
+              </g>
+            );
+          })()}
           <For each={breakpoints()}>
             {(breakpoint: number, index) => {
-              const angleRad = - (breakpoint / 180) * Math.PI;
+              const angleRad = -((breakpoint + zeroPointDegree()) / 180) * Math.PI;
               const innerRadius = radius * 1.0; // Start at circle edge
               const outerRadius = radius * 1.15; // Extend outside the circle
               const textRadius = radius * 1.25; // Position text further out

@@ -358,7 +358,7 @@ String Wheel::getState()
             float speed = _stepper->getDefaultSpeed();
             float accel = _stepper->getDefaultAcceleration();
             doc["speedRpm"] = (speed / _stepsPerRevolution) * 60.0f;
-            doc["acceleration"] = (accel / _stepsPerRevolution) * 3600.0f;
+            doc["acceleration"] = (accel / _stepsPerRevolution) * 60.0f;
         }
     }
 
@@ -381,6 +381,7 @@ String Wheel::getConfig() const
     doc["name"] = _name;
     doc["stepsPerRevolution"] = _stepsPerRevolution;
     doc["maxStepsPerRevolution"] = _maxStepsPerRevolution;
+    doc["zeroPointDegree"] = _zeroPointDegree;
     JsonArray arr = doc["breakPoints"].to<JsonArray>();
     for (float bp : _breakPoints)
     {
@@ -432,5 +433,11 @@ void Wheel::setConfig(JsonObject *config)
                 _breakPoints.push_back(v.as<float>());
             }
         }
+    }
+
+    // Set zeroPointDegree if provided
+    if ((*config)["zeroPointDegree"].is<float>())
+    {
+        _zeroPointDegree = (*config)["zeroPointDegree"].as<float>();
     }
 }

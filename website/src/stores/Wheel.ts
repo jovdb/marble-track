@@ -17,6 +17,7 @@ export interface IWheelConfig extends IDeviceConfig {
   breakPoints: number[];
   stepsPerRevolution?: number;
   maxStepsPerRevolution?: number;
+  zeroPointDegree?: number;
   [key: string]: unknown;
 }
 

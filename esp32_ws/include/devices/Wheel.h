@@ -45,6 +45,7 @@ private:
     /** Average of the last X revolutions? */
     long _stepsInLastRevolution = 0;
     long _stepsPerRevolution = 0;
+    long _maxStepsPerRevolution = 10000;
     size_t _currentBreakpointIndex = 0;
 };
 

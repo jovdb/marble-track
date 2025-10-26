@@ -13,6 +13,7 @@ export interface IWheelState extends IDeviceState {
 export interface IWheelConfig extends IDeviceConfig {
   breakPoints: number[];
   stepsPerRevolution?: number;
+  maxStepsPerRevolution?: number;
   [key: string]: unknown;
 }
 

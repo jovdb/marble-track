@@ -1,10 +1,6 @@
 #include "devices/Wheel.h"
 #include "Logging.h"
 
-long maxStepsPerRevolution = 50000;
-// 34580
-// 34587
-
 // Array of breakpoints values
 // these are the angle values for breakpoints
 static const float breakpoints[] = {45.0, 90.0, 180.0, 30.0, 270.0};
@@ -189,7 +185,7 @@ bool Wheel::calibrate()
     _lastZeroPosition = 0;
     notifyStateChange();
     // Max 2 revolutions
-    return _stepper->move(maxStepsPerRevolution * 2 * _direction); // Move a large number of steps in the current direction
+    return _stepper->move(_maxStepsPerRevolution * 2 * _direction); // Move a large number of steps in the current direction
 }
 
 /** Goto the initial position, until button is pressed*/
@@ -201,7 +197,7 @@ bool Wheel::reset()
     MLOG_INFO("Wheel [%s]: Reset started.", getId().c_str());
     _state = wheelState::RESET;
     notifyStateChange();
-    return _stepper->move(maxStepsPerRevolution * _direction); // Move a large number of steps in the current direction
+    return _stepper->move(_maxStepsPerRevolution * _direction); // Move a large number of steps in the current direction
 }
 
 /** Move to a specific angle (0-359.9 degrees) - absolute positioning based on zero point */
@@ -368,6 +364,7 @@ String Wheel::getConfig() const
     // Add wheel-specific config
     doc["name"] = _name;
     doc["stepsPerRevolution"] = _stepsPerRevolution;
+    doc["maxStepsPerRevolution"] = _maxStepsPerRevolution;
     JsonArray arr = doc["breakPoints"].to<JsonArray>();
     for (float bp : _breakPoints)
     {
@@ -399,6 +396,12 @@ void Wheel::setConfig(JsonObject *config)
     {
         _stepsPerRevolution = (*config)["stepsPerRevolution"].as<long>();
         _stepsInLastRevolution = _stepsPerRevolution;
+    }
+
+    // Set maxStepsPerRevolution if provided
+    if ((*config)["maxStepsPerRevolution"].is<long>())
+    {
+        _maxStepsPerRevolution = (*config)["maxStepsPerRevolution"].as<long>();
     }
 
     // Set breakPoints if provided

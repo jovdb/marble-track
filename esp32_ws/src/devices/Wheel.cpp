@@ -276,9 +276,27 @@ bool Wheel::control(const String &action, JsonObject *payload)
 
         int nextIndex = (_currentBreakpointIndex + 1) % _breakPoints.size();
         _targetBreakpointIndex = nextIndex;
-        _targetAngle = _breakPoints[nextIndex];
 
-        MLOG_INFO("Wheel [%s]: Moving to next breakpoint index %d, angle %.1f°", getId().c_str(), nextIndex, _targetAngle);
+        // Calculate current angle
+        float currentAngle = 0.0f;
+        if (_lastZeroPosition != 0 && _stepsPerRevolution > 0 && _stepper)
+        {
+            long currentPosition = _stepper->getCurrentPosition();
+            currentAngle = ((currentPosition - _lastZeroPosition) / (float)_stepsPerRevolution) * 360.0f;
+            // Normalize angle to 0-360 range
+            while (currentAngle < 0)
+                currentAngle += 360;
+            while (currentAngle >= 360)
+                currentAngle -= 360;
+        }
+
+        float targetAngleRaw = _breakPoints[nextIndex];
+        float delta = targetAngleRaw - currentAngle;
+        if (delta <= 0)
+            delta += 360;
+        _targetAngle = currentAngle + delta;
+
+        MLOG_INFO("Wheel [%s]: Moving to next breakpoint index %d, raw angle %.1f°, forward target %.1f°", getId().c_str(), nextIndex, targetAngleRaw, _targetAngle);
         return moveToAngle(_targetAngle);
     }
     else if (action == "calibrate")

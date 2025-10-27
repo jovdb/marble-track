@@ -218,6 +218,21 @@ private:
      * @brief Disable the stepper motor (set enable pin low if configured)
      */
     void disableStepper();
+
+    /**
+     * @brief Parse speed and acceleration from a JSON payload.
+     * @param payload The JSON object to parse.
+     * @param speed Reference to a float to store the parsed speed.
+     * @param acceleration Reference to a float to store the parsed acceleration.
+     */
+    void _parseSpeedAndAcceleration(JsonObject *payload, float &speed, float &acceleration);
+
+    /**
+     * @brief Prepares the stepper for a move operation by setting speed and acceleration.
+     * @param speed The target speed for the movement.
+     * @param acceleration The target acceleration for the movement.
+     */
+    void _prepareForMove(float &speed, float &acceleration);
 };
 
 #endif // STEPPER_H

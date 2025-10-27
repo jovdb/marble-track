@@ -1,4 +1,3 @@
-
 /**
  * @file Stepper.cpp
  * @brief Implementation of Stepper motor control class
@@ -107,19 +106,8 @@ bool Stepper::move(long steps, float speed, float acceleration)
         return false;
     }
 
-    if (speed <= 0 || speed > _maxSpeed)
-    {
-        speed = _defaultSpeed;
-    }
-    if (acceleration <= 0 || acceleration > _maxAcceleration)
-    {
-        acceleration = _defaultAcceleration;
-    }
-
+    _prepareForMove(speed, acceleration);
     MLOG_INFO("Stepper [%s]: Moving %ld steps (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), steps, speed, acceleration);
-    enableStepper(); // Enable stepper before movement
-    _stepper->setAcceleration(acceleration);
-    _stepper->setMaxSpeed(speed);
     _stepper->move(steps);
     _isMoving = true;
     notifyStateChange();
@@ -141,19 +129,8 @@ bool Stepper::moveTo(long position, float speed, float acceleration)
         return false;
     }
 
-    if (speed <= 0 || speed > _maxSpeed)
-    {
-        speed = _defaultSpeed;
-    }
-    if (acceleration <= 0 || acceleration > _maxAcceleration)
-    {
-        acceleration = _defaultAcceleration;
-    }
-
+    _prepareForMove(speed, acceleration);
     MLOG_INFO("Stepper [%s]: Moving to position %ld (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), position, speed, acceleration);
-    enableStepper(); // Enable stepper before movement
-    _stepper->setMaxSpeed(speed);
-    _stepper->setAcceleration(acceleration);
     _stepper->moveTo(position);
     _isMoving = true;
     notifyStateChange();
@@ -283,26 +260,11 @@ bool Stepper::control(const String &action, JsonObject *payload)
         {
             return false;
         }
-
         long steps = (*payload)["steps"].as<long>();
-
-        float speed = -1;
-        float acceleration = -1;
-        if (payload && (*payload)["speed"].is<float>())
-        {
-            speed = (*payload)["speed"].as<float>();
-        }
-
-        if (payload && (*payload)["acceleration"].is<float>())
-        {
-            acceleration = (*payload)["acceleration"].as<float>();
-        }
-
-        MLOG_INFO("Stepper [%s]: Move %ld steps (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), steps,
-                  speed > 0 ? speed : _defaultSpeed, acceleration > 0 ? acceleration : _defaultAcceleration);
+        float speed = -1, acceleration = -1;
+        _parseSpeedAndAcceleration(payload, speed, acceleration);
         return move(steps, speed, acceleration);
     }
-
     else if (action == "moveTo")
     {
         if (!payload || !(*payload)["position"].is<long>())
@@ -310,23 +272,9 @@ bool Stepper::control(const String &action, JsonObject *payload)
             MLOG_WARN("Stepper [%s]: Invalid 'moveTo' payload - need position", _id.c_str());
             return false;
         }
-
         long position = (*payload)["position"].as<long>();
-        float speed = -1;
-        float acceleration = -1;
-
-        if (payload && (*payload)["speed"].is<float>())
-        {
-            speed = (*payload)["speed"].as<float>();
-        }
-
-        if (payload && (*payload)["acceleration"].is<float>())
-        {
-            acceleration = (*payload)["acceleration"].as<float>();
-        }
-
-        MLOG_INFO("Stepper [%s]: Move to position %ld (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), position,
-                  speed > 0 ? speed : _defaultSpeed, acceleration > 0 ? acceleration : _defaultAcceleration);
+        float speed = -1, acceleration = -1;
+        _parseSpeedAndAcceleration(payload, speed, acceleration);
         return moveTo(position, speed, acceleration);
     }
     else if (action == "stop")
@@ -705,4 +653,34 @@ void Stepper::disableStepper()
     {
         digitalWrite(_enablePin, _invertEnable ? HIGH : LOW);
     }
+}
+
+void Stepper::_parseSpeedAndAcceleration(JsonObject *payload, float &speed, float &acceleration)
+{
+    if (payload)
+    {
+        if ((*payload)["speed"].is<float>())
+        {
+            speed = (*payload)["speed"].as<float>();
+        }
+        if ((*payload)["acceleration"].is<float>())
+        {
+            acceleration = (*payload)["acceleration"].as<float>();
+        }
+    }
+}
+
+void Stepper::_prepareForMove(float &speed, float &acceleration)
+{
+    if (speed <= 0 || speed > _maxSpeed)
+    {
+        speed = _defaultSpeed;
+    }
+    if (acceleration <= 0 || acceleration > _maxAcceleration)
+    {
+        acceleration = _defaultAcceleration;
+    }
+    enableStepper();
+    _stepper->setMaxSpeed(speed);
+    _stepper->setAcceleration(acceleration);
 }

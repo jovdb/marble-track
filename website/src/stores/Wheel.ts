@@ -9,7 +9,7 @@ export interface IWheelState extends IDeviceState {
   angle: number | null;
   targetAngle?: number;
   speedRpm?: number;
-  accelerationRpmSq?: number;
+  acceleration?: number;
   [key: string]: unknown;
 }
 

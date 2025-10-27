@@ -72,6 +72,11 @@ void Wheel::loop()
 
             // Reset position to avoid overflow: No
 
+            if (_targetBreakpointIndex >= 0) {
+                _currentBreakpointIndex = _targetBreakpointIndex;
+                _targetBreakpointIndex = -1;
+            }
+
             notifyStateChange();
             _targetAngle = -1.0f;
         }
@@ -184,6 +189,8 @@ bool Wheel::calibrate()
     MLOG_INFO("Wheel [%s]: Calibration started.", getId().c_str());
     _state = wheelState::CALIBRATING;
     _lastZeroPosition = 0;
+    _currentBreakpointIndex = -1;
+    _targetBreakpointIndex = -1;
     notifyStateChange();
     // Max 2 revolutions
     return _stepper->move(_maxStepsPerRevolution * 2 * _direction); // Move a large number of steps in the current direction
@@ -198,6 +205,8 @@ bool Wheel::reset()
     MLOG_INFO("Wheel [%s]: Reset started.", getId().c_str());
     _state = wheelState::RESET;
     notifyStateChange();
+    _currentBreakpointIndex = -1;
+    _targetBreakpointIndex = -1;
     return _stepper->move(_maxStepsPerRevolution * _direction); // Move a large number of steps in the current direction
 }
 
@@ -265,16 +274,12 @@ bool Wheel::control(const String &action, JsonObject *payload)
             return false;
         }
 
-        // Get the next breakpoint angle
-        float targetAngle = _breakPoints[_currentBreakpointIndex];
+        int nextIndex = (_currentBreakpointIndex + 1) % _breakPoints.size();
+        _targetBreakpointIndex = nextIndex;
+        _targetAngle = _breakPoints[nextIndex];
 
-        // Move to the next breakpoint index (wrap around)
-        _currentBreakpointIndex = (_currentBreakpointIndex + 1) % _breakPoints.size();
-
-        _targetAngle = targetAngle;
-
-        MLOG_INFO("Wheel [%s]: Moving to next breakpoint angle %.1f°", getId().c_str(), targetAngle);
-        return moveToAngle(targetAngle);
+        MLOG_INFO("Wheel [%s]: Moving to next breakpoint index %d, angle %.1f°", getId().c_str(), nextIndex, _targetAngle);
+        return moveToAngle(_targetAngle);
     }
     else if (action == "calibrate")
     {
@@ -332,6 +337,8 @@ String Wheel::getState()
     }
     doc["state"] = stateToString(_state);
     doc["lastZeroPosition"] = _lastZeroPosition;
+    doc["currentBreakpointIndex"] = _currentBreakpointIndex;
+    doc["targetBreakpointIndex"] = _targetBreakpointIndex;
     
     // Calculate angle if possible
     if (_lastZeroPosition != 0 && _stepsPerRevolution > 0 && _stepper)

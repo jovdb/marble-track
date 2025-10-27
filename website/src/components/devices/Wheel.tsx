@@ -1,6 +1,8 @@
 import { Device } from "./Device";
 import { For, createMemo, Show } from "solid-js";
 import styles from "./Device.module.css";
+import "./Wheel.module.css";
+
 import { WheelConfig } from "./WheelConfig";
 import { IWheelState, useWheel } from "../../stores/Wheel";
 import { useWheelAnimation } from "../../hooks/useWheelAnimation";
@@ -186,9 +188,20 @@ export function Wheel(props: { id: string }) {
                 Status: {getStateString(state()?.state)}
               </span>
             </div>
+            {(state()?.currentBreakpointIndex ?? -1) >= 0 && (
+              <div>
+                <span>[{(state()?.currentBreakpointIndex ?? 0) + 1}]</span>
+              </div>
+            )}
             {state()?.angle !== null && state()?.angle !== undefined && (
               <div>
                 <span class={styles["device__status-text"]}>{state()?.angle?.toFixed(1)}°</span>
+              </div>
+            )}
+            {(state()?.targetBreakpointIndex ?? -1) >= 0 && (
+              <div>
+                -&gt;
+                <span>[{(state()?.targetBreakpointIndex ?? 0) + 1}]</span>
               </div>
             )}
             {state()?.targetAngle !== undefined &&
@@ -196,7 +209,7 @@ export function Wheel(props: { id: string }) {
               state()?.targetAngle !== state()?.angle && (
                 <div>
                   <span class={styles["device__status-text"]}>
-                    -&gt; {state()?.targetAngle?.toFixed(1)}°
+                    {state()?.targetAngle?.toFixed(1)}°
                   </span>
                 </div>
               )}
@@ -205,13 +218,26 @@ export function Wheel(props: { id: string }) {
             <button class={styles.device__button} onClick={() => actions.reset()}>
               Reset
             </button>
-            <button
-              class={styles.device__button}
-              onClick={onNextClicked}
-              disabled={state()?.lastZeroPosition === 0}
-            >
-              Next
-            </button>
+            {(() => {
+              const nextBreakpointIndex = (() => {
+                const target = state()?.targetBreakpointIndex;
+                if (target !== undefined && target >= 0) {
+                  return target;
+                }
+                const current = state()?.currentBreakpointIndex ?? -1;
+                return (current + 1) % breakpoints().length;
+              })();
+              const nextBreakpointDisplay = nextBreakpointIndex + 1;
+              return (
+                <button
+                  class={styles.device__button}
+                  onClick={onNextClicked}
+                  disabled={state()?.lastZeroPosition === 0 || state()?.state === "MOVING"}
+                >
+                  Next {nextBreakpointDisplay}/{breakpoints().length}
+                </button>
+              );
+            })()}
           </div>
         </>
       )}

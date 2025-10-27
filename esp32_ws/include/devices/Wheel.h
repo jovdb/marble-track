@@ -46,7 +46,8 @@ private:
     long _stepsInLastRevolution = 0;
     long _stepsPerRevolution = 0;
     long _maxStepsPerRevolution = 10000;
-    size_t _currentBreakpointIndex = 0;
+    int _currentBreakpointIndex = -1;
+    int _targetBreakpointIndex = -1;
     float _targetAngle = -1.0f;
     float _zeroPointDegree = 0.0f;
 };

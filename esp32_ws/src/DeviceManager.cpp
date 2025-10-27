@@ -16,6 +16,7 @@
 #include "devices/Wheel.h"
 #include "devices/PwmMotor.h"
 #include "devices/PwmDevice.h"
+#include "devices/Lift.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
 
@@ -29,6 +30,7 @@ enum class DeviceType
     PWMMOTOR,
     PWM,
     WHEEL,
+    LIFT,
     UNKNOWN
 };
 
@@ -50,6 +52,8 @@ DeviceType stringToDeviceType(const String &type)
         return DeviceType::PWM;
     if (type == "wheel")
         return DeviceType::WHEEL;
+    if (type == "lift")
+        return DeviceType::LIFT;
     return DeviceType::UNKNOWN;
 }
 
@@ -205,6 +209,18 @@ void DeviceManager::loadDevicesFromJsonFile()
                             wheel->setConfig(&config);
                         }
                         newDevice = wheel;
+                        break;
+                    }
+                    case DeviceType::LIFT:
+                    {
+                        Lift *lift = new Lift(id);
+                        // Apply configuration from JSON config property if it exists
+                        if (obj["config"].is<JsonObject>())
+                        {
+                            JsonObject config = obj["config"];
+                            lift->setConfig(&config);
+                        }
+                        newDevice = lift;
                         break;
                     }
                     default:
@@ -720,6 +736,9 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
         break;
     case DeviceType::WHEEL:
         newDevice = new Wheel(deviceId);
+        break;
+    case DeviceType::LIFT:
+        newDevice = new Lift(deviceId);
         break;
     default:
         MLOG_ERROR("Unknown device type: %s", deviceType.c_str());

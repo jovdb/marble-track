@@ -6,6 +6,7 @@ export type DeviceType =
   | "gate"
   | "gatewithsensor"
   | "led"
+  | "lift"
   | "pwmmotor"
   | "pwm"
   | "servo"

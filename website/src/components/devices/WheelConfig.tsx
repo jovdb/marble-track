@@ -122,9 +122,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
         />
       </div>
       <div style={{ "margin-bottom": "1em" }}>
-        <label style={{ display: "block", "margin-bottom": "0.5em" }}>
-          Zero Point Degree:
-        </label>
+        <label style={{ display: "block", "margin-bottom": "0.5em" }}>Zero Point Degree:</label>
         <input
           type="number"
           value={zeroPointDegree()}

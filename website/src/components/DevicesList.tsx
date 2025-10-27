@@ -17,6 +17,7 @@ const DEVICE_TYPES = [
   "DividerWheel",
   "GateWithSensor",
   "Led",
+  "Lift",
   "PwmMotor",
   "Pwm",
   "Servo",

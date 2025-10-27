@@ -72,15 +72,9 @@ export function useWheelAnimation(deviceState: () => IWheelState | undefined) {
       return;
     }
 
-    const startingAngle =
-      state.angle ?? untrack(() => uiAngle()) ?? targetAngle;
+    const startingAngle = state.angle ?? untrack(() => uiAngle()) ?? targetAngle;
 
-    const plan = createAnimationPlan(
-      startingAngle,
-      targetAngle,
-      speedRpm,
-      accelerationRpm,
-    );
+    const plan = createAnimationPlan(startingAngle, targetAngle, speedRpm, accelerationRpm);
 
     if (!plan) {
       completedMovementKey = movementKey;
@@ -99,7 +93,7 @@ export function useWheelAnimation(deviceState: () => IWheelState | undefined) {
     startAngle: number,
     targetAngle: number,
     speedRpm: number,
-    accelerationRpm: number,
+    accelerationRpm: number
   ): AnimationPlan | null {
     if (!Number.isFinite(startAngle) || !Number.isFinite(targetAngle)) {
       return null;

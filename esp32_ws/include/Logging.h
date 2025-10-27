@@ -2,15 +2,15 @@
  * @file Logging.h
  * @brief Simple logging system for Marble Track project
  *
- * Provides logging macros with color coding for different message types.
+ * Provides simplified logging macros without colors for cleaner output.
  * All macros can be disabled by setting MARBLE_LOG_ENABLED to 0.
  *
  * Available macros:
  * - MLOG_INFO(format, ...)     - General information messages
- * - MLOG_ERROR(format, ...)    - Error messages (red color)
- * - MLOG_WARN(format, ...)     - Warning messages (orange color)
- * - MLOG_WS_SEND(format, ...)  - WebSocket send messages (blue color)
- * - MLOG_WS_RECEIVE(format, ...) - WebSocket receive messages (dark green color)
+ * - MLOG_ERROR(format, ...)    - Error messages
+ * - MLOG_WARN(format, ...)     - Warning messages
+ * - MLOG_WS_SEND(format, ...)  - WebSocket send messages
+ * - MLOG_WS_RECEIVE(format, ...) - WebSocket receive messages
  *
  * Usage examples:
  *   MLOG_INFO("System started");
@@ -36,16 +36,16 @@
     Serial.printf("[%lu] INFO: " format "\n", millis(), ##__VA_ARGS__)
 
 #define MLOG_ERROR(format, ...) \
-    Serial.printf("\033[31m[%lu] ERROR: " format "\033[0m\n", millis(), ##__VA_ARGS__)
+    Serial.printf("[%lu] ERROR: " format "\n", millis(), ##__VA_ARGS__)
 
 #define MLOG_WARN(format, ...) \
-    Serial.printf("\033[33m[%lu] WARN: " format "\033[0m\n", millis(), ##__VA_ARGS__)
+    Serial.printf("[%lu] WARN: " format "\n", millis(), ##__VA_ARGS__)
 
 #define MLOG_WS_SEND(format, ...) \
-    Serial.printf("\033[34m[%lu] WS_SEND: " format "\033[0m\n", millis(), ##__VA_ARGS__)
+    Serial.printf("[%lu] WS_SEND: " format "\n", millis(), ##__VA_ARGS__)
 
 #define MLOG_WS_RECEIVE(format, ...) \
-    Serial.printf("\033[32m[%lu] WS_RECV: " format "\033[0m\n", millis(), ##__VA_ARGS__)
+    Serial.printf("[%lu] WS_RECV: " format "\n", millis(), ##__VA_ARGS__)
 
 #else
 // Logging disabled - all macros become no-ops (zero overhead)

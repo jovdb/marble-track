@@ -8,7 +8,6 @@ export type DeviceType =
   | "led"
   | "lift"
   | "pwmmotor"
-  | "pwm"
   | "servo"
   | "stepper"
   | "wheel";

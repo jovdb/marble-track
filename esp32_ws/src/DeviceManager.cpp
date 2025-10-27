@@ -15,7 +15,6 @@
 #include "devices/Stepper.h"
 #include "devices/Wheel.h"
 #include "devices/PwmMotor.h"
-#include "devices/PwmDevice.h"
 #include "devices/Lift.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
@@ -48,8 +47,6 @@ DeviceType stringToDeviceType(const String &type)
         return DeviceType::STEPPER;
     if (type == "pwmmotor")
         return DeviceType::PWMMOTOR;
-    if (type == "pwm")
-        return DeviceType::PWM;
     if (type == "wheel")
         return DeviceType::WHEEL;
     if (type == "lift")
@@ -185,18 +182,6 @@ void DeviceManager::loadDevicesFromJsonFile()
                             motor->setConfig(&config);
                         }
                         newDevice = motor;
-                        break;
-                    }
-                    case DeviceType::PWM:
-                    {
-                        PwmDevice *pwm = new PwmDevice(id, "remove");
-                        // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>())
-                        {
-                            JsonObject config = obj["config"];
-                            pwm->setConfig(&config);
-                        }
-                        newDevice = pwm;
                         break;
                     }
                     case DeviceType::WHEEL:
@@ -730,9 +715,6 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
         break;
     case DeviceType::PWMMOTOR:
         newDevice = new PwmMotor(deviceId, deviceId);
-        break;
-    case DeviceType::PWM:
-        newDevice = new PwmDevice(deviceId, deviceId);
         break;
     case DeviceType::WHEEL:
         newDevice = new Wheel(deviceId);

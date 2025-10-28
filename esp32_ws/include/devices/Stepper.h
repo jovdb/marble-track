@@ -233,6 +233,14 @@ private:
      * @param acceleration The target acceleration for the movement.
      */
     void _prepareForMove(float &speed, float &acceleration);
+
+    /**
+     * @brief Ensures the driver is ready before executing an action.
+     * @param action Optional action name for logging context.
+     * @param logWarning When true emits a warning on failure.
+     * @return true if the driver is configured and has an AccelStepper instance.
+     */
+    bool ensureReady(const char *action, bool logWarning) const;
 };
 
 #endif // STEPPER_H

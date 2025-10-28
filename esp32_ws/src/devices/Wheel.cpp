@@ -104,15 +104,26 @@ void Wheel::loop()
     case wheelState::RESET:
         if (_sensor->wasPressed())
         {
-            MLOG_INFO("Wheel [%s]: Reset complete.", getId().c_str());
             _lastZeroPosition = _stepper->getCurrentPosition();
 
-            // TODO -> Move to first breakpoint?
-            _stepper->stop();
-
-            // Resting to moving
-            _state = wheelState::MOVING;
-            notifyStateChange();
+            // Move to first breakpoint
+            if (!_breakPoints.empty() && _stepsPerRevolution > 0)
+            {
+                MLOG_INFO("Wheel [%s]: Moving to first breakpoint.", getId().c_str());
+                _currentBreakpointIndex = -1;
+                _targetBreakpointIndex = 0;
+                 _state = wheelState::MOVING;
+                _targetAngle = _breakPoints[0];
+                moveToAngle(_breakPoints[0]);
+                notifyStateChange();
+            }
+            else
+            {
+                MLOG_INFO("Wheel [%s]: Reset complete, no breakpoints yet", getId().c_str());
+                _stepper->stop();
+                _state = wheelState::MOVING;
+                notifyStateChange();
+            }
         }
 
         // No zero found during calibration?
@@ -231,11 +242,9 @@ bool Wheel::moveToAngle(float angle)
         return false;
     }
 
-    // Ensure angle is in valid range
+    // Ensure angle is in valid range (allow angles >= 360 for continuous rotation)
     while (angle < 0)
         angle += 360;
-    while (angle >= 360)
-        angle -= 360;
 
     // Calculate absolute target position relative to zero point
     long targetPosition = _lastZeroPosition + (angle / 360.0) * _stepsPerRevolution;

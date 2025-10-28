@@ -143,9 +143,13 @@ bool Stepper::stop(float acceleration)
         return false;
     }
 
-    if (acceleration <= 0 || acceleration > _maxAcceleration)
+    if (acceleration <= 0)
     {
         acceleration = _defaultAcceleration;
+    }
+    else if (acceleration > _maxAcceleration)
+    {
+        acceleration = _maxAcceleration;
     }
 
     MLOG_WARN("Stepper [%s]: Stop initiated (Deceleration: %.2f)", _id.c_str(), acceleration);
@@ -646,14 +650,26 @@ void Stepper::_parseSpeedAndAcceleration(JsonObject *payload, float &speed, floa
 
 void Stepper::_prepareForMove(float &speed, float &acceleration)
 {
-    if (speed <= 0 || speed > _maxSpeed)
+    // Clamp speed between 1 and _maxSpeed
+    if (speed <= 0)
     {
         speed = _defaultSpeed;
     }
-    if (acceleration <= 0 || acceleration > _maxAcceleration)
+    else if (speed > _maxSpeed)
+    {
+        speed = _maxSpeed;
+    }
+
+    // Clamp acceleration between 1 and _maxAcceleration
+    if (acceleration <= 0)
     {
         acceleration = _defaultAcceleration;
     }
+    else if (acceleration > _maxAcceleration)
+    {
+        acceleration = _maxAcceleration;
+    }
+
     enableStepper();
     _stepper->setMaxSpeed(speed);
     _stepper->setAcceleration(acceleration);

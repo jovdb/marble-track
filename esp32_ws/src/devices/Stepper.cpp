@@ -543,6 +543,8 @@ void Stepper::setConfig(JsonObject *config)
         _name = cfg["name"].as<String>();
     }
 
+    _invertEnable = cfg["invertEnable"].is<bool>() ? cfg["invertEnable"].as<bool>() : false;
+
     const String stepperType = cfg["stepperType"].is<String>() ? cfg["stepperType"].as<String>() : "";
     if (stepperType.isEmpty())
     {
@@ -591,7 +593,6 @@ void Stepper::setConfig(JsonObject *config)
     _maxAcceleration = maxAcceleration;
     _defaultSpeed = defaultSpeed;
     _defaultAcceleration = defaultAcceleration;
-    _invertEnable = cfg["invertEnable"].is<bool>() ? cfg["invertEnable"].as<bool>() : false;
 
     if (_stepper)
     {

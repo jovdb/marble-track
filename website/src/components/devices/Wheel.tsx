@@ -1,9 +1,10 @@
 import { Device } from "./Device";
-import { For, createMemo, Show } from "solid-js";
+import { createMemo } from "solid-js";
 import styles from "./Device.module.css";
 import "./Wheel.module.css";
 
 import { WheelConfig } from "./WheelConfig";
+import { WheelGraphic } from "./WheelGraphic";
 import { IWheelState, useWheel } from "../../stores/Wheel";
 import { useWheelAnimation } from "../../hooks/useWheelAnimation";
 
@@ -25,8 +26,7 @@ export function Wheel(props: { id: string }) {
   const isCalibrated = createMemo(() => !!state()?.lastZeroPosition);
   const isSearchingZero = createMemo(() => !state()?.lastZeroPosition && state()?.state !== "IDLE");
 
-  const size = 100;
-  const radius = size / 2 - 15; // Radius of the wheel in pixels - made even smaller
+  // Radius handled internally by WheelGraphic now
 
   // Get breakpoints from device config
   const breakpoints = () => device()?.config?.breakPoints || [];
@@ -57,127 +57,14 @@ export function Wheel(props: { id: string }) {
       )}
     >
       <div style={{ "max-width": "300px", margin: "0 auto" }}>
-        <svg class={styles.svg} viewBox="0 0 100 100" style={{ "max-width": "300px" }}>
-          <g
-            transform={`rotate(${-(uiAngle() ?? 0)})`}
-            transform-origin={`${size / 2}px ${size / 2}px`}
-          >
-            <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              style={{ fill: "none", stroke: "currentColor", "stroke-width": "1" }}
-            />
-
-            {/* Question mark at center */}
-            <Show when={!isCalibrated()}>
-              <text
-                x={size / 2}
-                y={size / 2}
-                text-anchor="middle"
-                dominant-baseline="middle"
-                style={{
-                  "animation-name": isSearchingZero() ? "wheel-spin" : undefined,
-                  fill: "currentColor",
-                  opacity: 0.5,
-                  "font-size": "16px",
-                  "font-weight": "bold",
-                  "font-family": "monospace",
-                }}
-              >
-                ?
-              </text>
-            </Show>
-
-            {/* Zero degree reference line (fixed, at zero point) */}
-            <Show when={isCalibrated()}>
-              {(() => {
-                const angleRad = (-zeroPointDegree() / 180) * Math.PI;
-                const innerRadius = radius;
-                const outerRadius = radius * 0.8;
-                return (
-                  <line
-                    x1={size / 2 + Math.sin(angleRad) * outerRadius}
-                    y1={size / 2 - Math.cos(angleRad) * outerRadius}
-                    x2={size / 2 + Math.sin(angleRad) * innerRadius}
-                    y2={size / 2 - Math.cos(angleRad) * innerRadius}
-                    style={{ stroke: "currentColor", "stroke-width": "1" }}
-                  />
-                );
-              })()}
-            </Show>
-          </g>
-
-          {/* Breakpoint indicators */}
-          {/* Zero degree outer marker */}
-          {(() => {
-            const angleRad = (-zeroPointDegree() / 180) * Math.PI;
-            const innerRadius = radius;
-            const outerRadius = radius * 1.15;
-            const textRadius = radius * 1.25;
-            return (
-              <g>
-                <line
-                  x1={size / 2 + Math.sin(angleRad) * innerRadius}
-                  y1={size / 2 - Math.cos(angleRad) * innerRadius}
-                  x2={size / 2 + Math.sin(angleRad) * outerRadius}
-                  y2={size / 2 - Math.cos(angleRad) * outerRadius}
-                  style={{ stroke: "currentColor", opacity: 0.5, "stroke-width": "1" }}
-                />
-                <text
-                  x={size / 2 + Math.sin(angleRad) * textRadius}
-                  y={size / 2 - Math.cos(angleRad) * textRadius}
-                  text-anchor="middle"
-                  dominant-baseline="middle"
-                  style={{
-                    fill: "currentColor",
-                    opacity: 0.5,
-                    "font-size": "6px",
-                    "font-weight": "bold",
-                    "font-family": "monospace",
-                  }}
-                >
-                  0
-                </text>
-              </g>
-            );
-          })()}
-          <For each={breakpoints()}>
-            {(breakpoint: number, index) => {
-              const angleRad = -((breakpoint + zeroPointDegree()) / 180) * Math.PI;
-              const innerRadius = radius * 1.0; // Start at circle edge
-              const outerRadius = radius * 1.15; // Extend outside the circle
-              const textRadius = radius * 1.25; // Position text further out
-              return (
-                <g>
-                  {/* Line marker */}
-                  <line
-                    x1={size / 2 + Math.sin(angleRad) * innerRadius}
-                    y1={size / 2 - Math.cos(angleRad) * innerRadius}
-                    x2={size / 2 + Math.sin(angleRad) * outerRadius}
-                    y2={size / 2 - Math.cos(angleRad) * outerRadius}
-                    style={{ stroke: "currentColor", "stroke-width": "1" }}
-                  />
-                  {/* Index number */}
-                  <text
-                    x={size / 2 + Math.sin(angleRad) * textRadius}
-                    y={size / 2 - Math.cos(angleRad) * textRadius}
-                    text-anchor="middle"
-                    dominant-baseline="middle"
-                    style={{
-                      fill: "currentColor",
-                      "font-size": "6px",
-                      "font-weight": "bold",
-                      "font-family": "monospace",
-                    }}
-                  >
-                    {index() + 1}
-                  </text>
-                </g>
-              );
-            }}
-          </For>
-        </svg>
+        <WheelGraphic
+          angle={uiAngle() ?? 0}
+          size={100}
+          breakpoints={breakpoints()}
+          zeroPointDegree={zeroPointDegree()}
+          isCalibrated={isCalibrated()}
+          isSearchingZero={isSearchingZero()}
+        />
       </div>
       {error() && <div class={styles.device__error}>{error()}</div>}
       {!error() && (

@@ -39,6 +39,7 @@ export function WheelGraphic(props: WheelGraphicProps) {
             class={props.isSearchingZero ? styles["wheel-graphic__searching"] : undefined}
             style={{
               fill: "currentColor",
+              "transform-origin": "center",
               opacity: 0.5,
               "font-size": "16px",
               "font-weight": "bold",

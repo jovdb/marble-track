@@ -2,6 +2,8 @@ import { createMemo, createSignal, For, JSX, Show } from "solid-js";
 import styles from "./Device.module.css";
 import { useDevice } from "../../stores/Devices";
 import { renderDeviceComponent } from "../Devices";
+import { useWebSocket2 } from "../../hooks/useWebSocket2";
+import { BroadcastIcon } from "../icons/Icons";
 
 interface DeviceProps {
   id: string;
@@ -13,8 +15,10 @@ interface DeviceProps {
 export function Device(props: DeviceProps) {
   const [showChildren, setShowChildren] = createSignal(false);
   const [showConfig, setShowConfig] = createSignal(false);
+  const [showMessagesPanel, setShowMessages] = createSignal(false);
   const deviceStore = useDevice(props.id);
   const device = () => deviceStore[0];
+  const [wsStore] = useWebSocket2();
 
   const name = createMemo(
     () =>
@@ -25,6 +29,7 @@ export function Device(props: DeviceProps) {
   const deviceType = createMemo(() => device()?.type);
   const hasConfig = createMemo(() => Boolean(props.configComponent));
   const configPanelId = `device-config-${props.id}`;
+  const logsPanelId = `device-logs-${props.id}`;
 
   return (
     <div class={styles.device}>
@@ -47,21 +52,31 @@ export function Device(props: DeviceProps) {
                 class={`${styles["device__header-button"]} ${showChildren() ? styles["device__header-button--active"] : ""}`}
                 type="button"
                 aria-label={showChildren() ? "Hide advanced" : "Show advanced"}
+                title={showChildren() ? "Hide children" : "Show children"}
                 onClick={() => {
                   setShowChildren((v) => !v);
                   setShowConfig(false);
+                  setShowMessages(false);
                 }}
               >
                 <svg
+                  xmlns="http://www.w3.org/2000/svg"
                   width="24"
                   height="24"
                   viewBox="0 0 24 24"
                   fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="icon icon-tabler icons-tabler-outline icon-tabler-sitemap"
                 >
-                  <circle cx="5" cy="12" r="2" fill="currentColor" />
-                  <circle cx="12" cy="12" r="2" fill="currentColor" />
-                  <circle cx="19" cy="12" r="2" fill="currentColor" />
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M3 15m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" />
+                  <path d="M15 15m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" />
+                  <path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" />
+                  <path d="M6 15v-1a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v1" />
+                  <path d="M12 9l0 3" />
                 </svg>
               </button>
               // add config button
@@ -76,9 +91,11 @@ export function Device(props: DeviceProps) {
                 aria-expanded={showConfig()}
                 aria-controls={configPanelId}
                 aria-label={showConfig() ? "Hide configuration" : "Show configuration"}
+                title={showConfig() ? "Hide configuration" : "Show configuration"}
                 onClick={() => {
                   setShowConfig((v) => !v);
                   setShowChildren(false);
+                  setShowMessages(false);
                 }}
               >
                 <svg
@@ -92,11 +109,31 @@ export function Device(props: DeviceProps) {
                 </svg>
               </button>
             </Show>
+            <button
+              classList={{
+                [styles["device__header-button"]]: true,
+                [styles["device__header-button--active"]]: showMessagesPanel(),
+              }}
+              type="button"
+              aria-expanded={showMessagesPanel()}
+              aria-controls={logsPanelId}
+              aria-label={showMessagesPanel() ? "Hide messages" : "Show messages"}
+              title={showMessagesPanel() ? "Hide messages" : "Show messages"}
+              onClick={() => {
+                setShowMessages((v) => !v);
+                setShowChildren(false);
+                setShowConfig(false);
+              }}
+            >
+              <BroadcastIcon />
+            </button>
           </div>
         </div>
       </div>
       <div class={styles.device__content}>
-        <Show when={!showChildren() && !showConfig()}>{props.children}</Show>
+        <Show when={!showChildren() && !showConfig() && !showMessagesPanel()}>
+          {props.children}
+        </Show>
 
         {showChildren() && device()?.children?.length && (
           <div class={styles.device__children}>
@@ -108,6 +145,67 @@ export function Device(props: DeviceProps) {
             {props.configComponent!(() => setShowConfig(false))}
           </div>
         </Show>
+        <Show when={showMessagesPanel()}>
+          <div class={styles.device__children} id={logsPanelId} role="region" aria-live="polite">
+            <DeviceLogs deviceId={props.id} messages={wsStore.lastMessages} />
+          </div>
+        </Show>
+      </div>
+    </div>
+  );
+}
+
+function DeviceLogs(props: { deviceId: string; messages: string[] }) {
+  const filteredMessages = createMemo(() => {
+    return props.messages
+      .map((msgStr) => {
+        try {
+          const msg = JSON.parse(msgStr) as { data: string; direction: string; timestamp: number };
+          const data = JSON.parse(msg.data);
+          return { ...msg, parsed: data };
+        } catch {
+          return null;
+        }
+      })
+      .filter(
+        (msg): msg is NonNullable<typeof msg> =>
+          msg !== null && msg.parsed.deviceId === props.deviceId
+      )
+      .reverse(); // Show newest first
+  });
+
+  return (
+    <div>
+      <h4>Device Logs</h4>
+      <div
+        style={{
+          "max-height": "300px",
+          "overflow-y": "auto",
+          "font-family": "monospace",
+          "font-size": "12px",
+        }}
+      >
+        <For each={filteredMessages()}>
+          {(msg) => (
+            <div
+              style={{
+                margin: "4px 0",
+                padding: "4px",
+                border: "1px solid #ccc",
+                "border-radius": "4px",
+              }}
+            >
+              <div style={{ color: msg.direction === "incoming" ? "green" : "blue" }}>
+                {msg.direction === "incoming" ? "←" : "→"} {msg.parsed.type}
+              </div>
+              <div>{JSON.stringify(msg.parsed, null, 2)}</div>
+              <div style={{ "font-size": "10px", color: "#666" }}>
+                {new Date(msg.timestamp).toLocaleTimeString()}
+              </div>
+            </div>
+          )}
+        </For>
+        {filteredMessages().length === 0 && <div>No messages for this device</div>}
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { Header } from "./components/Header";
 import { DevicesList } from "./components/DevicesList";
 import { WebSocketMessages } from "./components/WebSocketMessages";
 import { CollapsibleSection } from "./components/CollapsibleSection";
-import { ClipboardIcon, RadioIcon } from "./components/icons/Icons";
+import { BroadcastIcon, ClipboardIcon } from "./components/icons/Icons";
 import AnimatedFavicon from "./utils/animatedFavicon";
 import logo from "./assets/logo-64.png";
 import styles from "./App.module.css";
@@ -83,7 +83,7 @@ const App: Component = () => {
           <section class={styles.app__section}>
             <CollapsibleSection
               title="WebSocket Messages"
-              icon={<RadioIcon height={24} width={24} />}
+              icon={<BroadcastIcon height={24} width={24} />}
             >
               <WebSocketMessages />
             </CollapsibleSection>

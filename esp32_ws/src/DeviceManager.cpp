@@ -19,41 +19,6 @@
 
 static constexpr const char *CONFIG_FILE = "/config.json";
 
-enum class DeviceType
-{
-    LED,
-    BUZZER,
-    BUTTON,
-    SERVO,
-    STEPPER,
-    PWMMOTOR,
-    PWM,
-    WHEEL,
-    LIFT,
-    UNKNOWN
-};
-
-DeviceType stringToDeviceType(const String &type)
-{
-    if (type == "led")
-        return DeviceType::LED;
-    if (type == "buzzer")
-        return DeviceType::BUZZER;
-    if (type == "button")
-        return DeviceType::BUTTON;
-    if (type == "servo")
-        return DeviceType::SERVO;
-    if (type == "stepper")
-        return DeviceType::STEPPER;
-    if (type == "pwmmotor")
-        return DeviceType::PWMMOTOR;
-    if (type == "wheel")
-        return DeviceType::WHEEL;
-    if (type == "lift")
-        return DeviceType::LIFT;
-    return DeviceType::UNKNOWN;
-}
-
 void DeviceManager::loadDevicesFromJsonFile()
 {
     if (!LittleFS.exists(CONFIG_FILE))
@@ -104,121 +69,13 @@ void DeviceManager::loadDevicesFromJsonFile()
                         continue;
                     }
 
-                    Device *newDevice = nullptr;
-                    DeviceType devType = stringToDeviceType(type);
-                    switch (devType)
-                    {
-                    case DeviceType::LED:
-                    {
-                        Led *led = new Led(id);
-                        // Log obj[config] as json string
-                        String configStr;
-                        serializeJson(obj["config"], configStr);
-                        MLOG_INFO("LED device config: %s", configStr.c_str());
-                        // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>())
-                        {
-                            JsonObject config = obj["config"];
-                            led->setConfig(&config);
-                        }
-                        newDevice = led;
-                        break;
-                    }
-                    case DeviceType::BUZZER:
-                    {
-                        Buzzer *buzzer = new Buzzer(id, "remove");
-                        // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>())
-                        {
-                            JsonObject config = obj["config"];
-                            buzzer->setConfig(&config);
-                        }
-                        newDevice = buzzer;
-                        break;
-                    }
-                    case DeviceType::BUTTON:
-                    {
-                        Button *button = new Button(id);
-                        // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>())
-                        {
-                            JsonObject config = obj["config"];
-                            button->setConfig(&config);
-                        }
-                        newDevice = button;
-                        break;
-                    }
-                    case DeviceType::SERVO:
-                    {
-                        ServoDevice *servo = new ServoDevice(id, "remove");
-                        // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>())
-                        {
-                            JsonObject config = obj["config"];
-                            servo->setConfig(&config);
-                        }
-                        newDevice = servo;
-                        break;
-                    }
-                    case DeviceType::STEPPER:
-                    {
-                        Stepper *stepper = new Stepper(id);
-                        // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>())
-                        {
-                            JsonObject config = obj["config"];
-                            stepper->setConfig(&config);
-                        }
-                        newDevice = stepper;
-                        break;
-                    }
-                    case DeviceType::PWMMOTOR:
-                    {
-                        PwmMotor *motor = new PwmMotor(id, "remove");
-                        // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>())
-                        {
-                            JsonObject config = obj["config"];
-                            motor->setConfig(&config);
-                        }
-                        newDevice = motor;
-                        break;
-                    }
-                    case DeviceType::WHEEL:
-                    {
-                        Wheel *wheel = new Wheel(id);
-                        // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>())
-                        {
-                            JsonObject config = obj["config"];
-                            wheel->setConfig(&config);
-                        }
-                        newDevice = wheel;
-                        break;
-                    }
-                    case DeviceType::LIFT:
-                    {
-                        Lift *lift = new Lift(id);
-                        // Apply configuration from JSON config property if it exists
-                        if (obj["config"].is<JsonObject>())
-                        {
-                            JsonObject config = obj["config"];
-                            lift->setConfig(&config);
-                        }
-                        newDevice = lift;
-                        break;
-                    }
-                    default:
+                    Device *newDevice = createDevice(type, id, obj["config"], notifyClients);
+                    if (newDevice == nullptr)
                     {
                         MLOG_WARN("Unknown device type: %s", type.c_str());
                         continue;
                     }
-                    }
-
-                    if (newDevice)
-                    {
-                        loadedDevices[id] = newDevice;
-                    }
+                    loadedDevices[id] = newDevice;
                 }
 
                 // Collect all child IDs
@@ -689,34 +546,40 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
     String lowerType = deviceType;
     lowerType.toLowerCase();
 
-    DeviceType devType = stringToDeviceType(lowerType);
-    switch (devType)
+    if (lowerType == "led")
     {
-    case DeviceType::LED:
         newDevice = new Led(deviceId, callback);
-        break;
-    case DeviceType::BUZZER:
+    }
+    else if (lowerType == "buzzer")
+    {
         newDevice = new Buzzer(deviceId, deviceId, callback); // Using deviceId as name too
-        break;
-    case DeviceType::BUTTON:
+    }
+    else if (lowerType == "button")
+    {
         newDevice = new Button(deviceId, callback);
-        break;
-    case DeviceType::SERVO:
+    }
+    else if (lowerType == "servo")
+    {
         newDevice = new ServoDevice(deviceId, deviceId, callback);
-        break;
-    case DeviceType::STEPPER:
+    }
+    else if (lowerType == "stepper")
+    {
         newDevice = new Stepper(deviceId, callback);
-        break;
-    case DeviceType::PWMMOTOR:
+    }
+    else if (lowerType == "pwmmotor")
+    {
         newDevice = new PwmMotor(deviceId, deviceId, callback);
-        break;
-    case DeviceType::WHEEL:
+    }
+    else if (lowerType == "wheel")
+    {
         newDevice = new Wheel(deviceId, callback);
-        break;
-    case DeviceType::LIFT:
+    }
+    else if (lowerType == "lift")
+    {
         newDevice = new Lift(deviceId, callback);
-        break;
-    default:
+    }
+    else
+    {
         MLOG_ERROR("Unknown device type: %s", deviceType.c_str());
         return nullptr;
     }

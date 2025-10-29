@@ -43,7 +43,7 @@ export function Devices() {
             : "Connect to see available devices"}
         </div>
       ) : (
-        <For each={topLevelDevices()}>{(device) => renderDeviceComponent(device)}</For>
+        <For each={topLevelDevices()}>{(device) => <div>{renderDeviceComponent(device)}</div>}</For>
       )}
     </div>
   );

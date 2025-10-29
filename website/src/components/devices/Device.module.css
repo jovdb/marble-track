@@ -226,9 +226,30 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
 }
 
-.device__header-button--active {
-  background-color: var(--color-primary-100);
-  border-color: var(--color-primary-300);
-  color: var(--color-primary-700);
-  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08);
+.device__collapse-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.device__collapse-button:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.device__collapse-button:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
 }

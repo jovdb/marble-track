@@ -16,6 +16,7 @@ export function Device(props: DeviceProps) {
   const [showChildren, setShowChildren] = createSignal(false);
   const [showConfig, setShowConfig] = createSignal(false);
   const [showMessagesPanel, setShowMessages] = createSignal(false);
+  const [isCollapsed, setIsCollapsed] = createSignal(false);
   const deviceStore = useDevice(props.id);
   const device = () => deviceStore[0];
   const [wsStore] = useWebSocket2();
@@ -35,6 +36,31 @@ export function Device(props: DeviceProps) {
     <div class={styles.device}>
       <div class={styles.device__header}>
         <div class={styles["device__header-left"]}>
+          <button
+            class={styles["device__collapse-button"]}
+            type="button"
+            aria-expanded={!isCollapsed()}
+            aria-label={isCollapsed() ? "Expand device" : "Collapse device"}
+            title={isCollapsed() ? "Expand device" : "Collapse device"}
+            onClick={() => setIsCollapsed((v) => !v)}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              style={{
+                transform: isCollapsed() ? "rotate(0deg)" : "rotate(90deg)",
+                transition: "transform 0.2s",
+              }}
+            >
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
           <Show when={props.icon}>
             <div class={styles.device__icon} aria-hidden="true">
               {props.icon}
@@ -130,27 +156,34 @@ export function Device(props: DeviceProps) {
           </div>
         </div>
       </div>
-      <div class={styles.device__content}>
-        <Show when={!showChildren() && !showConfig() && !showMessagesPanel()}>
-          {props.children}
-        </Show>
+      <Show when={!isCollapsed()}>
+        <div class={styles.device__content}>
+          <Show when={!showChildren() && !showConfig() && !showMessagesPanel()}>
+            {props.children}
+          </Show>
 
-        {showChildren() && device()?.children?.length && (
-          <div class={styles.device__children}>
-            <For each={device()?.children}>{(child) => renderDeviceComponent(child)}</For>
-          </div>
-        )}
-        <Show when={showConfig() && props.configComponent}>
-          <div class={styles.device__children} id={configPanelId} role="region" aria-live="polite">
-            {props.configComponent!(() => setShowConfig(false))}
-          </div>
-        </Show>
-        <Show when={showMessagesPanel()}>
-          <div class={styles.device__children} id={logsPanelId} role="region" aria-live="polite">
-            <DeviceLogs deviceId={props.id} messages={wsStore.lastMessages} />
-          </div>
-        </Show>
-      </div>
+          {showChildren() && device()?.children?.length && (
+            <div class={styles.device__children}>
+              <For each={device()?.children}>{(child) => renderDeviceComponent(child)}</For>
+            </div>
+          )}
+          <Show when={showConfig() && props.configComponent}>
+            <div
+              class={styles.device__children}
+              id={configPanelId}
+              role="region"
+              aria-live="polite"
+            >
+              {props.configComponent!(() => setShowConfig(false))}
+            </div>
+          </Show>
+          <Show when={showMessagesPanel()}>
+            <div class={styles.device__children} id={logsPanelId} role="region" aria-live="polite">
+              <DeviceLogs deviceId={props.id} messages={wsStore.lastMessages} />
+            </div>
+          </Show>
+        </div>
+      </Show>
     </div>
   );
 }
@@ -176,7 +209,7 @@ function DeviceLogs(props: { deviceId: string; messages: string[] }) {
 
   return (
     <div>
-      <h4>Device Logs</h4>
+      <h4>Messages</h4>
       <div
         style={{
           "max-height": "300px",

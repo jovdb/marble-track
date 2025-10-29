@@ -24,7 +24,9 @@ export function Wheel(props: { id: string }) {
   };
 
   const isCalibrated = createMemo(() => !!state()?.lastZeroPosition);
-  const isSearchingZero = createMemo(() => !state()?.lastZeroPosition && state()?.state !== "IDLE");
+  const isSearchingZero = createMemo(
+    () => !state()?.lastZeroPosition && state()?.state && state()?.state !== "IDLE"
+  );
 
   // Radius handled internally by WheelGraphic now
 

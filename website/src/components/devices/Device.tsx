@@ -73,40 +73,6 @@ export function Device(props: DeviceProps) {
             <Show when={deviceType()}>
               <span class={styles["device__type-badge"]}>{deviceType()}</span>
             </Show>
-            {device()?.children?.length && (
-              <button
-                class={`${styles["device__header-button"]} ${showChildren() ? styles["device__header-button--active"] : ""}`}
-                type="button"
-                aria-label={showChildren() ? "Hide advanced" : "Show advanced"}
-                title={showChildren() ? "Hide children" : "Show children"}
-                onClick={() => {
-                  setShowChildren((v) => !v);
-                  setShowConfig(false);
-                  setShowMessages(false);
-                }}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="icon icon-tabler icons-tabler-outline icon-tabler-sitemap"
-                >
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M3 15m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" />
-                  <path d="M15 15m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" />
-                  <path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" />
-                  <path d="M6 15v-1a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v1" />
-                  <path d="M12 9l0 3" />
-                </svg>
-              </button>
-              // add config button
-            )}
             <Show when={hasConfig()}>
               <button
                 classList={{
@@ -142,6 +108,41 @@ export function Device(props: DeviceProps) {
                 </svg>
               </button>
             </Show>
+
+            <Show when={device()?.children?.length}>
+              <button
+                class={`${styles["device__header-button"]} ${showChildren() ? styles["device__header-button--active"] : ""}`}
+                type="button"
+                aria-label={showChildren() ? "Hide advanced" : "Show advanced"}
+                title={showChildren() ? "Hide children" : "Show children"}
+                onClick={() => {
+                  setShowChildren((v) => !v);
+                  setShowConfig(false);
+                  setShowMessages(false);
+                }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="icon icon-tabler icons-tabler-outline icon-tabler-sitemap"
+                >
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M3 15m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" />
+                  <path d="M15 15m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" />
+                  <path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" />
+                  <path d="M6 15v-1a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v1" />
+                  <path d="M12 9l0 3" />
+                </svg>
+              </button>
+            </Show>
+
             <button
               classList={{
                 [styles["device__header-button"]]: true,

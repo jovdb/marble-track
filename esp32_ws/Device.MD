@@ -1,112 +1,163 @@
-# Device Class Architecture
+# Device Component Documentation
 
 ## Overview
 
-The `Device` class serves as the base class for all devices in the Marble Track system. It provides a common interface for device management, state handling, and hierarchical device relationships.
+The `Device` class serves as the base class for all devices in the Marble Track ESP32 firmware. It provides a common interface for device management, including identification, configuration, state management, and WebSocket-based communication. This abstract base class enables polymorphic device handling and hierarchical device structures through child device support.
 
-## Class Diagram
+## Key Features
+
+- **Polymorphic Interface**: Abstract base class with virtual methods for consistent device behavior
+- **Hierarchical Structure**: Support for child devices with recursive setup, loop, and state management
+- **WebSocket Integration**: Built-in notification system for real-time state updates and error reporting
+- **Configuration Management**: JSON-based configuration with get/set methods
+- **Pin Management**: Virtual method for retrieving GPIO pin assignments
+- **Identification**: Unique ID, type, and name properties for device identification
+
+## Class Architecture
 
 ```mermaid
 classDiagram
     class Device {
-        -String _id
-        -String _name
-        -String _type
-        -vector<Device*> children
-        -OnStateChange onStateChange
-
         +Device(id: String, type: String)
         +~Device()
-
+        +setup()
+        +loop()
+        +addChild(child: Device*)
+        +getChildren(): std::vector~Device*~
         +getId(): String
         +getType(): String
         +getName(): String
-
-        +addChild(child: Device*)
-        +getChildren(): vector<Device*>
-
-        +setup()*
-        +loop()*
-
-        +getState(): String*
-        +getPins(): vector<int>*
-
-        +setNotifyClients(callback: OnStateChange)
-
-        +setConfig(config: JsonObject*)*
-        +getConfig(): String*
-
-        +control(action: String, payload: JsonObject*): bool*
-        -notifyStateChange()
+        +control(action: String, payload: JsonObject*): bool
+        +getState(): String
+        +getPins(): std::vector~int~
+        +setNotifyClients(callback: NotifyClients)
+        +notifyStateChange()
+        +notifyError(messageType: String, error: String)
+        +setConfig(config: JsonObject*)
+        +getConfig(): String
+        +notifyClients: NotifyClients
     }
-
-    class OnStateChange {
-        <<typedef>>
-        +void operator()(deviceId: String, stateJson: String)
-    }
-
-    Device --> "0..*" Device : children
-    Device --> OnStateChange : onStateChange
 ```
 
-## Key Components
+## Inheritance Hierarchy
 
-### Core Properties
+The Device class is the root of the device hierarchy:
 
-- **`_id`**: Unique identifier for the device
-- **`_name`**: Human-readable name (can be empty)
-- **`_type`**: Device type identifier (e.g., "led", "servo")
-- **`children`**: Vector of child devices for hierarchical organization
-- **`onStateChange`**: Function pointer for state change notifications
+- `Device` (base class)
+  - `Stepper` (stepper motor control)
+  - `Wheel` (wheel device with stepper and sensor)
+  - `Led` (LED control)
+  - `Button` (button input)
+  - `Buzzer` (audio output)
+  - `GateWithSensor` (gate mechanism)
+  - `Lift` (lifting mechanism)
+  - `Pwm` (PWM output)
+  - `PwmMotor` (PWM motor control)
+  - `Servo` (servo motor control)
+
+## Core Methods
 
 ### Lifecycle Methods
-
-- **`setup()`**: Virtual method called during device initialization
-- **`loop()`**: Virtual method called repeatedly during device operation
-
-### State Management
-
-- **`getState()`**: Returns current device state as JSON string
-- **`notifyStateChange()`**: Triggers state change callback when state updates
-- **`setNotifyClients()`**: Registers callback for broadcasting messages
-
-### Configuration
-
-- **`getConfig()`**: Returns device configuration as JSON string
-- **`setConfig()`**: Applies configuration from JSON object
+- `setup()`: Initialize the device and its children
+- `loop()`: Main update loop called repeatedly
 
 ### Control Interface
+- `control(action, payload)`: Execute device-specific actions
+- `getState()`: Return current device state as JSON
+- `getConfig()`: Return device configuration as JSON
+- `setConfig(config)`: Apply configuration from JSON
 
-- **`control()`**: Processes control commands with optional JSON payload
+### Notification System
+- `notifyClients`: send any WebSocket message
+- `setNotifyClients(callback)`: caller the way to handle a WS message
+- `notifyStateChange()`: Send state update via WebSocket
+- `notifyError(type, error)`: Send error message via WebSocket
 
-### Device Hierarchy
+### Child Management
+- `addChild(child)`: Add a child device
+- `getChildren()`: Get list of child devices
+- `getPins()`: Get all GPIO pins used by device and children
 
-- **`addChild()`**: Adds a child device to the hierarchy
-- **`getChildren()`**: Returns list of child devices
-- **`getPins()`**: Returns all pins used by device and its children
-
-## Usage Patterns
+## Usage Examples
 
 ### Basic Device Creation
-
 ```cpp
-Device* myDevice = new MyDevice("device1", "mytype");
-myDevice->setup();
+class MyDevice : public Device {
+public:
+    MyDevice(const String &id) : Device(id, "mydevice") {}
+    
+    void setup() override {
+        // Initialize hardware
+        Device::setup(); // Setup children
+    }
+    
+    void loop() override {
+        // Update logic
+        Device::loop(); // Update children
+    }
+    
+    String getState() override {
+        JsonDocument doc;
+        doc["active"] = _isActive;
+        // Add base state
+        JsonDocument baseDoc;
+        deserializeJson(baseDoc, Device::getState());
+        for (JsonPair kv : baseDoc.as<JsonObject>()) {
+            doc[kv.key()] = kv.value();
+        }
+        String result;
+        serializeJson(doc, result);
+        return result;
+    }
+};
 ```
 
-### Hierarchical Device Management
-
+### WebSocket Integration
 ```cpp
-Device* parent = new ParentDevice("parent", "parent_type");
-Device* child = new ChildDevice("child", "child_type");
-parent->addChild(child);
+// Set notification callback
+device.setNotifyClients([](const String &message) {
+    // Send message via WebSocket
+    webSocket.send(message);
+});
+
+// State changes automatically notify
+device.notifyStateChange();
+
+// Send custom error
+device.notifyError("device-error", "Sensor failure");
 ```
 
-## Implementation Notes
+### Hierarchical Setup
+```cpp
+Device *parent = new MyDevice("parent");
+Device *child1 = new Stepper("stepper1");
+Device *child2 = new Led("led1");
 
-- The base `Device` class provides default implementations that derived classes can override
-- Pure virtual methods are marked with `*` in the diagram but are actually virtual with default implementations
-- The class uses Arduino's `String` class and ArduinoJson for JSON handling
-- Memory management for child devices is handled by the parent device
-- The callback mechanism enables reactive programming patterns for device state changes</content>
+parent->addChild(child1);
+parent->addChild(child2);
+
+// Setup propagates to children
+parent->setup();
+
+// Loop propagates to children
+parent->loop();
+```
+
+## State Management
+
+Device state is represented as JSON strings. The base `getState()` method returns an empty object `{}`, but derived classes override it to include device-specific state information.
+
+State changes trigger automatic WebSocket notifications when `notifyStateChange()` is called.
+
+## Configuration
+
+Configuration is handled via JSON objects. The base class provides empty implementations that derived classes override to support device-specific configuration parameters.
+
+## Pin Management
+
+The `getPins()` method returns a vector of GPIO pin numbers used by the device. The base implementation aggregates pins from all child devices, allowing hierarchical pin tracking.
+
+## Thread Safety
+
+The Device class is not inherently thread-safe. WebSocket notifications should be handled carefully in multi-threaded environments to avoid race conditions.</content>
   <parameter name="filePath">c:\repos\marble-track\esp32_ws\Device.MD

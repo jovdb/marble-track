@@ -17,6 +17,10 @@ export function WheelGraphic(props: WheelGraphicProps) {
   const zeroPointDegree = () => props.zeroPointDegree ?? 0;
   const breakpoints = () => props.breakpoints ?? [];
 
+  const innerRadius = radius() * 0.9;
+  const outerRadius = radius() * 1.0;
+  const textRadius = radius() * 0.8;
+
   return (
     <svg class={styles["wheel-graphic__svg"]} viewBox={`0 0 ${size()} ${size()}`}>
       <g
@@ -53,8 +57,6 @@ export function WheelGraphic(props: WheelGraphicProps) {
         <Show when={props.isCalibrated}>
           {(() => {
             const angleRad = (-zeroPointDegree() / 180) * Math.PI;
-            const innerRadius = radius();
-            const outerRadius = radius() * 0.8;
             return (
               <line
                 x1={size() / 2 + Math.sin(angleRad) * outerRadius}
@@ -71,9 +73,6 @@ export function WheelGraphic(props: WheelGraphicProps) {
       {/* Zero degree outer marker */}
       {(() => {
         const angleRad = (-zeroPointDegree() / 180) * Math.PI;
-        const innerRadius = radius();
-        const outerRadius = radius() * 1.15;
-        const textRadius = radius() * 1.25;
         return (
           <g>
             <line
@@ -104,9 +103,6 @@ export function WheelGraphic(props: WheelGraphicProps) {
       <For each={breakpoints()}>
         {(bp: number, idx) => {
           const angleRad = -((bp + zeroPointDegree()) / 180) * Math.PI;
-          const innerRadius = radius() * 1.0;
-          const outerRadius = radius() * 1.15;
-          const textRadius = radius() * 1.25;
           return (
             <g>
               <line

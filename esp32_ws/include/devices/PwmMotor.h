@@ -24,7 +24,7 @@ public:
      * @param id Unique identifier for the motor
      * @param name Human-readable name for the motor
      */
-    PwmMotor(const String &id, const String &name);
+    PwmMotor(const String &id, const String &name, NotifyClients callback = nullptr);
 
     /**
      * @brief Setup the PWM motor with specified parameters

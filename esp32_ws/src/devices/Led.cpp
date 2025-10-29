@@ -7,8 +7,8 @@
  * Initializes the Led object with just the ID parameter.
  * @param id Unique identifier string for the LED
  */
-Led::Led(const String &id)
-    : Device(id, "led"), _mode(LedMode::OFF), _initialMode(LedMode::OFF)
+Led::Led(const String &id, NotifyClients callback)
+    : Device(id, "led", callback), _mode(LedMode::OFF), _initialMode(LedMode::OFF)
 {
     // Name can be set later using setName()
 }

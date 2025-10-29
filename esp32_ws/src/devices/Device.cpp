@@ -7,7 +7,7 @@
 #include <vector>
 #include "Logging.h"
 
-Device::Device(const String &id, const String &type) : _id(id), _name(""), _type(type) {}
+Device::Device(const String &id, const String &type, NotifyClients callback) : _id(id), _name(""), _type(type), notifyClients(callback) {}
 
 Device::~Device()
 {
@@ -91,16 +91,6 @@ std::vector<int> Device::getPins() const
         }
     }
     return pins;
-}
-
-void Device::setNotifyClients(NotifyClients callback)
-{
-    notifyClients = callback;
-    for (Device *child : children)
-    {
-        if (child)
-            child->setNotifyClients(callback);
-    }
 }
 
 void Device::notifyStateChange()

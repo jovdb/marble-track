@@ -18,8 +18,8 @@
  * Initializes the Button object with just the ID parameter.
  * @param id Unique identifier string for the button
  */
-Button::Button(const String &id)
-    : Device(id, "button")
+Button::Button(const String &id, NotifyClients callback)
+    : Device(id, "button", callback)
 {
     _pin = -1;
     _pinMode = PinModeOption::Floating;

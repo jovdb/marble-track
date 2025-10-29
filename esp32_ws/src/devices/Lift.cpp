@@ -1,8 +1,8 @@
 #include "devices/Lift.h"
 #include "Logging.h"
 
-Lift::Lift(const String &id)
-    : Device(id, "lift"), _stepper(nullptr), _sensor(nullptr), _state(liftState::IDLE)
+Lift::Lift(const String &id, NotifyClients callback)
+    : Device(id, "lift", callback), _stepper(nullptr), _sensor(nullptr), _state(liftState::IDLE)
 {
 }
 
@@ -13,8 +13,8 @@ void Lift::setup()
     if (children.empty())
     {
         // Create children if not loaded from config
-        _stepper = new Stepper(getId() + "-stepper");
-        _sensor = new Button(getId() + "-sensor");
+        _stepper = new Stepper(getId() + "-stepper", notifyClients);
+        _sensor = new Button(getId() + "-sensor", notifyClients);
         addChild(_stepper);
         addChild(_sensor);
     }

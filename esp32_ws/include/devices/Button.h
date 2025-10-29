@@ -39,7 +39,7 @@ public:
         PullDown
     };
 
-    Button(const String &id);
+    Button(const String &id, NotifyClients callback = nullptr);
 
     /**
      * @brief Setup function to initialize the button

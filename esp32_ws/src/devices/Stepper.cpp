@@ -20,8 +20,8 @@
  * Configuration must be done separately using configure2Pin() or configure4Pin()
  * @param id Unique identifier string for the stepper
  */
-Stepper::Stepper(const String &id)
-    : Device(id, "stepper")
+Stepper::Stepper(const String &id, NotifyClients callback)
+    : Device(id, "stepper", callback)
 {
     _name = id;
     _maxSpeed = 1000;

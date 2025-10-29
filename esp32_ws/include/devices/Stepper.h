@@ -42,7 +42,7 @@ public:
      * @brief Constructor for Stepper motor
      * @param id Unique identifier string for the stepper
      */
-    Stepper(const String &id);
+    Stepper(const String &id, NotifyClients callback = nullptr);
 
     /**
      * @brief Destructor - cleans up AccelStepper instance

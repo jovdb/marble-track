@@ -38,7 +38,7 @@ public:
      * @param id Unique identifier string for the servo
      * @param name Human-readable name string for the servo
      */
-    ServoDevice(const String &id, const String &name);
+    ServoDevice(const String &id, const String &name, NotifyClients callback = nullptr);
 
     /**
      * @brief Destructor - cleans up servo object

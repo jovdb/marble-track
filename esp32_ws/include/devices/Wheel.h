@@ -20,7 +20,7 @@ public:
         MOVING,
         RESET
     };
-    Wheel(const String &id);
+    Wheel(const String &id, NotifyClients callback = nullptr);
     void setup() override;
     String getState() override;
     String getConfig() const override;

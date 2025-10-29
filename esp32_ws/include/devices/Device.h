@@ -30,7 +30,7 @@ using NotifyClients = std::function<void(const String &message)>;
 class Device
 {
 public:
-    Device(const String &id, const String &type);
+    Device(const String &id, const String &type, NotifyClients callback = nullptr);
     virtual ~Device();
     virtual void setup();
     virtual void loop();
@@ -42,14 +42,8 @@ public:
     virtual bool control(const String &action, JsonObject *payload = nullptr);
     virtual String getState();
     virtual std::vector<int> getPins() const;
-    virtual void setNotifyClients(NotifyClients callback);
     virtual void notifyStateChange();
     virtual void notifyError(String messageType, String error);
-    /**
-     * @brief Callback function for change notifications
-     */
-    NotifyClients notifyClients = nullptr;
-
     virtual void setConfig(JsonObject *config);
     virtual String getConfig() const;
 
@@ -58,6 +52,10 @@ protected:
     String _name;
     String _type;
     std::vector<Device *> children;
+    /**
+     * @brief Callback function for change notifications
+     */
+    NotifyClients notifyClients;
 };
 
 #endif // DEVICE_H

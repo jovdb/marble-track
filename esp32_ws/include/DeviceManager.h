@@ -95,7 +95,7 @@ public:
      * @param config Optional JSON configuration object
      * @return Pointer to the created device, or nullptr if creation failed
      */
-    Device *createDevice(const String &deviceType, const String &deviceId, JsonVariant config = JsonVariant());
+    Device *createDevice(const String &deviceType, const String &deviceId, JsonVariant config = JsonVariant(), NotifyClients callback = nullptr);
 
     /**
      * @brief Create and add a new device to the management system

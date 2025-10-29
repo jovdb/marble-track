@@ -18,7 +18,7 @@ public:
         IDLE,
         MOVING
     };
-    Lift(const String &id);
+    Lift(const String &id, NotifyClients callback = nullptr);
     void setup() override;
     String getState() override;
     String getConfig() const override;

@@ -523,11 +523,6 @@ bool DeviceManager::addDevice(Device *device)
     {
         devices[devicesCount] = device;
         devicesCount++;
-        // Set the callback on the newly added device if we have one
-        if (notifyClients)
-        {
-            device->setNotifyClients(notifyClients);
-        }
         MLOG_INFO("Added device: %s (%s)", device->getId().c_str(), device->getName().c_str());
         return true;
     }
@@ -564,7 +559,6 @@ void DeviceManager::setup(NotifyClients notifyClients)
     {
         if (devices[i])
         {
-            devices[i]->setNotifyClients(notifyClients);
             devices[i]->setup();
         }
     }
@@ -689,7 +683,7 @@ std::vector<Device *> DeviceManager::getAllDevices()
     return allDevices;
 }
 
-Device *DeviceManager::createDevice(const String &deviceType, const String &deviceId, JsonVariant config)
+Device *DeviceManager::createDevice(const String &deviceType, const String &deviceId, JsonVariant config, NotifyClients callback)
 {
     Device *newDevice = nullptr;
     String lowerType = deviceType;
@@ -699,28 +693,28 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
     switch (devType)
     {
     case DeviceType::LED:
-        newDevice = new Led(deviceId);
+        newDevice = new Led(deviceId, callback);
         break;
     case DeviceType::BUZZER:
-        newDevice = new Buzzer(deviceId, deviceId); // Using deviceId as name too
+        newDevice = new Buzzer(deviceId, deviceId, callback); // Using deviceId as name too
         break;
     case DeviceType::BUTTON:
-        newDevice = new Button(deviceId);
+        newDevice = new Button(deviceId, callback);
         break;
     case DeviceType::SERVO:
-        newDevice = new ServoDevice(deviceId, deviceId);
+        newDevice = new ServoDevice(deviceId, deviceId, callback);
         break;
     case DeviceType::STEPPER:
-        newDevice = new Stepper(deviceId);
+        newDevice = new Stepper(deviceId, callback);
         break;
     case DeviceType::PWMMOTOR:
-        newDevice = new PwmMotor(deviceId, deviceId);
+        newDevice = new PwmMotor(deviceId, deviceId, callback);
         break;
     case DeviceType::WHEEL:
-        newDevice = new Wheel(deviceId);
+        newDevice = new Wheel(deviceId, callback);
         break;
     case DeviceType::LIFT:
-        newDevice = new Lift(deviceId);
+        newDevice = new Lift(deviceId, callback);
         break;
     default:
         MLOG_ERROR("Unknown device type: %s", deviceType.c_str());
@@ -757,7 +751,7 @@ bool DeviceManager::addDevice(const String &deviceType, const String &deviceId, 
         return false;
     }
 
-    Device *newDevice = createDevice(deviceType, deviceId, config);
+    Device *newDevice = createDevice(deviceType, deviceId, config, notifyClients);
     if (newDevice == nullptr)
     {
         return false;
@@ -765,12 +759,6 @@ bool DeviceManager::addDevice(const String &deviceType, const String &deviceId, 
 
     devices[devicesCount] = newDevice;
     devicesCount++;
-
-    // Set the callback on the newly added device if we have one
-    if (notifyClients)
-    {
-        newDevice->setNotifyClients(notifyClients);
-    }
 
     MLOG_INFO("Added device to array: %s (%s)", deviceId.c_str(), deviceType.c_str());
     return true;

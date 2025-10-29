@@ -2,8 +2,8 @@
 #include "Logging.h"
 #include <ArduinoJson.h>
 
-PwmMotor::PwmMotor(const String &id, const String &name)
-    : Device(id, "pwmmotor"),
+PwmMotor::PwmMotor(const String &id, const String &name, NotifyClients callback)
+    : Device(id, "pwmmotor", callback),
       _pin(-1),
       _pwmChannel(0),
       _frequency(5000),

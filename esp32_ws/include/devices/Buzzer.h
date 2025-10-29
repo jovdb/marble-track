@@ -46,7 +46,7 @@ public:
      * @param id Unique identifier string for the buzzer
      * @param name Human-readable name string for the buzzer
      */
-    Buzzer(const String &id, const String &name);
+    Buzzer(const String &id, const String &name, NotifyClients callback = nullptr);
 
     /**
      * @brief Setup function to initialize the buzzer

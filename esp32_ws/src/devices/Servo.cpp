@@ -14,8 +14,8 @@
 #include "devices/Servo.h"
 #include <pwmWrite.h>
 
-ServoDevice::ServoDevice(const String &id, const String &name)
-    : Device(id, "servo"), _servoPwm()
+ServoDevice::ServoDevice(const String &id, const String &name, NotifyClients callback)
+    : Device(id, "servo", callback), _servoPwm()
 {
     _name = name;
 }

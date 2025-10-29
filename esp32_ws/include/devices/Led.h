@@ -25,7 +25,7 @@ public:
      * @brief Constructor - automatically initializes with ID only
      * @param id Unique identifier string for the LED
      */
-    Led(const String &id);
+    Led(const String &id, NotifyClients callback = nullptr);
 
     // Name getter and setter
     String getName() const { return _name; }

@@ -36,8 +36,8 @@
  * @param id Unique identifier string for the buzzer
  * @param name Human-readable name string for the buzzer
  */
-Buzzer::Buzzer(const String &id, const String &name)
-    : Device(id, "buzzer")
+Buzzer::Buzzer(const String &id, const String &name, NotifyClients callback)
+    : Device(id, "buzzer", callback)
 {
     _name = name;
     _pin = -1;

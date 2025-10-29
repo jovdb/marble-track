@@ -55,7 +55,7 @@ protected:
     /**
      * @brief Callback function for change notifications
      */
-    NotifyClients notifyClients;
+    NotifyClients _notifyClients;
 };
 
 #endif // DEVICE_H

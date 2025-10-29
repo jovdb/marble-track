@@ -7,7 +7,7 @@
 #include <vector>
 #include "Logging.h"
 
-Device::Device(const String &id, const String &type, NotifyClients callback) : _id(id), _name(""), _type(type), notifyClients(callback) {}
+Device::Device(const String &id, const String &type, NotifyClients notifyClients) : _id(id), _name(""), _type(type), _notifyClients(notifyClients) {}
 
 Device::~Device()
 {
@@ -95,7 +95,7 @@ std::vector<int> Device::getPins() const
 
 void Device::notifyStateChange()
 {
-    if (notifyClients)
+    if (_notifyClients)
     {
         JsonDocument doc;
         doc["type"] = "device-state";
@@ -119,17 +119,17 @@ void Device::notifyStateChange()
         String message;
         serializeJson(doc, message);
 
-        notifyClients(message);
+        _notifyClients(message);
     }
     else
     {
-        MLOG_WARN("Device [%s]: notifyClients callback not set", _id.c_str());
+        MLOG_WARN("Device [%s]: _notifyClients callback not set", _id.c_str());
     }
 }
 
 void Device::notifyError(String messageType, String error)
 {
-    if (notifyClients)
+    if (_notifyClients)
     {
         JsonDocument doc;
         doc["type"] = messageType;
@@ -139,11 +139,11 @@ void Device::notifyError(String messageType, String error)
         String message;
         serializeJson(doc, message);
 
-        notifyClients(message);
+        _notifyClients(message);
     }
     else
     {
-        MLOG_WARN("Device [%s]: notifyClients callback not set", _id.c_str());
+        MLOG_WARN("Device [%s]: _notifyClients callback not set", _id.c_str());
     }
 }
 

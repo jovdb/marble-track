@@ -5,8 +5,8 @@
 // these are the angle values for breakpoints
 static const float breakpoints[] = {45.0, 90.0, 180.0, 30.0, 270.0};
 
-Wheel::Wheel(const String &id, NotifyClients callback)
-    : Device(id, "wheel", callback), _stepper(nullptr), _sensor(nullptr), _stepsInLastRevolution(0)
+Wheel::Wheel(const String &id, NotifyClients notifyClients)
+    : Device(id, "wheel", notifyClients), _stepper(nullptr), _sensor(nullptr), _stepsInLastRevolution(0)
 {
     _direction = 1;
     _state = wheelState::IDLE;
@@ -19,8 +19,8 @@ void Wheel::setup()
     if (children.empty())
     {
         // Create children if not loaded from config
-        _stepper = new Stepper(getId() + "-stepper", notifyClients);
-        _sensor = new Button(getId() + "-sensor", notifyClients);
+        _stepper = new Stepper(getId() + "-stepper", _notifyClients);
+        _sensor = new Button(getId() + "-sensor", _notifyClients);
         addChild(_stepper);
         addChild(_sensor);
 
@@ -259,7 +259,7 @@ bool Wheel::moveToAngle(float angle)
 
 void Wheel::notifyStepsPerRevolution(long steps)
 {
-    if (Device::notifyClients)
+    if (Device::_notifyClients)
     {
         JsonDocument doc;
         doc["type"] = "steps-per-revolution";
@@ -268,7 +268,7 @@ void Wheel::notifyStepsPerRevolution(long steps)
 
         String message;
         serializeJson(doc, message);
-        notifyClients(message);
+        _notifyClients(message);
     }
 }
 

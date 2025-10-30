@@ -15,6 +15,7 @@ export function WheelGraphic(props: WheelGraphicProps) {
   const size = () => props.size ?? 100;
   const radius = () => size() / 2 - 15;
   const zeroPointDegree = () => props.zeroPointDegree ?? 0;
+  const zeroAngleRad = (-zeroPointDegree() / 180) * Math.PI;
   const breakpoints = () => props.breakpoints ?? [];
 
   // use createMemo?
@@ -24,6 +25,7 @@ export function WheelGraphic(props: WheelGraphicProps) {
 
   return (
     <svg class={styles["wheel-graphic__svg"]} viewBox={`0 0 ${size()} ${size()}`}>
+      {/* Rotates */}
       <g
         transform={`rotate(${-(props.angle ?? 0)})`}
         transform-origin={`${size() / 2}px ${size() / 2}px`}
@@ -55,82 +57,81 @@ export function WheelGraphic(props: WheelGraphicProps) {
           </text>
         </Show>
 
-        <Show when={props.isCalibrated}>
-          {(() => {
-            const angleRad = (-zeroPointDegree() / 180) * Math.PI;
+        {/* Zero degree outer marker */}
+        <g>
+          <line
+            x1={size() / 2 + Math.sin(zeroAngleRad) * innerRadius}
+            y1={size() / 2 - Math.cos(zeroAngleRad) * innerRadius}
+            x2={size() / 2 + Math.sin(zeroAngleRad) * radius()}
+            y2={size() / 2 - Math.cos(zeroAngleRad) * radius()}
+            style={{ stroke: "currentColor", opacity: 0.5, "stroke-width": "1" }}
+          />
+          <text
+            x={size() / 2 + Math.sin(zeroAngleRad) * textRadius}
+            y={size() / 2 - Math.cos(zeroAngleRad) * textRadius}
+            text-anchor="middle"
+            dominant-baseline="middle"
+            transform={`rotate(${props.angle ?? 0}, ${size() / 2 + Math.sin(zeroAngleRad) * textRadius}, ${size() / 2 - Math.cos(zeroAngleRad) * textRadius})`}
+            style={{
+              fill: "currentColor",
+              opacity: 0.5,
+              "font-size": "6px",
+              "font-weight": "bold",
+              "font-family": "monospace",
+            }}
+          >
+            0
+          </text>
+        </g>
+
+        <For each={breakpoints()}>
+          {(bp: number, idx) => {
+            const angleRad = ((bp - zeroPointDegree()) / 180) * Math.PI;
             return (
-              <line
-                x1={size() / 2 + Math.sin(angleRad) * outerRadius}
-                y1={size() / 2 - Math.cos(angleRad) * outerRadius}
-                x2={size() / 2 + Math.sin(angleRad) * radius()}
-                y2={size() / 2 - Math.cos(angleRad) * radius()}
-                style={{ stroke: "currentColor", "stroke-width": "1" }}
-              />
+              <g>
+                <line
+                  x1={size() / 2 + Math.sin(angleRad) * innerRadius}
+                  y1={size() / 2 - Math.cos(angleRad) * innerRadius}
+                  x2={size() / 2 + Math.sin(angleRad) * radius()}
+                  y2={size() / 2 - Math.cos(angleRad) * radius()}
+                  style={{ stroke: "currentColor", "stroke-width": "1" }}
+                />
+                <text
+                  x={size() / 2 + Math.sin(angleRad) * textRadius}
+                  y={size() / 2 - Math.cos(angleRad) * textRadius}
+                  text-anchor="middle"
+                  dominant-baseline="middle"
+                  transform={`rotate(${props.angle ?? 0}, ${size() / 2 + Math.sin(angleRad) * textRadius}, ${size() / 2 - Math.cos(angleRad) * textRadius})`}
+                  style={{
+                    fill: "currentColor",
+                    "font-size": "6px",
+                    "font-weight": "bold",
+                    "font-family": "monospace",
+                  }}
+                >
+                  {idx() + 1}
+                </text>
+              </g>
             );
-          })()}
-        </Show>
+          }}
+        </For>
       </g>
 
-      {/* Zero degree outer marker */}
-      {(() => {
-        const angleRad = (-zeroPointDegree() / 180) * Math.PI;
-        return (
-          <g>
+      {/* Doesn't rotates */}
+      <Show when={props.isCalibrated}>
+        {(() => {
+          const angleRad = (-zeroPointDegree() / 180) * Math.PI;
+          return (
             <line
-              x1={size() / 2 + Math.sin(angleRad) * innerRadius}
-              y1={size() / 2 - Math.cos(angleRad) * innerRadius}
+              x1={size() / 2 + Math.sin(angleRad) * outerRadius}
+              y1={size() / 2 - Math.cos(angleRad) * outerRadius}
               x2={size() / 2 + Math.sin(angleRad) * radius()}
               y2={size() / 2 - Math.cos(angleRad) * radius()}
-              style={{ stroke: "currentColor", opacity: 0.5, "stroke-width": "1" }}
+              style={{ stroke: "currentColor", "stroke-width": "1" }}
             />
-            <text
-              x={size() / 2 + Math.sin(angleRad) * textRadius}
-              y={size() / 2 - Math.cos(angleRad) * textRadius}
-              text-anchor="middle"
-              dominant-baseline="middle"
-              style={{
-                fill: "currentColor",
-                opacity: 0.5,
-                "font-size": "6px",
-                "font-weight": "bold",
-                "font-family": "monospace",
-              }}
-            >
-              0
-            </text>
-          </g>
-        );
-      })()}
-      <For each={breakpoints()}>
-        {(bp: number, idx) => {
-          const angleRad = -((bp + zeroPointDegree()) / 180) * Math.PI;
-          return (
-            <g>
-              <line
-                x1={size() / 2 + Math.sin(angleRad) * innerRadius}
-                y1={size() / 2 - Math.cos(angleRad) * innerRadius}
-                x2={size() / 2 + Math.sin(angleRad) * radius()}
-                y2={size() / 2 - Math.cos(angleRad) * radius()}
-                style={{ stroke: "currentColor", "stroke-width": "1" }}
-              />
-              <text
-                x={size() / 2 + Math.sin(angleRad) * textRadius}
-                y={size() / 2 - Math.cos(angleRad) * textRadius}
-                text-anchor="middle"
-                dominant-baseline="middle"
-                style={{
-                  fill: "currentColor",
-                  "font-size": "6px",
-                  "font-weight": "bold",
-                  "font-family": "monospace",
-                }}
-              >
-                {idx() + 1}
-              </text>
-            </g>
           );
-        }}
-      </For>
+        })()}
+      </Show>
     </svg>
   );
 }

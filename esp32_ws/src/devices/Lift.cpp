@@ -9,7 +9,6 @@ Lift::Lift(const String &id, NotifyClients notifyClients)
 void Lift::setup()
 {
     auto children = getChildren();
-    MLOG_WARN("Lift [%s]: Setup start, children count: %d", getId().c_str(), children.size());
     if (children.empty())
     {
         // Create children if not loaded from config

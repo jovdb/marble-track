@@ -32,6 +32,7 @@ public:
     bool reset();
     bool moveToAngle(float angle);
     void notifyStepsPerRevolution(long steps);
+    bool nextBreakPoint();
 
 private:
     String stateToString(wheelState state) const;

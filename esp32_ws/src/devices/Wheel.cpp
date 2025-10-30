@@ -15,12 +15,11 @@ Wheel::Wheel(const String &id, NotifyClients notifyClients)
 void Wheel::setup()
 {
     auto children = getChildren();
-    MLOG_WARN("Wheel [%s]: Setup start, children count: %d", getId().c_str(), children.size());
     if (children.empty())
     {
         // Create children if not loaded from config
         _stepper = new Stepper(getId() + "-stepper", _notifyClients);
-        _sensor = new Button(getId() + "-sensor", _notifyClients);
+        _sensor = new Button(getId() + "-zero-sensor", _notifyClients);
         _btnNext = new Button(getId() + "-btn-next", _notifyClients);
         addChild(_stepper);
         addChild(_sensor);
@@ -71,7 +70,7 @@ void Wheel::loop()
         if (_btnNext && _btnNext->wasPressed())
         {
             MLOG_INFO("Wheel [%s]: Next button pressed, triggering next-breakpoint", getId().c_str());
-            control("next-breakpoint");
+            nextBreakPoint();
         }
 
         break;
@@ -285,47 +284,52 @@ void Wheel::notifyStepsPerRevolution(long steps)
     }
 }
 
+bool Wheel::nextBreakPoint()
+{
+    if (_breakPoints.empty())
+    {
+        MLOG_WARN("Wheel [%s]: No breakpoints configured", getId().c_str());
+        return false;
+    }
+
+    // find first
+    if (_lastZeroPosition == 0)
+    {
+        return reset();
+    }
+
+    int nextIndex = (_currentBreakpointIndex + 1) % _breakPoints.size();
+    _targetBreakpointIndex = nextIndex;
+
+    // Calculate current angle
+    float currentAngle = 0.0f;
+    if (_lastZeroPosition != 0 && _stepsPerRevolution > 0 && _stepper)
+    {
+        long currentPosition = _stepper->getCurrentPosition();
+        currentAngle = ((currentPosition - _lastZeroPosition) / (float)_stepsPerRevolution) * 360.0f;
+        // Normalize angle to 0-360 range
+        while (currentAngle < 0)
+            currentAngle += 360;
+        while (currentAngle >= 360)
+            currentAngle -= 360;
+    }
+
+    float targetAngleRaw = _breakPoints[nextIndex];
+    float delta = targetAngleRaw - currentAngle;
+    if (delta <= 0)
+        delta += 360;
+    _targetAngle = currentAngle + delta;
+
+    MLOG_INFO("Wheel [%s]: Moving to next breakpoint index %d, raw angle %.1f°, forward target %.1f°", getId().c_str(), nextIndex, targetAngleRaw, _targetAngle);
+    return moveToAngle(_targetAngle);
+}
+
 bool Wheel::control(const String &action, JsonObject *payload)
 {
     // Use if-else if chain for string actions (C++ does not support switch on String)
     if (action == "next-breakpoint")
     {
-        if (_breakPoints.empty())
-        {
-            MLOG_WARN("Wheel [%s]: No breakpoints configured", getId().c_str());
-            return false;
-        }
-
-        // find first
-        if (_lastZeroPosition == 0)
-        {
-            return reset();
-        }
-
-        int nextIndex = (_currentBreakpointIndex + 1) % _breakPoints.size();
-        _targetBreakpointIndex = nextIndex;
-
-        // Calculate current angle
-        float currentAngle = 0.0f;
-        if (_lastZeroPosition != 0 && _stepsPerRevolution > 0 && _stepper)
-        {
-            long currentPosition = _stepper->getCurrentPosition();
-            currentAngle = ((currentPosition - _lastZeroPosition) / (float)_stepsPerRevolution) * 360.0f;
-            // Normalize angle to 0-360 range
-            while (currentAngle < 0)
-                currentAngle += 360;
-            while (currentAngle >= 360)
-                currentAngle -= 360;
-        }
-
-        float targetAngleRaw = _breakPoints[nextIndex];
-        float delta = targetAngleRaw - currentAngle;
-        if (delta <= 0)
-            delta += 360;
-        _targetAngle = currentAngle + delta;
-
-        MLOG_INFO("Wheel [%s]: Moving to next breakpoint index %d, raw angle %.1f°, forward target %.1f°", getId().c_str(), nextIndex, targetAngleRaw, _targetAngle);
-        return moveToAngle(_targetAngle);
+        return nextBreakPoint();
     }
     else if (action == "calibrate")
     {

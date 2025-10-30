@@ -46,6 +46,7 @@ public:
     virtual void notifyError(String messageType, String error);
     virtual void setConfig(JsonObject *config);
     virtual String getConfig() const;
+    void setNotifyClients(NotifyClients callback);
 
 protected:
     String _id;

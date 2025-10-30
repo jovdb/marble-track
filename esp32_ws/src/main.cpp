@@ -39,14 +39,16 @@ AsyncWebServer server(80);
 LittleFSManager littleFSManager;
 // WebsiteHost websiteHost(&network);
 WebsiteHost *websiteHost = nullptr; // Will be created after network initialization
-DeviceManager deviceManager;
-WebSocketManager wsManager(&deviceManager, nullptr, "/ws");
+WebSocketManager wsManager(nullptr, nullptr, "/ws");
 
 // Device instances
 // ...existing code...
 
 // Function declarations
 void setOperationMode(OperationMode mode);
+void globalNotifyClientsCallback(const String &message);
+
+SerialConsole *serialConsole = nullptr;
 
 
 void globalNotifyClientsCallback(const String &message)
@@ -54,8 +56,7 @@ void globalNotifyClientsCallback(const String &message)
   wsManager.notifyClients(message);
 }
 
-// SerialConsole will be initialized after network is created
-SerialConsole *serialConsole = nullptr;
+DeviceManager deviceManager(globalNotifyClientsCallback);
 
 void runManualMode()
 {
@@ -183,7 +184,7 @@ void setup()
   deviceManager.loadDevicesFromJsonFile();
 
   // Setup  Devices with callback to enable state change notifications during initialization
-  deviceManager.setup(globalNotifyClientsCallback);
+  deviceManager.setup();
 
   // Startup sound
   Buzzer *buzzer = deviceManager.getDeviceByTypeAs<Buzzer>("buzzer");

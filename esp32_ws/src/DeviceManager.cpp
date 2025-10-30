@@ -365,7 +365,7 @@ bool DeviceManager::saveNetworkSettings(const NetworkSettings &settings)
     }
 }
 
-DeviceManager::DeviceManager() : devicesCount(0)
+DeviceManager::DeviceManager(NotifyClients callback) : devicesCount(0), notifyClients(callback)
 {
     // Initialize device array to nullptr
     for (int i = 0; i < MAX_DEVICES; i++)
@@ -408,9 +408,24 @@ void DeviceManager::getDevices(Device **deviceList, int &count, int maxResults)
     }
 }
 
-void DeviceManager::setup(NotifyClients notifyClients)
+void DeviceManager::setup()
 {
-    this->notifyClients = notifyClients;
+    // Set the notify callback on all devices recursively
+    std::function<void(Device *)> setCallbackRecursive = [&](Device *dev) {
+        if (!dev) return;
+        dev->setNotifyClients(notifyClients);
+        for (Device *child : dev->getChildren()) {
+            setCallbackRecursive(child);
+        }
+    };
+
+    for (int i = 0; i < devicesCount; i++)
+    {
+        if (devices[i])
+        {
+            setCallbackRecursive(devices[i]);
+        }
+    }
 
     for (int i = 0; i < devicesCount; i++)
     {
@@ -540,7 +555,7 @@ std::vector<Device *> DeviceManager::getAllDevices()
     return allDevices;
 }
 
-Device *DeviceManager::createDevice(const String &deviceType, const String &deviceId, JsonVariant config, NotifyClients callback)
+Device *DeviceManager::createDevice(const String &deviceType, const String &deviceId, JsonVariant config, NotifyClients notifyClients)
 {
     Device *newDevice = nullptr;
     String lowerType = deviceType;
@@ -548,35 +563,35 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
 
     if (lowerType == "led")
     {
-        newDevice = new Led(deviceId, callback);
+        newDevice = new Led(deviceId, notifyClients);
     }
     else if (lowerType == "buzzer")
     {
-        newDevice = new Buzzer(deviceId, deviceId, callback); // Using deviceId as name too
+        newDevice = new Buzzer(deviceId, deviceId, notifyClients); // Using deviceId as name too
     }
     else if (lowerType == "button")
     {
-        newDevice = new Button(deviceId, callback);
+        newDevice = new Button(deviceId, notifyClients);
     }
     else if (lowerType == "servo")
     {
-        newDevice = new ServoDevice(deviceId, deviceId, callback);
+        newDevice = new ServoDevice(deviceId, deviceId, notifyClients);
     }
     else if (lowerType == "stepper")
     {
-        newDevice = new Stepper(deviceId, callback);
+        newDevice = new Stepper(deviceId, notifyClients);
     }
     else if (lowerType == "pwmmotor")
     {
-        newDevice = new PwmMotor(deviceId, deviceId, callback);
+        newDevice = new PwmMotor(deviceId, deviceId, notifyClients);
     }
     else if (lowerType == "wheel")
     {
-        newDevice = new Wheel(deviceId, callback);
+        newDevice = new Wheel(deviceId, notifyClients);
     }
     else if (lowerType == "lift")
     {
-        newDevice = new Lift(deviceId, callback);
+        newDevice = new Lift(deviceId, notifyClients);
     }
     else
     {

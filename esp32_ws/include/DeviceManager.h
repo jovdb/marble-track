@@ -72,7 +72,7 @@ public:
     /**
      * @brief Constructor - initializes empty device array
      */
-    DeviceManager();
+    DeviceManager(NotifyClients callback = nullptr);
 
     /**
      * @brief Add a device to the management system
@@ -116,9 +116,8 @@ public:
 
     /**
      * @brief Setup all devices and assign state change callback
-     * @param callback The callback to assign to each device
      */
-    void setup(NotifyClients callback);
+    void setup();
 
     /**
      * @brief Call loop() function on all registered devices

@@ -7,7 +7,13 @@
 #include <vector>
 #include "Logging.h"
 
-Device::Device(const String &id, const String &type, NotifyClients notifyClients) : _id(id), _name(""), _type(type), _notifyClients(notifyClients) {}
+Device::Device(const String &id, const String &type, NotifyClients notifyClients) : _id(id), _name(""), _type(type), _notifyClients(notifyClients)
+{
+    if (!_notifyClients)
+    {
+        MLOG_ERROR("Device [%s]: No notifyClients callback provided at constructor!", getId().c_str());
+    }
+}
 
 Device::~Device()
 {
@@ -157,4 +163,9 @@ void Device::setConfig(JsonObject *config)
 {
     // Default implementation: do nothing
     // Derived classes can override to handle config
+}
+
+void Device::setNotifyClients(NotifyClients callback)
+{
+    _notifyClients = callback;
 }

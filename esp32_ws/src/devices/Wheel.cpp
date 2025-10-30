@@ -72,7 +72,8 @@ void Wheel::loop()
 
             // Reset position to avoid overflow: No
 
-            if (_targetBreakpointIndex >= 0) {
+            if (_targetBreakpointIndex >= 0)
+            {
                 _currentBreakpointIndex = _targetBreakpointIndex;
                 _targetBreakpointIndex = -1;
             }
@@ -112,7 +113,7 @@ void Wheel::loop()
                 MLOG_INFO("Wheel [%s]: Moving to first breakpoint.", getId().c_str());
                 _currentBreakpointIndex = -1;
                 _targetBreakpointIndex = 0;
-                 _state = wheelState::MOVING;
+                _state = wheelState::MOVING;
                 _targetAngle = _breakPoints[0];
                 moveToAngle(_breakPoints[0]);
                 notifyStateChange();
@@ -366,7 +367,7 @@ String Wheel::getState()
     doc["lastZeroPosition"] = _lastZeroPosition;
     doc["currentBreakpointIndex"] = _currentBreakpointIndex;
     doc["targetBreakpointIndex"] = _targetBreakpointIndex;
-    
+
     // Calculate angle if possible
     if (_lastZeroPosition != 0 && _stepsPerRevolution > 0 && _stepper)
     {

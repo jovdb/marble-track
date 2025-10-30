@@ -121,7 +121,7 @@ export function Wheel(props: { id: string }) {
                 <button
                   class={styles.device__button}
                   onClick={onNextClicked}
-                  disabled={state()?.lastZeroPosition === 0 || state()?.state === "MOVING"}
+                  disabled={state()?.state === "MOVING"}
                 >
                   Next {nextBreakpointDisplay}/{breakpoints().length}
                 </button>

@@ -284,6 +284,12 @@ bool Wheel::control(const String &action, JsonObject *payload)
             return false;
         }
 
+        // find first
+        if (_lastZeroPosition == 0)
+        {
+            return reset();
+        }
+
         int nextIndex = (_currentBreakpointIndex + 1) % _breakPoints.size();
         _targetBreakpointIndex = nextIndex;
 

@@ -6,7 +6,7 @@
 static const float breakpoints[] = {45.0, 90.0, 180.0, 30.0, 270.0};
 
 Wheel::Wheel(const String &id, NotifyClients notifyClients)
-    : Device(id, "wheel", notifyClients), _stepper(nullptr), _sensor(nullptr), _stepsInLastRevolution(0)
+    : Device(id, "wheel", notifyClients), _stepper(nullptr), _sensor(nullptr), _btnNext(nullptr), _stepsInLastRevolution(0)
 {
     _direction = 1;
     _state = wheelState::IDLE;
@@ -21,8 +21,10 @@ void Wheel::setup()
         // Create children if not loaded from config
         _stepper = new Stepper(getId() + "-stepper", _notifyClients);
         _sensor = new Button(getId() + "-sensor", _notifyClients);
+        _btnNext = new Button(getId() + "-btn-next", _notifyClients);
         addChild(_stepper);
         addChild(_sensor);
+        addChild(_btnNext);
 
         // Initialize breakpoints if not loaded from config
         if (_breakPoints.empty())
@@ -37,6 +39,8 @@ void Wheel::setup()
             _stepper = static_cast<Stepper *>(children[0]);
         if (children.size() >= 2)
             _sensor = static_cast<Button *>(children[1]);
+        if (children.size() >= 3)
+            _btnNext = static_cast<Button *>(children[2]);
     }
 
     // Call base setup to setup children
@@ -62,6 +66,14 @@ void Wheel::loop()
             _state = wheelState::MOVING;
             notifyStateChange();
         }
+
+        // Check for next button press
+        if (_btnNext && _btnNext->wasPressed())
+        {
+            MLOG_INFO("Wheel [%s]: Next button pressed, triggering next-breakpoint", getId().c_str());
+            control("next-breakpoint");
+        }
+
         break;
     }
     case wheelState::MOVING:

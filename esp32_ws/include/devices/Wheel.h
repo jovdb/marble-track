@@ -37,6 +37,7 @@ private:
     String stateToString(wheelState state) const;
     Stepper *_stepper;
     Button *_sensor;
+    Button *_btnNext;
     wheelState _state;
     /* -1 = CCW, 1 = CW */
     int _direction = -1;

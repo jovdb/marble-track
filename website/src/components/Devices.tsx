@@ -11,6 +11,8 @@ import { Servo } from "./devices/Servo";
 import { Stepper } from "./devices/Stepper";
 import { Wheel } from "./devices/Wheel";
 import { Lift } from "./devices/Lift";
+import { CollapsibleSection } from "./CollapsibleSection";
+import { getDeviceIcon } from "./icons/Icons";
 
 import styles from "./Devices.module.css";
 
@@ -43,7 +45,17 @@ export function Devices() {
             : "Connect to see available devices"}
         </div>
       ) : (
-        <For each={topLevelDevices()}>{(device) => <div>{renderDeviceComponent(device)}</div>}</For>
+        <For each={topLevelDevices()}>
+          {(device) => (
+            <CollapsibleSection
+              title={`${device.type} - ${device.id}`}
+              icon={getDeviceIcon(device.type)}
+              defaultCollapsed={false}
+            >
+              {renderDeviceComponent(device)}
+            </CollapsibleSection>
+          )}
+        </For>
       )}
     </div>
   );

@@ -17,8 +17,9 @@ export function WheelGraphic(props: WheelGraphicProps) {
   const zeroPointDegree = () => props.zeroPointDegree ?? 0;
   const breakpoints = () => props.breakpoints ?? [];
 
+  // use createMemo?
   const innerRadius = radius() * 0.9;
-  const outerRadius = radius() * 1.0;
+  const outerRadius = radius() * 1.1;
   const textRadius = radius() * 0.8;
 
   return (
@@ -61,8 +62,8 @@ export function WheelGraphic(props: WheelGraphicProps) {
               <line
                 x1={size() / 2 + Math.sin(angleRad) * outerRadius}
                 y1={size() / 2 - Math.cos(angleRad) * outerRadius}
-                x2={size() / 2 + Math.sin(angleRad) * innerRadius}
-                y2={size() / 2 - Math.cos(angleRad) * innerRadius}
+                x2={size() / 2 + Math.sin(angleRad) * radius()}
+                y2={size() / 2 - Math.cos(angleRad) * radius()}
                 style={{ stroke: "currentColor", "stroke-width": "1" }}
               />
             );
@@ -78,8 +79,8 @@ export function WheelGraphic(props: WheelGraphicProps) {
             <line
               x1={size() / 2 + Math.sin(angleRad) * innerRadius}
               y1={size() / 2 - Math.cos(angleRad) * innerRadius}
-              x2={size() / 2 + Math.sin(angleRad) * outerRadius}
-              y2={size() / 2 - Math.cos(angleRad) * outerRadius}
+              x2={size() / 2 + Math.sin(angleRad) * radius()}
+              y2={size() / 2 - Math.cos(angleRad) * radius()}
               style={{ stroke: "currentColor", opacity: 0.5, "stroke-width": "1" }}
             />
             <text
@@ -108,8 +109,8 @@ export function WheelGraphic(props: WheelGraphicProps) {
               <line
                 x1={size() / 2 + Math.sin(angleRad) * innerRadius}
                 y1={size() / 2 - Math.cos(angleRad) * innerRadius}
-                x2={size() / 2 + Math.sin(angleRad) * outerRadius}
-                y2={size() / 2 - Math.cos(angleRad) * outerRadius}
+                x2={size() / 2 + Math.sin(angleRad) * radius()}
+                y2={size() / 2 - Math.cos(angleRad) * radius()}
                 style={{ stroke: "currentColor", "stroke-width": "1" }}
               />
               <text

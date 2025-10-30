@@ -1,4 +1,4 @@
-import { Show, For } from "solid-js";
+import { Show, For, createMemo } from "solid-js";
 import styles from "./WheelGraphic.module.css";
 
 export interface WheelGraphicProps {
@@ -12,16 +12,15 @@ export interface WheelGraphicProps {
 
 // Pure visual wheel graphic (no device store usage). All math is internal.
 export function WheelGraphic(props: WheelGraphicProps) {
-  const size = () => props.size ?? 100;
-  const radius = () => size() / 2 - 15;
-  const zeroPointDegree = () => props.zeroPointDegree ?? 0;
-  const zeroAngleRad = (-zeroPointDegree() / 180) * Math.PI;
-  const breakpoints = () => props.breakpoints ?? [];
+  const size = createMemo(() => props.size ?? 100);
+  const radius = createMemo(() => size() / 2 - 15);
+  const zeroPointDegree = createMemo(() => props.zeroPointDegree ?? 0);
+  const zeroPointRad = createMemo(() => (zeroPointDegree() / 180) * Math.PI);
+  const breakpoints = createMemo(() => props.breakpoints ?? []);
 
-  // use createMemo?
-  const innerRadius = radius() * 0.9;
-  const outerRadius = radius() * 1.1;
-  const textRadius = radius() * 0.8;
+  const innerRadius = createMemo(() => radius() * 0.9);
+  const outerRadius = createMemo(() => radius() * 1.1);
+  const textRadius = createMemo(() => radius() * 0.8);
 
   return (
     <svg class={styles["wheel-graphic__svg"]} viewBox={`0 0 ${size()} ${size()}`}>
@@ -57,21 +56,21 @@ export function WheelGraphic(props: WheelGraphicProps) {
           </text>
         </Show>
 
-        {/* Zero degree outer marker */}
+        {/* Zero degree inner marker */}
         <g>
           <line
-            x1={size() / 2 + Math.sin(zeroAngleRad) * innerRadius}
-            y1={size() / 2 - Math.cos(zeroAngleRad) * innerRadius}
-            x2={size() / 2 + Math.sin(zeroAngleRad) * radius()}
-            y2={size() / 2 - Math.cos(zeroAngleRad) * radius()}
+            x1={size() / 2 + Math.sin(-zeroPointRad()) * innerRadius()}
+            y1={size() / 2 - Math.cos(-zeroPointRad()) * innerRadius()}
+            x2={size() / 2 + Math.sin(-zeroPointRad()) * radius()}
+            y2={size() / 2 - Math.cos(-zeroPointRad()) * radius()}
             style={{ stroke: "currentColor", opacity: 0.5, "stroke-width": "1" }}
           />
           <text
-            x={size() / 2 + Math.sin(zeroAngleRad) * textRadius}
-            y={size() / 2 - Math.cos(zeroAngleRad) * textRadius}
+            x={size() / 2 + Math.sin(-zeroPointRad()) * textRadius()}
+            y={size() / 2 - Math.cos(-zeroPointRad()) * textRadius()}
             text-anchor="middle"
             dominant-baseline="middle"
-            transform={`rotate(${props.angle ?? 0}, ${size() / 2 + Math.sin(zeroAngleRad) * textRadius}, ${size() / 2 - Math.cos(zeroAngleRad) * textRadius})`}
+            transform={`rotate(${props.angle ?? 0}, ${size() / 2 + Math.sin(-zeroPointRad()) * textRadius()}, ${size() / 2 - Math.cos(-zeroPointRad()) * textRadius()})`}
             style={{
               fill: "currentColor",
               opacity: 0.5,
@@ -90,18 +89,18 @@ export function WheelGraphic(props: WheelGraphicProps) {
             return (
               <g>
                 <line
-                  x1={size() / 2 + Math.sin(angleRad) * innerRadius}
-                  y1={size() / 2 - Math.cos(angleRad) * innerRadius}
+                  x1={size() / 2 + Math.sin(angleRad) * innerRadius()}
+                  y1={size() / 2 - Math.cos(angleRad) * innerRadius()}
                   x2={size() / 2 + Math.sin(angleRad) * radius()}
                   y2={size() / 2 - Math.cos(angleRad) * radius()}
                   style={{ stroke: "currentColor", "stroke-width": "1" }}
                 />
                 <text
-                  x={size() / 2 + Math.sin(angleRad) * textRadius}
-                  y={size() / 2 - Math.cos(angleRad) * textRadius}
+                  x={size() / 2 + Math.sin(angleRad) * textRadius()}
+                  y={size() / 2 - Math.cos(angleRad) * textRadius()}
                   text-anchor="middle"
                   dominant-baseline="middle"
-                  transform={`rotate(${props.angle ?? 0}, ${size() / 2 + Math.sin(angleRad) * textRadius}, ${size() / 2 - Math.cos(angleRad) * textRadius})`}
+                  transform={`rotate(${props.angle ?? 0}, ${size() / 2 + Math.sin(angleRad) * textRadius()}, ${size() / 2 - Math.cos(angleRad) * textRadius()})`}
                   style={{
                     fill: "currentColor",
                     "font-size": "6px",
@@ -118,20 +117,14 @@ export function WheelGraphic(props: WheelGraphicProps) {
       </g>
 
       {/* Doesn't rotates */}
-      <Show when={props.isCalibrated}>
-        {(() => {
-          const angleRad = (-zeroPointDegree() / 180) * Math.PI;
-          return (
-            <line
-              x1={size() / 2 + Math.sin(angleRad) * outerRadius}
-              y1={size() / 2 - Math.cos(angleRad) * outerRadius}
-              x2={size() / 2 + Math.sin(angleRad) * radius()}
-              y2={size() / 2 - Math.cos(angleRad) * radius()}
-              style={{ stroke: "currentColor", "stroke-width": "1" }}
-            />
-          );
-        })()}
-      </Show>
+      {/* Zero degree outer marker */}
+      <line
+        x1={size() / 2 + Math.sin(-zeroPointRad()) * outerRadius()}
+        y1={size() / 2 - Math.cos(-zeroPointRad()) * outerRadius()}
+        x2={size() / 2 + Math.sin(-zeroPointRad()) * radius()}
+        y2={size() / 2 - Math.cos(-zeroPointRad()) * radius()}
+        style={{ stroke: "currentColor", "stroke-width": "1" }}
+      />
     </svg>
   );
 }

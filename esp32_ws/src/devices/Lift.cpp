@@ -28,8 +28,6 @@ void Lift::setup()
 
     // Call base setup to setup children
     Device::setup();
-
-    MLOG_WARN("Lift [%s]: Setup end, children count: %d", getId().c_str(), children.size());
 }
 
 void Lift::loop()

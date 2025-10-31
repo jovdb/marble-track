@@ -44,8 +44,6 @@ void Wheel::setup()
 
     // Call base setup to setup children
     Device::setup();
-
-    MLOG_WARN("Wheel [%s]: Setup end, children count: %d", getId().c_str(), children.size());
 }
 
 void Wheel::loop()

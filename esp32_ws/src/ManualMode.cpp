@@ -12,9 +12,30 @@ ManualMode::ManualMode(DeviceManager &deviceManager) : deviceManager(deviceManag
 void ManualMode::setup()
 {
     _wheelNextBtn = deviceManager.getDeviceByIdAs<Button>("wheel-next-btn");
+    if (_wheelNextBtn == nullptr)
+    {
+        MLOG_ERROR("Required device 'wheel-next-btn' not found!");
+    }
+
     _wheel = deviceManager.getDeviceByIdAs<Wheel>("wheel");
+    if (_wheel == nullptr)
+    {
+        MLOG_ERROR("Required device 'wheel' not found!");
+    }
+
     _buzzer = deviceManager.getDeviceByIdAs<Buzzer>("buzzer");
+    if (_buzzer == nullptr)
+    {
+        MLOG_ERROR("Required device 'buzzer' not found!");
+    }
+
     _wheelBtnLed = deviceManager.getDeviceByIdAs<Led>("wheel-btn-led");
+    if (_wheelBtnLed == nullptr)
+    {
+        MLOG_ERROR("Required device 'wheel-btn-led' not found!");
+    }
+
+    MLOG_INFO("ManualMode setup complete");
 }
 
 void ManualMode::loop()

@@ -75,6 +75,24 @@ export const StepperIcon = (props: IconProps) => (
   />
 );
 
+export const WheelIcon = (props: IconProps) => (
+  <svg
+    width={props.width || 24}
+    height={props.height || 24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class={props.class}
+    style={props.style}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <circle cx="12" cy="12" r="9" />
+  </svg>
+);
+
 export const ClipboardIcon = (props: IconProps) => (
   <img
     src={devicesIcon}
@@ -285,6 +303,8 @@ export const getDeviceIcon = (type: string, props?: IconProps) => {
       return <StepperIcon {...props} />; // Using stepper icon for PWM motor
     case "PWM":
       return <StepperIcon {...props} />; // Reuse stepper icon until design provided
+    case "WHEEL":
+      return <WheelIcon {...props} />;
     default:
       return null; // Default fallback
   }

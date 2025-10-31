@@ -7,6 +7,7 @@ import { WheelConfig } from "./WheelConfig";
 import { WheelGraphic } from "./WheelGraphic";
 import { IWheelState, useWheel } from "../../stores/Wheel";
 import { useWheelAnimation } from "../../hooks/useWheelAnimation";
+import { getDeviceIcon } from "../icons/Icons";
 
 export function Wheel(props: { id: string }) {
   const wheelStore = useWheel(props.id);
@@ -17,6 +18,7 @@ export function Wheel(props: { id: string }) {
   // TODO: Handle error state - might need to be added to device state
   const error = () => undefined; // Placeholder until error handling is implemented
 
+  const deviceType = device()?.type;
   const uiAngle = useWheelAnimation(state);
 
   const onNextClicked = () => {
@@ -57,6 +59,7 @@ export function Wheel(props: { id: string }) {
       configComponent={(onClose) => (
         <WheelConfig device={device()} actions={actions} onClose={onClose} />
       )}
+      icon={deviceType ? getDeviceIcon(deviceType) : null}
     >
       <div style={{ "max-width": "300px", margin: "0 auto" }}>
         <WheelGraphic

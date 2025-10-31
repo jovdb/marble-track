@@ -3,7 +3,7 @@ import { Device } from "./Device";
 import styles from "./Device.module.css";
 import ledStyles from "./Led.module.css";
 import LedConfig from "./LedConfig";
-import { LedIcon } from "../icons/Icons";
+import { getDeviceIcon, LedIcon } from "../icons/Icons";
 import { useLed } from "../../stores/Led";
 
 export function Led(props: { id: string }) {
@@ -11,6 +11,7 @@ export function Led(props: { id: string }) {
   const device = () => ledStore[0];
   const actions = ledStore[1];
 
+  const deviceType = device()?.type;
   const mode = createMemo(() => device()?.state?.mode ?? "OFF");
   const statusClass = createMemo(() => {
     switch (mode()) {
@@ -33,7 +34,7 @@ export function Led(props: { id: string }) {
     <Device
       id={props.id}
       configComponent={(onClose) => <LedConfig id={props.id} onClose={onClose} />}
-      icon={<LedIcon />}
+      icon={deviceType ? getDeviceIcon(deviceType) : null}
     >
       <div class={styles.device__status}>
         <div

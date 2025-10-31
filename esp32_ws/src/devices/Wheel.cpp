@@ -9,7 +9,7 @@ Wheel::Wheel(const String &id, NotifyClients notifyClients)
     : Device(id, "wheel", notifyClients), _stepper(nullptr), _sensor(nullptr), _btnNext(nullptr), _stepsInLastRevolution(0)
 {
     _direction = 1;
-    _state = wheelState::IDLE;
+    wheelState = WheelState::IDLE;
 }
 
 void Wheel::setup()
@@ -55,14 +55,14 @@ void Wheel::loop()
     if (!_stepper || !_sensor)
         return;
 
-    switch (_state)
+    switch (wheelState)
     {
-    case wheelState::IDLE:
+    case WheelState::IDLE:
     {
         // Started moving
         if (_stepper->isMoving())
         {
-            _state = wheelState::MOVING;
+            wheelState = WheelState::MOVING;
             notifyStateChange();
         }
 
@@ -75,11 +75,11 @@ void Wheel::loop()
 
         break;
     }
-    case wheelState::MOVING:
+    case WheelState::MOVING:
         // Stopped moving
         if (!_stepper->isMoving())
         {
-            _state = wheelState::IDLE;
+            wheelState = WheelState::IDLE;
 
             // Reset position to avoid overflow: No
 
@@ -113,7 +113,7 @@ void Wheel::loop()
         }
 
         break;
-    case wheelState::RESET:
+    case WheelState::RESET:
         if (_sensor->wasPressed())
         {
             _lastZeroPosition = _stepper->getCurrentPosition();
@@ -124,7 +124,7 @@ void Wheel::loop()
                 MLOG_INFO("Wheel [%s]: Moving to first breakpoint.", getId().c_str());
                 _currentBreakpointIndex = -1;
                 _targetBreakpointIndex = 0;
-                _state = wheelState::MOVING;
+                wheelState = WheelState::MOVING;
                 _targetAngle = _breakPoints[0];
                 moveToAngle(_breakPoints[0]);
                 notifyStateChange();
@@ -133,7 +133,7 @@ void Wheel::loop()
             {
                 MLOG_INFO("Wheel [%s]: Reset complete, no breakpoints yet", getId().c_str());
                 _stepper->stop();
-                _state = wheelState::MOVING;
+                wheelState = WheelState::MOVING;
                 notifyStateChange();
             }
         }
@@ -148,7 +148,7 @@ void Wheel::loop()
         // }
 
         break;
-    case wheelState::CALIBRATING:
+    case WheelState::CALIBRATING:
         if (_sensor->wasPressed())
         {
             // First phase: find zero
@@ -170,7 +170,7 @@ void Wheel::loop()
                 notifyStepsPerRevolution(_stepsInLastRevolution);
 
                 // Calibrating to moving
-                _state = wheelState::MOVING;
+                wheelState = WheelState::MOVING;
                 notifyStateChange();
             }
         }
@@ -210,7 +210,7 @@ bool Wheel::calibrate()
     }
 
     MLOG_INFO("Wheel [%s]: Calibration started.", getId().c_str());
-    _state = wheelState::CALIBRATING;
+    wheelState = WheelState::CALIBRATING;
     _lastZeroPosition = 0;
     _currentBreakpointIndex = -1;
     _targetBreakpointIndex = -1;
@@ -226,7 +226,7 @@ bool Wheel::reset()
         return false;
 
     MLOG_INFO("Wheel [%s]: Reset started.", getId().c_str());
-    _state = wheelState::RESET;
+    wheelState = WheelState::RESET;
     notifyStateChange();
     _currentBreakpointIndex = -1;
     _targetBreakpointIndex = -1;
@@ -358,17 +358,17 @@ bool Wheel::control(const String &action, JsonObject *payload)
     return false;
 }
 
-String Wheel::stateToString(Wheel::wheelState state) const
+String Wheel::stateToString(Wheel::WheelState state) const
 {
     switch (state)
     {
-    case Wheel::wheelState::CALIBRATING:
+    case Wheel::WheelState::CALIBRATING:
         return "CALIBRATING";
-    case Wheel::wheelState::IDLE:
+    case Wheel::WheelState::IDLE:
         return "IDLE";
-    case Wheel::wheelState::MOVING:
+    case Wheel::WheelState::MOVING:
         return "MOVING";
-    case Wheel::wheelState::RESET:
+    case Wheel::WheelState::RESET:
         return "RESET";
     default:
         return "UNKNOWN";
@@ -385,7 +385,7 @@ String Wheel::getState()
     {
         doc[kv.key()] = kv.value();
     }
-    doc["state"] = stateToString(_state);
+    doc["state"] = stateToString(wheelState);
     doc["lastZeroPosition"] = _lastZeroPosition;
     doc["currentBreakpointIndex"] = _currentBreakpointIndex;
     doc["targetBreakpointIndex"] = _targetBreakpointIndex;
@@ -407,7 +407,7 @@ String Wheel::getState()
         doc["angle"] = nullptr;
     }
 
-    if (_state != wheelState::IDLE && _targetAngle >= 0)
+    if (wheelState != WheelState::IDLE && _targetAngle >= 0)
     {
         doc["targetAngle"] = _targetAngle;
         if (_stepper && _stepsPerRevolution > 0)

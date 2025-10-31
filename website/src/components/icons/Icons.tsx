@@ -286,7 +286,7 @@ export const getDeviceIcon = (type: string, props?: IconProps) => {
     case "PWM":
       return <StepperIcon {...props} />; // Reuse stepper icon until design provided
     default:
-      return <LedIcon {...props} />; // Default fallback
+      return null; // Default fallback
   }
 };
 // Add a icon for wifi_connected and wifi_disconnected

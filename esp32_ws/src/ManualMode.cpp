@@ -3,74 +3,42 @@
 #include "devices/Button.h"
 #include "devices/Buzzer.h"
 #include "devices/Wheel.h"
+#include "devices/Led.h"
 
-ManualMode::ManualMode(DeviceManager &deviceManager) : deviceManager(deviceManager)
+ManualMode::ManualMode(DeviceManager &deviceManager) : deviceManager(deviceManager), _wheelNextBtn(nullptr), _wheel(nullptr), _buzzer(nullptr), _wheelBtnLed(nullptr)
 {
 }
 
 void ManualMode::setup()
 {
-    MLOG_INFO("ManualMode setup complete");
-    // Add any initialization logic here that should run after all devices are set up
+    _wheelNextBtn = deviceManager.getDeviceByIdAs<Button>("wheel-next-btn");
+    _wheel = deviceManager.getDeviceByIdAs<Wheel>("wheel");
+    _buzzer = deviceManager.getDeviceByIdAs<Buzzer>("buzzer");
+    _wheelBtnLed = deviceManager.getDeviceByIdAs<Led>("wheel-btn-led");
 }
 
 void ManualMode::loop()
 {
-    // Manual mode: devices are controlled via WebSocket commands
-    // Check for button press to toggle LED
-    Button *testButton = deviceManager.getDeviceByIdAs<Button>("test-button");
-    Buzzer *testBuzzer = deviceManager.getDeviceByIdAs<Buzzer>("test-buzzer");
-    Wheel *wheel = deviceManager.getDeviceByIdAs<Wheel>("wheel");
-    Button *testButton2 = deviceManager.getDeviceByIdAs<Button>("test-button2");
+    bool ledBlinkFast = millis() % 500 > 250;
+    bool ledBlinkSlow = millis() % 1000 > 500;
 
-    if (testButton && testBuzzer && wheel && testButton->isPressed())
+    if (_wheelNextBtn && _wheel && _wheelNextBtn->isPressed())
     {
-        MLOG_INFO("Button test-button pressed - triggering buzzer and wheel");
-        testBuzzer->tone(200, 100);
-        wheel->move(8000); // Move stepper 100 steps on button press
+        if (_buzzer != nullptr)
+            _buzzer->tone(200, 100);
+        _wheel->nextBreakPoint();
     }
 
-    // Check for second button press to trigger buzzer
-    if (testButton2 && testBuzzer && testButton2->wasPressed())
+    if (_wheel && _wheel->wheelState == Wheel::WheelState::MOVING)
     {
-        MLOG_INFO("Button test-button2 pressed - playing tone (1000Hz, 200ms)");
-        testBuzzer->tone(1000, 200); // Play 1000Hz tone for 200ms
+        if (_wheelBtnLed)
+        {
+            _wheelBtnLed->set(ledBlinkSlow);
+        }
     }
-
-    /*
-    static unsigned long ballActionStart = 0;
-    static int ballActionStep = 0;
-    if (ballSensor.wasPressed())
+    else
     {
-      Serial.println("Ball detected!");
-      testLed.set(true);
-      ballActionStart = millis();
-      ballActionStep = 1;
+        if (_wheelBtnLed)
+            _wheelBtnLed->set(true); // Solid on when idle
     }
-    // Non-blocking sequence for ball sensor actions
-    if (ballActionStep == 1 && millis() - ballActionStart >= 350)
-    {
-      // testServo.setSpeed(80);
-      testServo.setSpeed(240);
-      testServo.setAngle(170);
-      testBuzzer.tone(400, 200);
-      ballActionStart = millis();
-      ballActionStep = 2;
-    }
-    if (ballActionStep == 2 && millis() - ballActionStart >= 750)
-    {
-      // testServo.setSpeed(60);
-      testServo.setSpeed(200);
-      testServo.setAngle(28);
-      ballActionStep = 0;
-    }
-    else if (ballSensor.wasReleased())
-    {
-      // Ball sensor released, perform action
-      Serial.println("Ball released!");
-      testLed.set(false); // Turn off LED
-    }
-    */
-
-    // This is the default mode where users control devices through the web interface
 }

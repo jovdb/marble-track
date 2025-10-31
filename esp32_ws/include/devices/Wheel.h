@@ -13,7 +13,7 @@
 class Wheel : public Device
 {
 public:
-    enum class wheelState
+    enum class WheelState
     {
         CALIBRATING,
         IDLE,
@@ -33,13 +33,14 @@ public:
     bool moveToAngle(float angle);
     void notifyStepsPerRevolution(long steps);
     bool nextBreakPoint();
+    WheelState wheelState;
 
 private:
-    String stateToString(wheelState state) const;
+    String stateToString(WheelState state) const;
     Stepper *_stepper;
     Button *_sensor;
     Button *_btnNext;
-    wheelState _state;
+
     /* -1 = CCW, 1 = CW */
     int _direction = -1;
     std::vector<float> _breakPoints;

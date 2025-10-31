@@ -45,17 +45,7 @@ export function Devices() {
             : "Connect to see available devices"}
         </div>
       ) : (
-        <For each={topLevelDevices()}>
-          {(device) => (
-            <CollapsibleSection
-              title={`${device.type} - ${device.id}`}
-              icon={getDeviceIcon(device.type)}
-              defaultCollapsed={false}
-            >
-              {renderDeviceComponent(device)}
-            </CollapsibleSection>
-          )}
-        </For>
+        <For each={topLevelDevices()}>{(device) => <div>{renderDeviceComponent(device)}</div>}</For>
       )}
     </div>
   );

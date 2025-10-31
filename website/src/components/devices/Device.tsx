@@ -13,6 +13,7 @@ interface DeviceProps {
 }
 
 export function Device(props: DeviceProps) {
+  const [isCollapsed, setIsCollapsed] = createSignal(false);
   const [showChildren, setShowChildren] = createSignal(false);
   const [showConfig, setShowConfig] = createSignal(false);
   const [showMessagesPanel, setShowMessages] = createSignal(false);
@@ -35,6 +36,27 @@ export function Device(props: DeviceProps) {
     <div class={styles.device}>
       <div class={styles.device__header}>
         <div class={styles["device__header-left"]}>
+          <button
+            class={styles["device__collapse-button"]}
+            onClick={() => setIsCollapsed(!isCollapsed())}
+            aria-expanded={!isCollapsed()}
+            aria-label={isCollapsed() ? "Expand device" : "Collapse device"}
+            title={isCollapsed() ? "Expand device" : "Collapse device"}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              class={
+                isCollapsed() ? styles["device__chevron--collapsed"] : styles["device__chevron"]
+              }
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
           <Show when={props.icon}>
             <div class={styles.device__icon} aria-hidden="true">
               {props.icon}
@@ -138,27 +160,34 @@ export function Device(props: DeviceProps) {
           </div>
         </div>
       </div>
-      <div class={styles.device__content}>
-        <Show when={!showChildren() && !showConfig() && !showMessagesPanel()}>
-          {props.children}
-        </Show>
+      <Show when={!isCollapsed()}>
+        <div class={styles.device__content}>
+          <Show when={!showChildren() && !showConfig() && !showMessagesPanel()}>
+            {props.children}
+          </Show>
 
-        {showChildren() && device()?.children?.length && (
-          <div class={styles.device__children}>
-            <For each={device()?.children}>{(child) => renderDeviceComponent(child)}</For>
-          </div>
-        )}
-        <Show when={showConfig() && props.configComponent}>
-          <div class={styles.device__children} id={configPanelId} role="region" aria-live="polite">
-            {props.configComponent!(() => setShowConfig(false))}
-          </div>
-        </Show>
-        <Show when={showMessagesPanel()}>
-          <div class={styles.device__children} id={logsPanelId} role="region" aria-live="polite">
-            <DeviceLogs deviceId={props.id} messages={wsStore.lastMessages} />
-          </div>
-        </Show>
-      </div>
+          {showChildren() && device()?.children?.length && (
+            <div class={styles.device__children}>
+              <For each={device()?.children}>{(child) => renderDeviceComponent(child)}</For>
+            </div>
+          )}
+          <Show when={showConfig() && props.configComponent}>
+            <div
+              class={styles.device__children}
+              id={configPanelId}
+              role="region"
+              aria-live="polite"
+            >
+              {props.configComponent!(() => setShowConfig(false))}
+            </div>
+          </Show>
+          <Show when={showMessagesPanel()}>
+            <div class={styles.device__children} id={logsPanelId} role="region" aria-live="polite">
+              <DeviceLogs deviceId={props.id} messages={wsStore.lastMessages} />
+            </div>
+          </Show>
+        </div>
+      </Show>
     </div>
   );
 }

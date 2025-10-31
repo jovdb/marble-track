@@ -232,3 +232,34 @@
   color: var(--color-primary-700);
   box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08);
 }
+
+.device__collapse-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-1);
+  margin-left: var(--spacing-1);
+  border: none;
+  background: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+}
+
+.device__collapse-button:hover {
+  color: var(--color-text-primary);
+}
+
+.device__collapse-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.device__chevron {
+  transition: transform var(--transition-fast);
+}
+
+.device__chevron--collapsed {
+  transform: rotate(180deg);
+}

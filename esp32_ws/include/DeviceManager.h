@@ -17,6 +17,7 @@ private:
     Device *devices[MAX_DEVICES];
     int devicesCount;
     NotifyClients notifyClients;
+    std::function<void()> onDevicesChanged;
 
 public:
     /**
@@ -73,6 +74,16 @@ public:
      * @brief Constructor - initializes empty device array
      */
     DeviceManager(NotifyClients callback = nullptr);
+
+    /**
+     * @brief Set callback for when devices are added, removed, or config reloaded
+     */
+    void setOnDevicesChanged(std::function<void()> callback) { onDevicesChanged = callback; }
+
+    /**
+     * @brief Notify that devices have changed
+     */
+    void notifyDevicesChanged() { if (onDevicesChanged) onDevicesChanged(); }
 
     /**
      * @brief Add a device to the management system

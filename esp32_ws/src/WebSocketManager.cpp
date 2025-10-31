@@ -345,6 +345,8 @@ void WebSocketManager::handleSetDevicesConfig(JsonDocument &doc)
                 // Broadcast updated device list to all clients
                 JsonDocument emptyDoc;
                 handleGetDevices(emptyDoc);
+
+                deviceManager->notifyDevicesChanged();
             }
         }
     }
@@ -655,6 +657,8 @@ void WebSocketManager::handleAddDevice(JsonDocument &doc)
     JsonDocument emptyDoc;
     handleGetDevices(emptyDoc);
 
+    deviceManager->notifyDevicesChanged();
+
     MLOG_INFO("Added device: %s (%s)", deviceId.c_str(), deviceType.c_str());
 }
 
@@ -703,6 +707,8 @@ void WebSocketManager::handleRemoveDevice(JsonDocument &doc)
     // Broadcast updated device list to all clients
     JsonDocument emptyDoc;
     handleGetDevices(emptyDoc);
+
+    deviceManager->notifyDevicesChanged();
 
     MLOG_INFO("Removed device: %s", deviceId.c_str());
 }

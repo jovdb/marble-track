@@ -130,6 +130,12 @@ void setup()
   // Setup ManualMode after all devices are initialized
   manualMode.setup();
 
+  // Set callback for device changes
+  deviceManager.setOnDevicesChanged([]() {
+    autoMode.setup();
+    manualMode.setup();
+  });
+
   // Startup sound
   Buzzer *buzzer = deviceManager.getDeviceByTypeAs<Buzzer>("buzzer");
   if (buzzer)

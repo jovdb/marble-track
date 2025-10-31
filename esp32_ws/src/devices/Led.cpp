@@ -25,12 +25,12 @@ void Led::setup()
     {
         pinMode(_pin, OUTPUT);
     }
-
-    if (!_didSetup)
+    else
     {
-        applyInitialState();
-        _didSetup = true;
+        MLOG_WARN("Led [%s]: Pin not configured", _id.c_str());
     }
+
+    applyInitialState();
 }
 
 /**
@@ -41,10 +41,13 @@ void Led::setup()
 bool Led::set(bool state)
 {
     if (_pin == -1)
-    {
-        MLOG_WARN("Led [%s]: Pin not configured", _id.c_str());
         return false;
-    }
+
+    // prevent notify in loop if not changed
+    if (_mode == LedMode::OFF && !state)
+        return true;
+    if (_mode == LedMode::ON && state)
+        return true;
 
     digitalWrite(_pin, state ? HIGH : LOW);
     _mode = state ? LedMode::ON : LedMode::OFF;

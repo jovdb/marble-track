@@ -59,7 +59,6 @@ private:
 
     // When in blinking mode we need to know if the LED is currently on or off to toggle it
     bool _isOn = false;
-    bool _didSetup = false;
 
     void applyInitialState();
     LedMode modeFromString(const String &value) const;

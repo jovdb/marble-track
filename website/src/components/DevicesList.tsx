@@ -169,6 +169,20 @@ export function DevicesList() {
       );
     });
 
+  // Helper function to collect all pins from device and its children recursively
+  const collectAllPins = (device: IDevice): number[] => {
+    const pins: number[] = [...(device.pins || [])];
+    
+    device.children?.forEach((child) => {
+      const childDevice = devicesState.devices[child.id];
+      if (childDevice) {
+        pins.push(...collectAllPins(childDevice));
+      }
+    });
+    
+    return pins;
+  };
+
   // Recursive component to render a device and its children
   const DeviceRow = (props: { device: IDevice; depth?: number }) => {
     const depth = props.depth ?? 0;
@@ -177,6 +191,17 @@ export function DevicesList() {
     
     const indentStyle = {
       "padding-left": `${depth * 24}px`,
+    };
+
+    // Determine which pins to display
+    const displayPins = () => {
+      if (hasChildren && isCollapsed()) {
+        // When collapsed, show all pins including children's pins
+        return collectAllPins(props.device);
+      } else {
+        // When expanded or no children, show only this device's pins
+        return props.device.pins || [];
+      }
     };
 
     return (
@@ -206,8 +231,8 @@ export function DevicesList() {
             <code class={styles["devices-list__device-id"]}>{props.device.id}</code>
           </td>
           <td class={styles["devices-list__table-td"]}>
-            {props.device.pins?.length ? (
-              <code class={styles["devices-list__device-id"]}>{props.device.pins.join(", ")}</code>
+            {displayPins().length > 0 ? (
+              <code class={styles["devices-list__device-id"]}>{displayPins().join(", ")}</code>
             ) : (
               ""
             )}

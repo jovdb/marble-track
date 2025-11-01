@@ -10,6 +10,17 @@ try {
     Write-Host "Clearing previous files..." -ForegroundColor Yellow
     Get-ChildItem ".\esp32_ws\data" -Recurse -File | Remove-Item -Force
 
+    # Copy default config.json to data folder if it exists
+    $configFile = ".\esp32_ws\config.json"
+    $dataDir = ".\esp32_ws\data"
+    if (Test-Path $configFile) {
+        Write-Host "Copying config.json to data folder..." -ForegroundColor Yellow
+        Copy-Item $configFile $dataDir -Force
+        Write-Host "config.json copied successfully" -ForegroundColor Green
+    } else {
+        Write-Host "No config.json found in root directory" -ForegroundColor Yellow
+    }
+
     Write-Host "Building website files..." -ForegroundColor Green
     
     # Change to website directory

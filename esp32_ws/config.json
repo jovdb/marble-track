@@ -1,0 +1,116 @@
+{
+  "devices": [
+    {
+      "id": "Splitter",
+      "type": "wheel",
+      "children": ["Splitter-stepper", "Splitter-sensor"],
+      "config": {
+        "name": "Splitter",
+        "stepsPerRevolution": 4096,
+        "maxStepsPerRevolution": 10000,
+        "zeroPointDegree": 275,
+        "breakPoints": [32, 163, 286, 350]
+      }
+    },
+    {
+      "id": "Splitter-stepper",
+      "type": "stepper",
+      "children": [],
+      "config": {
+        "name": "Splitter-stepper",
+        "stepperType": "HALF4WIRE",
+        "maxSpeed": 400,
+        "maxAcceleration": 300,
+        "defaultSpeed": 250,
+        "defaultAcceleration": 75,
+        "stepPin": -1,
+        "dirPin": -1,
+        "pin1": 1,
+        "pin2": 2,
+        "pin3": 42,
+        "pin4": 41,
+        "enablePin": 4,
+        "invertEnable": false
+      }
+    },
+    {
+      "id": "Splitter-sensor",
+      "type": "button",
+      "children": [],
+      "config": {
+        "name": "",
+        "pin": 40,
+        "pinMode": "pullup",
+        "debounceMs": 50,
+        "buttonType": "NormalOpen"
+      }
+    },
+    {
+      "id": "wheel",
+      "type": "wheel",
+      "children": ["wheel-stepper", "wheel-sensor"],
+      "config": {
+        "name": "Wheel",
+        "stepsPerRevolution": 277212,
+        "maxStepsPerRevolution": 500000,
+        "zeroPointDegree": 180,
+        "breakPoints": [82, 160, 285, 316]
+      }
+    },
+    {
+      "id": "wheel-stepper",
+      "type": "stepper",
+      "children": [],
+      "config": {
+        "name": "wheel-stepper",
+        "stepperType": "DRIVER",
+        "maxSpeed": 4000,
+        "maxAcceleration": 3000,
+        "defaultSpeed": 2500,
+        "defaultAcceleration": 1000,
+        "stepPin": 12,
+        "dirPin": 13,
+        "pin1": -1,
+        "pin2": -1,
+        "pin3": -1,
+        "pin4": -1,
+        "enablePin": 14,
+        "invertEnable": true
+      }
+    },
+    {
+      "id": "wheel-sensor",
+      "type": "button",
+      "children": [],
+      "config": {
+        "name": "",
+        "pin": 11,
+        "pinMode": "pullup",
+        "debounceMs": 50,
+        "buttonType": "NormalOpen"
+      }
+    },
+    {
+      "id": "wheel-btn-led",
+      "type": "led",
+      "children": [],
+      "config": {
+        "name": "",
+        "pin": 15,
+        "initialState": "OFF"
+      }
+    },
+    {
+      "id": "wheel-next-btn",
+      "type": "button",
+      "children": [],
+      "config": {
+        "name": "",
+        "pin": 16,
+        "pinMode": "pullup",
+        "debounceMs": 50,
+        "buttonType": "NormalOpen"
+      }
+    }
+  ]
+}

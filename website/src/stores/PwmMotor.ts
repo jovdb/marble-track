@@ -21,6 +21,9 @@ export interface IPwmMotorConfig extends IDeviceConfig {
   pwmChannel?: number;
   frequency?: number;
   resolutionBits?: number;
+  minDutyCycle?: number;
+  maxDutyCycle?: number;
+  defaultDurationInMs?: number;
   [key: string]: unknown;
 }
 

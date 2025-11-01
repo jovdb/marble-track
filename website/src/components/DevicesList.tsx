@@ -177,6 +177,13 @@ export function DevicesList() {
           <td class={styles["devices-list__table-td"]}>
             <code class={styles["devices-list__device-id"]}>{props.device.id}</code>
           </td>
+          <td class={styles["devices-list__table-td"]}>
+            {props.device.pins?.length ? (
+              <code class={styles["devices-list__device-id"]}>{props.device.pins.join(", ")}</code>
+            ) : (
+              ""
+            )}
+          </td>
           <td class={styles["devices-list__table-td"]} style={{ "text-align": "right" }}>
             <button
               class={styles["devices-list__remove-button"]}
@@ -238,13 +245,12 @@ export function DevicesList() {
                     <th class={styles["devices-list__table-th"]}></th>
                     <th class={styles["devices-list__table-th"]}>Type</th>
                     <th class={styles["devices-list__table-th"]}>ID</th>
+                    <th class={styles["devices-list__table-th"]}>Pins</th>
                     <th class={styles["devices-list__table-th"]}></th>
                   </tr>
                 </thead>
                 <tbody class={styles["devices-list__table-body"]}>
-                  <For each={topLevelDevices()}>
-                    {(device) => <DeviceRow device={device} />}
-                  </For>
+                  <For each={topLevelDevices()}>{(device) => <DeviceRow device={device} />}</For>
                 </tbody>
               </table>
             </div>

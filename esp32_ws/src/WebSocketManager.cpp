@@ -68,6 +68,14 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
                 deviceObj["id"] = deviceList[i]->getId();
                 deviceObj["type"] = deviceList[i]->getType();
 
+                // Add pins array
+                std::vector<int> pins = deviceList[i]->getPins();
+                JsonArray pinsArr = deviceObj["pins"].to<JsonArray>();
+                for (int pin : pins)
+                {
+                    pinsArr.add(pin);
+                }
+
                 // Add children array
                 JsonArray childrenArr = deviceObj["children"].to<JsonArray>();
                 for (Device *child : deviceList[i]->getChildren())
@@ -77,6 +85,14 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
                         JsonObject childObj = childrenArr.add<JsonObject>();
                         childObj["id"] = child->getId();
                         childObj["type"] = child->getType();
+
+                        // Add child pins
+                        std::vector<int> childPins = child->getPins();
+                        JsonArray childPinsArr = childObj["pins"].to<JsonArray>();
+                        for (int pin : childPins)
+                        {
+                            childPinsArr.add(pin);
+                        }
                     }
                 }
             }
@@ -225,6 +241,7 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
 
     JsonDocument response;
     response["type"] = "device-config";
+    response["triggerBy"] = "set";
     response["deviceId"] = deviceId;
     if (configStr.length() > 0)
     {
@@ -277,6 +294,7 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
 
     JsonDocument response;
     response["type"] = "device-config";
+    response["triggerBy"] = "get";
     response["deviceId"] = deviceId;
     if (configStr.length() > 0)
     {

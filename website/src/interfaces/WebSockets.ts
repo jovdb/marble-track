@@ -28,6 +28,7 @@ interface _IWsSuccessResponse {
 export interface DeviceInfo {
   id: string;
   type: DeviceType;
+  pins?: number[];
   children?: DeviceInfo[];
 }
 
@@ -83,6 +84,7 @@ export type IWsReceiveDeviceConfigMessage =
       })
   | (IWsMessageBase<"device-config"> & {
       deviceId: string;
+      triggerBy: "set" | "get";
       config: Record<string, unknown>;
     });
 

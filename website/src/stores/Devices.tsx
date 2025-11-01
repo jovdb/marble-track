@@ -12,11 +12,13 @@ export interface IDevice<
 > {
   id: string;
   type: string;
+  pins?: number[];
   state?: TState;
   config?: TConfig;
   children?: {
     id: string;
     type: string;
+    pins?: number[];
   }[]; // Array of child device IDs
 }
 
@@ -52,12 +54,14 @@ export function createDevicesStore({
                 if (deviceDraft) {
                   // Update device
                   deviceDraft.type = device.type;
+                  deviceDraft.pins = device.pins;
                   deviceDraft.children = device.children || [];
                 } else {
                   // Add device
                   draft.devices[device.id] = {
                     id: device.id,
                     type: device.type,
+                    pins: device.pins,
                     state: undefined,
                     config: undefined,
                     children: device.children || [],
@@ -70,12 +74,14 @@ export function createDevicesStore({
                   if (childDraft) {
                     // Update child device
                     childDraft.type = child.type;
+                    childDraft.pins = child.pins;
                     childDraft.children = child.children || [];
                   } else {
                     // Add child device
                     draft.devices[child.id] = {
                       id: child.id,
                       type: child.type,
+                      pins: child.pins,
                       state: undefined,
                       config: undefined,
                       children: child.children || [],
@@ -118,6 +124,11 @@ export function createDevicesStore({
               }
             })
           );
+
+          // Refresh devices list to get updated pins
+          if (message.triggerBy === "set") {
+            sendMessage({ type: "devices-list" });
+          }
         }
         break;
       }

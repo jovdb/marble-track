@@ -172,14 +172,14 @@ export function DevicesList() {
   // Helper function to collect all pins from device and its children recursively
   const collectAllPins = (device: IDevice): number[] => {
     const pins: number[] = [...(device.pins || [])];
-    
+
     device.children?.forEach((child) => {
       const childDevice = devicesState.devices[child.id];
       if (childDevice) {
         pins.push(...collectAllPins(childDevice));
       }
     });
-    
+
     return pins;
   };
 
@@ -188,7 +188,7 @@ export function DevicesList() {
     const depth = props.depth ?? 0;
     const hasChildren = props.device.children && props.device.children.length > 0;
     const isCollapsed = () => collapsedDevices().has(props.device.id);
-    
+
     const indentStyle = {
       "padding-left": `${depth * 24}px`,
     };
@@ -206,15 +206,36 @@ export function DevicesList() {
 
     return (
       <>
-        <tr class={styles["devices-list__table-row"]}>
+        <tr
+          class={styles["devices-list__table-row"]}
+          style={{ cursor: "pointer" }}
+          onClick={(e) => {
+            // Don't scroll if clicking on buttons
+            if ((e.target as HTMLElement).closest("button")) return;
+
+            const deviceElement = document.getElementById(`device-${props.device.id}`);
+            if (deviceElement) {
+              deviceElement.scrollIntoView({ behavior: "smooth", block: "center" });
+              // Add a brief highlight effect
+              deviceElement.style.transition = "box-shadow 0.3s";
+              deviceElement.style.boxShadow = "0 0 0 3px var(--color-primary-500)";
+              setTimeout(() => {
+                deviceElement.style.boxShadow = "";
+              }, 1000);
+            }
+          }}
+        >
           <td class={styles["devices-list__table-td"]}>
             <div class={styles["devices-list__device-cell"]} style={indentStyle}>
               {hasChildren && (
                 <button
                   class={styles["devices-list__collapse-button"]}
-                  onClick={() => toggleCollapse(props.device.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleCollapse(props.device.id);
+                  }}
                   aria-label={isCollapsed() ? "Expand" : "Collapse"}
-                  style={{ "width": "24px" }}
+                  style={{ width: "24px" }}
                 >
                   {isCollapsed() ? <ChevronRightIcon /> : <ChevronDownIcon />}
                 </button>

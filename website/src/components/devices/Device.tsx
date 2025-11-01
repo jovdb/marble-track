@@ -33,7 +33,7 @@ export function Device(props: DeviceProps) {
   const logsPanelId = `device-logs-${props.id}`;
 
   return (
-    <div class={styles.device}>
+    <div class={styles.device} data-device-id={props.id} id={`device-${props.id}`}>
       <div class={styles.device__header}>
         <div class={styles["device__header-left"]}>
           <button

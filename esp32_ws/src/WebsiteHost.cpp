@@ -60,17 +60,10 @@ void WebsiteHost::setupRoutes()
             html += "<p>Please upload the website files using PlatformIO 'Upload Filesystem Image'.</p>";
             html += "<h2>Connection Status:</h2>";
             html += "<p>" + network->getConnectionInfo() + "</p>";
+
+            // Links
+            html += "<a href='./littlefs'>LittleFS</a><br/>";
             
-            html += "<h2>Available files in LittleFS:</h2><ul>";
-            
-            File root = LittleFS.open("/");
-            File file = root.openNextFile();
-            while (file) {
-                html += "<li>" + String(file.name()) + " (" + String(file.size()) + " bytes)</li>";
-                file = root.openNextFile();
-            }
-            html += "</ul>";
-            html += "<p><a href='/debug'>Debug Info</a> | <a href='/network-status'>Network Status</a></p>";
             html += "</body></html>";
             request->send(200, "text/html", html);
         } });

@@ -1,29 +1,29 @@
-#ifndef PWM_H
-#define PWM_H
+#ifndef PWMDEVICE_H
+#define PWMDEVICE_H
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include "Device.h"
 
 /**
- * @class Pwm
+ * @class PwmDevice
  * @brief PWM signal control class
  *
  * Provides PWM signal generation using ESP32 LEDC peripheral.
  */
-class Pwm : public Device
+class PwmDevice : public Device
 {
 public:
     /**
      * @brief Constructor - automatically initializes with ID only
      * @param id Unique identifier string for the PWM device
      */
-    Pwm(const String &id, NotifyClients callback = nullptr);
+    PwmDevice(const String &id, NotifyClients callback = nullptr);
 
     /**
      * @brief Destructor
      */
-    ~Pwm();
+    ~PwmDevice();
 
     void setup() override;
     void loop() override;
@@ -48,4 +48,4 @@ private:
     static int _nextChannel;
 };
 
-#endif // PWM_H
+#endif // PWMDEVICE_H

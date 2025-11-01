@@ -109,7 +109,7 @@ export function deviceGetStateHandler(deviceId: string) {
   return JSON.stringify({
     type: "device-state",
     deviceId: deviceId,
-    state: {},
+    state: device.state || {},
   });
 }
 
@@ -251,18 +251,37 @@ export function getNetworksHandler() {
   return JSON.stringify(response);
 }
 
-export function getNetworkStatusHandler() {
-  // Mock network status response
-  const response = {
-    type: "network-status",
-    status: {
-      mode: "client",
-      connected: true,
-      ssid: "MockNetwork",
-      ip: "192.168.1.100",
-      rssi: -45,
-      clients: 0,
-    },
-  };
-  return JSON.stringify(response);
+export function deviceControlHandler(deviceId: string, action: string, payload?: any) {
+  if (!deviceId || !action) {
+    return JSON.stringify({
+      type: "error",
+      msg: "Missing deviceId or action in device-control",
+    });
+  }
+
+  const config = readConfig();
+  const device = findDevice(config.devices, deviceId);
+  if (!device) {
+    return JSON.stringify({
+      type: "error",
+      msg: `DeviceId ${deviceId} not found.`,
+    });
+  }
+
+  // Simulate successful control action
+  console.log(`Mock: Device ${deviceId} action '${action}' with payload:`, payload);
+
+  // For PWM devices, update the duty cycle in the device state
+  if (device.type === "pwm" && action === "set-duty-cycle" && payload?.dutyCycle !== undefined) {
+    if (!device.state) device.state = {};
+    device.state.dutyCycle = payload.dutyCycle;
+    saveConfig(config);
+  }
+
+  return JSON.stringify({
+    type: "device-control",
+    deviceId: deviceId,
+    action: action,
+    success: true,
+  });
 }

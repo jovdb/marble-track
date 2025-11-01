@@ -1,9 +1,9 @@
-#include "devices/Pwm.h"
+#include "devices/PwmDevice.h"
 #include "Logging.h"
 
-int Pwm::_nextChannel = 0;
+int PwmDevice::_nextChannel = 0;
 
-Pwm::Pwm(const String &id, NotifyClients notifyClients)
+PwmDevice::PwmDevice(const String &id, NotifyClients notifyClients)
     : Device(id, "pwm", notifyClients), _channel(_nextChannel++)
 {
     if (_nextChannel >= 16)
@@ -12,12 +12,12 @@ Pwm::Pwm(const String &id, NotifyClients notifyClients)
     }
 }
 
-Pwm::~Pwm()
+PwmDevice::~PwmDevice()
 {
     // Cleanup if needed
 }
 
-void Pwm::setup()
+void PwmDevice::setup()
 {
     if (_pin != -1)
     {
@@ -31,12 +31,12 @@ void Pwm::setup()
     }
 }
 
-void Pwm::loop()
+void PwmDevice::loop()
 {
     // Nothing to do in loop
 }
 
-bool Pwm::control(const String &action, JsonObject *payload)
+bool PwmDevice::control(const String &action, JsonObject *payload)
 {
     if (action == "set-duty-cycle")
     {
@@ -58,7 +58,7 @@ bool Pwm::control(const String &action, JsonObject *payload)
     }
 }
 
-String Pwm::getState()
+String PwmDevice::getState()
 {
     JsonDocument doc;
     // Copy base Device state fields
@@ -77,7 +77,7 @@ String Pwm::getState()
     return result;
 }
 
-String Pwm::getConfig() const
+String PwmDevice::getConfig() const
 {
     JsonDocument doc;
     // Copy base Device config fields
@@ -96,7 +96,7 @@ String Pwm::getConfig() const
     return result;
 }
 
-void Pwm::setConfig(JsonObject *config)
+void PwmDevice::setConfig(JsonObject *config)
 {
     Device::setConfig(config);
 
@@ -122,7 +122,7 @@ void Pwm::setConfig(JsonObject *config)
     }
 }
 
-std::vector<int> Pwm::getPins() const
+std::vector<int> PwmDevice::getPins() const
 {
     std::vector<int> pins;
     if (_pin != -1)
@@ -132,7 +132,7 @@ std::vector<int> Pwm::getPins() const
     return pins;
 }
 
-bool Pwm::setDutyCycle(int dutyCycle)
+bool PwmDevice::setDutyCycle(int dutyCycle)
 {
     if (_pin == -1)
     {

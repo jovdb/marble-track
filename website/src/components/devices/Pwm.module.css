@@ -1,25 +1,84 @@
 .pwm__status-indicator {
-  --pwm-indicator-off: var(--color-gray-400);
-  --pwm-indicator-active: var(--color-warning-500);
-  --pwm-indicator-glow: rgba(234, 179, 8, 0.45);
+  width: 32px;
+  height: 16px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    to right,
+    var(--color-success-500) 0%,
+    var(--color-success-500) var(--duty-cycle-percent, 0%),
+    var(--color-gray-400) var(--duty-cycle-percent, 0%),
+    var(--color-gray-400) 100%
+  );
+  border: 1px solid var(--color-gray-300);
+  transition: background 0.25s ease;
+}
 
+.pwm__slider-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.pwm__slider-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-gray-700);
+}
+
+.pwm__slider {
+  width: 100%;
+  height: 6px;
+  border-radius: var(--radius-sm);
+  background: var(--color-gray-200);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.pwm__slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
   width: 16px;
   height: 16px;
   border-radius: var(--radius-full);
-  flex-shrink: 0;
-  background-color: var(--pwm-indicator-off);
-  box-shadow: none;
-  transition:
-    background-color 0.25s ease,
-    box-shadow 0.25s ease;
+  background: var(--color-primary-500);
+  cursor: pointer;
+  border: 2px solid var(--color-white);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.pwm__status-indicator--running {
-  background-color: var(--pwm-indicator-active);
-  box-shadow: 0 0 8px var(--pwm-indicator-glow);
+.pwm__slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-500);
+  cursor: pointer;
+  border: 2px solid var(--color-white);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.pwm__status-indicator--stopped {
-  background-color: var(--pwm-indicator-off);
-  box-shadow: none;
+.pwm__slider-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-primary-600);
+  text-align: center;
+}
+
+.pwm__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--color-gray-600);
+}
+
+@media (prefers-color-scheme: dark) {
+  .pwm__slider-label {
+    color: var(--color-gray-300);
+  }
+
+  .pwm__info {
+    color: var(--color-gray-400);
+  }
 }

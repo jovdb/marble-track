@@ -11,7 +11,8 @@ import {
   getDevicesConfigHandler,
   getNetworkConfigHandler,
   getNetworksHandler,
-  getNetworkStatusHandler
+  getNetworkStatusHandler,
+  deviceControlHandler
 } from "./handlers/devicesHandlers.ts";
 
 const PORT: number = 5173;
@@ -71,8 +72,8 @@ wss.on(
           case "add-device":
             sendMessage(ws, addDeviceHandler(data.deviceType, data.deviceId, data.config));
             break;
-          case "remove-device":
-            sendMessage(ws, removeDeviceHandler(data.deviceId));
+          case "device-control":
+            sendMessage(ws, deviceControlHandler(data.deviceId, data.action, data.payload));
             break;
           default:
             console.log("\x1b[31mUnknown message:\x1b[0m", data);

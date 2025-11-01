@@ -1,9 +1,9 @@
 {
   "devices": [
     {
-      "id": "Splitter",
+      "id": "splitter",
       "type": "wheel",
-      "children": ["Splitter-stepper", "Splitter-sensor"],
+      "children": ["splitter-stepper", "splitter-sensor"],
       "config": {
         "name": "Splitter",
         "stepsPerRevolution": 4096,
@@ -13,7 +13,7 @@
       }
     },
     {
-      "id": "Splitter-stepper",
+      "id": "splitter-stepper",
       "type": "stepper",
       "children": [],
       "config": {
@@ -34,7 +34,7 @@
       }
     },
     {
-      "id": "Splitter-sensor",
+      "id": "splitter-sensor",
       "type": "button",
       "children": [],
       "config": {
@@ -107,6 +107,28 @@
       "config": {
         "name": "",
         "pin": 16,
+        "pinMode": "pullup",
+        "debounceMs": 50,
+        "buttonType": "NormalOpen"
+      }
+    },
+    {
+      "id": "splitter-btn-led",
+      "type": "led",
+      "children": [],
+      "config": {
+        "name": "",
+        "pin": 17,
+        "initialState": "OFF"
+      }
+    },
+    {
+      "id": "splitter-next-btn",
+      "type": "button",
+      "children": [],
+      "config": {
+        "name": "",
+        "pin": 18,
         "pinMode": "pullup",
         "debounceMs": 50,
         "buttonType": "NormalOpen"

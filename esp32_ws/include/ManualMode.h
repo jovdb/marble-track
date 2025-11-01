@@ -21,6 +21,9 @@ private:
     Wheel *_wheel;
     Buzzer *_buzzer;
     Led *_wheelBtnLed;
+    Button *_splitterNextBtn;
+    Led *_splitterBtnLed;
+    Wheel *_splitter;
 };
 
 #endif // MANUALMODE_H

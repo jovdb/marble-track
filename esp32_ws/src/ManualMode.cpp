@@ -5,8 +5,17 @@
 #include "devices/Wheel.h"
 #include "devices/Led.h"
 
-ManualMode::ManualMode(DeviceManager &deviceManager) : deviceManager(deviceManager), _wheelNextBtn(nullptr), _wheel(nullptr), _buzzer(nullptr), _wheelBtnLed(nullptr)
+ManualMode::ManualMode(DeviceManager &deviceManager) : deviceManager(deviceManager)
 {
+    _buzzer = nullptr;
+
+    _wheel = nullptr;
+    _wheelNextBtn = nullptr;
+    _wheelBtnLed = nullptr;
+
+    _splitter = nullptr;
+    _splitterNextBtn = nullptr;
+    _splitterBtnLed = nullptr;
 }
 
 void ManualMode::setup()
@@ -35,6 +44,24 @@ void ManualMode::setup()
         MLOG_ERROR("Required device 'wheel-btn-led' not found!");
     }
 
+    _splitter = deviceManager.getDeviceByIdAs<Wheel>("splitter");
+    if (_splitter == nullptr)
+    {
+        MLOG_ERROR("Required device 'splitter' not found!");
+    }
+
+    _splitterNextBtn = deviceManager.getDeviceByIdAs<Button>("splitter-next-btn");
+    if (_splitterNextBtn == nullptr)
+    {
+        MLOG_ERROR("Required device 'splitter-next-btn' not found!");
+    }
+
+    _splitterBtnLed = deviceManager.getDeviceByIdAs<Led>("splitter-btn-led");
+    if (_splitterBtnLed == nullptr)
+    {
+        MLOG_ERROR("Required device 'splitter-btn-led' not found!");
+    }
+
     MLOG_INFO("ManualMode setup complete");
 }
 
@@ -43,6 +70,7 @@ void ManualMode::loop()
     bool ledBlinkFast = millis() % 500 > 250;
     bool ledBlinkSlow = millis() % 1000 > 500;
 
+    // Wheel Button
     if (_wheelNextBtn && _wheel && _wheelNextBtn->isPressed())
     {
         if (_buzzer != nullptr)
@@ -62,5 +90,27 @@ void ManualMode::loop()
     {
         if (_wheelBtnLed)
             _wheelBtnLed->set(true); // Solid on when idle
+    }
+
+    // Splitter Button
+    if (_splitterNextBtn && _splitter && _splitterNextBtn->isPressed())
+    {
+        if (_buzzer != nullptr)
+            _buzzer->tone(200, 100);
+        _splitter->nextBreakPoint();
+    }
+
+    // Splitter Led
+    if (_splitter && _splitter->wheelState != Wheel::WheelState::IDLE)
+    {
+        if (_splitterBtnLed)
+        {
+            _splitterBtnLed->set(ledBlinkSlow);
+        }
+    }
+    else
+    {
+        if (_splitterBtnLed)
+            _splitterBtnLed->set(true); // Solid on when idle
     }
 }

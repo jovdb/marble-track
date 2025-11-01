@@ -6,10 +6,13 @@ PwmMotor::PwmMotor(const String &id, const String &name, NotifyClients callback)
     : Device(id, "pwmmotor", callback),
       _pin(-1),
       _pwmChannel(0),
-      _frequency(5000),
-      _resolutionBits(12),
+      _frequency(50),
+      _resolutionBits(10),
       _currentDutyCycle(0.0),
       _isSetup(false),
+      _minDutyCycle(5.0),
+      _maxDutyCycle(10.0),
+      _defaultDurationInMs(500),
       _isAnimating(false),
       _startDutyCycle(0.0),
       _targetDutyCycle(0.0),
@@ -203,6 +206,40 @@ bool PwmMotor::setDutyCycleAnimated(float dutyCycle, uint32_t durationMs)
     return true;
 }
 
+bool PwmMotor::setValue(float value, int durationMs)
+{
+    if (!_isSetup)
+    {
+        MLOG_ERROR("PwmMotor [%s]: Not setup. Call setupMotor() first.", _id.c_str());
+        return false;
+    }
+
+    // Clamp value between 0.0 and 1.0
+    if (value < 0.0f)
+        value = 0.0f;
+    if (value > 1.0f)
+        value = 1.0f;
+
+    // Map normalized value (0.0-1.0) to duty cycle range (min-max)
+    float dutyCycle = _minDutyCycle + (value * (_maxDutyCycle - _minDutyCycle));
+
+    // Use default duration if not specified
+    uint32_t duration = (durationMs < 0) ? _defaultDurationInMs : static_cast<uint32_t>(durationMs);
+
+    MLOG_INFO("PwmMotor [%s]: setValue(%.3f) -> duty cycle %.1f%% (range: %.1f%%-%.1f%%), duration: %dms",
+              _id.c_str(), value, dutyCycle, _minDutyCycle, _maxDutyCycle, duration);
+
+    // Use animated or immediate transition based on duration
+    if (duration > 0)
+    {
+        return setDutyCycleAnimated(dutyCycle, duration);
+    }
+    else
+    {
+        return setDutyCycle(dutyCycle);
+    }
+}
+
 void PwmMotor::stop()
 {
     setDutyCycle(0.0);
@@ -280,6 +317,28 @@ bool PwmMotor::control(const String &action, JsonObject *args)
 
         return setupMotor(pin, channel, frequency, resolutionBits);
     }
+    else if (action == "setValue")
+    {
+        if (!args || !(*args)["value"].is<float>())
+        {
+            MLOG_ERROR("PwmMotor [%s]: Invalid 'setValue' payload", _id.c_str());
+            return false;
+        }
+        float value = (*args)["value"].as<float>();
+
+        // Check for optional duration parameter
+        int durationMs = -1; // Use default
+        if ((*args)["durationMs"].is<int>())
+        {
+            durationMs = (*args)["durationMs"].as<int>();
+        }
+        else if ((*args)["durationMs"].is<uint32_t>())
+        {
+            durationMs = static_cast<int>((*args)["durationMs"].as<uint32_t>());
+        }
+
+        return setValue(value, durationMs);
+    }
     else
     {
         MLOG_WARN("PwmMotor [%s]: Unknown action: %s", _id.c_str(), action.c_str());
@@ -328,6 +387,9 @@ String PwmMotor::getConfig() const
     config["pwmChannel"] = _pwmChannel;
     config["frequency"] = _frequency;
     config["resolutionBits"] = _resolutionBits;
+    config["minDutyCycle"] = _minDutyCycle;
+    config["maxDutyCycle"] = _maxDutyCycle;
+    config["defaultDurationInMs"] = _defaultDurationInMs;
 
     String message;
     serializeJson(config, message);
@@ -379,6 +441,25 @@ void PwmMotor::setConfig(JsonObject *config)
     if ((*config)["resolutionBits"].is<int>())
     {
         nextResolution = static_cast<uint8_t>((*config)["resolutionBits"].as<int>());
+    }
+
+    if ((*config)["minDutyCycle"].is<float>())
+    {
+        _minDutyCycle = (*config)["minDutyCycle"].as<float>();
+    }
+
+    if ((*config)["maxDutyCycle"].is<float>())
+    {
+        _maxDutyCycle = (*config)["maxDutyCycle"].as<float>();
+    }
+
+    if ((*config)["defaultDurationInMs"].is<uint32_t>())
+    {
+        _defaultDurationInMs = (*config)["defaultDurationInMs"].as<uint32_t>();
+    }
+    else if ((*config)["defaultDurationInMs"].is<int>())
+    {
+        _defaultDurationInMs = static_cast<uint32_t>((*config)["defaultDurationInMs"].as<int>());
     }
 
     _pin = nextPin;

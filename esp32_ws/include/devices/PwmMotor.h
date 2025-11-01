@@ -53,6 +53,14 @@ public:
     bool setDutyCycleAnimated(float dutyCycle, uint32_t durationMs);
 
     /**
+     * @brief Set motor value using normalized 0.0-1.0 range
+     * @param value Normalized value (0.0 = min duty cycle, 1.0 = max duty cycle)
+     * @param durationMs Optional duration for animation (default: uses configured default duration)
+     * @return true if set successfully, false if not configured
+     */
+    bool setValue(float value, int durationMs = -1);
+
+    /**
      * @brief Get current duty cycle
      * @return Current duty cycle as percentage (0.0 to 100.0)
      */
@@ -79,6 +87,9 @@ private:
     uint8_t _resolutionBits;
     float _currentDutyCycle;
     bool _isSetup;
+    float _minDutyCycle;
+    float _maxDutyCycle;
+    uint32_t _defaultDurationInMs;
     
     // Animation state
     bool _isAnimating;

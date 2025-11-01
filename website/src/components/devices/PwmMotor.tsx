@@ -29,6 +29,8 @@ export function PwmMotor(props: { id: string }) {
   }, 100);
 
   const sliderValue = createMemo(() => currentDutyCycle() ?? deviceState()?.dutyCycle ?? 0);
+  const minDutyCycle = createMemo(() => device()?.config?.minDutyCycle ?? 0);
+  const maxDutyCycle = createMemo(() => device()?.config?.maxDutyCycle ?? 100);
   const statusText = createMemo(() => {
     const duty = deviceState()?.dutyCycle ?? 0;
     return deviceState()?.running
@@ -57,15 +59,15 @@ export function PwmMotor(props: { id: string }) {
 
       <div class={deviceStyles["device__input-group"]}>
         <label class={deviceStyles.device__label} for={`dutyCycle-${props.id}`}>
-          Duty Cycle: {sliderValue().toFixed(0)}%
+          Duty Cycle: {sliderValue().toFixed(1)}%
         </label>
         <input
           id={`dutyCycle-${props.id}`}
           class={deviceStyles.device__input}
           type="range"
-          min="0"
-          max="100"
-          step="1"
+          min={minDutyCycle()}
+          max={maxDutyCycle()}
+          step="0.1"
           value={sliderValue()}
           onInput={(event) => {
             const value = Number(event.currentTarget.value);
@@ -93,59 +95,6 @@ export function PwmMotor(props: { id: string }) {
             setAnimationDuration(value);
           }}
         />
-      </div>
-
-      <div class={deviceStyles.device__controls}>
-        <button
-          class={deviceStyles.device__button}
-          onClick={() => {
-            const durationMs = animationDuration() * 1000;
-            setCurrentDutyCycle(0);
-            actions.setDutyCycle(0, durationMs > 0 ? durationMs : undefined);
-          }}
-        >
-          0%
-        </button>
-        <button
-          class={deviceStyles.device__button}
-          onClick={() => {
-            const durationMs = animationDuration() * 1000;
-            setCurrentDutyCycle(25);
-            actions.setDutyCycle(25, durationMs > 0 ? durationMs : undefined);
-          }}
-        >
-          25%
-        </button>
-        <button
-          class={deviceStyles.device__button}
-          onClick={() => {
-            const durationMs = animationDuration() * 1000;
-            setCurrentDutyCycle(50);
-            actions.setDutyCycle(50, durationMs > 0 ? durationMs : undefined);
-          }}
-        >
-          50%
-        </button>
-        <button
-          class={deviceStyles.device__button}
-          onClick={() => {
-            const durationMs = animationDuration() * 1000;
-            setCurrentDutyCycle(75);
-            actions.setDutyCycle(75, durationMs > 0 ? durationMs : undefined);
-          }}
-        >
-          75%
-        </button>
-        <button
-          class={deviceStyles.device__button}
-          onClick={() => {
-            const durationMs = animationDuration() * 1000;
-            setCurrentDutyCycle(100);
-            actions.setDutyCycle(100, durationMs > 0 ? durationMs : undefined);
-          }}
-        >
-          100%
-        </button>
       </div>
     </Device>
   );

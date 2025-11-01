@@ -208,6 +208,30 @@
   margin-top: var(--spacing-4);
 }
 
+.devices-list__collapse-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+
+.devices-list__collapse-button:hover {
+  color: var(--color-primary-600);
+}
+
+.devices-list__collapse-button:active {
+  transform: scale(0.9);
+}
+
 .devices-list__remove-button {
   background: none;
   border: none;

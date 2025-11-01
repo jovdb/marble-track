@@ -1,5 +1,5 @@
 import { createEffect, For, createSignal, onMount, onCleanup } from "solid-js";
-import { getDeviceIcon, TrashIcon } from "./icons/Icons";
+import { getDeviceIcon, TrashIcon, ChevronRightIcon, ChevronDownIcon } from "./icons/Icons";
 import styles from "./DevicesList.module.css";
 import { useDevices, type IDevice } from "../stores/Devices";
 import { useWebSocket2 } from "../hooks/useWebSocket2";
@@ -33,6 +33,21 @@ export function DevicesList() {
   const [showAddModal, setShowAddModal] = createSignal(false);
   const [newDeviceType, setNewDeviceType] = createSignal("");
   const [newDeviceId, setNewDeviceId] = createSignal("");
+
+  // Track collapsed state for devices with children
+  const [collapsedDevices, setCollapsedDevices] = createSignal<Set<string>>(new Set());
+
+  const toggleCollapse = (deviceId: string) => {
+    setCollapsedDevices((prev) => {
+      const next = new Set(prev);
+      if (next.has(deviceId)) {
+        next.delete(deviceId);
+      } else {
+        next.add(deviceId);
+      }
+      return next;
+    });
+  };
 
   // Download devices config handler
   const handleDownloadConfig = () => {
@@ -157,6 +172,9 @@ export function DevicesList() {
   // Recursive component to render a device and its children
   const DeviceRow = (props: { device: IDevice; depth?: number }) => {
     const depth = props.depth ?? 0;
+    const hasChildren = props.device.children && props.device.children.length > 0;
+    const isCollapsed = () => collapsedDevices().has(props.device.id);
+    
     const indentStyle = {
       "padding-left": `${depth * 24}px`,
     };
@@ -166,6 +184,16 @@ export function DevicesList() {
         <tr class={styles["devices-list__table-row"]}>
           <td class={styles["devices-list__table-td"]}>
             <div class={styles["devices-list__device-cell"]} style={indentStyle}>
+              {hasChildren && (
+                <button
+                  class={styles["devices-list__collapse-button"]}
+                  onClick={() => toggleCollapse(props.device.id)}
+                  aria-label={isCollapsed() ? "Expand" : "Collapse"}
+                  style={{ "width": "24px" }}
+                >
+                  {isCollapsed() ? <ChevronRightIcon /> : <ChevronDownIcon />}
+                </button>
+              )}
               {getDeviceIcon(props.device.type, {
                 class: styles["devices-list__device-icon"],
               })}
@@ -195,12 +223,14 @@ export function DevicesList() {
             </button>
           </td>
         </tr>
-        <For each={props.device.children}>
-          {(child) => {
-            const childDevice = devicesState.devices[child.id];
-            return childDevice ? <DeviceRow device={childDevice} depth={depth + 1} /> : null;
-          }}
-        </For>
+        {!isCollapsed() && (
+          <For each={props.device.children}>
+            {(child) => {
+              const childDevice = devicesState.devices[child.id];
+              return childDevice ? <DeviceRow device={childDevice} depth={depth + 1} /> : null;
+            }}
+          </For>
+        )}
       </>
     );
   };

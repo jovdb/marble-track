@@ -68,19 +68,7 @@ void WebsiteHost::setupRoutes()
             request->send(200, "text/html", html);
         } });
 
-    // Debug route to list files
-    server->on("/debug", HTTP_GET, [](AsyncWebServerRequest *request)
-               {
-        String message = "LittleFS Debug:\n";
-        File root = LittleFS.open("/");
-        File file = root.openNextFile();
-        while(file) {
-            message += "File: " + String(file.name()) + " Size: " + String(file.size()) + "\n";
-            file = root.openNextFile();
-        }
-        request->send(200, "text/plain", message); });
-
-    // LittleFS file browser
+       // LittleFS file browser
     server->on("/littlefs", HTTP_GET, [this](AsyncWebServerRequest *request)
                {
         String html = "<!DOCTYPE html><html><head><title>LittleFS Files</title><style>table { border-collapse: collapse; } th, td { border: 1px solid black; padding: 5px; } .size-col { text-align: right; }</style></head><body>";

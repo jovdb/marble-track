@@ -1,7 +1,7 @@
 import { createEffect, For, createSignal, onMount, onCleanup } from "solid-js";
 import { getDeviceIcon, TrashIcon } from "./icons/Icons";
 import styles from "./DevicesList.module.css";
-import { useDevices } from "../stores/Devices";
+import { useDevices, type IDevice } from "../stores/Devices";
 import { useWebSocket2 } from "../hooks/useWebSocket2";
 import {
   IWsSendAddDeviceMessage,
@@ -154,6 +154,50 @@ export function DevicesList() {
       );
     });
 
+  // Recursive component to render a device and its children
+  const DeviceRow = (props: { device: IDevice; depth?: number }) => {
+    const depth = props.depth ?? 0;
+    const indentStyle = {
+      "padding-left": `${depth * 24}px`,
+    };
+
+    return (
+      <>
+        <tr class={styles["devices-list__table-row"]}>
+          <td class={styles["devices-list__table-td"]}>
+            <div class={styles["devices-list__device-cell"]} style={indentStyle}>
+              {getDeviceIcon(props.device.type, {
+                class: styles["devices-list__device-icon"],
+              })}
+            </div>
+          </td>
+          <td class={styles["devices-list__table-td"]}>
+            <span class={styles["devices-list__type-badge"]}>{props.device.type}</span>
+          </td>
+          <td class={styles["devices-list__table-td"]}>
+            <code class={styles["devices-list__device-id"]}>{props.device.id}</code>
+          </td>
+          <td class={styles["devices-list__table-td"]} style={{ "text-align": "right" }}>
+            <button
+              class={styles["devices-list__remove-button"]}
+              onClick={() => handleRemoveDevice(props.device.id)}
+              title="Remove device"
+              aria-label={`Remove device ${props.device.id}`}
+            >
+              <TrashIcon />
+            </button>
+          </td>
+        </tr>
+        <For each={props.device.children}>
+          {(child) => {
+            const childDevice = devicesState.devices[child.id];
+            return childDevice ? <DeviceRow device={childDevice} depth={depth + 1} /> : null;
+          }}
+        </For>
+      </>
+    );
+  };
+
   // Subscribe to WebSocket messages for config download
   const unsubscribe = socketActions.subscribe((message: IWsReceiveMessage) => {
     if (message.type === "devices-config" && "config" in message) {
@@ -199,36 +243,7 @@ export function DevicesList() {
                 </thead>
                 <tbody class={styles["devices-list__table-body"]}>
                   <For each={topLevelDevices()}>
-                    {(device) => (
-                      <tr class={styles["devices-list__table-row"]}>
-                        <td class={styles["devices-list__table-td"]}>
-                          <div class={styles["devices-list__device-cell"]}>
-                            {getDeviceIcon(device.type, {
-                              class: styles["devices-list__device-icon"],
-                            })}
-                          </div>
-                        </td>
-                        <td class={styles["devices-list__table-td"]}>
-                          <span class={styles["devices-list__type-badge"]}>{device.type}</span>
-                        </td>
-                        <td class={styles["devices-list__table-td"]}>
-                          <code class={styles["devices-list__device-id"]}>{device.id}</code>
-                        </td>
-                        <td
-                          class={styles["devices-list__table-td"]}
-                          style={{ "text-align": "right" }}
-                        >
-                          <button
-                            class={styles["devices-list__remove-button"]}
-                            onClick={() => handleRemoveDevice(device.id)}
-                            title="Remove device"
-                            aria-label={`Remove device ${device.id}`}
-                          >
-                            <TrashIcon />
-                          </button>
-                        </td>
-                      </tr>
-                    )}
+                    {(device) => <DeviceRow device={device} />}
                   </For>
                 </tbody>
               </table>

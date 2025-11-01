@@ -88,14 +88,6 @@ String Device::getState()
 std::vector<int> Device::getPins() const
 {
     std::vector<int> pins;
-    for (const Device *child : children)
-    {
-        if (child)
-        {
-            auto childPins = child->getPins();
-            pins.insert(pins.end(), childPins.begin(), childPins.end());
-        }
-    }
     return pins;
 }
 

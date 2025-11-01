@@ -64,7 +64,15 @@ try {
     # Quick filesystem upload for ESP32-S3
     $platformioPath = "C:\Users\vandenberghej\.platformio\penv\Scripts\platformio.exe"
 
-    Write-Host "Uploading data folder to ESP32..." -ForegroundColor Green
+    Write-Host "Uploading firmware to ESP32..." -ForegroundColor Green
+    & $platformioPath run --target upload --environment 4d_systems_esp32s3_gen4_r8n16
+    
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "FAILED: Firmware upload failed" -ForegroundColor Red
+        exit 1
+    }
+
+    Write-Host "Uploading filesystem to ESP32..." -ForegroundColor Green
     & $platformioPath run --target uploadfs --environment 4d_systems_esp32s3_gen4_r8n16
     
     if ($LASTEXITCODE -eq 0) {

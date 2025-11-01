@@ -64,7 +64,7 @@ export default function LedConfig(props: LedConfigProps) {
             <input
               type="number"
               value={pin() || "1"}
-              min={1}
+              min={-1}
               max={50}
               onInput={(e) => setPin(Number(e.currentTarget.value))}
               style={{ "margin-left": "0.5rem" }}

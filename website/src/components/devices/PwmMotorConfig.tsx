@@ -77,11 +77,11 @@ export default function PwmMotorConfig(props: PwmMotorConfigProps) {
             <input
               type="number"
               value={pin()}
-              min={0}
+              min={-1}
               max={39}
               onInput={(event) => setPin(Number(event.currentTarget.value))}
               style={{ width: "4em", "margin-left": "0.5rem" }}
-              title="GPIO pin number for PWM output (0-39)"
+              title="GPIO pin number for PWM output (-1 to disable, 0-39)"
             />
           </DeviceConfigItem>
         </DeviceConfigRow>

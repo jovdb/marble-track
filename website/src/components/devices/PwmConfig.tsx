@@ -10,7 +10,7 @@ interface PwmConfigProps {
 export default function PwmConfig(props: PwmConfigProps) {
   const [device, { setDeviceConfig }] = usePwm(props.id);
 
-  const [name, setName] = createSignal(device?.config?.name ?? "PWM");
+  const [name, setName] = createSignal(device?.config?.name ?? "");
   const [pin, setPin] = createSignal(device?.config?.pin ?? -1);
   const [frequency, setFrequency] = createSignal(device?.config?.frequency ?? 5000);
   const [resolution, setResolution] = createSignal(device?.config?.resolution ?? 8);
@@ -69,7 +69,7 @@ export default function PwmConfig(props: PwmConfigProps) {
             <input
               type="number"
               value={pin() || "1"}
-              min={1}
+              min={-1}
               max={50}
               onInput={(e) => setPin(Number(e.currentTarget.value))}
               style={{ "margin-left": "0.5rem" }}

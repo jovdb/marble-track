@@ -1,4 +1,4 @@
-import { createMemo } from "solid-js";
+import { createMemo, createSignal, onCleanup } from "solid-js";
 import { Device } from "./Device";
 import styles from "./Device.module.css";
 import pwmStyles from "./Pwm.module.css";
@@ -18,15 +18,46 @@ export function Pwm(props: { id: string }) {
   const maxDutyCycle = createMemo(() => Math.pow(2, resolution()) - 1);
   const dutyCyclePercent = createMemo(() => Math.round((dutyCycle() / maxDutyCycle()) * 100));
 
-  const statusLabel = createMemo(() => `Duty Cycle: ${dutyCyclePercent()}% (${dutyCycle()}/${maxDutyCycle()})`);
+  const statusLabel = createMemo(
+    () => `Duty Cycle: ${dutyCyclePercent()}% (${dutyCycle()}/${maxDutyCycle()})`
+  );
+
+  // Debounced slider value
+  const [sliderValue, setSliderValue] = createSignal(dutyCycle());
+  let debounceTimeout: number | undefined;
+
+  // Update slider value when device state changes
+  createMemo(() => {
+    setSliderValue(dutyCycle());
+  });
 
   const handleDutyCycleChange = (event: Event) => {
     const target = event.target as HTMLInputElement;
     const value = parseInt(target.value, 10);
     if (!isNaN(value)) {
-      actions.setDutyCycle(value);
+      setSliderValue(value);
+
+      // Clear existing timeout
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
+
+      // Set new timeout to send update after 500ms of no changes
+      debounceTimeout = setTimeout(() => {
+        actions.setDutyCycle(value);
+        debounceTimeout = undefined;
+      }, 500) as unknown as number;
     }
   };
+
+  // Cleanup timeout on component unmount
+  onCleanup(() => {
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout);
+    }
+  });
+
+  const sliderPercent = createMemo(() => Math.round((sliderValue() / maxDutyCycle()) * 100));
 
   return (
     <Device
@@ -55,11 +86,11 @@ export function Pwm(props: { id: string }) {
             type="range"
             min="0"
             max={maxDutyCycle()}
-            value={dutyCycle()}
+            value={sliderValue()}
             onInput={handleDutyCycleChange}
             class={pwmStyles["pwm__slider"]}
           />
-          <span class={pwmStyles["pwm__slider-value"]}>{dutyCyclePercent()}%</span>
+          <span class={pwmStyles["pwm__slider-value"]}>{sliderPercent()}%</span>
         </div>
         <div class={pwmStyles["pwm__info"]}>
           <span>Frequency: {frequency()} Hz</span>

@@ -627,18 +627,7 @@ void SerialConsole::saveAndApplyNetworkSettings()
     NetworkSettings newSettings(m_session.selectedSsid, m_session.password);
 
     Serial.println();
-    Serial.println("💾 Saving network settings...");
-
-    bool saved = m_deviceManager.saveNetworkSettings(newSettings);
-    if (!saved)
-    {
-        Serial.println("❌ Failed to write settings to /config.json.");
-        m_session.reset();
-        Serial.println();
-        return;
-    }
-
-    Serial.println("✅ Network credentials saved to /config.json.");
+    Serial.println("� Applying network settings...");
 
     if (m_network != nullptr)
     {
@@ -663,6 +652,19 @@ void SerialConsole::saveAndApplyNetworkSettings()
     else
     {
         Serial.println("⚠️  Network manager is not initialized yet. Settings will apply on next reboot.");
+    }
+
+    Serial.println("💾 Saving network settings to config file...");
+
+    bool saved = m_deviceManager.saveNetworkSettings(newSettings);
+    if (!saved)
+    {
+        Serial.println("❌ Failed to write settings to /config.json.");
+        Serial.println("⚠️  Network settings applied but not saved. They will be lost on reboot.");
+    }
+    else
+    {
+        Serial.println("✅ Network credentials saved to /config.json.");
     }
 
     Serial.println();

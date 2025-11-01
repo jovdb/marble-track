@@ -91,6 +91,13 @@ bool Network::setup()
 
 bool Network::connectToWiFi()
 {
+    // Don't attempt to connect if SSID is empty or not configured
+    if (_wifi_ssid.isEmpty())
+    {
+        MLOG_INFO("WiFi SSID not configured, skipping WiFi connection");
+        return false;
+    }
+
     MLOG_INFO("Connect to WiFi network '%s' ..", _wifi_ssid.c_str());
 
     WiFi.mode(WIFI_STA);

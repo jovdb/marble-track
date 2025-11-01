@@ -71,7 +71,7 @@ void ManualMode::loop()
     bool ledBlinkSlow = millis() % 1000 > 500;
 
     // Wheel Button
-    if (_wheelNextBtn && _wheel && _wheelNextBtn->isPressed())
+    if (_wheelNextBtn && _wheel && _wheelNextBtn->isPressed() && _wheel->wheelState == Wheel::WheelState::IDLE)
     {
         if (_buzzer != nullptr)
             _buzzer->tone(200, 100);
@@ -93,7 +93,7 @@ void ManualMode::loop()
     }
 
     // Splitter Button
-    if (_splitterNextBtn && _splitter && _splitterNextBtn->isPressed())
+    if (_splitterNextBtn && _splitter && _splitterNextBtn->isPressed() && _splitter->wheelState == Wheel::WheelState::IDLE)
     {
         if (_buzzer != nullptr)
             _buzzer->tone(200, 100);

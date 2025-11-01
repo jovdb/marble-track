@@ -11,8 +11,6 @@ import { Servo } from "./devices/Servo";
 import { Stepper } from "./devices/Stepper";
 import { Wheel } from "./devices/Wheel";
 import { Lift } from "./devices/Lift";
-import { CollapsibleSection } from "./CollapsibleSection";
-import { getDeviceIcon } from "./icons/Icons";
 
 import styles from "./Devices.module.css";
 

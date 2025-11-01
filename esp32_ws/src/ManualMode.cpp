@@ -50,7 +50,8 @@ void ManualMode::loop()
         _wheel->nextBreakPoint();
     }
 
-    if (_wheel && _wheel->wheelState == Wheel::WheelState::MOVING)
+    // Wheel Led
+    if (_wheel && _wheel->wheelState != Wheel::WheelState::IDLE)
     {
         if (_wheelBtnLed)
         {

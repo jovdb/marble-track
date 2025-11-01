@@ -411,10 +411,13 @@ void DeviceManager::getDevices(Device **deviceList, int &count, int maxResults)
 void DeviceManager::setup()
 {
     // Set the notify callback on all devices recursively
-    std::function<void(Device *)> setCallbackRecursive = [&](Device *dev) {
-        if (!dev) return;
+    std::function<void(Device *)> setCallbackRecursive = [&](Device *dev)
+    {
+        if (!dev)
+            return;
         dev->setNotifyClients(notifyClients);
-        for (Device *child : dev->getChildren()) {
+        for (Device *child : dev->getChildren())
+        {
             setCallbackRecursive(child);
         }
     };
@@ -608,7 +611,7 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
             newDevice->setConfig(&configObj);
         }
 
-        MLOG_INFO("Created device: %s (%s)", deviceId.c_str(), deviceType.c_str());
+        // MLOG_INFO("Created device: %s (%s)", deviceId.c_str(), deviceType.c_str());
     }
 
     return newDevice;

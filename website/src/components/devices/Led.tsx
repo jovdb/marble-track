@@ -3,7 +3,7 @@ import { Device } from "./Device";
 import styles from "./Device.module.css";
 import ledStyles from "./Led.module.css";
 import LedConfig from "./LedConfig";
-import { getDeviceIcon, LedIcon } from "../icons/Icons";
+import { getDeviceIcon } from "../icons/Icons";
 import { useLed } from "../../stores/Led";
 
 export function Led(props: { id: string }) {

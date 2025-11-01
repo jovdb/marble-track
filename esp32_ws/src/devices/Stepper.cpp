@@ -404,7 +404,7 @@ void Stepper::configure2Pin(int stepPin, int dirPin, int enablePin)
     initializeAccelStepper();
     _configured = true;
 
-    MLOG_INFO("Stepper [%s]: Configured as DRIVER type on pins %d (step), %d (dir), %d (enable)", _id.c_str(), _pin1, _pin2, _enablePin);
+    // MLOG_INFO("Stepper [%s]: Configured as DRIVER type on pins %d (step), %d (dir), %d (enable)", _id.c_str(), _pin1, _pin2, _enablePin);
 
     // Set up enable pin if configured
     if (_enablePin >= 0)
@@ -439,8 +439,8 @@ void Stepper::configure4Pin(int pin1, int pin2, int pin3, int pin4,
     initializeAccelStepper();
     _configured = true;
 
-    MLOG_INFO("Stepper [%s]: Configured as %s type on pins %d, %d, %d, %d, %d (enable)",
-              _id.c_str(), _stepperType.c_str(), _pin1, _pin2, _pin3, _pin4, _enablePin);
+    // MLOG_INFO("Stepper [%s]: Configured as %s type on pins %d, %d, %d, %d, %d (enable)",
+    //          _id.c_str(), _stepperType.c_str(), _pin1, _pin2, _pin3, _pin4, _enablePin);
 
     // Set up enable pin if configured
     if (_enablePin >= 0)

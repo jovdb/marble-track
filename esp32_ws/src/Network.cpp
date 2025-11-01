@@ -38,13 +38,13 @@ Network::~Network()
 
 bool Network::setup()
 {
-    // First, try to connect to WiFi
-    if (connectToWiFi())
+    // Only try to connect to WiFi if SSID is configured (not empty)
+    if (_wifi_ssid.length() > 0 && connectToWiFi())
     {
         _currentMode = NetworkMode::WIFI_CLIENT;
     }
 
-    // If WiFi fails, start Access Point
+    // If WiFi fails or is not configured, start Access Point
     if (_currentMode == NetworkMode::DISCONNECTED && startAccessPoint())
     {
         _currentMode = NetworkMode::ACCESS_POINT;
@@ -91,6 +91,13 @@ bool Network::setup()
 
 bool Network::connectToWiFi()
 {
+    // Don't attempt connection if SSID is empty
+    if (_wifi_ssid.length() == 0)
+    {
+        MLOG_INFO("WiFi SSID not configured, skipping WiFi connection");
+        return false;
+    }
+
     MLOG_INFO("Connect to WiFi network '%s' ..", _wifi_ssid.c_str());
 
     WiFi.mode(WIFI_STA);

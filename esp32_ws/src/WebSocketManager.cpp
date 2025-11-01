@@ -789,9 +789,9 @@ void WebSocketManager::handleSetNetworkConfig(JsonDocument &doc)
         return;
     }
 
-    if (!deviceManager)
+    if (!network)
     {
-        response["error"] = "DeviceManager not available";
+        response["error"] = "Network not available";
         String respStr;
         serializeJson(response, respStr);
         notifyClients(respStr);
@@ -799,19 +799,37 @@ void WebSocketManager::handleSetNetworkConfig(JsonDocument &doc)
     }
 
     NetworkSettings settings(ssid, password);
-    if (deviceManager->saveNetworkSettings(settings))
+
+    // Apply network settings immediately, regardless of config save success
+    NetworkMode newMode = network->applySettings(settings);
+    MLOG_INFO("Network settings applied: SSID='%s', Mode=%s", ssid.c_str(),
+              newMode == NetworkMode::WIFI_CLIENT ? "WiFi Client" :
+              newMode == NetworkMode::ACCESS_POINT ? "Access Point" : "Disconnected");
+
+    // Try to save settings to config file
+    bool saveSuccess = false;
+    if (deviceManager)
+    {
+        saveSuccess = deviceManager->saveNetworkSettings(settings);
+    }
+
+    if (saveSuccess)
     {
         response["success"] = true;
-        MLOG_INFO("Network settings saved: SSID='%s'", ssid.c_str());
-
-        // Notify clients with updated network config
-        JsonDocument emptyDoc;
-        handleGetNetworkConfig(emptyDoc);
+        response["message"] = "Network settings updated and saved";
+        MLOG_INFO("Network settings saved to config file");
     }
     else
     {
-        response["error"] = "Failed to save network settings";
+        response["success"] = true;
+        response["message"] = "Network settings updated but failed to save to config file";
+        response["warning"] = "Settings will not persist after restart";
+        MLOG_WARN("Network settings applied but failed to save to config file");
     }
+
+    // Notify clients with updated network config
+    JsonDocument emptyDoc;
+    handleGetNetworkConfig(emptyDoc);
 
     String respStr;
     serializeJson(response, respStr);

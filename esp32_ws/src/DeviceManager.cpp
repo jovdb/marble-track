@@ -261,7 +261,7 @@ NetworkSettings DeviceManager::loadNetworkSettings()
 
     if (!LittleFS.exists(CONFIG_FILE))
     {
-        MLOG_INFO("Configuration file not found, returning default network settings");
+        MLOG_INFO("Configuration file not found, could not connect to network");
         return settings;
     }
 

@@ -10,6 +10,8 @@
 class DeviceManager;
 #include "Network.h"
 
+#include <map>
+
 class WebSocketManager
 {
 private:
@@ -17,6 +19,7 @@ private:
     DeviceManager *deviceManager;
     Network *network;
     bool scanInProgress = false;
+    std::map<uint32_t, String> messageBuffers;
 
     // Helper methods for cleaner message handling
     void handleRestart();
@@ -36,7 +39,7 @@ public:
     void setNetwork(Network *network);
 
     // Made public to allow global function access
-    void handleWebSocketMessage(void *arg, uint8_t *data, size_t len);
+    void parseMessage(String message);
 
     // Device config handlers
     void handleDeviceSaveConfig(JsonDocument &doc);

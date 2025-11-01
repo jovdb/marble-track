@@ -91,22 +91,15 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
 }
 
 /**
- * @brief Handle incoming WebSocket messages
+ * @brief Parse and handle incoming WebSocket messages
  */
-void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
+void WebSocketManager::parseMessage(String message)
 
 {
-    // Check if this is a complete, single-frame text message
-    AwsFrameInfo *info = (AwsFrameInfo *)arg;
-    if (!(info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT))
-        return;
-
-    data[len] = 0;
-    String message = (char *)data;
     MLOG_WS_RECEIVE("%s", message.c_str());
 
     // Parse as JSON
-    JsonDocument doc;
+    JsonDocument doc; // Dynamic sizing for large messages
     if (deserializeJson(doc, message))
     {
         String errorResponse = createJsonResponse(false, "Invalid JSON format", "", "");
@@ -120,6 +113,8 @@ void WebSocketManager::handleWebSocketMessage(void *arg, uint8_t *data, size_t l
     {
         type = doc["data"]["type"] | "";
     }
+
+    MLOG_WS_RECEIVE("Parsed message type: %s", type.c_str());
 
     // Handle special type
     if (type == "restart")
@@ -315,6 +310,7 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
 
 void WebSocketManager::handleSetDevicesConfig(JsonDocument &doc)
 {
+    MLOG_INFO("Received set-devices-config via WebSocket");
     JsonDocument response;
     response["type"] = "set-devices-config";
     if (!doc["config"].is<JsonObject>())
@@ -324,10 +320,10 @@ void WebSocketManager::handleSetDevicesConfig(JsonDocument &doc)
     }
     else
     {
+        MLOG_INFO("Config object found, attempting to write to file");
         File file = LittleFS.open("/config.json", "w");
         if (!file)
         {
-
             response["success"] = false;
             response["error"] = "Failed to open config.json for writing";
         }
@@ -338,13 +334,14 @@ void WebSocketManager::handleSetDevicesConfig(JsonDocument &doc)
             response["success"] = true;
             response["message"] = "config.json updated";
 
+            MLOG_INFO("Config written to file, reloading devices");
             // Reload devices from the new config
             if (deviceManager)
             {
                 deviceManager->loadDevicesFromJsonFile();
                 // Broadcast updated device list to all clients
-                JsonDocument emptyDoc;
-                handleGetDevices(emptyDoc);
+                // JsonDocument emptyDoc;
+                // handleGetDevices(emptyDoc);
 
                 deviceManager->notifyDevicesChanged();
             }
@@ -385,15 +382,6 @@ void WebSocketManager::handleGetDevicesConfig(JsonDocument &doc)
     notifyClients(respStr);
 }
 
-// Global function wrapper for callback compatibility
-void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
-{
-    if (instance)
-    {
-        instance->handleWebSocketMessage(arg, data, len);
-    }
-}
-
 void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
     switch (type)
@@ -413,9 +401,47 @@ void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
         break;
 
     case WS_EVT_DATA:
+    {
         MLOG_INFO("WebSocket client #%u data received", client->id());
-        handleWebSocketMessage(arg, data, len);
+        AwsFrameInfo *info = (AwsFrameInfo *)arg;
+        if (info->opcode == WS_TEXT)
+        {
+            if (info->final && info->index == 0 && info->len == len)
+            {
+                // Single frame message
+                data[len] = 0;
+                String message = (char *)data;
+                parseMessage(message);
+            }
+            else
+            {
+                // Multi-frame message
+                if (info->index == 0)
+                {
+                    messageBuffers[client->id()] = String((char *)data, len);
+                }
+                else
+                {
+                    auto it = messageBuffers.find(client->id());
+                    if (it != messageBuffers.end())
+                    {
+                        it->second += String((char *)data, len);
+                    }
+                }
+                if (info->final)
+                {
+                    auto it = messageBuffers.find(client->id());
+                    if (it != messageBuffers.end())
+                    {
+                        String message = it->second;
+                        messageBuffers.erase(it);
+                        parseMessage(message);
+                    }
+                }
+            }
+        }
         break;
+    }
 
     case WS_EVT_PONG:
         MLOG_INFO("WebSocket client #%u pong", client->id());

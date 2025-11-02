@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include "Button.h"
 #include "Stepper.h"
+#include "PwmMotor.h"
 #include "Device.h"
 
 /**
@@ -31,7 +32,8 @@ public:
 private:
     String stateToString(liftState state) const;
     Stepper *_stepper;
-    Button *_sensor;
+    Button *_limitSwitch;
+    PwmMotor *_gate;
     liftState _state;
     long _minSteps = 0;
     long _maxSteps = 1000;

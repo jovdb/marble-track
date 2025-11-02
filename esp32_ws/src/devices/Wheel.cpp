@@ -138,12 +138,12 @@ void Wheel::loop()
 
         // No zero found during calibration?
         // TODO: Wait for started moving
-        // if (!_stepper->isMoving())
-        // {
-        //     _state = wheelState::IDLE;
-        //     notifyStateChange();
-        //     notifyError("reset-error", "No zero point found during reset.");
-        // }
+        if (!_stepper->isMoving())
+        {
+            wheelState = WheelState::ERROR;
+            notifyStateChange();
+            notifyError("reset-error", "No zero point found during reset.");
+        }
 
         break;
     case WheelState::CALIBRATING:
@@ -368,6 +368,8 @@ String Wheel::stateToString(Wheel::WheelState state) const
         return "MOVING";
     case Wheel::WheelState::RESET:
         return "RESET";
+    case Wheel::WheelState::ERROR:
+        return "ERROR";
     default:
         return "UNKNOWN";
     }

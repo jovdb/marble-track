@@ -18,7 +18,8 @@ public:
         CALIBRATING,
         IDLE,
         MOVING,
-        RESET
+        RESET,
+        ERROR,
     };
     Wheel(const String &id, NotifyClients callback = nullptr);
     void setup() override;

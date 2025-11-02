@@ -79,17 +79,29 @@ void ManualMode::loop()
     }
 
     // Wheel Led
-    if (_wheel && _wheel->wheelState != Wheel::WheelState::IDLE)
+    if (_wheelBtnLed)
     {
-        if (_wheelBtnLed)
+        if (_wheel)
         {
-            _wheelBtnLed->set(ledBlinkSlow);
+            switch (_wheel->wheelState)
+            {
+            case Wheel::WheelState::MOVING:
+            case Wheel::WheelState::CALIBRATING:
+            case Wheel::WheelState::RESET:
+                _wheelBtnLed->set(ledBlinkFast);
+                break;
+            case Wheel::WheelState::ERROR:
+                _wheelBtnLed->set(false);
+                break;
+            case Wheel::WheelState::IDLE:
+                _wheelBtnLed->set(true);
+                break;
+            }
         }
-    }
-    else
-    {
-        if (_wheelBtnLed)
-            _wheelBtnLed->set(true); // Solid on when idle
+        else
+        {
+            _wheelBtnLed->set(false);
+        }
     }
 
     // Splitter Button
@@ -101,16 +113,28 @@ void ManualMode::loop()
     }
 
     // Splitter Led
-    if (_splitter && _splitter->wheelState != Wheel::WheelState::IDLE)
+    if (_splitterBtnLed)
     {
-        if (_splitterBtnLed)
+        if (_splitter)
         {
-            _splitterBtnLed->set(ledBlinkSlow);
+            switch (_splitter->wheelState)
+            {
+            case Wheel::WheelState::MOVING:
+            case Wheel::WheelState::CALIBRATING:
+            case Wheel::WheelState::RESET:
+                _splitterBtnLed->set(ledBlinkFast);
+                break;
+            case Wheel::WheelState::ERROR:
+                _splitterBtnLed->set(false);
+                break;
+            case Wheel::WheelState::IDLE:
+                _splitterBtnLed->set(true);
+                break;
+            }
         }
-    }
-    else
-    {
-        if (_splitterBtnLed)
-            _splitterBtnLed->set(true); // Solid on when idle
+        else
+        {
+            _wheelBtnLed->set(false);
+        }
     }
 }

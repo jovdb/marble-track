@@ -4,7 +4,7 @@ import { createEffect, createMemo, createSignal } from "solid-js";
 import deviceStyles from "./Device.module.css";
 import pwmMotorStyles from "./PwmMotor.module.css";
 import { usePwmMotor } from "../../stores/PwmMotor";
-import { StepperIcon } from "../icons/Icons"; // Using stepper icon as closest to motor
+import { ServoIcon } from "../icons/Icons"; // Using servo icon for PWM motor
 import PwmMotorConfig from "./PwmMotorConfig";
 
 export function PwmMotor(props: { id: string }) {
@@ -55,7 +55,7 @@ export function PwmMotor(props: { id: string }) {
     <Device
       id={props.id}
       configComponent={(onClose) => <PwmMotorConfig id={props.id} onClose={onClose} />}
-      icon={<StepperIcon />}
+      icon={<ServoIcon />}
     >
       <div class={deviceStyles.device__status}>
         <div

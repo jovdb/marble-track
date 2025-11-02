@@ -336,7 +336,7 @@ export const getDeviceIcon = (type: string, props?: IconProps) => {
     case "STEPPER":
       return <StepperIcon {...props} />;
     case "PWMMOTOR":
-      return <StepperIcon {...props} />; // Using stepper icon for PWM motor
+      return <ServoIcon {...props} />; // Using servo icon for PWM motor
     case "WHEEL":
       return <WheelIcon {...props} />;
     default:

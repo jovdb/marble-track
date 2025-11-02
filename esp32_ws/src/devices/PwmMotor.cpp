@@ -338,7 +338,7 @@ String PwmMotor::getState()
     }
 
     // Add PwmMotor specific state
-    doc["running"] = (_currentDutyCycle > 0.0f) || _isAnimating;
+    doc["running"] = _isAnimating;
 
     // Calculate current value (0-100%) from duty cycle range
     float currentValue = 0.0f;
@@ -354,7 +354,17 @@ String PwmMotor::getState()
 
     if (_isAnimating)
     {
-        doc["targetDutyCycle"] = _targetDutyCycle;
+        // Calculate target value (0-100%) from duty cycle range
+        float targetValue = 0.0f;
+        if (_maxDutyCycle > _minDutyCycle)
+        {
+            float normalizedValue = (_targetDutyCycle - _minDutyCycle) / (_maxDutyCycle - _minDutyCycle);
+            // Clamp to valid range
+            if (normalizedValue < 0.0f) normalizedValue = 0.0f;
+            if (normalizedValue > 1.0f) normalizedValue = 1.0f;
+            targetValue = normalizedValue * 100.0f;
+        }
+        doc["targetValue"] = targetValue;
         doc["targetDurationMs"] = _animationDuration - (millis() - _animationStartTime);
     }
 
@@ -473,9 +483,11 @@ void PwmMotor::updateAnimation()
     if (elapsed >= _animationDuration)
     {
         _isAnimating = false;
-        setDutyCycle(_targetDutyCycle, true); // Final notify like normal setDutyCycle
+        bool success = setDutyCycle(_targetDutyCycle, false); // Don't notify yet, we'll do it below
         MLOG_INFO("PwmMotor [%s]: Animation complete, final duty cycle: %.1f%%",
                   _id.c_str(), _targetDutyCycle);
+        // Always notify clients when animation completes, regardless of setDutyCycle success
+        notifyStateChange();
         return;
     }
 

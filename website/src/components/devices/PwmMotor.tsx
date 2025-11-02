@@ -19,9 +19,14 @@ export function PwmMotor(props: { id: string }) {
   );
 
   createEffect(() => {
-    const value = deviceState()?.value;
-    if (typeof value === 'number') {
-      setCurrentValue(value);
+    const targetValue = deviceState()?.targetValue;
+    if (typeof targetValue === "number") {
+      setCurrentValue(targetValue);
+    } else {
+      const value = deviceState()?.value;
+      if (typeof value === "number") {
+        setCurrentValue(value);
+      }
     }
   });
 
@@ -42,8 +47,8 @@ export function PwmMotor(props: { id: string }) {
   const statusText = createMemo(() => {
     const value = sliderValue();
     return deviceState()?.running
-      ? `Running at ${value.toFixed(0)}%`
-      : `Stopped (${value.toFixed(0)}%)`;
+      ? `Moving from ${deviceState()?.value?.toFixed(0)}% to ${deviceState()?.targetValue?.toFixed(0) ?? value.toFixed(0)}%`
+      : `Moved to ${value.toFixed(0)}%`;
   });
 
   return (

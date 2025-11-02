@@ -5,7 +5,7 @@ const deviceType = "pwmmotor";
 
 interface IPwmMotorState extends IDeviceState {
   value?: number;
-  targetDutyCycle?: number;
+  targetValue?: number;
   targetDurationMs?: number;
   running?: boolean;
   [key: string]: unknown;

@@ -57,8 +57,8 @@ public:
 
     // Button-specific operations
     bool isPressed() const { return _currentState; }
-    bool wasPressed();                    // Returns true once when button is pressed (edge detection)
-    bool wasReleased();                   // Returns true once when button is released (edge detection)
+    bool onPressed();                    // Returns true once when button is pressed (edge detection)
+    bool onReleased();                   // Returns true once when button is released (edge detection)
     unsigned long getPressedTime() const; // How long button has been pressed (ms)
 
 private:
@@ -76,8 +76,8 @@ private:
     unsigned long _pressStartTime = 0;   ///< When the current press started
 
     // Edge detection flags
-    bool _pressedFlag = false;  ///< Set when button is pressed (cleared by wasPressed())
-    bool _releasedFlag = false; ///< Set when button is released (cleared by wasReleased())
+    bool _pressedFlag = false;  ///< Set when button is pressed (cleared by onPressed())
+    bool _releasedFlag = false; ///< Set when button is released (cleared by onReleased())
     bool _virtualPress = false; ///< Flag to indicate virtual button press is active
 
     /**

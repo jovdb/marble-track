@@ -70,24 +70,19 @@ void ManualMode::loop()
     bool ledBlinkFast = millis() % 500 > 250;
     bool ledBlinkSlow = millis() % 1000 > 500;
 
-    // Check for wheel error and buzz
-    if (_wheel && _wheel->getOnError() && _buzzer)
-    {
-        _buzzer->tone(1000, 500); // Long buzz for error
-    }
-
-    // Check for splitter error and buzz
-    if (_splitter && _splitter->getOnError() && _buzzer)
-    {
-        _buzzer->tone(1000, 500); // Long buzz for error
-    }
-
     // Wheel Button
-    if (_wheelNextBtn && _wheel && _wheelNextBtn->isPressed() && _wheel->wheelState == Wheel::WheelState::IDLE)
+    if (_wheelNextBtn && _wheel && _wheelNextBtn->onPressed())
     {
-        if (_buzzer != nullptr)
-            _buzzer->tone(200, 100);
-        _wheel->nextBreakPoint();
+        if (_wheel->wheelState == Wheel::WheelState::IDLE)
+        {
+            if (_buzzer != nullptr)
+                _buzzer->tone(200, 100);
+            _wheel->nextBreakPoint();
+        }
+        else
+        {
+            MLOG_WARN("Wheel [%s]: Next button pressed, but wheel ignored, wheel not idle", _wheel->getId().c_str());
+        }
     }
 
     // Wheel Led
@@ -116,12 +111,25 @@ void ManualMode::loop()
         }
     }
 
-    // Splitter Button
-    if (_splitterNextBtn && _splitter && _splitterNextBtn->isPressed() && _splitter->wheelState == Wheel::WheelState::IDLE)
+    // Check for wheel error and buzz
+    if (_wheel && _wheel->getOnError() && _buzzer)
     {
-        if (_buzzer != nullptr)
-            _buzzer->tone(200, 100);
-        _splitter->nextBreakPoint();
+        _buzzer->tone(1000, 500); // Long buzz for error
+    }
+
+    // Splitter Button
+    if (_splitterNextBtn && _splitter && _splitterNextBtn->onPressed())
+    {
+        if (_splitter->wheelState == Wheel::WheelState::IDLE)
+        {
+            if (_buzzer != nullptr)
+                _buzzer->tone(200, 100);
+            _splitter->nextBreakPoint();
+        }
+        else
+        {
+            MLOG_WARN("Splitter [%s]: Next button pressed, but splitter ignored, wheel not idle", _splitter->getId().c_str());
+        }
     }
 
     // Splitter Led
@@ -148,5 +156,11 @@ void ManualMode::loop()
         {
             _wheelBtnLed->set(false);
         }
+    }
+
+    // Check for splitter error and buzz
+    if (_splitter && _splitter->getOnError() && _buzzer)
+    {
+        _buzzer->tone(1000, 500); // Long buzz for error
     }
 }

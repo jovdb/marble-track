@@ -124,7 +124,7 @@ void Button::loop()
  * @return true once when button is pressed, false otherwise
  * @note This function clears the pressed flag, so it only returns true once per press
  */
-bool Button::wasPressed()
+bool Button::onPressed()
 {
     if (_pressedFlag)
     {
@@ -140,7 +140,7 @@ bool Button::wasPressed()
  * @return true once when button is released, false otherwise
  * @note This function clears the released flag, so it only returns true once per release
  */
-bool Button::wasReleased()
+bool Button::onReleased()
 {
     if (_releasedFlag)
     {

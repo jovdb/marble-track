@@ -67,7 +67,7 @@ void Wheel::loop()
         }
 
         // Check for next button press
-        if (_btnNext && _btnNext->wasPressed())
+        if (_btnNext && _btnNext->onPressed())
         {
             MLOG_INFO("Wheel [%s]: Next button pressed, triggering next-breakpoint", getId().c_str());
             nextBreakPoint();
@@ -93,7 +93,7 @@ void Wheel::loop()
             _targetAngle = -1.0f;
         }
 
-        if (_sensor->wasPressed())
+        if (_sensor->onPressed())
         {
             MLOG_INFO("Wheel [%s]: Zero position.", getId().c_str());
             long currentPosition = _stepper->getCurrentPosition();
@@ -114,7 +114,7 @@ void Wheel::loop()
 
         break;
     case WheelState::RESET:
-        if (_sensor->wasPressed())
+        if (_sensor->onPressed())
         {
             _lastZeroPosition = _stepper->getCurrentPosition();
 
@@ -150,7 +150,7 @@ void Wheel::loop()
 
         break;
     case WheelState::CALIBRATING:
-        if (_sensor->wasPressed())
+        if (_sensor->onPressed())
         {
             // First phase: find zero
             if (_lastZeroPosition == 0)

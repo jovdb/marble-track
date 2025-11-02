@@ -27,7 +27,7 @@ void DividerWheel::loop()
     switch (_state)
     {
     case wheelState::CALIBRATING:
-        if (_button->wasReleased())
+        if (_button->onReleased())
         {
             MLOG_INFO("Wheel [%s]: Calibration complete.", getId().c_str());
             _stepper->setCurrentPosition(0);

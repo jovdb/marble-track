@@ -33,6 +33,7 @@ private:
     String stateToString(liftState state) const;
     Stepper *_stepper;
     Button *_limitSwitch;
+    Button *_ballSensor;
     PwmMotor *_gate;
     liftState _state;
     long _minSteps = 0;

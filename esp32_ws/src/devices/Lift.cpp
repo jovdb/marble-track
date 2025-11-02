@@ -2,7 +2,7 @@
 #include "Logging.h"
 
 Lift::Lift(const String &id, NotifyClients notifyClients)
-    : Device(id, "lift", notifyClients), _stepper(nullptr), _limitSwitch(nullptr), _gate(nullptr), _state(liftState::IDLE)
+    : Device(id, "lift", notifyClients), _stepper(nullptr), _limitSwitch(nullptr), _ballSensor(nullptr), _gate(nullptr), _state(liftState::IDLE)
 {
 }
 
@@ -14,9 +14,11 @@ void Lift::setup()
         // Create children if not loaded from config
         _stepper = new Stepper(getId() + "-stepper", _notifyClients);
         _limitSwitch = new Button(getId() + "-limit", _notifyClients);
+        _ballSensor = new Button(getId() + "-ball-sensor", _notifyClients);
         _gate = new PwmMotor(getId() + "-gate", _notifyClients);
         addChild(_stepper);
         addChild(_limitSwitch);
+        addChild(_ballSensor);
         addChild(_gate);
     }
     else
@@ -27,7 +29,9 @@ void Lift::setup()
         if (children.size() >= 2)
             _limitSwitch = static_cast<Button *>(children[1]);
         if (children.size() >= 3)
-            _gate = static_cast<PwmMotor *>(children[2]);
+            _ballSensor = static_cast<Button *>(children[2]);
+        if (children.size() >= 4)
+            _gate = static_cast<PwmMotor *>(children[3]);
     }
 
     // Call base setup to setup children

@@ -3,7 +3,7 @@ import { useDevice } from "./Devices";
 
 const deviceType = "lift";
 export interface ILiftState extends IDeviceState {
-  state: "Unknown" | "Idle" | "BallLoaded" | "Reset" | "Error";
+  state: "Unknown" | "Idle" | "BallWaiting" | "Reset" | "Error" | "LiftLoaded" | "MovingUp" | "MovingDown";
   currentPosition?: number;
   [key: string]: unknown;
 }
@@ -41,6 +41,22 @@ export function useLift(deviceId: string) {
       fn: "reset",
     });
 
+  const gateUp = () =>
+    sendMessage({
+      type: "device-fn",
+      deviceId,
+      deviceType,
+      fn: "gateUp",
+    });
+
+  const gateDown = () =>
+    sendMessage({
+      type: "device-fn",
+      deviceId,
+      deviceType,
+      fn: "gateDown",
+    });
+
   return [
     device,
     {
@@ -48,6 +64,8 @@ export function useLift(deviceId: string) {
       up,
       down,
       reset,
+      gateUp,
+      gateDown,
     },
   ] as const;
 }

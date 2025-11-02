@@ -1,5 +1,5 @@
 import { Device } from "./Device";
-import { createMemo } from "solid-js";
+import { createMemo, createSignal } from "solid-js";
 import styles from "./Device.module.css";
 
 import { LiftConfig } from "./LiftConfig";
@@ -15,10 +15,17 @@ export function Lift(props: { id: string }) {
   // TODO: Handle error state - might need to be added to device state
   const error = () => undefined; // Placeholder until error handling is implemented
 
-  const isMoving = createMemo(() => state()?.state === "Reset");
+  const isMoving = createMemo(() => 
+    state()?.state === "Reset" || 
+    state()?.state === "MovingUp" || 
+    state()?.state === "MovingDown"
+  );
   const currentPosition = () => state()?.currentPosition ?? 0;
   const minSteps = () => config()?.minSteps ?? 0;
   const maxSteps = () => config()?.maxSteps ?? 1000;
+
+  // Track gate toggle state
+  const [gateIsUp, setGateIsUp] = createSignal(false);
 
   function getStateString(state: string | undefined) {
     switch (state) {
@@ -26,14 +33,30 @@ export function Lift(props: { id: string }) {
         return "Unknown";
       case "Idle":
         return "Idle";
-      case "BallLoaded":
-        return "Ball Loaded";
+      case "BallWaiting":
+        return "Ball Waiting";
       case "Reset":
         return "Resetting...";
       case "Error":
         return "Error";
+      case "LiftLoaded":
+        return "Lift Loaded";
+      case "MovingUp":
+        return "Moving Up";
+      case "MovingDown":
+        return "Moving Down";
       default:
         return "Unknown";
+    }
+  }
+
+  function toggleGate() {
+    if (gateIsUp()) {
+      actions.gateDown();
+      setGateIsUp(false);
+    } else {
+      actions.gateUp();
+      setGateIsUp(true);
     }
   }
 
@@ -129,6 +152,9 @@ export function Lift(props: { id: string }) {
               disabled={isMoving()}
             >
               Reset
+            </button>
+            <button class={styles.device__button} onClick={toggleGate} disabled={isMoving()}>
+              Gate {gateIsUp() ? "Down" : "Up"}
             </button>
           </div>
         </>

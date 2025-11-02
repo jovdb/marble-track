@@ -18,9 +18,12 @@ public:
     {
         UNKNOWN,
         IDLE,
-        BALL_LOADED,
+        ERROR,
         RESET,
-        ERROR
+        BALL_WAITING,
+        LIFT_LOADED,
+        MOVING_UP,
+        MOVING_DOWN
     };
     Lift(const String &id, NotifyClients callback = nullptr);
     void setup() override;
@@ -32,6 +35,8 @@ public:
     bool up();
     bool down();
     bool reset();
+    bool gateUp();
+    bool gateDown();
 
 private:
     String stateToString(liftState state) const;

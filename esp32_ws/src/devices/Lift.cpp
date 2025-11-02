@@ -52,19 +52,20 @@ void Lift::loop()
         if (_limitSwitch && _limitSwitch->isPressed())
         {
             _stepper->setCurrentPosition(0);
-            _state = (_ballSensor && _ballSensor->isPressed()) ? liftState::BALL_LOADED : liftState::IDLE;
+            _state = (_ballSensor && _ballSensor->isPressed()) ? liftState::BALL_WAITING : liftState::IDLE;
             notifyStateChange();
         }
+        break;
     }
     case liftState::IDLE:
         if (_ballSensor && _ballSensor->isPressed())
         {
             MLOG_INFO("Lift [%s]: Ball loaded", getId().c_str());
-            _state = liftState::BALL_LOADED;
+            _state = liftState::BALL_WAITING;
             notifyStateChange();
         }
         break;
-    case liftState::BALL_LOADED:
+    case liftState::BALL_WAITING:
         if (_ballSensor && _ballSensor->onReleased())
         {
             MLOG_INFO("Lift [%s]: Ball unloaded", getId().c_str());
@@ -79,14 +80,23 @@ void Lift::loop()
             MLOG_INFO("Lift [%s]: Reset complete - limit switch pressed", getId().c_str());
             // _stepper->stop(100000); // Stop the stepper
             _stepper->setCurrentPosition(0); // Reset position to zero
-            _state = (_ballSensor && _ballSensor->isPressed()) ? liftState::BALL_LOADED : liftState::IDLE;
+            _state = (_ballSensor && _ballSensor->isPressed()) ? liftState::BALL_WAITING : liftState::IDLE;
             notifyStateChange();
         }
         else if (_stepper && !_stepper->isMoving())
         {
-            // Re
             MLOG_WARN("Lift [%s]: Reset incomplete - Lift stopped but limit switch not pressed", getId().c_str());
             _state = liftState::ERROR;
+            notifyStateChange();
+        }
+        break;
+    case liftState::MOVING_UP:
+    case liftState::MOVING_DOWN:
+        // When stepper stops moving, return to appropriate idle state
+        if (_stepper && !_stepper->isMoving())
+        {
+            MLOG_INFO("Lift [%s]: Movement complete", getId().c_str());
+            _state = (_ballSensor && _ballSensor->isPressed()) ? liftState::BALL_WAITING : liftState::IDLE;
             notifyStateChange();
         }
         break;
@@ -102,9 +112,9 @@ bool Lift::up()
     }
 
     MLOG_INFO("Lift [%s]: Moving up to %ld steps", getId().c_str(), _maxSteps);
-    // _state = liftState::MOVING; // Removed - no MOVING state in new enum
-    // notifyStateChange();
-    return _stepper->moveTo(_maxSteps);
+    _state = liftState::MOVING_UP;
+    notifyStateChange();
+    return _stepper->moveTo(-_maxSteps);
 }
 
 bool Lift::down()
@@ -116,9 +126,9 @@ bool Lift::down()
     }
 
     MLOG_INFO("Lift [%s]: Moving down to %ld steps", getId().c_str(), _minSteps);
-    // _state = liftState::MOVING; // Removed - no MOVING state in new enum
-    // notifyStateChange();
-    return _stepper->moveTo(_minSteps);
+    _state = liftState::MOVING_DOWN;
+    notifyStateChange();
+    return _stepper->moveTo(-_minSteps);
 }
 
 bool Lift::reset()
@@ -129,6 +139,15 @@ bool Lift::reset()
         return false;
     }
 
+    if (_limitSwitch->isPressed())
+    {
+        MLOG_INFO("Lift [%s]: Altready on limit", getId().c_str());
+
+        _state = liftState::IDLE;
+        notifyStateChange();
+        return true;
+    }
+
     MLOG_INFO("Lift [%s]: Starting reset - moving down slowly until limit switch is pressed", getId().c_str());
     _state = liftState::RESET;
     notifyStateChange();
@@ -136,6 +155,38 @@ bool Lift::reset()
     // Move down slowly (negative direction) until limit switch is pressed
     // We'll move in small steps and check the limit switch
     return _stepper->move(_maxSteps - _minSteps, _stepper ? _stepper->_defaultSpeed / 2 : 100);
+}
+
+bool Lift::gateUp()
+{
+    if (!_gate)
+    {
+        MLOG_WARN("Lift [%s]: Gate not initialized", getId().c_str());
+        return false;
+    }
+
+    MLOG_INFO("Lift [%s]: Setting gate to up (100)", getId().c_str());
+    _state = liftState::LIFT_LOADED;
+    notifyStateChange();
+
+    // Set gate to 100 (fully open)
+    return _gate->setValue(100.0f);
+}
+
+bool Lift::gateDown()
+{
+    if (!_gate)
+    {
+        MLOG_WARN("Lift [%s]: Gate not initialized", getId().c_str());
+        return false;
+    }
+
+    MLOG_INFO("Lift [%s]: Setting gate to down (0)", getId().c_str());
+    _state = liftState::IDLE;
+    notifyStateChange();
+
+    // Set gate to 0 (fully closed)
+    return _gate->setValue(0.0f);
 }
 
 bool Lift::control(const String &action, JsonObject *payload)
@@ -151,6 +202,14 @@ bool Lift::control(const String &action, JsonObject *payload)
     else if (action == "reset")
     {
         return reset();
+    }
+    else if (action == "gateUp")
+    {
+        return gateUp();
+    }
+    else if (action == "gateDown")
+    {
+        return gateDown();
     }
     else
     {
@@ -168,12 +227,18 @@ String Lift::stateToString(Lift::liftState state) const
         return "Unknown";
     case Lift::liftState::IDLE:
         return "Idle";
-    case Lift::liftState::BALL_LOADED:
-        return "BallLoaded";
+    case Lift::liftState::BALL_WAITING:
+        return "BallWaiting";
     case Lift::liftState::RESET:
         return "Reset";
     case Lift::liftState::ERROR:
         return "Error";
+    case Lift::liftState::LIFT_LOADED:
+        return "LiftLoaded";
+    case Lift::liftState::MOVING_UP:
+        return "MovingUp";
+    case Lift::liftState::MOVING_DOWN:
+        return "MovingDown";
     default:
         return "UNKNOWN";
     }

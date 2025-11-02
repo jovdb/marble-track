@@ -12,7 +12,7 @@ PwmMotor::PwmMotor(const String &id, const String &name, NotifyClients callback)
       _isSetup(false),
       _minDutyCycle(5.0),
       _maxDutyCycle(10.0),
-      _defaultDurationInMs(500),
+      _defaultDurationInMs(1000),
       _isAnimating(false),
       _startDutyCycle(0.0),
       _targetDutyCycle(0.0),
@@ -276,28 +276,7 @@ void PwmMotor::loop()
 
 bool PwmMotor::control(const String &action, JsonObject *args)
 {
-    if (action == "setDutyCycle")
-    {
-        if (!args || !(*args)["value"].is<float>())
-        {
-            MLOG_ERROR("PwmMotor [%s]: Invalid 'setDutyCycle' payload", _id.c_str());
-            return false;
-        }
-        float dutyCycle = (*args)["value"].as<float>();
-
-        // Check for optional duration parameter
-        if ((*args)["durationMs"].is<uint32_t>())
-        {
-            uint32_t durationMs = (*args)["durationMs"].as<uint32_t>();
-            setDutyCycleAnimated(dutyCycle, durationMs);
-        }
-        else
-        {
-            setDutyCycle(dutyCycle);
-        }
-        return true;
-    }
-    else if (action == "stop")
+    if (action == "stop")
     {
         stop();
         return true;

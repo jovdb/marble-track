@@ -32,7 +32,7 @@ export function usePwmMotor(deviceId: string) {
     deviceId
   );
 
-  const setDutyCycle = (value: number, durationMs?: number) => {
+  const setValue = (value: number, durationMs?: number) => {
     const args: { value: number; durationMs?: number } = { value };
     if (durationMs !== undefined && durationMs > 0) {
       args.durationMs = durationMs;
@@ -42,7 +42,7 @@ export function usePwmMotor(deviceId: string) {
       type: "device-fn",
       deviceId,
       deviceType,
-      fn: "setDutyCycle",
+      fn: "setValue",
       args,
     });
   };
@@ -69,7 +69,7 @@ export function usePwmMotor(deviceId: string) {
     device,
     {
       ...actions,
-      setDutyCycle,
+      setValue,
       stop,
       setupMotor,
     },

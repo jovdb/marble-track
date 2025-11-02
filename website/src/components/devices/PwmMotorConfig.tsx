@@ -20,8 +20,12 @@ export default function PwmMotorConfig(props: PwmMotorConfigProps) {
     device()?.config?.resolutionBits ?? 12
   );
   const [minDutyCycle, setMinDutyCycle] = createSignal<number>(device()?.config?.minDutyCycle ?? 5);
-  const [maxDutyCycle, setMaxDutyCycle] = createSignal<number>(device()?.config?.maxDutyCycle ?? 10);
-  const [defaultDurationInMs, setDefaultDurationInMs] = createSignal<number>(device()?.config?.defaultDurationInMs ?? 500);
+  const [maxDutyCycle, setMaxDutyCycle] = createSignal<number>(
+    device()?.config?.maxDutyCycle ?? 10
+  );
+  const [defaultDurationInMs, setDefaultDurationInMs] = createSignal<number>(
+    device()?.config?.defaultDurationInMs ?? 500
+  );
 
   createEffect(() => {
     const config = device()?.config;
@@ -180,7 +184,7 @@ export default function PwmMotorConfig(props: PwmMotorConfigProps) {
               type="number"
               value={defaultDurationInMs()}
               min={0}
-              step={100}
+              step={10}
               onInput={(event) => setDefaultDurationInMs(Number(event.currentTarget.value))}
               style={{ width: "6em", "margin-left": "0.5rem" }}
               title="Default duration in milliseconds (0 = indefinite)"

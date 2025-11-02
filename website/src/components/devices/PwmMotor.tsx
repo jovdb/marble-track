@@ -13,28 +13,41 @@ export function PwmMotor(props: { id: string }) {
   const actions = pwmMotorStore[1];
 
   const deviceState = createMemo(() => device()?.state);
-  const [currentDutyCycle, setCurrentDutyCycle] = createSignal<number | undefined>(undefined);
-  const [animationDuration, setAnimationDuration] = createSignal(0); // Duration in seconds
+  const [currentValue, setCurrentValue] = createSignal<number | undefined>(undefined);
+  const [currentDuration, setCurrentDuration] = createSignal<number>(
+    device()?.config?.defaultDurationInMs ?? 1000
+  );
 
   createEffect(() => {
     const duty = deviceState()?.dutyCycle;
-    if (duty !== undefined) {
-      setCurrentDutyCycle(duty);
+    const minDuty = device()?.config?.minDutyCycle ?? 0;
+    const maxDuty = device()?.config?.maxDutyCycle ?? 100;
+    if (duty !== undefined && maxDuty > minDuty) {
+      // Convert duty cycle to normalized value (0-1)
+      const normalizedValue = (duty - minDuty) / (maxDuty - minDuty);
+      setCurrentValue(normalizedValue * 100); // Convert to percentage (0-100%)
     }
   });
 
-  const debouncedSetDutyCycle = debounce((value: number) => {
-    const durationMs = animationDuration() * 1000; // Convert to milliseconds
-    actions.setDutyCycle(value, durationMs > 0 ? durationMs : undefined);
+  createEffect(() => {
+    const defaultDuration = device()?.config?.defaultDurationInMs;
+    if (defaultDuration !== undefined) {
+      setCurrentDuration(defaultDuration);
+    }
+  });
+
+  const debouncedSetValue = debounce((value: number, durationMs: number) => {
+    // Convert percentage (0-100%) to normalized value (0.0-1.0)
+    const normalizedValue = value / 100;
+    actions.setValue(normalizedValue, durationMs);
   }, 100);
 
-  const sliderValue = createMemo(() => currentDutyCycle() ?? deviceState()?.dutyCycle ?? 0);
-  const minDutyCycle = createMemo(() => device()?.config?.minDutyCycle ?? 0);
-  const maxDutyCycle = createMemo(() => device()?.config?.maxDutyCycle ?? 100);
+  const sliderValue = createMemo(() => currentValue() ?? 0);
   const statusText = createMemo(() => {
+    const value = sliderValue();
     const duty = deviceState()?.dutyCycle ?? 0;
     return deviceState()?.running
-      ? `Running at ${duty.toFixed(1)}%`
+      ? `Running at ${duty.toFixed(1)}% (${value.toFixed(0)}%)`
       : `Stopped (${duty.toFixed(1)}%)`;
   });
 
@@ -58,41 +71,40 @@ export function PwmMotor(props: { id: string }) {
       </div>
 
       <div class={deviceStyles["device__input-group"]}>
-        <label class={deviceStyles.device__label} for={`dutyCycle-${props.id}`}>
-          Duty Cycle: {sliderValue().toFixed(1)}%
+        <label class={deviceStyles.device__label} for={`value-${props.id}`}>
+          Value: {sliderValue().toFixed(0)}%
         </label>
         <input
-          id={`dutyCycle-${props.id}`}
+          id={`value-${props.id}`}
           class={deviceStyles.device__input}
           type="range"
-          min={minDutyCycle()}
-          max={maxDutyCycle()}
-          step="0.1"
+          min="0"
+          max="100"
+          step="1"
           value={sliderValue()}
           onInput={(event) => {
             const value = Number(event.currentTarget.value);
-            setCurrentDutyCycle(value);
-            debouncedSetDutyCycle(value);
+            setCurrentValue(value);
+            debouncedSetValue(value, currentDuration());
           }}
         />
       </div>
 
       <div class={deviceStyles["device__input-group"]}>
         <label class={deviceStyles.device__label} for={`duration-${props.id}`}>
-          Animation Duration: {animationDuration().toFixed(1)}s
-          {animationDuration() === 0 && " (Instant)"}
+          Duration: {currentDuration()}ms
         </label>
         <input
           id={`duration-${props.id}`}
           class={deviceStyles.device__input}
           type="range"
           min="0"
-          max="10"
-          step="0.1"
-          value={animationDuration()}
+          max="5000"
+          step="100"
+          value={currentDuration()}
           onInput={(event) => {
             const value = Number(event.currentTarget.value);
-            setAnimationDuration(value);
+            setCurrentDuration(value);
           }}
         />
       </div>

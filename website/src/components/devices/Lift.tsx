@@ -15,19 +15,23 @@ export function Lift(props: { id: string }) {
   // TODO: Handle error state - might need to be added to device state
   const error = () => undefined; // Placeholder until error handling is implemented
 
-  const isMoving = createMemo(() => state()?.state === "MOVING");
+  const isMoving = createMemo(() => state()?.state === "Reset");
   const currentPosition = () => state()?.currentPosition ?? 0;
   const minSteps = () => config()?.minSteps ?? 0;
   const maxSteps = () => config()?.maxSteps ?? 1000;
 
   function getStateString(state: string | undefined) {
     switch (state) {
-      case "IDLE":
+      case "Unknown":
+        return "Unknown";
+      case "Idle":
         return "Idle";
-      case "MOVING":
-        return "Moving...";
-      case undefined:
-        return "";
+      case "BallLoaded":
+        return "Ball Loaded";
+      case "Reset":
+        return "Resetting...";
+      case "Error":
+        return "Error";
       default:
         return "Unknown";
     }
@@ -118,6 +122,13 @@ export function Lift(props: { id: string }) {
               disabled={isMoving()}
             >
               Down
+            </button>
+            <button
+              class={styles.device__button}
+              onClick={() => actions.reset()}
+              disabled={isMoving()}
+            >
+              Reset
             </button>
           </div>
         </>

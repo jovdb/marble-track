@@ -3,7 +3,7 @@ import { useDevice } from "./Devices";
 
 const deviceType = "lift";
 export interface ILiftState extends IDeviceState {
-  state: "IDLE" | "MOVING";
+  state: "Unknown" | "Idle" | "BallLoaded" | "Reset" | "Error";
   currentPosition?: number;
   [key: string]: unknown;
 }
@@ -33,12 +33,21 @@ export function useLift(deviceId: string) {
       fn: "down",
     });
 
+  const reset = () =>
+    sendMessage({
+      type: "device-fn",
+      deviceId,
+      deviceType,
+      fn: "reset",
+    });
+
   return [
     device,
     {
       ...actions,
       up,
       down,
+      reset,
     },
   ] as const;
 }

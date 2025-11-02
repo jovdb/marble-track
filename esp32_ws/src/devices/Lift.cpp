@@ -48,8 +48,16 @@ void Lift::loop()
     switch (_state)
     {
     case liftState::UNKNOWN:
+    {
+        if (_limitSwitch && _limitSwitch->isPressed())
+        {
+            _stepper->setCurrentPosition(0);
+            _state = (_ballSensor && _ballSensor->isPressed()) ? liftState::BALL_LOADED : liftState::IDLE;
+            notifyStateChange();
+        }
+    }
     case liftState::IDLE:
-        if (_ballSensor && _ballSensor->onPressed())
+        if (_ballSensor && _ballSensor->isPressed())
         {
             MLOG_INFO("Lift [%s]: Ball loaded", getId().c_str());
             _state = liftState::BALL_LOADED;
@@ -61,6 +69,24 @@ void Lift::loop()
         {
             MLOG_INFO("Lift [%s]: Ball unloaded", getId().c_str());
             _state = liftState::IDLE;
+            notifyStateChange();
+        }
+        break;
+    case liftState::RESET:
+        // During reset, check if limit switch is pressed
+        if (_limitSwitch && _limitSwitch->isPressed())
+        {
+            MLOG_INFO("Lift [%s]: Reset complete - limit switch pressed", getId().c_str());
+            // _stepper->stop(100000); // Stop the stepper
+            _stepper->setCurrentPosition(0); // Reset position to zero
+            _state = (_ballSensor && _ballSensor->isPressed()) ? liftState::BALL_LOADED : liftState::IDLE;
+            notifyStateChange();
+        }
+        else if (_stepper && !_stepper->isMoving())
+        {
+            // Re
+            MLOG_WARN("Lift [%s]: Reset incomplete - Lift stopped but limit switch not pressed", getId().c_str());
+            _state = liftState::ERROR;
             notifyStateChange();
         }
         break;
@@ -95,6 +121,23 @@ bool Lift::down()
     return _stepper->moveTo(_minSteps);
 }
 
+bool Lift::reset()
+{
+    if (!_stepper || !_limitSwitch)
+    {
+        MLOG_WARN("Lift [%s]: Stepper or limit switch not initialized", getId().c_str());
+        return false;
+    }
+
+    MLOG_INFO("Lift [%s]: Starting reset - moving down slowly until limit switch is pressed", getId().c_str());
+    _state = liftState::RESET;
+    notifyStateChange();
+
+    // Move down slowly (negative direction) until limit switch is pressed
+    // We'll move in small steps and check the limit switch
+    return _stepper->move(_maxSteps - _minSteps, _stepper ? _stepper->_defaultSpeed / 2 : 100);
+}
+
 bool Lift::control(const String &action, JsonObject *payload)
 {
     if (action == "up")
@@ -104,6 +147,10 @@ bool Lift::control(const String &action, JsonObject *payload)
     else if (action == "down")
     {
         return down();
+    }
+    else if (action == "reset")
+    {
+        return reset();
     }
     else
     {
@@ -123,6 +170,10 @@ String Lift::stateToString(Lift::liftState state) const
         return "Idle";
     case Lift::liftState::BALL_LOADED:
         return "BallLoaded";
+    case Lift::liftState::RESET:
+        return "Reset";
+    case Lift::liftState::ERROR:
+        return "Error";
     default:
         return "UNKNOWN";
     }

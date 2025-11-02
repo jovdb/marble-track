@@ -18,7 +18,9 @@ public:
     {
         UNKNOWN,
         IDLE,
-        BALL_LOADED
+        BALL_LOADED,
+        RESET,
+        ERROR
     };
     Lift(const String &id, NotifyClients callback = nullptr);
     void setup() override;
@@ -29,6 +31,7 @@ public:
     bool control(const String &action, JsonObject *payload = nullptr) override;
     bool up();
     bool down();
+    bool reset();
 
 private:
     String stateToString(liftState state) const;

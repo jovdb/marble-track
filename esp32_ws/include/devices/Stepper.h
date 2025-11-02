@@ -166,8 +166,8 @@ public:
     float getDefaultAcceleration() const { return _defaultAcceleration; }
 
     /**
-    * @brief Get stepper type
-    * @return Type string ("DRIVER", "HALF4WIRE", or "FULL4WIRE")
+     * @brief Get stepper type
+     * @return Type string ("DRIVER", "HALF4WIRE", or "FULL4WIRE")
      */
     String getStepperType() const { return _stepperType; }
 
@@ -183,20 +183,21 @@ public:
      */
     int getEnablePin() const { return _enablePin; }
 
+    float _defaultSpeed = 500.0; ///< Default speed in steps per second
+
 private:
-    AccelStepper *_stepper = nullptr; ///< AccelStepper library instance
-    float _maxSpeed = 1000.0;         ///< Maximum speed in steps per second
-    float _maxAcceleration = 500.0;   ///< Acceleration in steps per second per second
-    float _defaultSpeed = 500.0;      ///< Default speed in steps per second
+    AccelStepper *_stepper = nullptr;   ///< AccelStepper library instance
+    float _maxSpeed = 1000.0;           ///< Maximum speed in steps per second
+    float _maxAcceleration = 500.0;     ///< Acceleration in steps per second per second
     float _defaultAcceleration = 250.0; ///< Default acceleration in steps per second per second
-    bool _isMoving = false;           ///< Current movement state
-    bool _configured = false;         ///< True if stepper has been configured
+    bool _isMoving = false;             ///< Current movement state
+    bool _configured = false;           ///< True if stepper has been configured
 
     // Pin configuration
-    int _pin1 = -1, _pin2 = -1, _pin3 = -1, _pin4 = -1; ///< Pin numbers (all used for 4-pin, only pin1&pin2 for 2-pin)
-    int _enablePin = -1;                                ///< Enable pin number (-1 if not used)
-    bool _invertEnable = false;                         ///< True if enable pin logic is inverted
-    String _stepperType = "";                           ///< Type string for reporting ("DRIVER", "HALF4WIRE", "FULL4WIRE")
+    int _pin1 = -1, _pin2 = -1, _pin3 = -1, _pin4 = -1;                     ///< Pin numbers (all used for 4-pin, only pin1&pin2 for 2-pin)
+    int _enablePin = -1;                                                    ///< Enable pin number (-1 if not used)
+    bool _invertEnable = false;                                             ///< True if enable pin logic is inverted
+    String _stepperType = "";                                               ///< Type string for reporting ("DRIVER", "HALF4WIRE", "FULL4WIRE")
     AccelStepper::MotorInterfaceType _interfaceType = AccelStepper::DRIVER; ///< Current motor interface
 
     /**

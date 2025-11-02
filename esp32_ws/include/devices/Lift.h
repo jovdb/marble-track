@@ -16,8 +16,9 @@ class Lift : public Device
 public:
     enum class liftState
     {
+        UNKNOWN,
         IDLE,
-        MOVING
+        BALL_LOADED
     };
     Lift(const String &id, NotifyClients callback = nullptr);
     void setup() override;

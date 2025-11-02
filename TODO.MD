@@ -25,6 +25,7 @@ Website:
 - Move wheel markers to the inside
 
 Both:
+Batch ws messages, allow to send an array of messages
 
 Ideas:
 

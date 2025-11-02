@@ -2,7 +2,7 @@
 #include "Logging.h"
 
 Lift::Lift(const String &id, NotifyClients notifyClients)
-    : Device(id, "lift", notifyClients), _stepper(nullptr), _limitSwitch(nullptr), _ballSensor(nullptr), _gate(nullptr), _state(liftState::IDLE)
+    : Device(id, "lift", notifyClients), _stepper(nullptr), _limitSwitch(nullptr), _ballSensor(nullptr), _gate(nullptr), _state(liftState::UNKNOWN)
 {
 }
 
@@ -45,10 +45,25 @@ void Lift::loop()
     if (!_stepper)
         return;
 
-    if (_state == liftState::MOVING && !_stepper->isMoving())
+    switch (_state)
     {
-        _state = liftState::IDLE;
-        notifyStateChange();
+    case liftState::UNKNOWN:
+    case liftState::IDLE:
+        if (_ballSensor && _ballSensor->onPressed())
+        {
+            MLOG_INFO("Lift [%s]: Ball loaded", getId().c_str());
+            _state = liftState::BALL_LOADED;
+            notifyStateChange();
+        }
+        break;
+    case liftState::BALL_LOADED:
+        if (_ballSensor && _ballSensor->onReleased())
+        {
+            MLOG_INFO("Lift [%s]: Ball unloaded", getId().c_str());
+            _state = liftState::IDLE;
+            notifyStateChange();
+        }
+        break;
     }
 }
 
@@ -61,8 +76,8 @@ bool Lift::up()
     }
 
     MLOG_INFO("Lift [%s]: Moving up to %ld steps", getId().c_str(), _maxSteps);
-    _state = liftState::MOVING;
-    notifyStateChange();
+    // _state = liftState::MOVING; // Removed - no MOVING state in new enum
+    // notifyStateChange();
     return _stepper->moveTo(_maxSteps);
 }
 
@@ -75,8 +90,8 @@ bool Lift::down()
     }
 
     MLOG_INFO("Lift [%s]: Moving down to %ld steps", getId().c_str(), _minSteps);
-    _state = liftState::MOVING;
-    notifyStateChange();
+    // _state = liftState::MOVING; // Removed - no MOVING state in new enum
+    // notifyStateChange();
     return _stepper->moveTo(_minSteps);
 }
 
@@ -102,10 +117,12 @@ String Lift::stateToString(Lift::liftState state) const
 {
     switch (state)
     {
+    case Lift::liftState::UNKNOWN:
+        return "Unknown";
     case Lift::liftState::IDLE:
-        return "IDLE";
-    case Lift::liftState::MOVING:
-        return "MOVING";
+        return "Idle";
+    case Lift::liftState::BALL_LOADED:
+        return "BallLoaded";
     default:
         return "UNKNOWN";
     }

@@ -367,12 +367,12 @@ std::vector<int> Stepper::getPins() const
     std::vector<int> pins;
     if (_configured)
     {
-        pins.push_back(_pin1);
-        pins.push_back(_pin2);
+        if (_pin1 >= 0) pins.push_back(_pin1);
+        if (_pin2 >= 0) pins.push_back(_pin2);
         if (_stepperType == "HALF4WIRE" || _stepperType == "FULL4WIRE")
         {
-            pins.push_back(_pin3);
-            pins.push_back(_pin4);
+            if (_pin3 >= 0) pins.push_back(_pin3);
+            if (_pin4 >= 0) pins.push_back(_pin4);
         }
         if (_enablePin >= 0)
         {

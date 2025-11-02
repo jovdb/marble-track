@@ -53,7 +53,7 @@ public:
     String getState() override;
     String getConfig() const override;
     void setConfig(JsonObject *config) override;
-    std::vector<int> getPins() const override { return {_pin}; }
+    std::vector<int> getPins() const override;
 
     // Button-specific operations
     bool isPressed() const { return _currentState; }

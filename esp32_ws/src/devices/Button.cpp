@@ -164,6 +164,19 @@ unsigned long Button::getPressedTime() const
 }
 
 /**
+ * @brief Get the pins used by this button
+ * @return Vector of pin numbers, empty if not configured
+ */
+std::vector<int> Button::getPins() const
+{
+    if (_pin < 0)
+    {
+        return {};
+    }
+    return {_pin};
+}
+
+/**
  * @brief Dynamic control function for button operations
  * @param action The action to perform ("pressed", "released")
  * @param payload Pointer to JSON object containing action parameters (can be nullptr)

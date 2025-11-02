@@ -19,7 +19,6 @@ const DEVICE_TYPES = [
   "Led",
   "Lift",
   "PwmMotor",
-  "Pwm",
   "Servo",
   "Stepper",
   "Wheel",

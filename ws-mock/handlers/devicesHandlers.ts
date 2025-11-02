@@ -271,13 +271,6 @@ export function deviceControlHandler(deviceId: string, action: string, payload?:
   // Simulate successful control action
   console.log(`Mock: Device ${deviceId} action '${action}' with payload:`, payload);
 
-  // For PWM devices, update the duty cycle in the device state
-  if (device.type === "pwm" && action === "set-duty-cycle" && payload?.dutyCycle !== undefined) {
-    if (!device.state) device.state = {};
-    device.state.dutyCycle = payload.dutyCycle;
-    saveConfig(config);
-  }
-
   return JSON.stringify({
     type: "device-control",
     deviceId: deviceId,

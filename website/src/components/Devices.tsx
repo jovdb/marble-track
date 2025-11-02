@@ -7,7 +7,6 @@ import { Button } from "./devices/Button";
 import { Buzzer } from "./devices/Buzzer";
 import { Gate } from "./devices/Gate";
 import { PwmMotor } from "./devices/PwmMotor";
-import { Pwm } from "./devices/Pwm";
 import { Servo } from "./devices/Servo";
 import { Stepper } from "./devices/Stepper";
 import { Wheel } from "./devices/Wheel";
@@ -66,8 +65,6 @@ export function renderDeviceComponent(device: { id: string; type: string }) {
       return <Gate id={device.id} />;
     case "wheel":
       return <Wheel id={device.id} />;
-    case "pwm":
-      return <Pwm id={device.id} />;
     case "pwmmotor":
       return <PwmMotor id={device.id} />;
     case "lift":

@@ -16,7 +16,6 @@
 #include "devices/Wheel.h"
 #include "devices/PwmMotor.h"
 #include "devices/Lift.h"
-#include "devices/PwmDevice.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
 
@@ -596,10 +595,6 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
     else if (lowerType == "lift")
     {
         newDevice = new Lift(deviceId, notifyClients);
-    }
-    else if (lowerType == "pwm")
-    {
-        newDevice = new PwmDevice(deviceId, notifyClients);
     }
     else
     {

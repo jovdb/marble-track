@@ -13,7 +13,7 @@ void Lift::setup()
     {
         // Create children if not loaded from config
         _stepper = new Stepper(getId() + "-stepper", _notifyClients);
-        _sensor = new Button(getId() + "-sensor", _notifyClients);
+        _sensor = new Button(getId() + "-limit", _notifyClients);
         addChild(_stepper);
         addChild(_sensor);
     }

@@ -14,7 +14,7 @@ void Lift::setup()
         // Create children if not loaded from config
         _stepper = new Stepper(getId() + "-stepper", _notifyClients);
         _limitSwitch = new Button(getId() + "-limit", _notifyClients);
-        _gate = new PwmMotor(getId() + "-gate", "GATE Motor", _notifyClients);
+        _gate = new PwmMotor(getId() + "-gate", _notifyClients);
         addChild(_stepper);
         addChild(_limitSwitch);
         addChild(_gate);

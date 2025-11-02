@@ -581,7 +581,7 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
     }
     else if (lowerType == "pwmmotor")
     {
-        newDevice = new PwmMotor(deviceId, deviceId, notifyClients);
+        newDevice = new PwmMotor(deviceId, notifyClients);
     }
     else if (lowerType == "wheel")
     {

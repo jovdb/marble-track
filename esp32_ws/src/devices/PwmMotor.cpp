@@ -2,7 +2,7 @@
 #include "Logging.h"
 #include <ArduinoJson.h>
 
-PwmMotor::PwmMotor(const String &id, const String &name, NotifyClients callback)
+PwmMotor::PwmMotor(const String &id, NotifyClients callback)
     : Device(id, "pwmmotor", callback),
       _pin(-1),
       _pwmChannel(0),
@@ -22,7 +22,6 @@ PwmMotor::PwmMotor(const String &id, const String &name, NotifyClients callback)
       _mcpwmTimer(MCPWM_TIMER_0),
       _mcpwmSignal(MCPWM0A)
 {
-    _name = name;
 }
 
 bool PwmMotor::setupMotor(int pin, int pwmChannel, uint32_t frequency, uint8_t resolutionBits)

@@ -338,12 +338,19 @@ String PwmMotor::getState()
     }
 
     // Add PwmMotor specific state
-    doc["pin"] = _pin;
-    doc["pwmChannel"] = _pwmChannel;
-    doc["frequency"] = _frequency;
-    doc["resolutionBits"] = _resolutionBits;
-    doc["dutyCycle"] = _currentDutyCycle;
     doc["running"] = (_currentDutyCycle > 0.0f) || _isAnimating;
+
+    // Calculate current value (0-100%) from duty cycle range
+    float currentValue = 0.0f;
+    if (_maxDutyCycle > _minDutyCycle)
+    {
+        float normalizedValue = (_currentDutyCycle - _minDutyCycle) / (_maxDutyCycle - _minDutyCycle);
+        // Clamp to valid range
+        if (normalizedValue < 0.0f) normalizedValue = 0.0f;
+        if (normalizedValue > 1.0f) normalizedValue = 1.0f;
+        currentValue = normalizedValue * 100.0f;
+    }
+    doc["value"] = currentValue;
 
     if (_isAnimating)
     {

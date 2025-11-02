@@ -19,13 +19,9 @@ export function PwmMotor(props: { id: string }) {
   );
 
   createEffect(() => {
-    const duty = deviceState()?.dutyCycle;
-    const minDuty = device()?.config?.minDutyCycle ?? 0;
-    const maxDuty = device()?.config?.maxDutyCycle ?? 100;
-    if (duty !== undefined && maxDuty > minDuty) {
-      // Convert duty cycle to normalized value (0-1)
-      const normalizedValue = (duty - minDuty) / (maxDuty - minDuty);
-      setCurrentValue(normalizedValue * 100); // Convert to percentage (0-100%)
+    const value = deviceState()?.value;
+    if (typeof value === 'number') {
+      setCurrentValue(value);
     }
   });
 
@@ -45,10 +41,9 @@ export function PwmMotor(props: { id: string }) {
   const sliderValue = createMemo(() => currentValue() ?? 0);
   const statusText = createMemo(() => {
     const value = sliderValue();
-    const duty = deviceState()?.dutyCycle ?? 0;
     return deviceState()?.running
-      ? `Running at ${duty.toFixed(1)}% (${value.toFixed(0)}%)`
-      : `Stopped (${duty.toFixed(1)}%)`;
+      ? `Running at ${value.toFixed(0)}%`
+      : `Stopped (${value.toFixed(0)}%)`;
   });
 
   return (

@@ -1,15 +1,46 @@
 {
+  "network": {
+    "ssid": "telenet-182FE",
+    "password": "cPQdRWmFx1eM"
+  },
   "devices": [
+    {
+      "id": "lift-stepper",
+      "type": "stepper",
+      "children": [],
+      "config": {
+        "name": "lift-stepper",
+        "stepperType": "DRIVER",
+        "maxSpeed": 1000,
+        "maxAcceleration": 3000,
+        "defaultSpeed": 500,
+        "defaultAcceleration": 150,
+        "stepPin": 12,
+        "dirPin": 13,
+        "pin1": -1,
+        "pin2": -1,
+        "pin3": -1,
+        "pin4": -1
+      }
+    },
     {
       "id": "splitter",
       "type": "wheel",
-      "children": ["splitter-stepper", "splitter-sensor"],
+      "children": [
+        "splitter-stepper",
+        "splitter-sensor"
+      ],
       "config": {
         "name": "Splitter",
         "stepsPerRevolution": 4096,
         "maxStepsPerRevolution": 10000,
         "zeroPointDegree": 275,
-        "breakPoints": [32, 163, 286, 350]
+        "breakPoints": [
+          32,
+          163,
+          286,
+          350
+        ]
       }
     },
     {
@@ -25,12 +56,10 @@
         "defaultAcceleration": 75,
         "stepPin": -1,
         "dirPin": -1,
-        "pin1": 1,
-        "pin2": 2,
-        "pin3": 42,
-        "pin4": 41,
-        "enablePin": 4,
-        "invertEnable": false
+        "pin1": 17,
+        "pin2": 18,
+        "pin3": 8,
+        "pin4": 3
       }
     },
     {
@@ -39,22 +68,67 @@
       "children": [],
       "config": {
         "name": "",
-        "pin": 40,
+        "pin": 9,
         "pinMode": "pullup",
         "debounceMs": 50,
         "buttonType": "NormalOpen"
       }
     },
     {
+      "id": "splitter-btn-led",
+      "type": "led",
+      "children": [],
+      "config": {
+        "name": "",
+        "pin": 10,
+        "initialState": "OFF"
+      }
+    },
+    {
+      "id": "splitter-next-btn",
+      "type": "button",
+      "children": [],
+      "config": {
+        "name": "",
+        "pin": 11,
+        "pinMode": "pullup",
+        "debounceMs": 50,
+        "buttonType": "NormalOpen"
+      }
+    },
+    {
+      "id": "t",
+      "type": "pwmmotor",
+      "children": [],
+      "config": {
+        "name": "t",
+        "pin": 14,
+        "pwmChannel": 1,
+        "frequency": 50,
+        "resolutionBits": 10,
+        "minDutyCycle": 5.5,
+        "maxDutyCycle": 10,
+        "defaultDurationInMs": 250
+      }
+    },
+    {
       "id": "wheel",
       "type": "wheel",
-      "children": ["wheel-stepper", "wheel-sensor"],
+      "children": [
+        "wheel-stepper",
+        "wheel-sensor"
+      ],
       "config": {
         "name": "Wheel",
         "stepsPerRevolution": 277212,
         "maxStepsPerRevolution": 500000,
         "zeroPointDegree": 180,
-        "breakPoints": [82, 160, 285, 316]
+        "breakPoints": [
+          82,
+          160,
+          285,
+          316
+        ]
       }
     },
     {
@@ -64,17 +138,17 @@
       "config": {
         "name": "wheel-stepper",
         "stepperType": "DRIVER",
-        "maxSpeed": 4000,
+        "maxSpeed": 3000,
         "maxAcceleration": 3000,
-        "defaultSpeed": 2500,
-        "defaultAcceleration": 1000,
-        "stepPin": 12,
-        "dirPin": 13,
+        "defaultSpeed": 1500,
+        "defaultAcceleration": 200,
+        "stepPin": 4,
+        "dirPin": 5,
         "pin1": -1,
         "pin2": -1,
         "pin3": -1,
         "pin4": -1,
-        "enablePin": 14,
+        "enablePin": 6,
         "invertEnable": true
       }
     },
@@ -84,7 +158,7 @@
       "children": [],
       "config": {
         "name": "",
-        "pin": 11,
+        "pin": 7,
         "pinMode": "pullup",
         "debounceMs": 50,
         "buttonType": "NormalOpen"
@@ -107,28 +181,6 @@
       "config": {
         "name": "",
         "pin": 16,
-        "pinMode": "pullup",
-        "debounceMs": 50,
-        "buttonType": "NormalOpen"
-      }
-    },
-    {
-      "id": "splitter-btn-led",
-      "type": "led",
-      "children": [],
-      "config": {
-        "name": "",
-        "pin": 17,
-        "initialState": "OFF"
-      }
-    },
-    {
-      "id": "splitter-next-btn",
-      "type": "button",
-      "children": [],
-      "config": {
-        "name": "",
-        "pin": 18,
         "pinMode": "pullup",
         "debounceMs": 50,
         "buttonType": "NormalOpen"

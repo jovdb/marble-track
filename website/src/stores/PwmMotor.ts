@@ -4,11 +4,7 @@ import { useDevice } from "./Devices";
 const deviceType = "pwmmotor";
 
 interface IPwmMotorState extends IDeviceState {
-  pin?: number;
-  pwmChannel?: number;
-  frequency?: number;
-  resolutionBits?: number;
-  dutyCycle?: number;
+  value?: number;
   targetDutyCycle?: number;
   targetDurationMs?: number;
   running?: boolean;

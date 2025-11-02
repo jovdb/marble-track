@@ -11,7 +11,6 @@
 #include "devices/Led.h"
 #include "devices/Buzzer.h"
 #include "devices/Button.h"
-#include "devices/Servo.h"
 #include "devices/Stepper.h"
 #include "devices/Wheel.h"
 #include "devices/PwmMotor.h"
@@ -575,10 +574,6 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
     else if (lowerType == "button")
     {
         newDevice = new Button(deviceId, notifyClients);
-    }
-    else if (lowerType == "servo")
-    {
-        newDevice = new ServoDevice(deviceId, deviceId, notifyClients);
     }
     else if (lowerType == "stepper")
     {

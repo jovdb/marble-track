@@ -15,11 +15,9 @@ const DEVICE_TYPES = [
   "Button",
   "Buzzer",
   "DividerWheel",
-  "GateWithSensor",
   "Led",
   "Lift",
   "PwmMotor",
-  "Servo",
   "Stepper",
   "Wheel",
 ] as const;

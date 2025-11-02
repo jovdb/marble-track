@@ -49,11 +49,10 @@ The Device class is the root of the device hierarchy:
   - `Led` (LED control)
   - `Button` (button input)
   - `Buzzer` (audio output)
-  - `GateWithSensor` (gate mechanism)
   - `Lift` (lifting mechanism)
-  - `Pwm` (PWM output)
   - `PwmMotor` (PWM motor control)
-  - `Servo` (servo motor control)
+  - `Stepper` (stepper motor control)
+  - `Wheel` (wheel mechanism)
 
 ## Core Methods
 

@@ -19,10 +19,6 @@ export function getDevices() {
         type: "stepper",
       },
       {
-        id: "servo-1",
-        type: "servo",
-      },
-      {
         id: "wheel-1",
         type: "wheel",
         children: [

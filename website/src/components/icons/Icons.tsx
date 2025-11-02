@@ -327,8 +327,6 @@ export const getDeviceIcon = (type: string, props?: IconProps) => {
   switch (type.toUpperCase()) {
     case "LED":
       return <LedIcon {...props} />;
-    case "SERVO":
-      return <ServoIcon {...props} />;
     case "BUTTON":
       return <ButtonIcon {...props} />;
     case "BUZZER":

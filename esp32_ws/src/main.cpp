@@ -9,7 +9,6 @@
 #include "WebSocketManager.h"
 #include "TimeManager.h"
 #include "devices/Led.h"
-#include "devices/Servo.h"
 #include "devices/Button.h"
 #include "devices/Device.h"
 #include "devices/DividerWheel.h"
@@ -17,7 +16,6 @@
 #include <devices/Buzzer.h>
 #include "esp_log.h"
 
-#include "devices/GateWithSensor.h"
 #include "devices/Stepper.h"
 #include "devices/PwmMotor.h"
 

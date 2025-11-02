@@ -4,11 +4,9 @@ export type DeviceType =
   | "buzzer"
   | "dividerwheel"
   | "gate"
-  | "gatewithsensor"
   | "led"
   | "lift"
   | "pwmmotor"
-  | "servo"
   | "stepper"
   | "wheel";
 export type NetworkMode = "ap" | "sta" | "apsta";

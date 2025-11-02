@@ -70,6 +70,18 @@ void ManualMode::loop()
     bool ledBlinkFast = millis() % 500 > 250;
     bool ledBlinkSlow = millis() % 1000 > 500;
 
+    // Check for wheel error and buzz
+    if (_wheel && _wheel->getOnError() && _buzzer)
+    {
+        _buzzer->tone(1000, 500); // Long buzz for error
+    }
+
+    // Check for splitter error and buzz
+    if (_splitter && _splitter->getOnError() && _buzzer)
+    {
+        _buzzer->tone(1000, 500); // Long buzz for error
+    }
+
     // Wheel Button
     if (_wheelNextBtn && _wheel && _wheelNextBtn->isPressed() && _wheel->wheelState == Wheel::WheelState::IDLE)
     {

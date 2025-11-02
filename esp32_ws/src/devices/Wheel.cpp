@@ -50,6 +50,8 @@ void Wheel::loop()
 {
     Device::loop();
 
+    if (_onError) _onError = false;
+
     if (!_stepper || !_sensor)
         return;
 
@@ -141,6 +143,7 @@ void Wheel::loop()
         if (!_stepper->isMoving())
         {
             wheelState = WheelState::ERROR;
+            _onError = true;
             notifyStateChange();
             notifyError("reset-error", "No zero point found during reset.");
         }

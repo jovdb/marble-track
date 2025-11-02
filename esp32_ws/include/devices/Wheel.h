@@ -35,6 +35,7 @@ public:
     void notifyStepsPerRevolution(long steps);
     bool nextBreakPoint();
     WheelState wheelState;
+    bool getOnError() const { return _onError; }
 
 private:
     String stateToString(WheelState state) const;
@@ -54,6 +55,7 @@ private:
     int _targetBreakpointIndex = -1;
     float _targetAngle = -1.0f;
     float _zeroPointDegree = 0.0f;
+    bool _onError = false;
 };
 
 #endif // WHEEL_H

@@ -569,7 +569,7 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
     }
     else if (lowerType == "buzzer")
     {
-        newDevice = new Buzzer(deviceId, deviceId, notifyClients); // Using deviceId as name too
+        newDevice = new Buzzer(deviceId, notifyClients);
     }
     else if (lowerType == "button")
     {

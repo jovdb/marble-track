@@ -36,10 +36,9 @@
  * @param id Unique identifier string for the buzzer
  * @param name Human-readable name string for the buzzer
  */
-Buzzer::Buzzer(const String &id, const String &name, NotifyClients callback)
+Buzzer::Buzzer(const String &id, NotifyClients callback)
     : Device(id, "buzzer", callback)
 {
-    _name = name;
     _pin = -1;
     _isPlaying = false;
     _mode = BuzzerMode::IDLE;

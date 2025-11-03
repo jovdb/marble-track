@@ -14,7 +14,7 @@
 class Lift : public Device
 {
 public:
-    enum class liftState
+    enum class LiftState
     {
         UNKNOWN,
         IDLE,
@@ -39,12 +39,12 @@ public:
     bool gateDown();
 
 private:
-    String stateToString(liftState state) const;
+    String stateToString(LiftState state) const;
     Stepper *_stepper;
     Button *_limitSwitch;
     Button *_ballSensor;
     PwmMotor *_gate;
-    liftState _state;
+    LiftState _state;
     long _minSteps = 0;
     long _maxSteps = 1000;
 };

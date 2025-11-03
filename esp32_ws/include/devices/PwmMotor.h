@@ -60,6 +60,12 @@ public:
     bool setValue(float value, int durationMs = -1);
 
     /**
+     * @brief Get current value as percentage (0-100)
+     * @return Current value as percentage, calculated from duty cycle range
+     */
+    float getValue() const;
+
+    /**
      * @brief Get current duty cycle
      * @return Current duty cycle as percentage (0.0 to 100.0)
      */

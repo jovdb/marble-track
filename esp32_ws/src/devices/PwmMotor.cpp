@@ -239,6 +239,21 @@ bool PwmMotor::setValue(float value, int durationMs)
     }
 }
 
+float PwmMotor::getValue() const
+{
+    // Calculate current value as percentage (0-100%) from duty cycle range
+    float currentValue = 0.0f;
+    if (_maxDutyCycle > _minDutyCycle)
+    {
+        float normalizedValue = (_currentDutyCycle - _minDutyCycle) / (_maxDutyCycle - _minDutyCycle);
+        // Clamp to valid range
+        if (normalizedValue < 0.0f) normalizedValue = 0.0f;
+        if (normalizedValue > 1.0f) normalizedValue = 1.0f;
+        currentValue = normalizedValue * 100.0f;
+    }
+    return currentValue;
+}
+
 void PwmMotor::stop()
 {
     setDutyCycle(0.0);

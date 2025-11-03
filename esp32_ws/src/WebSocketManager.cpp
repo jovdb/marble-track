@@ -420,7 +420,6 @@ void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
 
     case WS_EVT_DATA:
     {
-        MLOG_INFO("WebSocket client #%u data received", client->id());
         AwsFrameInfo *info = (AwsFrameInfo *)arg;
         if (info->opcode == WS_TEXT)
         {

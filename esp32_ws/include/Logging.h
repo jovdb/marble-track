@@ -1,9 +1,8 @@
 /**
  * @file Logging.h
- * @brief Simple logging system for Marble Track project
+ * @brief Conditional logging system for Marble Track project
  *
- * Provides simplified logging macros without colors for cleaner output.
- * All macros can be disabled by setting MARBLE_LOG_ENABLED to 0.
+ * Provides logging macros with runtime enable/disable per log type.
  *
  * Available macros:
  * - MLOG_INFO(format, ...)     - General information messages
@@ -18,7 +17,7 @@
  *   MLOG_WS_SEND("Message sent to client #%u", clientId);
  *
  * All messages include timestamp in milliseconds since boot: [12345]
- * To disable all logging, set MARBLE_LOG_ENABLED to 0 below.
+ * Use the 'logging' serial command to enable/disable log types at runtime.
  */
 
 #ifndef LOGGING_H
@@ -29,23 +28,97 @@
 // Enable/disable logging (set to 0 to disable all logging)
 #define MARBLE_LOG_ENABLED 1
 
-// Simple logging macros without colors
 #if MARBLE_LOG_ENABLED
 
-#define MLOG_INFO(format, ...) \
-    Serial.printf("[%lu] INFO: " format "\n", millis(), ##__VA_ARGS__)
+// Log type bit flags
+enum LogType : uint8_t
+{
+    LOG_INFO = 0x01,       // 1
+    LOG_WARN = 0x02,       // 2
+    LOG_ERROR = 0x04,      // 3
+    LOG_WS_RECEIVE = 0x08, // 4
+    LOG_WS_SEND = 0x10     // 5
+};
 
-#define MLOG_ERROR(format, ...) \
-    Serial.printf("[%lu] ERROR: " format "\n", millis(), ##__VA_ARGS__)
+// Global logging configuration
+class LogConfig
+{
+public:
+    static uint8_t enabledTypes;
 
-#define MLOG_WARN(format, ...) \
-    Serial.printf("[%lu] WARN: " format "\n", millis(), ##__VA_ARGS__)
+    static bool isEnabled(LogType type)
+    {
+        return (enabledTypes & type) != 0;
+    }
 
-#define MLOG_WS_SEND(format, ...) \
-    Serial.printf("[%lu] WS_SEND: " format "\n", millis(), ##__VA_ARGS__)
+    static void enable(LogType type)
+    {
+        enabledTypes |= type;
+    }
 
-#define MLOG_WS_RECEIVE(format, ...) \
-    Serial.printf("[%lu] WS_RECV: " format "\n", millis(), ##__VA_ARGS__)
+    static void disable(LogType type)
+    {
+        enabledTypes &= ~type;
+    }
+
+    static void setAll(bool enabled)
+    {
+        enabledTypes = enabled ? 0xFF : 0x00;
+    }
+};
+
+// Conditional logging macros
+
+// By wrapping it in do { ... } while(0), the macro:
+// - Requires a semicolon - It's a proper statement that must end with ;
+// - Acts as a single statement - Works correctly in all control flow contexts (if/else, for, while)
+// - No side effects - The while(0) never loops (condition is always false)
+// - Gets optimized away - Compilers remove it entirely, zero runtime cost
+
+#define MLOG_INFO(format, ...)                                                  \
+    do                                                                          \
+    {                                                                           \
+        if (LogConfig::isEnabled(LOG_INFO))                                     \
+        {                                                                       \
+            Serial.printf("[%lu] INFO: " format "\n", millis(), ##__VA_ARGS__); \
+        }                                                                       \
+    } while (0)
+
+#define MLOG_ERROR(format, ...)                                                  \
+    do                                                                           \
+    {                                                                            \
+        if (LogConfig::isEnabled(LOG_ERROR))                                     \
+        {                                                                        \
+            Serial.printf("[%lu] ERROR: " format "\n", millis(), ##__VA_ARGS__); \
+        }                                                                        \
+    } while (0)
+
+#define MLOG_WARN(format, ...)                                                  \
+    do                                                                          \
+    {                                                                           \
+        if (LogConfig::isEnabled(LOG_WARN))                                     \
+        {                                                                       \
+            Serial.printf("[%lu] WARN: " format "\n", millis(), ##__VA_ARGS__); \
+        }                                                                       \
+    } while (0)
+
+#define MLOG_WS_SEND(format, ...)                                                  \
+    do                                                                             \
+    {                                                                              \
+        if (LogConfig::isEnabled(LOG_WS_SEND))                                     \
+        {                                                                          \
+            Serial.printf("[%lu] WS_SEND: " format "\n", millis(), ##__VA_ARGS__); \
+        }                                                                          \
+    } while (0)
+
+#define MLOG_WS_RECEIVE(format, ...)                                               \
+    do                                                                             \
+    {                                                                              \
+        if (LogConfig::isEnabled(LOG_WS_RECEIVE))                                  \
+        {                                                                          \
+            Serial.printf("[%lu] WS_RECV: " format "\n", millis(), ##__VA_ARGS__); \
+        }                                                                          \
+    } while (0)
 
 #else
 // Logging disabled - all macros become no-ops (zero overhead)

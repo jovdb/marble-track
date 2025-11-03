@@ -38,7 +38,8 @@ private:
             EnteringCustomSsid,
             EnteringPassword,
             Confirming,
-            DeletingDevice
+            DeletingDevice,
+            LoggingMenu
         };
 
         State state = State::Idle;
@@ -70,8 +71,12 @@ private:
     void handlePasswordInput(char incoming);
     void handleConfirmationInput(char incoming);
     void handleDeviceDeletionInput(char incoming);
+    void handleLoggingMenuInput(char incoming);
 
     void startSetNetworkFlow();
+    void startLoggingMenu();
+    void showLoggingMenu();
+    void cancelLoggingMenu();
     void cancelSetNetworkFlow(const char *reason = nullptr);
     void showConfirmationPrompt();
     void finishNetworkSelection(size_t selectedIndex);

@@ -78,7 +78,7 @@ void SerialConsole::loop()
 
             if (input.length() == 0)
             {
-                Serial.println("💡 Commands: 'devices', 'network', 'memory', 'config', 'version', 'restart'");
+                Serial.println("💡 Commands: 'devices', 'network', 'memory', 'config', 'version', 'logging', 'restart'");
                 Serial.println();
                 continue;
             }
@@ -246,6 +246,12 @@ void SerialConsole::handleCommand(const String &input)
         return;
     }
 
+    if (input.equalsIgnoreCase("logging"))
+    {
+        startLoggingMenu();
+        return;
+    }
+
     Serial.printf("❓ Unknown command: '%s'\n", input.c_str());
     Serial.println();
 }
@@ -288,6 +294,9 @@ void SerialConsole::handleInteractiveInput(char incoming)
         break;
     case State::DeletingDevice:
         handleDeviceDeletionInput(incoming);
+        break;
+    case State::LoggingMenu:
+        handleLoggingMenuInput(incoming);
         break;
     case State::Idle:
     default:
@@ -720,3 +729,111 @@ void SerialConsole::cancelDeviceDeletion()
     Serial.println();
     m_session.reset();
 }
+
+void SerialConsole::startLoggingMenu()
+{
+    m_session.reset();
+    m_session.state = Session::State::LoggingMenu;
+    showLoggingMenu();
+}
+
+void SerialConsole::showLoggingMenu()
+{
+    Serial.println();
+    Serial.println("📋 Logging Configuration:");
+    Serial.printf("  1. INFO       : %s\n", LogConfig::isEnabled(LOG_INFO) ? "✅ Enabled" : "❌ Disabled");
+    Serial.printf("  2. WARN       : %s\n", LogConfig::isEnabled(LOG_WARN) ? "✅ Enabled" : "❌ Disabled");
+    Serial.printf("  3. ERROR      : %s\n", LogConfig::isEnabled(LOG_ERROR) ? "✅ Enabled" : "❌ Disabled");
+    Serial.printf("  4. WS_RECEIVE : %s\n", LogConfig::isEnabled(LOG_WS_RECEIVE) ? "✅ Enabled" : "❌ Disabled");
+    Serial.printf("  5. WS_SEND    : %s\n", LogConfig::isEnabled(LOG_WS_SEND) ? "✅ Enabled" : "❌ Disabled");
+    Serial.println();
+    Serial.println("Press 1-5 to toggle, 'a' for all, 'n' for none, Enter or Esc to exit.");
+    Serial.println();
+}
+
+void SerialConsole::handleLoggingMenuInput(char incoming)
+{
+    if (isEscape(incoming))
+    {
+        cancelLoggingMenu();
+        return;
+    }
+
+    if (incoming == '\r')
+    {
+        return;
+    }
+
+    if (incoming == '\n')
+    {
+        cancelLoggingMenu();
+        return;
+    }
+
+    LogType type;
+    String typeName;
+    bool validInput = true;
+
+    switch (incoming)
+    {
+        case '1':
+            type = LOG_INFO;
+            typeName = "INFO";
+            break;
+        case '2':
+            type = LOG_WARN;
+            typeName = "WARN";
+            break;
+        case '3':
+            type = LOG_ERROR;
+            typeName = "ERROR";
+            break;
+        case '4':
+            type = LOG_WS_RECEIVE;
+            typeName = "WS_RECEIVE";
+            break;
+        case '5':
+            type = LOG_WS_SEND;
+            typeName = "WS_SEND";
+            break;
+        case 'a':
+        case 'A':
+            LogConfig::setAll(true);
+            Serial.println("✅ All logging types enabled");
+            showLoggingMenu();
+            return;
+        case 'n':
+        case 'N':
+            LogConfig::setAll(false);
+            Serial.println("❌ All logging types disabled");
+            showLoggingMenu();
+            return;
+        default:
+            validInput = false;
+            break;
+    }
+
+    if (validInput)
+    {
+        if (LogConfig::isEnabled(type))
+        {
+            LogConfig::disable(type);
+            Serial.printf("❌ %s logging disabled\n", typeName.c_str());
+        }
+        else
+        {
+            LogConfig::enable(type);
+            Serial.printf("✅ %s logging enabled\n", typeName.c_str());
+        }
+        showLoggingMenu();
+    }
+}
+
+void SerialConsole::cancelLoggingMenu()
+{
+    Serial.println();
+    Serial.println("❎ Logging menu closed.");
+    Serial.println();
+    m_session.reset();
+}
+

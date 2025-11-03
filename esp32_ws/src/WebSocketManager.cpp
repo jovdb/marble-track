@@ -483,7 +483,7 @@ void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
 }
 
 WebSocketManager::WebSocketManager(DeviceManager *deviceManager, Network *network, const char *path)
-    : ws(path), deviceManager(deviceManager), network(network)
+    : ws(path), deviceManager(deviceManager), network(network), batchingActive(false)
 {
     instance = this;
 }
@@ -556,8 +556,55 @@ String WebSocketManager::getStatus() const
 
 void WebSocketManager::notifyClients(String state)
 {
-    MLOG_WS_SEND("%s", state.c_str());
-    ws.textAll(state);
+    if (!hasClients()) return;
+    
+    if (batchingActive) {
+        // Queue message for batch sending
+        messageQueue.push_back(state);
+    } else {
+        // Send immediately
+        MLOG_WS_SEND("%s", state.c_str());
+        ws.textAll(state);
+    }
+}
+
+void WebSocketManager::beginBatch()
+{
+    batchingActive = true;
+    messageQueue.clear();
+}
+
+void WebSocketManager::endBatch()
+{
+    batchingActive = false;
+    
+    if (!hasClients() || messageQueue.empty()) {
+        messageQueue.clear();
+        return;
+    }
+    
+    if (messageQueue.size() == 1) {
+        // Send single message directly
+        MLOG_WS_SEND("%s", messageQueue[0].c_str());
+        ws.textAll(messageQueue[0]);
+    } else {
+        // Create batch message array manually to avoid nested JsonDocument allocation
+        String batchMessage = "[";
+        
+        for (size_t i = 0; i < messageQueue.size(); i++) {
+            if (i > 0) {
+                batchMessage += ",";
+            }
+            batchMessage += messageQueue[i];
+        }
+        
+        batchMessage += "]";
+        
+        MLOG_WS_SEND("Batch: %d messages", messageQueue.size());
+        ws.textAll(batchMessage);
+    }
+    
+    messageQueue.clear();
 }
 
 void WebSocketManager::setDeviceManager(DeviceManager *deviceManager)
@@ -823,6 +870,7 @@ void WebSocketManager::handleSetNetworkConfig(JsonDocument &doc)
     if (!hasClients()) return;
 
     const String ssid = doc["ssid"] | "";
+    const String password = doc["password"] | "";
 
     JsonDocument response;
     response["type"] = "set-network-config";

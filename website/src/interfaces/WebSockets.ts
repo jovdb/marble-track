@@ -148,7 +148,8 @@ export type IWsReceiveStepsPerRevolutionMessage = IWsMessageBase<"steps-per-revo
   steps: number;
 };
 
-export type IWsReceiveMessage =
+// Individual message type (non-batch)
+export type IWsReceiveSingleMessage =
   | IWsReceiveDevicesListMessage
   | IWsReceiveDeviceStateMessage
   | IWsReceiveDeviceConfigMessage
@@ -163,6 +164,9 @@ export type IWsReceiveMessage =
   | IWsReceiveDevicesConfigMessage
   | IWsReceiveStepsPerRevolutionMessage
   | IWsReceivePongMessage;
+
+// Message can be a single message or an array of messages (batch)
+export type IWsReceiveMessage = IWsReceiveSingleMessage | IWsReceiveSingleMessage[];
 
 export type IWsSendRestartMessage = IWsMessageBase<"restart">;
 

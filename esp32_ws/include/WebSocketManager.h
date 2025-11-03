@@ -11,6 +11,7 @@ class DeviceManager;
 #include "Network.h"
 
 #include <map>
+#include <vector>
 
 class WebSocketManager
 {
@@ -20,6 +21,10 @@ private:
     Network *network;
     bool scanInProgress = false;
     std::map<uint32_t, String> messageBuffers;
+    
+    // Message batching - collects messages during loop
+    std::vector<String> messageQueue;
+    bool batchingActive = false;
 
     // Helper methods for cleaner message handling
     void handleRestart();
@@ -33,6 +38,8 @@ public:
     void setup(AsyncWebServer &server);
     void loop();
     void notifyClients(String state);
+    void beginBatch();
+    void endBatch();
     String getStatus() const;
     bool hasClients() const { return ws.count() > 0; }
     void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);

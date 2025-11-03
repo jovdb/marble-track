@@ -20,7 +20,7 @@ Website:
 - haertbeat - pong
 
 Both:
-Batch ws messages, allow to send an array of messages
+- ✅ Batch ws messages, allow to send an array of messages
 
 Ideas:
 

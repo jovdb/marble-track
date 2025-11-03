@@ -158,6 +158,9 @@ void setup()
 
 void loop()
 {
+  // Begin batching WebSocket messages for this loop iteration
+  wsManager.beginBatch();
+
   // Check for serial input commands
   if (serialConsole)
   {
@@ -191,6 +194,9 @@ void loop()
     autoMode.loop();
     break;
   }
+
+  // Send all batched WebSocket messages at once
+  wsManager.endBatch();
 }
 
 void setOperationMode(OperationMode mode)

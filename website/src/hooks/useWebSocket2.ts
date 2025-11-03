@@ -1,7 +1,7 @@
 import { createWSState, makeReconnectingWS } from "@solid-primitives/websocket";
 import { createContext, createMemo, onCleanup, onMount, useContext } from "solid-js";
 import { createStore } from "solid-js/store";
-import { IWsReceiveMessage, IWsSendMessage } from "../interfaces/WebSockets";
+import { IWsReceiveMessage, IWsReceiveSingleMessage, IWsSendMessage } from "../interfaces/WebSockets";
 import { pipe } from "../utils/pipe";
 
 // WebSocket Store Interface
@@ -39,8 +39,8 @@ export interface IWebSocketMessage {
   timestamp: number;
 }
 
-// Message callback type
-export type MessageCallback = (message: IWsReceiveMessage) => void;
+// Message callback type - always receives individual messages (arrays are unwrapped)
+export type MessageCallback = (message: IWsReceiveSingleMessage) => void;
 
 // WebSocket Actions Interface
 export interface IWebSocketActions {
@@ -267,16 +267,52 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
   const handleMessage = (event: MessageEvent) => {
     const data = event.data;
 
-    // Parse message first to check for heartbeat responses
+    // Parse message first
     let parsedData: IWsReceiveMessage | undefined;
     try {
       parsedData = JSON.parse(data) as IWsReceiveMessage;
     } catch (error) {
       console.error("Non-JSON message received:", error);
+      return;
     }
 
+    // Check if it's an array (batch message)
+    if (Array.isArray(parsedData)) {
+      console.log("WebSocket batch message received:", parsedData.length, "messages");
+      
+      // Update message history with batch info
+      const batchSummary: IWebSocketMessage = {
+        data: `[BATCH: ${parsedData.length} messages]`,
+        direction: "incoming",
+        timestamp: Date.now(),
+      };
+      setStore("lastMessage", batchSummary.data);
+      setStore("lastMessages", (prev) => [...prev, JSON.stringify(batchSummary)].slice(-20));
+
+      // Process each message in the batch
+      parsedData.forEach((msg) => {
+        // Skip heartbeat messages in batch
+        if (msg.type === "pong") {
+          setStore("lastHeartbeat", Date.now());
+          return;
+        }
+
+        // Notify subscribers for each message
+        messageSubscribers.forEach((callback) => {
+          try {
+            callback(msg);
+          } catch (error) {
+            console.error("Error in message subscriber callback for batched message:", error);
+          }
+        });
+      });
+
+      return;
+    }
+
+    // Handle single messages
     // Handle heartbeat responses (pong)
-    if (parsedData && parsedData.type === "pong") {
+    if (parsedData.type === "pong") {
       setStore("lastHeartbeat", Date.now());
       console.debug("Heartbeat pong received");
       // Don't add heartbeat messages to message history
@@ -294,16 +330,14 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
 
     console.log("WebSocket message received:", data);
 
-    if (parsedData) {
-      // Notify all subscribers
-      messageSubscribers.forEach((callback) => {
-        try {
-          callback(parsedData);
-        } catch (error) {
-          console.error("Error in message subscriber callback:", error);
-        }
-      });
-    }
+    // Notify all subscribers
+    messageSubscribers.forEach((callback) => {
+      try {
+        callback(parsedData);
+      } catch (error) {
+        console.error("Error in message subscriber callback:", error);
+      }
+    });
   };
 
   // Set up event listeners

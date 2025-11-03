@@ -65,20 +65,6 @@ void Lift::loop()
             notifyStateChange();
         }
         break;
-    case LiftState::BALL_WAITING:
-        if (_ballSensor && _ballSensor->onReleased())
-        {
-            MLOG_INFO("Lift [%s]: Ball unloaded", getId().c_str());
-            _state = LiftState::IDLE;
-            notifyStateChange();
-        }
-        if (_gate->getValue() > 90)
-        {
-            _state = LiftState::LIFT_LOADED;
-            notifyStateChange();
-        }
-        break;
-
     case LiftState::RESET:
         // During reset, check if limit switch is pressed
         if (_limitSwitch && _limitSwitch->isPressed())
@@ -92,9 +78,25 @@ void Lift::loop()
         else if (_stepper && !_stepper->isMoving())
         {
             MLOG_WARN("Lift [%s]: Reset incomplete - Lift stopped but limit switch not pressed", getId().c_str());
-            _state = LiftState::ERROR;
+            //_state = LiftState::ERROR;
+            // notifyStateChange();
+        }
+        break;
+    case LiftState::BALL_WAITING:
+        if (_ballSensor && _ballSensor->onReleased())
+        {
+            MLOG_INFO("Lift [%s]: Ball unloaded", getId().c_str());
+            _state = LiftState::IDLE;
             notifyStateChange();
         }
+
+        if (_gate->getValue() > 90)
+        {
+            _state = LiftState::LIFT_LOADED;
+            notifyStateChange();
+        }
+        break;
+    case LiftState::LIFT_LOADED:
         break;
     case LiftState::MOVING_UP:
     case LiftState::MOVING_DOWN:
@@ -102,6 +104,14 @@ void Lift::loop()
         if (_stepper && !_stepper->isMoving())
         {
             MLOG_INFO("Lift [%s]: Movement complete", getId().c_str());
+            _state = (_ballSensor && _ballSensor->isPressed()) ? LiftState::BALL_WAITING : LiftState::IDLE;
+            notifyStateChange();
+        }
+
+        if (_limitSwitch && _limitSwitch->isPressed() && _state == LiftState::MOVING_DOWN)
+        {
+            MLOG_WARN("Lift [%s]: Limit switch triggered during downward movement - stopping", getId().c_str());
+            _stepper->setCurrentPosition(0); // Reset position to zero
             _state = (_ballSensor && _ballSensor->isPressed()) ? LiftState::BALL_WAITING : LiftState::IDLE;
             notifyStateChange();
         }
@@ -117,6 +127,21 @@ bool Lift::up()
         return false;
     }
 
+    // Prevent operation when state is unknown or error
+    if (_state == LiftState::UNKNOWN || _state == LiftState::ERROR)
+    {
+        MLOG_WARN("Lift [%s]: Cannot move up - state is %s", getId().c_str(), stateToString(_state).c_str());
+        return false;
+    }
+
+    // Check if lift is already at or above max position
+    long currentPos = _stepper->getCurrentPosition();
+    if (currentPos <= -_maxSteps)
+    {
+        MLOG_WARN("Lift [%s]: Cannot move up - already at max position (current: %ld, max: %ld)", getId().c_str(), currentPos, -_maxSteps);
+        return false;
+    }
+
     MLOG_INFO("Lift [%s]: Moving up to %ld steps", getId().c_str(), _maxSteps);
     _state = LiftState::MOVING_UP;
     notifyStateChange();
@@ -128,6 +153,21 @@ bool Lift::down()
     if (!_stepper)
     {
         MLOG_WARN("Lift [%s]: Stepper not initialized", getId().c_str());
+        return false;
+    }
+
+    // Prevent operation when state is unknown or error
+    if (_state == LiftState::UNKNOWN || _state == LiftState::ERROR)
+    {
+        MLOG_WARN("Lift [%s]: Cannot move down - state is %s", getId().c_str(), stateToString(_state).c_str());
+        return false;
+    }
+
+    // Check if lift is already at or below min position
+    long currentPos = _stepper->getCurrentPosition();
+    if (currentPos >= -_minSteps)
+    {
+        MLOG_WARN("Lift [%s]: Cannot move down - already at min position (current: %ld, min: %ld)", getId().c_str(), currentPos, -_minSteps);
         return false;
     }
 

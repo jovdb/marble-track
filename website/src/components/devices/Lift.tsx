@@ -15,11 +15,13 @@ export function Lift(props: { id: string }) {
   // TODO: Handle error state - might need to be added to device state
   const error = () => undefined; // Placeholder until error handling is implemented
 
-  const isMoving = createMemo(() => 
-    state()?.state === "Reset" || 
-    state()?.state === "MovingUp" || 
-    state()?.state === "MovingDown"
+  const isMoving = createMemo(
+    () =>
+      state()?.state === "Reset" || state()?.state === "MovingUp" || state()?.state === "MovingDown"
   );
+
+  const canMove = createMemo(() => state()?.state !== "Unknown" && state()?.state !== "Error");
+
   const currentPosition = () => state()?.currentPosition ?? 0;
   const minSteps = () => config()?.minSteps ?? 0;
   const maxSteps = () => config()?.maxSteps ?? 1000;
@@ -135,14 +137,14 @@ export function Lift(props: { id: string }) {
             <button
               class={styles.device__button}
               onClick={() => actions.up()}
-              disabled={isMoving()}
+              disabled={!canMove()}
             >
               Up
             </button>
             <button
               class={styles.device__button}
               onClick={() => actions.down()}
-              disabled={isMoving()}
+              disabled={!canMove()}
             >
               Down
             </button>

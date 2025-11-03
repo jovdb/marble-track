@@ -75,6 +75,14 @@ void Stepper::loop()
         return;
     }
 
+    // If move just started, skip checking stepper state for one iteration
+    // to allow the stepper to actually begin moving
+    if (_moveJustStarted)
+    {
+        _moveJustStarted = false;
+        return;
+    }
+
     bool wasMoving = _isMoving;
     _isMoving = _stepper->run();
 
@@ -105,6 +113,7 @@ bool Stepper::move(long steps, float speed, float acceleration)
     MLOG_INFO("Stepper [%s]: Moving %ld steps (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), steps, speed, acceleration);
     _stepper->move(steps);
     _isMoving = true;
+    _moveJustStarted = true;
     notifyStateChange();
     return true;
 }
@@ -127,6 +136,7 @@ bool Stepper::moveTo(long position, float speed, float acceleration)
     MLOG_INFO("Stepper [%s]: Moving to position %ld (Speed: %.2f, Acceleration: %.2f)", _id.c_str(), position, speed, acceleration);
     _stepper->moveTo(position);
     _isMoving = true;
+    _moveJustStarted = true;
     notifyStateChange();
     return true;
 }

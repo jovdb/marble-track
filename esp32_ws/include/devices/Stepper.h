@@ -191,6 +191,7 @@ private:
     float _maxAcceleration = 500.0;     ///< Acceleration in steps per second per second
     float _defaultAcceleration = 250.0; ///< Default acceleration in steps per second per second
     bool _isMoving = false;             ///< Current movement state
+    bool _moveJustStarted = false;      ///< True for one loop iteration after move starts
     bool _configured = false;           ///< True if stepper has been configured
 
     // Pin configuration

@@ -1,7 +1,11 @@
 import { createWSState, makeReconnectingWS } from "@solid-primitives/websocket";
 import { createContext, createMemo, onCleanup, onMount, useContext } from "solid-js";
 import { createStore } from "solid-js/store";
-import { IWsReceiveMessage, IWsReceiveSingleMessage, IWsSendMessage } from "../interfaces/WebSockets";
+import {
+  IWsReceiveMessage,
+  IWsReceiveSingleMessage,
+  IWsSendMessage,
+} from "../interfaces/WebSockets";
 import { pipe } from "../utils/pipe";
 
 // WebSocket Store Interface
@@ -278,8 +282,8 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
 
     // Check if it's an array (batch message)
     if (Array.isArray(parsedData)) {
-      console.log("WebSocket batch message received:", parsedData.length, "messages");
-      
+      // console.log("WebSocket batch message received:", parsedData.length, "messages");
+
       // Update message history with batch info
       const batchSummary: IWebSocketMessage = {
         data: `[BATCH: ${parsedData.length} messages]`,
@@ -287,10 +291,13 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
         timestamp: Date.now(),
       };
       setStore("lastMessage", batchSummary.data);
-      setStore("lastMessages", (prev) => [...prev, JSON.stringify(batchSummary)].slice(-20));
+      setStore("lastMessages", (prev) => [...prev, JSON.stringify(batchSummary)].slice(-100));
 
       // Process each message in the batch
       parsedData.forEach((msg) => {
+        
+        console.log("WebSocket message received:", msg);
+
         // Skip heartbeat messages in batch
         if (msg.type === "pong") {
           setStore("lastHeartbeat", Date.now());

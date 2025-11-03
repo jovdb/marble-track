@@ -26,8 +26,9 @@ export function Lift(props: { id: string }) {
   const minSteps = () => config()?.minSteps ?? 0;
   const maxSteps = () => config()?.maxSteps ?? 1000;
 
-  // Track gate toggle state
+  // Track gate and lift direction toggle states
   const [gateIsUp, setGateIsUp] = createSignal(false);
+  const [liftIsUp, setLiftIsUp] = createSignal(false);
 
   function getStateString(state: string | undefined) {
     switch (state) {
@@ -59,6 +60,16 @@ export function Lift(props: { id: string }) {
     } else {
       actions.gateUp();
       setGateIsUp(true);
+    }
+  }
+
+  function toggleLift() {
+    if (liftIsUp()) {
+      actions.down();
+      setLiftIsUp(false);
+    } else {
+      actions.up();
+      setLiftIsUp(true);
     }
   }
 
@@ -136,20 +147,6 @@ export function Lift(props: { id: string }) {
           <div class={styles.device__controls}>
             <button
               class={styles.device__button}
-              onClick={() => actions.up()}
-              disabled={!canMove()}
-            >
-              Up
-            </button>
-            <button
-              class={styles.device__button}
-              onClick={() => actions.down()}
-              disabled={!canMove()}
-            >
-              Down
-            </button>
-            <button
-              class={styles.device__button}
               onClick={() => actions.reset()}
               disabled={isMoving()}
             >
@@ -157,6 +154,13 @@ export function Lift(props: { id: string }) {
             </button>
             <button class={styles.device__button} onClick={toggleGate} disabled={isMoving()}>
               Gate {gateIsUp() ? "Down" : "Up"}
+            </button>
+            <button
+              class={styles.device__button}
+              onClick={toggleLift}
+              disabled={!canMove()}
+            >
+              {liftIsUp() ? "Down" : "Up"}
             </button>
           </div>
         </>

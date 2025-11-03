@@ -196,6 +196,10 @@ bool Lift::reset()
 
     MLOG_INFO("Lift [%s]: Starting reset - moving down slowly until limit switch is pressed", getId().c_str());
     _state = LiftState::RESET;
+
+    // Slowly close the gate
+    _gate->setValue(0.0f, 3000);
+
     notifyStateChange();
 
     // Move down slowly (negative direction) until limit switch is pressed

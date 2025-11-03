@@ -364,7 +364,7 @@ bool DeviceManager::saveNetworkSettings(const NetworkSettings &settings)
     }
 }
 
-DeviceManager::DeviceManager(NotifyClients callback) : devicesCount(0), notifyClients(callback)
+DeviceManager::DeviceManager(NotifyClients callback) : devicesCount(0), notifyClients(callback), hasClients(nullptr)
 {
     // Initialize device array to nullptr
     for (int i = 0; i < MAX_DEVICES; i++)
@@ -415,6 +415,7 @@ void DeviceManager::setup()
         if (!dev)
             return;
         dev->setNotifyClients(notifyClients);
+        dev->setHasClients(hasClients);
         for (Device *child : dev->getChildren())
         {
             setCallbackRecursive(child);

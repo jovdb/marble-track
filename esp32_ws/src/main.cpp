@@ -53,7 +53,9 @@ SerialConsole *serialConsole = nullptr;
 
 void globalNotifyClientsCallback(const String &message)
 {
-  wsManager.notifyClients(message);
+  if (wsManager.hasClients()) {
+    wsManager.notifyClients(message);
+  }
 }
 
 DeviceManager deviceManager(globalNotifyClientsCallback);
@@ -112,6 +114,8 @@ void setup()
   wsManager.setup(server);
   wsManager.setDeviceManager(&deviceManager);
   wsManager.setNetwork(network);
+
+  deviceManager.setHasClients([]() { return wsManager.hasClients(); });
 
   // Start server
   server.begin();

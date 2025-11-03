@@ -18,6 +18,7 @@
 #include <vector>
 
 using NotifyClients = std::function<void(const String &message)>;
+using HasClients = std::function<bool()>;
 
 /**
  * @class Device
@@ -47,6 +48,7 @@ public:
     virtual void setConfig(JsonObject *config);
     virtual String getConfig() const;
     void setNotifyClients(NotifyClients callback);
+    void setHasClients(HasClients callback);
 
 protected:
     String _id;
@@ -57,6 +59,7 @@ protected:
      * @brief Callback function for change notifications
      */
     NotifyClients _notifyClients;
+    HasClients _hasClients;
 };
 
 #endif // DEVICE_H

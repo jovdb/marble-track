@@ -17,6 +17,7 @@ private:
     Device *devices[MAX_DEVICES];
     int devicesCount;
     NotifyClients notifyClients;
+    HasClients hasClients;
     std::function<void()> onDevicesChanged;
 
 public:
@@ -79,6 +80,11 @@ public:
      * @brief Set callback for when devices are added, removed, or config reloaded
      */
     void setOnDevicesChanged(std::function<void()> callback) { onDevicesChanged = callback; }
+
+    /**
+     * @brief Set hasClients callback
+     */
+    void setHasClients(HasClients callback) { hasClients = callback; }
 
     /**
      * @brief Notify that devices have changed

@@ -50,7 +50,8 @@ void Wheel::loop()
 {
     Device::loop();
 
-    if (_onError) _onError = false;
+    if (_onError)
+        _onError = false;
 
     if (!_stepper || !_sensor)
         return;
@@ -272,7 +273,7 @@ bool Wheel::moveToAngle(float angle)
 
 void Wheel::notifyStepsPerRevolution(long steps)
 {
-    if (Device::_notifyClients)
+    if (Device::_notifyClients && Device::_hasClients && Device::_hasClients())
     {
         JsonDocument doc;
         doc["type"] = "steps-per-revolution";

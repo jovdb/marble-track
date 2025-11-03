@@ -35,6 +35,8 @@ String createJsonResponse(bool success, const String &message, const String &dat
 
 void WebSocketManager::handleGetDevices(JsonDocument &doc)
 {
+    if (!hasClients()) return;
+
     JsonDocument response;
     response["type"] = "devices-list";
 
@@ -118,8 +120,10 @@ void WebSocketManager::parseMessage(String message)
     JsonDocument doc; // Dynamic sizing for large messages
     if (deserializeJson(doc, message))
     {
-        String errorResponse = createJsonResponse(false, "Invalid JSON format", "", "");
-        notifyClients(errorResponse);
+        if (hasClients()) {
+            String errorResponse = createJsonResponse(false, "Invalid JSON format", "", "");
+            notifyClients(errorResponse);
+        }
         return;
     }
 
@@ -214,6 +218,8 @@ void WebSocketManager::parseMessage(String message)
 // Save config from client for a device
 void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
 {
+    if (!hasClients()) return;
+
     const String deviceId = doc["deviceId"] | "";
     if (!deviceManager)
     {
@@ -277,6 +283,8 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
 // Read config for a device and send to client
 void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
 {
+    if (!hasClients()) return;
+
     const String deviceId = doc["deviceId"] | "";
     if (!deviceManager)
     {
@@ -328,6 +336,8 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
 
 void WebSocketManager::handleSetDevicesConfig(JsonDocument &doc)
 {
+    if (!hasClients()) return;
+
     MLOG_INFO("Received set-devices-config via WebSocket");
     JsonDocument response;
     response["type"] = "set-devices-config";
@@ -372,6 +382,8 @@ void WebSocketManager::handleSetDevicesConfig(JsonDocument &doc)
 
 void WebSocketManager::handleGetDevicesConfig(JsonDocument &doc)
 {
+    if (!hasClients()) return;
+
     JsonDocument response;
     response["type"] = "devices-config";
     // Read config.json from LittleFS
@@ -502,6 +514,8 @@ void WebSocketManager::loop()
         {
             scanInProgress = false;
 
+            if (!hasClients()) return;
+
             JsonDocument response;
             response["type"] = "networks";
 
@@ -558,6 +572,11 @@ void WebSocketManager::setNetwork(Network *network)
 
 void WebSocketManager::handleRestart()
 {
+    if (!hasClients()) {
+        ESP.restart();
+        return;
+    }
+
     String response = createJsonResponse(true, "Device restart initiated", "", "");
     notifyClients(response);
     MLOG_INFO("Restarting device...");
@@ -567,6 +586,8 @@ void WebSocketManager::handleRestart()
 
 void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
 {
+    if (!hasClients()) return;
+
     // Extract device info from either root or data field
     String deviceId = doc["deviceId"] | "";
     String functionName = doc["fn"] | "";
@@ -611,6 +632,8 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
 
 void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
 {
+    if (!hasClients()) return;
+
     // Extract device info from either root or data field
     String deviceId = doc["deviceId"] | "";
 
@@ -638,6 +661,8 @@ void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
 
 void WebSocketManager::handleAddDevice(JsonDocument &doc)
 {
+    if (!hasClients()) return;
+
     const String deviceType = doc["deviceType"] | "";
     const String deviceId = doc["deviceId"] | "";
     JsonDocument response;
@@ -707,6 +732,8 @@ void WebSocketManager::handleAddDevice(JsonDocument &doc)
 
 void WebSocketManager::handleRemoveDevice(JsonDocument &doc)
 {
+    if (!hasClients()) return;
+
     const String deviceId = doc["deviceId"] | "";
     JsonDocument response;
     response["type"] = "remove-device";
@@ -758,6 +785,8 @@ void WebSocketManager::handleRemoveDevice(JsonDocument &doc)
 
 void WebSocketManager::handleGetNetworkConfig(JsonDocument &doc)
 {
+    if (!hasClients()) return;
+
     JsonDocument response;
     response["type"] = "network-config";
 
@@ -791,8 +820,9 @@ void WebSocketManager::handleGetNetworkConfig(JsonDocument &doc)
 
 void WebSocketManager::handleSetNetworkConfig(JsonDocument &doc)
 {
+    if (!hasClients()) return;
+
     const String ssid = doc["ssid"] | "";
-    const String password = doc["password"] | "";
 
     JsonDocument response;
     response["type"] = "set-network-config";
@@ -855,6 +885,8 @@ void WebSocketManager::handleSetNetworkConfig(JsonDocument &doc)
 
 void WebSocketManager::handleGetNetworks(JsonDocument &doc)
 {
+    if (!hasClients()) return;
+
     if (scanInProgress)
     {
         JsonDocument response;
@@ -874,6 +906,8 @@ void WebSocketManager::handleGetNetworks(JsonDocument &doc)
 
 void WebSocketManager::handleGetNetworkStatus(JsonDocument &doc)
 {
+    if (!hasClients()) return;
+
     JsonDocument response;
     response["type"] = "network-status";
 

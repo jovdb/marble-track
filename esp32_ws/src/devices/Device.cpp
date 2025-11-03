@@ -7,7 +7,7 @@
 #include <vector>
 #include "Logging.h"
 
-Device::Device(const String &id, const String &type, NotifyClients notifyClients) : _id(id), _name(""), _type(type), _notifyClients(notifyClients)
+Device::Device(const String &id, const String &type, NotifyClients notifyClients) : _id(id), _name(""), _type(type), _notifyClients(notifyClients), _hasClients(nullptr)
 {
     if (!_notifyClients)
     {
@@ -38,6 +38,11 @@ std::vector<Device *> Device::getChildren() const
 
 void Device::setup()
 {
+    if (_hasClients == nullptr)
+    {
+        MLOG_ERROR("Device [%s]: _hasClients callback not set before setup!", _id.c_str());
+    }
+
     for (Device *child : children)
     {
         if (child)
@@ -93,7 +98,7 @@ std::vector<int> Device::getPins() const
 
 void Device::notifyStateChange()
 {
-    if (_notifyClients)
+    if (_notifyClients && _hasClients && _hasClients())
     {
         JsonDocument doc;
         doc["type"] = "device-state";
@@ -119,15 +124,11 @@ void Device::notifyStateChange()
 
         _notifyClients(message);
     }
-    else
-    {
-        MLOG_WARN("Device [%s]: _notifyClients callback not set", _id.c_str());
-    }
 }
 
 void Device::notifyError(String messageType, String error)
 {
-    if (_notifyClients)
+    if (_notifyClients && _hasClients && _hasClients())
     {
         JsonDocument doc;
         doc["type"] = messageType;
@@ -138,10 +139,6 @@ void Device::notifyError(String messageType, String error)
         serializeJson(doc, message);
 
         _notifyClients(message);
-    }
-    else
-    {
-        MLOG_WARN("Device [%s]: _notifyClients callback not set", _id.c_str());
     }
 }
 
@@ -160,4 +157,9 @@ void Device::setConfig(JsonObject *config)
 void Device::setNotifyClients(NotifyClients callback)
 {
     _notifyClients = callback;
+}
+
+void Device::setHasClients(HasClients callback)
+{
+    _hasClients = callback;
 }

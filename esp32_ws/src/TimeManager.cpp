@@ -55,13 +55,15 @@ unsigned long long TimeManager::getCurrentTimestamp()
     {
         time_t now;
         time(&now);
-        return (unsigned long long)now * 1000ULL; // Convert seconds to milliseconds
+        const unsigned long long result = (unsigned long long)now * 1000ULL; // Convert seconds to milliseconds
+        return result;
     }
     else
     {
         // Fallback to millis() if time sync failed
     MLOG_WARN("Warning: Using millis() fallback - time not synchronized");
-        return (unsigned long long)millis();
+        const unsigned long long result = (unsigned long long)millis();
+        return result;
     }
 }
 

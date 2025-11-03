@@ -342,7 +342,7 @@ bool Wheel::control(const String &action, JsonObject *payload)
     }
     else if (action == "move-to-angle")
     {
-        float angle = payload && (*payload)["angle"].is<float>() ? (*payload)["angle"].as<float>() : 0.0f;
+        const float angle = payload && (*payload)["angle"].is<float>() ? (*payload)["angle"].as<float>() : 0.0f;
         _targetAngle = angle;
         return moveToAngle(angle);
     }
@@ -465,20 +465,23 @@ void Wheel::setConfig(JsonObject *config)
     // Set name if provided
     if ((*config)["name"].is<String>())
     {
-        _name = (*config)["name"].as<String>();
+        const String name = (*config)["name"].as<String>();
+        _name = name;
     }
 
     // Set stepsPerRevolution if provided
     if ((*config)["stepsPerRevolution"].is<long>())
     {
-        _stepsPerRevolution = (*config)["stepsPerRevolution"].as<long>();
+        const long stepsPerRevolution = (*config)["stepsPerRevolution"].as<long>();
+        _stepsPerRevolution = stepsPerRevolution;
         _stepsInLastRevolution = _stepsPerRevolution;
     }
 
     // Set maxStepsPerRevolution if provided
     if ((*config)["maxStepsPerRevolution"].is<long>())
     {
-        _maxStepsPerRevolution = (*config)["maxStepsPerRevolution"].as<long>();
+        const long maxStepsPerRevolution = (*config)["maxStepsPerRevolution"].as<long>();
+        _maxStepsPerRevolution = maxStepsPerRevolution;
     }
 
     // Set breakPoints if provided
@@ -498,6 +501,7 @@ void Wheel::setConfig(JsonObject *config)
     // Set zeroPointDegree if provided
     if ((*config)["zeroPointDegree"].is<float>())
     {
-        _zeroPointDegree = (*config)["zeroPointDegree"].as<float>();
+        const float zeroPointDegree = (*config)["zeroPointDegree"].as<float>();
+        _zeroPointDegree = zeroPointDegree;
     }
 }

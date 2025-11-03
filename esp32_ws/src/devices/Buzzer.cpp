@@ -210,8 +210,8 @@ bool Buzzer::control(const String &action, JsonObject *args)
             return false;
         }
 
-        int frequency = (*args)["frequency"].as<int>();
-        int duration = (*args)["duration"].as<int>();
+        const int frequency = (*args)["frequency"].as<int>();
+        const int duration = (*args)["duration"].as<int>();
 
         // Validate frequency range
         if (frequency < 20 || frequency > 20000)
@@ -244,7 +244,7 @@ bool Buzzer::control(const String &action, JsonObject *args)
             return false;
         }
 
-        String rtttl = (*args)["rtttl"].as<String>();
+        const String rtttl = (*args)["rtttl"].as<String>();
         if (rtttl.length() == 0)
         {
             MLOG_ERROR("Buzzer [%s]: Empty RTTTL string", _id.c_str());
@@ -326,13 +326,13 @@ void Buzzer::setConfig(JsonObject *config)
         return;
     }
 
-    JsonVariant nameVariant = (*config)["name"];
+    const JsonVariant nameVariant = (*config)["name"];
     if (!nameVariant.isNull())
     {
         _name = nameVariant.as<String>();
     }
 
-    JsonVariant pinVariant = (*config)["pin"];
+    const JsonVariant pinVariant = (*config)["pin"];
     if (!pinVariant.isNull())
     {
         _pin = pinVariant.as<int>();

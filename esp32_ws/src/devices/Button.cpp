@@ -280,19 +280,19 @@ void Button::setConfig(JsonObject *config)
         return;
     }
 
-    JsonVariant nameVar = (*config)["name"];
+    const JsonVariant nameVar = (*config)["name"];
     if (!nameVar.isNull())
     {
         _name = nameVar.as<String>();
     }
 
-    JsonVariant pinVar = (*config)["pin"];
+    const JsonVariant pinVar = (*config)["pin"];
     if (!pinVar.isNull())
     {
         _pin = pinVar.as<int>();
     }
 
-    JsonVariant pinModeVar = (*config)["pinMode"];
+    const JsonVariant pinModeVar = (*config)["pinMode"];
     if (!pinModeVar.isNull())
     {
         if (pinModeVar.is<String>())
@@ -301,7 +301,7 @@ void Button::setConfig(JsonObject *config)
         }
         else if (pinModeVar.is<int>() || pinModeVar.is<long>())
         {
-            int value = pinModeVar.as<int>();
+            const int value = pinModeVar.as<int>();
             switch (value)
             {
             case 1:
@@ -317,18 +317,22 @@ void Button::setConfig(JsonObject *config)
             }
         }
     }
-    JsonVariant debounceVar = (*config)["debounceMs"];
+    const JsonVariant debounceVar = (*config)["debounceMs"];
     if (!debounceVar.isNull())
     {
-        long debounceValue = debounceVar.as<long>();
+        const long debounceValue = debounceVar.as<long>();
         if (debounceValue < 0)
         {
-            debounceValue = 0;
+            const long clampedValue = 0;
+            _debounceMs = static_cast<unsigned long>(clampedValue);
         }
-        _debounceMs = static_cast<unsigned long>(debounceValue);
+        else
+        {
+            _debounceMs = static_cast<unsigned long>(debounceValue);
+        }
     }
 
-    JsonVariant buttonTypeVar = (*config)["buttonType"];
+    const JsonVariant buttonTypeVar = (*config)["buttonType"];
     if (!buttonTypeVar.isNull())
     {
         if (buttonTypeVar.is<String>())
@@ -337,7 +341,7 @@ void Button::setConfig(JsonObject *config)
         }
         else if (buttonTypeVar.is<int>() || buttonTypeVar.is<long>())
         {
-            int value = buttonTypeVar.as<int>();
+            const int value = buttonTypeVar.as<int>();
             _buttonType = (value == 1) ? ButtonType::NormalClosed : ButtonType::NormalOpen;
         }
     }

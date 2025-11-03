@@ -198,20 +198,26 @@ String Network::getStatusJSON() const
     switch (_currentMode)
     {
     case NetworkMode::WIFI_CLIENT:
+    {
         doc["mode"] = "client";
         doc["connected"] = true;
         doc["ssid"] = _wifi_ssid;
         doc["ip"] = WiFi.localIP().toString();
-        doc["rssi"] = WiFi.RSSI();
+        const int rssi = WiFi.RSSI();
+        doc["rssi"] = rssi;
         break;
+    }
 
     case NetworkMode::ACCESS_POINT:
+    {
         doc["mode"] = "ap";
         doc["connected"] = true;
         doc["ssid"] = AP_SSID;
         doc["ip"] = WiFi.softAPIP().toString();
-        doc["clients"] = WiFi.softAPgetStationNum();
+        const int clients = WiFi.softAPgetStationNum();
+        doc["clients"] = clients;
         break;
+    }
 
     case NetworkMode::DISCONNECTED:
     default:

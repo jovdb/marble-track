@@ -267,7 +267,7 @@ bool Stepper::control(const String &action, JsonObject *payload)
         {
             return false;
         }
-        long steps = (*payload)["steps"].as<long>();
+        const long steps = (*payload)["steps"].as<long>();
         float speed = -1, acceleration = -1;
         _parseSpeedAndAcceleration(payload, speed, acceleration);
         return move(steps, speed, acceleration);
@@ -279,7 +279,7 @@ bool Stepper::control(const String &action, JsonObject *payload)
             MLOG_WARN("Stepper [%s]: Invalid 'moveTo' payload - need position", _id.c_str());
             return false;
         }
-        long position = (*payload)["position"].as<long>();
+        const long position = (*payload)["position"].as<long>();
         float speed = -1, acceleration = -1;
         _parseSpeedAndAcceleration(payload, speed, acceleration);
         return moveTo(position, speed, acceleration);
@@ -301,7 +301,7 @@ bool Stepper::control(const String &action, JsonObject *payload)
             return false;
         }
 
-        long position = (*payload)["position"].as<long>();
+        const long position = (*payload)["position"].as<long>();
         MLOG_INFO("Stepper [%s]: Reset position to %ld", _id.c_str(), position);
         return setCurrentPosition(position);
     }

@@ -418,58 +418,69 @@ void PwmMotor::setConfig(JsonObject *config)
 
     if ((*config)["name"].is<String>())
     {
-        _name = (*config)["name"].as<String>();
+        const String name = (*config)["name"].as<String>();
+        _name = name;
     }
 
     int nextPin = _pin;
     if ((*config)["pin"].is<int>())
     {
-        nextPin = (*config)["pin"].as<int>();
+        const int pin = (*config)["pin"].as<int>();
+        nextPin = pin;
     }
 
     int nextChannel = _pwmChannel;
     if ((*config)["pwmChannel"].is<int>())
     {
-        nextChannel = (*config)["pwmChannel"].as<int>();
+        const int pwmChannel = (*config)["pwmChannel"].as<int>();
+        nextChannel = pwmChannel;
     }
     else if ((*config)["channel"].is<int>())
     {
-        nextChannel = (*config)["channel"].as<int>();
+        const int channel = (*config)["channel"].as<int>();
+        nextChannel = channel;
     }
 
     uint32_t nextFrequency = _frequency;
     if ((*config)["frequency"].is<uint32_t>())
     {
-        nextFrequency = (*config)["frequency"].as<uint32_t>();
+        const uint32_t frequency = (*config)["frequency"].as<uint32_t>();
+        nextFrequency = frequency;
     }
     else if ((*config)["frequency"].is<int>())
     {
-        nextFrequency = static_cast<uint32_t>((*config)["frequency"].as<int>());
+        const int frequency = (*config)["frequency"].as<int>();
+        nextFrequency = static_cast<uint32_t>(frequency);
     }
 
     uint8_t nextResolution = _resolutionBits;
     if ((*config)["resolutionBits"].is<int>())
     {
-        nextResolution = static_cast<uint8_t>((*config)["resolutionBits"].as<int>());
+        const int resolutionBits = (*config)["resolutionBits"].as<int>();
+        nextResolution = static_cast<uint8_t>(resolutionBits);
     }
 
     if ((*config)["minDutyCycle"].is<float>())
     {
-        _minDutyCycle = (*config)["minDutyCycle"].as<float>();
+        const float minDutyCycle = (*config)["minDutyCycle"].as<float>();
+        _minDutyCycle = minDutyCycle;
     }
 
     if ((*config)["maxDutyCycle"].is<float>())
     {
-        _maxDutyCycle = (*config)["maxDutyCycle"].as<float>();
+        const float maxDutyCycle = (*config)["maxDutyCycle"].as<float>();
+        _maxDutyCycle = maxDutyCycle;
     }
 
     if ((*config)["defaultDurationInMs"].is<uint32_t>())
     {
-        _defaultDurationInMs = (*config)["defaultDurationInMs"].as<uint32_t>();
+        const uint32_t defaultDurationInMs = (*config)["defaultDurationInMs"].as<uint32_t>();
+        _defaultDurationInMs = defaultDurationInMs;
     }
     else if ((*config)["defaultDurationInMs"].is<int>())
     {
-        _defaultDurationInMs = static_cast<uint32_t>((*config)["defaultDurationInMs"].as<int>());
+        const int defaultDurationInMs = (*config)["defaultDurationInMs"].as<int>();
+        _defaultDurationInMs = static_cast<uint32_t>(defaultDurationInMs);
     }
 
     _pin = nextPin;

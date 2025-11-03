@@ -85,7 +85,7 @@ bool DividerWheel::control(const String &action, JsonObject *payload)
     // Use if-else if chain for string actions (C++ does not support switch on String)
     if (action == "next-breakpoint")
     {
-        long steps = payload && (*payload)["steps"].is<long>() ? (*payload)["steps"].as<long>() : 5000;
+        const long steps = payload && (*payload)["steps"].is<long>() ? (*payload)["steps"].as<long>() : 5000;
         move(steps);
         return true;
     }

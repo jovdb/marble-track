@@ -59,8 +59,8 @@ void DeviceManager::loadDevicesFromJsonFile()
                 std::map<String, Device *> loadedDevices;
                 for (JsonObject obj : arr)
                 {
-                    String id = obj["id"] | "";
-                    String type = obj["type"] | "";
+                    const String id = obj["id"] | "";
+                    const String type = obj["type"] | "";
 
                     if (loadedDevices.find(id) != loadedDevices.end())
                     {
@@ -111,7 +111,7 @@ void DeviceManager::loadDevicesFromJsonFile()
                 // Link children
                 for (JsonObject obj : arr)
                 {
-                    String id = obj["id"] | "";
+                    const String id = obj["id"] | "";
                     auto it = loadedDevices.find(id);
                     if (it != loadedDevices.end() && obj["children"].is<JsonArray>())
                     {

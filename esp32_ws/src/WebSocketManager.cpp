@@ -214,7 +214,7 @@ void WebSocketManager::parseMessage(String message)
 // Save config from client for a device
 void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
 {
-    String deviceId = doc["deviceId"] | "";
+    const String deviceId = doc["deviceId"] | "";
     if (!deviceManager)
     {
         notifyClients(createJsonResponse(false, "DeviceManager not available", "", ""));
@@ -277,7 +277,7 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
 // Read config for a device and send to client
 void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
 {
-    String deviceId = doc["deviceId"] | "";
+    const String deviceId = doc["deviceId"] | "";
     if (!deviceManager)
     {
         notifyClients(createJsonResponse(false, "DeviceManager not available", "", ""));
@@ -638,8 +638,8 @@ void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
 
 void WebSocketManager::handleAddDevice(JsonDocument &doc)
 {
-    String deviceType = doc["deviceType"] | "";
-    String deviceId = doc["deviceId"] | "";
+    const String deviceType = doc["deviceType"] | "";
+    const String deviceId = doc["deviceId"] | "";
     JsonDocument response;
     response["type"] = "add-device";
 
@@ -707,7 +707,7 @@ void WebSocketManager::handleAddDevice(JsonDocument &doc)
 
 void WebSocketManager::handleRemoveDevice(JsonDocument &doc)
 {
-    String deviceId = doc["deviceId"] | "";
+    const String deviceId = doc["deviceId"] | "";
     JsonDocument response;
     response["type"] = "remove-device";
 
@@ -791,8 +791,8 @@ void WebSocketManager::handleGetNetworkConfig(JsonDocument &doc)
 
 void WebSocketManager::handleSetNetworkConfig(JsonDocument &doc)
 {
-    String ssid = doc["ssid"] | "";
-    String password = doc["password"] | "";
+    const String ssid = doc["ssid"] | "";
+    const String password = doc["password"] | "";
 
     JsonDocument response;
     response["type"] = "set-network-config";

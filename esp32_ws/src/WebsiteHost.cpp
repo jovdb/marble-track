@@ -136,7 +136,7 @@ void WebsiteHost::setupRoutes()
     // Catch-all handler for any other requests (prevents LittleFS errors)
     server->onNotFound([this](AsyncWebServerRequest *request)
                        {
-        String url = request->url();
+        const String url = request->url();
     MLOG_WARN("404 - File not found: %s - redirecting to root", url.c_str());
         
         // If it's a captive portal check we missed, redirect to root

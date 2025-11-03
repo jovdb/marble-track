@@ -97,7 +97,7 @@ bool Led::control(const String &action, JsonObject *args)
             MLOG_ERROR("Led [%s]: Invalid 'set' payload", _id.c_str());
             return false;
         }
-        boolean on = (*args)["value"].as<bool>();
+        const bool on = (*args)["value"].as<bool>();
         set(on);
         return true;
     }
@@ -108,9 +108,15 @@ bool Led::control(const String &action, JsonObject *args)
         if (args)
         {
             if ((*args)["onTime"].is<unsigned long>())
-                onTime = (*args)["onTime"].as<unsigned long>();
+            {
+                const unsigned long extractedOnTime = (*args)["onTime"].as<unsigned long>();
+                onTime = extractedOnTime;
+            }
             if ((*args)["offTime"].is<unsigned long>())
-                offTime = (*args)["offTime"].as<unsigned long>();
+            {
+                const unsigned long extractedOffTime = (*args)["offTime"].as<unsigned long>();
+                offTime = extractedOffTime;
+            }
         }
         blink(onTime, offTime);
         return true;
@@ -231,14 +237,15 @@ void Led::setConfig(JsonObject *config)
     // Set name if provided
     if ((*config)["name"].is<String>())
     {
-        _name = (*config)["name"].as<String>();
+        const String name = (*config)["name"].as<String>();
+        _name = name;
         //  ESP_LOGI(TAG, "Led [%s]: Name updated to '%s'", _id.c_str(), _name.c_str());
     }
 
     // Set pin if provided
     if ((*config)["pin"].is<int>())
     {
-        int pin = (*config)["pin"].as<int>();
+        const int pin = (*config)["pin"].as<int>();
         _pin = pin;
     }
 

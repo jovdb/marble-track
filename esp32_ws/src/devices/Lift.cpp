@@ -351,18 +351,21 @@ void Lift::setConfig(JsonObject *config)
     // Set name if provided
     if ((*config)["name"].is<String>())
     {
-        _name = (*config)["name"].as<String>();
+        const String name = (*config)["name"].as<String>();
+        _name = name;
     }
 
     // Set minSteps if provided
     if ((*config)["minSteps"].is<long>())
     {
-        _minSteps = (*config)["minSteps"].as<long>();
+        const long minSteps = (*config)["minSteps"].as<long>();
+        _minSteps = minSteps;
     }
 
     // Set maxSteps if provided
     if ((*config)["maxSteps"].is<long>())
     {
-        _maxSteps = (*config)["maxSteps"].as<long>();
+        const long maxSteps = (*config)["maxSteps"].as<long>();
+        _maxSteps = maxSteps;
     }
 }

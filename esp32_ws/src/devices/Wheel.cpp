@@ -53,8 +53,8 @@ void Wheel::loop()
     if (_onError)
         _onError = false;
 
-    if (_onCurrentBreakpointIndexChanged)
-        _onCurrentBreakpointIndexChanged = false;
+    if (onCurrentBreakpointIndexChanged)
+        onCurrentBreakpointIndexChanged = false;
 
     if (!_stepper || !_sensor)
         return;
@@ -86,12 +86,11 @@ void Wheel::loop()
             wheelState = WheelState::IDLE;
 
             // Reset position to avoid overflow: No
-
             if (_targetBreakpointIndex >= 0)
             {
                 _currentBreakpointIndex = _targetBreakpointIndex;
                 _targetBreakpointIndex = -1;
-                _onCurrentBreakpointIndexChanged = true;
+                onCurrentBreakpointIndexChanged = true;
             }
 
             notifyStateChange();
@@ -111,7 +110,7 @@ void Wheel::loop()
                 float percentDiff = abs(_stepsInLastRevolution - _stepsPerRevolution) / (float)_stepsPerRevolution * 100.0f;
                 if (percentDiff > 0.1f)
                 {
-                    MLOG_WARN("Wheel [%s]: Steps per revolution mismatch - measured: %ld, configured: %ld (%.2f%% difference). Update the wheel configuration.",
+                    MLOG_ERROR("Wheel [%s]: Steps per revolution mismatch - measured: %ld, configured: %ld (%.2f%% difference). Update the wheel configuration.",
                               getId().c_str(), _stepsInLastRevolution, _stepsPerRevolution, percentDiff);
                 }
             }

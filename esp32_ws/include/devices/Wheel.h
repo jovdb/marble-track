@@ -38,6 +38,7 @@ public:
     WheelState wheelState;
     bool getOnError() const { return _onError; }
     int getCurrentBreakpointIndex() const;
+    bool onCurrentBreakpointIndexChanged = false;
 
 private:
     String stateToString(WheelState state) const;
@@ -58,7 +59,6 @@ private:
     float _targetAngle = -1.0f;
     float _zeroPointDegree = 0.0f;
     bool _onError = false;
-    bool _onCurrentBreakpointIndexChanged = false;
 };
 
 #endif // WHEEL_H

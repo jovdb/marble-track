@@ -73,7 +73,7 @@ void ManualMode::loop()
     // Wheel Button
     if (_wheelNextBtn && _wheel && _wheelNextBtn->onPressed())
     {
-        if (_wheel->wheelState == Wheel::WheelState::IDLE)
+        if (_wheel->wheelState == Wheel::WheelState::IDLE || _wheel->wheelState == Wheel::WheelState::UNKNOWN)
         {
             if (_buzzer != nullptr)
                 _buzzer->tone(200, 100);
@@ -100,8 +100,13 @@ void ManualMode::loop()
             case Wheel::WheelState::ERROR:
                 _wheelBtnLed->set(false);
                 break;
+            case Wheel::WheelState::UNKNOWN:
             case Wheel::WheelState::IDLE:
                 _wheelBtnLed->set(true);
+                break;
+
+            default:
+                MLOG_ERROR("ManualMode: Unknown wheel state");
                 break;
             }
         }
@@ -120,7 +125,7 @@ void ManualMode::loop()
     // Splitter Button
     if (_splitterNextBtn && _splitter && _splitterNextBtn->onPressed())
     {
-        if (_splitter->wheelState == Wheel::WheelState::IDLE)
+        if (_splitter->wheelState == Wheel::WheelState::IDLE || _splitter->wheelState == Wheel::WheelState::UNKNOWN)
         {
             if (_buzzer != nullptr)
                 _buzzer->tone(200, 100);
@@ -147,8 +152,12 @@ void ManualMode::loop()
             case Wheel::WheelState::ERROR:
                 _splitterBtnLed->set(false);
                 break;
+            case Wheel::WheelState::UNKNOWN:
             case Wheel::WheelState::IDLE:
                 _splitterBtnLed->set(true);
+                break;
+            default:
+                MLOG_ERROR("ManualMode: Unknown wheel state");
                 break;
             }
         }

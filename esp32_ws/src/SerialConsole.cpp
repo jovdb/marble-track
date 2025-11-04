@@ -10,8 +10,8 @@
 #include "Logging.h"
 #include "devices/Device.h"
 
-SerialConsole::SerialConsole(DeviceManager &deviceManager, Network *&networkRef, OperationMode &modeRef)
-    : m_deviceManager(deviceManager), m_network(networkRef), m_mode(modeRef)
+SerialConsole::SerialConsole(DeviceManager &deviceManager, Network *&networkRef, AutoMode *&autoModeRef, ManualMode *&manualModeRef)
+    : m_deviceManager(deviceManager), m_network(networkRef), m_autoMode(autoModeRef), m_manualMode(manualModeRef)
 {
 }
 
@@ -118,7 +118,7 @@ void SerialConsole::handleCommand(const String &input)
 
         Serial.printf("⚙️  Devices: %d total | Mode: %s\n",
                       static_cast<int>(allDevices.size()),
-                      (m_mode == OperationMode::MANUAL) ? "MANUAL" : "AUTOMATIC");
+                      m_manualMode ? "MANUAL" : "AUTOMATIC");
 
         if (!allDevices.empty())
         {

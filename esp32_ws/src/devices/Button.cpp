@@ -111,8 +111,7 @@ void Button::loop()
             {
                 // Button was released
                 _releasedFlag = true;
-                unsigned long pressDuration = millis() - _pressStartTime;
-                MLOG_INFO("Button [%s]: RELEASED (held for %lu ms)", _id.c_str(), pressDuration);
+                MLOG_INFO("Button [%s]: RELEASED", _id.c_str());
                 notifyStateChange(); // Notify state change
             }
         }

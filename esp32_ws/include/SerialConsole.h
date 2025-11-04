@@ -4,23 +4,25 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <vector>
-#include "OperationMode.h"
 #include "NetworkSettings.h"
 
 class DeviceManager;
 class Network;
+class AutoMode;
+class ManualMode;
 
 class SerialConsole
 {
 public:
-    SerialConsole(DeviceManager &deviceManager, Network *&networkRef, OperationMode &modeRef);
+    SerialConsole(DeviceManager &deviceManager, Network *&networkRef, AutoMode *&autoModeRef, ManualMode *&manualModeRef);
 
     void loop();
 
 private:
     DeviceManager &m_deviceManager;
     Network *&m_network;
-    OperationMode &m_mode;
+    AutoMode *&m_autoMode;
+    ManualMode *&m_manualMode;
 
     struct NetworkOption
     {

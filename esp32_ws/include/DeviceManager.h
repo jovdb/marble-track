@@ -110,9 +110,11 @@ public:
      * @param deviceType The type of device to create (led, button, pwmmotor, etc.)
      * @param deviceId The unique ID for the new device
      * @param config Optional JSON configuration object
+     * @param notifyCallback Optional callback for notifying clients
+     * @param hasClientsCallback Optional callback to check if clients are connected
      * @return Pointer to the created device, or nullptr if creation failed
      */
-    Device *createDevice(const String &deviceType, const String &deviceId, JsonVariant config = JsonVariant(), NotifyClients callback = nullptr);
+    Device *createDevice(const String &deviceType, const String &deviceId, JsonVariant config = JsonVariant(), NotifyClients notifyCallback = nullptr, HasClients hasClientsCallback = nullptr);
 
     /**
      * @brief Create and add a new device to the management system

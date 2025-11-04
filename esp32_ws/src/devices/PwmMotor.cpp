@@ -81,8 +81,8 @@ bool PwmMotor::setupMotor(int pin, int pwmChannel, uint32_t frequency, uint8_t r
         _mcpwmSignal = MCPWM1A;
     }
 
-    MLOG_INFO("PwmMotor [%s]: Setup - pin:%d, channel:%d, freq:%d Hz, resolution:%d bits",
-              _id.c_str(), _pin, _pwmChannel, _frequency, _resolutionBits);
+    // MLOG_INFO("PwmMotor [%s]: Setup - pin:%d, channel:%d, freq:%d Hz, resolution:%d bits",
+    //           _id.c_str(), _pin, _pwmChannel, _frequency, _resolutionBits);
 
     bool configured = configureMCPWM();
     if (configured)
@@ -129,7 +129,7 @@ bool PwmMotor::configureMCPWM()
     }
 
     _isSetup = true;
-    MLOG_INFO("PwmMotor [%s]: MCPWM configured successfully on pin %d", _id.c_str(), _pin);
+    // MLOG_INFO("PwmMotor [%s]: MCPWM configured successfully on pin %d", _id.c_str(), _pin);
     return true;
 }
 
@@ -247,8 +247,10 @@ float PwmMotor::getValue() const
     {
         float normalizedValue = (_currentDutyCycle - _minDutyCycle) / (_maxDutyCycle - _minDutyCycle);
         // Clamp to valid range
-        if (normalizedValue < 0.0f) normalizedValue = 0.0f;
-        if (normalizedValue > 1.0f) normalizedValue = 1.0f;
+        if (normalizedValue < 0.0f)
+            normalizedValue = 0.0f;
+        if (normalizedValue > 1.0f)
+            normalizedValue = 1.0f;
         currentValue = normalizedValue * 100.0f;
     }
     return currentValue;
@@ -360,8 +362,10 @@ String PwmMotor::getState()
     {
         float normalizedValue = (_currentDutyCycle - _minDutyCycle) / (_maxDutyCycle - _minDutyCycle);
         // Clamp to valid range
-        if (normalizedValue < 0.0f) normalizedValue = 0.0f;
-        if (normalizedValue > 1.0f) normalizedValue = 1.0f;
+        if (normalizedValue < 0.0f)
+            normalizedValue = 0.0f;
+        if (normalizedValue > 1.0f)
+            normalizedValue = 1.0f;
         currentValue = normalizedValue * 100.0f;
     }
     doc["value"] = currentValue;
@@ -374,8 +378,10 @@ String PwmMotor::getState()
         {
             float normalizedValue = (_targetDutyCycle - _minDutyCycle) / (_maxDutyCycle - _minDutyCycle);
             // Clamp to valid range
-            if (normalizedValue < 0.0f) normalizedValue = 0.0f;
-            if (normalizedValue > 1.0f) normalizedValue = 1.0f;
+            if (normalizedValue < 0.0f)
+                normalizedValue = 0.0f;
+            if (normalizedValue > 1.0f)
+                normalizedValue = 1.0f;
             targetValue = normalizedValue * 100.0f;
         }
         doc["targetValue"] = targetValue;

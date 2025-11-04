@@ -1,5 +1,5 @@
 ---
-applyTo: "website/**"
+applyTo: "website/**/*.*"
 ---
 
 # GitHub Copilot Instructions for website

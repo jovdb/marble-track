@@ -18,6 +18,7 @@ Website:
 
 - use zod to validate state
 - haertbeat - pong
+- Remove  useWebsocket.ts
 
 Both:
 - ✅ Batch ws messages, allow to send an array of messages

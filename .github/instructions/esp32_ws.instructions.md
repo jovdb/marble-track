@@ -1,5 +1,5 @@
 ---
-applyTo: "esp32_ws/**"
+applyTo: "esp32_ws/**/*.*"
 ---
 
 # Marble Track Firmware – Copilot Notes

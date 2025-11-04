@@ -20,13 +20,10 @@
 #include "devices/PwmMotor.h"
 
 #include <devices/Wheel.h>
-#include "OperationMode.h"
 #include "SerialConsole.h"
 #include "OtaUpload.h"
 #include "AutoMode.h"
 #include "ManualMode.h"
-
-OperationMode currentMode = OperationMode::MANUAL;
 
 // Timing variable for automatic mode
 unsigned long lastAutoToggleTime = 0;
@@ -45,23 +42,22 @@ WebSocketManager wsManager(nullptr, nullptr, "/ws");
 // ...existing code...
 
 // Function declarations
-void setOperationMode(OperationMode mode);
 void globalNotifyClientsCallback(const String &message);
 
 SerialConsole *serialConsole = nullptr;
 
-
 void globalNotifyClientsCallback(const String &message)
 {
-  if (wsManager.hasClients()) {
+  if (wsManager.hasClients())
+  {
     wsManager.notifyClients(message);
   }
 }
 
 DeviceManager deviceManager(globalNotifyClientsCallback);
 
-AutoMode autoMode(deviceManager);
-ManualMode manualMode(deviceManager);
+AutoMode *autoMode = nullptr;
+ManualMode *manualMode = nullptr;
 
 void setup()
 {
@@ -87,7 +83,7 @@ void setup()
   network = new Network(networkSettings);
 
   // Now create SerialConsole after network is initialized
-  serialConsole = new SerialConsole(deviceManager, network, currentMode);
+  serialConsole = new SerialConsole(deviceManager, network, autoMode, manualMode);
 
   // Initialize Network (will try WiFi, fall back to AP if needed)
   bool networkInitialized = network->setup();
@@ -115,7 +111,10 @@ void setup()
   wsManager.setDeviceManager(&deviceManager);
   wsManager.setNetwork(network);
 
-  deviceManager.setHasClients([]() { return wsManager.hasClients(); });
+  // Set callback to check for connected clients (don't broadcast WS messages if no clients are connected)
+  // This must be set BEFORE loading devices so that child devices get the callback during construction
+  deviceManager.setHasClients([]()
+                              { return wsManager.hasClients(); });
 
   // Start server
   server.begin();
@@ -126,17 +125,49 @@ void setup()
   // Setup  Devices with callback to enable state change notifications during initialization
   deviceManager.setup();
 
-  // Setup AutoMode after all devices are initialized
-  autoMode.setup();
-
-  // Setup ManualMode after all devices are initialized
-  manualMode.setup();
-
   // Set callback for device changes
-  deviceManager.setOnDevicesChanged([]() {
-    autoMode.setup();
-    manualMode.setup();
-  });
+  deviceManager.setOnDevicesChanged([]()
+                                    {
+    // Cleanup existing modes
+    if (autoMode) {
+      delete autoMode;
+      autoMode = nullptr;
+    }
+    if (manualMode) {
+      delete manualMode;
+      manualMode = nullptr;
+    }
+    
+    // Recreate mode based on button state
+    const Button *manualBtn = deviceManager.getDeviceByIdAs<Button>("manual-btn");
+    if (manualBtn && manualBtn->isPressed())
+    {
+      MLOG_INFO("Device changed: Initializing MANUAL mode");
+      manualMode = new ManualMode(deviceManager);
+      manualMode->setup();
+    }
+    else
+    {
+      MLOG_INFO("Device changed: Initializing AUTOMATIC mode");
+      autoMode = new AutoMode(deviceManager);
+      autoMode->setup();
+    } });
+
+  const Button *manualBtn = deviceManager.getDeviceByIdAs<Button>("manual-btn");
+  MLOG_INFO("Manual button is %s", manualBtn ? (manualBtn->isPressed() ? "PRESSED" : "NOT PRESSED") : "NOT FOUND");
+
+  if (manualBtn && manualBtn->isPressed())
+  {
+    MLOG_INFO("Operation mode: MANUAL");
+    manualMode = new ManualMode(deviceManager);
+    manualMode->setup();
+  }
+  else
+  {
+    MLOG_INFO("Operation mode: AUTOMATIC");
+    autoMode = new AutoMode(deviceManager);
+    autoMode->setup();
+  }
 
   // Startup sound
   Buzzer *buzzer = deviceManager.getDeviceByTypeAs<Buzzer>("buzzer");
@@ -146,12 +177,9 @@ void setup()
     buzzer->startupTone(); // Play startup tone sequence
   }
 
-  MLOG_INFO("Device management initialized - Total devices: %d", deviceManager.getDeviceCount());
+  // MLOG_INFO("Device management initialized - Total devices: %d", deviceManager.getDeviceCount());
 
   // State change broadcasting is now enabled during setup
-
-  // Initialize in MANUAL mode
-  MLOG_INFO("Operation mode: MANUAL");
 
   MLOG_INFO("System initialization complete!");
 }
@@ -183,33 +211,16 @@ void loop()
   // Run all devices using DeviceManager
   deviceManager.loop();
 
-  // State machine based on current mode
-  switch (currentMode)
+  // Run the active mode
+  if (manualMode)
   {
-  case OperationMode::MANUAL:
-    manualMode.loop();
-    break;
-
-  case OperationMode::AUTOMATIC:
-    autoMode.loop();
-    break;
+    manualMode->loop();
+  }
+  if (autoMode)
+  {
+    autoMode->loop();
   }
 
   // Send all batched WebSocket messages at once
   wsManager.endBatch();
-}
-
-void setOperationMode(OperationMode mode)
-{
-  if (currentMode != mode)
-  {
-    currentMode = mode;
-
-    const char *modeString = (mode == OperationMode::MANUAL) ? "MANUAL" : "AUTOMATIC";
-
-    MLOG_INFO("Operation mode changed to: %s", modeString);
-
-    // Optional: broadcast mode change via WebSocket
-    // You could add WebSocket message broadcasting here if needed
-  }
 }

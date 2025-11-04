@@ -68,7 +68,7 @@ void DeviceManager::loadDevicesFromJsonFile()
                         continue;
                     }
 
-                    Device *newDevice = createDevice(type, id, obj["config"], notifyClients);
+                    Device *newDevice = createDevice(type, id, obj["config"], notifyClients, hasClients);
                     if (newDevice == nullptr)
                     {
                         MLOG_WARN("Unknown device type: %s", type.c_str());
@@ -558,7 +558,7 @@ std::vector<Device *> DeviceManager::getAllDevices()
     return allDevices;
 }
 
-Device *DeviceManager::createDevice(const String &deviceType, const String &deviceId, JsonVariant config, NotifyClients notifyClients)
+Device *DeviceManager::createDevice(const String &deviceType, const String &deviceId, JsonVariant config, NotifyClients notifyCallback, HasClients hasClientsCallback)
 {
     Device *newDevice = nullptr;
     String lowerType = deviceType;
@@ -566,31 +566,31 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
 
     if (lowerType == "led")
     {
-        newDevice = new Led(deviceId, notifyClients);
+        newDevice = new Led(deviceId, notifyCallback);
     }
     else if (lowerType == "buzzer")
     {
-        newDevice = new Buzzer(deviceId, notifyClients);
+        newDevice = new Buzzer(deviceId, notifyCallback);
     }
     else if (lowerType == "button")
     {
-        newDevice = new Button(deviceId, notifyClients);
+        newDevice = new Button(deviceId, notifyCallback);
     }
     else if (lowerType == "stepper")
     {
-        newDevice = new Stepper(deviceId, notifyClients);
+        newDevice = new Stepper(deviceId, notifyCallback);
     }
     else if (lowerType == "pwmmotor")
     {
-        newDevice = new PwmMotor(deviceId, notifyClients);
+        newDevice = new PwmMotor(deviceId, notifyCallback);
     }
     else if (lowerType == "wheel")
     {
-        newDevice = new Wheel(deviceId, notifyClients);
+        newDevice = new Wheel(deviceId, notifyCallback);
     }
     else if (lowerType == "lift")
     {
-        newDevice = new Lift(deviceId, notifyClients);
+        newDevice = new Lift(deviceId, notifyCallback);
     }
     else
     {
@@ -600,6 +600,12 @@ Device *DeviceManager::createDevice(const String &deviceType, const String &devi
 
     if (newDevice != nullptr)
     {
+        // Set hasClients callback if provided
+        if (hasClientsCallback)
+        {
+            newDevice->setHasClients(hasClientsCallback);
+        }
+        
         // Apply configuration if provided
         if (config.is<JsonObject>())
         {
@@ -628,7 +634,7 @@ bool DeviceManager::addDevice(const String &deviceType, const String &deviceId, 
         return false;
     }
 
-    Device *newDevice = createDevice(deviceType, deviceId, config, notifyClients);
+    Device *newDevice = createDevice(deviceType, deviceId, config, notifyClients, hasClients);
     if (newDevice == nullptr)
     {
         return false;

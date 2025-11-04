@@ -4,6 +4,12 @@
 #include <Arduino.h>
 #include "DeviceManager.h"
 
+// Forward declarations
+class Button;
+class Buzzer;
+class Wheel;
+class Led;
+
 class AutoMode
 {
 public:
@@ -13,6 +19,17 @@ public:
 
 private:
     DeviceManager &deviceManager;
+    
+    // Device references
+    Buzzer *_buzzer;
+    
+    Wheel *_wheel;
+    Button *_wheelNextBtn;
+    Led *_wheelBtnLed;
+    
+    Wheel *_splitter;
+    Button *_splitterNextBtn;
+    Led *_splitterBtnLed;
 };
 
 #endif // AUTOMODE_H

@@ -295,7 +295,6 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
 
       // Process each message in the batch
       parsedData.forEach((msg) => {
-        
         console.log("WebSocket message received:", msg);
 
         // Skip heartbeat messages in batch

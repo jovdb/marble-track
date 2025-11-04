@@ -598,14 +598,22 @@ void WebSocketManager::endBatch()
     // Always send as array, even for single messages
     String batchMessage = "[";
 
+    bool firstMessage = true;
     for (size_t i = 0; i < messageQueue.size(); i++)
     {
-        if (i > 0)
+        // Skip empty messages to prevent double commas
+        if (messageQueue[i].isEmpty())
+        {
+            continue;
+        }
+
+        if (!firstMessage)
         {
             batchMessage += ",";
         }
-        MLOG_WS_SEND("%s", messageQueue[i].c_str());
+        firstMessage = false;
 
+        MLOG_WS_SEND("%s", messageQueue[i].c_str());
         batchMessage += messageQueue[i];
     }
 

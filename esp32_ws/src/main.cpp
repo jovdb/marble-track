@@ -154,7 +154,6 @@ void setup()
     } });
 
   const Button *manualBtn = deviceManager.getDeviceByIdAs<Button>("manual-btn");
-  MLOG_INFO("Manual button is %s", manualBtn ? (manualBtn->isPressed() ? "PRESSED" : "NOT PRESSED") : "NOT FOUND");
 
   if (manualBtn && manualBtn->isPressed())
   {

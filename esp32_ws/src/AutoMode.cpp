@@ -123,7 +123,7 @@ void AutoMode::loop()
         if (!wheelDelaySet)
         {
             wheelIdleStartTime = currentMillis;
-            randomWheelDelayMs = random(100, 30000); // random(min, max) is [min, max)
+            randomWheelDelayMs = random(100, 20000);
             wheelDelaySet = true;
             MLOG_INFO("AutoMode: Next wheel trigger in %d ms", randomWheelDelayMs);
         }
@@ -149,11 +149,37 @@ void AutoMode::loop()
     case Wheel::WheelState::ERROR:
         break;
     case Wheel::WheelState::IDLE:
-        if (wheelExitMaxBallCount > 0 && currentMillis > lastWheelExitTime + 1500)
+        if (wheelExitMaxBallCount > 0)
         {
-            MLOG_INFO("AutoMode: Triggering splitter 1.5s after wheel ball unloading, remaining count %d", wheelExitMaxBallCount);
-            wheelExitMaxBallCount--;
-            _splitter->nextBreakPoint();
+
+            if (lastWheelExitTime > 0 && currentMillis > lastWheelExitTime + 500)
+            {
+                MLOG_INFO("AutoMode: Splitter turns because wheel ball unloading, remaining count %d", wheelExitMaxBallCount);
+                wheelExitMaxBallCount--;
+                lastWheelExitTime = 0;
+                _splitter->nextBreakPoint();
+            }
+            else
+            {
+                // Possible balls
+                static ulong splitterIdleStartTime = 0;
+                static int randomSplitterDelayMs = 0;
+                static bool splitterDelaySet = false;
+
+                if (!splitterDelaySet)
+                {
+                    splitterIdleStartTime = currentMillis;
+                    randomSplitterDelayMs = random(30000, 120000); // 60s to 300s
+                    splitterDelaySet = true;
+                }
+                else if (currentMillis >= splitterIdleStartTime + randomSplitterDelayMs)
+                {
+                    wheelExitMaxBallCount--;
+                    MLOG_INFO("AutoMode: Splitter turns to unload possible balls, remaining possible balls %d", wheelExitMaxBallCount);
+                    _splitter->nextBreakPoint();
+                    splitterDelaySet = false;
+                }
+            }
         }
         break;
     default:

@@ -27,9 +27,9 @@
         "name": "lift-stepper",
         "stepperType": "DRIVER",
         "maxSpeed": 400,
-        "maxAcceleration": 300,
-        "defaultSpeed": 300,
-        "defaultAcceleration": 150,
+        "maxAcceleration": 1000,
+        "defaultSpeed": 350,
+        "defaultAcceleration": 100,
         "stepPin": 1,
         "dirPin": 2,
         "pin1": -1,
@@ -58,7 +58,7 @@
         "name": "",
         "pin": 41,
         "pinMode": "pullup",
-        "debounceMs": 50,
+        "debounceMs": 100,
         "buttonType": "NormalOpen"
       }
     },
@@ -74,7 +74,19 @@
         "resolutionBits": 10,
         "minDutyCycle": 5,
         "maxDutyCycle": 10,
-        "defaultDurationInMs": 2500
+        "defaultDurationInMs": 200
+      }
+    },
+    {
+      "id": "manual-btn",
+      "type": "button",
+      "children": [],
+      "config": {
+        "name": "",
+        "pin": 12,
+        "pinMode": "pullup",
+        "debounceMs": 50,
+        "buttonType": "NormalOpen"
       }
     },
     {
@@ -92,8 +104,7 @@
         "breakPoints": [
           32,
           163,
-          286,
-          350
+          286
         ]
       }
     },
@@ -159,14 +170,14 @@
       ],
       "config": {
         "name": "Wheel",
-        "stepsPerRevolution": 277212,
-        "maxStepsPerRevolution": 500000,
+        "stepsPerRevolution": 138325,
+        "maxStepsPerRevolution": 150000,
         "zeroPointDegree": 180,
         "breakPoints": [
           82,
           160,
           285,
-          316
+          317
         ]
       }
     },
@@ -179,7 +190,7 @@
         "stepperType": "DRIVER",
         "maxSpeed": 3000,
         "maxAcceleration": 3000,
-        "defaultSpeed": 1500,
+        "defaultSpeed": 1400,
         "defaultAcceleration": 200,
         "stepPin": 4,
         "dirPin": 5,

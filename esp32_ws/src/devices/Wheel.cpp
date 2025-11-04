@@ -9,7 +9,7 @@ Wheel::Wheel(const String &id, NotifyClients notifyClients)
     : Device(id, "wheel", notifyClients), _stepper(nullptr), _sensor(nullptr), _btnNext(nullptr), _stepsInLastRevolution(0)
 {
     _direction = 1;
-    wheelState = WheelState::IDLE;
+    wheelState = WheelState::UNKNOWN;
 }
 
 void Wheel::setup()
@@ -122,7 +122,7 @@ void Wheel::loop()
             // Move to first breakpoint
             if (!_breakPoints.empty() && _stepsPerRevolution > 0)
             {
-                MLOG_INFO("Wheel [%s]: Moving to first breakpoint.", getId().c_str());
+                MLOG_INFO("Wheel [%s]: Zero point found, moving to first breakpoint.", getId().c_str());
                 _currentBreakpointIndex = -1;
                 _targetBreakpointIndex = 0;
                 wheelState = WheelState::MOVING;
@@ -132,9 +132,9 @@ void Wheel::loop()
             }
             else
             {
-                MLOG_INFO("Wheel [%s]: Reset complete, no breakpoints yet", getId().c_str());
-                _stepper->stop();
+                MLOG_INFO("Wheel [%s]: zero point found, no breakpoints yet", getId().c_str());
                 wheelState = WheelState::MOVING;
+                _stepper->stop();
                 notifyStateChange();
             }
         }
@@ -364,6 +364,8 @@ String Wheel::stateToString(Wheel::WheelState state) const
 {
     switch (state)
     {
+    case Wheel::WheelState::UNKNOWN:
+        return "UNKNOWN";
     case Wheel::WheelState::CALIBRATING:
         return "CALIBRATING";
     case Wheel::WheelState::IDLE:

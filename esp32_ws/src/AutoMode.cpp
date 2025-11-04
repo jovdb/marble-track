@@ -10,21 +10,14 @@ AutoMode::AutoMode(DeviceManager &deviceManager) : deviceManager(deviceManager)
     _buzzer = nullptr;
 
     _wheel = nullptr;
-    _wheelNextBtn = nullptr;
     _wheelBtnLed = nullptr;
 
     _splitter = nullptr;
-    _splitterNextBtn = nullptr;
     _splitterBtnLed = nullptr;
 }
 
 void AutoMode::setup()
 {
-    _wheelNextBtn = deviceManager.getDeviceByIdAs<Button>("wheel-next-btn");
-    if (_wheelNextBtn == nullptr)
-    {
-        MLOG_ERROR("Required device 'wheel-next-btn' not found!");
-    }
 
     _wheel = deviceManager.getDeviceByIdAs<Wheel>("wheel");
     if (_wheel == nullptr)
@@ -50,12 +43,6 @@ void AutoMode::setup()
         MLOG_ERROR("Required device 'splitter' not found!");
     }
 
-    _splitterNextBtn = deviceManager.getDeviceByIdAs<Button>("splitter-next-btn");
-    if (_splitterNextBtn == nullptr)
-    {
-        MLOG_ERROR("Required device 'splitter-next-btn' not found!");
-    }
-
     _splitterBtnLed = deviceManager.getDeviceByIdAs<Led>("splitter-btn-led");
     if (_splitterBtnLed == nullptr)
     {
@@ -69,9 +56,11 @@ void AutoMode::loop()
 {
     switch (_wheel->wheelState)
     {
-    case Wheel::WheelState::IDLE:
+    case Wheel::WheelState::UNKNOWN:
+        MLOG_INFO("Initializing Wheel");
         _wheel->reset();
         break;
+    case Wheel::WheelState::IDLE:
     case Wheel::WheelState::CALIBRATING:
     case Wheel::WheelState::RESET:
     case Wheel::WheelState::MOVING:
@@ -85,9 +74,11 @@ void AutoMode::loop()
 
     switch (_splitter->wheelState)
     {
-    case Wheel::WheelState::IDLE:
+    case Wheel::WheelState::UNKNOWN:
+        MLOG_INFO("Initializing Stepper");
         _splitter->reset();
         break;
+    case Wheel::WheelState::IDLE:
     case Wheel::WheelState::CALIBRATING:
     case Wheel::WheelState::RESET:
     case Wheel::WheelState::MOVING:

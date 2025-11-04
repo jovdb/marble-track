@@ -15,6 +15,7 @@ class Wheel : public Device
 public:
     enum class WheelState
     {
+        UNKNOWN,
         CALIBRATING,
         IDLE,
         MOVING,

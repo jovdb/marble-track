@@ -58,6 +58,7 @@ private:
     float _targetAngle = -1.0f;
     float _zeroPointDegree = 0.0f;
     bool _onError = false;
+    bool _onCurrentBreakpointIndexChanged = false;
 };
 
 #endif // WHEEL_H

@@ -53,6 +53,9 @@ void Wheel::loop()
     if (_onError)
         _onError = false;
 
+    if (_onCurrentBreakpointIndexChanged)
+        _onCurrentBreakpointIndexChanged = false;
+
     if (!_stepper || !_sensor)
         return;
 
@@ -88,6 +91,7 @@ void Wheel::loop()
             {
                 _currentBreakpointIndex = _targetBreakpointIndex;
                 _targetBreakpointIndex = -1;
+                _onCurrentBreakpointIndexChanged = true;
             }
 
             notifyStateChange();

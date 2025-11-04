@@ -360,6 +360,11 @@ bool Wheel::control(const String &action, JsonObject *payload)
     return false;
 }
 
+int Wheel::getCurrentBreakpointIndex() const
+{
+    return _currentBreakpointIndex;
+}
+
 String Wheel::stateToString(Wheel::WheelState state) const
 {
     switch (state)

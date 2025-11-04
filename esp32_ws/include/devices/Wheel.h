@@ -37,6 +37,7 @@ public:
     bool nextBreakPoint();
     WheelState wheelState;
     bool getOnError() const { return _onError; }
+    int getCurrentBreakpointIndex() const;
 
 private:
     String stateToString(WheelState state) const;

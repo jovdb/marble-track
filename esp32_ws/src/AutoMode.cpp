@@ -4,6 +4,7 @@
 #include "devices/Buzzer.h"
 #include "devices/Wheel.h"
 #include "devices/Led.h"
+#include "devices/Lift.h"
 
 AutoMode::AutoMode(DeviceManager &deviceManager) : deviceManager(deviceManager)
 {
@@ -14,6 +15,8 @@ AutoMode::AutoMode(DeviceManager &deviceManager) : deviceManager(deviceManager)
 
     _splitter = nullptr;
     _splitterBtnLed = nullptr;
+
+    _lift = nullptr;
 }
 
 void AutoMode::setup()
@@ -49,6 +52,12 @@ void AutoMode::setup()
         MLOG_ERROR("Required device 'splitter-btn-led' not found!");
     }
 
+    _lift = deviceManager.getDeviceByIdAs<Lift>("lift");
+    if (_lift == nullptr)
+    {
+        MLOG_ERROR("Required device 'lift' not found!");
+    }
+
     MLOG_INFO("AutoMode setup complete");
 }
 
@@ -65,6 +74,12 @@ void AutoMode::loop()
     {
         MLOG_INFO("Initializing Stepper");
         _splitter->reset();
+    }
+
+    if (_lift->liftState == Lift::LiftState::UNKNOWN)
+    {
+        MLOG_INFO("Initializing Lift");
+        _lift->reset();
     }
 
     const ulong currentMillis = millis();
@@ -94,14 +109,15 @@ void AutoMode::loop()
             lastWheelExitTime = currentMillis;
         }
     }
+    /*
+        const bool allInitialized =
+            (_wheel && _wheel->wheelState != Wheel::WheelState::UNKNOWN) &&
+            (_splitter && _splitter->wheelState != Wheel::WheelState::UNKNOWN) &&
+            (_lift && _lift->liftState != Lift::LiftState::UNKNOWN);
 
-    const bool allInitialized =
-        (_wheel && _wheel->wheelState != Wheel::WheelState::UNKNOWN) &&
-        (_splitter && _splitter->wheelState != Wheel::WheelState::UNKNOWN);
-
-    if (!allInitialized)
-        return;
-
+        if (!allInitialized)
+            return;
+    */
     // Wheel
     static ulong wheelIdleStartTime = 0;
     static int randomWheelDelayMs = 0;
@@ -110,7 +126,6 @@ void AutoMode::loop()
     switch (_wheel->wheelState)
     {
     case Wheel::WheelState::UNKNOWN:
-
     case Wheel::WheelState::CALIBRATING:
     case Wheel::WheelState::RESET:
     case Wheel::WheelState::ERROR:
@@ -184,6 +199,50 @@ void AutoMode::loop()
         break;
     default:
         MLOG_WARN("AutoMode: Unknown splitter state");
+        break;
+    }
+
+    // Lift
+    static bool _speedMoveDownCalled = false;
+    switch (_lift->liftState)
+    {
+    case Lift::LiftState::UNKNOWN:
+    case Lift::LiftState::RESET:
+    case Lift::LiftState::ERROR:
+    case Lift::LiftState::MOVING_UP:
+    case Lift::LiftState::LIFT_DOWN_LOADING:
+    case Lift::LiftState::LIFT_UP_UNLOADING:
+        _speedMoveDownCalled = false; // Reset flag when state changes
+        break;
+    case Lift::LiftState::MOVING_DOWN:
+        if (_lift->isBallWaiting() && !_speedMoveDownCalled)
+        {
+            _lift->down(1);
+            _speedMoveDownCalled = true;
+        }
+        break;
+    case Lift::LiftState::LIFT_DOWN_UNLOADED:
+        _speedMoveDownCalled = false; // Reset flag when state changes
+        if (_lift->isBallWaiting())
+        {
+            MLOG_INFO("AutoMode: Loading ball into lift");
+            _lift->loadBall();
+        }
+        break;
+    case Lift::LiftState::LIFT_DOWN_LOADED:
+        _speedMoveDownCalled = false; // Reset flag when state changes
+        _lift->up();
+        break;
+    case Lift::LiftState::LIFT_UP_LOADED:
+        _speedMoveDownCalled = false; // Reset flag when state changes
+        _lift->unloadBall();
+        break;
+    case Lift::LiftState::LIFT_UP_UNLOADED:
+        _speedMoveDownCalled = false; // Reset flag when state changes
+        _lift->down(_lift->isBallWaiting() ? 1.0f : 0.05f);
+        break;
+    default:
+        MLOG_WARN("AutoMode: Unknown lift state");
         break;
     }
 }

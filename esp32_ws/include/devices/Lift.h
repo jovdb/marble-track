@@ -35,12 +35,14 @@ public:
     void setConfig(JsonObject *config) override;
     void loop() override;
     bool control(const String &action, JsonObject *payload = nullptr) override;
-    bool up();
-    bool down();
+    bool up(float speedRatio = 1.0f);
+    bool down(float speedRatio = 1.0f);
     bool reset();
     bool loadBall();
     bool unloadBall();
     bool isBallWaiting();
+
+    LiftState liftState;
 
 private:
     bool isLoaded();
@@ -54,7 +56,6 @@ private:
     Button *_ballSensor;
     PwmMotor *_loader;
     PwmMotor *_unloader;
-    LiftState _state;
     long _minSteps = 0;
     long _maxSteps = 1000;
     unsigned long _loadStartTime = 0;

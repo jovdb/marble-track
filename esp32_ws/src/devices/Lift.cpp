@@ -2,7 +2,7 @@
 #include "Logging.h"
 
 Lift::Lift(const String &id, NotifyClients notifyClients)
-    : Device(id, "lift", notifyClients), _stepper(nullptr), _limitSwitch(nullptr), _ballSensor(nullptr), _loader(nullptr), _unloader(nullptr), _state(LiftState::UNKNOWN)
+    : Device(id, "lift", notifyClients), _stepper(nullptr), _limitSwitch(nullptr), _ballSensor(nullptr), _loader(nullptr), _unloader(nullptr), liftState(LiftState::UNKNOWN)
 {
 }
 
@@ -58,14 +58,14 @@ void Lift::loop()
         notifyStateChange();
     }
 
-    switch (_state)
+    switch (liftState)
     {
     case LiftState::UNKNOWN:
     {
         if (_limitSwitch && _limitSwitch->isPressed())
         {
             _stepper->setCurrentPosition(0);
-            _state = LiftState::LIFT_DOWN_UNLOADED;
+            liftState = LiftState::LIFT_DOWN_UNLOADED;
             notifyStateChange();
         }
         break;
@@ -75,14 +75,14 @@ void Lift::loop()
         if (_limitSwitch && _limitSwitch->isPressed())
         {
             MLOG_INFO("Lift [%s]: Reset complete - limit switch pressed", getId().c_str());
-            _stepper->setCurrentPosition(0);      // Reset position to zero
-            _state = LiftState::LIFT_DOWN_LOADED; // First unload?
+            _stepper->setCurrentPosition(0);         // Reset position to zero
+            liftState = LiftState::LIFT_DOWN_LOADED; // First unload?
             notifyStateChange();
         }
         else if (_stepper && !_stepper->isMoving())
         {
             MLOG_WARN("Lift [%s]: Reset incomplete - Lift stopped but limit switch not pressed", getId().c_str());
-            _state = LiftState::ERROR;
+            liftState = LiftState::ERROR;
             notifyStateChange();
         }
         break;
@@ -115,7 +115,7 @@ void Lift::loop()
         if (_stepper && !_stepper->isMoving())
         {
             MLOG_INFO("Lift [%s]: Top reached", getId().c_str());
-            _state = _isLoaded ? LiftState::LIFT_UP_LOADED : LiftState::LIFT_UP_UNLOADED;
+            liftState = _isLoaded ? LiftState::LIFT_UP_LOADED : LiftState::LIFT_UP_UNLOADED;
             notifyStateChange();
         }
         break;
@@ -124,15 +124,15 @@ void Lift::loop()
         if (_stepper && !_stepper->isMoving())
         {
             MLOG_INFO("Lift [%s]: Movement complete", getId().c_str());
-            _state = _isLoaded ? LiftState::LIFT_DOWN_LOADED : LiftState::LIFT_DOWN_UNLOADED;
+            liftState = _isLoaded ? LiftState::LIFT_DOWN_LOADED : LiftState::LIFT_DOWN_UNLOADED;
             notifyStateChange();
         }
 
-        else if (_limitSwitch && _limitSwitch->isPressed() && _state == LiftState::MOVING_DOWN)
+        else if (_limitSwitch && _limitSwitch->isPressed() && liftState == LiftState::MOVING_DOWN)
         {
             MLOG_WARN("Lift [%s]: Limit switch triggered during downward movement - stopping", getId().c_str());
             _stepper->setCurrentPosition(0); // Reset position to zero
-            _state = LiftState::LIFT_DOWN_UNLOADED;
+            liftState = LiftState::LIFT_DOWN_UNLOADED;
             notifyStateChange();
         }
         break;
@@ -141,7 +141,7 @@ void Lift::loop()
     }
 }
 
-bool Lift::up()
+bool Lift::up(float speedRatio)
 {
     if (!_stepper)
     {
@@ -149,22 +149,22 @@ bool Lift::up()
         return false;
     }
 
-    switch (_state)
+    switch (liftState)
     {
     case LiftState::UNKNOWN:
     case LiftState::RESET:
     case LiftState::ERROR:
-    case LiftState::MOVING_UP:
     case LiftState::LIFT_DOWN_LOADING:
     case LiftState::LIFT_UP_UNLOADED:
     case LiftState::LIFT_UP_LOADED:
     case LiftState::LIFT_UP_UNLOADING:
-        MLOG_WARN("Lift [%s]: Cannot move up, state is %s", getId().c_str(), stateToString(_state).c_str());
-        return false;
-
+    MLOG_WARN("Lift [%s]: Cannot move up, state is %s", getId().c_str(), stateToString(liftState).c_str());
+    return false;
+    
     case LiftState::LIFT_DOWN_UNLOADED:
     case LiftState::LIFT_DOWN_LOADED:
     case LiftState::MOVING_DOWN:
+    case LiftState::MOVING_UP: // for changed speed
     {
         // Check if lift is already at or above max position
         long currentPos = _stepper->getCurrentPosition();
@@ -175,9 +175,9 @@ bool Lift::up()
         }
 
         MLOG_INFO("Lift [%s]: Moving up to %ld steps", getId().c_str(), _maxSteps);
-        _state = LiftState::MOVING_UP;
+        liftState = LiftState::MOVING_UP;
         notifyStateChange();
-        return _stepper->moveTo(-_maxSteps);
+        return _stepper->moveTo(-_maxSteps, _stepper->_defaultSpeed * speedRatio);
     }
     default:
         MLOG_ERROR("Lift [%s]: Unknown state encountered in up()", getId().c_str());
@@ -185,7 +185,7 @@ bool Lift::up()
     }
 }
 
-bool Lift::down()
+bool Lift::down(float speedRatio)
 {
     if (!_stepper)
     {
@@ -193,21 +193,21 @@ bool Lift::down()
         return false;
     }
 
-    switch (_state)
+    switch (liftState)
     {
     case LiftState::UNKNOWN:
     case LiftState::RESET:
     case LiftState::ERROR:
-    case LiftState::MOVING_DOWN:
     case LiftState::LIFT_DOWN_UNLOADED:
     case LiftState::LIFT_DOWN_LOADED:
     case LiftState::LIFT_DOWN_LOADING:
     case LiftState::LIFT_UP_UNLOADING:
-        MLOG_WARN("Lift [%s]: Cannot move down, state is %s", getId().c_str(), stateToString(_state).c_str());
+        MLOG_WARN("Lift [%s]: Cannot move down, state is %s", getId().c_str(), stateToString(liftState).c_str());
         return false;
 
     case LiftState::LIFT_UP_UNLOADED:
     case LiftState::LIFT_UP_LOADED:
+    case LiftState::MOVING_DOWN:  // for changed speed
     case LiftState::MOVING_UP:
     {
         // Check if lift is already at or below min position
@@ -219,9 +219,9 @@ bool Lift::down()
         }
 
         MLOG_INFO("Lift [%s]: Moving down to %ld steps", getId().c_str(), _minSteps);
-        _state = LiftState::MOVING_DOWN;
+        liftState = LiftState::MOVING_DOWN;
         notifyStateChange();
-        return _stepper->moveTo(-_minSteps);
+        return _stepper->moveTo(-_minSteps, _stepper->_defaultSpeed * speedRatio);
     }
     default:
         MLOG_ERROR("Lift [%s]: Unknown state encountered in down()", getId().c_str());
@@ -241,13 +241,13 @@ bool Lift::reset()
     {
         MLOG_INFO("Lift [%s]: Already on limit", getId().c_str());
 
-        _state = LiftState::LIFT_DOWN_LOADED; // first UNLOAD?
+        liftState = LiftState::LIFT_DOWN_LOADED; // first UNLOAD?
         notifyStateChange();
         return true;
     }
 
     MLOG_INFO("Lift [%s]: Starting reset - moving down slowly until limit switch is pressed", getId().c_str());
-    _state = LiftState::RESET;
+    liftState = LiftState::RESET;
 
     // Slowly close the gate
     _loader->setValue(0.0f, 3000);
@@ -273,7 +273,7 @@ bool Lift::loadBallStart()
     }
 
     MLOG_INFO("Lift [%s]: Loading ball...", getId().c_str());
-    _state = LiftState::LIFT_DOWN_LOADING;
+    liftState = LiftState::LIFT_DOWN_LOADING;
     _loadStartTime = millis();
     _isLoaded = true;
     notifyStateChange();
@@ -290,7 +290,7 @@ bool Lift::loadBallEnd()
         return false;
     }
 
-    _state = LiftState::LIFT_DOWN_LOADED;
+    liftState = LiftState::LIFT_DOWN_LOADED;
     notifyStateChange();
 
     // Set loader to 0 (fully closed)
@@ -306,7 +306,7 @@ bool Lift::unloadBallStart()
     }
 
     MLOG_INFO("Lift [%s]: Unloading ball...", getId().c_str());
-    _state = LiftState::LIFT_UP_UNLOADING;
+    liftState = LiftState::LIFT_UP_UNLOADING;
     _unloadStartTime = millis();
     _isLoaded = false;
     notifyStateChange();
@@ -323,7 +323,7 @@ bool Lift::unloadBallEnd()
         return false;
     }
 
-    _state = LiftState::LIFT_UP_UNLOADED;
+    liftState = LiftState::LIFT_UP_UNLOADED;
     notifyStateChange();
 
     // Set unloader to 0 (fully closed)
@@ -332,7 +332,7 @@ bool Lift::unloadBallEnd()
 
 bool Lift::loadBall()
 {
-    switch (_state)
+    switch (liftState)
     {
     case LiftState::UNKNOWN:
     case LiftState::RESET:
@@ -344,7 +344,7 @@ bool Lift::loadBall()
     case LiftState::LIFT_UP_UNLOADING:
     case LiftState::MOVING_DOWN:
     case LiftState::LIFT_DOWN_LOADED:
-        MLOG_WARN("Lift [%s]: Cannot load ball, state is %s", getId().c_str(), stateToString(_state).c_str());
+        MLOG_WARN("Lift [%s]: Cannot load ball, state is %s", getId().c_str(), stateToString(liftState).c_str());
         return false;
 
     case LiftState::LIFT_DOWN_UNLOADED:
@@ -359,7 +359,7 @@ bool Lift::loadBall()
 
 bool Lift::unloadBall()
 {
-    switch (_state)
+    switch (liftState)
     {
     case LiftState::UNKNOWN:
     case LiftState::RESET:
@@ -370,7 +370,7 @@ bool Lift::unloadBall()
     case LiftState::MOVING_DOWN:
     case LiftState::LIFT_DOWN_LOADED:
     case LiftState::LIFT_DOWN_UNLOADED:
-        MLOG_WARN("Lift [%s]: Cannot unload ball, state is %s", getId().c_str(), stateToString(_state).c_str());
+        MLOG_WARN("Lift [%s]: Cannot unload ball, state is %s", getId().c_str(), stateToString(liftState).c_str());
         return false;
 
     case LiftState::LIFT_UP_UNLOADED:
@@ -398,11 +398,21 @@ bool Lift::control(const String &action, JsonObject *payload)
 {
     if (action == "up")
     {
-        return up();
+        float speedRatio = 1.0f;
+        if (payload && (*payload)["speedRatio"].is<float>())
+        {
+            speedRatio = (*payload)["speedRatio"];
+        }
+        return up(speedRatio);
     }
     else if (action == "down")
     {
-        return down();
+        float speedRatio = 1.0f;
+        if (payload && (*payload)["speedRatio"].is<float>())
+        {
+            speedRatio = (*payload)["speedRatio"];
+        }
+        return down(speedRatio);
     }
     else if (action == "reset")
     {
@@ -465,7 +475,7 @@ String Lift::getState()
     {
         doc[kv.key()] = kv.value();
     }
-    doc["state"] = stateToString(_state);
+    doc["state"] = stateToString(liftState);
     if (_stepper)
     {
         doc["currentPosition"] = _stepper->getCurrentPosition();

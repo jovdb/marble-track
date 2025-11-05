@@ -3,7 +3,18 @@ import { useDevice } from "./Devices";
 
 const deviceType = "lift";
 export interface ILiftState extends IDeviceState {
-  state: "Unknown" | "Error" | "Reset" | "LiftDownLoading" | "LiftDownLoaded" | "LiftUpUnloading" | "LiftUpUnloaded" | "LiftUpLoaded" | "LiftDownUnloaded" | "MovingUp" | "MovingDown";
+  state:
+    | "Unknown"
+    | "Error"
+    | "Reset"
+    | "LiftDownLoading"
+    | "LiftDownLoaded"
+    | "LiftUpUnloading"
+    | "LiftUpUnloaded"
+    | "LiftUpLoaded"
+    | "LiftDownUnloaded"
+    | "MovingUp"
+    | "MovingDown";
   currentPosition?: number;
   isBallWaiting: boolean;
   [key: string]: unknown;

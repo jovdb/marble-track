@@ -6,20 +6,11 @@ import { useWebSocket2 } from "../hooks/useWebSocket2";
 import {
   IWsSendAddDeviceMessage,
   IWsSendRemoveDeviceMessage,
-  IWsReceiveMessage,
   DeviceType,
 } from "../interfaces/WebSockets";
 
 // Available device types
-const DEVICE_TYPES = [
-  "Button",
-  "Buzzer",
-  "Led",
-  "Lift",
-  "PwmMotor",
-  "Stepper",
-  "Wheel",
-] as const;
+const DEVICE_TYPES = ["Button", "Buzzer", "Led", "Lift", "PwmMotor", "Stepper", "Wheel"] as const;
 
 export function DevicesList() {
   const [devicesState, { loadDevices }] = useDevices();
@@ -278,7 +269,7 @@ export function DevicesList() {
   };
 
   // Subscribe to WebSocket messages for config download
-  const unsubscribe = socketActions.subscribe((message: IWsReceiveMessage) => {
+  const unsubscribe = socketActions.subscribe((message) => {
     if (message.type === "devices-config" && "config" in message) {
       const blob = new Blob([JSON.stringify(message.config, null, 2)], {
         type: "application/json",

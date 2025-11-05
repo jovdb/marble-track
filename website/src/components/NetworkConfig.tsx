@@ -4,7 +4,6 @@ import { Popup } from "./Popup";
 import PopupHeader from "./PopupHeader";
 import PopupContent from "./PopupContent";
 import PopupFooter from "./PopupFooter";
-import { IWsReceiveMessage } from "../interfaces/WebSockets";
 
 interface NetworkConfigProps {
   isOpen: boolean;
@@ -97,7 +96,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
 
   // Subscribe to network config messages
   onMount(() => {
-    const unsubscribe = subscribe((message: IWsReceiveMessage) => {
+    const unsubscribe = subscribe((message) => {
       if (message.type === "network-config") {
         if ("error" in message) {
           setNetworkError(message.error);

@@ -164,8 +164,8 @@ export type IWsReceiveSingleMessage =
   | IWsReceiveStepsPerRevolutionMessage
   | IWsReceivePongMessage;
 
-// Message can be a single message or an array of messages (batch)
-export type IWsReceiveMessage = IWsReceiveSingleMessage | IWsReceiveSingleMessage[];
+// Message is always an array of messages (batch)
+export type IWsReceiveMessage = IWsReceiveSingleMessage[];
 
 export type IWsSendRestartMessage = IWsMessageBase<"restart">;
 

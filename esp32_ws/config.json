@@ -5,18 +5,31 @@
   },
   "devices": [
     {
+      "id": "manual-btn",
+      "type": "button",
+      "children": [],
+      "config": {
+        "name": "",
+        "pin": 12,
+        "pinMode": "pullup",
+        "debounceMs": 50,
+        "buttonType": "NormalOpen"
+      }
+    },
+    {
       "id": "lift",
       "type": "lift",
       "children": [
         "lift-stepper",
         "lift-limit",
         "lift-ball-sensor",
-        "lift-gate"
+        "lift-loader",
+        "lift-unloader"
       ],
       "config": {
-        "name": "lift",
+        "name": "",
         "minSteps": 0,
-        "maxSteps": 5000
+        "maxSteps": 1500
       }
     },
     {
@@ -28,8 +41,8 @@
         "stepperType": "DRIVER",
         "maxSpeed": 400,
         "maxAcceleration": 1000,
-        "defaultSpeed": 350,
-        "defaultAcceleration": 100,
+        "defaultSpeed": 400,
+        "defaultAcceleration": 200,
         "stepPin": 1,
         "dirPin": 2,
         "pin1": -1,
@@ -63,7 +76,7 @@
       }
     },
     {
-      "id": "lift-gate",
+      "id": "lift-loader",
       "type": "pwmmotor",
       "children": [],
       "config": {
@@ -78,34 +91,30 @@
       }
     },
     {
-      "id": "manual-btn",
-      "type": "button",
+      "id": "lift-unloader",
+      "type": "pwmmotor",
       "children": [],
       "config": {
         "name": "",
-        "pin": 12,
-        "pinMode": "pullup",
-        "debounceMs": 50,
-        "buttonType": "NormalOpen"
+        "pin": -1,
+        "pwmChannel": 0,
+        "frequency": 50,
+        "resolutionBits": 10,
+        "minDutyCycle": 5,
+        "maxDutyCycle": 10,
+        "defaultDurationInMs": 1000
       }
     },
     {
       "id": "splitter",
       "type": "wheel",
-      "children": [
-        "splitter-stepper",
-        "splitter-sensor"
-      ],
+      "children": ["splitter-stepper", "splitter-sensor"],
       "config": {
         "name": "Splitter",
-        "stepsPerRevolution": 4096,
+        "stepsPerRevolution": 4092,
         "maxStepsPerRevolution": 10000,
         "zeroPointDegree": 275,
-        "breakPoints": [
-          32,
-          163,
-          286
-        ]
+        "breakPoints": [56, 187, 309]
       }
     },
     {
@@ -164,21 +173,13 @@
     {
       "id": "wheel",
       "type": "wheel",
-      "children": [
-        "wheel-stepper",
-        "wheel-sensor"
-      ],
+      "children": ["wheel-stepper", "wheel-sensor"],
       "config": {
         "name": "Wheel",
-        "stepsPerRevolution": 138325,
+        "stepsPerRevolution": 138259,
         "maxStepsPerRevolution": 150000,
         "zeroPointDegree": 180,
-        "breakPoints": [
-          82,
-          160,
-          285,
-          317
-        ]
+        "breakPoints": [82, 160, 285, 317]
       }
     },
     {
@@ -190,7 +191,7 @@
         "stepperType": "DRIVER",
         "maxSpeed": 3000,
         "maxAcceleration": 3000,
-        "defaultSpeed": 1400,
+        "defaultSpeed": 1000,
         "defaultAcceleration": 200,
         "stepPin": 4,
         "dirPin": 5,

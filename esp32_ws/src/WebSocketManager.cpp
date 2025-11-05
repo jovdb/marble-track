@@ -573,9 +573,10 @@ void WebSocketManager::notifyClients(String state)
     }
     else
     {
-        // Send immediately
-        MLOG_WS_SEND("%s", state.c_str());
-        ws.textAll(state);
+        // Send immediately as array
+        String arrayMessage = "[" + state + "]";
+        MLOG_WS_SEND("%s", arrayMessage.c_str());
+        ws.textAll(arrayMessage);
     }
 }
 

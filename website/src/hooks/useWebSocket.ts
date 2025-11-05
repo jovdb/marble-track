@@ -129,18 +129,27 @@ export function createDeviceState<T>(deviceId: string) {
     }
 
     function onMessage(event: MessageEvent) {
-      const data = JSON.parse(event.data) as IWsReceiveMessage;
-
-      if (typeof data === "object" && data.type === "device-state" && data.deviceId === deviceId) {
-        if ("error" in data) {
-          setError(data.error);
-          setDeviceState(undefined);
-          setConnectionState(6);
-        } else {
-          setDeviceState(data.state as any);
-          setError(undefined);
-          setConnectionState(5);
-        }
+      try {
+        const messages = JSON.parse(event.data) as IWsReceiveMessage;
+        messages.forEach((data) => {
+          if (
+            typeof data === "object" &&
+            data.type === "device-state" &&
+            data.deviceId === deviceId
+          ) {
+            if ("error" in data) {
+              setError(data.error);
+              setDeviceState(undefined);
+              setConnectionState(6);
+            } else {
+              setDeviceState(data.state as any);
+              setError(undefined);
+              setConnectionState(5);
+            }
+          }
+        });
+      } catch {
+        // Ignore non-JSON
       }
     }
 

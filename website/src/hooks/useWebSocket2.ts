@@ -272,7 +272,7 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
     const data = event.data;
 
     // Parse message first
-    let parsedData: IWsReceiveMessage | undefined;
+    let parsedData: IWsReceiveMessage;
     try {
       parsedData = JSON.parse(data) as IWsReceiveMessage;
     } catch (error) {
@@ -280,69 +280,41 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
       return;
     }
 
-    // Check if it's an array (batch message)
-    if (Array.isArray(parsedData)) {
-      // console.log("WebSocket batch message received:", parsedData.length, "messages");
-
-      // Update message history with batch info
-      const batchSummary: IWebSocketMessage = {
-        data: `[BATCH: ${parsedData.length} messages]`,
-        direction: "incoming",
-        timestamp: Date.now(),
-      };
-      setStore("lastMessage", batchSummary.data);
-      setStore("lastMessages", (prev) => [...prev, JSON.stringify(batchSummary)].slice(-100));
-
-      // Process each message in the batch
-      parsedData.forEach((msg) => {
-        console.log("WebSocket message received:", msg);
-
-        // Skip heartbeat messages in batch
-        if (msg.type === "pong") {
-          setStore("lastHeartbeat", Date.now());
-          return;
-        }
-
-        // Notify subscribers for each message
-        messageSubscribers.forEach((callback) => {
-          try {
-            callback(msg);
-          } catch (error) {
-            console.error("Error in message subscriber callback for batched message:", error);
-          }
-        });
-      });
-
+    if (!Array.isArray(parsedData)) {
+      console.error("Unexpected WebSocket message format:", parsedData);
       return;
     }
 
-    // Handle single messages
-    // Handle heartbeat responses (pong)
-    if (parsedData.type === "pong") {
-      setStore("lastHeartbeat", Date.now());
-      console.debug("Heartbeat pong received");
-      // Don't add heartbeat messages to message history
-      return;
-    }
+    // Process batch of messages
+    // console.log("WebSocket batch message received:", parsedData.length, "messages");
 
-    // Update message history for non-heartbeat messages
-    const message: IWebSocketMessage = {
-      data,
+    // Update message history with batch info
+    const batchSummary: IWebSocketMessage = {
+      data: `[BATCH: ${parsedData.length} messages]`,
       direction: "incoming",
       timestamp: Date.now(),
     };
-    setStore("lastMessage", data);
-    setStore("lastMessages", (prev) => [...prev, JSON.stringify(message)].slice(-20)); // Keep only last 20 messages
+    setStore("lastMessage", batchSummary.data);
+    setStore("lastMessages", (prev) => [...prev, JSON.stringify(batchSummary)].slice(-100));
 
-    console.log("WebSocket message received:", data);
+    // Process each message in the batch
+    parsedData.forEach((msg) => {
+      console.log("WebSocket message received:", msg);
 
-    // Notify all subscribers
-    messageSubscribers.forEach((callback) => {
-      try {
-        callback(parsedData);
-      } catch (error) {
-        console.error("Error in message subscriber callback:", error);
+      // Skip heartbeat messages in batch
+      if (msg.type === "pong") {
+        setStore("lastHeartbeat", Date.now());
+        return;
       }
+
+      // Notify subscribers for each message
+      messageSubscribers.forEach((callback) => {
+        try {
+          callback(msg);
+        } catch (error) {
+          console.error("Error in message subscriber callback for batched message:", error);
+        }
+      });
     });
   };
 

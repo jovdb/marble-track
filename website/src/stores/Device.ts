@@ -6,15 +6,17 @@ function readDeviceConfig(ws: WebSocket, deviceId: string): Promise<any> {
   return new Promise((resolve, reject) => {
     const handler = (event: MessageEvent) => {
       try {
-        const data = JSON.parse(event.data) as IWsReceiveMessage;
-        if (data.type === "device-read-config" && data.deviceId === deviceId) {
-          ws.removeEventListener("message", handler);
-          if ("error" in data) {
-            reject(data.error);
-          } else {
-            resolve(data.config);
+        const messages = JSON.parse(event.data) as IWsReceiveMessage;
+        messages.forEach((data) => {
+          if (data.type === "device-read-config" && data.deviceId === deviceId) {
+            ws.removeEventListener("message", handler);
+            if ("error" in data) {
+              reject(data.error);
+            } else {
+              resolve(data.config);
+            }
           }
-        }
+        });
       } catch {
         // Ignore non-JSON
       }
@@ -28,15 +30,17 @@ function saveDeviceConfig(ws: WebSocket, deviceId: string, config: any): Promise
   return new Promise((resolve, reject) => {
     const handler = (event: MessageEvent) => {
       try {
-        const data = JSON.parse(event.data) as IWsReceiveMessage;
-        if (data.type === "device-save-config" && data.deviceId === deviceId) {
-          ws.removeEventListener("message", handler);
-          if ("error" in data) {
-            reject(data.error);
-          } else {
-            resolve(true);
+        const messages = JSON.parse(event.data) as IWsReceiveMessage;
+        messages.forEach((data) => {
+          if (data.type === "device-save-config" && data.deviceId === deviceId) {
+            ws.removeEventListener("message", handler);
+            if ("error" in data) {
+              reject(data.error);
+            } else {
+              resolve(true);
+            }
           }
-        }
+        });
       } catch {
         // Ignore non-JSON
       }
@@ -70,24 +74,30 @@ export function createDeviceStore<TDeviceType extends keyof IDeviceStates>(
 
   // Listen for state updates from WebSocket
   function onMessage(event: MessageEvent) {
-    const data = JSON.parse(event.data);
-    if (data.type === "device-state" && data.deviceId === deviceId) {
-      if (data.error) {
-        setError(data.error);
-        setState(undefined);
-      } else {
-        setState(data.state);
-        setError(undefined);
-      }
-      setConnectionState(WebSocket.OPEN);
-    } else if (data.type === "device-read-config" && data.deviceId === deviceId) {
-      if (data.error) {
-        setError(data.error);
-        setConfig(undefined);
-      } else {
-        setConfig(data.config);
-        setError(undefined);
-      }
+    try {
+      const messages = JSON.parse(event.data) as IWsReceiveMessage;
+      messages.forEach((data) => {
+        if (data.type === "device-state" && data.deviceId === deviceId) {
+          if ("error" in data) {
+            setError(data.error);
+            setState(undefined);
+          } else if ("state" in data) {
+            setState(data.state as any);
+            setError(undefined);
+          }
+          setConnectionState(WebSocket.OPEN);
+        } else if (data.type === "device-read-config" && data.deviceId === deviceId) {
+          if ("error" in data) {
+            setError(data.error);
+            setConfig(undefined);
+          } else if ("config" in data) {
+            setConfig(data.config as any);
+            setError(undefined);
+          }
+        }
+      });
+    } catch {
+      // Ignore non-JSON
     }
   }
 

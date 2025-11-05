@@ -2,7 +2,6 @@
 export type DeviceType =
   | "button"
   | "buzzer"
-  | "dividerwheel"
   | "gate"
   | "led"
   | "lift"

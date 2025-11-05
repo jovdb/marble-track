@@ -14,7 +14,6 @@ import {
 const DEVICE_TYPES = [
   "Button",
   "Buzzer",
-  "DividerWheel",
   "Led",
   "Lift",
   "PwmMotor",

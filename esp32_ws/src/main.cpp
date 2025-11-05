@@ -11,7 +11,6 @@
 #include "devices/Led.h"
 #include "devices/Button.h"
 #include "devices/Device.h"
-#include "devices/DividerWheel.h"
 #include "DeviceManager.h"
 #include <devices/Buzzer.h>
 #include "esp_log.h"

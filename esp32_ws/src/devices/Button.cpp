@@ -33,6 +33,9 @@ Button::Button(const String &id, NotifyClients callback)
  */
 void Button::setup()
 {
+    // Call base setup first (though Button has no children, this maintains consistency)
+    Device::setup();
+
     if (_pin < 0)
     {
         MLOG_WARN("Button [%s]: Pin not configured, skipping setup", _id.c_str());

@@ -78,8 +78,9 @@ void Lift::loop()
         else if (_stepper && !_stepper->isMoving())
         {
             MLOG_WARN("Lift [%s]: Reset incomplete - Lift stopped but limit switch not pressed", getId().c_str());
-            //_state = LiftState::ERROR;
-            // notifyStateChange();
+            // ERROR vs IDLE
+            _state = LiftState::IDLE;
+            notifyStateChange();
         }
         break;
     case LiftState::BALL_WAITING:
@@ -200,11 +201,13 @@ bool Lift::reset()
     // Slowly close the gate
     _gate->setValue(0.0f, 3000);
 
-    notifyStateChange();
-
     // Move down slowly (negative direction) until limit switch is pressed
     // We'll move in small steps and check the limit switch
-    return _stepper->move(_maxSteps - _minSteps, _stepper ? _stepper->_defaultSpeed / 2 : 100);
+    bool startedMove = _stepper->move(_maxSteps - _minSteps, _stepper ? _stepper->_defaultSpeed / 3 : 100);
+
+    notifyStateChange();
+
+    return startedMove;
 
     // TODO:
     // When reset, go up and empty the lift

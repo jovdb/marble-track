@@ -43,6 +43,9 @@ Stepper::~Stepper()
  */
 void Stepper::setup()
 {
+    // Call base setup first
+    Device::setup();
+
     if (!_configured)
     {
         // MLOG_WARN("Stepper [%s]: Not configured yet - call configure2Pin() or configure4Pin() first", _id.c_str());

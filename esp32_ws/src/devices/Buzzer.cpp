@@ -72,6 +72,9 @@ void Buzzer::startupTone()
  */
 void Buzzer::setup()
 {
+    // Call base setup first
+    Device::setup();
+
     if (_pin < 0)
     {
         MLOG_WARN("Buzzer [%s]: Pin not configured, defaulting to pin 2", _id.c_str());

@@ -154,8 +154,8 @@ void AutoMode::loop()
 
             if (lastWheelExitTime > 0 && currentMillis > lastWheelExitTime + 500)
             {
-                MLOG_INFO("AutoMode: Splitter turns because wheel ball unloading, remaining count %d", wheelExitMaxBallCount);
                 wheelExitMaxBallCount--;
+                MLOG_INFO("AutoMode: Splitter turns because wheel ball unloading");
                 lastWheelExitTime = 0;
                 _splitter->nextBreakPoint();
             }
@@ -175,7 +175,7 @@ void AutoMode::loop()
                 else if (currentMillis >= splitterIdleStartTime + randomSplitterDelayMs)
                 {
                     wheelExitMaxBallCount--;
-                    MLOG_INFO("AutoMode: Splitter turns to unload possible balls, remaining possible balls %d", wheelExitMaxBallCount);
+                    MLOG_INFO("AutoMode: Splitter turns to unload possible balls, remaining possible balls: %d", wheelExitMaxBallCount);
                     _splitter->nextBreakPoint();
                     splitterDelaySet = false;
                 }

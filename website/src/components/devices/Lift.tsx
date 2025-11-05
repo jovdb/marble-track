@@ -55,10 +55,10 @@ export function Lift(props: { id: string }) {
 
   function toggleGate() {
     if (gateIsUp()) {
-      actions.gateDown();
+      actions.loadBallEnd();
       setGateIsUp(false);
     } else {
-      actions.gateUp();
+      actions.loadBallStart();
       setGateIsUp(true);
     }
   }

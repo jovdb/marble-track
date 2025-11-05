@@ -35,15 +35,15 @@ public:
     bool up();
     bool down();
     bool reset();
-    bool gateUp();
-    bool gateDown();
+    bool loadBallStart();
+    bool loadBallEnd();
 
 private:
     String stateToString(LiftState state) const;
     Stepper *_stepper;
     Button *_limitSwitch;
     Button *_ballSensor;
-    PwmMotor *_gate;
+    PwmMotor *_loader;
     LiftState _state;
     long _minSteps = 0;
     long _maxSteps = 1000;

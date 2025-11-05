@@ -2,7 +2,7 @@
 #include "Logging.h"
 
 Lift::Lift(const String &id, NotifyClients notifyClients)
-    : Device(id, "lift", notifyClients), _stepper(nullptr), _limitSwitch(nullptr), _ballSensor(nullptr), _gate(nullptr), _state(LiftState::UNKNOWN)
+    : Device(id, "lift", notifyClients), _stepper(nullptr), _limitSwitch(nullptr), _ballSensor(nullptr), _loader(nullptr), _state(LiftState::UNKNOWN)
 {
 }
 
@@ -15,11 +15,11 @@ void Lift::setup()
         _stepper = new Stepper(getId() + "-stepper", _notifyClients);
         _limitSwitch = new Button(getId() + "-limit", _notifyClients);
         _ballSensor = new Button(getId() + "-ball-sensor", _notifyClients);
-        _gate = new PwmMotor(getId() + "-gate", _notifyClients);
+        _loader = new PwmMotor(getId() + "-loader", _notifyClients);
         addChild(_stepper);
         addChild(_limitSwitch);
         addChild(_ballSensor);
-        addChild(_gate);
+        addChild(_loader);
     }
     else
     {
@@ -31,7 +31,7 @@ void Lift::setup()
         if (children.size() >= 3)
             _ballSensor = static_cast<Button *>(children[2]);
         if (children.size() >= 4)
-            _gate = static_cast<PwmMotor *>(children[3]);
+            _loader = static_cast<PwmMotor *>(children[3]);
     }
 
     // Call base setup to setup children
@@ -91,7 +91,7 @@ void Lift::loop()
             notifyStateChange();
         }
 
-        if (_gate->getValue() > 90)
+        if (_loader->getValue() > 90)
         {
             _state = LiftState::LIFT_LOADED;
             notifyStateChange();
@@ -199,7 +199,7 @@ bool Lift::reset()
     _state = LiftState::RESET;
 
     // Slowly close the gate
-    _gate->setValue(0.0f, 3000);
+    _loader->setValue(0.0f, 3000);
 
     // Move down slowly (negative direction) until limit switch is pressed
     // We'll move in small steps and check the limit switch
@@ -213,36 +213,35 @@ bool Lift::reset()
     // When reset, go up and empty the lift
 }
 
-bool Lift::gateUp()
+bool Lift::loadBallStart()
 {
-    if (!_gate)
+    if (!_loader)
     {
-        MLOG_WARN("Lift [%s]: Gate not initialized", getId().c_str());
+        MLOG_WARN("Lift [%s]: Lift Loader not initialized", getId().c_str());
         return false;
     }
 
-    MLOG_INFO("Lift [%s]: Setting gate to up (100)", getId().c_str());
+    MLOG_INFO("Lift [%s]: Setting loader to load ball end (0)", getId().c_str());
     _state = LiftState::LIFT_LOADED;
     notifyStateChange();
 
-    // Set gate to 100 (fully open)
-    return _gate->setValue(100.0f);
+    // Set loader to 100 (fully open)
+    return _loader->setValue(100.0f);
 }
 
-bool Lift::gateDown()
+bool Lift::loadBallEnd()
 {
-    if (!_gate)
+    if (!_loader)
     {
-        MLOG_WARN("Lift [%s]: Gate not initialized", getId().c_str());
+        MLOG_WARN("Lift [%s]: Lift Loader not initialized", getId().c_str());
         return false;
     }
 
-    MLOG_INFO("Lift [%s]: Setting gate to down (0)", getId().c_str());
-    _state = LiftState::IDLE;
+    _state = LiftState::LIFT_LOADED;
     notifyStateChange();
 
-    // Set gate to 0 (fully closed)
-    return _gate->setValue(0.0f);
+    // Set loader to 0 (fully closed)
+    return _loader->setValue(0.0f);
 }
 
 bool Lift::control(const String &action, JsonObject *payload)
@@ -259,13 +258,13 @@ bool Lift::control(const String &action, JsonObject *payload)
     {
         return reset();
     }
-    else if (action == "gateUp")
+    else if (action == "loadBallStart")
     {
-        return gateUp();
+        return loadBallStart();
     }
-    else if (action == "gateDown")
+    else if (action == "loadBallEnd")
     {
-        return gateDown();
+        return loadBallEnd();
     }
     else
     {

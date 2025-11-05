@@ -41,20 +41,20 @@ export function useLift(deviceId: string) {
       fn: "reset",
     });
 
-  const gateUp = () =>
+  const loadBallStart = () =>
     sendMessage({
       type: "device-fn",
       deviceId,
       deviceType,
-      fn: "gateUp",
+      fn: "loadBallStart",
     });
 
-  const gateDown = () =>
+  const loadBallEnd = () =>
     sendMessage({
       type: "device-fn",
       deviceId,
       deviceType,
-      fn: "gateDown",
+      fn: "loadBallEnd",
     });
 
   return [
@@ -64,8 +64,8 @@ export function useLift(deviceId: string) {
       up,
       down,
       reset,
-      gateUp,
-      gateDown,
+      loadBallStart,
+      loadBallEnd,
     },
   ] as const;
 }

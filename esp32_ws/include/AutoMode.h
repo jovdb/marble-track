@@ -9,6 +9,7 @@ class Button;
 class Buzzer;
 class Wheel;
 class Led;
+class Lift;
 
 class AutoMode
 {
@@ -30,6 +31,8 @@ private:
     Wheel *_splitter;
     Button *_splitterNextBtn;
     Led *_splitterBtnLed;
+
+    Lift *_lift;
 };
 
 #endif // AUTOMODE_H

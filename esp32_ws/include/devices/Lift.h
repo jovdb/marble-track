@@ -60,8 +60,10 @@ private:
     long _maxSteps = 1000;
     unsigned long _loadStartTime = 0;
     unsigned long _unloadStartTime = 0;
+    unsigned long _unloadEndTime = 0;
     bool _isBallWaiting = false;
     bool _isLoaded = false;
+    int _resetStep = 0;
 };
 
 #endif // LIFT_H

@@ -261,7 +261,7 @@ void AutoMode::loop()
         break;
     case Lift::LiftState::LIFT_UP_UNLOADED:
         _speedMoveDownCalled = false; // Reset flag when state changes
-        _lift->down(_lift->isBallWaiting() ? 1.0f : 0.05f);
+        _lift->down(_lift->isBallWaiting() ? 1.0f : 0.1f);
         break;
     default:
         MLOG_WARN("AutoMode: Unknown lift state");

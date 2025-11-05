@@ -71,19 +71,79 @@ void Lift::loop()
         break;
     }
     case LiftState::RESET:
-        // During reset, check if limit switch is pressed
-        if (_limitSwitch && _limitSwitch->isPressed())
+        // Handle reset sequence steps
+        if (_resetStep == 1) // Move unload out of the way first
         {
-            MLOG_INFO("Lift [%s]: Reset complete - limit switch pressed", getId().c_str());
-            _stepper->setCurrentPosition(0);         // Reset position to zero
-            liftState = LiftState::LIFT_DOWN_LOADED; // First unload?
-            notifyStateChange();
+            _unloader->setValue(0.0f);
+            _unloadEndTime = millis();
+            _resetStep = 2; // waiting 1s
         }
-        else if (_stepper && !_stepper->isMoving())
+        else if (_resetStep == 2) // Waiting after unload end
         {
-            MLOG_WARN("Lift [%s]: Reset incomplete - Lift stopped but limit switch not pressed", getId().c_str());
-            liftState = LiftState::ERROR;
-            notifyStateChange();
+            if (millis() - _unloadEndTime >= 1000)
+            {
+                if (_limitSwitch->isPressed())
+                {
+                    MLOG_INFO("Lift [%s]: Already on limit, moving up", getId().c_str());
+                    _stepper->setCurrentPosition(0);
+                    _stepper->moveTo(-_maxSteps);
+                    _resetStep = 4; // moving up
+                }
+                else
+                {
+                    MLOG_INFO("Lift [%s]: Moving down to limit", getId().c_str());
+                    _stepper->move((_maxSteps - _minSteps) * 1.1);
+                    _resetStep = 3; // moving down
+                }
+            }
+        }
+        else if (_resetStep == 3) // Moving down to limit
+        {
+            if (_limitSwitch && _limitSwitch->isPressed())
+            {
+                MLOG_INFO("Lift [%s]: Limit switch reached, moving up", getId().c_str());
+                _stepper->setCurrentPosition(0);
+                _stepper->moveTo(-_maxSteps);
+                _resetStep = 4;
+            }
+            else if (_stepper && !_stepper->isMoving())
+            {
+                MLOG_WARN("Lift [%s]: Reset failed - stopped moving but limit not pressed", getId().c_str());
+                liftState = LiftState::ERROR;
+                _resetStep = 0;
+                notifyStateChange();
+            }
+        }
+        else if (_resetStep == 4) // Moving up
+        {
+            if (_stepper && !_stepper->isMoving())
+            {
+                MLOG_INFO("Lift [%s]: At top, unloading", getId().c_str());
+                _unloader->setValue(100.0f);
+                _unloadStartTime = millis();
+                _resetStep = 5;
+            }
+        }
+        else if (_resetStep == 5) // Unloading
+        {
+            if (millis() - _unloadStartTime >= 2000)
+            {
+                MLOG_INFO("Lift [%s]: Unload complete, moving down", getId().c_str());
+                _unloader->setValue(0.0f);
+                _isLoaded = false;
+                _stepper->moveTo(-_minSteps, _stepper->_defaultSpeed);
+                _resetStep = 6;
+            }
+        }
+        else if (_resetStep == 6) // Moving down
+        {
+            if (_stepper && !_stepper->isMoving())
+            {
+                MLOG_INFO("Lift [%s]: Reset complete", getId().c_str());
+                liftState = LiftState::LIFT_DOWN_UNLOADED;
+                _resetStep = 0;
+                notifyStateChange();
+            }
         }
         break;
     case LiftState::ERROR:
@@ -158,9 +218,9 @@ bool Lift::up(float speedRatio)
     case LiftState::LIFT_UP_UNLOADED:
     case LiftState::LIFT_UP_LOADED:
     case LiftState::LIFT_UP_UNLOADING:
-    MLOG_WARN("Lift [%s]: Cannot move up, state is %s", getId().c_str(), stateToString(liftState).c_str());
-    return false;
-    
+        MLOG_WARN("Lift [%s]: Cannot move up, state is %s", getId().c_str(), stateToString(liftState).c_str());
+        return false;
+
     case LiftState::LIFT_DOWN_UNLOADED:
     case LiftState::LIFT_DOWN_LOADED:
     case LiftState::MOVING_DOWN:
@@ -207,7 +267,7 @@ bool Lift::down(float speedRatio)
 
     case LiftState::LIFT_UP_UNLOADED:
     case LiftState::LIFT_UP_LOADED:
-    case LiftState::MOVING_DOWN:  // for changed speed
+    case LiftState::MOVING_DOWN: // for changed speed
     case LiftState::MOVING_UP:
     {
         // Check if lift is already at or below min position
@@ -237,31 +297,16 @@ bool Lift::reset()
         return false;
     }
 
-    if (_limitSwitch->isPressed())
-    {
-        MLOG_INFO("Lift [%s]: Already on limit", getId().c_str());
+    MLOG_INFO("Lift [%s]: Starting reset sequence", getId().c_str());
 
-        liftState = LiftState::LIFT_DOWN_LOADED; // first UNLOAD?
-        notifyStateChange();
-        return true;
-    }
-
-    MLOG_INFO("Lift [%s]: Starting reset - moving down slowly until limit switch is pressed", getId().c_str());
     liftState = LiftState::RESET;
+    _resetStep = 1; // unload end
 
     // Slowly close the gate
     _loader->setValue(0.0f, 3000);
 
-    // Move down slowly (negative direction) until limit switch is pressed
-    // We'll move in small steps and check the limit switch
-    bool startedMove = _stepper->move((_maxSteps - _minSteps) * 1.1, _stepper ? _stepper->_defaultSpeed / 3 : 100);
-
     notifyStateChange();
-
-    return startedMove;
-
-    // TODO:
-    // When reset, go up and empty the lift
+    return true;
 }
 
 bool Lift::loadBallStart()

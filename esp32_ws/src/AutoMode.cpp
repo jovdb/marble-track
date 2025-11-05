@@ -228,6 +228,28 @@ void AutoMode::loop()
             MLOG_INFO("AutoMode: Loading ball into lift");
             _lift->loadBall();
         }
+
+        // Sometimes with random delay, try to load a ball
+        // Maybe switch is not detected properly
+        else
+        {
+            static ulong liftIdleStartTime = 0;
+            static int randomLiftDelayMs = 0;
+            static bool liftDelaySet = false;
+
+            if (!liftDelaySet)
+            {
+                liftIdleStartTime = currentMillis;
+                randomLiftDelayMs = random(60000, 300000); // 10s to 60s
+                liftDelaySet = true;
+            }
+            else if (currentMillis >= liftIdleStartTime + randomLiftDelayMs)
+            {
+                MLOG_INFO("AutoMode: Random starting lift, for case the sensor didn't detect a ball");
+                _lift->loadBall();
+                liftDelaySet = false;
+            }
+        }
         break;
     case Lift::LiftState::LIFT_DOWN_LOADED:
         _speedMoveDownCalled = false; // Reset flag when state changes

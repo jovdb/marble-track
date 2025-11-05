@@ -17,11 +17,14 @@ public:
     enum class LiftState
     {
         UNKNOWN,
-        IDLE,
         ERROR,
         RESET,
-        BALL_WAITING,
-        LIFT_LOADED,
+        LIFT_DOWN_LOADING,
+        LIFT_DOWN_LOADED,
+        LIFT_DOWN_UNLOADED,
+        LIFT_UP_UNLOADING,
+        LIFT_UP_UNLOADED,
+        LIFT_UP_LOADED,
         MOVING_UP,
         MOVING_DOWN
     };
@@ -35,18 +38,29 @@ public:
     bool up();
     bool down();
     bool reset();
-    bool loadBallStart();
-    bool loadBallEnd();
+    bool loadBall();
+    bool unloadBall();
+    bool isBallWaiting();
 
 private:
+    bool isLoaded();
     String stateToString(LiftState state) const;
+    bool loadBallStart();
+    bool loadBallEnd();
+    bool unloadBallStart();
+    bool unloadBallEnd();
     Stepper *_stepper;
     Button *_limitSwitch;
     Button *_ballSensor;
     PwmMotor *_loader;
+    PwmMotor *_unloader;
     LiftState _state;
     long _minSteps = 0;
     long _maxSteps = 1000;
+    unsigned long _loadStartTime = 0;
+    unsigned long _unloadStartTime = 0;
+    bool _isBallWaiting = false;
+    bool _isLoaded = false;
 };
 
 #endif // LIFT_H

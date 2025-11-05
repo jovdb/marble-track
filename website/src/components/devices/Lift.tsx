@@ -20,46 +20,88 @@ export function Lift(props: { id: string }) {
       state()?.state === "Reset" || state()?.state === "MovingUp" || state()?.state === "MovingDown"
   );
 
-  const canMove = createMemo(() => state()?.state !== "Unknown" && state()?.state !== "Error");
+  const canLoad = createMemo(
+    () => state()?.state === "LiftDownUnloaded" || state()?.state === "LiftDownLoaded"
+  );
+
+  const canUnload = createMemo(
+    () => state()?.state === "LiftUpLoaded" || state()?.state === "LiftUpUnloaded"
+  );
+
+  const canUp = createMemo(() => {
+    const currentState = state()?.state;
+    console.log("canUp", currentState);
+    return (
+      currentState === "LiftDownUnloaded" ||
+      currentState === "LiftDownLoaded" ||
+      currentState === "MovingDown"
+    );
+  });
+
+  const canDown = createMemo(() => {
+    const currentState = state()?.state;
+    console.log("canDown", currentState);
+    return (
+      currentState === "LiftUpUnloaded" ||
+      currentState === "LiftUpLoaded" ||
+      currentState === "MovingUp"
+    );
+  });
+
+  const canLoadOrUnload = createMemo(() => canLoad() || canUnload());
+
+  const getLoadUnloadText = createMemo(() => {
+    if (
+      state()?.state === "LiftUpLoaded" ||
+      state()?.state === "LiftUpUnloading" ||
+      state()?.state === "LiftUpUnloaded" ||
+      state()?.state === "MovingUp"
+    )
+      return "Unload";
+    return "Load"; // fallback
+  });
+
+  const handleLoadUnload = () => {
+    if (canUnload()) {
+      actions.unloadBall();
+    } else if (canLoad()) {
+      actions.loadBall();
+    }
+  };
 
   const currentPosition = () => state()?.currentPosition ?? 0;
   const minSteps = () => config()?.minSteps ?? 0;
   const maxSteps = () => config()?.maxSteps ?? 1000;
 
-  // Track gate and lift direction toggle states
-  const [gateIsUp, setGateIsUp] = createSignal(false);
+  // Track lift direction toggle state
   const [liftIsUp, setLiftIsUp] = createSignal(false);
 
   function getStateString(state: string | undefined) {
     switch (state) {
       case "Unknown":
         return "Unknown";
-      case "Idle":
-        return "Idle";
-      case "BallWaiting":
-        return "Ball Waiting";
       case "Reset":
         return "Resetting...";
       case "Error":
         return "Error";
-      case "LiftLoaded":
-        return "Lift Loaded";
+      case "LiftDownLoading":
+        return "Lift Down Loading";
+      case "LiftDownLoaded":
+        return "Lift Down Loaded";
+      case "LiftUpUnloading":
+        return "Lift Up Unloading";
+      case "LiftUpUnloaded":
+        return "Lift Up Unloaded";
+      case "LiftUpLoaded":
+        return "Lift Up Loaded";
+      case "LiftDownUnloaded":
+        return "Lift Down Unloaded";
       case "MovingUp":
         return "Moving Up";
       case "MovingDown":
         return "Moving Down";
       default:
         return "Unknown";
-    }
-  }
-
-  function toggleGate() {
-    if (gateIsUp()) {
-      actions.loadBallEnd();
-      setGateIsUp(false);
-    } else {
-      actions.loadBallStart();
-      setGateIsUp(true);
     }
   }
 
@@ -143,6 +185,9 @@ export function Lift(props: { id: string }) {
                 Status: {getStateString(state()?.state)}
               </span>
             </div>
+            <div style={{ "font-size": "0.9em", opacity: 0.7, "margin-top": "0.5em" }}>
+              Ball: {state()?.isBallWaiting ? "Waiting" : "Not waiting"}
+            </div>
           </div>
           <div class={styles.device__controls}>
             <button
@@ -152,13 +197,17 @@ export function Lift(props: { id: string }) {
             >
               Reset
             </button>
-            <button class={styles.device__button} onClick={toggleGate} disabled={isMoving()}>
-              Gate {gateIsUp() ? "Down" : "Up"}
+            <button
+              class={styles.device__button}
+              onClick={handleLoadUnload}
+              disabled={!canLoadOrUnload()}
+            >
+              {getLoadUnloadText()}
             </button>
             <button
               class={styles.device__button}
               onClick={toggleLift}
-              disabled={!canMove()}
+              disabled={liftIsUp() ? !canDown() : !canUp()}
             >
               {liftIsUp() ? "Down" : "Up"}
             </button>

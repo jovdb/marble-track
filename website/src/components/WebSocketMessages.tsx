@@ -1,5 +1,5 @@
 import { type Component, For, createSignal, createMemo, createEffect, onMount } from "solid-js";
-import { useWebSocket2 } from "../hooks/useWebSocket2";
+import { useWebSocket2 } from "../hooks/useWebSocket";
 import { useDevices } from "../stores/Devices";
 import { IncomingMessageIcon, OutgoingMessageIcon, MessageIcon } from "./icons/Icons";
 import styles from "./WebSocketMessages.module.css";

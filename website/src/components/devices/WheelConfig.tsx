@@ -4,7 +4,7 @@ import { createMemo, For, onMount, createSignal, onCleanup } from "solid-js";
 import DeviceConfig from "./DeviceConfig";
 import { useWheel } from "../../stores/Wheel";
 import { WheelGraphic } from "./WheelGraphic";
-import { useWebSocket2 } from "../../hooks/useWebSocket2";
+import { useWebSocket2 } from "../../hooks/useWebSocket";
 
 export function WheelConfig(props: { device: any; actions: any; onClose: () => void }) {
   const device = () => props.device;

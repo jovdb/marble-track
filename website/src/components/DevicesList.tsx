@@ -2,7 +2,7 @@ import { createEffect, For, createSignal, onMount, onCleanup } from "solid-js";
 import { getDeviceIcon, TrashIcon, ChevronRightIcon, ChevronDownIcon } from "./icons/Icons";
 import styles from "./DevicesList.module.css";
 import { useDevices, type IDevice } from "../stores/Devices";
-import { useWebSocket2 } from "../hooks/useWebSocket2";
+import { useWebSocket2 } from "../hooks/useWebSocket";
 import {
   IWsSendAddDeviceMessage,
   IWsSendRemoveDeviceMessage,

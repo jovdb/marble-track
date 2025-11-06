@@ -2,7 +2,7 @@ import { createMemo, createSignal, For, JSX, Show } from "solid-js";
 import styles from "./Device.module.css";
 import { useDevice } from "../../stores/Devices";
 import { renderDeviceComponent } from "../Devices";
-import { useWebSocket2 } from "../../hooks/useWebSocket2";
+import { useWebSocket2 } from "../../hooks/useWebSocket";
 import { BroadcastIcon } from "../icons/Icons";
 
 interface DeviceProps {

@@ -1,7 +1,7 @@
 import { type Component, createSignal } from "solid-js";
 import styles from "./Header.module.css";
 import logo from "../assets/logo-64.png";
-import { useWebSocket2 } from "../hooks/useWebSocket2";
+import { useWebSocket2 } from "../hooks/useWebSocket";
 import { ConnectedIcon, DisconnectedIcon, RestartIcon, WifiConnectedIcon } from "./icons/Icons";
 import { TransparentButton } from "./TransparentButton";
 import { NetworkConfig } from "./NetworkConfig";

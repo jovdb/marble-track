@@ -421,19 +421,3 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
  * }
  * ```
  */
-export function useWebSocketHealth(timeoutMs: number = 60000) {
-  const [wsStore] = useWebSocket2();
-
-  return createMemo(() => {
-    if (!wsStore.isConnected || !wsStore.isHeartbeatEnabled) {
-      return false;
-    }
-
-    if (wsStore.lastHeartbeat === null) {
-      return false;
-    }
-
-    const timeSinceLastHeartbeat = Date.now() - wsStore.lastHeartbeat;
-    return timeSinceLastHeartbeat < timeoutMs;
-  });
-}

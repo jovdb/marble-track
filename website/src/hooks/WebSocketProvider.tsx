@@ -1,7 +1,7 @@
 import { createContext } from "solid-js";
 import type { ParentComponent } from "solid-js";
-import { getWebSocketContextValue, initializeWebSocket } from "./useWebSocket2";
-import type { IWebSocketStore, IWebSocketActions } from "./useWebSocket2";
+import { getWebSocketContextValue, initializeWebSocket } from "./useWebSocket";
+import type { IWebSocketStore, IWebSocketActions } from "./useWebSocket";
 
 // WebSocket Context type
 type WebSocketContextType =

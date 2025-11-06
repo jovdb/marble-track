@@ -1,5 +1,5 @@
 import { For, onMount, createMemo } from "solid-js";
-import { useWebSocket2 } from "../hooks/useWebSocket2";
+import { useWebSocket2 } from "../hooks/useWebSocket";
 import { useDevices } from "../stores/Devices";
 import { Led } from "./devices/Led";
 import { logger } from "../stores/logger";

@@ -64,19 +64,19 @@ void AutoMode::setup()
 void AutoMode::loop()
 {
     // Reset devices at start
-    if (_wheel->wheelState == Wheel::WheelState::UNKNOWN)
+    if (_wheel && _wheel->wheelState == Wheel::WheelState::UNKNOWN)
     {
         MLOG_INFO("Initializing Wheel");
         _wheel->reset();
     }
 
-    if (_splitter->wheelState == Wheel::WheelState::UNKNOWN)
+    if (_splitter && _splitter->wheelState == Wheel::WheelState::UNKNOWN)
     {
         MLOG_INFO("Initializing Stepper");
         _splitter->reset();
     }
 
-    if (_lift->liftState == Lift::LiftState::UNKNOWN)
+    if (_lift && _lift->liftState == Lift::LiftState::UNKNOWN)
     {
         MLOG_INFO("Initializing Lift");
         _lift->reset();
@@ -98,7 +98,7 @@ void AutoMode::loop()
     // Wheel ball exit counting
     static uint wheelExitMaxBallCount = 2; // Max number of ball loaded due to reset
     static ulong lastWheelExitTime = 0;
-    if (_wheel->onCurrentBreakpointIndexChanged)
+    if (_wheel && _wheel->onCurrentBreakpointIndexChanged)
     {
         // Increase on Ball Exit breakpoints
         const int currentIndex = _wheel->getCurrentBreakpointIndex();
@@ -123,7 +123,7 @@ void AutoMode::loop()
     static int randomWheelDelayMs = 0;
     static bool wheelDelaySet = false;
 
-    switch (_wheel->wheelState)
+    if (_wheel) switch (_wheel->wheelState)
     {
     case Wheel::WheelState::UNKNOWN:
     case Wheel::WheelState::CALIBRATING:
@@ -155,7 +155,7 @@ void AutoMode::loop()
     }
 
     // Splitter
-    switch (_splitter->wheelState)
+    if (_splitter) switch (_splitter->wheelState)
     {
     case Wheel::WheelState::UNKNOWN:
     case Wheel::WheelState::CALIBRATING:
@@ -204,7 +204,7 @@ void AutoMode::loop()
 
     // Lift
     static bool _speedMoveDownCalled = false;
-    switch (_lift->liftState)
+    if (_lift) switch (_lift->liftState)
     {
     case Lift::LiftState::UNKNOWN:
     case Lift::LiftState::RESET:

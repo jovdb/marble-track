@@ -151,7 +151,7 @@ export default function PwmMotorConfig(props: PwmMotorConfigProps) {
           </DeviceConfigItem>
         </DeviceConfigRow>
         <DeviceConfigRow>
-          <DeviceConfigItem name="Min Duty Cycle (%)">
+          <DeviceConfigItem name="Duty Cycle at 0%">
             <input
               type="number"
               value={minDutyCycle().toFixed(1)}
@@ -160,12 +160,12 @@ export default function PwmMotorConfig(props: PwmMotorConfigProps) {
               step={0.1}
               onInput={(event) => setMinDutyCycle(Number(event.currentTarget.value))}
               style={{ width: "5em", "margin-left": "0.5rem" }}
-              title="Minimum duty cycle percentage (0.0-100.0)"
+              title="Duty cycle percentage when value is 0% (0.0-100.0)"
             />
           </DeviceConfigItem>
         </DeviceConfigRow>
         <DeviceConfigRow>
-          <DeviceConfigItem name="Max Duty Cycle (%)">
+          <DeviceConfigItem name="Duty Cycle at 100%">
             <input
               type="number"
               value={maxDutyCycle().toFixed(1)}
@@ -174,7 +174,7 @@ export default function PwmMotorConfig(props: PwmMotorConfigProps) {
               step={0.1}
               onInput={(event) => setMaxDutyCycle(Number(event.currentTarget.value))}
               style={{ width: "5em", "margin-left": "0.5rem" }}
-              title="Maximum duty cycle percentage (0.0-100.0)"
+              title="Duty cycle percentage when value is 100% (0.0-100.0)"
             />
           </DeviceConfigItem>
         </DeviceConfigRow>

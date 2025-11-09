@@ -34,11 +34,21 @@ export function Device(props: DeviceProps) {
 
   return (
     <div class={styles.device} data-device-id={props.id} id={`device-${props.id}`}>
-      <div class={styles.device__header}>
+      <div
+        class={styles.device__header}
+        onClick={() => {
+          setShowChildren(false);
+          setShowConfig(false);
+          setShowMessages(false);
+        }}
+      >
         <div class={styles["device__header-left"]}>
           <button
             class={styles["device__collapse-button"]}
-            onClick={() => setIsCollapsed(!isCollapsed())}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsCollapsed(!isCollapsed());
+            }}
             aria-expanded={!isCollapsed()}
             aria-label={isCollapsed() ? "Expand device" : "Collapse device"}
             title={isCollapsed() ? "Expand device" : "Collapse device"}
@@ -80,7 +90,8 @@ export function Device(props: DeviceProps) {
                 aria-controls={configPanelId}
                 aria-label={showConfig() ? "Hide configuration" : "Show configuration"}
                 title={showConfig() ? "Hide configuration" : "Show configuration"}
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   setShowConfig((v) => !v);
                   setShowChildren(false);
                   setShowMessages(false);
@@ -111,7 +122,8 @@ export function Device(props: DeviceProps) {
                 type="button"
                 aria-label={showChildren() ? "Hide advanced" : "Show advanced"}
                 title={showChildren() ? "Hide children" : "Show children"}
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   setShowChildren((v) => !v);
                   setShowConfig(false);
                   setShowMessages(false);
@@ -149,7 +161,8 @@ export function Device(props: DeviceProps) {
               aria-controls={logsPanelId}
               aria-label={showMessagesPanel() ? "Hide messages" : "Show messages"}
               title={showMessagesPanel() ? "Hide messages" : "Show messages"}
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setShowMessages((v) => !v);
                 setShowChildren(false);
                 setShowConfig(false);

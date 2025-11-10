@@ -1,5 +1,5 @@
 import { Device } from "./Device";
-import { createMemo, createSignal } from "solid-js";
+import { createMemo } from "solid-js";
 import styles from "./Device.module.css";
 
 import { LiftConfig } from "./LiftConfig";

@@ -64,22 +64,21 @@ export function Stepper(props: { id: string }) {
       </div>
       <div class={styles["device__input-group"]}>
         <label class={styles.device__label} for={`steps-${props.id}`}>
-          Steps: {steps()} steps
+          Steps:
         </label>
         <input
           id={`steps-${props.id}`}
           class={styles.device__input}
-          type="range"
-          min="-10000"
-          max="10000"
+          type="number"
           value={steps()}
           onInput={(event) => setSteps(Number(event.currentTarget.value))}
+          style={{ width: "8em" }}
         />
       </div>
       <div class={styles["device__input-group"]}>
-        <label class={styles.device__label} for={`maxSpeed-${props.id}`}>
+        <span class={styles.device__label} for={`maxSpeed-${props.id}`}>
           Speed: {speed()} steps/s
-        </label>
+        </span>
         <input
           id={`speed-${props.id}`}
           class={styles.device__input}

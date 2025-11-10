@@ -324,10 +324,13 @@ bool Lift::down(float speedRatio)
             return false;
         }
 
+        long steps = (currentPos - _direction * _minSteps);
+        steps = steps * 1.02; // Do 2% more to make sure we hit the limit switch
+
         MLOG_INFO("Lift [%s]: Moving down to %ld steps", getId().c_str(), _direction * _minSteps);
         liftState = LiftState::MOVING_DOWN;
         notifyStateChange();
-        return _stepper->moveTo(_direction * _minSteps, _stepper->_defaultSpeed * speedRatio);
+        return _stepper->move(steps, _stepper->_defaultSpeed * speedRatio);
     }
     default:
         MLOG_ERROR("Lift [%s]: Unknown state encountered in down()", getId().c_str());

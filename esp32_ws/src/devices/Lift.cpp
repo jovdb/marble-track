@@ -86,13 +86,13 @@ void Lift::loop()
                 {
                     MLOG_INFO("Lift [%s]: Already on limit, moving up", getId().c_str());
                     _stepper->setCurrentPosition(0);
-                    _stepper->moveTo(_direction * _maxSteps);
+                    _stepper->moveTo(_maxSteps);
                     _resetStep = 4; // moving up
                 }
                 else
                 {
                     MLOG_INFO("Lift [%s]: Moving down to limit", getId().c_str());
-                    _stepper->move(_direction * (_minSteps - _maxSteps), _stepper->getDefaultSpeed() * 0.25);
+                    _stepper->move((_minSteps - _maxSteps), _stepper->getDefaultSpeed() * 0.25);
                     _resetStep = 3; // moving down
                 }
             }
@@ -103,7 +103,7 @@ void Lift::loop()
             {
                 MLOG_INFO("Lift [%s]: Limit switch reached, moving up", getId().c_str());
                 _stepper->setCurrentPosition(0);
-                _stepper->moveTo(_direction * _maxSteps);
+                _stepper->moveTo(_maxSteps);
                 _resetStep = 4;
             }
             else if (_stepper && !_stepper->isMoving())
@@ -131,7 +131,7 @@ void Lift::loop()
                 MLOG_INFO("Lift [%s]: Unload complete, moving down", getId().c_str());
                 _unloader->setValue(0.0f);
                 _isLoaded = false;
-                _stepper->moveTo(_direction * _minSteps, _stepper->_defaultSpeed);
+                _stepper->moveTo(_minSteps, _stepper->_defaultSpeed);
                 _resetStep = 6;
             }
         }
@@ -151,7 +151,7 @@ void Lift::loop()
             if (millis() - _loadStartTime >= 500)
             {
                 MLOG_INFO("Lift [%s]: Loader closed, moving up again", getId().c_str());
-                _stepper->moveTo(_direction * _maxSteps);
+                _stepper->moveTo(_maxSteps);
                 _resetStep = 8;
             }
         }
@@ -178,7 +178,7 @@ void Lift::loop()
         {
             MLOG_INFO("Lift [%s]: Moving down to complete reset", getId().c_str());
             _isLoaded = false;
-            _stepper->moveTo(_direction * _minSteps, _stepper->_defaultSpeed);
+            _stepper->moveTo(_minSteps, _stepper->_defaultSpeed);
             _resetStep = 11;
         }
         else if (_resetStep == 11) // Final position
@@ -274,16 +274,16 @@ bool Lift::up(float speedRatio)
     {
         // Check if lift is already at or above max position
         long currentPos = _stepper->getCurrentPosition();
-        if (currentPos >= _direction * _maxSteps)
+        if (currentPos >= _maxSteps)
         {
-            MLOG_WARN("Lift [%s]: Cannot move up - already at max position (current: %ld, max: %ld)", getId().c_str(), currentPos, _direction * _maxSteps);
+            MLOG_WARN("Lift [%s]: Cannot move up - already at max position (current: %ld, max: %ld)", getId().c_str(), currentPos, _maxSteps);
             return false;
         }
 
-        MLOG_INFO("Lift [%s]: Moving up to %ld steps", getId().c_str(), _direction * _maxSteps);
+        MLOG_INFO("Lift [%s]: Moving up to %ld steps", getId().c_str(), _maxSteps);
         liftState = LiftState::MOVING_UP;
         notifyStateChange();
-        return _stepper->moveTo(_direction * _maxSteps, _stepper->_defaultSpeed * speedRatio);
+        return _stepper->moveTo(_maxSteps, _stepper->_defaultSpeed * speedRatio);
     }
     default:
         MLOG_ERROR("Lift [%s]: Unknown state encountered in up()", getId().c_str());
@@ -318,16 +318,16 @@ bool Lift::down(float speedRatio)
     {
         // Check if lift is already at or below min position
         long currentPos = _stepper->getCurrentPosition();
-        if (currentPos <= _direction * _minSteps)
+        if (currentPos <= _minSteps)
         {
-            MLOG_WARN("Lift [%s]: Cannot move down - already at min position (current: %ld, min: %ld)", getId().c_str(), currentPos, _direction * _minSteps);
+            MLOG_WARN("Lift [%s]: Cannot move down - already at min position (current: %ld, min: %ld)", getId().c_str(), currentPos, _minSteps);
             return false;
         }
 
-        long steps = (currentPos - _direction * _minSteps);
+        long steps = (currentPos - _minSteps);
         steps = steps * 1.02; // Do 2% more to make sure we hit the limit switch
 
-        MLOG_INFO("Lift [%s]: Moving down to %ld steps", getId().c_str(), _direction * _minSteps);
+        MLOG_INFO("Lift [%s]: Moving down to %ld steps", getId().c_str(), _minSteps);
         liftState = LiftState::MOVING_DOWN;
         notifyStateChange();
         return _stepper->move(steps, _stepper->_defaultSpeed * speedRatio);

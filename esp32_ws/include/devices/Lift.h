@@ -56,7 +56,6 @@ private:
     Button *_ballSensor;
     PwmMotor *_loader;
     PwmMotor *_unloader;
-    const int _direction = 1; // Direction multiplier: 1 or -1
     long _minSteps = 0;
     long _maxSteps = 1000;
     unsigned long _loadStartTime = 0;

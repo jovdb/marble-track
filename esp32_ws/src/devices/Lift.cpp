@@ -139,6 +139,52 @@ void Lift::loop()
         {
             if (_stepper && !_stepper->isMoving())
             {
+                MLOG_INFO("Lift [%s]: At bottom, closing loader", getId().c_str());
+                _loader->setValue(0.0f, 500);
+                _loadStartTime = millis();
+                _resetStep = 7;
+            }
+        }
+        else if (_resetStep == 7) // Waiting for loader to close
+        {
+            // Wait 500ms for loader to close
+            if (millis() - _loadStartTime >= 500)
+            {
+                MLOG_INFO("Lift [%s]: Loader closed, moving up again", getId().c_str());
+                _stepper->moveTo(_direction * _maxSteps);
+                _resetStep = 8;
+            }
+        }
+        else if (_resetStep == 8) // At top, unload again
+        {
+            if (_stepper && !_stepper->isMoving())
+            {
+                MLOG_INFO("Lift [%s]: At top again, unloading", getId().c_str());
+                _unloader->setValue(100.0f);
+                _unloadStartTime = millis();
+                _resetStep = 9;
+            }
+        }
+        else if (_resetStep == 9) // Unloading second time
+        {
+            if (millis() - _unloadStartTime >= 2000)
+            {
+                MLOG_INFO("Lift [%s]: Unload complete, closing unloader", getId().c_str());
+                _unloader->setValue(0.0f);
+                _resetStep = 10;
+            }
+        }
+        else if (_resetStep == 10) // Moving down final time
+        {
+            MLOG_INFO("Lift [%s]: Moving down to complete reset", getId().c_str());
+            _isLoaded = false;
+            _stepper->moveTo(_direction * _minSteps, _stepper->_defaultSpeed);
+            _resetStep = 11;
+        }
+        else if (_resetStep == 11) // Final position
+        {
+            if (_stepper && !_stepper->isMoving())
+            {
                 MLOG_INFO("Lift [%s]: Reset complete", getId().c_str());
                 liftState = LiftState::LIFT_DOWN_UNLOADED;
                 _resetStep = 0;
@@ -301,9 +347,6 @@ bool Lift::reset()
 
     liftState = LiftState::RESET;
     _resetStep = 1; // unload end
-
-    // Slowly close the gate
-    _loader->setValue(0.0f, 3000);
 
     notifyStateChange();
     return true;

@@ -72,13 +72,13 @@ void Lift::loop()
     }
     case LiftState::INIT:
         // Handle reset sequence steps
-        if (_resetStep == 1) // Move unload out of the way first
+        if (_initStep == 1) // Move unload out of the way first
         {
             _unloader->setValue(0.0f);
             _unloadEndTime = millis();
-            _resetStep = 2; // waiting 1s
+            _initStep = 2; // waiting 1s
         }
-        else if (_resetStep == 2) // Waiting after unload end
+        else if (_initStep == 2) // Waiting after unload end
         {
             if (millis() - _unloadEndTime >= 1000)
             {
@@ -87,44 +87,44 @@ void Lift::loop()
                     MLOG_INFO("Lift [%s]: Already on limit, moving up", getId().c_str());
                     _stepper->setCurrentPosition(0);
                     _stepper->moveTo(_maxSteps);
-                    _resetStep = 4; // moving up
+                    _initStep = 4; // moving up
                 }
                 else
                 {
                     MLOG_INFO("Lift [%s]: Moving down to limit", getId().c_str());
                     _stepper->move((_minSteps - _maxSteps), _stepper->getDefaultSpeed() * 0.25);
-                    _resetStep = 3; // moving down
+                    _initStep = 3; // moving down
                 }
             }
         }
-        else if (_resetStep == 3) // Moving down to limit
+        else if (_initStep == 3) // Moving down to limit
         {
             if (_limitSwitch && _limitSwitch->isPressed())
             {
                 MLOG_INFO("Lift [%s]: Limit switch reached, moving up", getId().c_str());
                 _stepper->setCurrentPosition(0);
                 _stepper->moveTo(_maxSteps);
-                _resetStep = 4;
+                _initStep = 4;
             }
             else if (_stepper && !_stepper->isMoving())
             {
                 MLOG_WARN("Lift [%s]: Reset failed - stopped moving but limit not pressed", getId().c_str());
                 liftState = LiftState::ERROR;
-                _resetStep = 0;
+                _initStep = 0;
                 notifyStateChange();
             }
         }
-        else if (_resetStep == 4) // Moving up
+        else if (_initStep == 4) // Moving up
         {
             if (_stepper && !_stepper->isMoving())
             {
                 MLOG_INFO("Lift [%s]: At top, unloading", getId().c_str());
                 _unloader->setValue(100.0f);
                 _unloadStartTime = millis();
-                _resetStep = 5;
+                _initStep = 5;
             }
         }
-        else if (_resetStep == 5) // Unloading
+        else if (_initStep == 5) // Unloading
         {
             if (millis() - _unloadStartTime >= 2000)
             {
@@ -132,62 +132,62 @@ void Lift::loop()
                 _unloader->setValue(0.0f);
                 _isLoaded = false;
                 _stepper->moveTo(_minSteps, _stepper->_defaultSpeed);
-                _resetStep = 6;
+                _initStep = 6;
             }
         }
-        else if (_resetStep == 6) // Moving down
+        else if (_initStep == 6) // Moving down
         {
             if (_stepper && !_stepper->isMoving())
             {
                 MLOG_INFO("Lift [%s]: At bottom, closing loader", getId().c_str());
                 _loader->setValue(0.0f, 500);
                 _loadStartTime = millis();
-                _resetStep = 7;
+                _initStep = 7;
             }
         }
-        else if (_resetStep == 7) // Waiting for loader to close
+        else if (_initStep == 7) // Waiting for loader to close
         {
-            // Wait 500ms for loader to close
-            if (millis() - _loadStartTime >= 500)
+            // Wait 2000ms for loader to close
+            if (millis() - _loadStartTime >= 2000)
             {
                 MLOG_INFO("Lift [%s]: Loader closed, moving up again", getId().c_str());
                 _stepper->moveTo(_maxSteps);
-                _resetStep = 8;
+                _initStep = 8;
             }
         }
-        else if (_resetStep == 8) // At top, unload again
+        else if (_initStep == 8) // At top, unload again
         {
             if (_stepper && !_stepper->isMoving())
             {
                 MLOG_INFO("Lift [%s]: At top again, unloading", getId().c_str());
                 _unloader->setValue(100.0f);
                 _unloadStartTime = millis();
-                _resetStep = 9;
+                _initStep = 9;
             }
         }
-        else if (_resetStep == 9) // Unloading second time
+        else if (_initStep == 9) // Unloading second time
         {
             if (millis() - _unloadStartTime >= 2000)
             {
                 MLOG_INFO("Lift [%s]: Unload complete, closing unloader", getId().c_str());
                 _unloader->setValue(0.0f);
-                _resetStep = 10;
+                _initStep = 10;
             }
         }
-        else if (_resetStep == 10) // Moving down final time
+        else if (_initStep == 10) // Moving down final time
         {
             MLOG_INFO("Lift [%s]: Moving down to complete reset", getId().c_str());
             _isLoaded = false;
             _stepper->moveTo(_minSteps, _stepper->_defaultSpeed);
-            _resetStep = 11;
+            _initStep = 11;
         }
-        else if (_resetStep == 11) // Final position
+        else if (_initStep == 11) // Final position
         {
             if (_stepper && !_stepper->isMoving())
             {
                 MLOG_INFO("Lift [%s]: Reset complete", getId().c_str());
                 liftState = LiftState::LIFT_DOWN_UNLOADED;
-                _resetStep = 0;
+                _initStep = 0;
                 notifyStateChange();
             }
         }
@@ -349,7 +349,7 @@ bool Lift::init()
     MLOG_INFO("Lift [%s]: Starting init sequence", getId().c_str());
 
     liftState = LiftState::INIT;
-    _resetStep = 1; // unload end
+    _initStep = 1; // unload end
 
     notifyStateChange();
     return true;

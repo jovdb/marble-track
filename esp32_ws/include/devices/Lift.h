@@ -63,7 +63,7 @@ private:
     unsigned long _unloadEndTime = 0;
     bool _isBallWaiting = false;
     bool _isLoaded = false;
-    int _resetStep = 0;
+    int _initStep = 0;
 };
 
 #endif // LIFT_H

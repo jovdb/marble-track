@@ -6,6 +6,9 @@ Lift::Lift(const String &id, NotifyClients notifyClients)
 {
 }
 
+/* Move 2% extra down */
+const float DOWN_FACTOR = 1.01f; // Move 2% extra when going down to ensure full descent
+
 void Lift::setup()
 {
     auto children = getChildren();
@@ -72,32 +75,33 @@ void Lift::loop()
     }
     case LiftState::INIT:
         // Handle reset sequence steps
-        if (_initStep == 1) // Move unload out of the way first
+        if (_initStep == 1) // Move unload out of the way first before moving lift down
         {
             _unloader->setValue(0.0f);
             _unloadEndTime = millis();
             _initStep = 2; // waiting 1s
         }
-        else if (_initStep == 2) // Waiting after unload end
+        else if (_initStep == 2) // Waiting after unload end and move down
         {
             if (millis() - _unloadEndTime >= 1000)
             {
-                if (_limitSwitch->isPressed())
+                // Move down if needed?
+                if (!_limitSwitch->isPressed())
                 {
-                    MLOG_INFO("Lift [%s]: Already on limit, moving up", getId().c_str());
-                    _stepper->setCurrentPosition(0);
-                    _stepper->moveTo(_maxSteps);
-                    _initStep = 4; // moving up
+                    MLOG_INFO("Lift [%s]: Moving down to limit", getId().c_str());
+                    _stepper->move((_minSteps - _maxSteps) * DOWN_FACTOR, _stepper->getDefaultSpeed() * 0.4);
+                    _initStep = 3; // moving down
                 }
                 else
                 {
-                    MLOG_INFO("Lift [%s]: Moving down to limit", getId().c_str());
-                    _stepper->move((_minSteps - _maxSteps), _stepper->getDefaultSpeed() * 0.25);
-                    _initStep = 3; // moving down
+                    MLOG_INFO("Lift [%s]: Init step 2 - Already at limit, skipping to step 4", getId().c_str());
+                    _stepper->setCurrentPosition(0);
+                    _stepper->moveTo(_maxSteps);
+                    _initStep = 4;
                 }
             }
         }
-        else if (_initStep == 3) // Moving down to limit
+        else if (_initStep == 3) // When down, move back up
         {
             if (_limitSwitch && _limitSwitch->isPressed())
             {
@@ -116,8 +120,10 @@ void Lift::loop()
         }
         else if (_initStep == 4) // Moving up
         {
+            // Top reached
             if (_stepper && !_stepper->isMoving())
             {
+                // Unload start
                 MLOG_INFO("Lift [%s]: At top, unloading", getId().c_str());
                 _unloader->setValue(100.0f);
                 _unloadStartTime = millis();
@@ -126,66 +132,98 @@ void Lift::loop()
         }
         else if (_initStep == 5) // Unloading
         {
+            // Wait a bit
             if (millis() - _unloadStartTime >= 2000)
             {
-                MLOG_INFO("Lift [%s]: Unload complete, moving down", getId().c_str());
+                // Unload end
+                MLOG_INFO("Lift [%s]: Unload complete, waiting before moving down", getId().c_str());
                 _unloader->setValue(0.0f);
                 _isLoaded = false;
-                _stepper->moveTo(_minSteps, _stepper->_defaultSpeed);
+                _unloadEndTime = millis();
                 _initStep = 6;
             }
         }
-        else if (_initStep == 6) // Moving down
+        else if (_initStep == 6) // Waiting after unload before moving down
+        {
+            if (millis() - _unloadEndTime >= 1000)
+            {
+                MLOG_INFO("Lift [%s]: Moving down", getId().c_str());
+                long currentPos = _stepper->getCurrentPosition();
+                long steps = (_minSteps - currentPos);
+                _stepper->move(steps * DOWN_FACTOR);
+                _initStep = 7;
+            }
+        }
+        //
+        else if (_initStep == 7) // Moving down
         {
             if (_stepper && !_stepper->isMoving())
             {
                 MLOG_INFO("Lift [%s]: At bottom, closing loader", getId().c_str());
                 _loader->setValue(0.0f, 500);
                 _loadStartTime = millis();
-                _initStep = 7;
+                _initStep = 8;
+            }
+            else if (_limitSwitch && _limitSwitch->isPressed())
+            {
+                MLOG_WARN("Lift [%s]: Limit switch triggered during downward movement - stopping", getId().c_str());
+                _stepper->setCurrentPosition(0); // Reset position to zero
+                _loader->setValue(0.0f, 500);
+                _loadStartTime = millis();
+                _initStep = 8;
             }
         }
-        else if (_initStep == 7) // Waiting for loader to close
+        else if (_initStep == 8) // Waiting for loader to close
         {
-            // Wait 2000ms for loader to close
+            // Wait 2000ms for loader to initialize and possible ball to fall into lift
             if (millis() - _loadStartTime >= 2000)
             {
                 MLOG_INFO("Lift [%s]: Loader closed, moving up again", getId().c_str());
                 _stepper->moveTo(_maxSteps);
-                _initStep = 8;
+                _initStep = 9;
             }
         }
-        else if (_initStep == 8) // At top, unload again
+        else if (_initStep == 9) // At top, unload again
         {
             if (_stepper && !_stepper->isMoving())
             {
                 MLOG_INFO("Lift [%s]: At top again, unloading", getId().c_str());
                 _unloader->setValue(100.0f);
                 _unloadStartTime = millis();
-                _initStep = 9;
+                _initStep = 10;
             }
         }
-        else if (_initStep == 9) // Unloading second time
+        else if (_initStep == 10) // Unloading second time
         {
             if (millis() - _unloadStartTime >= 2000)
             {
                 MLOG_INFO("Lift [%s]: Unload complete, closing unloader", getId().c_str());
                 _unloader->setValue(0.0f);
-                _initStep = 10;
+                _initStep = 11;
             }
         }
-        else if (_initStep == 10) // Moving down final time
+        else if (_initStep == 11) // Moving down final time
         {
-            MLOG_INFO("Lift [%s]: Moving down to complete reset", getId().c_str());
+            MLOG_INFO("Lift [%s]: Moving down to complete init", getId().c_str());
             _isLoaded = false;
-            _stepper->moveTo(_minSteps, _stepper->_defaultSpeed);
-            _initStep = 11;
+            long currentPos = _stepper->getCurrentPosition();
+            long steps = (_minSteps - currentPos) * DOWN_FACTOR;
+            _stepper->move(steps);
+            _initStep = 12;
         }
-        else if (_initStep == 11) // Final position
+        else if (_initStep == 12) // Final position
         {
             if (_stepper && !_stepper->isMoving())
             {
                 MLOG_INFO("Lift [%s]: Reset complete", getId().c_str());
+                liftState = LiftState::LIFT_DOWN_UNLOADED;
+                _initStep = 0;
+                notifyStateChange();
+            }
+            else if (_limitSwitch && _limitSwitch->isPressed())
+            {
+                MLOG_WARN("Lift [%s]: Limit switch triggered during downward movement - stopping", getId().c_str());
+                _stepper->setCurrentPosition(0); // Reset position to zero
                 liftState = LiftState::LIFT_DOWN_UNLOADED;
                 _initStep = 0;
                 notifyStateChange();
@@ -324,8 +362,8 @@ bool Lift::down(float speedRatio)
             return false;
         }
 
-        long steps = (currentPos - _minSteps);
-        steps = steps * 1.02; // Do 2% more to make sure we hit the limit switch
+        long steps = (_minSteps - currentPos) * DOWN_FACTOR;
+        _stepper->move(steps);
 
         MLOG_INFO("Lift [%s]: Moving down to %ld steps", getId().c_str(), _minSteps);
         liftState = LiftState::MOVING_DOWN;

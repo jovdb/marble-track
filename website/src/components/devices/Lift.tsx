@@ -192,10 +192,10 @@ export function Lift(props: { id: string }) {
           <div class={styles.device__controls}>
             <button
               class={styles.device__button}
-              onClick={() => actions.reset()}
+              onClick={() => actions.init()}
               disabled={isMoving()}
             >
-              Reset
+              Init
             </button>
             <button
               class={styles.device__button}

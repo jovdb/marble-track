@@ -175,12 +175,12 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                 class={styles.device__button}
                 onClick={(e) => {
                   e.preventDefault(); // prevent post
-                  wheelActions.reset();
+                  wheelActions.init();
                 }}
                 style={{ "flex-shrink": "0" }}
                 disabled={device()?.state?.state === "RESET"}
               >
-                Reset
+                Init
               </button>
               <button
                 class={styles.device__button}

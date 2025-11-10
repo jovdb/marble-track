@@ -19,7 +19,7 @@ public:
         CALIBRATING,
         IDLE,
         MOVING,
-        RESET,
+        INIT,
         ERROR,
     };
     Wheel(const String &id, NotifyClients callback = nullptr);
@@ -31,7 +31,7 @@ public:
     bool control(const String &action, JsonObject *payload = nullptr) override;
     bool move(long steps);
     bool calibrate();
-    bool reset();
+    bool init();
     bool moveToAngle(float angle);
     void notifyStepsPerRevolution(long steps);
     bool nextBreakPoint();

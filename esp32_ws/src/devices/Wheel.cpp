@@ -117,7 +117,7 @@ void Wheel::loop()
         }
 
         break;
-    case WheelState::RESET:
+    case WheelState::INIT:
         if (_sensor->onPressed())
         {
             _lastZeroPosition = _stepper->getCurrentPosition();
@@ -225,13 +225,13 @@ bool Wheel::calibrate()
 }
 
 /** Goto the initial position, until button is pressed*/
-bool Wheel::reset()
+bool Wheel::init()
 {
     if (!_stepper)
         return false;
 
-    MLOG_INFO("Wheel [%s]: Reset started.", getId().c_str());
-    wheelState = WheelState::RESET;
+    MLOG_INFO("Wheel [%s]: Init started.", getId().c_str());
+    wheelState = WheelState::INIT;
     notifyStateChange();
     _currentBreakpointIndex = -1;
     _targetBreakpointIndex = -1;
@@ -300,7 +300,7 @@ bool Wheel::nextBreakPoint()
     // find first
     if (_lastZeroPosition == 0)
     {
-        return reset();
+        return init();
     }
 
     int nextIndex = (_currentBreakpointIndex + 1) % _breakPoints.size();
@@ -340,9 +340,9 @@ bool Wheel::control(const String &action, JsonObject *payload)
     {
         return calibrate();
     }
-    else if (action == "reset")
+    else if (action == "init")
     {
-        return reset();
+        return init();
     }
     else if (action == "move-to-angle")
     {
@@ -380,8 +380,8 @@ String Wheel::stateToString(Wheel::WheelState state) const
         return "IDLE";
     case Wheel::WheelState::MOVING:
         return "MOVING";
-    case Wheel::WheelState::RESET:
-        return "RESET";
+    case Wheel::WheelState::INIT:
+        return "INIT";
     case Wheel::WheelState::ERROR:
         return "ERROR";
     default:

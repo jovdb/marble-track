@@ -67,19 +67,19 @@ void AutoMode::loop()
     if (_wheel && _wheel->wheelState == Wheel::WheelState::UNKNOWN)
     {
         MLOG_INFO("Initializing Wheel");
-        _wheel->reset();
+        _wheel->init();
     }
 
     if (_splitter && _splitter->wheelState == Wheel::WheelState::UNKNOWN)
     {
         MLOG_INFO("Initializing Stepper");
-        _splitter->reset();
+        _splitter->init();
     }
 
     if (_lift && _lift->liftState == Lift::LiftState::UNKNOWN)
     {
         MLOG_INFO("Initializing Lift");
-        _lift->reset();
+        _lift->init();
     }
 
     const ulong currentMillis = millis();
@@ -127,7 +127,7 @@ void AutoMode::loop()
     {
     case Wheel::WheelState::UNKNOWN:
     case Wheel::WheelState::CALIBRATING:
-    case Wheel::WheelState::RESET:
+    case Wheel::WheelState::INIT:
     case Wheel::WheelState::ERROR:
         wheelDelaySet = false;
         break;
@@ -159,7 +159,7 @@ void AutoMode::loop()
     {
     case Wheel::WheelState::UNKNOWN:
     case Wheel::WheelState::CALIBRATING:
-    case Wheel::WheelState::RESET:
+    case Wheel::WheelState::INIT:
     case Wheel::WheelState::MOVING:
     case Wheel::WheelState::ERROR:
         break;
@@ -207,7 +207,7 @@ void AutoMode::loop()
     if (_lift) switch (_lift->liftState)
     {
     case Lift::LiftState::UNKNOWN:
-    case Lift::LiftState::RESET:
+    case Lift::LiftState::INIT:
     case Lift::LiftState::ERROR:
     case Lift::LiftState::MOVING_UP:
     case Lift::LiftState::LIFT_DOWN_LOADING:

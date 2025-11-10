@@ -18,7 +18,7 @@ public:
     {
         UNKNOWN,
         ERROR,
-        RESET,
+        INIT,
         LIFT_DOWN_LOADING,
         LIFT_DOWN_LOADED,
         LIFT_DOWN_UNLOADED,
@@ -37,7 +37,7 @@ public:
     bool control(const String &action, JsonObject *payload = nullptr) override;
     bool up(float speedRatio = 1.0f);
     bool down(float speedRatio = 1.0f);
-    bool reset();
+    bool init();
     bool loadBall();
     bool unloadBall();
     bool isBallWaiting();

@@ -107,8 +107,8 @@ export function Wheel(props: { id: string }) {
               )}
           </div>
           <div class={styles.device__controls}>
-            <button class={styles.device__button} onClick={() => actions.reset()}>
-              Reset
+            <button class={styles.device__button} onClick={() => actions.init()}>
+              Init
             </button>
             {(() => {
               const nextBreakpointIndex = (() => {

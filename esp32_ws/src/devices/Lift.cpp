@@ -70,7 +70,7 @@ void Lift::loop()
         }
         break;
     }
-    case LiftState::RESET:
+    case LiftState::INIT:
         // Handle reset sequence steps
         if (_resetStep == 1) // Move unload out of the way first
         {
@@ -258,7 +258,7 @@ bool Lift::up(float speedRatio)
     switch (liftState)
     {
     case LiftState::UNKNOWN:
-    case LiftState::RESET:
+    case LiftState::INIT:
     case LiftState::ERROR:
     case LiftState::LIFT_DOWN_LOADING:
     case LiftState::LIFT_UP_UNLOADED:
@@ -302,7 +302,7 @@ bool Lift::down(float speedRatio)
     switch (liftState)
     {
     case LiftState::UNKNOWN:
-    case LiftState::RESET:
+    case LiftState::INIT:
     case LiftState::ERROR:
     case LiftState::LIFT_DOWN_UNLOADED:
     case LiftState::LIFT_DOWN_LOADED:
@@ -335,7 +335,7 @@ bool Lift::down(float speedRatio)
     }
 }
 
-bool Lift::reset()
+bool Lift::init()
 {
     if (!_stepper || !_limitSwitch)
     {
@@ -343,9 +343,9 @@ bool Lift::reset()
         return false;
     }
 
-    MLOG_INFO("Lift [%s]: Starting reset sequence", getId().c_str());
+    MLOG_INFO("Lift [%s]: Starting init sequence", getId().c_str());
 
-    liftState = LiftState::RESET;
+    liftState = LiftState::INIT;
     _resetStep = 1; // unload end
 
     notifyStateChange();
@@ -423,7 +423,7 @@ bool Lift::loadBall()
     switch (liftState)
     {
     case LiftState::UNKNOWN:
-    case LiftState::RESET:
+    case LiftState::INIT:
     case LiftState::ERROR:
     case LiftState::MOVING_UP:
     case LiftState::LIFT_DOWN_LOADING:
@@ -450,7 +450,7 @@ bool Lift::unloadBall()
     switch (liftState)
     {
     case LiftState::UNKNOWN:
-    case LiftState::RESET:
+    case LiftState::INIT:
     case LiftState::ERROR:
     case LiftState::MOVING_UP:
     case LiftState::LIFT_DOWN_LOADING:
@@ -502,9 +502,9 @@ bool Lift::control(const String &action, JsonObject *payload)
         }
         return down(speedRatio);
     }
-    else if (action == "reset")
+    else if (action == "init")
     {
-        return reset();
+        return init();
     }
     else if (action == "loadBall")
     {
@@ -530,8 +530,8 @@ String Lift::stateToString(Lift::LiftState state) const
         return "Unknown";
     case Lift::LiftState::ERROR:
         return "Error";
-    case Lift::LiftState::RESET:
-        return "Reset";
+    case Lift::LiftState::INIT:
+        return "Init";
     case Lift::LiftState::LIFT_DOWN_LOADING:
         return "LiftDownLoading";
     case Lift::LiftState::LIFT_DOWN_LOADED:

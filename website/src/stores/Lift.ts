@@ -45,12 +45,12 @@ export function useLift(deviceId: string) {
       fn: "down",
     });
 
-  const reset = () =>
+  const init = () =>
     sendMessage({
       type: "device-fn",
       deviceId,
       deviceType,
-      fn: "reset",
+      fn: "init",
     });
 
   const loadBall = () =>
@@ -75,7 +75,7 @@ export function useLift(deviceId: string) {
       ...actions,
       up,
       down,
-      reset,
+      init,
       loadBall,
       unloadBall,
     },

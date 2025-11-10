@@ -94,7 +94,7 @@ void ManualMode::loop()
             {
             case Wheel::WheelState::MOVING:
             case Wheel::WheelState::CALIBRATING:
-            case Wheel::WheelState::RESET:
+            case Wheel::WheelState::INIT:
                 _wheelBtnLed->set(ledBlinkFast);
                 break;
             case Wheel::WheelState::ERROR:
@@ -146,7 +146,7 @@ void ManualMode::loop()
             {
             case Wheel::WheelState::MOVING:
             case Wheel::WheelState::CALIBRATING:
-            case Wheel::WheelState::RESET:
+            case Wheel::WheelState::INIT:
                 _splitterBtnLed->set(ledBlinkFast);
                 break;
             case Wheel::WheelState::ERROR:

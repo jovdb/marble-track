@@ -69,13 +69,19 @@ export function Lift(props: { id: string }) {
     }
   };
 
+  const isLiftUp = createMemo(
+    () =>
+      state()?.state === "LiftUpLoaded" ||
+      state()?.state === "LiftUpUnloaded" ||
+      state()?.state === "LiftUpUnloading" ||
+      state()?.state === "MovingUp"
+  );
+
   const currentPosition = () => state()?.currentPosition ?? 0;
   const minSteps = () => config()?.minSteps ?? 0;
   const maxSteps = () => config()?.maxSteps ?? 1000;
 
   // Track lift direction toggle state
-  const [liftIsUp, setLiftIsUp] = createSignal(false);
-
   function getStateString(state: string | undefined) {
     switch (state) {
       case "Unknown":
@@ -102,16 +108,6 @@ export function Lift(props: { id: string }) {
         return "Moving Down";
       default:
         return "Unknown";
-    }
-  }
-
-  function toggleLift() {
-    if (liftIsUp()) {
-      actions.down();
-      setLiftIsUp(false);
-    } else {
-      actions.up();
-      setLiftIsUp(true);
     }
   }
 
@@ -206,10 +202,16 @@ export function Lift(props: { id: string }) {
             </button>
             <button
               class={styles.device__button}
-              onClick={toggleLift}
-              disabled={liftIsUp() ? !canDown() : !canUp()}
+              onClick={() => {
+                if (isLiftUp()) {
+                  actions.down();
+                } else {
+                  actions.up();
+                }
+              }}
+              disabled={isLiftUp() ? !canDown() : !canUp()}
             >
-              {liftIsUp() ? "Down" : "Up"}
+              {isLiftUp() ? "Down" : "Up"}
             </button>
           </div>
         </>

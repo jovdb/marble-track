@@ -7,7 +7,7 @@ Lift::Lift(const String &id, NotifyClients notifyClients)
 }
 
 /* Move 2% extra down */
-const float DOWN_FACTOR = 1.01f; // Move 2% extra when going down to ensure full descent
+const float DOWN_FACTOR = 1.015f; // Move 2% extra when going down to ensure full descent
 
 void Lift::setup()
 {

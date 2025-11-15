@@ -28,7 +28,7 @@ public:
     /**
      * @brief Setup the PWM motor with specified parameters
      * @param pin GPIO pin number for PWM output
-     * @param pwmChannel PWM channel (0 or 1)
+     * @param pwmChannel PWM channel (0-7)
      * @param frequency PWM frequency in Hz
      * @param resolutionBits PWM resolution in bits (8-16)
      * @return true if setup successful, false otherwise
@@ -106,6 +106,7 @@ private:
     mcpwm_unit_t _mcpwmUnit;
     mcpwm_timer_t _mcpwmTimer;
     mcpwm_io_signals_t _mcpwmSignal;
+    mcpwm_operator_t _mcpwmOperator;
 
     /**
      * @brief Configure MCPWM for motor control

@@ -112,11 +112,17 @@ export default function PwmMotorConfig(props: PwmMotorConfigProps) {
             <select
               value={pwmChannel()}
               onChange={(event) => setPwmChannel(Number(event.currentTarget.value))}
-              title="MCPWM channel (0 = MCPWM0A/TIMER0, 1 = MCPWM1A/TIMER1)"
+              title="MCPWM channel (0-7 available)"
               style={{ "margin-left": "0.5rem" }}
             >
-              <option value={0}>Channel 0 (TIMER0)</option>
-              <option value={1}>Channel 1 (TIMER1)</option>
+              <option value={0}>Channel 0</option>
+              <option value={1}>Channel 1</option>
+              <option value={2}>Channel 2</option>
+              <option value={3}>Channel 3</option>
+              <option value={4}>Channel 4</option>
+              <option value={5}>Channel 5</option>
+              <option value={6}>Channel 6</option>
+              <option value={7}>Channel 7</option>
             </select>
           </DeviceConfigItem>
         </DeviceConfigRow>

@@ -20,7 +20,8 @@ PwmMotor::PwmMotor(const String &id, NotifyClients callback)
       _animationDuration(0),
       _mcpwmUnit(MCPWM_UNIT_0),
       _mcpwmTimer(MCPWM_TIMER_0),
-      _mcpwmSignal(MCPWM0A)
+      _mcpwmSignal(MCPWM0A),
+      _mcpwmOperator(MCPWM_OPR_A)
 {
 }
 
@@ -34,9 +35,9 @@ bool PwmMotor::setupMotor(int pin, int pwmChannel, uint32_t frequency, uint8_t r
         return false;
     }
 
-    if (pwmChannel < 0 || pwmChannel > 1)
+    if (pwmChannel < 0 || pwmChannel > 7)
     {
-        MLOG_ERROR("PwmMotor [%s]: Invalid PWM channel %d. Must be 0 or 1.", _id.c_str(), pwmChannel);
+        MLOG_ERROR("PwmMotor [%s]: Invalid PWM channel %d. Must be 0-7.", _id.c_str(), pwmChannel);
         _isSetup = false;
         return false;
     }
@@ -67,18 +68,61 @@ bool PwmMotor::setupMotor(int pin, int pwmChannel, uint32_t frequency, uint8_t r
     _frequency = frequency;
     _resolutionBits = resolutionBits;
 
-    // Determine MCPWM unit and timer based on channel
-    if (_pwmChannel == 0)
+    // Determine MCPWM unit, timer, and signal based on channel
+    switch (_pwmChannel)
     {
+    case 0:
         _mcpwmUnit = MCPWM_UNIT_0;
         _mcpwmTimer = MCPWM_TIMER_0;
         _mcpwmSignal = MCPWM0A;
-    }
-    else if (_pwmChannel == 1)
-    {
+        _mcpwmOperator = MCPWM_OPR_A;
+        break;
+    case 1:
+        _mcpwmUnit = MCPWM_UNIT_0;
+        _mcpwmTimer = MCPWM_TIMER_0;
+        _mcpwmSignal = MCPWM0B;
+        _mcpwmOperator = MCPWM_OPR_B;
+        break;
+    case 2:
         _mcpwmUnit = MCPWM_UNIT_0;
         _mcpwmTimer = MCPWM_TIMER_1;
         _mcpwmSignal = MCPWM1A;
+        _mcpwmOperator = MCPWM_OPR_A;
+        break;
+    case 3:
+        _mcpwmUnit = MCPWM_UNIT_0;
+        _mcpwmTimer = MCPWM_TIMER_1;
+        _mcpwmSignal = MCPWM1B;
+        _mcpwmOperator = MCPWM_OPR_B;
+        break;
+    case 4:
+        _mcpwmUnit = MCPWM_UNIT_0;
+        _mcpwmTimer = MCPWM_TIMER_2;
+        _mcpwmSignal = MCPWM2A;
+        _mcpwmOperator = MCPWM_OPR_A;
+        break;
+    case 5:
+        _mcpwmUnit = MCPWM_UNIT_0;
+        _mcpwmTimer = MCPWM_TIMER_2;
+        _mcpwmSignal = MCPWM2B;
+        _mcpwmOperator = MCPWM_OPR_B;
+        break;
+    case 6:
+        _mcpwmUnit = MCPWM_UNIT_1;
+        _mcpwmTimer = MCPWM_TIMER_0;
+        _mcpwmSignal = MCPWM0A;
+        _mcpwmOperator = MCPWM_OPR_A;
+        break;
+    case 7:
+        _mcpwmUnit = MCPWM_UNIT_1;
+        _mcpwmTimer = MCPWM_TIMER_0;
+        _mcpwmSignal = MCPWM0B;
+        _mcpwmOperator = MCPWM_OPR_B;
+        break;
+    default:
+        MLOG_ERROR("PwmMotor [%s]: Invalid PWM channel %d. This should not happen.", _id.c_str(), _pwmChannel);
+        _isSetup = false;
+        return false;
     }
 
     // MLOG_INFO("PwmMotor [%s]: Setup - pin:%d, channel:%d, freq:%d Hz, resolution:%d bits",
@@ -150,7 +194,7 @@ bool PwmMotor::setDutyCycle(float dutyCycle, bool notifyChange)
     _currentDutyCycle = dutyCycle;
 
     // Set the duty cycle using MCPWM
-    esp_err_t err = mcpwm_set_duty(_mcpwmUnit, _mcpwmTimer, MCPWM_OPR_A, dutyCycle);
+    esp_err_t err = mcpwm_set_duty(_mcpwmUnit, _mcpwmTimer, _mcpwmOperator, dutyCycle);
     if (err != ESP_OK)
     {
         MLOG_ERROR("PwmMotor [%s]: Failed to set duty cycle: %s", _id.c_str(), esp_err_to_name(err));
@@ -158,7 +202,7 @@ bool PwmMotor::setDutyCycle(float dutyCycle, bool notifyChange)
     }
 
     // Update duty cycle type to percentage
-    mcpwm_set_duty_type(_mcpwmUnit, _mcpwmTimer, MCPWM_OPR_A, MCPWM_DUTY_MODE_0);
+    mcpwm_set_duty_type(_mcpwmUnit, _mcpwmTimer, _mcpwmOperator, MCPWM_DUTY_MODE_0);
 
     MLOG_INFO("PwmMotor [%s]: Duty cycle set to %.1f%%", _id.c_str(), dutyCycle);
 
@@ -535,7 +579,7 @@ void PwmMotor::updateAnimation()
     _currentDutyCycle = currentDutyCycle;
 
     // Set the duty cycle using MCPWM
-    esp_err_t err = mcpwm_set_duty(_mcpwmUnit, _mcpwmTimer, MCPWM_OPR_A, currentDutyCycle);
+    esp_err_t err = mcpwm_set_duty(_mcpwmUnit, _mcpwmTimer, _mcpwmOperator, currentDutyCycle);
     if (err != ESP_OK)
     {
         MLOG_ERROR("PwmMotor [%s]: Failed to set animated duty cycle: %s", _id.c_str(), esp_err_to_name(err));
@@ -544,7 +588,7 @@ void PwmMotor::updateAnimation()
     }
 
     // Update duty cycle type to percentage
-    mcpwm_set_duty_type(_mcpwmUnit, _mcpwmTimer, MCPWM_OPR_A, MCPWM_DUTY_MODE_0);
+    mcpwm_set_duty_type(_mcpwmUnit, _mcpwmTimer, _mcpwmOperator, MCPWM_DUTY_MODE_0);
 
     // Remove periodic notifications during animation to reduce WebSocket traffic
     // Only notify at start (in setDutyCycleAnimated) and end (in this method when complete)

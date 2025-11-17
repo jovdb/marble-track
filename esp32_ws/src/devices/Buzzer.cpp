@@ -40,10 +40,24 @@ Buzzer::Buzzer(const String &id, NotifyClients callback)
     : Device(id, "buzzer", callback)
 {
     _pin = -1;
+    // Fixed channel 0 for buzzer
+    // https://github.com/end2endzone/NonBlockingRTTTL/blob/master/src/NonBlockingRtttl.cpp#L90C5-L99C6
+    _ledcChannel = 0; 
+    LedcChannels::acquireSpecific(_ledcChannel);
     _isPlaying = false;
     _mode = BuzzerMode::IDLE;
     _playStartTime = 0;
     _toneDuration = 0;
+}
+
+/**
+ * @brief Destructor for Buzzer class
+ *
+ * Releases the LEDC channel
+ */
+Buzzer::~Buzzer()
+{
+    LedcChannels::release(_ledcChannel);
 }
 
 /**

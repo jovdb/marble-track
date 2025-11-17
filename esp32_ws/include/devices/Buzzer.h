@@ -16,6 +16,7 @@
 #include <ArduinoJson.h>
 #include <vector>
 #include "Device.h"
+#include "LedcChannels.h"
 
 /**
  * @class Buzzer
@@ -46,6 +47,11 @@ public:
      * @param id Unique identifier string for the buzzer
      */
     Buzzer(const String &id, NotifyClients callback = nullptr);
+
+    /**
+     * @brief Destructor - releases LEDC channel
+     */
+    ~Buzzer();
 
     /**
      * @brief Setup function to initialize the buzzer
@@ -81,6 +87,7 @@ public:
 
 private:
     int _pin;                            ///< GPIO pin number for the buzzer
+    int _ledcChannel;                    ///< LEDC channel assigned to this buzzer
     bool _isPlaying = false;             ///< Current playing state
     BuzzerMode _mode = BuzzerMode::IDLE; ///< Current playback mode
     String _currentTune = "";            ///< Currently loaded tune name

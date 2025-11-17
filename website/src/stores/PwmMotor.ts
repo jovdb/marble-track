@@ -14,7 +14,7 @@ interface IPwmMotorState extends IDeviceState {
 export interface IPwmMotorConfig extends IDeviceConfig {
   name?: string;
   pin?: number;
-  pwmChannel?: number;
+  mcpwmChannel?: number;
   frequency?: number;
   resolutionBits?: number;
   minDutyCycle?: number;
@@ -52,13 +52,13 @@ export function usePwmMotor(deviceId: string) {
       args: {},
     });
 
-  const setupMotor = (pin: number, channel: number, frequency: number, resolutionBits: number) =>
+  const setupMotor = (pin: number, mcpwmChannel: number, frequency: number, resolutionBits: number) =>
     sendMessage({
       type: "device-fn",
       deviceId,
       deviceType,
       fn: "setup",
-      args: { pin, channel, frequency, resolutionBits },
+      args: { pin, mcpwmChannel, frequency, resolutionBits },
     });
 
   return [

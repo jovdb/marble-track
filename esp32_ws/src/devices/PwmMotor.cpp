@@ -5,7 +5,7 @@
 PwmMotor::PwmMotor(const String &id, NotifyClients callback)
     : Device(id, "pwmmotor", callback),
       _pin(-1),
-      _pwmChannel(0),
+      _mcpwmChannelIndex(-1),
       _frequency(50),
       _resolutionBits(10),
       _currentDutyCycle(0.0),
@@ -25,20 +25,21 @@ PwmMotor::PwmMotor(const String &id, NotifyClients callback)
 {
 }
 
-bool PwmMotor::setupMotor(int pin, int pwmChannel, uint32_t frequency, uint8_t resolutionBits)
+PwmMotor::~PwmMotor()
+{
+    if (_mcpwmChannelIndex >= 0) {
+        McPwmChannels::release(_mcpwmChannelIndex);
+        _mcpwmChannelIndex = -1;
+    }
+}
+
+bool PwmMotor::setupMotor(int pin, int mcpwmChannel, uint32_t frequency, uint8_t resolutionBits)
 {
     if (pin < 0)
     {
         MLOG_ERROR("PwmMotor [%s]: Invalid pin %d. Pin must be >= 0.", _id.c_str(), pin);
         _isSetup = false;
         _pin = -1;
-        return false;
-    }
-
-    if (pwmChannel < 0 || pwmChannel > 7)
-    {
-        MLOG_ERROR("PwmMotor [%s]: Invalid PWM channel %d. Must be 0-7.", _id.c_str(), pwmChannel);
-        _isSetup = false;
         return false;
     }
 
@@ -63,70 +64,43 @@ bool PwmMotor::setupMotor(int pin, int pwmChannel, uint32_t frequency, uint8_t r
         resolutionBits = static_cast<uint8_t>(clamped);
     }
 
+    // Release old channel if acquired
+    if (_mcpwmChannelIndex >= 0) {
+        McPwmChannels::release(_mcpwmChannelIndex);
+        _mcpwmChannelIndex = -1;
+    }
+
+    // Acquire new channel
+    int channelToUse = mcpwmChannel;
+    if (channelToUse == -1) {
+        channelToUse = McPwmChannels::acquireFree();
+        if (channelToUse == -1) {
+            MLOG_ERROR("PwmMotor [%s]: No free MCPWM channels available.", _id.c_str());
+            _isSetup = false;
+            return false;
+        }
+    } else {
+        if (!McPwmChannels::acquireSpecific(channelToUse)) {
+            MLOG_ERROR("PwmMotor [%s]: MCPWM channel %d already in use or invalid.", _id.c_str(), channelToUse);
+            _isSetup = false;
+            return false;
+        }
+    }
+
     _pin = pin;
-    _pwmChannel = pwmChannel;
+    _mcpwmChannelIndex = channelToUse;
     _frequency = frequency;
     _resolutionBits = resolutionBits;
 
-    // Determine MCPWM unit, timer, and signal based on channel
-    switch (_pwmChannel)
-    {
-    case 0:
-        _mcpwmUnit = MCPWM_UNIT_0;
-        _mcpwmTimer = MCPWM_TIMER_0;
-        _mcpwmSignal = MCPWM0A;
-        _mcpwmOperator = MCPWM_OPR_A;
-        break;
-    case 1:
-        _mcpwmUnit = MCPWM_UNIT_0;
-        _mcpwmTimer = MCPWM_TIMER_0;
-        _mcpwmSignal = MCPWM0B;
-        _mcpwmOperator = MCPWM_OPR_B;
-        break;
-    case 2:
-        _mcpwmUnit = MCPWM_UNIT_0;
-        _mcpwmTimer = MCPWM_TIMER_1;
-        _mcpwmSignal = MCPWM1A;
-        _mcpwmOperator = MCPWM_OPR_A;
-        break;
-    case 3:
-        _mcpwmUnit = MCPWM_UNIT_0;
-        _mcpwmTimer = MCPWM_TIMER_1;
-        _mcpwmSignal = MCPWM1B;
-        _mcpwmOperator = MCPWM_OPR_B;
-        break;
-    case 4:
-        _mcpwmUnit = MCPWM_UNIT_0;
-        _mcpwmTimer = MCPWM_TIMER_2;
-        _mcpwmSignal = MCPWM2A;
-        _mcpwmOperator = MCPWM_OPR_A;
-        break;
-    case 5:
-        _mcpwmUnit = MCPWM_UNIT_0;
-        _mcpwmTimer = MCPWM_TIMER_2;
-        _mcpwmSignal = MCPWM2B;
-        _mcpwmOperator = MCPWM_OPR_B;
-        break;
-    case 6:
-        _mcpwmUnit = MCPWM_UNIT_1;
-        _mcpwmTimer = MCPWM_TIMER_0;
-        _mcpwmSignal = MCPWM0A;
-        _mcpwmOperator = MCPWM_OPR_A;
-        break;
-    case 7:
-        _mcpwmUnit = MCPWM_UNIT_1;
-        _mcpwmTimer = MCPWM_TIMER_0;
-        _mcpwmSignal = MCPWM0B;
-        _mcpwmOperator = MCPWM_OPR_B;
-        break;
-    default:
-        MLOG_ERROR("PwmMotor [%s]: Invalid PWM channel %d. This should not happen.", _id.c_str(), _pwmChannel);
-        _isSetup = false;
-        return false;
-    }
+    // Determine MCPWM unit, timer, signal, and operator based on channel
+    _mcpwmUnit = MCPWM_UNIT_0;
+    int timerIndex = _mcpwmChannelIndex / 2; // 0-2 for timers 0-2
+    _mcpwmTimer = static_cast<mcpwm_timer_t>(timerIndex);
+    _mcpwmSignal = McPwmChannels::getSignal(_mcpwmChannelIndex);
+    _mcpwmOperator = (_mcpwmChannelIndex % 2 == 0) ? MCPWM_OPR_A : MCPWM_OPR_B;
 
     // MLOG_INFO("PwmMotor [%s]: Setup - pin:%d, channel:%d, freq:%d Hz, resolution:%d bits",
-    //           _id.c_str(), _pin, _pwmChannel, _frequency, _resolutionBits);
+    //           _id.c_str(), _pin, _mcpwmChannelIndex, _frequency, _resolutionBits);
 
     bool configured = configureMCPWM();
     if (configured)
@@ -350,7 +324,7 @@ bool PwmMotor::control(const String &action, JsonObject *args)
         }
 
         int pin = (*args)["pin"].as<int>();
-        int channel = (*args)["channel"].as<int>();
+        int channel = (*args)["mcpwmChannel"].as<int>();
         uint32_t frequency = (*args)["frequency"].as<uint32_t>();
         uint8_t resolutionBits = (*args)["resolutionBits"].as<uint8_t>();
 
@@ -444,7 +418,7 @@ String PwmMotor::getConfig() const
 
     config["name"] = _name;
     config["pin"] = _pin;
-    config["pwmChannel"] = _pwmChannel;
+    config["mcpwmChannel"] = _mcpwmChannelIndex;
     config["frequency"] = _frequency;
     config["resolutionBits"] = _resolutionBits;
     config["minDutyCycle"] = _minDutyCycle;
@@ -479,11 +453,11 @@ void PwmMotor::setConfig(JsonObject *config)
         nextPin = pin;
     }
 
-    int nextChannel = _pwmChannel;
-    if ((*config)["pwmChannel"].is<int>())
+    int nextChannel = _mcpwmChannelIndex;
+    if ((*config)["mcpwmChannel"].is<int>())
     {
-        const int pwmChannel = (*config)["pwmChannel"].as<int>();
-        nextChannel = pwmChannel;
+        const int mcpwmChannel = (*config)["mcpwmChannel"].as<int>();
+        nextChannel = mcpwmChannel;
     }
     else if ((*config)["channel"].is<int>())
     {
@@ -534,13 +508,13 @@ void PwmMotor::setConfig(JsonObject *config)
     }
 
     _pin = nextPin;
-    _pwmChannel = nextChannel;
+    _mcpwmChannelIndex = nextChannel;
     _frequency = nextFrequency;
     _resolutionBits = nextResolution;
 
     if (_pin >= 0)
     {
-        setupMotor(_pin, _pwmChannel, _frequency, _resolutionBits);
+        setupMotor(_pin, _mcpwmChannelIndex, _frequency, _resolutionBits);
     }
 
     notifyStateChange();

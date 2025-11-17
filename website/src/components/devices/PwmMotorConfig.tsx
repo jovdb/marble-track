@@ -14,7 +14,7 @@ export default function PwmMotorConfig(props: PwmMotorConfigProps) {
 
   const [name, setName] = createSignal(device()?.config?.name ?? device()?.id ?? "PWM Motor");
   const [pin, setPin] = createSignal<number>(device()?.config?.pin ?? -1);
-  const [pwmChannel, setPwmChannel] = createSignal<number>(device()?.config?.pwmChannel ?? 0);
+  const [mcpwmChannel, setMcpwmChannel] = createSignal<number>(device()?.config?.mcpwmChannel ?? -1);
   const [frequency, setFrequency] = createSignal<number>(device()?.config?.frequency ?? 50);
   const [resolutionBits, setResolutionBits] = createSignal<number>(
     device()?.config?.resolutionBits ?? 12
@@ -41,8 +41,8 @@ export default function PwmMotorConfig(props: PwmMotorConfigProps) {
       setPin(config.pin);
     }
 
-    if (typeof config.pwmChannel === "number") {
-      setPwmChannel(config.pwmChannel);
+    if (typeof config.mcpwmChannel === "number") {
+      setMcpwmChannel(config.mcpwmChannel);
     }
 
     if (typeof config.frequency === "number") {
@@ -73,7 +73,7 @@ export default function PwmMotorConfig(props: PwmMotorConfigProps) {
         actions.setDeviceConfig({
           name: name()?.trim() || device()?.id,
           pin: pin(),
-          pwmChannel: pwmChannel(),
+          mcpwmChannel: mcpwmChannel(),
           frequency: frequency(),
           resolutionBits: resolutionBits(),
           minDutyCycle: minDutyCycle(),
@@ -108,21 +108,20 @@ export default function PwmMotorConfig(props: PwmMotorConfigProps) {
           </DeviceConfigItem>
         </DeviceConfigRow>
         <DeviceConfigRow>
-          <DeviceConfigItem name="PWM Channel:">
+          <DeviceConfigItem name="MCPWM Channel:">
             <select
-              value={pwmChannel()}
-              onChange={(event) => setPwmChannel(Number(event.currentTarget.value))}
-              title="MCPWM channel (0-7 available)"
+              value={mcpwmChannel()}
+              onChange={(event) => setMcpwmChannel(Number(event.currentTarget.value))}
+              title="MCPWM channel (-1 = auto-acquire, 0-5 = specific channel)"
               style={{ "margin-left": "0.5rem" }}
             >
-              <option value={0}>Channel 0</option>
-              <option value={1}>Channel 1</option>
-              <option value={2}>Channel 2</option>
-              <option value={3}>Channel 3</option>
-              <option value={4}>Channel 4</option>
-              <option value={5}>Channel 5</option>
-              <option value={6}>Channel 6</option>
-              <option value={7}>Channel 7</option>
+              <option value={-1}>Auto-acquire</option>
+              <option value={0}>MCPWM_OUT0A</option>
+              <option value={1}>MCPWM_OUT0B</option>
+              <option value={2}>MCPWM_OUT1A</option>
+              <option value={3}>MCPWM_OUT1B</option>
+              <option value={4}>MCPWM_OUT2A</option>
+              <option value={5}>MCPWM_OUT2B</option>
             </select>
           </DeviceConfigItem>
         </DeviceConfigRow>

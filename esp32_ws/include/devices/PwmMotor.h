@@ -15,6 +15,7 @@
 #include "Device.h"
 #include "driver/mcpwm.h"
 #include "soc/mcpwm_periph.h"
+#include "McPwmChannels.h"
 
 class PwmMotor : public Device
 {
@@ -26,14 +27,19 @@ public:
     PwmMotor(const String &id, NotifyClients callback = nullptr);
 
     /**
+     * @brief Destructor for PwmMotor
+     */
+    ~PwmMotor();
+
+    /**
      * @brief Setup the PWM motor with specified parameters
      * @param pin GPIO pin number for PWM output
-     * @param pwmChannel PWM channel (0-7)
+     * @param mcpwmChannel MCPWM channel index (0-5), or -1 to auto-acquire
      * @param frequency PWM frequency in Hz
      * @param resolutionBits PWM resolution in bits (8-16)
      * @return true if setup successful, false otherwise
      */
-    bool setupMotor(int pin, int pwmChannel, uint32_t frequency, uint8_t resolutionBits);
+    bool setupMotor(int pin, int mcpwmChannel, uint32_t frequency, uint8_t resolutionBits);
 
     /**
      * @brief Set motor duty cycle
@@ -87,7 +93,7 @@ public:
 
 private:
     int _pin;
-    int _pwmChannel;
+    int _mcpwmChannelIndex;
     uint32_t _frequency;
     uint8_t _resolutionBits;
     float _currentDutyCycle;

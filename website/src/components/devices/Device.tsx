@@ -13,7 +13,7 @@ interface DeviceProps {
 }
 
 export function Device(props: DeviceProps) {
-  const [isCollapsed, setIsCollapsed] = createSignal(false);
+  const [isCollapsed, setIsCollapsed] = createSignal(true);
   const [showChildren, setShowChildren] = createSignal(false);
   const [showConfig, setShowConfig] = createSignal(false);
   const [showMessagesPanel, setShowMessages] = createSignal(false);

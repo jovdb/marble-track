@@ -37,7 +37,7 @@ bool PwmMotor::setupMotor(int pin, int mcpwmChannel, uint32_t frequency, uint8_t
 {
     if (pin < 0)
     {
-        MLOG_ERROR("PwmMotor [%s]: Invalid pin %d. Pin must be >= 0.", _id.c_str(), pin);
+        setError("PWM_INVALID_PIN", "Invalid pin. Pin must be >= 0.");
         _isSetup = false;
         _pin = -1;
         return false;
@@ -75,13 +75,13 @@ bool PwmMotor::setupMotor(int pin, int mcpwmChannel, uint32_t frequency, uint8_t
     if (channelToUse == -1) {
         channelToUse = McPwmChannels::acquireFree();
         if (channelToUse == -1) {
-            MLOG_ERROR("PwmMotor [%s]: No free MCPWM channels available.", _id.c_str());
+            setError("PWM_NO_FREE_CHANNELS", "No free MCPWM channels available.");
             _isSetup = false;
             return false;
         }
     } else {
         if (!McPwmChannels::acquireSpecific(channelToUse)) {
-            MLOG_ERROR("PwmMotor [%s]: MCPWM channel %d already in use or invalid.", _id.c_str(), channelToUse);
+            setError("PWM_CHANNEL_IN_USE", "MCPWM channel " + String(channelToUse) + " already in use or invalid.");
             _isSetup = false;
             return false;
         }
@@ -120,11 +120,10 @@ bool PwmMotor::configureMCPWM()
         return false;
     }
 
-    // Configure GPIO for MCPWM
     esp_err_t gpioErr = mcpwm_gpio_init(_mcpwmUnit, _mcpwmSignal, _pin);
     if (gpioErr != ESP_OK)
     {
-        MLOG_ERROR("PwmMotor [%s]: Failed to initialize MCPWM GPIO: %s", _id.c_str(), esp_err_to_name(gpioErr));
+        setError("PWM_GPIO_INIT_FAILED", "Failed to initialize MCPWM GPIO: " + String(esp_err_to_name(gpioErr)));
         _isSetup = false;
         return false;
     }
@@ -141,13 +140,14 @@ bool PwmMotor::configureMCPWM()
     esp_err_t err = mcpwm_init(_mcpwmUnit, _mcpwmTimer, &pwm_config);
     if (err != ESP_OK)
     {
-        MLOG_ERROR("PwmMotor [%s]: MCPWM initialization failed: %s", _id.c_str(), esp_err_to_name(err));
+        setError("PWM_INIT_FAILED", "MCPWM initialization failed: " + String(esp_err_to_name(err)));
         _isSetup = false;
         return false;
     }
 
     _isSetup = true;
     // MLOG_INFO("PwmMotor [%s]: MCPWM configured successfully on pin %d", _id.c_str(), _pin);
+    clearError();
     return true;
 }
 
@@ -155,7 +155,7 @@ bool PwmMotor::setDutyCycle(float dutyCycle, bool notifyChange)
 {
     if (!_isSetup)
     {
-        MLOG_ERROR("PwmMotor [%s]: Not setup. Call setupMotor() first.", _id.c_str());
+        setError("PWM_NOT_SETUP", "Not setup. Call setupMotor() first.");
         return false;
     }
 
@@ -171,7 +171,7 @@ bool PwmMotor::setDutyCycle(float dutyCycle, bool notifyChange)
     esp_err_t err = mcpwm_set_duty(_mcpwmUnit, _mcpwmTimer, _mcpwmOperator, dutyCycle);
     if (err != ESP_OK)
     {
-        MLOG_ERROR("PwmMotor [%s]: Failed to set duty cycle: %s", _id.c_str(), esp_err_to_name(err));
+        setError("PWM_SET_DUTY_FAILED", "Failed to set duty cycle: " + String(esp_err_to_name(err)));
         return false;
     }
 
@@ -192,7 +192,7 @@ bool PwmMotor::setDutyCycleAnimated(float dutyCycle, uint32_t durationMs)
 {
     if (!_isSetup)
     {
-        MLOG_ERROR("PwmMotor [%s]: Not setup. Call setupMotor() first.", _id.c_str());
+        setError("PWM_NOT_SETUP", "Not setup. Call setupMotor() first.");
         return false;
     }
 
@@ -227,7 +227,7 @@ bool PwmMotor::setValue(float value, int durationMs)
 {
     if (!_isSetup)
     {
-        MLOG_ERROR("PwmMotor [%s]: Not setup. Call setupMotor() first.", _id.c_str());
+        setError("PWM_NOT_SETUP", "Not setup. Call setupMotor() first.");
         return false;
     }
 
@@ -319,7 +319,7 @@ bool PwmMotor::control(const String &action, JsonObject *args)
     {
         if (!args)
         {
-            MLOG_ERROR("PwmMotor [%s]: 'setup' requires parameters", _id.c_str());
+            setError("PWM_SETUP_NO_PARAMS", "'setup' requires parameters");
             return false;
         }
 
@@ -334,7 +334,7 @@ bool PwmMotor::control(const String &action, JsonObject *args)
     {
         if (!args || !(*args)["value"].is<float>())
         {
-            MLOG_ERROR("PwmMotor [%s]: Invalid 'setValue' payload", _id.c_str());
+            setError("PWM_SETVALUE_INVALID_PAYLOAD", "Invalid 'setValue' payload");
             return false;
         }
         float value = (*args)["value"].as<float>();
@@ -556,7 +556,7 @@ void PwmMotor::updateAnimation()
     esp_err_t err = mcpwm_set_duty(_mcpwmUnit, _mcpwmTimer, _mcpwmOperator, currentDutyCycle);
     if (err != ESP_OK)
     {
-        MLOG_ERROR("PwmMotor [%s]: Failed to set animated duty cycle: %s", _id.c_str(), esp_err_to_name(err));
+        setError("PWM_SET_ANIMATED_DUTY_FAILED", "Failed to set animated duty cycle: " + String(esp_err_to_name(err)));
         _isAnimating = false;
         return;
     }

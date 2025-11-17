@@ -54,7 +54,7 @@ void Stepper::setup()
 
     if (!_stepper)
     {
-        MLOG_ERROR("Stepper [%s]: AccelStepper instance not initialized", _id.c_str());
+        setError("STEPPER_NO_DRIVER", "AccelStepper instance not initialized");
         return;
     }
 

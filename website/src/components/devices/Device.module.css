@@ -91,6 +91,17 @@
   letter-spacing: 0.05em;
 }
 
+.device__error-badge {
+  background-color: var(--color-danger-100);
+  color: var(--color-danger-800);
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-base);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .device__content {
   padding: var(--spacing-5);
 }

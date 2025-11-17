@@ -29,6 +29,9 @@ export function Device(props: DeviceProps) {
   );
   const deviceType = createMemo(() => device()?.type);
   const hasConfig = createMemo(() => Boolean(props.configComponent));
+  const hasError = createMemo(() => (device()?.state as any)?.errorCode > 0);
+  const errorCode = createMemo(() => (device()?.state as any)?.errorCode || 0);
+  const errorMessage = createMemo(() => (device()?.state as any)?.errorMessage || "");
   const configPanelId = `device-config-${props.id}`;
   const logsPanelId = `device-logs-${props.id}`;
 
@@ -78,6 +81,14 @@ export function Device(props: DeviceProps) {
           <div class={styles["device__header-actions"]}>
             <Show when={deviceType()}>
               <span class={styles["device__type-badge"]}>{deviceType()}</span>
+            </Show>
+            <Show when={hasError()}>
+              <span 
+                class={styles["device__error-badge"]}
+                title={`Error ${errorCode()}: ${errorMessage()}`}
+              >
+                ⚠️ {errorCode()}
+              </span>
             </Show>
             <Show when={hasConfig()}>
               <button

@@ -40,6 +40,10 @@ public:
     virtual String getId() const { return _id; }
     virtual String getType() const { return _type; }
     virtual String getName() const { return _name; }
+    virtual String getErrorCode() const { return _errorCode; }
+    virtual String getErrorMessage() const { return _errorMessage; }
+    virtual void setError(const String &code, const String &message);
+    virtual void clearError();
     virtual bool control(const String &action, JsonObject *payload = nullptr);
     virtual String getState();
     virtual std::vector<int> getPins() const;
@@ -54,6 +58,8 @@ protected:
     String _id;
     String _name;
     String _type;
+    String _errorCode;
+    String _errorMessage;
     std::vector<Device *> children;
     /**
      * @brief Callback function for change notifications

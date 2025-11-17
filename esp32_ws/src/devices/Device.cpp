@@ -7,7 +7,7 @@
 #include <vector>
 #include "Logging.h"
 
-Device::Device(const String &id, const String &type, NotifyClients notifyClients) : _id(id), _name(""), _type(type), _notifyClients(notifyClients), _hasClients(nullptr)
+Device::Device(const String &id, const String &type, NotifyClients notifyClients) : _id(id), _name(""), _type(type), _errorCode(""), _errorMessage(""), _notifyClients(notifyClients), _hasClients(nullptr)
 {
     if (!_notifyClients)
     {
@@ -38,6 +38,9 @@ std::vector<Device *> Device::getChildren() const
 
 void Device::setup()
 {
+    // Clear any previous errors at the start of setup
+    clearError();
+
     if (_hasClients == nullptr)
     {
         MLOG_ERROR("Device [%s]: _hasClients callback not set before setup!", _id.c_str());
@@ -84,6 +87,12 @@ String Device::getState()
           }
       }
   */
+
+    // Add error information
+    if (!_errorCode.isEmpty()) {
+        doc["errorCode"] = _errorCode;
+        doc["errorMessage"] = _errorMessage;
+    }
 
     String result;
     serializeJson(doc, result);
@@ -162,4 +171,22 @@ void Device::setNotifyClients(NotifyClients callback)
 void Device::setHasClients(HasClients callback)
 {
     _hasClients = callback;
+}
+
+void Device::setError(const String &code, const String &message)
+{
+    _errorCode = code;
+    _errorMessage = message;
+    MLOG_ERROR("Device [%s]: Error %s - %s", _id.c_str(), code.c_str(), message.c_str());
+    notifyStateChange();
+}
+
+void Device::clearError()
+{
+    if (!_errorCode.isEmpty()) {
+        _errorCode = "";
+        _errorMessage = "";
+        MLOG_INFO("Device [%s]: Error cleared", _id.c_str());
+        notifyStateChange();
+    }
 }

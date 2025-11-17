@@ -112,7 +112,7 @@ void Lift::loop()
             }
             else if (_stepper && !_stepper->isMoving())
             {
-                MLOG_WARN("Lift [%s]: Reset failed - stopped moving but limit not pressed", getId().c_str());
+                setError("LIFT_RESET_FAILED", "Reset failed - stopped moving but limit not pressed");
                 liftState = LiftState::ERROR;
                 _initStep = 0;
                 notifyStateChange();
@@ -281,7 +281,7 @@ void Lift::loop()
         }
         break;
     default:
-        MLOG_ERROR("Lift [%s]: Unknown state encountered in loop()", getId().c_str());
+        setError("LIFT_UNKNOWN_STATE_LOOP", "Unknown state encountered in loop()");
     }
 }
 
@@ -324,7 +324,7 @@ bool Lift::up(float speedRatio)
         return _stepper->moveTo(_maxSteps, _stepper->_defaultSpeed * speedRatio);
     }
     default:
-        MLOG_ERROR("Lift [%s]: Unknown state encountered in up()", getId().c_str());
+        setError("LIFT_UNKNOWN_STATE_UP", "Unknown state encountered in up()");
         return false;
     }
 }
@@ -371,7 +371,7 @@ bool Lift::down(float speedRatio)
         return _stepper->move(steps, _stepper->_defaultSpeed * speedRatio);
     }
     default:
-        MLOG_ERROR("Lift [%s]: Unknown state encountered in down()", getId().c_str());
+        setError("LIFT_UNKNOWN_STATE_DOWN", "Unknown state encountered in down()");
         return false;
     }
 }
@@ -481,7 +481,7 @@ bool Lift::loadBall()
         return loadBallStart();
     }
     default:
-        MLOG_ERROR("Lift [%s]: Unknown state encountered in loadBall()", getId().c_str());
+        setError("LIFT_UNKNOWN_STATE_LOAD_BALL", "Unknown state encountered in loadBall()");
         return false;
     }
 }
@@ -508,7 +508,7 @@ bool Lift::unloadBall()
         return unloadBallStart();
     }
     default:
-        MLOG_ERROR("Lift [%s]: Unknown state encountered in unloadBall()", getId().c_str());
+        setError("LIFT_UNKNOWN_STATE_UNLOAD_BALL", "Unknown state encountered in unloadBall()");
         return false;
     }
 }

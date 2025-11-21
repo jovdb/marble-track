@@ -16,6 +16,8 @@
 #include <ArduinoJson.h>
 #include <functional>
 #include <vector>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 using NotifyClients = std::function<void(const String &message)>;
 using HasClients = std::function<bool()>;
@@ -66,6 +68,15 @@ protected:
      */
     NotifyClients _notifyClients;
     HasClients _hasClients;
+
+    // RTOS Task
+    TaskHandle_t _taskHandle = nullptr;
+    // Can have a endless loop if needed)
+    virtual void task() {}
+    virtual bool useTask() const { return false; }
+
+    // A function that is used to start the task
+    static void _taskTrampoline(void *arg);
 };
 
 #endif // DEVICE_H

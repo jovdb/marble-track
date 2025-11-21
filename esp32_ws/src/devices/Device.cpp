@@ -3,7 +3,6 @@
 #include <LittleFS.h>
 #include <ArduinoJson.h>
 #include "devices/Device.h"
-#include "devices/Device.h"
 #include <vector>
 #include "Logging.h"
 
@@ -17,6 +16,12 @@ Device::Device(const String &id, const String &type, NotifyClients notifyClients
 
 Device::~Device()
 {
+    if (_taskHandle != nullptr)
+    {
+        vTaskDelete(_taskHandle);
+        _taskHandle = nullptr;
+    }
+
     for (Device *child : children)
     {
         delete child;
@@ -46,11 +51,37 @@ void Device::setup()
         MLOG_ERROR("Device [%s]: _hasClients callback not set before setup!", _id.c_str());
     }
 
+    if (useTask())
+    {
+        if (_taskHandle == nullptr)
+        {
+            xTaskCreatePinnedToCore(
+                _taskTrampoline,
+                "DeviceTask",
+                2048,
+                this,
+                1,
+                &_taskHandle,
+                1);
+        }
+    }
+
     for (Device *child : children)
     {
         if (child)
             child->setup();
     }
+}
+
+void Device::_taskTrampoline(void *arg)
+{
+    Device *device = static_cast<Device *>(arg);
+    if (device)
+    {
+        device->task();
+    }
+    // Delete task when is completed
+    vTaskDelete(NULL);
 }
 
 void Device::loop()
@@ -89,7 +120,8 @@ String Device::getState()
   */
 
     // Add error information
-    if (!_errorCode.isEmpty()) {
+    if (!_errorCode.isEmpty())
+    {
         doc["errorCode"] = _errorCode;
         doc["errorMessage"] = _errorMessage;
     }
@@ -183,7 +215,8 @@ void Device::setError(const String &code, const String &message)
 
 void Device::clearError()
 {
-    if (!_errorCode.isEmpty()) {
+    if (!_errorCode.isEmpty())
+    {
         _errorCode = "";
         _errorMessage = "";
         MLOG_INFO("Device [%s]: Error cleared", _id.c_str());

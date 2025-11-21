@@ -48,6 +48,8 @@ public:
     void setup();
 
     void loop() override; // Handles debouncing and state tracking
+    void task() override;
+    bool useTask() const override { return true; }
 
     bool control(const String &action, JsonObject *payload = nullptr) override;
     String getState() override;
@@ -79,6 +81,9 @@ private:
     bool _pressedFlag = false;  ///< Set when button is pressed (cleared by onPressed())
     bool _releasedFlag = false; ///< Set when button is released (cleared by onReleased())
     bool _virtualPress = false; ///< Flag to indicate virtual button press is active
+
+    volatile bool _hasNewState = false;
+    volatile bool _newStableState = false;
 
     /**
      * @brief Read the raw pin state accounting for pull-up/pull-down configuration

@@ -60,6 +60,48 @@ void Button::setup()
     // Initialize state variables
     _rawState = readRawState();
     _currentState = _rawState;
+    _newStableState = _currentState;
+}
+
+void Button::task()
+{
+    unsigned long lastDebounceTime = 0;
+    bool lastRawState = readRawState();
+    bool currentStableState = lastRawState;
+
+    while (true)
+    {
+        if (_pin < 0)
+        {
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            continue;
+        }
+
+        // Read raw state
+        bool rawState = readRawState();
+
+        // If raw state changed, reset timer
+        if (rawState != lastRawState)
+        {
+            lastDebounceTime = millis();
+            lastRawState = rawState;
+        }
+
+        // Check debounce
+        if ((millis() - lastDebounceTime) > _debounceMs)
+        {
+            if (rawState != currentStableState)
+            {
+                currentStableState = rawState;
+
+                // Update shared variables for main loop
+                _newStableState = currentStableState;
+                _hasNewState = true;
+            }
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(10)); // Poll every 10ms
+    }
 }
 
 /**
@@ -81,25 +123,16 @@ void Button::loop()
         return;
     }
 
-    // Read current raw state
-    bool newRawState = readRawState();
-
-    // Check if raw state has changed
-    if (newRawState != _rawState)
+    // Check if task has reported a new state
+    if (_hasNewState)
     {
-        // Reset debounce timer and update raw state
-        _lastDebounceTime = millis();
-        _rawState = newRawState;
-    }
+        bool newState = _newStableState;
+        _hasNewState = false; // Clear flag
 
-    // Check if enough time has passed for debouncing
-    if ((millis() - _lastDebounceTime) > _debounceMs)
-    {
-        // Update debounced state if it has changed
-        if (_rawState != _currentState)
+        if (newState != _currentState)
         {
             bool previousState = _currentState;
-            _currentState = _rawState;
+            _currentState = newState;
 
             // Set edge detection flags
             if (_currentState && !previousState)

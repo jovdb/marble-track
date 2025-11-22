@@ -51,7 +51,15 @@ bool Led::set(bool state)
 
     digitalWrite(_pin, state ? HIGH : LOW);
     _mode = state ? LedMode::ON : LedMode::OFF;
+    _targetMode = _mode;
+    _targetState = state;
     _isOn = state;
+
+    // Notify task to update immediately
+    if (_taskHandle != nullptr)
+    {
+        xTaskNotifyGive(_taskHandle);
+    }
 
     // Notify state change for real-time updates
     notifyStateChange();
@@ -73,9 +81,18 @@ bool Led::blink(unsigned long onTime, unsigned long offTime)
     }
 
     _mode = LedMode::BLINKING;
+    _targetMode = LedMode::BLINKING;
     _blinkOnTime = onTime;
     _blinkOffTime = offTime;
+    _targetBlinkOnTime = onTime;
+    _targetBlinkOffTime = offTime;
     _lastToggleTime = millis() - 1000000;
+
+    // Notify task to update immediately
+    if (_taskHandle != nullptr)
+    {
+        xTaskNotifyGive(_taskHandle);
+    }
 
     // Notify state change for real-time updates
     notifyStateChange();
@@ -161,30 +178,46 @@ String Led::getState()
     return result;
 }
 
-void Led::loop()
+void Led::task()
 {
-    Device::loop();
-
-    if (_mode == LedMode::BLINKING && _pin != -1)
+    while (true)
     {
-        unsigned long now = millis();
-        if (_isOn)
+        if (_pin == -1)
         {
-            if (now - _lastToggleTime >= _blinkOnTime)
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            continue;
+        }
+
+        // Read volatile targets into local variables
+        LedMode currentMode = _targetMode;
+        bool targetState = _targetState;
+
+        if (currentMode == LedMode::BLINKING)
+        {
+            // Determine wait time based on current state
+            unsigned long waitTime = _isOn ? _targetBlinkOnTime : _targetBlinkOffTime;
+
+            // Wait for notification OR timeout (blink toggle)
+            // ulTaskNotifyTake(pdTRUE, ...) clears the notification value on exit
+            if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(waitTime)) > 0)
             {
-                digitalWrite(_pin, LOW);
-                _isOn = false;
-                _lastToggleTime = now;
+                // Received a notification (e.g. set() or blink() called)
+                // Loop will restart and pick up new _targetMode/_targetState
+                continue;
             }
+
+            // Timeout occurred: Toggle LED
+            _isOn = !_isOn;
+            digitalWrite(_pin, _isOn ? HIGH : LOW);
         }
         else
         {
-            if (now - _lastToggleTime >= _blinkOffTime)
-            {
-                digitalWrite(_pin, HIGH);
-                _isOn = true;
-                _lastToggleTime = now;
-            }
+            // Static state (ON or OFF)
+            digitalWrite(_pin, targetState ? HIGH : LOW);
+            _isOn = targetState;
+
+            // Sleep indefinitely until notified
+            ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
         }
     }
 }

@@ -6,16 +6,16 @@
 #ifndef CONTROLLABLE_TASK_DEVICE_H
 #define CONTROLLABLE_TASK_DEVICE_H
 
-#include "devices/TaskDevice.h"
+#include "devices/SaveableTaskDevice.h"
 #include <ArduinoJson.h>
 
 /**
  * @class ControllableTaskDevice
  * @brief Base class for devices that run on their own RTOS task and are controllable
  *
- * This class extends TaskDevice with control and state methods.
+ * This class extends SaveableTaskDevice with control and state methods.
  */
-class ControllableTaskDevice : public TaskDevice
+class ControllableTaskDevice : public SaveableTaskDevice
 {
 public:
     ControllableTaskDevice(const String &id, const String &type);

@@ -1,7 +1,7 @@
 #include "devices/LedDevice.h"
 #include "Logging.h"
 
-LedDevice::LedDevice(const String &id) : SaveableTaskDevice(id, "led")
+LedDevice::LedDevice(const String &id) : ControllableTaskDevice(id, "led")
 {
 }
 
@@ -26,6 +26,45 @@ JsonDocument LedDevice::getConfig() const
     doc["pin"] = _pin;
     doc["name"] = _name;
     return doc;
+}
+
+void LedDevice::addToState(JsonDocument &doc)
+{
+    if (_targetMode == Mode::BLINKING)
+    {
+        doc["mode"] = "blinking";
+    }
+    else
+    {
+        doc["mode"] = _isOn ? "on" : "off";
+    }
+}
+
+bool LedDevice::control(const String &action, JsonObject *args)
+{
+    if (action == "set")
+    {
+        if (args && (*args)["value"].is<bool>())
+        {
+            set((*args)["value"].as<bool>());
+            return true;
+        }
+    }
+    else if (action == "blink")
+    {
+        unsigned long onTime = 500;
+        unsigned long offTime = 500;
+        if (args)
+        {
+            if ((*args)["onTime"].is<unsigned long>())
+                onTime = (*args)["onTime"].as<unsigned long>();
+            if ((*args)["offTime"].is<unsigned long>())
+                offTime = (*args)["offTime"].as<unsigned long>();
+        }
+        blink(onTime, offTime);
+        return true;
+    }
+    return false;
 }
 
 void LedDevice::set(bool state)

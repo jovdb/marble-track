@@ -6,15 +6,18 @@
 #ifndef LED_DEVICE_H
 #define LED_DEVICE_H
 
-#include "devices/SaveableTaskDevice.h"
+#include "devices/ControllableTaskDevice.h"
 
-class LedDevice : public SaveableTaskDevice
+class LedDevice : public ControllableTaskDevice
 {
 public:
     LedDevice(const String &id);
 
     void updateConfig(const JsonDocument &config);
     JsonDocument getConfig() const override;
+
+    void addToState(JsonDocument &doc) override;
+    bool control(const String &action, JsonObject *args = nullptr) override;
 
     /**
      * @brief Set LED to static ON or OFF

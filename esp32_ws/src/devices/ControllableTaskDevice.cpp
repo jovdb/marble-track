@@ -1,7 +1,7 @@
 #include "devices/ControllableTaskDevice.h"
 
 ControllableTaskDevice::ControllableTaskDevice(const String &id, const String &type)
-    : TaskDevice(id, type)
+    : SaveableTaskDevice(id, type)
 {
 }
 

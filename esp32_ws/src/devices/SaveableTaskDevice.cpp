@@ -14,6 +14,8 @@ SaveableTaskDevice::~SaveableTaskDevice()
 bool SaveableTaskDevice::setup(const JsonDocument &config)
 {
     setConfig(config);
+
+    // Create task with default parameters
     return TaskDevice::setup(_id);
 }
 
@@ -27,24 +29,24 @@ JsonDocument SaveableTaskDevice::getConfig() const
 
 void SaveableTaskDevice::setConfig(const JsonDocument &config)
 {
-    // Default implementation: do nothing
-}
-
-/** Notify task config is changed */
-void SaveableTaskDevice::updateConfig(const JsonDocument &config)
-{
     // Task not started
     if (_taskHandle == nullptr)
     {
-        setConfig(config);
+        updateConfig(config);
         return;
     }
 
     // Suspend task while updating config
     vTaskSuspend(_taskHandle);
-    setConfig(config);
+    updateConfig(config);
     vTaskResume(_taskHandle);
 
     // Force task to re-read config
     xTaskNotifyGive(_taskHandle);
+}
+
+/** Notify task config is changed */
+void SaveableTaskDevice::updateConfig(const JsonDocument &config)
+{
+    // Default implementation: do nothing
 }

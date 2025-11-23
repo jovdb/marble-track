@@ -35,9 +35,9 @@ public:
      * @brief Apply configuration
      * @param config JSON configuration object
      */
-    virtual void setConfig(const JsonDocument &config);
+    void setConfig(const JsonDocument &config);
 
-    void updateConfig(const JsonDocument &config);
+    virtual void updateConfig(const JsonDocument &config);
 };
 
 #endif // SAVEABLE_TASK_DEVICE_H

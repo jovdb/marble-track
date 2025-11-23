@@ -13,7 +13,7 @@ class LedDevice : public SaveableTaskDevice
 public:
     LedDevice(const String &id);
 
-    void setConfig(const JsonDocument &config) override;
+    void updateConfig(const JsonDocument &config);
     JsonDocument getConfig() const override;
 
     /**

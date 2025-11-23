@@ -5,13 +5,13 @@ LedDevice::LedDevice(const String &id) : SaveableTaskDevice(id, "led")
 {
 }
 
-void LedDevice::setConfig(const JsonDocument &config)
+void LedDevice::updateConfig(const JsonDocument &config)
 {
-    if (config.containsKey("pin"))
+    if (config["pin"].is<int>())
     {
         _pin = config["pin"].as<int>();
     }
-    if (config.containsKey("name"))
+    if (config["name"].is<String>())
     {
         _name = config["name"].as<String>();
     }

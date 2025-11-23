@@ -6,6 +6,7 @@
     "esp-deploy": "%USERPROFILE%\\.platformio\\penv\\Scripts\\platformio.exe run --target upload -t nobuild --environment 4d_systems_esp32s3_gen4_r8n16",
     "esp-deploy-ota": "%USERPROFILE%\\.platformio\\penv\\Scripts\\platformio.exe run --target upload -t nobuild --environment 4d_systems_esp32s3_gen4_r8n16_ota",
     "esp-mon": "%USERPROFILE%\\.platformio\\penv\\Scripts\\platformio.exe device monitor --environment 4d_systems_esp32s3_gen4_r8n16",
+    "esp-connect": "start https://thelastoutpostworkshop.github.io/microcontroller_devkit/espconnect/",
     "web-dev": "npm run dev --prefix ./website",
     "web-build": "npm run type-check --prefix ./website && npm run fix --prefix ./website && npm run build --prefix ./website",
     "web-deploy": "powershell -ExecutionPolicy Bypass -File deploy-website.ps1",

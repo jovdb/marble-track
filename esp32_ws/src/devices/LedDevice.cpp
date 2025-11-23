@@ -1,19 +1,31 @@
 #include "devices/LedDevice.h"
 #include "Logging.h"
 
-LedDevice::LedDevice(const String &id) : TaskDevice(id, "led")
+LedDevice::LedDevice(const String &id) : SaveableTaskDevice(id, "led")
 {
 }
 
-bool LedDevice::setup(uint8_t pin, const String &name)
+void LedDevice::setConfig(const JsonDocument &config)
 {
-    _pin = pin;
-    _name = name;
+    if (config.containsKey("pin"))
+    {
+        _pin = config["pin"].as<int>();
+    }
+    if (config.containsKey("name"))
+    {
+        _name = config["name"].as<String>();
+    }
 
     pinMode(_pin, OUTPUT);
     digitalWrite(_pin, LOW);
+}
 
-    return TaskDevice::setup(_name);
+JsonDocument LedDevice::getConfig() const
+{
+    JsonDocument doc = SaveableTaskDevice::getConfig();
+    doc["pin"] = _pin;
+    doc["name"] = _name;
+    return doc;
 }
 
 void LedDevice::set(bool state)

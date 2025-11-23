@@ -28,6 +28,7 @@
 unsigned long lastAutoToggleTime = 0;
 
 #include "NetworkSettings.h"
+#include <devices/LedDevice.h>
 
 // Create network and server instances
 Network *network = nullptr; // Will be created after loading settings
@@ -36,6 +37,9 @@ LittleFSManager littleFSManager;
 // WebsiteHost websiteHost(&network);
 WebsiteHost *websiteHost = nullptr; // Will be created after network initialization
 WebSocketManager wsManager(nullptr, nullptr, "/ws");
+
+// Global status LED
+LedDevice *statusLed = nullptr;
 
 // Device instances
 // ...existing code...
@@ -178,6 +182,15 @@ void setup()
   // MLOG_INFO("Device management initialized - Total devices: %d", deviceManager.getDeviceCount());
 
   // State change broadcasting is now enabled during setup
+
+  statusLed = new LedDevice("led1");
+  JsonDocument ledConfig;
+  ledConfig["pin"] = 21;
+  ledConfig["name"] = "Status LED";
+  statusLed->setup(ledConfig);
+
+  statusLed->blink(100, 200); // Blink with 100ms ON, 300ms OFF
+  // statusLed->set(true);       // Set LED ON (overrides blink)
 
   MLOG_INFO("System initialization complete!");
 }

@@ -6,19 +6,15 @@
 #ifndef LED_DEVICE_H
 #define LED_DEVICE_H
 
-#include "devices/TaskDevice.h"
+#include "devices/SaveableTaskDevice.h"
 
-class LedDevice : public TaskDevice {
+class LedDevice : public SaveableTaskDevice
+{
 public:
-    LedDevice(const String& id);
-    
-    /**
-     * @brief Setup the LED and start the task
-     * @param pin GPIO pin number
-     * @param name Name of the device (used for task name)
-     * @return true if successful
-     */
-    bool setup(uint8_t pin, const String& name);
+    LedDevice(const String &id);
+
+    void setConfig(const JsonDocument &config) override;
+    JsonDocument getConfig() const override;
 
     /**
      * @brief Set LED to static ON or OFF
@@ -39,9 +35,14 @@ protected:
 private:
     uint8_t _pin;
     String _name;
-    
-    enum class Mode { OFF, ON, BLINKING };
-    
+
+    enum class Mode
+    {
+        OFF,
+        ON,
+        BLINKING
+    };
+
     // Thread-safe communication variables
     volatile Mode _targetMode = Mode::OFF;
     volatile bool _targetState = false;

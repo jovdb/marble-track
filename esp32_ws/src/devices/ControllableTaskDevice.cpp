@@ -1,0 +1,35 @@
+#include "devices/ControllableTaskDevice.h"
+
+ControllableTaskDevice::ControllableTaskDevice(const String &id, const String &type)
+    : TaskDevice(id, type)
+{
+}
+
+ControllableTaskDevice::~ControllableTaskDevice()
+{
+    // Destructor implementation
+}
+
+String ControllableTaskDevice::getState()
+{
+    // Default implementation: return basic state
+    JsonDocument doc;
+    doc["id"] = _id;
+    doc["type"] = _type;
+    addToState(doc);
+
+    String state;
+    serializeJson(doc, state);
+    return state;
+}
+
+void ControllableTaskDevice::addToState(JsonDocument &doc)
+{
+    // Default implementation: do nothing
+}
+
+bool ControllableTaskDevice::control(const String &action, JsonObject *args)
+{
+    // Default implementation: do nothing, return false
+    return false;
+}

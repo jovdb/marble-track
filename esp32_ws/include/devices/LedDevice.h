@@ -16,7 +16,7 @@ public:
     void updateConfig(const JsonDocument &config);
     JsonDocument getConfig() const override;
 
-    void addToState(JsonDocument &doc) override;
+    void addStateToJson(JsonDocument &doc) override;
     bool control(const String &action, JsonObject *args = nullptr) override;
 
     /**

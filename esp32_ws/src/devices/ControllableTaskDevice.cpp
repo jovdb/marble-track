@@ -16,14 +16,14 @@ String ControllableTaskDevice::getState()
     JsonDocument doc;
     doc["id"] = _id;
     doc["type"] = _type;
-    addToState(doc);
+    addStateToJson(doc);
 
     String state;
     serializeJson(doc, state);
     return state;
 }
 
-void ControllableTaskDevice::addToState(JsonDocument &doc)
+void ControllableTaskDevice::addStateToJson(JsonDocument &doc)
 {
     // Default implementation: do nothing
 }

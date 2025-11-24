@@ -13,7 +13,7 @@ classDiagram
     class ControllableTaskDevice {
         +getState()
         +control(action, args)
-        +addToState(doc)
+        +addStateToJson(doc)
     }
 
     class SaveableTaskDevice {
@@ -49,7 +49,7 @@ Extends `TaskDevice` to add configuration persistence.
 Extends `SaveableTaskDevice` to add a standardized control interface.
 - `getState()`: Returns the current state as a JSON string.
 - `control(action, args)`: Accepts commands to modify the device state.
-- `addToState(doc)`: Virtual method for subclasses to inject their specific state data.
+- `addStateToJson(doc)`: Virtual method for subclasses to inject their specific state data.
 
 ### LedDevice (Example Implementation)
-A concrete implementation that controls an LED. It implements the `task()` loop to handle blinking or static states and overrides `addToState` and `control` to expose its specific functionality.
+A concrete implementation that controls an LED. It implements the `task()` loop to handle blinking or static states and overrides `addStateToJson` and `control` to expose its specific functionality.

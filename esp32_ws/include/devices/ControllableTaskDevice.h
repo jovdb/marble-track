@@ -31,7 +31,7 @@ public:
      * @brief Add device-specific state to the JSON document
      * @param doc The JSON document to extend
      */
-    virtual void addToState(JsonDocument &doc);
+    virtual void addStateToJson(JsonDocument &doc);
 
     /**
      * @brief Control the device with an action and optional arguments

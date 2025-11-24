@@ -28,7 +28,7 @@ JsonDocument LedDevice::getConfig() const
     return doc;
 }
 
-void LedDevice::addToState(JsonDocument &doc)
+void LedDevice::addStateToJson(JsonDocument &doc)
 {
     if (_targetMode == Mode::BLINKING)
     {

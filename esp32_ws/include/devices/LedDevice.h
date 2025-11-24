@@ -13,7 +13,7 @@ class LedDevice : public ControllableTaskDevice
 public:
     LedDevice(const String &id);
 
-    void updateConfig(const JsonDocument &config);
+    void updateConfig(const JsonDocument &config) override;
     JsonDocument getConfig() const override;
 
     void addStateToJson(JsonDocument &doc) override;

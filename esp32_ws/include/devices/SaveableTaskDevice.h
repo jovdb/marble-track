@@ -29,7 +29,7 @@ public:
      * @brief Get current configuration
      * @return JSON document containing configuration
      */
-    virtual JsonDocument getConfig() const;
+    virtual JsonDocument getConfig() const = 0;
 
     /**
      * @brief Apply configuration
@@ -37,7 +37,7 @@ public:
      */
     void setConfig(const JsonDocument &config);
 
-    virtual void updateConfig(const JsonDocument &config);
+    virtual void updateConfig(const JsonDocument &config) = 0;
 };
 
 #endif // SAVEABLE_TASK_DEVICE_H

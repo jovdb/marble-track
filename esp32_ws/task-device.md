@@ -6,21 +6,20 @@ This diagram illustrates the inheritance hierarchy for task-based devices in the
 classDiagram
     class TaskDevice {
         +setup(taskName, stackSize, priority, core)
-        #task()
-        #_taskTrampoline(arg)
+        #task()*
     }
 
     class ControllableTaskDevice {
         +getState()
-        +control(action, args)
-        +addStateToJson(doc)
+        +control(action, args)*
+        +addStateToJson(doc)*
     }
 
     class SaveableTaskDevice {
-        +setup(config)
-        +getConfig()
+        +setup(config)*
+        +getConfig()*
         +setConfig(config)
-        +updateConfig(config)
+        +updateConfig(config)*
     }
     
     class LedDevice {
@@ -37,6 +36,8 @@ classDiagram
 
 ### TaskDevice
 The base class that manages the FreeRTOS task lifecycle. It handles task creation and provides the virtual `task()` method that derived classes must implement for their main loop.
+- `setup(taskName, stackSize, priority, core)`: Creates and starts the FreeRTOS task on the specified core.
+- `task()`: Protected virtual method containing the main loop. Derived classes must implement this to define the device's runtime behavior.
 
 ### SaveableTaskDevice
 Extends `TaskDevice` to add configuration persistence.

@@ -8,6 +8,7 @@
 #include <functional>
 #include <Arduino.h>
 #include "NetworkSettings.h"
+#include "devices/TaskDevice.h"
 
 class DeviceManager
 {
@@ -16,6 +17,8 @@ private:
     static const int MAX_DEVICES = 20;
     Device *devices[MAX_DEVICES];
     int devicesCount;
+    TaskDevice *taskDevices[MAX_DEVICES];
+    int taskDevicesCount;
     NotifyClients notifyClients;
     HasClients hasClients;
     std::function<void()> onDevicesChanged;
@@ -143,6 +146,45 @@ public:
      * This should be called from the main loop to update all devices
      */
     void loop();
+
+    /**
+     * @brief Add a task device to the management system
+     * @param taskDevice Pointer to task device to add
+     * @return true if task device was added successfully, false if array is full
+     */
+    bool addTaskDevice(TaskDevice *taskDevice);
+
+    /**
+     * @brief Remove a task device from the management system
+     * @param taskDeviceId The ID of the task device to remove
+     * @return true if task device was found and removed successfully, false otherwise
+     */
+    bool removeTaskDevice(const String &taskDeviceId);
+
+    /**
+     * @brief Get task device by ID
+     * @param taskDeviceId The ID of the task device to find
+     * @return Pointer to task device or nullptr if not found
+     */
+    TaskDevice *getTaskDeviceById(const String &taskDeviceId) const;
+
+    /**
+     * @brief Get task device by ID and cast to specific type
+     * @tparam T TaskDevice type to cast to
+     * @param taskDeviceId The ID of the task device to find
+     * @return Pointer to task device of type T or nullptr if not found or wrong type
+     */
+    template <typename T>
+    T *getTaskDeviceByIdAs(const String &taskDeviceId) const
+    {
+        return static_cast<T *>(getTaskDeviceById(taskDeviceId));
+    }
+
+    /**
+     * @brief Get the total number of registered task devices
+     * @return Number of task devices in the system
+     */
+    int getTaskDeviceCount() const { return taskDevicesCount; }
 
     /**
      * @brief Get the total number of registered devices

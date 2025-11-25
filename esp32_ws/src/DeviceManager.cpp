@@ -201,6 +201,7 @@ void DeviceManager::saveDevicesToJsonFile()
         JsonObject deviceObj = devicesArray.add<JsonObject>();
         deviceObj["id"] = device->getId();
         deviceObj["type"] = device->getType();
+        deviceObj["isTaskDevice"] = false;
 
         // Save children IDs
         JsonArray childrenArray = deviceObj["children"].to<JsonArray>();
@@ -231,6 +232,21 @@ void DeviceManager::saveDevicesToJsonFile()
                 }
                 deviceObj["config"] = serialized(configStr.c_str());
             }
+        }
+    }
+
+    // Save task devices
+    rootObj.remove("taskDevices");
+    JsonArray taskDevicesArray = rootObj["taskDevices"].to<JsonArray>();
+    for (int i = 0; i < taskDevicesCount; i++)
+    {
+        if (taskDevices[i])
+        {
+            JsonObject taskDeviceObj = taskDevicesArray.add<JsonObject>();
+            taskDeviceObj["id"] = taskDevices[i]->getId();
+            taskDeviceObj["type"] = taskDevices[i]->getType();
+            taskDeviceObj["isTaskDevice"] = true;
+            // TaskDevices may not have config, but if they do (like SaveableTaskDevice), we can add later
         }
     }
 
@@ -364,32 +380,33 @@ bool DeviceManager::saveNetworkSettings(const NetworkSettings &settings)
     }
 }
 
-DeviceManager::DeviceManager(NotifyClients callback) : devicesCount(0), notifyClients(callback), hasClients(nullptr)
+DeviceManager::DeviceManager(NotifyClients callback) : devicesCount(0), taskDevicesCount(0), notifyClients(callback), hasClients(nullptr)
 {
     // Initialize device array to nullptr
     for (int i = 0; i < MAX_DEVICES; i++)
     {
         devices[i] = nullptr;
+        taskDevices[i] = nullptr;
     }
 }
 
-bool DeviceManager::addDevice(Device *device)
+bool DeviceManager::addTaskDevice(TaskDevice *taskDevice)
 {
-    if (devicesCount < MAX_DEVICES && device != nullptr)
+    if (taskDevicesCount < MAX_DEVICES && taskDevice != nullptr)
     {
-        devices[devicesCount] = device;
-        devicesCount++;
-        MLOG_INFO("Added device: %s (%s)", device->getId().c_str(), device->getName().c_str());
+        taskDevices[taskDevicesCount] = taskDevice;
+        taskDevicesCount++;
+        MLOG_INFO("Added task device: %s (%s)", taskDevice->getId().c_str(), taskDevice->getType().c_str());
         return true;
     }
 
-    if (device == nullptr)
+    if (taskDevice == nullptr)
     {
-        MLOG_ERROR("Error: Cannot add null device");
+        MLOG_ERROR("Error: Cannot add null task device");
     }
     else
     {
-        MLOG_ERROR("Error: Device array is full, cannot add device: %s", device->getId().c_str());
+        MLOG_ERROR("Error: Task device array is full, cannot add task device: %s", taskDevice->getId().c_str());
     }
     return false;
 }
@@ -451,14 +468,25 @@ void DeviceManager::loop()
     }
 }
 
-Device *DeviceManager::getDeviceById(const String &deviceId) const
+TaskDevice *DeviceManager::getTaskDeviceById(const String &taskDeviceId) const
 {
-    // Helper function for recursive search
+    for (int i = 0; i < taskDevicesCount; i++)
+    {
+        if (taskDevices[i] != nullptr && taskDevices[i]->getId() == taskDeviceId)
+        {
+            return taskDevices[i];
+        }
+    }
+    return nullptr;
+}
+// Recursively search for the first device of the given type
+Device *DeviceManager::getDeviceByType(const String &deviceType) const
+{
     std::function<Device *(Device *)> findRecursive = [&](Device *dev) -> Device *
     {
         if (!dev)
             return nullptr;
-        if (dev->getId() == deviceId)
+        if (dev->getType() == deviceType)
             return dev;
         for (Device *child : dev->getChildren())
         {
@@ -479,14 +507,65 @@ Device *DeviceManager::getDeviceById(const String &deviceId) const
     }
     return nullptr;
 }
-// Recursively search for the first device of the given type
-Device *DeviceManager::getDeviceByType(const String &deviceType) const
+bool DeviceManager::removeTaskDevice(const String &taskDeviceId)
 {
+    for (int i = 0; i < taskDevicesCount; i++)
+    {
+        if (taskDevices[i] != nullptr && taskDevices[i]->getId() == taskDeviceId)
+        {
+            MLOG_INFO("Removing task device: %s (%s)", taskDevices[i]->getId().c_str(), taskDevices[i]->getType().c_str());
+            delete taskDevices[i];
+
+            // Shift remaining task devices down
+            for (int j = i; j < taskDevicesCount - 1; j++)
+            {
+                taskDevices[j] = taskDevices[j + 1];
+            }
+            taskDevices[taskDevicesCount - 1] = nullptr;
+            taskDevicesCount--;
+
+            return true;
+        }
+    }
+
+    MLOG_WARN("Task device not found for removal: %s", taskDeviceId.c_str());
+    return false;
+}
+
+std::vector<Device *> DeviceManager::getAllDevices()
+{
+    std::vector<Device *> allDevices;
+
+    std::function<void(Device *)> collectRecursive = [&](Device *device)
+    {
+        if (!device)
+            return;
+        allDevices.push_back(device);
+        for (Device *child : device->getChildren())
+        {
+            collectRecursive(child);
+        }
+    };
+
+    for (int i = 0; i < devicesCount; i++)
+    {
+        if (devices[i])
+        {
+            collectRecursive(devices[i]);
+        }
+    }
+
+    return allDevices;
+}
+
+Device *DeviceManager::getDeviceById(const String &deviceId) const
+{
+    // Helper function for recursive search
     std::function<Device *(Device *)> findRecursive = [&](Device *dev) -> Device *
     {
         if (!dev)
             return nullptr;
-        if (dev->getType() == deviceType)
+        if (dev->getId() == deviceId)
             return dev;
         for (Device *child : dev->getChildren())
         {
@@ -530,32 +609,6 @@ bool DeviceManager::removeDevice(const String &deviceId)
 
     MLOG_WARN("Device not found for removal: %s", deviceId.c_str());
     return false;
-}
-
-std::vector<Device *> DeviceManager::getAllDevices()
-{
-    std::vector<Device *> allDevices;
-
-    std::function<void(Device *)> collectRecursive = [&](Device *device)
-    {
-        if (!device)
-            return;
-        allDevices.push_back(device);
-        for (Device *child : device->getChildren())
-        {
-            collectRecursive(child);
-        }
-    };
-
-    for (int i = 0; i < devicesCount; i++)
-    {
-        if (devices[i])
-        {
-            collectRecursive(devices[i]);
-        }
-    }
-
-    return allDevices;
 }
 
 Device *DeviceManager::createDevice(const String &deviceType, const String &deviceId, JsonVariant config, NotifyClients notifyCallback, HasClients hasClientsCallback)

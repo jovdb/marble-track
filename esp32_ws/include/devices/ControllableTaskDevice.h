@@ -7,6 +7,7 @@
 #define CONTROLLABLE_TASK_DEVICE_H
 
 #include "devices/SaveableTaskDevice.h"
+#include "devices/Device.h"
 #include <ArduinoJson.h>
 
 /**
@@ -18,7 +19,7 @@
 class ControllableTaskDevice : public SaveableTaskDevice
 {
 public:
-    ControllableTaskDevice(const String &id, const String &type);
+    ControllableTaskDevice(const String &id, const String &type, NotifyClients callback = nullptr);
     virtual ~ControllableTaskDevice();
 
     /**
@@ -40,6 +41,12 @@ public:
      * @return true if the action was successful
      */
     virtual bool control(const String &action, JsonObject *args = nullptr);
+
+protected:
+    void notifyStateChange();
+    void notifyConfigChange();
+
+    NotifyClients _notifyClients;
 };
 
 #endif // CONTROLLABLE_TASK_DEVICE_H

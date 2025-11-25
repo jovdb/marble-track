@@ -49,8 +49,14 @@ public:
      */
     virtual std::vector<int> getPins() const;
 
-protected:
+    /**
+     * @brief Check if this device is controllable
+     * @return true if the device is controllable
+     */
+    virtual bool isControllable() const override { return true; }
     void notifyStateChange();
+
+protected:
     void notifyConfigChange();
     NotifyClients _notifyClients;
 };

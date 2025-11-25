@@ -738,6 +738,7 @@ void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
         Device *device = deviceManager->getDeviceById(deviceId);
         if (!device)
         {
+            MLOG_ERROR("Device not found for state request: %s", deviceId.c_str());
             // TODO: broadcastState(deviceId, "", "Device '" + deviceId + "' not found.");
         }
         else

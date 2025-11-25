@@ -40,6 +40,12 @@ public:
     String toString() const;
 
     /**
+     * @brief Check if this device is controllable
+     * @return true if the device is controllable
+     */
+    virtual bool isControllable() const { return false; }
+
+    /**
      * @brief Get the pins used by this device
      * @return Vector of pin numbers
      */

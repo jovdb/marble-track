@@ -546,6 +546,19 @@ Device *DeviceManager::getDeviceByType(const String &deviceType) const
     }
     return nullptr;
 }
+
+ControllableTaskDevice *DeviceManager::getControllableTaskDeviceById(const String &deviceId) const
+{
+    for (int i = 0; i < taskDevicesCount; i++)
+    {
+        if (taskDevices[i] != nullptr && taskDevices[i]->getId() == deviceId && taskDevices[i]->isControllable())
+        {
+            return static_cast<ControllableTaskDevice *>(taskDevices[i]);
+        }
+    }
+    return nullptr;
+}
+
 bool DeviceManager::removeDevice(const String &deviceId)
 {
     for (int i = 0; i < devicesCount; i++)

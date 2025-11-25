@@ -5,6 +5,7 @@
 
 #include "devices/Device.h"
 #include "devices/TaskDevice.h"
+#include "devices/ControllableTaskDevice.h"
 #include <functional>
 #include <Arduino.h>
 #include "NetworkSettings.h"
@@ -76,6 +77,13 @@ public:
     {
         return static_cast<T *>(getDeviceById(deviceId));
     }
+
+    /**
+     * @brief Get controllable task device by ID
+     * @param deviceId The ID of the device to find
+     * @return Pointer to ControllableTaskDevice or nullptr if not found
+     */
+    ControllableTaskDevice *getControllableTaskDeviceById(const String &deviceId) const;
     /**
      * @brief Constructor - initializes empty device array
      */

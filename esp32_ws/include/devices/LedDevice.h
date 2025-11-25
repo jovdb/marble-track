@@ -19,6 +19,8 @@ public:
     void addStateToJson(JsonDocument &doc) override;
     bool control(const String &action, JsonObject *args = nullptr) override;
 
+    std::vector<int> getPins() const override;
+
     /**
      * @brief Set LED to static ON or OFF
      * @param state true for ON, false for OFF

@@ -31,6 +31,11 @@ bool ControllableTaskDevice::control(const String &action, JsonObject *args)
     return false;
 }
 
+std::vector<int> ControllableTaskDevice::getPins() const
+{
+    return std::vector<int>();
+}
+
 void ControllableTaskDevice::notifyStateChange()
 {
     if (_notifyClients)

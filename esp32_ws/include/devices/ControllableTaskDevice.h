@@ -9,6 +9,7 @@
 #include "devices/SaveableTaskDevice.h"
 #include "devices/Device.h"
 #include <ArduinoJson.h>
+#include <vector>
 
 /**
  * @class ControllableTaskDevice
@@ -42,10 +43,15 @@ public:
      */
     virtual bool control(const String &action, JsonObject *args = nullptr);
 
+    /**
+     * @brief Get the pins used by this device
+     * @return Vector of pin numbers
+     */
+    virtual std::vector<int> getPins() const;
+
 protected:
     void notifyStateChange();
     void notifyConfigChange();
-
     NotifyClients _notifyClients;
 };
 

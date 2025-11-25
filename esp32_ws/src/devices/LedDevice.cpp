@@ -67,6 +67,11 @@ bool LedDevice::control(const String &action, JsonObject *args)
     return false;
 }
 
+std::vector<int> LedDevice::getPins() const
+{
+    return {_pin};
+}
+
 void LedDevice::set(bool state)
 {
     _targetMode = state ? Mode::ON : Mode::OFF;

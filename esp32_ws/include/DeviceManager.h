@@ -1,14 +1,13 @@
-
 #ifndef DEVICEMANAGER_H
 #define DEVICEMANAGER_H
 
 #include <ArduinoJson.h>
 
 #include "devices/Device.h"
+#include "devices/TaskDevice.h"
 #include <functional>
 #include <Arduino.h>
 #include "NetworkSettings.h"
-#include "devices/TaskDevice.h"
 
 class DeviceManager
 {
@@ -17,8 +16,11 @@ private:
     static const int MAX_DEVICES = 20;
     Device *devices[MAX_DEVICES];
     int devicesCount;
-    TaskDevice *taskDevices[MAX_DEVICES];
+
+    static const int MAX_TASK_DEVICES = 10;
+    TaskDevice *taskDevices[MAX_TASK_DEVICES];
     int taskDevicesCount;
+
     NotifyClients notifyClients;
     HasClients hasClients;
     std::function<void()> onDevicesChanged;
@@ -102,6 +104,13 @@ public:
     bool addDevice(Device *device);
 
     /**
+     * @brief Add a task device to the management system
+     * @param device Pointer to task device to add
+     * @return true if device was added successfully, false if array is full
+     */
+    bool addTaskDevice(TaskDevice *device);
+
+    /**
      * @brief Remove a device from the management system
      * @param deviceId The ID of the device to remove
      * @return true if device was found and removed successfully, false otherwise
@@ -137,6 +146,14 @@ public:
     void getDevices(Device **deviceList, int &count, int maxResults);
 
     /**
+     * @brief Get all task devices
+     * @param deviceList Array to store pointers to task devices
+     * @param count Reference to store the number of devices found
+     * @param maxResults Maximum number of results to return
+     */
+    void getTaskDevices(TaskDevice **deviceList, int &count, int maxResults);
+
+    /**
      * @brief Setup all devices and assign state change callback
      */
     void setup();
@@ -146,45 +163,6 @@ public:
      * This should be called from the main loop to update all devices
      */
     void loop();
-
-    /**
-     * @brief Add a task device to the management system
-     * @param taskDevice Pointer to task device to add
-     * @return true if task device was added successfully, false if array is full
-     */
-    bool addTaskDevice(TaskDevice *taskDevice);
-
-    /**
-     * @brief Remove a task device from the management system
-     * @param taskDeviceId The ID of the task device to remove
-     * @return true if task device was found and removed successfully, false otherwise
-     */
-    bool removeTaskDevice(const String &taskDeviceId);
-
-    /**
-     * @brief Get task device by ID
-     * @param taskDeviceId The ID of the task device to find
-     * @return Pointer to task device or nullptr if not found
-     */
-    TaskDevice *getTaskDeviceById(const String &taskDeviceId) const;
-
-    /**
-     * @brief Get task device by ID and cast to specific type
-     * @tparam T TaskDevice type to cast to
-     * @param taskDeviceId The ID of the task device to find
-     * @return Pointer to task device of type T or nullptr if not found or wrong type
-     */
-    template <typename T>
-    T *getTaskDeviceByIdAs(const String &taskDeviceId) const
-    {
-        return static_cast<T *>(getTaskDeviceById(taskDeviceId));
-    }
-
-    /**
-     * @brief Get the total number of registered task devices
-     * @return Number of task devices in the system
-     */
-    int getTaskDeviceCount() const { return taskDevicesCount; }
 
     /**
      * @brief Get the total number of registered devices

@@ -10,6 +10,7 @@
 #include <ArduinoJson.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <vector>
 
 /**
  * @class TaskDevice
@@ -37,6 +38,12 @@ public:
     String getId() const { return _id; }
     String getType() const { return _type; }
     String toString() const;
+
+    /**
+     * @brief Get the pins used by this device
+     * @return Vector of pin numbers
+     */
+    virtual std::vector<int> getPins() const { return {}; }
 
 protected:
     String _id;

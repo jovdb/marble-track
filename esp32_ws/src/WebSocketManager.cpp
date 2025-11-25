@@ -100,11 +100,33 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
                 }
             }
         }
+
+        // Get task devices from DeviceManager
+        TaskDevice *taskDeviceList[10]; // MAX_TASK_DEVICES from DeviceManager
+        int taskCount;
+        deviceManager->getTaskDevices(taskDeviceList, taskCount, 10);
+
+        for (int i = 0; i < taskCount; i++)
+        {
+            if (taskDeviceList[i] != nullptr)
+            {
+                JsonObject deviceObj = devicesArray.add<JsonObject>();
+                deviceObj["id"] = taskDeviceList[i]->getId();
+                deviceObj["type"] = taskDeviceList[i]->getType();
+
+                // Get pins directly from TaskDevice (now virtual)
+                std::vector<int> pins = taskDeviceList[i]->getPins();
+                JsonArray pinsArr = deviceObj["pins"].to<JsonArray>();
+                for (int pin : pins)
+                {
+                    pinsArr.add(pin);
+                }
+            }
+        }
     }
 
     String message;
     serializeJson(response, message);
-    // MLOG_WS_SEND("WebSocket sent devices list: %s", message.c_str());
 
     notifyClients(message);
 }

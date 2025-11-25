@@ -189,6 +189,8 @@ void setup()
   ledConfig["name"] = "Status LED";
   statusLed->setup(ledConfig);
 
+  deviceManager.addTaskDevice(statusLed);
+
   statusLed->blink(100, 200); // Blink with 100ms ON, 300ms OFF
   // statusLed->set(true);       // Set LED ON (overrides blink)
 

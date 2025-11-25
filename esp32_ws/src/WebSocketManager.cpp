@@ -14,7 +14,7 @@ String createJsonResponse(bool success, const String &message, const String &dat
     JsonDocument response;
     response["success"] = success;
     response["message"] = message;
-    response["timestamp"] = TimeManager::getCurrentTimestamp();
+  //  response["timestamp"] = TimeManager::getCurrentTimestamp();
 
     if (requestId.length() > 0)
     {
@@ -738,8 +738,18 @@ void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
         Device *device = deviceManager->getDeviceById(deviceId);
         if (!device)
         {
-            MLOG_ERROR("Device not found for state request: %s", deviceId.c_str());
-            // TODO: broadcastState(deviceId, "", "Device '" + deviceId + "' not found.");
+
+            ControllableTaskDevice *controllableDevice = deviceManager->getControllableTaskDeviceById(deviceId);
+            if (!controllableDevice)
+            {
+                MLOG_ERROR("Device not found for state request: %s", deviceId.c_str());
+                // TODO: broadcastState(deviceId, "", "Device '" + deviceId + "' not found.");
+            }
+            else
+            {
+                MLOG_INFO("Notifying state for controllable task device: %s", deviceId.c_str());
+                controllableDevice->notifyStateChange();
+            }
         }
         else
         {

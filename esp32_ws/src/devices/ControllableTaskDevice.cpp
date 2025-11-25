@@ -1,4 +1,5 @@
 #include "devices/ControllableTaskDevice.h"
+#include "Logging.h"
 
 ControllableTaskDevice::ControllableTaskDevice(const String &id, const String &type, NotifyClients callback)
     : SaveableTaskDevice(id, type), _notifyClients(callback)
@@ -50,6 +51,10 @@ void ControllableTaskDevice::notifyStateChange()
 
         _notifyClients(message);
     }
+    else
+    {
+        MLOG_WARN("No notifyClients callback set for device %s", toString().c_str());
+    }
 }
 
 void ControllableTaskDevice::notifyConfigChange()
@@ -64,6 +69,11 @@ void ControllableTaskDevice::notifyConfigChange()
         String message;
         serializeJson(doc, message);
 
+        MLOG_INFO("%s: Notifying config change for device: %s", toString().c_str(), message.c_str());
         _notifyClients(message);
+    }
+    else
+    {
+        MLOG_WARN("%s: No notifyClients callback set for device", toString().c_str());
     }
 }

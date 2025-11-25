@@ -18,24 +18,19 @@
 
 static constexpr const char *CONFIG_FILE = "/config.json";
 
-void DeviceManager::loadDevicesFromJsonFile()
+JsonArray DeviceManager::getDevicesFromJsonFile(JsonDocument& doc)
 {
     if (!LittleFS.exists(CONFIG_FILE))
     {
         MLOG_INFO("File %s not found.", CONFIG_FILE);
-        return;
+        return JsonArray();
     }
 
     File file = LittleFS.open(CONFIG_FILE, FILE_READ);
     if (file)
     {
-        JsonDocument doc;
         DeserializationError err = deserializeJson(doc, file);
         file.close();
-
-        // String prettyJson;
-        // serializeJsonPretty(doc, prettyJson);
-        // MLOG_INFO("Loaded JSON from config file:\n%s", prettyJson.c_str());
 
         if (!err && doc.is<JsonObject>())
         {
@@ -44,95 +39,7 @@ void DeviceManager::loadDevicesFromJsonFile()
             // Check if devices array exists
             if (rootObj["devices"].is<JsonArray>())
             {
-                JsonArray arr = rootObj["devices"];
-                // Clear current devices
-                for (int i = 0; i < devicesCount; i++)
-                {
-                    if (devices[i])
-                    {
-                        delete devices[i];
-                        devices[i] = nullptr;
-                    }
-                }
-                devicesCount = 0;
-
-                std::map<String, Device *> loadedDevices;
-                for (JsonObject obj : arr)
-                {
-                    const String id = obj["id"] | "";
-                    const String type = obj["type"] | "";
-
-                    if (loadedDevices.find(id) != loadedDevices.end())
-                    {
-                        MLOG_WARN("Duplicate device ID '%s' in config, skipping", id.c_str());
-                        continue;
-                    }
-
-                    Device *newDevice = createDevice(type, id, obj["config"], notifyClients, hasClients);
-                    if (newDevice == nullptr)
-                    {
-                        MLOG_WARN("Unknown device type: %s", type.c_str());
-                        continue;
-                    }
-                    loadedDevices[id] = newDevice;
-                }
-
-                // Collect all child IDs
-                std::set<String> childIds;
-                for (JsonObject obj : arr)
-                {
-                    if (obj["children"].is<JsonArray>())
-                    {
-                        JsonArray childrenArr = obj["children"];
-                        for (String childId : childrenArr)
-                        {
-                            childIds.insert(childId);
-                        }
-                    }
-                }
-
-                // Identify top-level devices and add to devices array
-                for (auto &pair : loadedDevices)
-                {
-                    if (childIds.find(pair.first) == childIds.end())
-                    {
-                        if (devicesCount < MAX_DEVICES)
-                        {
-                            devices[devicesCount++] = pair.second;
-                        }
-                        else
-                        {
-                            MLOG_WARN("Maximum device limit reached, cannot add top-level device: %s", pair.first.c_str());
-                            delete pair.second;
-                        }
-                    }
-                }
-
-                // Link children
-                for (JsonObject obj : arr)
-                {
-                    const String id = obj["id"] | "";
-                    auto it = loadedDevices.find(id);
-                    if (it != loadedDevices.end() && obj["children"].is<JsonArray>())
-                    {
-                        Device *parent = it->second;
-                        JsonArray childrenArr = obj["children"];
-                        for (String childId : childrenArr)
-                        {
-                            auto childIt = loadedDevices.find(childId);
-                            if (childIt != loadedDevices.end())
-                            {
-                                parent->addChild(childIt->second);
-                            }
-                            else
-                            {
-                                MLOG_WARN("Child device '%s' not found for parent '%s'", childId.c_str(), id.c_str());
-                            }
-                        }
-                    }
-                }
-
-                MLOG_INFO("Loaded %d devices from %s", loadedDevices.size(), CONFIG_FILE);
+                return rootObj["devices"];
             }
             else
             {
@@ -147,6 +54,127 @@ void DeviceManager::loadDevicesFromJsonFile()
     else
     {
         MLOG_ERROR("Failed to open config JSON file for reading");
+    }
+
+    return JsonArray();
+}
+
+void DeviceManager::clearCurrentDevices()
+{
+    for (int i = 0; i < devicesCount; i++)
+    {
+        if (devices[i])
+        {
+            delete devices[i];
+            devices[i] = nullptr;
+        }
+    }
+    devicesCount = 0;
+}
+
+void DeviceManager::createDevicesFromArray(JsonArray arr, std::map<String, Device*>& loadedDevices)
+{
+    for (JsonObject obj : arr)
+    {
+        const String id = obj["id"] | "";
+        const String type = obj["type"] | "";
+
+        if (loadedDevices.find(id) != loadedDevices.end())
+        {
+            MLOG_WARN("Duplicate device ID '%s' in config, skipping", id.c_str());
+            continue;
+        }
+
+        Device *newDevice = createDevice(type, id, obj["config"], notifyClients, hasClients);
+        if (newDevice == nullptr)
+        {
+            MLOG_WARN("Unknown device type: %s", type.c_str());
+            continue;
+        }
+        loadedDevices[id] = newDevice;
+    }
+}
+
+void DeviceManager::collectChildIds(JsonArray arr, std::set<String>& childIds)
+{
+    for (JsonObject obj : arr)
+    {
+        if (obj["children"].is<JsonArray>())
+        {
+            JsonArray childrenArr = obj["children"];
+            for (String childId : childrenArr)
+            {
+                childIds.insert(childId);
+            }
+        }
+    }
+}
+
+void DeviceManager::addTopLevelDevices(std::map<String, Device*>& loadedDevices, std::set<String>& childIds)
+{
+    for (auto &pair : loadedDevices)
+    {
+        if (childIds.find(pair.first) == childIds.end())
+        {
+            if (devicesCount < MAX_DEVICES)
+            {
+                devices[devicesCount++] = pair.second;
+            }
+            else
+            {
+                MLOG_WARN("Maximum device limit reached, cannot add top-level device: %s", pair.first.c_str());
+                delete pair.second;
+            }
+        }
+    }
+}
+
+void DeviceManager::linkChildren(JsonArray arr, std::map<String, Device*>& loadedDevices)
+{
+    for (JsonObject obj : arr)
+    {
+        const String id = obj["id"] | "";
+        auto it = loadedDevices.find(id);
+        if (it != loadedDevices.end() && obj["children"].is<JsonArray>())
+        {
+            Device *parent = it->second;
+            JsonArray childrenArr = obj["children"];
+            for (String childId : childrenArr)
+            {
+                auto childIt = loadedDevices.find(childId);
+                if (childIt != loadedDevices.end())
+                {
+                    parent->addChild(childIt->second);
+                }
+                else
+                {
+                    MLOG_WARN("Child device '%s' not found for parent '%s'", childId.c_str(), id.c_str());
+                }
+            }
+        }
+    }
+}
+
+void DeviceManager::loadDevicesFromJsonFile()
+{
+    JsonDocument doc;
+    JsonArray arr = getDevicesFromJsonFile(doc);
+
+    if (arr.size() > 0)
+    {
+        clearCurrentDevices();
+
+        std::map<String, Device *> loadedDevices;
+        createDevicesFromArray(arr, loadedDevices);
+
+        std::set<String> childIds;
+        collectChildIds(arr, childIds);
+
+        addTopLevelDevices(loadedDevices, childIds);
+
+        linkChildren(arr, loadedDevices);
+
+        MLOG_INFO("Loaded %d devices from %s", loadedDevices.size(), CONFIG_FILE);
     }
 }
 

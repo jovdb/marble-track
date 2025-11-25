@@ -9,6 +9,8 @@
 #include <functional>
 #include <Arduino.h>
 #include "NetworkSettings.h"
+#include <map>
+#include <set>
 
 class DeviceManager
 {
@@ -186,6 +188,14 @@ public:
 
     void loadDevicesFromJsonFile();
     void saveDevicesToJsonFile();
+
+private:
+    JsonArray getDevicesFromJsonFile(JsonDocument& doc);
+    void clearCurrentDevices();
+    void createDevicesFromArray(JsonArray arr, std::map<String, Device*>& loadedDevices);
+    void collectChildIds(JsonArray arr, std::set<String>& childIds);
+    void addTopLevelDevices(std::map<String, Device*>& loadedDevices, std::set<String>& childIds);
+    void linkChildren(JsonArray arr, std::map<String, Device*>& loadedDevices);
 };
 
 #endif // DEVICEMANAGER_H

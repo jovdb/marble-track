@@ -23,10 +23,10 @@ public:
     virtual ~ControllableTaskDevice();
 
     /**
-     * @brief Get the current state as a JSON string
-     * @return JSON string representing the device state
+     * @brief Get the current state as a JSON document
+     * @return JSON document representing the device state
      */
-    String getState();
+    JsonDocument getState();
 
     /**
      * @brief Add device-specific state to the JSON document

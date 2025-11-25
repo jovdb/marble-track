@@ -10,17 +10,14 @@ ControllableTaskDevice::~ControllableTaskDevice()
     // Destructor implementation
 }
 
-String ControllableTaskDevice::getState()
+JsonDocument ControllableTaskDevice::getState()
 {
     // Default implementation: return basic state
     JsonDocument doc;
     doc["id"] = _id;
     doc["type"] = _type;
     addStateToJson(doc);
-
-    String state;
-    serializeJson(doc, state);
-    return state;
+    return doc;
 }
 
 void ControllableTaskDevice::addStateToJson(JsonDocument &doc)
@@ -41,17 +38,7 @@ void ControllableTaskDevice::notifyStateChange()
         JsonDocument doc;
         doc["type"] = "device-state";
         doc["deviceId"] = _id;
-
-        String stateJson = getState();
-        JsonDocument stateDoc;
-        if (deserializeJson(stateDoc, stateJson) == DeserializationError::Ok)
-        {
-            doc["state"] = stateDoc.as<JsonObject>();
-        }
-        else
-        {
-            doc["state"] = stateJson;
-        }
+        doc["state"] = getState();
 
         String message;
         serializeJson(doc, message);

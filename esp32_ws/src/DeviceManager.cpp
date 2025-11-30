@@ -164,17 +164,17 @@ void DeviceManager::loadDevicesFromJsonFile()
     {
         clearCurrentDevices();
 
-        std::map<String, Device *> loadedDevices;
-        createDevicesFromArray(arr, loadedDevices);
+        // std::map<String, Device *> loadedDevices;
+        // createDevicesFromArray(arr, loadedDevices);
 
-        std::set<String> childIds;
-        collectChildIds(arr, childIds);
+        // std::set<String> childIds;
+        // collectChildIds(arr, childIds);
 
-        addTopLevelDevices(loadedDevices, childIds);
+        // addTopLevelDevices(loadedDevices, childIds);
 
-        linkChildren(arr, loadedDevices);
+        // linkChildren(arr, loadedDevices);
 
-        MLOG_INFO("Loaded %d devices from %s", loadedDevices.size(), CONFIG_FILE);
+        // MLOG_INFO("Loaded %d devices from %s", loadedDevices.size(), CONFIG_FILE);
     }
 }
 

@@ -2,7 +2,7 @@ import { createMemo, createSignal, For, JSX, Show } from "solid-js";
 import styles from "./Device.module.css";
 import { useDevice } from "../../stores/Devices";
 import { renderDeviceComponent } from "../Devices";
-import { useWebSocket2 } from "../../hooks/useWebSocket";
+import { useWebSocket2, IWebSocketMessage } from "../../hooks/useWebSocket";
 import { BroadcastIcon } from "../icons/Icons";
 
 interface DeviceProps {
@@ -216,12 +216,11 @@ export function Device(props: DeviceProps) {
   );
 }
 
-function DeviceLogs(props: { deviceId: string; messages: string[] }) {
+function DeviceLogs(props: { deviceId: string; messages: IWebSocketMessage[] }) {
   const filteredMessages = createMemo(() => {
     return props.messages
-      .map((msgStr) => {
+      .map((msg) => {
         try {
-          const msg = JSON.parse(msgStr) as { data: string; direction: string; timestamp: number };
           const data = JSON.parse(msg.data);
           return { ...msg, parsed: data };
         } catch {
@@ -260,9 +259,6 @@ function DeviceLogs(props: { deviceId: string; messages: string[] }) {
                 {msg.direction === "incoming" ? "←" : "→"} {msg.parsed.type}
               </div>
               <div>{JSON.stringify(msg.parsed, null, 2)}</div>
-              <div style={{ "font-size": "10px", color: "#666" }}>
-                {new Date(msg.timestamp).toLocaleTimeString()}
-              </div>
             </div>
           )}
         </For>

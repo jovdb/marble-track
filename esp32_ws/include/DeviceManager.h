@@ -9,8 +9,6 @@
 #include <functional>
 #include <Arduino.h>
 #include "NetworkSettings.h"
-#include <map>
-#include <set>
 
 class DeviceManager
 {

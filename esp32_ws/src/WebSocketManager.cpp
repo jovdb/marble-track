@@ -14,7 +14,6 @@ String createJsonResponse(bool success, const String &message, const String &dat
     JsonDocument response;
     response["success"] = success;
     response["message"] = message;
-  //  response["timestamp"] = TimeManager::getCurrentTimestamp();
 
     if (requestId.length() > 0)
     {

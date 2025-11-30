@@ -92,7 +92,6 @@ const JsonTree: Component<{ data: any; level?: number }> = (props) => {
 const ExpandableMessage: Component<{
   message: string;
   direction: "incoming" | "outgoing";
-  timestamp: number;
 }> = (props) => {
   const [isExpanded, setIsExpanded] = createSignal(false);
 
@@ -117,16 +116,6 @@ const ExpandableMessage: Component<{
     return `${directionText} message${jsonText}`;
   };
 
-  const formatTimestamp = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString("en-US", {
-      hour12: false,
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
-
   return (
     <div class={styles["websocket-messages__message"]}>
       <div
@@ -140,9 +129,6 @@ const ExpandableMessage: Component<{
           ) : (
             <OutgoingMessageIcon class={styles["websocket-messages__message-icon"]} />
           )}
-          <span class={styles["websocket-messages__timestamp"]}>
-            {formatTimestamp(props.timestamp)}
-          </span>
         </div>
         <span class={styles["websocket-messages__message-text"]}>{props.message}</span>
       </div>
@@ -205,38 +191,22 @@ const WebSocketMessages: Component = () => {
   });
 
   // Parse messages to extract deviceId and type
-  const parseMessage = (message: string) => {
+  const parseMessage = (msg: {data: string, direction: "incoming" | "outgoing"}) => {
     try {
-      const parsed = JSON.parse(message);
-      // Check if this is our new message format with direction
-      if (parsed.data && parsed.direction && parsed.timestamp) {
-        const innerParsed = JSON.parse(parsed.data);
-        return {
-          raw: parsed.data,
-          type: innerParsed.type || "",
-          deviceId: innerParsed.deviceId || "",
-          direction: parsed.direction,
-          timestamp: parsed.timestamp,
-          parsed: innerParsed,
-        };
-      } else {
-        // Legacy format - assume incoming
-        return {
-          raw: message,
-          type: parsed.type || "",
-          deviceId: parsed.deviceId || "",
-          direction: "incoming" as const,
-          timestamp: Date.now(),
-          parsed,
-        };
-      }
+      const parsed = JSON.parse(msg.data);
+      return {
+        raw: msg.data,
+        type: parsed.type || "",
+        deviceId: parsed.deviceId || "",
+        direction: msg.direction,
+        parsed,
+      };
     } catch {
       return {
-        raw: message,
+        raw: msg.data,
         type: "",
         deviceId: "",
-        direction: "incoming" as const,
-        timestamp: Date.now(),
+        direction: msg.direction,
         parsed: null,
       };
     }
@@ -329,7 +299,6 @@ const WebSocketMessages: Component = () => {
                 <ExpandableMessage
                   message={message.raw}
                   direction={message.direction}
-                  timestamp={message.timestamp}
                 />
               )}
             </For>

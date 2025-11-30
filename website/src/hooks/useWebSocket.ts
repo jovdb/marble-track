@@ -20,7 +20,7 @@ export interface IWebSocketStore {
 
   // Messages
   lastMessage: string | null;
-  lastMessages: string[];
+  lastMessages: IWebSocketMessage[];
 
   // Error handling
   error: string | null;
@@ -40,7 +40,6 @@ export interface IWebSocketStore {
 export interface IWebSocketMessage {
   data: string;
   direction: "incoming" | "outgoing";
-  timestamp: number;
 }
 
 // Message callback type - always receives individual messages (arrays are unwrapped)
@@ -288,15 +287,6 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
     // Process batch of messages
     // console.log("WebSocket batch message received:", parsedData.length, "messages");
 
-    // Update message history with batch info
-    const batchSummary: IWebSocketMessage = {
-      data: `[BATCH: ${parsedData.length} messages]`,
-      direction: "incoming",
-      timestamp: Date.now(),
-    };
-    setStore("lastMessage", batchSummary.data);
-    setStore("lastMessages", (prev) => [...prev, JSON.stringify(batchSummary)].slice(-100));
-
     // Process each message in the batch
     parsedData.forEach((msg) => {
       console.log("WebSocket message received:", msg);
@@ -306,6 +296,14 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
         setStore("lastHeartbeat", Date.now());
         return;
       }
+
+      // Add to message history
+      const incomingMessage: IWebSocketMessage = {
+        data: JSON.stringify(msg),
+        direction: "incoming",
+      };
+      setStore("lastMessage", incomingMessage.data);
+      setStore("lastMessages", (prev) => [...prev, incomingMessage].slice(-100));
 
       // Notify subscribers for each message
       messageSubscribers.forEach((callback) => {
@@ -343,9 +341,8 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
       const outgoingMessage: IWebSocketMessage = {
         data: messageData,
         direction: "outgoing",
-        timestamp: Date.now(),
       };
-      setStore("lastMessages", (prev) => [...prev, JSON.stringify(outgoingMessage)].slice(-20));
+      setStore("lastMessages", (prev) => [...prev, outgoingMessage].slice(-20));
 
       return true;
     } else {

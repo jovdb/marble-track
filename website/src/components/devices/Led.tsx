@@ -12,15 +12,17 @@ export function Led(props: { id: string }) {
   const actions = ledStore[1];
 
   const deviceType = device()?.type;
-  const mode = createMemo(() => device()?.state?.mode ?? "OFF");
+  const mode = createMemo(() => device()?.state?.mode ?? "");
   const statusClass = createMemo(() => {
     switch (mode()) {
       case "ON":
         return ledStyles["led__status-indicator--on"];
       case "BLINKING":
         return ledStyles["led__status-indicator--blinking"];
-      default:
+      case "OFF":
         return ledStyles["led__status-indicator--off"];
+      default:
+        return "";
     }
   });
   const statusLabel = createMemo(() => `Status: ${mode()}`);
@@ -53,7 +55,7 @@ export function Led(props: { id: string }) {
             [styles.device__button]: true,
             [styles["device__button--secondary"]]: isMode("ON"),
           }}
-          disabled={isMode("ON")}
+          disabled={!mode() || isMode("ON")}
           onClick={handleTurnOn}
         >
           Turn On
@@ -63,7 +65,7 @@ export function Led(props: { id: string }) {
             [styles.device__button]: true,
             [styles["device__button--secondary"]]: isMode("OFF"),
           }}
-          disabled={isMode("OFF")}
+          disabled={!mode() || isMode("OFF")}
           onClick={handleTurnOff}
         >
           Turn Off
@@ -73,7 +75,7 @@ export function Led(props: { id: string }) {
             [styles.device__button]: true,
             [styles["device__button--secondary"]]: isMode("BLINKING"),
           }}
-          disabled={isMode("BLINKING")}
+          disabled={!mode() || isMode("BLINKING")}
           onClick={handleBlink}
         >
           Blink

@@ -9,7 +9,7 @@
 // Static instance for callback access (simplified to single instance)
 static WebSocketManager *instance = nullptr;
 
-String createJsonResponse(bool success, const String &message, const String &data, const String &requestId)
+String createJsonResponse(bool success, const String &message, const String &data, const String &requestId, const String &type = "", const String &deviceId = "")
 {
     JsonDocument response;
     response["success"] = success;
@@ -18,6 +18,16 @@ String createJsonResponse(bool success, const String &message, const String &dat
     if (requestId.length() > 0)
     {
         response["requestId"] = requestId;
+    }
+
+    if (type.length() > 0)
+    {
+        response["type"] = type;
+    }
+
+    if (deviceId.length() > 0)
+    {
+        response["deviceId"] = deviceId;
     }
 
     if (data.length() > 0)
@@ -247,18 +257,18 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
     const String deviceId = doc["deviceId"] | "";
     if (!deviceManager)
     {
-        notifyClients(createJsonResponse(false, "DeviceManager not available", "", ""));
+        notifyClients(createJsonResponse(false, "DeviceManager not available", "", "", "device-save-config", deviceId));
         return;
     }
     Device *device = deviceManager->getDeviceById(deviceId);
     if (!device)
     {
-        notifyClients(createJsonResponse(false, "Device not found: " + deviceId, "", ""));
+        notifyClients(createJsonResponse(false, "Device not found: " + deviceId, "", "", "device-save-config", deviceId));
         return;
     }
     if (!doc["config"].is<JsonObject>())
     {
-        notifyClients(createJsonResponse(false, "No config provided", "", ""));
+        notifyClients(createJsonResponse(false, "No config provided", "", "", "device-save-config", deviceId));
         return;
     }
     JsonObject configObj = doc["config"].as<JsonObject>();
@@ -313,13 +323,13 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
     const String deviceId = doc["deviceId"] | "";
     if (!deviceManager)
     {
-        notifyClients(createJsonResponse(false, "DeviceManager not available", "", ""));
+        notifyClients(createJsonResponse(false, "DeviceManager not available", "", "", "device-read-config", deviceId));
         return;
     }
     Device *device = deviceManager->getDeviceById(deviceId);
     if (!device)
     {
-        notifyClients(createJsonResponse(false, "Device not found: " + deviceId, "", ""));
+        notifyClients(createJsonResponse(false, "Device not found: " + deviceId, "", "", "device-read-config", deviceId));
         return;
     }
 
@@ -691,14 +701,14 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
 
     if (!deviceManager)
     {
-        response = createJsonResponse(false, "DeviceManager not available", "", "");
+        response = createJsonResponse(false, "DeviceManager not available", "", "", "device-fn", deviceId);
     }
     else
     {
         Device *device = deviceManager->getDeviceById(deviceId);
         if (!device)
         {
-            response = createJsonResponse(false, "Device not found or not controllable: " + deviceId, "", "");
+            response = createJsonResponse(false, "Device not found or not controllable: " + deviceId, "", "", "device-fn", deviceId);
         }
         else
         {

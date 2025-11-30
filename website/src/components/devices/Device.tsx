@@ -40,6 +40,7 @@ export function Device(props: DeviceProps) {
       <div
         class={styles.device__header}
         onClick={() => {
+          setIsCollapsed(!isCollapsed());
           setShowChildren(false);
           setShowConfig(false);
           setShowMessages(false);

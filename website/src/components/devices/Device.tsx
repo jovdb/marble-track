@@ -104,6 +104,7 @@ export function Device(props: DeviceProps) {
                 title={showConfig() ? "Hide configuration" : "Show configuration"}
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (isCollapsed()) setIsCollapsed(false);
                   setShowConfig((v) => !v);
                   setShowChildren(false);
                   setShowMessages(false);
@@ -136,6 +137,7 @@ export function Device(props: DeviceProps) {
                 title={showChildren() ? "Hide children" : "Show children"}
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (isCollapsed()) setIsCollapsed(false);
                   setShowChildren((v) => !v);
                   setShowConfig(false);
                   setShowMessages(false);
@@ -175,6 +177,7 @@ export function Device(props: DeviceProps) {
               title={showMessagesPanel() ? "Hide messages" : "Show messages"}
               onClick={(e) => {
                 e.stopPropagation();
+                if (isCollapsed()) setIsCollapsed(false);
                 setShowMessages((v) => !v);
                 setShowChildren(false);
                 setShowConfig(false);

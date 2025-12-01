@@ -126,7 +126,7 @@ export function createDevicesStore({
           );
 
           // Refresh devices list to get updated pins
-          if (message.triggerBy === "set") {
+          if (message.triggerBy === "set" || message.isChanged) {
             sendMessage({ type: "devices-list" });
           }
         }

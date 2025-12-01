@@ -709,35 +709,30 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
         functionName = dataObj["fn"] | "";
     }
 
-    String response;
-
     if (!deviceManager)
     {
-        response = createJsonResponse(false, "DeviceManager not available", "", "", "device-fn", deviceId);
-    }
-    else
-    {
-        Device *device = deviceManager->getDeviceById(deviceId);
-        if (!device)
-        {
-            response = createJsonResponse(false, "Device not found or not controllable: " + deviceId, "", "", "device-fn", deviceId);
-        }
-        else
-        {
-            MLOG_INFO("Executing action: %s[%s]", deviceId.c_str(), functionName.c_str());
-            JsonObject payload = doc["args"].as<JsonObject>();
-            bool success = device->control(functionName, &payload);
-
-            /*
-            response = createJsonResponse(success,
-                                          success ? "Device function executed successfully" : "Device function execution failed",
-                                          "", "");
-            */
-        }
-    }
-
-    if (response != nullptr)
+        String response = createJsonResponse(false, "DeviceManager not available", "", "", "device-fn", deviceId);
         notifyClients(response);
+        return;
+    }
+
+    Device *device = deviceManager->getDeviceById(deviceId);
+    if (device)
+    {
+        MLOG_INFO("Executing action: %s[%s]", deviceId.c_str(), functionName.c_str());
+        JsonObject payload = doc["args"].as<JsonObject>();
+        device->control(functionName, &payload);
+        return;
+    }
+
+    ControllableTaskDevice *controllableDevice = deviceManager->getControllableTaskDeviceById(deviceId);
+    if (controllableDevice)
+    {
+        MLOG_INFO("Executing action on controllable device: %s[%s]", deviceId.c_str(), functionName.c_str());
+        JsonObject payload = doc["args"].as<JsonObject>();
+        controllableDevice->control(functionName, &payload);
+        return;
+    }
 }
 
 void WebSocketManager::handleDeviceGetState(JsonDocument &doc)

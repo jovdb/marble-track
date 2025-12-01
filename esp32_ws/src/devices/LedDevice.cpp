@@ -32,11 +32,15 @@ void LedDevice::addStateToJson(JsonDocument &doc)
 {
     if (_targetMode == Mode::BLINKING)
     {
-        doc["mode"] = "blinking";
+        doc["mode"] = "BLINKING";
+    }
+    else if (_targetMode == Mode::ON || _targetMode == Mode::OFF)
+    {
+        doc["mode"] = _targetState ? "ON" : "OFF";
     }
     else
     {
-        doc["mode"] = _isOn ? "on" : "off";
+        MLOG_ERROR("[%s]: Unknown _targetMode", toString().c_str());
     }
 }
 
@@ -77,6 +81,8 @@ void LedDevice::set(bool state)
     _targetMode = state ? Mode::ON : Mode::OFF;
     _targetState = state;
 
+    notifyState(true);
+
     if (_taskHandle)
     {
         xTaskNotifyGive(_taskHandle);
@@ -88,6 +94,8 @@ void LedDevice::blink(unsigned long onTime, unsigned long offTime)
     _targetMode = Mode::BLINKING;
     _targetBlinkOnTime = onTime;
     _targetBlinkOffTime = offTime;
+
+    notifyState(true);
 
     if (_taskHandle)
     {

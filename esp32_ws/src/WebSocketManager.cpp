@@ -333,6 +333,7 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
         if (taskDevice)
         {
             taskDevice->notifyConfig(false);
+            return;  // Need to return here since we already sent the response
         }
         else
         {

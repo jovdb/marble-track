@@ -202,6 +202,10 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
   // Message subscribers
   const messageSubscribers = new Set<MessageCallback>();
 
+  // Deduplication cache: message string -> last sent timestamp
+  const sentMessagesCache = new Map<string, number>();
+  const DEDUPE_WINDOW_MS = 100; // Don't send identical messages within 100ms
+
   // Initialize store with default values
   const [store, setStore] = createStore<IWebSocketStore>(
     {
@@ -334,6 +338,25 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
   const sendMessage = (message: IWsSendMessage): boolean => {
     if (websocket.readyState === WebSocket.OPEN) {
       const messageData = JSON.stringify(message);
+      
+      // Check for duplicate messages within the deduplication window
+      const now = Date.now();
+      const lastSent = sentMessagesCache.get(messageData);
+      if (lastSent && (now - lastSent) < DEDUPE_WINDOW_MS) {
+        console.debug("Skipping duplicate WebSocket message:", message);
+        return false; // Don't send duplicate
+      }
+      
+      // Clean up expired entries from cache
+      for (const [key, timestamp] of sentMessagesCache) {
+        if (now - timestamp >= DEDUPE_WINDOW_MS) {
+          sentMessagesCache.delete(key);
+        }
+      }
+      
+      // Update cache
+      sentMessagesCache.set(messageData, now);
+      
       console.debug("WebSocket message sent:", message);
       websocket.send(messageData);
 
@@ -354,7 +377,6 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
 
   // Actions object
   const actions: IWebSocketActions = {
-    // TODO: deduplicate calls
     sendMessage: pipe(sendMessage),
 
     clearMessages: () => {

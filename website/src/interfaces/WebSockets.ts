@@ -71,6 +71,7 @@ export type IWsReceiveDeviceStateMessage =
   | (IWsMessageBase<"device-state"> & {
       deviceId: string;
       state: Record<string, unknown>;
+      isChanged?: boolean;
     });
 
 export type IWsReceiveDeviceConfigMessage =
@@ -83,6 +84,7 @@ export type IWsReceiveDeviceConfigMessage =
       /** only when a config changes, devices need to be reloaded */
       triggerBy: "set" | "get";
       config: Record<string, unknown>;
+      isChanged?: boolean;
     });
 
 export type IWsReceiveDeviceReadConfigMessage =

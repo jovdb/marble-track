@@ -37,7 +37,7 @@ public:
      */
     void setConfig(const JsonDocument &config);
 
-    virtual void updateConfig(const JsonDocument &config) = 0;
+    virtual void getConfigFromJson(const JsonDocument &config) = 0;
 };
 
 #endif // SAVEABLE_TASK_DEVICE_H

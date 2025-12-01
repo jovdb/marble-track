@@ -19,7 +19,7 @@ classDiagram
         +setup(config)*
         +getConfig()*
         +setConfig(config)
-        +updateConfig(config)*
+        +getConfigFromJson(config)*
     }
     
     class LedDevice {
@@ -44,7 +44,7 @@ Extends `TaskDevice` to add configuration persistence.
 - `setup(config)`: Initializes the device with a JSON configuration.
 - `getConfig()`: Returns the current configuration.
 - `setConfig(config)`: Updates the configuration, handling thread safety by suspending the task during updates.
-- `updateConfig(config)`: Virtual method for subclasses to apply configuration changes.
+- `getConfigFromJson(config)`: Virtual method for subclasses to apply configuration changes.
 
 ### ControllableTaskDevice
 Extends `SaveableTaskDevice` to add a standardized control interface.

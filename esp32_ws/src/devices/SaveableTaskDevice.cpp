@@ -21,6 +21,7 @@ bool SaveableTaskDevice::setup(const JsonDocument &config)
 
 JsonDocument SaveableTaskDevice::getConfig() const
 {
+    // Base implementation of config
     JsonDocument doc;
     doc["id"] = _id;
     doc["type"] = _type;
@@ -32,21 +33,22 @@ void SaveableTaskDevice::setConfig(const JsonDocument &config)
     // Task not started
     if (_taskHandle == nullptr)
     {
-        updateConfig(config);
+        getConfigFromJson(config);
         return;
     }
 
     // Suspend task while updating config
+    // Restart task?
     vTaskSuspend(_taskHandle);
-    updateConfig(config);
+    getConfigFromJson(config);
     vTaskResume(_taskHandle);
 
     // Force task to re-read config
     xTaskNotifyGive(_taskHandle);
 }
 
-/** Notify task config is changed */
-void SaveableTaskDevice::updateConfig(const JsonDocument &config)
+/** Extend JSON object with config information */
+void SaveableTaskDevice::getConfigFromJson(const JsonDocument &config)
 {
     // Default implementation: do nothing
 }

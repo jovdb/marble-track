@@ -5,15 +5,16 @@ LedDevice::LedDevice(const String &id, NotifyClients callback) : ControllableTas
 {
 }
 
-void LedDevice::updateConfig(const JsonDocument &config)
+void LedDevice::getConfigFromJson(const JsonDocument &config)
 {
-    if (config["pin"].is<int>())
-    {
-        _pin = config["pin"].as<int>();
-    }
     if (config["name"].is<String>())
     {
         _name = config["name"].as<String>();
+    }
+
+    if (config["pin"].is<int>())
+    {
+        _pin = config["pin"].as<int>();
     }
 
     pinMode(_pin, OUTPUT);

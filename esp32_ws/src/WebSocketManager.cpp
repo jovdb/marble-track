@@ -321,61 +321,64 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
         return;
 
     const String deviceId = doc["deviceId"] | "";
+
     if (!deviceManager)
     {
-        notifyClients(createJsonResponse(false, "DeviceManager not available", "", "", "device-read-config", deviceId));
+        String response = createJsonResponse(false, "DeviceManager not available", "", "", "device-read-config", deviceId);
+        notifyClients(response);
         return;
     }
+
     Device *device = deviceManager->getDeviceById(deviceId);
-    if (!device)
+    if (device)
     {
-        ControllableTaskDevice *taskDevice = deviceManager->getControllableTaskDeviceById(deviceId);
-        if (taskDevice)
-        {
-            taskDevice->notifyConfig(false);
-            return; // Need to return here since we already sent the response
-        }
-        else
-        {
-            notifyClients(createJsonResponse(false, "Device not found: " + deviceId, "", "", "device-read-config", deviceId));
-            return;
-        }
-    }
+        String configStr = device->getConfig();
 
-    String configStr = device->getConfig();
-
-    JsonDocument response;
-    response["type"] = "device-config";
-    response["triggerBy"] = "get";
-    response["deviceId"] = deviceId;
-    if (configStr.length() > 0)
-    {
-        JsonDocument configDoc;
-        DeserializationError err = deserializeJson(configDoc, configStr);
-        if (!err && configDoc.is<JsonObject>())
+        JsonDocument response;
+        response["type"] = "device-config";
+        response["triggerBy"] = "get";
+        response["deviceId"] = deviceId;
+        if (configStr.length() > 0)
         {
-            response["config"] = configDoc.as<JsonObject>();
-        }
-        else
-        {
-            if (err)
+            JsonDocument configDoc;
+            DeserializationError err = deserializeJson(configDoc, configStr);
+            if (!err && configDoc.is<JsonObject>())
             {
-                MLOG_WARN("Device %s: failed to deserialize config on read (%s)", deviceId.c_str(), err.c_str());
+                response["config"] = configDoc.as<JsonObject>();
             }
             else
             {
-                MLOG_WARN("Device %s: config read is not a JSON object, returning raw string", deviceId.c_str());
+                if (err)
+                {
+                    MLOG_WARN("Device %s: failed to deserialize config on read (%s)", deviceId.c_str(), err.c_str());
+                }
+                else
+                {
+                    MLOG_WARN("Device %s: config read is not a JSON object, returning raw string", deviceId.c_str());
+                }
+                response["config"] = serialized(configStr.c_str());
             }
-            response["config"] = serialized(configStr.c_str());
         }
+        else
+        {
+            response["config"].to<JsonObject>();
+        }
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
+        return;
     }
-    else
+
+    ControllableTaskDevice *controllableDevice = deviceManager->getControllableTaskDeviceById(deviceId);
+    if (controllableDevice)
     {
-        response["config"].to<JsonObject>();
+        controllableDevice->notifyConfig(false);
+        return;
     }
-    String respStr;
-    serializeJson(response, respStr);
-    notifyClients(respStr);
+
+    MLOG_ERROR("Device not found for config read request: %s", deviceId.c_str());
+    String response = createJsonResponse(false, "Device not found: " + deviceId, "", "", "device-read-config", deviceId);
+    notifyClients(response);
 }
 
 void WebSocketManager::handleSetDevicesConfig(JsonDocument &doc)

@@ -53,21 +53,25 @@ void ControllableTaskDevice::notifyClients(JsonDocument &doc)
     }
 }
 
-void ControllableTaskDevice::notifyState()
+void ControllableTaskDevice::notifyState(bool changed)
 {
     JsonDocument doc;
     doc["type"] = "device-state";
     doc["deviceId"] = _id;
+    // A UI can use get to load initial state and then just listen to changes
+    doc["isChanged"] = changed;
     doc["state"] = getState();
 
     notifyClients(doc);
 }
 
-void ControllableTaskDevice::notifyConfig()
+void ControllableTaskDevice::notifyConfig(bool changed)
 {
     JsonDocument doc;
     doc["type"] = "device-config";
     doc["deviceId"] = _id;
+    // A UI can use get to load initial state and then just listen to changes
+    doc["isChanged"] = changed;
     doc["config"] = getConfig();
 
     MLOG_INFO("%s: Notifying config change for device", toString().c_str());

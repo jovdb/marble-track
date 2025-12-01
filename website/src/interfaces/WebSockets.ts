@@ -80,6 +80,7 @@ export type IWsReceiveDeviceConfigMessage =
       })
   | (IWsMessageBase<"device-config"> & {
       deviceId: string;
+      /** only when a config changes, devices need to be reloaded */
       triggerBy: "set" | "get";
       config: Record<string, unknown>;
     });

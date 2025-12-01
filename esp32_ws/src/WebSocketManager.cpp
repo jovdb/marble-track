@@ -332,24 +332,7 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
         ControllableTaskDevice *taskDevice = deviceManager->getControllableTaskDeviceById(deviceId);
         if (taskDevice)
         {
-            JsonDocument configDoc = taskDevice->getConfig();
-
-            JsonDocument response;
-            response["type"] = "device-config";
-            response["triggerBy"] = "get";
-            response["deviceId"] = deviceId;
-            if (!configDoc.isNull())
-            {
-                response["config"] = configDoc.as<JsonObject>();
-            }
-            else
-            {
-                response["config"].to<JsonObject>();
-            }
-            String respStr;
-            serializeJson(response, respStr);
-            notifyClients(respStr);
-            return;
+            taskDevice->notifyConfig(false);
         }
         else
         {
@@ -782,7 +765,7 @@ void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
             else
             {
                 MLOG_INFO("Notifying state for controllable task device: %s", deviceId.c_str());
-                controllableDevice->notifyState();
+                controllableDevice->notifyState(false);
             }
         }
         else

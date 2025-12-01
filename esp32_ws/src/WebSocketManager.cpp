@@ -745,35 +745,31 @@ void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
     // Extract device info from either root or data field
     String deviceId = doc["deviceId"] | "";
 
-    String response;
-
     if (!deviceManager)
     {
-        //    TODO: broadcastState(deviceId, "", "DeviceManager not available");
+        String response;
+        response = createJsonResponse(false, "No DeviceManager available", "", "device-state", deviceId);
+        notifyClients(response);
+        return;
     }
-    else
+
+    Device *device = deviceManager->getDeviceById(deviceId);
+    if (device)
     {
-        Device *device = deviceManager->getDeviceById(deviceId);
-        if (!device)
-        {
-
-            ControllableTaskDevice *controllableDevice = deviceManager->getControllableTaskDeviceById(deviceId);
-            if (controllableDevice)
-            {
-                controllableDevice->notifyState(false);
-            }
-            else
-            {
-                MLOG_ERROR("Device not found for state request: %s", deviceId.c_str());
-                // TODO: notify clients?
-            }
-        }
-        else
-        {
-            device->notifyStateChange();
-        }
+        device->notifyStateChange();
+        return;
     }
 
+    ControllableTaskDevice *controllableDevice = deviceManager->getControllableTaskDeviceById(deviceId);
+    if (controllableDevice)
+    {
+        controllableDevice->notifyState(false);
+        return;
+    }
+
+    MLOG_ERROR("Device not found for state request: %s", deviceId.c_str());
+    String response;
+    response = createJsonResponse(false, "Device not found or not controllable: " + deviceId, "", "", "device-state", deviceId);
     notifyClients(response);
 }
 

@@ -333,7 +333,7 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
         if (taskDevice)
         {
             taskDevice->notifyConfig(false);
-            return;  // Need to return here since we already sent the response
+            return; // Need to return here since we already sent the response
         }
         else
         {
@@ -758,15 +758,14 @@ void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
         {
 
             ControllableTaskDevice *controllableDevice = deviceManager->getControllableTaskDeviceById(deviceId);
-            if (!controllableDevice)
+            if (controllableDevice)
             {
-                MLOG_ERROR("Device not found for state request: %s", deviceId.c_str());
-                // TODO: broadcastState(deviceId, "", "Device '" + deviceId + "' not found.");
+                controllableDevice->notifyState(false);
             }
             else
             {
-                MLOG_INFO("Notifying state for controllable task device: %s", deviceId.c_str());
-                controllableDevice->notifyState(false);
+                MLOG_ERROR("Device not found for state request: %s", deviceId.c_str());
+                // TODO: notify clients?
             }
         }
         else

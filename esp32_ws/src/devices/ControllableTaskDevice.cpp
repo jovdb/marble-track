@@ -77,3 +77,14 @@ void ControllableTaskDevice::notifyConfig(bool changed)
     MLOG_INFO("%s: Notifying config change for device", toString().c_str());
     notifyClients(doc);
 }
+
+void ControllableTaskDevice::notifyError(const String &type, const String &error)
+{
+    JsonDocument doc;
+    doc["type"] = type;
+    doc["deviceId"] = _id;
+    doc["error"] = error;
+
+    MLOG_ERROR("%s: Notifying error for device: %s", toString().c_str(), error.c_str());
+    notifyClients(doc);
+}

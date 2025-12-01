@@ -107,6 +107,11 @@ export type IWsReceiveDeviceSaveConfigMessage =
       config: Record<string, unknown>;
     });
 
+export type IWsReceiveDeviceErrorMessage = IWsMessageBase<"device-error"> & {
+  deviceId: string;
+  error: string;
+};
+
 // Heartbeat messages
 export type IWsReceivePongMessage = IWsMessageBase<"pong"> & {
   timestamp?: number;
@@ -157,6 +162,7 @@ export type IWsReceiveSingleMessage =
   | IWsReceiveDeviceConfigMessage
   | IWsReceiveDeviceReadConfigMessage
   | IWsReceiveDeviceSaveConfigMessage
+  | IWsReceiveDeviceErrorMessage
   | IWsReceiveAddDeviceMessage
   | IWsReceiveRemoveDeviceMessage
   | IWsReceiveGetNetworkConfigMessage

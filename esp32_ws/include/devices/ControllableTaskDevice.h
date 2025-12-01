@@ -10,6 +10,7 @@
 #include "devices/Device.h"
 #include <ArduinoJson.h>
 #include <vector>
+#include <string>
 
 /**
  * @class ControllableTaskDevice
@@ -57,6 +58,7 @@ public:
     void notifyClients(JsonDocument &doc);
     void notifyState(bool changed);
     void notifyConfig(bool changed);
+    void notifyError(const String &type, const String &error);
 
 protected:
     NotifyClients _notifyClients;

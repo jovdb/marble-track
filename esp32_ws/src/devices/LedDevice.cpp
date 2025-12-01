@@ -21,12 +21,10 @@ void LedDevice::getConfigFromJson(const JsonDocument &config)
     digitalWrite(_pin, LOW);
 }
 
-JsonDocument LedDevice::getConfig() const
+void LedDevice::addConfigToJson(JsonDocument &doc) const
 {
-    JsonDocument doc = SaveableTaskDevice::getConfig();
     doc["pin"] = _pin;
     doc["name"] = _name;
-    return doc;
 }
 
 void LedDevice::addStateToJson(JsonDocument &doc)

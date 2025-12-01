@@ -25,7 +25,13 @@ JsonDocument SaveableTaskDevice::getConfig() const
     JsonDocument doc;
     doc["id"] = _id;
     doc["type"] = _type;
+    addConfigToJson(doc);
     return doc;
+}
+
+void SaveableTaskDevice::addConfigToJson(JsonDocument &doc) const
+{
+    // Default implementation: do nothing
 }
 
 void SaveableTaskDevice::setConfig(const JsonDocument &config)

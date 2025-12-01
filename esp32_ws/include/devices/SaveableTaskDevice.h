@@ -29,7 +29,7 @@ public:
      * @brief Get current configuration
      * @return JSON document containing configuration
      */
-    virtual JsonDocument getConfig() const = 0;
+    virtual JsonDocument getConfig() const;
 
     /**
      * @brief Apply configuration
@@ -38,6 +38,13 @@ public:
     void setConfig(const JsonDocument &config);
 
     virtual void getConfigFromJson(const JsonDocument &config) = 0;
+
+protected:
+    /**
+     * @brief Add device-specific config to the JSON document
+     * @param doc The JSON document to extend
+     */
+    virtual void addConfigToJson(JsonDocument &doc) const;
 };
 
 #endif // SAVEABLE_TASK_DEVICE_H

@@ -17,6 +17,7 @@ public:
     JsonDocument getConfig() const override;
 
     void addStateToJson(JsonDocument &doc) override;
+    void addConfigToJson(JsonDocument &doc) const override;
     bool control(const String &action, JsonObject *args = nullptr) override;
 
     std::vector<int> getPins() const override;

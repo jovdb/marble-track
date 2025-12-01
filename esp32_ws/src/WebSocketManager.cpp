@@ -329,8 +329,33 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
     Device *device = deviceManager->getDeviceById(deviceId);
     if (!device)
     {
-        notifyClients(createJsonResponse(false, "Device not found: " + deviceId, "", "", "device-read-config", deviceId));
-        return;
+        ControllableTaskDevice *taskDevice = deviceManager->getControllableTaskDeviceById(deviceId);
+        if (taskDevice)
+        {
+            JsonDocument configDoc = taskDevice->getConfig();
+
+            JsonDocument response;
+            response["type"] = "device-config";
+            response["triggerBy"] = "get";
+            response["deviceId"] = deviceId;
+            if (!configDoc.isNull())
+            {
+                response["config"] = configDoc.as<JsonObject>();
+            }
+            else
+            {
+                response["config"].to<JsonObject>();
+            }
+            String respStr;
+            serializeJson(response, respStr);
+            notifyClients(respStr);
+            return;
+        }
+        else
+        {
+            notifyClients(createJsonResponse(false, "Device not found: " + deviceId, "", "", "device-read-config", deviceId));
+            return;
+        }
     }
 
     String configStr = device->getConfig();

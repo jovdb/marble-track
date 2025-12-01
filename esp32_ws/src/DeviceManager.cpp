@@ -241,7 +241,7 @@ void DeviceManager::saveDevicesToJsonFile()
         String configStr = device->getConfig();
         if (configStr.length() > 0)
         {
-            DynamicJsonDocument configDoc(4096);
+            JsonDocument configDoc;
             DeserializationError err = deserializeJson(configDoc, configStr);
             if (!err && configDoc.is<JsonObject>())
             {

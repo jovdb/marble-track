@@ -11,7 +11,7 @@
 class LedDevice : public ControllableTaskDevice
 {
 public:
-    LedDevice(const String &id);
+    LedDevice(const String &id, NotifyClients callback = nullptr);
 
     void updateConfig(const JsonDocument &config) override;
     JsonDocument getConfig() const override;

@@ -183,7 +183,7 @@ void setup()
 
   // State change broadcasting is now enabled during setup
 
-  statusLed = new LedDevice("led1");
+  statusLed = new LedDevice("led1", globalNotifyClientsCallback);
   JsonDocument ledConfig;
   ledConfig["pin"] = 21;
   ledConfig["name"] = "Status LED";

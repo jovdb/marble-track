@@ -39,16 +39,15 @@ std::vector<int> ControllableTaskDevice::getPins() const
 
 void ControllableTaskDevice::notifyClients(JsonDocument &doc)
 {
+    String message;
+    serializeJson(doc, message);
+
     if (_notifyClients)
     {
-        String message;
-        serializeJson(doc, message);
         _notifyClients(message);
     }
     else
     {
-        String message;
-        serializeJson(doc, message);
         MLOG_WARN("%s: notifyClients callback is null, cannot send message: %s", toString().c_str(), message.c_str());
     }
 }
@@ -62,6 +61,7 @@ void ControllableTaskDevice::notifyState(bool changed)
     doc["isChanged"] = changed;
     doc["state"] = getState();
 
+    MLOG_INFO("%s: Notifying state change for device", toString().c_str());
     notifyClients(doc);
 }
 

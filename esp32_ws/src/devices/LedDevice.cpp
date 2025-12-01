@@ -1,7 +1,7 @@
 #include "devices/LedDevice.h"
 #include "Logging.h"
 
-LedDevice::LedDevice(const String &id) : ControllableTaskDevice(id, "led")
+LedDevice::LedDevice(const String &id, NotifyClients callback) : ControllableTaskDevice(id, "led", callback)
 {
 }
 

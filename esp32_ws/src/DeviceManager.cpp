@@ -546,6 +546,19 @@ Device *DeviceManager::getDeviceById(const String &deviceId) const
     }
     return nullptr;
 }
+
+TaskDevice *DeviceManager::getTaskDeviceById(const String &deviceId) const
+{
+    for (int i = 0; i < taskDevicesCount; i++)
+    {
+        if (taskDevices[i] != nullptr && taskDevices[i]->getId() == deviceId)
+        {
+            return taskDevices[i];
+        }
+    }
+    return nullptr;
+}
+
 // Recursively search for the first device of the given type
 Device *DeviceManager::getDeviceByType(const String &deviceType) const
 {

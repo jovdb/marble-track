@@ -9,8 +9,6 @@
 #include <functional>
 #include <Arduino.h>
 #include "NetworkSettings.h"
-#include <map>
-#include <set>
 
 class DeviceManager
 {
@@ -67,6 +65,13 @@ public:
      * @return Pointer to device or nullptr if not found
      */
     Device *getDeviceById(const String &deviceId) const;
+
+    /**
+     * @brief Get task device by ID
+     * @param deviceId The ID of the task device to find
+     * @return Pointer to task device or nullptr if not found
+     */
+    TaskDevice *getTaskDeviceById(const String &deviceId) const;
 
     /**
      * @brief Get device by ID and cast to specific type

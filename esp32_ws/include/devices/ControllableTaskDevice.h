@@ -54,10 +54,11 @@ public:
      * @return true if the device is controllable
      */
     virtual bool isControllable() const override { return true; }
-    void notifyStateChange();
+    void notifyState();
+    void notifyClients(JsonDocument &doc);
 
 protected:
-    void notifyConfigChange();
+    void notifyConfig();
     NotifyClients _notifyClients;
 };
 

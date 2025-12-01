@@ -782,7 +782,7 @@ void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
             else
             {
                 MLOG_INFO("Notifying state for controllable task device: %s", deviceId.c_str());
-                controllableDevice->notifyStateChange();
+                controllableDevice->notifyState();
             }
         }
         else

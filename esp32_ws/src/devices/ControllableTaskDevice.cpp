@@ -37,43 +37,39 @@ std::vector<int> ControllableTaskDevice::getPins() const
     return std::vector<int>();
 }
 
-void ControllableTaskDevice::notifyStateChange()
+void ControllableTaskDevice::notifyClients(JsonDocument &doc)
 {
     if (_notifyClients)
     {
-        JsonDocument doc;
-        doc["type"] = "device-state";
-        doc["deviceId"] = _id;
-        doc["state"] = getState();
-
         String message;
         serializeJson(doc, message);
-
         _notifyClients(message);
     }
     else
     {
-        MLOG_WARN("No notifyClients callback set for device %s", toString().c_str());
+        String message;
+        serializeJson(doc, message);
+        MLOG_WARN("%s: notifyClients callback is null, cannot send message: %s", toString().c_str(), message.c_str());
     }
 }
 
-void ControllableTaskDevice::notifyConfigChange()
+void ControllableTaskDevice::notifyState()
 {
-    if (_notifyClients)
-    {
-        JsonDocument doc;
-        doc["type"] = "device-config";
-        doc["deviceId"] = _id;
-        doc["config"] = getConfig();
+    JsonDocument doc;
+    doc["type"] = "device-state";
+    doc["deviceId"] = _id;
+    doc["state"] = getState();
 
-        String message;
-        serializeJson(doc, message);
+    notifyClients(doc);
+}
 
-        MLOG_INFO("%s: Notifying config change for device: %s", toString().c_str(), message.c_str());
-        _notifyClients(message);
-    }
-    else
-    {
-        MLOG_WARN("%s: No notifyClients callback set for device", toString().c_str());
-    }
+void ControllableTaskDevice::notifyConfig()
+{
+    JsonDocument doc;
+    doc["type"] = "device-config";
+    doc["deviceId"] = _id;
+    doc["config"] = getConfig();
+
+    MLOG_INFO("%s: Notifying config change for device", toString().c_str());
+    notifyClients(doc);
 }

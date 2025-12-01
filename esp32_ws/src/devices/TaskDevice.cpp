@@ -16,7 +16,9 @@ TaskDevice::~TaskDevice()
 
 String TaskDevice::toString() const
 {
-    return _type + " [" + _id + "]";
+    String upperType = _type;
+    upperType.toUpperCase();
+    return upperType + "[" + _id + "]";
 }
 
 bool TaskDevice::setup(const String &taskName, uint32_t stackSize, UBaseType_t priority, BaseType_t core)

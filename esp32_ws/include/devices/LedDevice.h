@@ -14,7 +14,6 @@ public:
     LedDevice(const String &id, NotifyClients callback = nullptr);
 
     void getConfigFromJson(const JsonDocument &config) override;
-    JsonDocument getConfig() const override;
 
     void addStateToJson(JsonDocument &doc) override;
     void addConfigToJson(JsonDocument &doc) const override;

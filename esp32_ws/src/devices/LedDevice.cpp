@@ -11,6 +11,10 @@ void LedDevice::getConfigFromJson(const JsonDocument &config)
     {
         _name = config["name"].as<String>();
     }
+    else
+    {
+        _name = "LED Device";  // Default name
+    }
 
     if (config["pin"].is<int>())
     {
@@ -32,6 +36,8 @@ void LedDevice::addStateToJson(JsonDocument &doc)
     if (_targetMode == Mode::BLINKING)
     {
         doc["mode"] = "BLINKING";
+        doc["onTime"] = _targetBlinkOnTime;
+        doc["offTime"] = _targetBlinkOffTime;
     }
     else if (_targetMode == Mode::ON || _targetMode == Mode::OFF)
     {
@@ -49,23 +55,40 @@ bool LedDevice::control(const String &action, JsonObject *args)
     {
         if (args && (*args)["value"].is<bool>())
         {
-            set((*args)["value"].as<bool>());
+            bool state = (*args)["value"].as<bool>();
+            set(state);
+            MLOG_INFO("[%s]: Set to %s", toString().c_str(), state ? "ON" : "OFF");
             return true;
+        }
+        else
+        {
+            MLOG_WARN("[%s]: Invalid args for 'set' action", toString().c_str());
         }
     }
     else if (action == "blink")
     {
-        unsigned long onTime = 500;
-        unsigned long offTime = 500;
+        unsigned long onTime = DEFAULT_BLINK_TIME;
+        unsigned long offTime = DEFAULT_BLINK_TIME;
         if (args)
         {
             if ((*args)["onTime"].is<unsigned long>())
+            {
                 onTime = (*args)["onTime"].as<unsigned long>();
+                if (onTime == 0 || onTime > 10000) onTime = DEFAULT_BLINK_TIME;  // Validate range
+            }
             if ((*args)["offTime"].is<unsigned long>())
+            {
                 offTime = (*args)["offTime"].as<unsigned long>();
+                if (offTime == 0 || offTime > 10000) offTime = DEFAULT_BLINK_TIME;  // Validate range
+            }
         }
         blink(onTime, offTime);
+        MLOG_INFO("[%s]: Blinking with onTime=%lu, offTime=%lu", toString().c_str(), onTime, offTime);
         return true;
+    }
+    else
+    {
+        MLOG_WARN("[%s]: Unknown action '%s'", toString().c_str(), action.c_str());
     }
     return false;
 }
@@ -111,6 +134,9 @@ void LedDevice::task()
 
         if (currentMode == Mode::BLINKING)
         {
+            // Reset _isOn if switching to blinking
+            if (_targetMode != Mode::BLINKING) _isOn = false;
+
             // Determine wait time based on current state
             unsigned long waitTime = _isOn ? _targetBlinkOnTime : _targetBlinkOffTime;
 

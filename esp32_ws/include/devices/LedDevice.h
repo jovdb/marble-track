@@ -38,6 +38,7 @@ protected:
     void task() override;
 
 private:
+    static const unsigned long DEFAULT_BLINK_TIME = 500;  // Default blink on/off time in ms
     uint8_t _pin;
     String _name;
 
@@ -51,8 +52,8 @@ private:
     // Thread-safe communication variables
     volatile Mode _targetMode = Mode::OFF;
     volatile bool _targetState = false;
-    volatile unsigned long _targetBlinkOnTime = 500;
-    volatile unsigned long _targetBlinkOffTime = 500;
+    volatile unsigned long _targetBlinkOnTime = DEFAULT_BLINK_TIME;
+    volatile unsigned long _targetBlinkOffTime = DEFAULT_BLINK_TIME;
 
     // Internal state
     bool _isOn = false;

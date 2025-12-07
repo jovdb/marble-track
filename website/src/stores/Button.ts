@@ -11,9 +11,8 @@ interface IButtonState extends IDeviceState {
 export interface IButtonConfig extends IDeviceConfig {
   name?: string;
   pin?: number;
-  pinMode?: "floating" | "pullup" | "pulldown";
-  debounceMs?: number;
-  buttonType?: "NormalOpen" | "NormalClosed";
+  pinMode?: "Floating" | "PullUp" | "PullDown";
+  debounceTimeInMs?: number;
   [key: string]: unknown;
 }
 
@@ -25,7 +24,7 @@ export function useButton(deviceId: string) {
       type: "device-fn",
       deviceId,
       deviceType,
-      fn: "pressed",
+      fn: "press",
       args: {},
     });
 
@@ -34,7 +33,7 @@ export function useButton(deviceId: string) {
       type: "device-fn",
       deviceId,
       deviceType,
-      fn: "released",
+      fn: "release",
       args: {},
     });
 

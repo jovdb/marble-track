@@ -8,9 +8,9 @@ interface ButtonConfigProps {
 }
 
 const BUTTON_PIN_MODE_OPTIONS = [
-  { label: "Floating", value: "floating" },
-  { label: "Pull-up", value: "pullup" },
-  { label: "Pull-down", value: "pulldown" },
+  { label: "Floating", value: "Floating" },
+  { label: "Pull-up", value: "PullUp" },
+  { label: "Pull-down", value: "PullDown" },
 ] as const;
 
 type ButtonPinMode = (typeof BUTTON_PIN_MODE_OPTIONS)[number]["value"];
@@ -37,11 +37,11 @@ function normalizeDebounce(value: unknown): number {
 }
 
 function normalizePinMode(pinModeValue: unknown): ButtonPinMode {
-  if (pinModeValue === "floating" || pinModeValue === "pullup" || pinModeValue === "pulldown") {
+  if (pinModeValue === "Floating" || pinModeValue === "PullUp" || pinModeValue === "PullDown") {
     return pinModeValue;
   }
 
-  return "floating";
+  return "Floating";
 }
 
 export default function ButtonConfig(props: ButtonConfigProps) {
@@ -52,7 +52,7 @@ export default function ButtonConfig(props: ButtonConfigProps) {
   const [pinMode, setPinMode] = createSignal<ButtonPinMode>(
     normalizePinMode(device?.config?.pinMode)
   );
-  const [debounce, setDebounce] = createSignal(normalizeDebounce(device?.config?.debounceMs));
+  const [debounce, setDebounce] = createSignal(normalizeDebounce(device?.config?.debounceTimeInMs));
 
   createEffect(() => {
     const config = device?.config;
@@ -63,7 +63,7 @@ export default function ButtonConfig(props: ButtonConfigProps) {
     setName(normalizeName(config.name));
     setPin(normalizePin(config.pin));
     setPinMode(normalizePinMode(config.pinMode));
-    setDebounce(normalizeDebounce(config.debounceMs));
+    setDebounce(normalizeDebounce(config.debounceTimeInMs));
   });
 
   const handleSave = () => {
@@ -71,9 +71,8 @@ export default function ButtonConfig(props: ButtonConfigProps) {
     setDeviceConfig({
       name: name(),
       pin: pin(),
-      debounceMs: debounce(),
+      debounceTimeInMs: debounce(),
       pinMode: selectedMode,
-      buttonType: selectedMode === "pulldown" ? "NormalClosed" : "NormalOpen",
     });
   };
 

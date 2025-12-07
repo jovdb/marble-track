@@ -21,6 +21,17 @@ public:
     bool control(const String &action, JsonObject *args = nullptr) override;
     std::vector<int> getPins() const override;
 
+    /**
+     * @brief Get the current pressed state of the button
+     * @return true if pressed, false otherwise
+     */
+    bool isPressed() const;
+    /**
+     * @brief Get the current pressed state of the button
+     * @return true if released, false otherwise
+     */
+    bool isReleased() const;
+
 protected:
     void task() override;
 
@@ -33,7 +44,7 @@ private:
     // State
     volatile bool _isPressed = false;
     volatile bool _isReleased = true; // Inverse of isPressed, but kept separate if needed for logic
-    
+
     // Internal for debouncing
     bool readIsButtonPressed();
     String pinModeToString(PinModeOption mode) const;

@@ -89,7 +89,6 @@ void ButtonDevice::task()
         lastIsButtonPressed = readIsButtonPressed();
         currentStableState = lastIsButtonPressed;
         _isPressed = currentStableState;
-        _isReleased = !currentStableState;
     }
 
     while (true)
@@ -120,7 +119,6 @@ void ButtonDevice::task()
                 // Update shared variables
                 bool prevPressed = _isPressed;
                 _isPressed = currentStableState;
-                _isReleased = !currentStableState;
 
                 if (_isPressed != prevPressed)
                 {
@@ -167,4 +165,14 @@ ButtonDevice::PinModeOption ButtonDevice::pinModeFromString(const String &value)
     if (value.equalsIgnoreCase("PullDown"))
         return PinModeOption::PullDown;
     return PinModeOption::Floating;
+}
+
+bool ButtonDevice::isPressed() const
+{
+    return _isPressed;
+}
+
+bool ButtonDevice::isReleased() const
+{
+    return !_isPressed;
 }

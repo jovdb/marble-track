@@ -31,7 +31,7 @@ JsonDocument SaveableTaskDevice::getConfig() const
 
 void SaveableTaskDevice::addConfigToJson(JsonDocument &doc) const
 {
-    // Default implementation: do nothing
+    // Should be overriden
 }
 
 void SaveableTaskDevice::setConfig(const JsonDocument &config)

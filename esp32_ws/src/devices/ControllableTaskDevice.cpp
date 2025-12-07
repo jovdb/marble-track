@@ -23,7 +23,7 @@ JsonDocument ControllableTaskDevice::getState()
 
 void ControllableTaskDevice::addStateToJson(JsonDocument &doc)
 {
-    // Default implementation: do nothing
+    // Should be overriden
 }
 
 bool ControllableTaskDevice::control(const String &action, JsonObject *args)

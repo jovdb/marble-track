@@ -56,13 +56,13 @@ bool ButtonDevice::control(const String &action, JsonObject *args)
     {
         _isSimulated = true;
         _simulatedState = true;
-        MLOG_INFO("[%s]: Simulated  button PRESS", toString().c_str());
+        MLOG_INFO("%s: Simulated  button PRESS", toString().c_str());
         return true;
     }
     else if (action == "release")
     {
         _isSimulated = false;
-        MLOG_INFO("[%s]: Simulated button RELEASE", toString().c_str());
+        MLOG_INFO("%s: Simulated button RELEASE", toString().c_str());
         return true;
     }
     return false;

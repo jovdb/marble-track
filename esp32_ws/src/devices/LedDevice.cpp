@@ -45,7 +45,7 @@ void LedDevice::addStateToJson(JsonDocument &doc)
     }
     else
     {
-        MLOG_ERROR("[%s]: Unknown _desiredMode", toString().c_str());
+        MLOG_ERROR("%s: Unknown _desiredMode", toString().c_str());
     }
 }
 
@@ -57,12 +57,12 @@ bool LedDevice::control(const String &action, JsonObject *args)
         {
             bool state = (*args)["value"].as<bool>();
             set(state);
-            MLOG_INFO("[%s]: Set to %s", toString().c_str(), state ? "ON" : "OFF");
+            MLOG_INFO("%s: Set to %s", toString().c_str(), state ? "ON" : "OFF");
             return true;
         }
         else
         {
-            MLOG_WARN("[%s]: Invalid args for 'set' action", toString().c_str());
+            MLOG_WARN("%s: Invalid args for 'set' action", toString().c_str());
         }
     }
     else if (action == "blink")
@@ -85,12 +85,12 @@ bool LedDevice::control(const String &action, JsonObject *args)
             }
         }
         blink(onTime, offTime);
-        MLOG_INFO("[%s]: Blinking with onTime=%lu, offTime=%lu", toString().c_str(), onTime, offTime);
+        MLOG_INFO("%s: Blinking with onTime=%lu, offTime=%lu", toString().c_str(), onTime, offTime);
         return true;
     }
     else
     {
-        MLOG_WARN("[%s]: Unknown action '%s'", toString().c_str(), action.c_str());
+        MLOG_WARN("%s: Unknown action '%s'", toString().c_str(), action.c_str());
     }
     return false;
 }

@@ -50,10 +50,10 @@ private:
     };
 
     // Thread-safe communication variables
-    volatile Mode _targetMode = Mode::OFF;
-    volatile bool _targetState = false;
-    volatile unsigned long _targetBlinkOnTime = DEFAULT_BLINK_TIME;
-    volatile unsigned long _targetBlinkOffTime = DEFAULT_BLINK_TIME;
+    volatile Mode _desiredMode = Mode::OFF;
+    volatile bool _desiredState = false;
+    volatile unsigned long _blinkOnDurationMs = DEFAULT_BLINK_TIME;
+    volatile unsigned long _blinkOffDurationMs = DEFAULT_BLINK_TIME;
 
     // Internal state
     bool _isOn = false;

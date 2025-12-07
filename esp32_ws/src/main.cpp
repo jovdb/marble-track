@@ -29,6 +29,7 @@ unsigned long lastAutoToggleTime = 0;
 
 #include "NetworkSettings.h"
 #include <devices/LedDevice.h>
+#include <devices/ButtonDevice.h>
 
 // Create network and server instances
 Network *network = nullptr; // Will be created after loading settings
@@ -193,6 +194,17 @@ void setup()
 
   statusLed->blink(100, 200); // Blink with 100ms ON, 300ms OFF
   // statusLed->set(true);       // Set LED ON (overrides blink)
+
+  // Hard-coded ButtonDevice
+  ButtonDevice *testButton = new ButtonDevice("test-btn", globalNotifyClientsCallback);
+  JsonDocument btnConfig;
+  btnConfig["pin"] = 22;
+  btnConfig["name"] = "Test Button";
+  btnConfig["debounceTimeInMs"] = 50;
+  btnConfig["pinMode"] = "PullUp";
+  testButton->setup(btnConfig);
+
+  deviceManager.addTaskDevice(testButton);
 
   MLOG_INFO("System initialization complete!");
 }

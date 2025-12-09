@@ -80,7 +80,7 @@ public:
     {                                                                           \
         if (LogConfig::isEnabled(LOG_INFO))                                     \
         {                                                                       \
-            Serial.printf("[%lu] INFO: " format "\n", millis(), ##__VA_ARGS__); \
+            Serial.printf("[%6lu][I]: " format "\n", millis(), ##__VA_ARGS__); \
         }                                                                       \
     } while (0)
 
@@ -89,7 +89,7 @@ public:
     {                                                                            \
         if (LogConfig::isEnabled(LOG_ERROR))                                     \
         {                                                                        \
-            Serial.printf("[%lu] ERROR: " format "\n", millis(), ##__VA_ARGS__); \
+            Serial.printf("[%6lu][E]: " format "\n", millis(), ##__VA_ARGS__); \
         }                                                                        \
     } while (0)
 
@@ -98,7 +98,7 @@ public:
     {                                                                           \
         if (LogConfig::isEnabled(LOG_WARN))                                     \
         {                                                                       \
-            Serial.printf("[%lu] WARN: " format "\n", millis(), ##__VA_ARGS__); \
+            Serial.printf("[%6lu][W]: " format "\n", millis(), ##__VA_ARGS__); \
         }                                                                       \
     } while (0)
 
@@ -107,7 +107,7 @@ public:
     {                                                                              \
         if (LogConfig::isEnabled(LOG_WS_SEND))                                     \
         {                                                                          \
-            Serial.printf("[%lu] WS_SEND: " format "\n", millis(), ##__VA_ARGS__); \
+            Serial.printf("[%6lu][WS_SEND]: " format "\n", millis(), ##__VA_ARGS__); \
         }                                                                          \
     } while (0)
 
@@ -116,7 +116,7 @@ public:
     {                                                                              \
         if (LogConfig::isEnabled(LOG_WS_RECEIVE))                                  \
         {                                                                          \
-            Serial.printf("[%lu] WS_RECV: " format "\n", millis(), ##__VA_ARGS__); \
+            Serial.printf("[%6lu][WS_RECV]: " format "\n", millis(), ##__VA_ARGS__); \
         }                                                                          \
     } while (0)
 

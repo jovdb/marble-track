@@ -211,7 +211,7 @@ void setup()
   deviceManager.addTaskDevice(testButton);
 
   // Create TestTaskDevice that uses the test button
-  TestTaskDevice *testTask = new TestTaskDevice("test-task", testButton, globalNotifyClientsCallback);
+  TestTaskDevice *testTask = new TestTaskDevice("test-task", testButton, statusLed, globalNotifyClientsCallback);
   testTask->setup();
   deviceManager.addTaskDevice(testTask);
 

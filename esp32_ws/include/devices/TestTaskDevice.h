@@ -3,11 +3,12 @@
 
 #include "devices/ControllableTaskDevice.h"
 #include "devices/ButtonDevice.h"
+#include "devices/LedDevice.h"
 
 class TestTaskDevice : public ControllableTaskDevice
 {
 public:
-    TestTaskDevice(const String &id, ButtonDevice *button, NotifyClients callback = nullptr);
+    TestTaskDevice(const String &id, ButtonDevice *button, LedDevice *led, NotifyClients callback = nullptr);
 
     void getConfigFromJson(const JsonDocument &config) override;
     void addConfigToJson(JsonDocument &doc) const override;
@@ -17,6 +18,7 @@ protected:
 
 private:
     ButtonDevice *_button;
+    LedDevice *_led;
     bool _lastPressed = false;
 };
 

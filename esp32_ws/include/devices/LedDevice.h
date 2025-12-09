@@ -11,6 +11,15 @@
 class LedDevice : public ControllableTaskDevice
 {
 public:
+    static constexpr unsigned long DEFAULT_BLINK_TIME = 500;
+
+    enum class Mode
+    {
+        OFF,
+        ON,
+        BLINKING
+    };
+
     LedDevice(const String &id, NotifyClients callback = nullptr);
 
     void getConfigFromJson(const JsonDocument &config) override;
@@ -34,20 +43,18 @@ public:
      */
     void blink(unsigned long onTime, unsigned long offTime);
 
+    /**
+     * @brief Get current mode
+     * @return Current LED mode
+     */
+    Mode mode() const { return _desiredMode; }
+
 protected:
     void task() override;
 
-private:
-    static const unsigned long DEFAULT_BLINK_TIME = 500;  // Default blink on/off time in ms
-    uint8_t _pin;
+    // Configuration
     String _name;
-
-    enum class Mode
-    {
-        OFF,
-        ON,
-        BLINKING
-    };
+    int _pin = -1;
 
     // Thread-safe communication variables
     volatile Mode _desiredMode = Mode::OFF;

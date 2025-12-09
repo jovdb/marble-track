@@ -1,8 +1,9 @@
 #include "devices/TestTaskDevice.h"
+#include "devices/LedDevice.h"
 #include "Logging.h"
 
-TestTaskDevice::TestTaskDevice(const String &id, ButtonDevice *button, NotifyClients callback)
-    : ControllableTaskDevice(id, "test-task", callback), _button(button)
+TestTaskDevice::TestTaskDevice(const String &id, ButtonDevice *button, LedDevice *led, NotifyClients callback)
+    : ControllableTaskDevice(id, "test-task", callback), _button(button), _led(led)
 {
 }
 
@@ -28,6 +29,21 @@ void TestTaskDevice::task()
         if (currentPressed && !_lastPressed)
         {
             MLOG_INFO("[%s]: Hello", toString().c_str());
+            
+            // Toggle LED blinking
+            if (_led)
+            {
+                if (_led->mode() == LedDevice::Mode::BLINKING)
+                {
+                    MLOG_INFO("[%s]: Turn LED OFF", toString().c_str());
+                    _led->set(false); // Turn off LED
+                }
+                else
+                {
+                    _led->blink(200, 200); // Start blinking
+                    MLOG_INFO("[%s]: LED started blinking", toString().c_str());
+                }
+            }
         }
         _lastPressed = currentPressed;
 

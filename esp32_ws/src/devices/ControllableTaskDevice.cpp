@@ -61,7 +61,7 @@ void ControllableTaskDevice::notifyState(bool changed)
     doc["isChanged"] = changed;
     doc["state"] = getState();
 
-    MLOG_INFO("%s: Notifying state %sfor device", toString().c_str(), changed ? "change " : "");
+    MLOG_INFO("%s: Notifying state %s", toString().c_str(), changed ? "change " : "");
     notifyClients(doc);
 }
 
@@ -74,7 +74,7 @@ void ControllableTaskDevice::notifyConfig(bool changed)
     doc["isChanged"] = changed;
     doc["config"] = getConfig();
 
-    MLOG_INFO("%s: Notifying config %sfor device", toString().c_str(), changed ? "change " : "");
+    MLOG_INFO("%s: Notifying config %s", toString().c_str(), changed ? "change " : "");
     notifyClients(doc);
 }
 
@@ -85,6 +85,6 @@ void ControllableTaskDevice::notifyError(const String &type, const String &error
     doc["deviceId"] = _id;
     doc["error"] = error;
 
-    MLOG_ERROR("%s: Notifying error for device: %s", toString().c_str(), error.c_str());
+    MLOG_ERROR("%s: Notifying error: %s", toString().c_str(), error.c_str());
     notifyClients(doc);
 }

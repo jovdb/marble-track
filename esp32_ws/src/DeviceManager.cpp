@@ -433,7 +433,7 @@ bool DeviceManager::addTaskDevice(TaskDevice *device)
     {
         taskDevices[taskDevicesCount] = device;
         taskDevicesCount++;
-        MLOG_INFO("Added task device: %s (%s)", device->getId().c_str(), device->getType().c_str());
+        MLOG_INFO("Added task device: %s", device->toString().c_str());
         return true;
     }
 

@@ -30,6 +30,7 @@ unsigned long lastAutoToggleTime = 0;
 #include "NetworkSettings.h"
 #include <devices/LedDevice.h>
 #include <devices/ButtonDevice.h>
+#include <devices/TestTaskDevice.h>
 
 // Create network and server instances
 Network *network = nullptr; // Will be created after loading settings
@@ -41,6 +42,10 @@ WebSocketManager wsManager(nullptr, nullptr, "/ws");
 
 // Global status LED
 LedDevice *statusLed = nullptr;
+
+// Button press toggle for LED blinking
+bool blinkingActive = false;
+bool lastButtonPressed = false;
 
 // Device instances
 // ...existing code...
@@ -192,19 +197,23 @@ void setup()
 
   deviceManager.addTaskDevice(statusLed);
 
-  statusLed->blink(100, 200); // Blink with 100ms ON, 300ms OFF
-  // statusLed->set(true);       // Set LED ON (overrides blink)
+  statusLed->blink(100, 200); // Initially off
 
   // Hard-coded ButtonDevice
   ButtonDevice *testButton = new ButtonDevice("test-btn", globalNotifyClientsCallback);
   JsonDocument btnConfig;
-  btnConfig["pin"] = 22;
+  btnConfig["pin"] = 19;
   btnConfig["name"] = "Test Button";
   btnConfig["debounceTimeInMs"] = 50;
-  btnConfig["pinMode"] = "PullUp";
+  btnConfig["pinMode"] = "F";
   testButton->setup(btnConfig);
 
   deviceManager.addTaskDevice(testButton);
+
+  // Create TestTaskDevice that uses the test button
+  TestTaskDevice *testTask = new TestTaskDevice("test-task", testButton, globalNotifyClientsCallback);
+  testTask->setup();
+  deviceManager.addTaskDevice(testTask);
 
   MLOG_INFO("System initialization complete!");
 }

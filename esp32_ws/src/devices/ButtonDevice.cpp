@@ -19,6 +19,9 @@ void ButtonDevice::getConfigFromJson(const JsonDocument &config)
         _pinMode = pinModeFromString(config["pinMode"].as<String>());
     }
 
+    // Initialize simulated state based on pin mode (released state)
+    _simulatedState = (_pinMode == PinModeOption::PullUp || _pinMode == PinModeOption::Floating) ? true : false;
+
     if (_pin >= 0)
     {
         switch (_pinMode)
@@ -54,15 +57,16 @@ bool ButtonDevice::control(const String &action, JsonObject *args)
 {
     if (action == "press")
     {
+        MLOG_INFO("%s: Simulated button PRESS", toString().c_str());
         _isSimulated = true;
-        _simulatedState = true;
-        MLOG_INFO("%s: Simulated  button PRESS", toString().c_str());
+        _simulatedState = (_pinMode == PinModeOption::PullUp || _pinMode == PinModeOption::Floating) ? false : true;
         return true;
     }
     else if (action == "release")
     {
-        _isSimulated = false;
         MLOG_INFO("%s: Simulated button RELEASE", toString().c_str());
+        _isSimulated = false;
+        _simulatedState = (_pinMode == PinModeOption::PullUp || _pinMode == PinModeOption::Floating) ? true : false;
         return true;
     }
     return false;
@@ -123,7 +127,7 @@ void ButtonDevice::task()
                 if (_isPressed != prevPressed)
                 {
                     notifyState(true);
-                    MLOG_INFO("[%s]: State changed to %s", toString().c_str(), _isPressed ? "PRESSED" : "RELEASED");
+                    MLOG_INFO("%s: State changed to %s", toString().c_str(), _isPressed ? "PRESSED" : "RELEASED");
                 }
             }
         }

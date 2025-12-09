@@ -167,8 +167,6 @@ void WebSocketManager::parseMessage(String message)
         type = doc["data"]["type"] | "";
     }
 
-    MLOG_WS_RECEIVE("Parsed message type: %s", type.c_str());
-
     // Handle special type
     if (type == "restart")
     {
@@ -732,6 +730,10 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
         JsonObject payload = doc["args"].as<JsonObject>();
         controllableDevice->control(functionName, &payload);
         return;
+    }
+    else
+    {
+        MLOG_WARN("handleDeviceFunction: Device not found: %s", deviceId.c_str());
     }
 }
 

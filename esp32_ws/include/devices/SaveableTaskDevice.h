@@ -20,10 +20,10 @@ public:
 
     /**
      * @brief Setup the device using a configuration object
-     * @param config JSON configuration object
+     * @param config JSON configuration object (optional, defaults to empty)
      * @return true if setup successful
      */
-    virtual bool setup(const JsonDocument &config);
+    virtual bool setup(const JsonDocument &config = JsonDocument());
 
     /**
      * @brief Get current configuration

@@ -66,7 +66,8 @@ export function renderDeviceComponent(device: { id: string; type: string }) {
       return <PwmMotor id={device.id} />;
     case "lift":
       return <Lift id={device.id} />;
-
+    case "test-task":
+      return null;
     default:
       logger.error(`Unknown device type: ${device.type}`);
       return null;

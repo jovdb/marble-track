@@ -126,8 +126,8 @@ void ButtonDevice::task()
 
                 if (_isPressed != prevPressed)
                 {
-                    notifyState(true);
                     MLOG_INFO("%s: State changed to %s", toString().c_str(), _isPressed ? "PRESSED" : "RELEASED");
+                    notifyState(true);
                 }
             }
         }

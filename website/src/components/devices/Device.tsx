@@ -13,12 +13,17 @@ interface DeviceProps {
 }
 
 export function Device(props: DeviceProps) {
-  const [isCollapsed, setIsCollapsed] = createSignal(true);
-  const [showChildren, setShowChildren] = createSignal(false);
-  const [showConfig, setShowConfig] = createSignal(false);
-  const [showMessagesPanel, setShowMessages] = createSignal(false);
   const deviceStore = useDevice(props.id);
   const device = () => deviceStore[0];
+
+  const hasConfig = createMemo(() => Boolean(props.configComponent));
+  const [isCollapsed, setIsCollapsed] = createSignal(true);
+  const [showChildren, setShowChildren] = createSignal(
+    !hasConfig() && !!device()?.children?.length
+  );
+
+  const [showConfig, setShowConfig] = createSignal(false);
+  const [showMessagesPanel, setShowMessages] = createSignal(false);
   const [wsStore] = useWebSocket2();
 
   const name = createMemo(
@@ -28,7 +33,6 @@ export function Device(props: DeviceProps) {
       "Unknown Device"
   );
   const deviceType = createMemo(() => device()?.type);
-  const hasConfig = createMemo(() => Boolean(props.configComponent));
   const hasError = createMemo(() => (device()?.state as any)?.errorCode > 0);
   const errorCode = createMemo(() => (device()?.state as any)?.errorCode || 0);
   const errorMessage = createMemo(() => (device()?.state as any)?.errorMessage || "");
@@ -84,7 +88,7 @@ export function Device(props: DeviceProps) {
               <span class={styles["device__type-badge"]}>{deviceType()}</span>
             </Show>
             <Show when={hasError()}>
-              <span 
+              <span
                 class={styles["device__error-badge"]}
                 title={`Error ${errorCode()}: ${errorMessage()}`}
               >

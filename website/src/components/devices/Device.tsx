@@ -45,9 +45,6 @@ export function Device(props: DeviceProps) {
         class={styles.device__header}
         onClick={() => {
           setIsCollapsed(!isCollapsed());
-          setShowChildren(false);
-          setShowConfig(false);
-          setShowMessages(false);
         }}
       >
         <div class={styles["device__header-left"]}>

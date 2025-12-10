@@ -8,8 +8,9 @@
 class TestTaskDevice : public ControllableTaskDevice
 {
 public:
-    TestTaskDevice(const String &id, ButtonDevice *button, LedDevice *led, NotifyClients callback = nullptr);
+    TestTaskDevice(const String &id, NotifyClients callback = nullptr);
 
+    bool setup(const JsonDocument &config = JsonDocument()) override;
     void getConfigFromJson(const JsonDocument &config) override;
     void addConfigToJson(JsonDocument &doc) const override;
 

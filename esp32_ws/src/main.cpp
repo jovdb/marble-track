@@ -189,29 +189,8 @@ void setup()
 
   // State change broadcasting is now enabled during setup
 
-  statusLed = new LedDevice("led1", globalNotifyClientsCallback);
-  JsonDocument ledConfig;
-  ledConfig["pin"] = 21;
-  ledConfig["name"] = "Status LED";
-  statusLed->setup(ledConfig);
-
-  deviceManager.addTaskDevice(statusLed);
-
-  statusLed->blink(100, 200); // Initially off
-
-  // Hard-coded ButtonDevice
-  ButtonDevice *testButton = new ButtonDevice("test-btn", globalNotifyClientsCallback);
-  JsonDocument btnConfig;
-  btnConfig["pin"] = 19;
-  btnConfig["name"] = "Test Button";
-  btnConfig["debounceTimeInMs"] = 50;
-  btnConfig["pinMode"] = "F";
-  testButton->setup(btnConfig);
-
-  deviceManager.addTaskDevice(testButton);
-
-  // Create TestTaskDevice that uses the test button
-  TestTaskDevice *testTask = new TestTaskDevice("test-task", testButton, statusLed, globalNotifyClientsCallback);
+   // Create TestTaskDevice with its own button and LED children
+  TestTaskDevice *testTask = new TestTaskDevice("test-task", globalNotifyClientsCallback);
   testTask->setup();
   deviceManager.addTaskDevice(testTask);
 

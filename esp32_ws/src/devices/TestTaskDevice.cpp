@@ -2,9 +2,36 @@
 #include "devices/LedDevice.h"
 #include "Logging.h"
 
-TestTaskDevice::TestTaskDevice(const String &id, ButtonDevice *button, LedDevice *led, NotifyClients callback)
-    : ControllableTaskDevice(id, "test-task", callback), _button(button), _led(led)
+TestTaskDevice::TestTaskDevice(const String &id, NotifyClients callback)
+    : ControllableTaskDevice(id, "test-task", callback)
 {
+    // Create child devices
+    _button = new ButtonDevice(id + "-btn", callback);
+    _led = new LedDevice(id + "-led", callback);
+    
+    // Add as children
+    addChild(_button);
+    addChild(_led);
+}
+
+bool TestTaskDevice::setup(const JsonDocument &config)
+{
+    // Setup button
+    JsonDocument btnConfig;
+    btnConfig["pin"] = 19;
+    btnConfig["name"] = "Test Button";
+    btnConfig["debounceTimeInMs"] = 50;
+    btnConfig["pinMode"] = "PullUp";
+    _button->setup(btnConfig);
+    
+    // Setup LED
+    JsonDocument ledConfig;
+    ledConfig["pin"] = 21;
+    ledConfig["name"] = "Test LED";
+    _led->setup(ledConfig);
+    
+    // Call parent setup to start the task
+    return SaveableTaskDevice::setup(config);
 }
 
 void TestTaskDevice::task()

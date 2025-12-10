@@ -130,6 +130,26 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
                 {
                     pinsArr.add(pin);
                 }
+
+                // Add children array
+                JsonArray childrenArr = deviceObj["children"].to<JsonArray>();
+                for (TaskDevice *child : taskDeviceList[i]->getChildren())
+                {
+                    if (child)
+                    {
+                        JsonObject childObj = childrenArr.add<JsonObject>();
+                        childObj["id"] = child->getId();
+                        childObj["type"] = child->getType();
+
+                        // Add child pins
+                        std::vector<int> childPins = child->getPins();
+                        JsonArray childPinsArr = childObj["pins"].to<JsonArray>();
+                        for (int pin : childPins)
+                        {
+                            childPinsArr.add(pin);
+                        }
+                    }
+                }
             }
         }
     }

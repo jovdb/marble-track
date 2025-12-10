@@ -51,10 +51,23 @@ public:
      */
     virtual std::vector<int> getPins() const { return {}; }
 
+    /**
+     * @brief Add a child device
+     * @param child Pointer to child device
+     */
+    void addChild(TaskDevice *child);
+
+    /**
+     * @brief Get all child devices
+     * @return Vector of child device pointers
+     */
+    std::vector<TaskDevice *> getChildren() const;
+
 protected:
     String _id;
     String _type;
     TaskHandle_t _taskHandle = nullptr;
+    std::vector<TaskDevice *> children;
 
     /**
      * @brief Main task loop

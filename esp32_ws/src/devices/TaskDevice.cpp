@@ -12,6 +12,11 @@ TaskDevice::~TaskDevice()
         vTaskDelete(_taskHandle);
         _taskHandle = nullptr;
     }
+
+    for (TaskDevice *child : children)
+    {
+        delete child;
+    }
 }
 
 String TaskDevice::toString() const
@@ -19,6 +24,19 @@ String TaskDevice::toString() const
     String upperType = _type;
     upperType.toUpperCase();
     return upperType + "[" + _id + "]";
+}
+
+void TaskDevice::addChild(TaskDevice *child)
+{
+    if (child)
+    {
+        children.push_back(child);
+    }
+}
+
+std::vector<TaskDevice *> TaskDevice::getChildren() const
+{
+    return children;
 }
 
 bool TaskDevice::setup(const String &taskName, uint32_t stackSize, UBaseType_t priority, BaseType_t core)

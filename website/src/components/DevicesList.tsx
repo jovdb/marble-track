@@ -246,14 +246,16 @@ export function DevicesList() {
             )}
           </td>
           <td class={styles["devices-list__table-td"]} style={{ "text-align": "right" }}>
-            <button
-              class={styles["devices-list__remove-button"]}
-              onClick={() => handleRemoveDevice(props.device.id)}
-              title="Remove device"
-              aria-label={`Remove device ${props.device.id}`}
-            >
-              <TrashIcon />
-            </button>
+            {depth === 0 && (
+              <button
+                class={styles["devices-list__remove-button"]}
+                onClick={() => handleRemoveDevice(props.device.id)}
+                title="Remove device"
+                aria-label={`Remove device ${props.device.id}`}
+              >
+                <TrashIcon />
+              </button>
+            )}
           </td>
         </tr>
         {!isCollapsed() && (

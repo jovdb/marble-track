@@ -119,7 +119,7 @@ void LedDevice::set(bool state)
     _desiredMode = state ? Mode::ON : Mode::OFF;
     _desiredState = state;
 
-    notifyState(true);
+    notifyStateChange();
 
     if (_taskHandle)
     {
@@ -133,7 +133,7 @@ void LedDevice::blink(unsigned long onTime, unsigned long offTime)
     _blinkOnDurationMs = onTime;
     _blinkOffDurationMs = offTime;
 
-    notifyState(true);
+    notifyStateChange();
 
     if (_taskHandle)
     {
@@ -151,15 +151,15 @@ void LedDevice::task()
 
     while (true)
     {
-        // Read atomic desired values into local variables
-        // Take snapshots of atomic variables
+        // Read volatile desired values into local variables
+        // Take snapshots of volatile variables
         Mode snapshotMode = _desiredMode;
 
         if (snapshotMode == Mode::BLINKING)
         {
 
             // Determine wait time based on current state
-            unsigned long waitTime = _isOn ? _blinkOnDurationMs.load() : _blinkOffDurationMs.load();
+            unsigned long waitTime = _isOn ? _blinkOnDurationMs : _blinkOffDurationMs;
 
             // Wait for notification OR timeout (blink toggle)
             if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(waitTime)) > 0)

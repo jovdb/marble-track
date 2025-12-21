@@ -52,7 +52,7 @@ void ControllableTaskDevice::notifyClients(JsonDocument &doc)
     }
 }
 
-void ControllableTaskDevice::notifyState(bool changed)
+void ControllableTaskDevice::notifyStateChange(bool changed)
 {
     JsonDocument doc;
     doc["type"] = "device-state";
@@ -63,6 +63,9 @@ void ControllableTaskDevice::notifyState(bool changed)
 
     MLOG_INFO("%s: Notifying state %s", toString().c_str(), changed ? "change " : "");
     notifyClients(doc);
+
+    // Emit to internal subscribers
+    TaskDevice::notifyStateChange(changed);
 }
 
 void ControllableTaskDevice::notifyConfig(bool changed)

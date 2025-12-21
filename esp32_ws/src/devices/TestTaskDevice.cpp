@@ -30,32 +30,23 @@ bool TestTaskDevice::setup(const JsonDocument &config)
     ledConfig["name"] = "Test LED";
     _led->setup(ledConfig);
 
+    // Subscribe to button state changes
+    _button->clearStateChangeCallbacks();
+    _button->onStateChange([this](void *data)
+                           { update(); });
+
     // Call parent setup to start the task
     return SaveableTaskDevice::setup(config);
 }
 
-void TestTaskDevice::task()
+void TestTaskDevice::update()
 {
-    MLOG_INFO("%s: TestTaskDevice task started", toString().c_str());
-
-    // Initialize last pressed state
     if (_button)
     {
-        _lastPressed = _button->isPressed();
-    }
-
-    while (true)
-    {
-        if (!_button)
+        bool pressed = _button->isPressed();
+        if (pressed)
         {
-            vTaskDelay(pdMS_TO_TICKS(1000));
-            continue;
-        }
-
-        bool currentPressed = _button->isPressed();
-        if (currentPressed && !_lastPressed)
-        {
-            MLOG_INFO("[%s]: Hello", toString().c_str());
+            MLOG_INFO("[%s]: Hello (from update)", toString().c_str());
 
             // Toggle LED blinking
             if (_led)
@@ -72,9 +63,19 @@ void TestTaskDevice::task()
                 }
             }
         }
-        _lastPressed = currentPressed;
+    }
+}
 
-        vTaskDelay(pdMS_TO_TICKS(10));
+void TestTaskDevice::task()
+{
+    MLOG_INFO("%s: TestTaskDevice task started", toString().c_str());
+
+    // Check at start
+    this->update();
+
+    while (true)
+    {
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 

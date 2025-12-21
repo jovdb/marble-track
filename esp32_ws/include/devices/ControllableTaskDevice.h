@@ -56,7 +56,7 @@ public:
      */
     virtual bool isControllable() const override { return true; }
     void notifyClients(JsonDocument &doc);
-    void notifyState(bool changed);
+    void notifyStateChange(bool changed = true) override;
     void notifyConfig(bool changed);
     void notifyError(const String &type, const String &error);
 

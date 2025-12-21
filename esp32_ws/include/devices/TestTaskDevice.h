@@ -16,11 +16,14 @@ public:
 
 protected:
     void task() override;
+    /**
+     * @brief Called when a child device state changes
+     */
+    void update();
 
 private:
     ButtonDevice *_button;
     LedDevice *_led;
-    bool _lastPressed = false;
 };
 
 #endif // TEST_TASK_DEVICE_H

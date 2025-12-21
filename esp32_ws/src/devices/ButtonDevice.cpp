@@ -108,7 +108,7 @@ void ButtonDevice::task()
             continue;
         }
 
-        bool isButtonPressed = _isSimulated ? _simulatedState.load() : readIsButtonPressed();
+        bool isButtonPressed = _isSimulated.load() ? _simulatedState.load() : readIsButtonPressed();
 
         // If raw state changed, reset timer
         if (isButtonPressed != lastIsButtonPressed)
@@ -125,13 +125,13 @@ void ButtonDevice::task()
                 currentStableState = isButtonPressed;
 
                 // Update shared variables
-                bool prevPressed = _isPressed;
+                bool prevPressed = _isPressed.load();
                 _isPressed = currentStableState;
 
-                if (_isPressed != prevPressed)
+                if (_isPressed.load() != prevPressed)
                 {
-                    MLOG_INFO("%s: State changed to %s", toString().c_str(), _isPressed ? "PRESSED" : "RELEASED");
-                    notifyState(true);
+                    MLOG_INFO("%s: State changed to %s", toString().c_str(), _isPressed.load() ? "PRESSED" : "RELEASED");
+                    notifyStateChange();
                 }
             }
         }
@@ -177,10 +177,10 @@ ButtonDevice::PinModeOption ButtonDevice::pinModeFromString(const String &value)
 
 bool ButtonDevice::isPressed() const
 {
-    return _isPressed;
+    return _isPressed.load();
 }
 
 bool ButtonDevice::isReleased() const
 {
-    return !_isPressed;
+    return !_isPressed.load();
 }

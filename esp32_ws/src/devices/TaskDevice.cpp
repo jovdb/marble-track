@@ -39,6 +39,32 @@ std::vector<TaskDevice *> TaskDevice::getChildren() const
     return children;
 }
 
+void TaskDevice::onStateChange(EventCallback callback)
+{
+    _stateChangeCallbacks.push_back(callback);
+}
+
+void TaskDevice::notifyStateChange(bool changed)
+{
+    if (changed)
+    {
+        emitStateChange();
+    }
+}
+
+void TaskDevice::emitStateChange(void *data)
+{
+    for (auto &callback : _stateChangeCallbacks)
+    {
+        callback(data);
+    }
+}
+
+void TaskDevice::clearStateChangeCallbacks()
+{
+    _stateChangeCallbacks.clear();
+}
+
 bool TaskDevice::setup(const String &taskName, uint32_t stackSize, UBaseType_t priority, BaseType_t core)
 {
     if (_taskHandle != nullptr)

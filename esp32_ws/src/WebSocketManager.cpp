@@ -803,7 +803,7 @@ void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
     ControllableTaskDevice *controllableDevice = deviceManager->getControllableTaskDeviceById(deviceId);
     if (controllableDevice)
     {
-        controllableDevice->notifyState(false);
+        controllableDevice->notifyStateChange(false);
         return;
     }
 

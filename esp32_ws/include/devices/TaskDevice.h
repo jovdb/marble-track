@@ -11,6 +11,10 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <vector>
+#include <functional>
+#include <map>
+
+typedef std::function<void(void *)> EventCallback;
 
 /**
  * @class TaskDevice
@@ -28,12 +32,12 @@ public:
     /**
      * @brief Setup and start the device task
      * @param taskName Name of the task
-     * @param stackSize Stack size in bytes (default: 2048)
+     * @param stackSize Stack size in bytes (default: 4096)
      * @param priority Task priority (default: 1)
      * @param core Core ID (0 or 1) (default: 1)
      * @return true if task started successfully or was already running
      */
-    virtual bool setup(const String &taskName, uint32_t stackSize = 2048, UBaseType_t priority = 1, BaseType_t core = 1);
+    virtual bool setup(const String &taskName, uint32_t stackSize = 4096, UBaseType_t priority = 1, BaseType_t core = 1);
 
     String getId() const { return _id; }
     String getType() const { return _type; }
@@ -63,11 +67,35 @@ public:
      */
     std::vector<TaskDevice *> getChildren() const;
 
+    /**
+     * @brief Subscribe to state change events
+     * @param callback Callback function
+     */
+    void onStateChange(EventCallback callback);
+
+    /**
+     * @brief Notify that the state has changed
+     * @param changed Whether the state actually changed (default: true)
+     */
+    virtual void notifyStateChange(bool changed = true);
+
+    /**
+     * @brief Clear all state change subscriptions
+     */
+    void clearStateChangeCallbacks();
+
 protected:
     String _id;
     String _type;
     TaskHandle_t _taskHandle = nullptr;
     std::vector<TaskDevice *> children;
+    std::vector<EventCallback> _stateChangeCallbacks;
+
+    /**
+     * @brief Emit internally a state change event to subscribers
+     * @param data Optional data pointer
+     */
+    void emitStateChange(void *data = nullptr);
 
     /**
      * @brief Main task loop

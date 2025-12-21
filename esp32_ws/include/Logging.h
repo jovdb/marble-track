@@ -16,7 +16,7 @@
  *   MLOG_ERROR("Failed to initialize device: %s", deviceId);
  *   MLOG_WS_SEND("Message sent to client #%u", clientId);
  *
- * All messages include timestamp in milliseconds since boot: [12345]
+ * All messages include timestamp in milliseconds since boot and the current task name: [12345][I][loop]
  * Use the 'logging' serial command to enable/disable log types at runtime.
  */
 
@@ -24,6 +24,8 @@
 #define LOGGING_H
 
 #include <Arduino.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
 // Enable/disable logging (set to 0 to disable all logging)
 #define MARBLE_LOG_ENABLED 1
@@ -75,49 +77,49 @@ public:
 // - No side effects - The while(0) never loops (condition is always false)
 // - Gets optimized away - Compilers remove it entirely, zero runtime cost
 
-#define MLOG_INFO(format, ...)                                                  \
-    do                                                                          \
-    {                                                                           \
-        if (LogConfig::isEnabled(LOG_INFO))                                     \
-        {                                                                       \
-            Serial.printf("[%6lu][I]: " format "\n", millis(), ##__VA_ARGS__); \
-        }                                                                       \
+#define MLOG_INFO(format, ...)                                                               \
+    do                                                                                       \
+    {                                                                                        \
+        if (LogConfig::isEnabled(LOG_INFO))                                                  \
+        {                                                                                    \
+            Serial.printf("[%6lu][I][%s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
+        }                                                                                    \
     } while (0)
 
-#define MLOG_ERROR(format, ...)                                                  \
-    do                                                                           \
-    {                                                                            \
-        if (LogConfig::isEnabled(LOG_ERROR))                                     \
-        {                                                                        \
-            Serial.printf("[%6lu][E]: " format "\n", millis(), ##__VA_ARGS__); \
-        }                                                                        \
+#define MLOG_ERROR(format, ...)                                                              \
+    do                                                                                       \
+    {                                                                                        \
+        if (LogConfig::isEnabled(LOG_ERROR))                                                 \
+        {                                                                                    \
+            Serial.printf("[%6lu][E][%s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
+        }                                                                                    \
     } while (0)
 
-#define MLOG_WARN(format, ...)                                                  \
-    do                                                                          \
-    {                                                                           \
-        if (LogConfig::isEnabled(LOG_WARN))                                     \
-        {                                                                       \
-            Serial.printf("[%6lu][W]: " format "\n", millis(), ##__VA_ARGS__); \
-        }                                                                       \
+#define MLOG_WARN(format, ...)                                                               \
+    do                                                                                       \
+    {                                                                                        \
+        if (LogConfig::isEnabled(LOG_WARN))                                                  \
+        {                                                                                    \
+            Serial.printf("[%6lu][W][%s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
+        }                                                                                    \
     } while (0)
 
-#define MLOG_WS_SEND(format, ...)                                                  \
-    do                                                                             \
-    {                                                                              \
-        if (LogConfig::isEnabled(LOG_WS_SEND))                                     \
-        {                                                                          \
-            Serial.printf("[%6lu][WS_SEND]: " format "\n", millis(), ##__VA_ARGS__); \
-        }                                                                          \
+#define MLOG_WS_SEND(format, ...)                                                                  \
+    do                                                                                             \
+    {                                                                                              \
+        if (LogConfig::isEnabled(LOG_WS_SEND))                                                     \
+        {                                                                                          \
+            Serial.printf("[%6lu][WS_SEND][%s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
+        }                                                                                          \
     } while (0)
 
-#define MLOG_WS_RECEIVE(format, ...)                                               \
-    do                                                                             \
-    {                                                                              \
-        if (LogConfig::isEnabled(LOG_WS_RECEIVE))                                  \
-        {                                                                          \
-            Serial.printf("[%6lu][WS_RECV]: " format "\n", millis(), ##__VA_ARGS__); \
-        }                                                                          \
+#define MLOG_WS_RECEIVE(format, ...)                                                               \
+    do                                                                                             \
+    {                                                                                              \
+        if (LogConfig::isEnabled(LOG_WS_RECEIVE))                                                  \
+        {                                                                                          \
+            Serial.printf("[%6lu][WS_RECV][%s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
+        }                                                                                          \
     } while (0)
 
 #else

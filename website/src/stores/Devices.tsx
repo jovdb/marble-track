@@ -33,6 +33,9 @@ export function createDevicesStore({
 }: Pick<IWebSocketActions, "subscribe" | "sendMessage">) {
   const [store, setStore] = createStore<IDevicesStore>({ devices: {} }, { name: "devicesStore" });
 
+  // for debugging
+  (window as any).__store = store;
+
   const handleMessage: Parameters<IWebSocketActions["subscribe"]>[0] = (message) => {
     switch (message.type) {
       case "devices-list": {

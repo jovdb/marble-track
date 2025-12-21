@@ -2,7 +2,7 @@ import { JSX, onMount, createSignal, Show } from "solid-js";
 import styles from "./DeviceConfig.module.css";
 
 interface DeviceConfigProps {
-  device?: { id: string; config?: Record<string, unknown> };
+  device?: { id: string; config?: Record<string, unknown>; configErrorMessage?: string };
   onSave: () => void;
   onClose?: () => void;
   children?: JSX.Element | JSX.Element[];
@@ -10,7 +10,8 @@ interface DeviceConfigProps {
 }
 
 export default function DeviceConfig(props: DeviceConfigProps) {
-  const [error, setError] = createSignal<string | null>(null);
+  const [saveError, setSaveError] = createSignal<string | null>(null);
+  const hasConfigError = () => !!props.device?.configErrorMessage;
 
   const deviceData = () => props.device;
   const isLoading = () => deviceData()?.config === undefined;
@@ -25,13 +26,13 @@ export default function DeviceConfig(props: DeviceConfigProps) {
 
   const handleSubmit = (event: Event) => {
     event.preventDefault();
-    setError(null);
+    setSaveError(null);
 
     try {
       props.onSave();
       props.onClose?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save configuration");
+      setSaveError(err instanceof Error ? err.message : "Failed to save configuration");
     }
   };
 
@@ -43,17 +44,30 @@ export default function DeviceConfig(props: DeviceConfigProps) {
         </h2>
       </Show>
 
-      <Show when={isLoading()}>
+      <Show when={isLoading() && !hasConfigError()}>
         <div class={styles["device-config__loading"]}>Loading configuration...</div>
+      </Show>
+
+      <Show when={hasConfigError()}>
+        <div class={styles["device-config__error"]} role="alert">
+          {props.device?.configErrorMessage}
+        </div>
+        <div class={styles["device-config__actions"]}>
+          {props.onClose && (
+            <button type="button" class={styles["device-config__close"]} onClick={props.onClose}>
+              Close
+            </button>
+          )}
+        </div>
       </Show>
 
       <Show when={!isLoading()}>
         <form onSubmit={handleSubmit}>
           <div class={styles["device-config__fields"]}>{props.children}</div>
 
-          <Show when={error()}>
+          <Show when={saveError()}>
             <div class={styles["device-config__error"]} role="alert">
-              {error()}
+              {saveError()}
             </div>
           </Show>
 

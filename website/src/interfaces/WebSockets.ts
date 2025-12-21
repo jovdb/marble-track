@@ -94,6 +94,11 @@ export type IWsReceiveDeviceReadConfigMessage =
       })
   | (IWsMessageBase<"device-read-config"> & {
       deviceId: string;
+      success: false;
+      message: string;
+    })
+  | (IWsMessageBase<"device-read-config"> & {
+      deviceId: string;
       config: Record<string, unknown>;
     });
 

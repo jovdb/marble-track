@@ -4,7 +4,7 @@ import { useDevice } from "./Devices";
 const deviceType = "button";
 
 interface IButtonState extends IDeviceState {
-  pressed: boolean;
+  isPressed: boolean;
   [key: string]: unknown;
 }
 

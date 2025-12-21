@@ -11,7 +11,7 @@ export function Button(props: { id: string }) {
   const device = () => buttonStore[0];
   const actions = buttonStore[1];
 
-  const isPressed = createMemo(() => Boolean(device()?.state?.pressed));
+  const isPressed = createMemo(() => Boolean(device()?.state?.isPressed));
   const statusLabel = createMemo(() => `Status: ${isPressed() ? "Pressed" : "Released"}`);
 
   const [isPressing, setIsPressing] = createSignal(false);

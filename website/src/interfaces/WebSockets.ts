@@ -50,11 +50,21 @@ interface IWsMessageBase<TType extends string = string> {
   type: TType;
 }
 
+interface IWsMessageBase<TType extends string = string> {
+  type: TType;
+}
+
 export interface IWsDeviceMessage extends IWsMessageBase<"device-fn"> {
-  deviceType: DeviceType;
   deviceId: string;
+  deviceType: DeviceType;
   fn: string;
   args?: Record<string, unknown>;
+}
+
+export interface IWsDeviceError<T extends string> extends IWsMessageBase<T> {
+  deviceId: string;
+  success: false;
+  message: string;
 }
 
 export type IWsReceiveDevicesListMessage =
@@ -68,6 +78,7 @@ export type IWsReceiveDeviceStateMessage =
       _IWsErrorResponse & {
         deviceId: string;
       })
+  | IWsDeviceError<"device-state">
   | (IWsMessageBase<"device-state"> & {
       deviceId: string;
       state: Record<string, unknown>;
@@ -92,11 +103,7 @@ export type IWsReceiveDeviceReadConfigMessage =
       _IWsErrorResponse & {
         deviceId: string;
       })
-  | (IWsMessageBase<"device-read-config"> & {
-      deviceId: string;
-      success: false;
-      message: string;
-    })
+  | IWsDeviceError<"device-read-config">
   | (IWsMessageBase<"device-read-config"> & {
       deviceId: string;
       config: Record<string, unknown>;

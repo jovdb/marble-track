@@ -33,9 +33,7 @@ export function Device(props: DeviceProps) {
       "Unknown Device"
   );
   const deviceType = createMemo(() => device()?.type);
-  const hasError = createMemo(() => (device()?.state as any)?.errorCode > 0);
-  const errorCode = createMemo(() => (device()?.state as any)?.errorCode || 0);
-  const errorMessage = createMemo(() => (device()?.state as any)?.errorMessage || "");
+  const stateErrorMessage = createMemo(() => device()?.stateErrorMessage || "");
   const configPanelId = `device-config-${props.id}`;
   const logsPanelId = `device-logs-${props.id}`;
 
@@ -83,14 +81,6 @@ export function Device(props: DeviceProps) {
           <div class={styles["device__header-actions"]}>
             <Show when={deviceType()}>
               <span class={styles["device__type-badge"]}>{deviceType()}</span>
-            </Show>
-            <Show when={hasError()}>
-              <span
-                class={styles["device__error-badge"]}
-                title={`Error ${errorCode()}: ${errorMessage()}`}
-              >
-                ⚠️ {errorCode()}
-              </span>
             </Show>
             <Show when={hasConfig()}>
               <button
@@ -192,7 +182,10 @@ export function Device(props: DeviceProps) {
       <Show when={!isCollapsed()}>
         <div class={styles.device__content}>
           <Show when={!showChildren() && !showConfig() && !showMessagesPanel()}>
-            {props.children}
+            <Show when={device()?.stateErrorMessage}>
+              <div class={styles.device__error}>{device()?.stateErrorMessage}</div>
+            </Show>
+            <Show when={!device()?.stateErrorMessage}>{props.children}</Show>
           </Show>
 
           {showChildren() && device()?.children?.length && (

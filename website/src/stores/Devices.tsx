@@ -14,6 +14,7 @@ export interface IDevice<
   type: string;
   pins?: number[];
   state?: TState;
+  stateErrorMessage?: string;
   config?: TConfig;
   configErrorMessage?: string;
   children?: {
@@ -131,7 +132,7 @@ export function createDevicesStore({
           if (message.triggerBy === "set" || message.isChanged) {
             sendMessage({ type: "devices-list" });
           }
-        } else if ("error" in message || ("success" in message && !message.success)) {
+        } else if ("success" in message && !message.success) {
           setStore(
             produce((draft) => {
               const draftDevice = draft.devices[message.deviceId];
@@ -168,6 +169,17 @@ export function createDevicesStore({
               if (draftDevice) {
                 const { id, type, ...rest } = message.state;
                 draftDevice.state = rest;
+                draftDevice.stateErrorMessage = undefined;
+              }
+            })
+          );
+        } else if ("error" in message || ("success" in message && !message.success)) {
+          setStore(
+            produce((draft) => {
+              const draftDevice = draft.devices[message.deviceId];
+              if (draftDevice) {
+                draftDevice.stateErrorMessage =
+                  (message as any).message || (message as any).error || "Unknown error";
               }
             })
           );

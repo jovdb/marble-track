@@ -62,8 +62,8 @@ void TestTaskDevice::update()
                 }
                 else
                 {
+                    MLOG_INFO("[%s]: Set LED blinking", toString().c_str());
                     _led->blink(200, 200); // Start blinking
-                    MLOG_INFO("[%s]: LED started blinking", toString().c_str());
                 }
             }
         }

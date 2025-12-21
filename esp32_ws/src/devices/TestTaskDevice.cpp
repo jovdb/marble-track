@@ -33,7 +33,11 @@ bool TestTaskDevice::setup(const JsonDocument &config)
     // Subscribe to button state changes
     _button->clearStateChangeCallbacks();
     _button->onStateChange([this](void *data)
-                           { update(); });
+                           {
+                               if (_taskHandle)
+                               {
+                                   xTaskNotifyGive(_taskHandle);
+                               } });
 
     // Call parent setup to start the task
     return SaveableTaskDevice::setup(config);
@@ -75,7 +79,11 @@ void TestTaskDevice::task()
 
     while (true)
     {
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        // Wait for notification (e.g. from button callback)
+        if (ulTaskNotifyTake(pdTRUE, portMAX_DELAY) > 0)
+        {
+            this->update();
+        }
     }
 }
 

@@ -549,11 +549,29 @@ Device *DeviceManager::getDeviceById(const String &deviceId) const
 
 TaskDevice *DeviceManager::getTaskDeviceById(const String &deviceId) const
 {
+    // Helper function for recursive search
+    std::function<TaskDevice *(TaskDevice *)> findRecursive = [&](TaskDevice *dev) -> TaskDevice *
+    {
+        if (!dev)
+            return nullptr;
+        if (dev->getId() == deviceId)
+            return dev;
+        for (TaskDevice *child : dev->getChildren())
+        {
+            TaskDevice *found = findRecursive(child);
+            if (found)
+                return found;
+        }
+        return nullptr;
+    };
+
     for (int i = 0; i < taskDevicesCount; i++)
     {
-        if (taskDevices[i] != nullptr && taskDevices[i]->getId() == deviceId)
+        if (taskDevices[i] != nullptr)
         {
-            return taskDevices[i];
+            TaskDevice *found = findRecursive(taskDevices[i]);
+            if (found)
+                return found;
         }
     }
     return nullptr;
@@ -590,12 +608,10 @@ Device *DeviceManager::getDeviceByType(const String &deviceType) const
 
 ControllableTaskDevice *DeviceManager::getControllableTaskDeviceById(const String &deviceId) const
 {
-    for (int i = 0; i < taskDevicesCount; i++)
+    TaskDevice *taskDev = getTaskDeviceById(deviceId);
+    if (taskDev && taskDev->isControllable())
     {
-        if (taskDevices[i] != nullptr && taskDevices[i]->getId() == deviceId && taskDevices[i]->isControllable())
-        {
-            return static_cast<ControllableTaskDevice *>(taskDevices[i]);
-        }
+        return static_cast<ControllableTaskDevice *>(taskDev);
     }
     return nullptr;
 }

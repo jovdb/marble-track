@@ -279,57 +279,77 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
         return;
     }
     Device *device = deviceManager->getDeviceById(deviceId);
-    if (!device)
+    if (device)
     {
-        notifyClients(createJsonResponse(false, "Device not found: " + deviceId, "", "", "device-save-config", deviceId));
-        return;
-    }
-    if (!doc["config"].is<JsonObject>())
-    {
-        notifyClients(createJsonResponse(false, "No config provided", "", "", "device-save-config", deviceId));
-        return;
-    }
-    JsonObject configObj = doc["config"].as<JsonObject>();
-    device->setConfig(&configObj);
-
-    deviceManager->saveDevicesToJsonFile();
-    // notifyClients(createJsonResponse(true, "Config saved", "", ""));
-
-    String configStr = device->getConfig();
-
-    JsonDocument response;
-    response["type"] = "device-config";
-    response["triggerBy"] = "set";
-    response["deviceId"] = deviceId;
-    if (configStr.length() > 0)
-    {
-        JsonDocument configDoc;
-        DeserializationError err = deserializeJson(configDoc, configStr);
-        if (!err && configDoc.is<JsonObject>())
+        if (!doc["config"].is<JsonObject>())
         {
-            response["config"] = configDoc.as<JsonObject>();
+            notifyClients(createJsonResponse(false, "No config provided", "", "", "device-save-config", deviceId));
+            return;
         }
-        else
+        JsonObject configObj = doc["config"].as<JsonObject>();
+        device->setConfig(&configObj);
+
+        deviceManager->saveDevicesToJsonFile();
+        // notifyClients(createJsonResponse(true, "Config saved", "", ""));
+
+        String configStr = device->getConfig();
+
+        JsonDocument response;
+        response["type"] = "device-config";
+        response["triggerBy"] = "set";
+        response["deviceId"] = deviceId;
+        if (configStr.length() > 0)
         {
-            if (err)
+            JsonDocument configDoc;
+            DeserializationError err = deserializeJson(configDoc, configStr);
+            if (!err && configDoc.is<JsonObject>())
             {
-                MLOG_WARN("Device %s: failed to deserialize config after save (%s)", deviceId.c_str(), err.c_str());
+                response["config"] = configDoc.as<JsonObject>();
             }
             else
             {
-                MLOG_WARN("Device %s: config after save is not a JSON object, returning raw string", deviceId.c_str());
+                if (err)
+                {
+                    MLOG_WARN("Device %s: failed to deserialize config after save (%s)", deviceId.c_str(), err.c_str());
+                }
+                else
+                {
+                    MLOG_WARN("Device %s: config after save is not a JSON object, returning raw string", deviceId.c_str());
+                }
+                response["config"] = serialized(configStr.c_str());
             }
-            response["config"] = serialized(configStr.c_str());
         }
-    }
-    else
-    {
-        response["config"].to<JsonObject>();
-    }
-    String respStr;
-    serializeJson(response, respStr);
+        else
+        {
+            response["config"].to<JsonObject>();
+        }
+        String respStr;
+        serializeJson(response, respStr);
 
-    notifyClients(respStr);
+        notifyClients(respStr);
+        return;
+    }
+
+    ControllableTaskDevice *controllableDevice = deviceManager->getControllableTaskDeviceById(deviceId);
+    if (controllableDevice)
+    {
+        if (!doc["config"].is<JsonObject>())
+        {
+            notifyClients(createJsonResponse(false, "No config provided", "", "", "device-save-config", deviceId));
+            return;
+        }
+        JsonObject configObj = doc["config"].as<JsonObject>();
+        JsonDocument configDoc;
+        configDoc.set(configObj);
+        controllableDevice->setConfig(configDoc);
+
+        deviceManager->saveDevicesToJsonFile();
+
+        controllableDevice->notifyConfig(true);
+        return;
+    }
+
+    notifyClients(createJsonResponse(false, "Device not found: " + deviceId, "", "", "device-save-config", deviceId));
 }
 
 // Read config for a device and send to client

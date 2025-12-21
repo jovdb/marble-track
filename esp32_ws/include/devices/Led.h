@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <atomic>
 #include "Device.h"
 
 /**
@@ -62,10 +63,10 @@ private:
     bool _isOn = false;
 
     // Thread-safe communication
-    volatile LedMode _targetMode = LedMode::OFF;
-    volatile unsigned long _targetBlinkOnTime = 500;
-    volatile unsigned long _targetBlinkOffTime = 500;
-    volatile bool _targetState = false; // For ON/OFF commands
+    std::atomic<LedMode> _targetMode{LedMode::OFF};
+    std::atomic<unsigned long> _targetBlinkOnTime{500};
+    std::atomic<unsigned long> _targetBlinkOffTime{500};
+    std::atomic<bool> _targetState{false}; // For ON/OFF commands
 
     void applyInitialState();
     LedMode modeFromString(const String &value) const;

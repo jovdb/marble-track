@@ -54,7 +54,7 @@ void ButtonDevice::addConfigToJson(JsonDocument &doc) const
 
 void ButtonDevice::addStateToJson(JsonDocument &doc)
 {
-    doc["isPressed"] = _isPressed;
+    doc["isPressed"] = _isPressed.load();
 }
 
 bool ButtonDevice::control(const String &action, JsonObject *args)
@@ -108,7 +108,7 @@ void ButtonDevice::task()
             continue;
         }
 
-        bool isButtonPressed = _isSimulated ? _simulatedState : readIsButtonPressed();
+        bool isButtonPressed = _isSimulated ? _simulatedState.load() : readIsButtonPressed();
 
         // If raw state changed, reset timer
         if (isButtonPressed != lastIsButtonPressed)

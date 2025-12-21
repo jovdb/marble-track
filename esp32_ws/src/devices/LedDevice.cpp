@@ -41,15 +41,15 @@ void LedDevice::addConfigToJson(JsonDocument &doc) const
 
 void LedDevice::addStateToJson(JsonDocument &doc)
 {
-    if (_desiredMode == Mode::BLINKING)
+    if (_desiredMode.load() == Mode::BLINKING)
     {
         doc["mode"] = "BLINKING";
-        doc["onTime"] = _blinkOnDurationMs;
-        doc["offTime"] = _blinkOffDurationMs;
+        doc["onTime"] = _blinkOnDurationMs.load();
+        doc["offTime"] = _blinkOffDurationMs.load();
     }
-    else if (_desiredMode == Mode::ON || _desiredMode == Mode::OFF)
+    else if (_desiredMode.load() == Mode::ON || _desiredMode.load() == Mode::OFF)
     {
-        doc["mode"] = _desiredState ? "ON" : "OFF";
+        doc["mode"] = _desiredState.load() ? "ON" : "OFF";
     }
     else
     {
@@ -151,14 +151,15 @@ void LedDevice::task()
 
     while (true)
     {
-        // Read volatile desired values into local variables
-        // Take snapshots of volatile variables
+        // Read atomic desired values into local variables
+        // Take snapshots of atomic variables
         Mode snapshotMode = _desiredMode;
 
         if (snapshotMode == Mode::BLINKING)
         {
+
             // Determine wait time based on current state
-            unsigned long waitTime = _isOn ? _blinkOnDurationMs : _blinkOffDurationMs;
+            unsigned long waitTime = _isOn ? _blinkOnDurationMs.load() : _blinkOffDurationMs.load();
 
             // Wait for notification OR timeout (blink toggle)
             if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(waitTime)) > 0)

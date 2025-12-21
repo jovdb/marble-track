@@ -14,6 +14,7 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <atomic>
 #include "Device.h"
 
 /**
@@ -82,8 +83,8 @@ private:
     bool _releasedFlag = false; ///< Set when button is released (cleared by onReleased())
     bool _virtualPress = false; ///< Flag to indicate virtual button press is active
 
-    volatile bool _hasNewState = false;
-    volatile bool _newStableState = false;
+    std::atomic<bool> _hasNewState{false};
+    std::atomic<bool> _newStableState{false};
 
     /**
      * @brief Read the raw pin state accounting for pull-up/pull-down configuration

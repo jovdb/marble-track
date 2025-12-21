@@ -1,6 +1,7 @@
 #ifndef BUTTON_DEVICE_H
 #define BUTTON_DEVICE_H
 
+#include <atomic>
 #include "devices/ControllableTaskDevice.h"
 
 class ButtonDevice : public ControllableTaskDevice
@@ -42,15 +43,15 @@ private:
     PinModeOption _pinMode = PinModeOption::Floating;
 
     // State
-    volatile bool _isPressed = false;
+    std::atomic<bool> _isPressed{false};
 
     // Internal for debouncing
     bool readIsButtonPressed();
     String pinModeToString(PinModeOption mode) const;
     PinModeOption pinModeFromString(const String &value) const;
 
-    volatile bool _isSimulated = false;
-    volatile bool _simulatedState = false;
+    std::atomic<bool> _isSimulated{false};
+    std::atomic<bool> _simulatedState{false};
 };
 
 #endif // BUTTON_DEVICE_H

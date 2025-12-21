@@ -6,6 +6,7 @@
 #ifndef LED_DEVICE_H
 #define LED_DEVICE_H
 
+#include <atomic>
 #include "devices/ControllableTaskDevice.h"
 
 class LedDevice : public ControllableTaskDevice
@@ -57,10 +58,10 @@ protected:
     int _pin = -1;
 
     // Thread-safe communication variables
-    volatile Mode _desiredMode = Mode::OFF;
-    volatile bool _desiredState = false;
-    volatile unsigned long _blinkOnDurationMs = DEFAULT_BLINK_TIME;
-    volatile unsigned long _blinkOffDurationMs = DEFAULT_BLINK_TIME;
+    std::atomic<Mode> _desiredMode{Mode::OFF};
+    std::atomic<bool> _desiredState{false};
+    std::atomic<unsigned long> _blinkOnDurationMs{DEFAULT_BLINK_TIME};
+    std::atomic<unsigned long> _blinkOffDurationMs{DEFAULT_BLINK_TIME};
 
     // Internal state
     bool _isOn = false;

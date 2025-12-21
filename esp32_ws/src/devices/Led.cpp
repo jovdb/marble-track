@@ -188,14 +188,14 @@ void Led::task()
             continue;
         }
 
-        // Read volatile targets into local variables
+        // Read atomic targets into local variables
         LedMode currentMode = _targetMode;
         bool targetState = _targetState;
 
         if (currentMode == LedMode::BLINKING)
         {
             // Determine wait time based on current state
-            unsigned long waitTime = _isOn ? _targetBlinkOnTime : _targetBlinkOffTime;
+            unsigned long waitTime = _isOn ? _targetBlinkOnTime.load() : _targetBlinkOffTime.load();
 
             // Wait for notification OR timeout (blink toggle)
             // ulTaskNotifyTake(pdTRUE, ...) clears the notification value on exit

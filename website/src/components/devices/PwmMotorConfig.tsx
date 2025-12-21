@@ -14,7 +14,9 @@ export default function PwmMotorConfig(props: PwmMotorConfigProps) {
 
   const [name, setName] = createSignal(device()?.config?.name ?? device()?.id ?? "PWM Motor");
   const [pin, setPin] = createSignal<number>(device()?.config?.pin ?? -1);
-  const [mcpwmChannel, setMcpwmChannel] = createSignal<number>(device()?.config?.mcpwmChannel ?? -1);
+  const [mcpwmChannel, setMcpwmChannel] = createSignal<number>(
+    device()?.config?.mcpwmChannel ?? -1
+  );
   const [frequency, setFrequency] = createSignal<number>(device()?.config?.frequency ?? 50);
   const [resolutionBits, setResolutionBits] = createSignal<number>(
     device()?.config?.resolutionBits ?? 12

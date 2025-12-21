@@ -52,7 +52,12 @@ export function usePwmMotor(deviceId: string) {
       args: {},
     });
 
-  const setupMotor = (pin: number, mcpwmChannel: number, frequency: number, resolutionBits: number) =>
+  const setupMotor = (
+    pin: number,
+    mcpwmChannel: number,
+    frequency: number,
+    resolutionBits: number
+  ) =>
     sendMessage({
       type: "device-fn",
       deviceId,

@@ -191,7 +191,7 @@ const WebSocketMessages: Component = () => {
   });
 
   // Parse messages to extract deviceId and type
-  const parseMessage = (msg: {data: string, direction: "incoming" | "outgoing"}) => {
+  const parseMessage = (msg: { data: string; direction: "incoming" | "outgoing" }) => {
     try {
       const parsed = JSON.parse(msg.data);
       return {
@@ -296,10 +296,7 @@ const WebSocketMessages: Component = () => {
           <div class={styles["websocket-messages__list"]}>
             <For each={filteredMessages()}>
               {(message) => (
-                <ExpandableMessage
-                  message={message.raw}
-                  direction={message.direction}
-                />
+                <ExpandableMessage message={message.raw} direction={message.direction} />
               )}
             </For>
           </div>

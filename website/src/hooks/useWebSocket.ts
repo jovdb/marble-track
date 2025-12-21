@@ -338,25 +338,25 @@ function createWebSocketStore(url?: string): [IWebSocketStore, IWebSocketActions
   const sendMessage = (message: IWsSendMessage): boolean => {
     if (websocket.readyState === WebSocket.OPEN) {
       const messageData = JSON.stringify(message);
-      
+
       // Check for duplicate messages within the deduplication window
       const now = Date.now();
       const lastSent = sentMessagesCache.get(messageData);
-      if (lastSent && (now - lastSent) < DEDUPE_WINDOW_MS) {
+      if (lastSent && now - lastSent < DEDUPE_WINDOW_MS) {
         console.debug("Skipping duplicate WebSocket message:", message);
         return false; // Don't send duplicate
       }
-      
+
       // Clean up expired entries from cache
       for (const [key, timestamp] of sentMessagesCache) {
         if (now - timestamp >= DEDUPE_WINDOW_MS) {
           sentMessagesCache.delete(key);
         }
       }
-      
+
       // Update cache
       sentMessagesCache.set(messageData, now);
-      
+
       console.debug("WebSocket message sent:", message);
       websocket.send(messageData);
 

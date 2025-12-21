@@ -72,8 +72,8 @@ void TaskDevice::_taskTrampoline(void *arg)
     if (device)
     {
         device->task();
+        device->_taskHandle = nullptr;
     }
     // If task returns, delete it
     vTaskDelete(NULL);
-    device->_taskHandle = nullptr;
 }

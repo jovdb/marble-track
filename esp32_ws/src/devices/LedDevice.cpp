@@ -21,8 +21,16 @@ void LedDevice::getConfigFromJson(const JsonDocument &config)
         _pin = config["pin"].as<int>();
     }
 
-    pinMode(_pin, OUTPUT);
-    digitalWrite(_pin, LOW);
+    if (_pin >= 0)
+    {
+        pinMode(_pin, OUTPUT);
+        digitalWrite(_pin, LOW);
+        _isOn = false;
+    }
+    else
+    {
+        MLOG_WARN("%s: No valid pin configured", toString().c_str());
+    }
 }
 
 void LedDevice::addConfigToJson(JsonDocument &doc) const
@@ -51,6 +59,12 @@ void LedDevice::addStateToJson(JsonDocument &doc)
 
 bool LedDevice::control(const String &action, JsonObject *args)
 {
+    if (_pin < 0)
+    {
+        MLOG_WARN("%s: Cannot control LED - no pin configured", toString().c_str());
+        return false;
+    }
+
     if (action == "set")
     {
         if (args && (*args)["value"].is<bool>())
@@ -129,6 +143,12 @@ void LedDevice::blink(unsigned long onTime, unsigned long offTime)
 
 void LedDevice::task()
 {
+    if (_pin < 0)
+    {
+        MLOG_ERROR("%s: No valid pin configured, task exiting", toString().c_str());
+        return;
+    }
+
     while (true)
     {
         // Read volatile desired values into local variables
@@ -137,7 +157,6 @@ void LedDevice::task()
 
         if (snapshotMode == Mode::BLINKING)
         {
-
             // Determine wait time based on current state
             unsigned long waitTime = _isOn ? _blinkOnDurationMs : _blinkOffDurationMs;
 
@@ -158,9 +177,12 @@ void LedDevice::task()
             // Static state (ON or OFF)
             bool snapshotState = _desiredState;
 
-            // Apply state
-            digitalWrite(_pin, snapshotState ? HIGH : LOW);
-            _isOn = snapshotState;
+            // Apply state only if it changed
+            if (_isOn != snapshotState)
+            {
+                digitalWrite(_pin, snapshotState ? HIGH : LOW);
+                _isOn = snapshotState;
+            }
 
             // Sleep indefinitely until notified
             ulTaskNotifyTake(pdTRUE, portMAX_DELAY);

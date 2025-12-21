@@ -38,6 +38,10 @@ void ButtonDevice::getConfigFromJson(const JsonDocument &config)
             break;
         }
     }
+    else
+    {
+        MLOG_WARN("%s: No valid pin configured", toString().c_str());
+    }
 }
 
 void ButtonDevice::addConfigToJson(JsonDocument &doc) const

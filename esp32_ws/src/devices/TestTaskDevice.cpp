@@ -8,7 +8,7 @@ TestTaskDevice::TestTaskDevice(const String &id, NotifyClients callback)
     // Create child devices
     _button = new ButtonDevice(id + "-btn", callback);
     _led = new LedDevice(id + "-led", callback);
-    
+
     // Add as children
     addChild(_button);
     addChild(_led);
@@ -21,15 +21,15 @@ bool TestTaskDevice::setup(const JsonDocument &config)
     btnConfig["pin"] = 19;
     btnConfig["name"] = "Test Button";
     btnConfig["debounceTimeInMs"] = 50;
-    btnConfig["pinMode"] = "PullUp";
+    btnConfig["pinMode"] = "Floating";
     _button->setup(btnConfig);
-    
+
     // Setup LED
     JsonDocument ledConfig;
     ledConfig["pin"] = 21;
     ledConfig["name"] = "Test LED";
     _led->setup(ledConfig);
-    
+
     // Call parent setup to start the task
     return SaveableTaskDevice::setup(config);
 }
@@ -56,7 +56,7 @@ void TestTaskDevice::task()
         if (currentPressed && !_lastPressed)
         {
             MLOG_INFO("[%s]: Hello", toString().c_str());
-            
+
             // Toggle LED blinking
             if (_led)
             {

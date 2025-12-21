@@ -43,7 +43,6 @@ private:
 
     // State
     volatile bool _isPressed = false;
-    volatile bool _isReleased = true; // Inverse of isPressed, but kept separate if needed for logic
 
     // Internal for debouncing
     bool readIsButtonPressed();

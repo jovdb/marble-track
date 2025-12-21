@@ -101,23 +101,6 @@ bool Device::control(const String &action, JsonObject *payload)
 String Device::getState()
 {
     JsonDocument doc;
-    /*
-      // If there are children, add their states to a 'children' array
-      if (!children.empty())
-      {
-          JsonArray childrenArr = doc["children"].to<JsonArray>();
-          for (Device *child : children)
-          {
-              if (child)
-              {
-                  String childStateStr = child->getState();
-                  JsonDocument childDoc;
-                  deserializeJson(childDoc, childStateStr);
-                  childrenArr.add(childDoc.as<JsonObject>());
-              }
-          }
-      }
-  */
 
     // Add error information
     if (!_errorCode.isEmpty())
@@ -156,10 +139,7 @@ void Device::notifyStateChange()
             // Fallback: add the string directly if parsing fails
             doc["state"] = stateJson;
         }
-        /*
-        if (!error.isEmpty())
-            doc["error"] = error;
-        */
+
         String message;
         serializeJson(doc, message);
 

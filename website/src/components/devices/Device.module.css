@@ -189,11 +189,6 @@
   margin-bottom: var(--spacing-4);
 }
 
-.device__error::before {
-  content: "⚠️";
-  flex-shrink: 0;
-}
-
 .device__svg {
   fill: none;
 }

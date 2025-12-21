@@ -33,7 +33,7 @@ export function Device(props: DeviceProps) {
       "Unknown Device"
   );
   const deviceType = createMemo(() => device()?.type);
-  const stateErrorMessage = createMemo(() => device()?.stateErrorMessage || "");
+
   const configPanelId = `device-config-${props.id}`;
   const logsPanelId = `device-logs-${props.id}`;
 
@@ -183,7 +183,9 @@ export function Device(props: DeviceProps) {
         <div class={styles.device__content}>
           <Show when={!showChildren() && !showConfig() && !showMessagesPanel()}>
             <Show when={device()?.stateErrorMessage}>
-              <div class={styles.device__error}>{device()?.stateErrorMessage}</div>
+              <div class={styles.device__error} role="alert">
+                {device()?.stateErrorMessage}
+              </div>
             </Show>
             <Show when={!device()?.stateErrorMessage}>{props.children}</Show>
           </Show>

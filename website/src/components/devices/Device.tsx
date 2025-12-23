@@ -4,12 +4,14 @@ import { useDevice } from "../../stores/Devices";
 import { renderDeviceComponent } from "../Devices";
 import { useWebSocket2, IWebSocketMessage } from "../../hooks/useWebSocket";
 import { BroadcastIcon } from "../icons/Icons";
+import DeviceJsonState from "../DeviceJsonState";
 
 interface DeviceProps {
   id: string;
   icon?: JSX.Element;
   children?: JSX.Element | JSX.Element[];
   configComponent?: (onClose: () => void) => JSX.Element;
+  stateComponent?: (state: unknown) => JSX.Element;
 }
 
 export function Device(props: DeviceProps) {
@@ -187,7 +189,15 @@ export function Device(props: DeviceProps) {
                 {device()?.stateErrorMessage}
               </div>
             </Show>
-            <Show when={!device()?.stateErrorMessage}>{props.children}</Show>
+
+            <Show when={!device()?.stateErrorMessage}>
+              {props.stateComponent === undefined ? (
+                <DeviceJsonState state={device()?.state} />
+              ) : (
+                props.stateComponent({ state: device()?.state })
+              )}
+              {props.children}
+            </Show>
           </Show>
 
           {showChildren() && device()?.children?.length && (

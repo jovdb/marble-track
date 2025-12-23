@@ -757,7 +757,7 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
     Device *device = deviceManager->getDeviceById(deviceId);
     if (device)
     {
-        MLOG_INFO("%s: Executing action", deviceId.c_str());
+        MLOG_INFO("%s: Executing action '%s'.", deviceId.c_str(), functionName.c_str());
         JsonObject payload = doc["args"].as<JsonObject>();
         device->control(functionName, &payload);
         return;

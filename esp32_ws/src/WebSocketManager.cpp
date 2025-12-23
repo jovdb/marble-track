@@ -152,6 +152,57 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
                 }
             }
         }
+
+        // Get composition devices (DeviceBase) from DeviceManager
+        DeviceBase *compositionDeviceList[20]; // MAX_COMPOSITION_DEVICES from DeviceManager
+        int compositionCount;
+        deviceManager->getCompositionDevices(compositionDeviceList, compositionCount, 20);
+
+        for (int i = 0; i < compositionCount; i++)
+        {
+            if (compositionDeviceList[i] != nullptr)
+            {
+                // Skip devices that are single children (have exactly one child with no children)
+                auto children = compositionDeviceList[i]->getChildren();
+                bool isSingleChildDevice = (children.size() == 1) && (children[0]->getChildren().empty());
+                if (isSingleChildDevice)
+                {
+                    continue; // Skip this device, it will be included as a child of its parent
+                }
+
+                JsonObject deviceObj = devicesArray.add<JsonObject>();
+                deviceObj["id"] = compositionDeviceList[i]->getId();
+                deviceObj["type"] = compositionDeviceList[i]->getType();
+
+                // Add pins array
+                std::vector<int> pins = compositionDeviceList[i]->getPins();
+                JsonArray pinsArr = deviceObj["pins"].to<JsonArray>();
+                for (int pin : pins)
+                {
+                    pinsArr.add(pin);
+                }
+
+                // Add children array
+                JsonArray childrenArr = deviceObj["children"].to<JsonArray>();
+                for (DeviceBase *child : compositionDeviceList[i]->getChildren())
+                {
+                    if (child)
+                    {
+                        JsonObject childObj = childrenArr.add<JsonObject>();
+                        childObj["id"] = child->getId();
+                        childObj["type"] = child->getType();
+
+                        // Add child pins
+                        std::vector<int> childPins = child->getPins();
+                        JsonArray childPinsArr = childObj["pins"].to<JsonArray>();
+                        for (int pin : childPins)
+                        {
+                            childPinsArr.add(pin);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     String message;

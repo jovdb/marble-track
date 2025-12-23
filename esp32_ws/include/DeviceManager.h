@@ -12,6 +12,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include "devices/composition/DeviceBase.h"
 
 class DeviceManager
 {
@@ -24,6 +25,11 @@ private:
     static const int MAX_TASK_DEVICES = 10;
     TaskDevice *taskDevices[MAX_TASK_DEVICES];
     int taskDevicesCount;
+
+    // Composition devices (DeviceBase)
+    static const int MAX_COMPOSITION_DEVICES = 20;
+    DeviceBase *devices2[MAX_COMPOSITION_DEVICES];
+    int devices2Count;
 
     NotifyClients notifyClients;
     HasClients hasClients;
@@ -122,6 +128,13 @@ public:
     bool addDevice(Device *device);
 
     /**
+     * @brief Add a composition device (DeviceBase) to the management system
+     * @param device Pointer to composition device to add
+     * @return true if device was added successfully, false if array is full
+     */
+    bool addDevice(DeviceBase *device);
+
+    /**
      * @brief Add a task device to the management system
      * @param device Pointer to task device to add
      * @return true if device was added successfully, false if array is full
@@ -172,6 +185,14 @@ public:
     void getTaskDevices(TaskDevice **deviceList, int &count, int maxResults);
 
     /**
+     * @brief Get all composition devices
+     * @param deviceList Array to store pointers to devices
+     * @param count Reference to store the number of devices found
+     * @param maxResults Maximum number of results to return
+     */
+    void getCompositionDevices(DeviceBase **deviceList, int &count, int maxResults);
+
+    /**
      * @brief Setup all devices and assign state change callback
      */
     void setup();
@@ -194,6 +215,22 @@ public:
      */
     std::vector<Device*> getAllDevices();
 
+    /**
+     * @brief Get composition device by ID
+     * @param deviceId The ID of the device to find
+     * @return Pointer to composition device or nullptr if not found
+     */
+    DeviceBase *getCompositionDeviceById(const String &deviceId) const;
+
+    /**
+     * @brief Get composition device by ID and cast to specific type
+     */
+    template <typename T>
+    T *getCompositionDeviceByIdAs(const String &deviceId) const
+    {
+        return static_cast<T *>(getCompositionDeviceById(deviceId));
+    }
+
     void loadDevicesFromJsonFile();
     void saveDevicesToJsonFile();
 
@@ -204,6 +241,7 @@ private:
     void collectChildIds(JsonArray arr, std::set<String>& childIds);
     void addTopLevelDevices(std::map<String, Device*>& loadedDevices, std::set<String>& childIds);
     void linkChildren(JsonArray arr, std::map<String, Device*>& loadedDevices);
+    DeviceBase *findCompositionDeviceRecursiveById(DeviceBase *root, const String &deviceId) const;
 };
 
 #endif // DEVICEMANAGER_H

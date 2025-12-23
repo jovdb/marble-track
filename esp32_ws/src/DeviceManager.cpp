@@ -392,7 +392,7 @@ bool DeviceManager::saveNetworkSettings(const NetworkSettings &settings)
     }
 }
 
-DeviceManager::DeviceManager(NotifyClients callback) : devicesCount(0), taskDevicesCount(0), notifyClients(callback), hasClients(nullptr)
+DeviceManager::DeviceManager(NotifyClients callback) : devicesCount(0), taskDevicesCount(0), devices2Count(0), notifyClients(callback), hasClients(nullptr)
 {
     // Initialize device array to nullptr
     for (int i = 0; i < MAX_DEVICES; i++)
@@ -403,6 +403,11 @@ DeviceManager::DeviceManager(NotifyClients callback) : devicesCount(0), taskDevi
     for (int i = 0; i < MAX_TASK_DEVICES; i++)
     {
         taskDevices[i] = nullptr;
+    }
+    // Initialize composition device array to nullptr
+    for (int i = 0; i < MAX_COMPOSITION_DEVICES; i++)
+    {
+        devices2[i] = nullptr;
     }
 }
 
@@ -504,6 +509,15 @@ void DeviceManager::setup()
             devices[i]->setup();
         }
     }
+
+    // Setup composition devices (DeviceBase)
+    for (int i = 0; i < devices2Count; i++)
+    {
+        if (devices2[i])
+        {
+            devices2[i]->setup();
+        }
+    }
 }
 
 void DeviceManager::loop()
@@ -514,6 +528,15 @@ void DeviceManager::loop()
         if (devices[i] != nullptr)
         {
             devices[i]->loop();
+        }
+    }
+
+    // Call loop() on all composition devices
+    for (int i = 0; i < devices2Count; i++)
+    {
+        if (devices2[i] != nullptr)
+        {
+            devices2[i]->loop();
         }
     }
 }
@@ -754,4 +777,69 @@ bool DeviceManager::addDevice(const String &deviceType, const String &deviceId, 
 
     MLOG_INFO("Added device to array: %s (%s)", deviceId.c_str(), deviceType.c_str());
     return true;
+}
+
+// ======== Composition Device (DeviceBase) Methods ========
+
+bool DeviceManager::addDevice(DeviceBase *device)
+{
+    if (devices2Count < MAX_COMPOSITION_DEVICES && device != nullptr)
+    {
+        devices2[devices2Count] = device;
+        devices2Count++;
+        MLOG_INFO("Added composition device: %s (%s)", device->getId().c_str(), device->getType().c_str());
+        return true;
+    }
+
+    if (device == nullptr)
+    {
+        MLOG_ERROR("Error: Cannot add null composition device");
+    }
+    else
+    {
+        MLOG_ERROR("Error: Composition device array is full, cannot add device: %s", device->getId().c_str());
+    }
+    return false;
+}
+
+void DeviceManager::getCompositionDevices(DeviceBase **deviceList, int &count, int maxResults)
+{
+    count = 0;
+    for (int i = 0; i < devices2Count && count < maxResults; i++)
+    {
+        if (devices2[i] != nullptr)
+        {
+            deviceList[count] = devices2[i];
+            count++;
+        }
+    }
+}
+
+DeviceBase *DeviceManager::getCompositionDeviceById(const String &deviceId) const
+{
+    for (int i = 0; i < devices2Count; i++)
+    {
+        if (devices2[i] != nullptr)
+        {
+            DeviceBase *found = findCompositionDeviceRecursiveById(devices2[i], deviceId);
+            if (found)
+                return found;
+        }
+    }
+    return nullptr;
+}
+
+DeviceBase *DeviceManager::findCompositionDeviceRecursiveById(DeviceBase *root, const String &deviceId) const
+{
+    if (!root)
+        return nullptr;
+    if (root->getId() == deviceId)
+        return root;
+    for (DeviceBase *child : root->getChildren())
+    {
+        DeviceBase *found = findCompositionDeviceRecursiveById(child, deviceId);
+        if (found)
+            return found;
+    }
+    return nullptr;
 }

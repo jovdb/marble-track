@@ -28,9 +28,6 @@ namespace composition
 
     bool Led::set(bool value)
     {
-        _isOn = value;
-        _mode = value ? Mode::ON : Mode::OFF;
-
         // Update public state
         state.mode = value ? "ON" : "OFF";
 
@@ -45,11 +42,6 @@ namespace composition
 
     bool Led::blink(unsigned long onTime, unsigned long offTime)
     {
-        _mode = Mode::BLINKING;
-        _blinkOnTime = onTime;
-        _blinkOffTime = offTime;
-        _isOn = true; // Start in ON state
-
         // Update public state
         state.mode = "BLINKING";
         state.blinkOnTime = onTime;
@@ -66,26 +58,26 @@ namespace composition
 
     void Led::loop()
     {
-        if (_mode != Mode::BLINKING)
+        if (state.mode != "BLINKING")
             return;
 
         // Calculate total blink cycle time
-        unsigned long cycle = _blinkOnTime + _blinkOffTime;
+        unsigned long cycle = state.blinkOnTime + state.blinkOffTime;
 
         // Use modulo to find position in cycle (0 to cycle-1)
         // This ensures all LEDs using the same timings blink in sync
         unsigned long position = millis() % cycle;
 
         // LED should be ON if position is within the ON time
-        bool shouldBeOn = position < _blinkOnTime;
+        bool shouldBeOn = position < state.blinkOnTime;
 
-        // Only update GPIO if state changed
-        if (_isOn != shouldBeOn)
+        // Only update GPIO if state changed (check against current mode state)
+        bool isCurrentlyOn = (state.mode == "ON");
+        if (isCurrentlyOn != shouldBeOn)
         {
-            _isOn = shouldBeOn;
             state.mode = shouldBeOn ? "ON" : "OFF";
-            digitalWrite(_pin, _isOn ? HIGH : LOW);
-            MLOG_INFO("%s: Blink state changed to %s", toString().c_str(), _isOn ? "ON" : "OFF");
+            digitalWrite(_pin, shouldBeOn ? HIGH : LOW);
+            MLOG_INFO("%s: Blink state changed to %s", toString().c_str(), shouldBeOn ? "ON" : "OFF");
 
             // Notify subscribers of state change
             notifyStateChanged();

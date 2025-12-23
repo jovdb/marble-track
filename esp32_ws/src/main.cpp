@@ -196,7 +196,7 @@ void setup()
 
   // State change broadcasting is now enabled during setup
 
-   // Create TestTaskDevice with its own button and LED children
+  // Create TestTaskDevice with its own button and LED children
   TestTaskDevice *testTask = new TestTaskDevice("test-task", globalNotifyClientsCallback);
   testTask->setup();
   deviceManager.addTaskDevice(testTask);
@@ -206,8 +206,8 @@ void setup()
   JsonDocument servoConfig;
   servoConfig["name"] = "Test Servo";
   servoConfig["pin"] = 16;
-  servoConfig["mcpwmChannel"] = -1; // Auto-acquire
-  servoConfig["frequency"] = 50;    // Standard servo frequency
+  servoConfig["mcpwmChannel"] = -1;   // Auto-acquire
+  servoConfig["frequency"] = 50;      // Standard servo frequency
   servoConfig["minDutyCycle"] = 2.5;  // 0 degrees
   servoConfig["maxDutyCycle"] = 12.5; // 180 degrees
   servoConfig["defaultDurationInMs"] = 500;
@@ -217,6 +217,15 @@ void setup()
   // Create composition LED test on pin 15
   testLed2 = new composition::Led("led2");
   testLed2->setup();
+  testLed2->onStateChange([](void* data)
+  {
+    if (data)
+    {
+      composition::LedState* state = static_cast<composition::LedState*>(data);
+      MLOG_INFO("Composition LED state changed: mode=%s, onTime=%lu, offTime=%lu",
+                state->mode.c_str(), state->blinkOnTime, state->blinkOffTime);
+    }
+  });
   testLed2->blink(); // Turn on at startup
   MLOG_INFO("Composition LED test created on pin 15");
 

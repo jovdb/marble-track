@@ -1,10 +1,10 @@
 import { createMemo } from "solid-js";
 import { Device } from "./Device";
 import styles from "./Device.module.css";
-import ledStyles from "./Led.module.css";
 import LedConfig from "./LedConfig";
 import { getDeviceIcon } from "../icons/Icons";
 import { useLed } from "../../stores/Led";
+import DeviceJsonState from "../DeviceJsonState";
 
 export function Led(props: { id: string }) {
   const ledStore = useLed(props.id);
@@ -13,19 +13,7 @@ export function Led(props: { id: string }) {
 
   const deviceType = device()?.type;
   const mode = createMemo(() => device()?.state?.mode ?? "");
-  const statusClass = createMemo(() => {
-    switch (mode()) {
-      case "ON":
-        return ledStyles["led__status-indicator--on"];
-      case "BLINKING":
-        return ledStyles["led__status-indicator--blinking"];
-      case "OFF":
-        return ledStyles["led__status-indicator--off"];
-      default:
-        return "";
-    }
-  });
-  const statusLabel = createMemo(() => `Status: ${mode()}`);
+  // Status visualization removed; use DeviceJsonState below
   const isMode = (value: string) => mode() === value;
 
   const handleTurnOn = () => actions.setLed(true);
@@ -38,17 +26,7 @@ export function Led(props: { id: string }) {
       configComponent={(onClose) => <LedConfig id={props.id} onClose={onClose} />}
       icon={deviceType ? getDeviceIcon(deviceType) : null}
     >
-      <div class={styles.device__status}>
-        <div
-          classList={{
-            [ledStyles["led__status-indicator"]]: true,
-            [statusClass()]: true,
-          }}
-          role="status"
-          aria-label={statusLabel()}
-        ></div>
-        <span class={styles["device__status-text"]}>{statusLabel()}</span>
-      </div>
+      <DeviceJsonState state={device()?.state} />
       <div class={styles.device__controls}>
         <button
           classList={{

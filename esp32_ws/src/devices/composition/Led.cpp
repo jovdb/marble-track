@@ -1,6 +1,6 @@
 /**
  * @file Led.cpp
- * @brief Simple LED implementation using only DeviceBase
+ * @brief Simple LED implementation using DeviceBase, ConfigMixin, and StateMixin
  */
 
 #include "devices/composition/Led.h"
@@ -16,22 +16,34 @@ namespace composition
 
     void Led::setup()
     {
-        pinMode(_pin, OUTPUT);
-        digitalWrite(_pin, LOW);
-        MLOG_INFO("%s: Setup on pin %d", toString().c_str(), _pin);
+        if (_config.pin == -1)
+        {
+            MLOG_WARN("%s: Pin not configured (pin = -1)", toString().c_str());
+            return;
+        }
+
+        pinMode(_config.pin, OUTPUT);
+        digitalWrite(_config.pin, LOW);
+        MLOG_INFO("%s: Setup on pin %d", toString().c_str(), _config.pin);
     }
 
     std::vector<int> Led::getPins() const
     {
-        return {_pin};
+        return {_config.pin};
     }
 
     bool Led::set(bool value)
     {
-        // Update public state
-        state.mode = value ? "ON" : "OFF";
+        if (_config.pin == -1)
+        {
+            MLOG_WARN("%s: Pin not configured", toString().c_str());
+            return false;
+        }
 
-        digitalWrite(_pin, value ? HIGH : LOW);
+        // Update state
+        _state.mode = value ? "ON" : "OFF";
+
+        digitalWrite(_config.pin, value ? HIGH : LOW);
         MLOG_INFO("%s: Set to %s", toString().c_str(), value ? "ON" : "OFF");
 
         // Notify subscribers
@@ -42,12 +54,18 @@ namespace composition
 
     bool Led::blink(unsigned long onTime, unsigned long offTime)
     {
-        // Update public state
-        state.mode = "BLINKING";
-        state.blinkOnTime = onTime;
-        state.blinkOffTime = offTime;
+        if (_config.pin == -1)
+        {
+            MLOG_WARN("%s: Pin not configured", toString().c_str());
+            return false;
+        }
 
-        digitalWrite(_pin, HIGH);
+        // Update state
+        _state.mode = "BLINKING";
+        _state.blinkOnTime = onTime;
+        _state.blinkOffTime = offTime;
+
+        digitalWrite(_config.pin, HIGH);
         MLOG_INFO("%s: Blinking with on=%lums, off=%lums", toString().c_str(), onTime, offTime);
 
         // Notify subscribers
@@ -58,25 +76,25 @@ namespace composition
 
     void Led::loop()
     {
-        if (state.mode != "BLINKING")
+        if (_config.pin == -1 || _state.mode != "BLINKING")
             return;
 
         // Calculate total blink cycle time
-        unsigned long cycle = state.blinkOnTime + state.blinkOffTime;
+        unsigned long cycle = _state.blinkOnTime + _state.blinkOffTime;
 
         // Use modulo to find position in cycle (0 to cycle-1)
         // This ensures all LEDs using the same timings blink in sync
         unsigned long position = millis() % cycle;
 
         // LED should be ON if position is within the ON time
-        bool shouldBeOn = position < state.blinkOnTime;
+        bool shouldBeOn = position < _state.blinkOnTime;
 
         // Only update GPIO if state changed (check against current mode state)
-        bool isCurrentlyOn = (state.mode == "ON");
+        bool isCurrentlyOn = (_state.mode == "ON");
         if (isCurrentlyOn != shouldBeOn)
         {
-            state.mode = shouldBeOn ? "ON" : "OFF";
-            digitalWrite(_pin, shouldBeOn ? HIGH : LOW);
+            _state.mode = shouldBeOn ? "ON" : "OFF";
+            digitalWrite(_config.pin, shouldBeOn ? HIGH : LOW);
             MLOG_INFO("%s: Blink state changed to %s", toString().c_str(), shouldBeOn ? "ON" : "OFF");
 
             // Notify subscribers of state change

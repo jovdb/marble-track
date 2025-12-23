@@ -216,16 +216,21 @@ void setup()
 
   // Create composition LED test on pin 15
   testLed2 = new composition::Led("led2");
+
+  // Configure pin before setup
+  composition::LedConfig ledConfig;
+  ledConfig.pin = 15;
+  testLed2->setConfig(ledConfig);
+
   testLed2->setup();
-  testLed2->onStateChange([](void* data)
-  {
+  testLed2->onStateChange([](void *data)
+                          {
     if (data)
     {
       composition::LedState* state = static_cast<composition::LedState*>(data);
       MLOG_INFO("Composition LED state changed: mode=%s, onTime=%lu, offTime=%lu",
                 state->mode.c_str(), state->blinkOnTime, state->blinkOffTime);
-    }
-  });
+    } });
   testLed2->blink(); // Turn on at startup
   MLOG_INFO("Composition LED test created on pin 15");
 

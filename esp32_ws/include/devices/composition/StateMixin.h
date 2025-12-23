@@ -33,9 +33,13 @@ public:
     virtual ~StateMixin() = default;
 
     /**
-     * @brief Public state member - can be read/written directly
+     * @brief Get state (read-only reference)
+     * @return Reference to current state
      */
-    StateType state;
+    const StateType& getState() const
+    {
+        return _state;
+    }
 
     /**
      * @brief Subscribe to state change events
@@ -48,6 +52,11 @@ public:
 
 protected:
     /**
+     * @brief Protected state member - use getState()
+     */
+    StateType _state;
+
+    /**
      * @brief Notify all subscribers that state has changed
      */
     void notifyStateChanged()
@@ -56,7 +65,7 @@ protected:
         {
             if (callback)
             {
-                callback(&state);
+                callback(&_state);
             }
         }
     }

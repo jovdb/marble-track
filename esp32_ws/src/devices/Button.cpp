@@ -58,11 +58,8 @@ void Button::setup()
     }
 
     // Initialize state variables
-    _lastRawValue = getDefaultRawValue();
-    // For NC, the default state is "Pressed" (Closed contact)
-    // For NO, the default state is "Released" (Open contact)
-    bool isPressed = readRawState();
-    _currentState = isPressed;
+    _currentState = readRawState();
+    _lastRawValue = contactStateToPinState(_currentState);
     _newStableState = _currentState;
 }
 
@@ -86,15 +83,7 @@ void Button::task()
         {
             isPressed = _currentState;
             // Update raw value for state reporting
-            int defaultVal = getDefaultRawValue();
-            if (_buttonType == ButtonType::NormalOpen)
-            {
-                _lastRawValue = isPressed ? (defaultVal == 1 ? 0 : 1) : defaultVal;
-            }
-            else
-            {
-                _lastRawValue = isPressed ? defaultVal : (defaultVal == 1 ? 0 : 1);
-            }
+            _lastRawValue = contactStateToPinState(isPressed);
         }
         else
         {
@@ -422,35 +411,21 @@ bool Button::readRawState()
     int pinState = digitalRead(_pin);
     _lastRawValue = pinState;
 
-    int defaultState = getDefaultRawValue();
-    
-    if (_buttonType == ButtonType::NormalOpen)
-    {
-        // For NO, it's pressed (closed) when it's NOT the default state
-        return pinState != defaultState;
-    }
-    else
-    {
-        // For NC, it's pressed (closed) when it IS the default state
-        return pinState == defaultState;
-    }
+    // Contact is closed if:
+    // PullUp: pin is LOW
+    // PullDown/Floating: pin is HIGH
+    return (_pinMode == PinModeOption::PullUp) ? (pinState == LOW) : (pinState == HIGH);
 }
 
-int Button::getDefaultRawValue() const
+int Button::contactStateToPinState(bool isClosed) const
 {
-    // Default state = released / not pressed state:
-    // |          | NO | NC |
-    // |----------|----|----|
-    // | PullUp   | 1  | 0  |
-    // | PullDown | 0  | 1  |
-    // | Floating | 0  | 1  |
-    if (_buttonType == ButtonType::NormalOpen)
+    if (_pinMode == PinModeOption::PullUp)
     {
-        return (_pinMode == PinModeOption::PullUp) ? 1 : 0;
+        return isClosed ? LOW : HIGH;
     }
     else
     {
-        return (_pinMode == PinModeOption::PullUp) ? 0 : 1;
+        return isClosed ? HIGH : LOW;
     }
 }
 

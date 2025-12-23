@@ -92,7 +92,7 @@ private:
     PinModeOption pinModeFromString(const String &value) const;
     String pinModeToString(PinModeOption mode) const;
     String buttonTypeToString(ButtonType type) const;
-    int getDefaultRawValue() const;
+    int contactStateToPinState(bool isClosed) const;
 };
 
 #endif // BUTTON_H

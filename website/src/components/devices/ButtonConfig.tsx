@@ -146,7 +146,7 @@ export default function ButtonConfig(props: ButtonConfigProps) {
           </DeviceConfigItem>
         </DeviceConfigRow>
         <DeviceConfigRow>
-          <DeviceConfigItem name="Debounce (ms):">
+          <DeviceConfigItem name="Debounce time (ms):">
             <input
               type="number"
               value={debounce()}

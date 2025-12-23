@@ -59,7 +59,7 @@ private:
     PinModeOption pinModeFromString(const String &value) const;
     String buttonTypeToString(ButtonType type) const;
     ButtonType buttonTypeFromString(const String &value) const;
-    int getDefaultRawValue() const;
+    int contactStateToPinState(bool isClosed) const;
 
     std::atomic<bool> _isSimulated{false};
     std::atomic<bool> _simulatedIsPressed{false};

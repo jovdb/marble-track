@@ -17,6 +17,7 @@
 
 #include "devices/Stepper.h"
 #include "devices/PwmMotor.h"
+#include "devices/Servo.h"
 
 #include <devices/Wheel.h>
 #include "SerialConsole.h"
@@ -193,6 +194,19 @@ void setup()
   TestTaskDevice *testTask = new TestTaskDevice("test-task", globalNotifyClientsCallback);
   testTask->setup();
   deviceManager.addTaskDevice(testTask);
+
+  // Create test Servo on pin 16
+  Servo *testServo = new Servo("test-servo", globalNotifyClientsCallback);
+  JsonDocument servoConfig;
+  servoConfig["name"] = "Test Servo";
+  servoConfig["pin"] = 16;
+  servoConfig["mcpwmChannel"] = -1; // Auto-acquire
+  servoConfig["frequency"] = 50;    // Standard servo frequency
+  servoConfig["minDutyCycle"] = 2.5;  // 0 degrees
+  servoConfig["maxDutyCycle"] = 12.5; // 180 degrees
+  servoConfig["defaultDurationInMs"] = 500;
+  testServo->setup(servoConfig);
+  deviceManager.addTaskDevice(testServo);
 
   MLOG_INFO("System initialization complete!");
 }

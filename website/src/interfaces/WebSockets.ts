@@ -6,6 +6,7 @@ export type DeviceType =
   | "led"
   | "lift"
   | "pwmmotor"
+  | "servo"
   | "stepper"
   | "wheel";
 export type NetworkMode = "ap" | "sta" | "apsta";

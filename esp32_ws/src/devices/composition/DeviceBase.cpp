@@ -1,0 +1,19 @@
+/**
+ * @file DeviceBase.cpp
+ * @brief Implementation of minimal device base class
+ */
+
+#include "devices/composition/DeviceBase.h"
+
+DeviceBase::DeviceBase(const String &id, const String &type)
+    : _id(id), _type(type), _name(id)
+{
+}
+
+void DeviceBase::addChild(DeviceBase *child)
+{
+    if (child)
+    {
+        _children.push_back(child);
+    }
+}

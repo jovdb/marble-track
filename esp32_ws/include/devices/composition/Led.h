@@ -7,8 +7,8 @@
 #define COMPOSITION_LED_H
 
 #include "devices/composition/DeviceBase.h"
-#include "devices/composition/StateMixin.h"
-#include "devices/composition/ConfigMixin.h"
+#include "devices/mixins/StateMixin.h"
+#include "devices/mixins/ConfigMixin.h"
 
 namespace composition
 {

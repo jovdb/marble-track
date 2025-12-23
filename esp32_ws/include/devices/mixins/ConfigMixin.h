@@ -47,4 +47,3 @@ protected:
 };
 
 #endif // CONFIG_MIXIN_H
-

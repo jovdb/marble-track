@@ -52,6 +52,7 @@ namespace composition
 
         // ControllableMixin implementation
         void addStateToJson(JsonDocument &doc) override;
+        bool control(const String &action, JsonObject *args = nullptr) override;
 
     protected:
     };

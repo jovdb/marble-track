@@ -9,6 +9,7 @@ class IControllable {
 public:
     virtual ~IControllable() = default;
     virtual void addStateToJson(JsonDocument &doc) = 0;
+    virtual bool control(const String &action, JsonObject *args = nullptr) = 0;
 };
 
 namespace mixins {

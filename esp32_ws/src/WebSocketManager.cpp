@@ -871,9 +871,6 @@ void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
             if (ctrl)
             {
                 JsonDocument stateDoc;
-                stateDoc["id"] = compositionDevice->getId();
-                stateDoc["type"] = compositionDevice->getType();
-
                 ctrl->addStateToJson(stateDoc);
 
                 JsonDocument responseDoc;

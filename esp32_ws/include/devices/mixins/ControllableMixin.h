@@ -30,6 +30,13 @@ public:
         auto *derived = static_cast<Derived *>(this);
         mixins::ControllableRegistry::unregisterDevice(derived->getId());
     }
+
+    /**
+     * @brief Handle control commands for this device
+     * Derived classes must implement to handle device-specific actions
+     */
+    virtual bool control(const String &action, JsonObject *args = nullptr) = 0;
+
     // Provide DeviceBase virtual override via mixin when combined
     virtual IControllable* getControllableInterface() { return this; }
 

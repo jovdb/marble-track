@@ -5,6 +5,7 @@ const deviceType = "button";
 
 interface IButtonState extends IDeviceState {
   isPressed: boolean;
+  value: number;
   [key: string]: unknown;
 }
 
@@ -12,6 +13,7 @@ export interface IButtonConfig extends IDeviceConfig {
   name?: string;
   pin?: number;
   pinMode?: "Floating" | "PullUp" | "PullDown";
+  buttonType?: "NormalOpen" | "NormalClosed";
   debounceTimeInMs?: number;
   [key: string]: unknown;
 }

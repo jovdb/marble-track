@@ -4,9 +4,6 @@
  *
  * This class provides button input functionality with debouncing, state tracking,
  * and event detection for managing button interactions in the marble track system.
- *
- * @author Generated for Marble Track Project
- * @date 2025
  */
 
 #ifndef BUTTON_H
@@ -60,8 +57,8 @@ public:
 
     // Button-specific operations
     bool isPressed() const { return _currentState; }
-    bool onPressed();                    // Returns true once when button is pressed (edge detection)
-    bool onReleased();                   // Returns true once when button is released (edge detection)
+    bool onPressed();                     // Returns true once when button is pressed (edge detection)
+    bool onReleased();                    // Returns true once when button is released (edge detection)
     unsigned long getPressedTime() const; // How long button has been pressed (ms)
 
 private:
@@ -72,7 +69,7 @@ private:
 
     // State tracking
     bool _currentState = false; ///< Current debounced state
-    bool _rawState = false;     ///< Raw pin reading
+    int _lastRawValue = 0;      ///< Last raw pin reading
 
     // Timing
     unsigned long _lastDebounceTime = 0; ///< Last time the pin state changed
@@ -95,6 +92,7 @@ private:
     PinModeOption pinModeFromString(const String &value) const;
     String pinModeToString(PinModeOption mode) const;
     String buttonTypeToString(ButtonType type) const;
+    int getDefaultRawValue() const;
 };
 
 #endif // BUTTON_H

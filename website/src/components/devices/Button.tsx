@@ -1,7 +1,6 @@
 import { createMemo, createSignal } from "solid-js";
 import { Device } from "./Device";
 import deviceStyles from "./Device.module.css";
-import buttonStyles from "./Button.module.css";
 import { useButton } from "../../stores/Button";
 import ButtonConfig from "./ButtonConfig";
 import { ButtonIcon } from "../icons/Icons";
@@ -12,9 +11,15 @@ export function Button(props: { id: string }) {
   const actions = buttonStore[1];
 
   const isPressed = createMemo(() => Boolean(device()?.state?.isPressed));
-  const statusLabel = createMemo(() => `Status: ${isPressed() ? "Pressed" : "Released"}`);
 
   const [isPressing, setIsPressing] = createSignal(false);
+
+  const isNC = createMemo(() => device()?.config?.buttonType === "NormalClosed");
+
+  const displayPressed = createMemo(() => {
+    const pressed = isPressed();
+    return isNC() ? !pressed : pressed;
+  });
 
   const handlePress = () => {
     if (!isPressing()) {
@@ -36,25 +41,19 @@ export function Button(props: { id: string }) {
       configComponent={(onClose) => <ButtonConfig id={props.id} onClose={onClose} />}
       icon={<ButtonIcon />}
     >
-      <div class={deviceStyles.device__status}>
-        <div
-          classList={{
-            [buttonStyles["button__status-indicator"]]: true,
-            [buttonStyles["button__status-indicator--pressed"]]: isPressed(),
-            [buttonStyles["button__status-indicator--off"]]: !isPressed(),
-          }}
-        ></div>
-        <span class={deviceStyles["device__status-text"]}>{statusLabel()}</span>
-      </div>
       <div class={deviceStyles.device__controls}>
         <button
-          class={deviceStyles.device__button}
+          classList={{
+            [deviceStyles.device__button]: true,
+            [deviceStyles["device__button--full"]]: true,
+            [deviceStyles["device__button--secondary"]]: displayPressed(),
+          }}
           onPointerDown={handlePress}
           onPointerUp={handleRelease}
           onPointerLeave={handleRelease}
           onPointerCancel={handleRelease}
         >
-          Hold to Press
+          {displayPressed() ? "Pressed" : "Released"}
         </button>
       </div>
     </Device>

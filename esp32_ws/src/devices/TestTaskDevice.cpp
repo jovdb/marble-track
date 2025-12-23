@@ -20,7 +20,6 @@ bool TestTaskDevice::setup(const JsonDocument &config)
     JsonDocument btnConfig;
     btnConfig["pin"] = 19;
     btnConfig["name"] = "Test Button";
-    btnConfig["debounceTimeInMs"] = 50;
     btnConfig["pinMode"] = "Floating";
     _button->setup(btnConfig);
 

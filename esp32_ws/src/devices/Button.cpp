@@ -58,41 +58,62 @@ void Button::setup()
     }
 
     // Initialize state variables
-    _rawState = readRawState();
-    _currentState = _rawState;
+    _lastRawValue = getDefaultRawValue();
+    // For NC, the default state is "Pressed" (Closed contact)
+    // For NO, the default state is "Released" (Open contact)
+    bool isPressed = readRawState();
+    _currentState = isPressed;
     _newStableState = _currentState;
 }
 
 void Button::task()
 {
     unsigned long lastDebounceTime = 0;
-    bool lastRawState = readRawState();
-    bool currentStableState = lastRawState;
+    bool lastIsPressed = readRawState();
+    bool currentStableState = lastIsPressed;
 
     while (true)
     {
-        if (_pin < 0)
+        if (_pin < 0 && !_virtualPress)
         {
             vTaskDelay(pdMS_TO_TICKS(1000));
             continue;
         }
 
-        // Read raw state
-        bool rawState = readRawState();
+        // Read raw state and determine if pressed
+        bool isPressed;
+        if (_virtualPress)
+        {
+            isPressed = _currentState;
+            // Update raw value for state reporting
+            int defaultVal = getDefaultRawValue();
+            if (_buttonType == ButtonType::NormalOpen)
+            {
+                _lastRawValue = isPressed ? (defaultVal == 1 ? 0 : 1) : defaultVal;
+            }
+            else
+            {
+                _lastRawValue = isPressed ? defaultVal : (defaultVal == 1 ? 0 : 1);
+            }
+        }
+        else
+        {
+            isPressed = readRawState();
+        }
 
-        // If raw state changed, reset timer
-        if (rawState != lastRawState)
+        // If state changed, reset timer
+        if (isPressed != lastIsPressed)
         {
             lastDebounceTime = millis();
-            lastRawState = rawState;
+            lastIsPressed = isPressed;
         }
 
         // Check debounce
         if ((millis() - lastDebounceTime) > _debounceMs)
         {
-            if (rawState != currentStableState)
+            if (isPressed != currentStableState)
             {
-                currentStableState = rawState;
+                currentStableState = isPressed;
 
                 // Update shared variables for main loop
                 _newStableState = currentStableState;
@@ -219,43 +240,46 @@ std::vector<int> Button::getPins() const
  */
 bool Button::control(const String &action, JsonObject *args)
 {
-    if (action == "pressed")
+    bool isPressAction = (action == "press" || action == "pressed");
+    bool isReleaseAction = (action == "release" || action == "released");
+
+    if (isPressAction || isReleaseAction)
     {
-        // Simulate button press: set state to pressed and trigger notifications
-        if (!_currentState)
+        bool targetContactState;
+        if (isPressAction)
         {
-            _currentState = true;
-            _pressedFlag = true;
-            _pressStartTime = millis();
-            _virtualPress = true; // Mark as virtual press to prevent physical override
-            MLOG_INFO("Button [%s]: Simulated PRESS", _id.c_str());
-            notifyStateChange();
-            return true;
+            // Pressing: NO closes (true), NC opens (false)
+            targetContactState = (_buttonType == ButtonType::NormalOpen);
         }
         else
         {
-            MLOG_WARN("Button [%s]: Already pressed, ignoring simulated press", _id.c_str());
-            return false;
+            // Releasing: NO opens (false), NC closes (true)
+            targetContactState = (_buttonType == ButtonType::NormalClosed);
         }
-    }
-    else if (action == "released")
-    {
-        // Simulate button release: set state to released and trigger notifications
-        if (_currentState)
+
+        if (_currentState != targetContactState)
         {
-            _currentState = false;
-            _releasedFlag = true;
-            _virtualPress = false; // Clear virtual press flag
-            unsigned long pressDuration = millis() - _pressStartTime;
-            MLOG_INFO("Button [%s]: Simulated RELEASE (held for %lu ms)", _id.c_str(), pressDuration);
+            bool previousState = _currentState;
+            _currentState = targetContactState;
+            _virtualPress = true;
+
+            if (isPressAction)
+            {
+                _pressedFlag = true;
+                _pressStartTime = millis();
+                MLOG_INFO("Button [%s]: Simulated PRESS", _id.c_str());
+            }
+            else
+            {
+                _releasedFlag = true;
+                unsigned long pressDuration = millis() - _pressStartTime;
+                MLOG_INFO("Button [%s]: Simulated RELEASE (held for %lu ms)", _id.c_str(), pressDuration);
+            }
+
             notifyStateChange();
             return true;
         }
-        else
-        {
-            MLOG_WARN("Button [%s]: Already released, ignoring simulated release", _id.c_str());
-            return false;
-        }
+        return false;
     }
     else
     {
@@ -281,7 +305,8 @@ String Button::getState()
     }
 
     // Add Button-specific fields
-    doc["pressed"] = _currentState;
+    doc["isPressed"] = _currentState;
+    doc["value"] = _lastRawValue;
     doc["pressedTime"] = getPressedTime();
 
     String result;
@@ -291,13 +316,13 @@ String Button::getState()
 
 String Button::getConfig() const
 {
-    DynamicJsonDocument config(256);
+    JsonDocument config;
     deserializeJson(config, Device::getConfig());
 
     config["name"] = _name;
     config["pin"] = _pin;
     config["pinMode"] = pinModeToString(_pinMode);
-    config["debounceMs"] = _debounceMs;
+    config["debounceTimeInMs"] = _debounceMs;
     config["buttonType"] = buttonTypeToString(_buttonType);
 
     String message;
@@ -352,20 +377,8 @@ void Button::setConfig(JsonObject *config)
             }
         }
     }
-    const JsonVariant debounceVar = (*config)["debounceMs"];
-    if (!debounceVar.isNull())
-    {
-        const long debounceValue = debounceVar.as<long>();
-        if (debounceValue < 0)
-        {
-            const long clampedValue = 0;
-            _debounceMs = static_cast<unsigned long>(clampedValue);
-        }
-        else
-        {
-            _debounceMs = static_cast<unsigned long>(debounceValue);
-        }
-    }
+    
+    _debounceMs = (*config)["debounceTimeInMs"] | 50UL;
 
     const JsonVariant buttonTypeVar = (*config)["buttonType"];
     if (!buttonTypeVar.isNull())
@@ -387,6 +400,16 @@ void Button::setConfig(JsonObject *config)
 
 /**
  * @brief Read the raw pin state accounting for pull-up/pull-down configuration
+ *
+ * 
+ *  Default state / released:
+ * |          | NO | NC |
+ * |----------|----|----|
+ * | PullUp   | 1  | 0  |
+ * | PullDown | 0  | 1  |
+ * | Floating | 0  | 1  |
+ *
+
  * @return true if button is physically pressed, false otherwise
  */
 bool Button::readRawState()
@@ -396,13 +419,39 @@ bool Button::readRawState()
         return false;
     }
 
-    bool pinState = digitalRead(_pin);
+    int pinState = digitalRead(_pin);
+    _lastRawValue = pinState;
 
-    // Determine pressed state depending on pin mode
-    bool pressed;
-    pressed = !pinState;
+    int defaultState = getDefaultRawValue();
+    
+    if (_buttonType == ButtonType::NormalOpen)
+    {
+        // For NO, it's pressed (closed) when it's NOT the default state
+        return pinState != defaultState;
+    }
+    else
+    {
+        // For NC, it's pressed (closed) when it IS the default state
+        return pinState == defaultState;
+    }
+}
 
-    return pressed;
+int Button::getDefaultRawValue() const
+{
+    // Default state = released / not pressed state:
+    // |          | NO | NC |
+    // |----------|----|----|
+    // | PullUp   | 1  | 0  |
+    // | PullDown | 0  | 1  |
+    // | Floating | 0  | 1  |
+    if (_buttonType == ButtonType::NormalOpen)
+    {
+        return (_pinMode == PinModeOption::PullUp) ? 1 : 0;
+    }
+    else
+    {
+        return (_pinMode == PinModeOption::PullUp) ? 0 : 1;
+    }
 }
 
 Button::ButtonType Button::buttonTypeFromString(const String &value) const

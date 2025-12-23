@@ -13,7 +13,13 @@ const BUTTON_PIN_MODE_OPTIONS = [
   { label: "Pull-down", value: "PullDown" },
 ] as const;
 
+const BUTTON_TYPE_OPTIONS = [
+  { label: "NO (Normally Open)", value: "NormalOpen" },
+  { label: "NC (Normally Closed)", value: "NormalClosed" },
+] as const;
+
 type ButtonPinMode = (typeof BUTTON_PIN_MODE_OPTIONS)[number]["value"];
+type ButtonType = (typeof BUTTON_TYPE_OPTIONS)[number]["value"];
 
 function normalizeName(value: unknown): string {
   if (typeof value === "string" && value.trim().length > 0) {
@@ -44,6 +50,14 @@ function normalizePinMode(pinModeValue: unknown): ButtonPinMode {
   return "Floating";
 }
 
+function normalizeButtonType(buttonTypeValue: unknown): ButtonType {
+  if (buttonTypeValue === "NormalOpen" || buttonTypeValue === "NormalClosed") {
+    return buttonTypeValue;
+  }
+
+  return "NormalOpen";
+}
+
 export default function ButtonConfig(props: ButtonConfigProps) {
   const [device, { setDeviceConfig }] = useButton(props.id);
 
@@ -51,6 +65,9 @@ export default function ButtonConfig(props: ButtonConfigProps) {
   const [pin, setPin] = createSignal(normalizePin(device?.config?.pin));
   const [pinMode, setPinMode] = createSignal<ButtonPinMode>(
     normalizePinMode(device?.config?.pinMode)
+  );
+  const [buttonType, setButtonType] = createSignal<ButtonType>(
+    normalizeButtonType(device?.config?.buttonType)
   );
   const [debounce, setDebounce] = createSignal(normalizeDebounce(device?.config?.debounceTimeInMs));
 
@@ -63,6 +80,7 @@ export default function ButtonConfig(props: ButtonConfigProps) {
     setName(normalizeName(config.name));
     setPin(normalizePin(config.pin));
     setPinMode(normalizePinMode(config.pinMode));
+    setButtonType(normalizeButtonType(config.buttonType));
     setDebounce(normalizeDebounce(config.debounceTimeInMs));
   });
 
@@ -73,6 +91,7 @@ export default function ButtonConfig(props: ButtonConfigProps) {
       pin: pin(),
       debounceTimeInMs: debounce(),
       pinMode: selectedMode,
+      buttonType: buttonType(),
     });
   };
 
@@ -108,6 +127,19 @@ export default function ButtonConfig(props: ButtonConfigProps) {
               style={{ "margin-left": "0.5rem" }}
             >
               <For each={BUTTON_PIN_MODE_OPTIONS}>
+                {(option) => <option value={option.value}>{option.label}</option>}
+              </For>
+            </select>
+          </DeviceConfigItem>
+        </DeviceConfigRow>
+        <DeviceConfigRow>
+          <DeviceConfigItem name="Button type:">
+            <select
+              value={buttonType()}
+              onChange={(event) => setButtonType(event.currentTarget.value as ButtonType)}
+              style={{ "margin-left": "0.5rem" }}
+            >
+              <For each={BUTTON_TYPE_OPTIONS}>
                 {(option) => <option value={option.value}>{option.label}</option>}
               </For>
             </select>

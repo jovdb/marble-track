@@ -11,16 +11,25 @@ void ButtonDevice::getConfigFromJson(const JsonDocument &config)
         _name = config["name"].as<String>();
     if (config["pin"].is<int>())
         _pin = config["pin"].as<int>();
-    if (config["debounceTimeInMs"].is<unsigned long>())
-        _debounceTimeInMs = config["debounceTimeInMs"].as<unsigned long>();
+    
+    _debounceTimeInMs = config["debounceTimeInMs"] | 50UL;
 
     if (config["pinMode"].is<String>())
     {
         _pinMode = pinModeFromString(config["pinMode"].as<String>());
     }
 
+    if (config["buttonType"].is<String>())
+    {
+        _buttonType = buttonTypeFromString(config["buttonType"].as<String>());
+    }
+
     // Initialize simulated state based on pin mode (released state)
-    _simulatedState = (_pinMode == PinModeOption::PullUp || _pinMode == PinModeOption::Floating) ? true : false;
+    int defaultState = getDefaultRawValue();
+    // For NC, the default state is "Pressed" (Closed contact)
+    // For NO, the default state is "Released" (Open contact)
+    _simulatedIsPressed = (_buttonType == ButtonType::NormalClosed);
+    _lastRawValue = defaultState;
 
     if (_pin >= 0)
     {
@@ -50,10 +59,12 @@ void ButtonDevice::addConfigToJson(JsonDocument &doc) const
     doc["pin"] = _pin;
     doc["debounceTimeInMs"] = _debounceTimeInMs;
     doc["pinMode"] = pinModeToString(_pinMode);
+    doc["buttonType"] = buttonTypeToString(_buttonType);
 }
 
 void ButtonDevice::addStateToJson(JsonDocument &doc)
 {
+    doc["value"] = _lastRawValue.load();
     doc["isPressed"] = _isPressed.load();
 }
 
@@ -63,14 +74,16 @@ bool ButtonDevice::control(const String &action, JsonObject *args)
     {
         MLOG_INFO("%s: Simulated button PRESS", toString().c_str());
         _isSimulated = true;
-        _simulatedState = (_pinMode == PinModeOption::PullUp || _pinMode == PinModeOption::Floating) ? false : true;
+        // For NO, press means contact closed (true). For NC, press means contact open (false).
+        _simulatedIsPressed = (_buttonType == ButtonType::NormalOpen);
         return true;
     }
     else if (action == "release")
     {
         MLOG_INFO("%s: Simulated button RELEASE", toString().c_str());
-        _isSimulated = false;
-        _simulatedState = (_pinMode == PinModeOption::PullUp || _pinMode == PinModeOption::Floating) ? true : false;
+        _isSimulated = true;
+        // For NO, release means contact open (false). For NC, release means contact closed (true).
+        _simulatedIsPressed = (_buttonType == ButtonType::NormalClosed);
         return true;
     }
     return false;
@@ -101,14 +114,32 @@ void ButtonDevice::task()
 
     while (true)
     {
-        if (_pin < 0)
+        if (_pin < 0 && !_isSimulated.load())
         {
             // recheck every second
             vTaskDelay(pdMS_TO_TICKS(1000));
             continue;
         }
 
-        bool isButtonPressed = _isSimulated.load() ? _simulatedState.load() : readIsButtonPressed();
+        bool isButtonPressed;
+        if (_isSimulated.load())
+        {
+            isButtonPressed = _simulatedIsPressed.load();
+            // Update raw value for state reporting
+            int defaultVal = getDefaultRawValue();
+            if (_buttonType == ButtonType::NormalOpen)
+            {
+                _lastRawValue = isButtonPressed ? (defaultVal == 1 ? 0 : 1) : defaultVal;
+            }
+            else
+            {
+                _lastRawValue = isButtonPressed ? defaultVal : (defaultVal == 1 ? 0 : 1);
+            }
+        }
+        else
+        {
+            isButtonPressed = readIsButtonPressed();
+        }
 
         // If raw state changed, reset timer
         if (isButtonPressed != lastIsButtonPressed)
@@ -146,10 +177,39 @@ bool ButtonDevice::readIsButtonPressed()
     if (_pin < 0)
         return false;
 
-    bool pinState = digitalRead(_pin);
+    int pinState = digitalRead(_pin);
+    _lastRawValue = pinState;
 
-    // HIGH = Pressed for PullDown, LOW = Pressed for PullUp or Floating
-    return _pinMode == PinModeOption::PullDown ? pinState : !pinState;
+    int defaultState = getDefaultRawValue();
+    
+    if (_buttonType == ButtonType::NormalOpen)
+    {
+        // For NO, it's pressed (closed) when it's NOT the default state
+        return pinState != defaultState;
+    }
+    else
+    {
+        // For NC, it's pressed (closed) when it IS the default state
+        return pinState == defaultState;
+    }
+}
+
+int ButtonDevice::getDefaultRawValue() const
+{
+    // Default state = released / not pressed state:
+    // |          | NO | NC |
+    // |----------|----|----|
+    // | PullUp   | 1  | 0  |
+    // | PullDown | 0  | 1  |
+    // | Floating | 0  | 1  |
+    if (_buttonType == ButtonType::NormalOpen)
+    {
+        return (_pinMode == PinModeOption::PullUp) ? 1 : 0;
+    }
+    else
+    {
+        return (_pinMode == PinModeOption::PullUp) ? 0 : 1;
+    }
 }
 
 String ButtonDevice::pinModeToString(PinModeOption mode) const
@@ -173,6 +233,25 @@ ButtonDevice::PinModeOption ButtonDevice::pinModeFromString(const String &value)
     if (value.equalsIgnoreCase("PullDown"))
         return PinModeOption::PullDown;
     return PinModeOption::Floating;
+}
+
+String ButtonDevice::buttonTypeToString(ButtonType type) const
+{
+    switch (type)
+    {
+    case ButtonType::NormalClosed:
+        return "NormalClosed";
+    case ButtonType::NormalOpen:
+    default:
+        return "NormalOpen";
+    }
+}
+
+ButtonDevice::ButtonType ButtonDevice::buttonTypeFromString(const String &value) const
+{
+    if (value.equalsIgnoreCase("NormalClosed"))
+        return ButtonType::NormalClosed;
+    return ButtonType::NormalOpen;
 }
 
 bool ButtonDevice::isPressed() const

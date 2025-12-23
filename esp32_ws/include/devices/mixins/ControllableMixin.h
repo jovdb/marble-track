@@ -10,6 +10,7 @@
 #define CONTROLLABLE_MIXIN_H
 
 #include <ArduinoJson.h>
+#include "IControllable.h"
 
 /**
  * @class ControllableMixin
@@ -20,22 +21,26 @@
  * Automatically registers itself with DeviceBase::registerMixin("ControllableMixin")
  */
 template <typename Derived>
-class ControllableMixin
+class ControllableMixin : public IControllable
 {
 public:
-    /**
-     * @brief Pure virtual method that derived classes must implement
-     * Serializes device state to JSON for WebSocket transmission
-     */
-    virtual void addStateToJson(JsonDocument &doc) = 0;
+    virtual ~ControllableMixin()
+    {
+        // Unregister on destruction
+        auto *derived = static_cast<Derived *>(this);
+        mixins::ControllableRegistry::unregisterDevice(derived->getId());
+    }
+    // Provide DeviceBase virtual override via mixin when combined
+    virtual IControllable* getControllableInterface() { return this; }
 
 protected:
     ControllableMixin()
     {
         // Register this mixin with the base class
-        static_cast<Derived *>(this)->registerMixin("controllable");
+        auto *derived = static_cast<Derived *>(this);
+        derived->registerMixin("controllable");
+        mixins::ControllableRegistry::registerDevice(derived->getId(), this);
     }
-    virtual ~ControllableMixin() = default;
 };
 
 #endif // CONTROLLABLE_MIXIN_H

@@ -1,6 +1,7 @@
 #include "Logging.h"
 #include <LittleFS.h>
 #include "WebSocketManager.h"
+#include "devices/mixins/IControllable.h"
 #include "DeviceManager.h"
 #include "Network.h"
 #include "NetworkSettings.h"
@@ -856,6 +857,62 @@ void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
     {
         controllableDevice->notifyStateChange(false);
         return;
+    }
+
+    // Check composition devices (DeviceBase)
+    DeviceBase *compositionDevice = deviceManager->getCompositionDeviceById(deviceId);
+    if (compositionDevice)
+    {
+        // If the device implements the controllable mixin, return its JSON state
+        if (compositionDevice->hasMixin("controllable"))
+        {
+            // Lookup controllable interface via global registry (base remains agnostic)
+            IControllable *ctrl = mixins::ControllableRegistry::get(deviceId);
+            if (ctrl)
+            {
+                JsonDocument stateDoc;
+                stateDoc["id"] = compositionDevice->getId();
+                stateDoc["type"] = compositionDevice->getType();
+
+                ctrl->addStateToJson(stateDoc);
+
+                JsonDocument responseDoc;
+                responseDoc["type"] = "device-state";
+                responseDoc["success"] = true;
+                responseDoc["deviceId"] = deviceId;
+                responseDoc["state"] = stateDoc;
+
+                String response;
+                serializeJson(responseDoc, response);
+                notifyClients(response);
+                return;
+            }
+            // Fallback: controllable flag set but no interface, return null
+            JsonDocument responseDoc;
+            responseDoc["type"] = "device-state";
+            responseDoc["success"] = true;
+            responseDoc["deviceId"] = deviceId;
+            responseDoc["state"] = nullptr;
+
+            String response;
+            serializeJson(responseDoc, response);
+            notifyClients(response);
+            return;
+        }
+        else
+        {
+            // Device exists but is not controllable: return null state
+            JsonDocument responseDoc;
+            responseDoc["type"] = "device-state";
+            responseDoc["success"] = true;
+            responseDoc["deviceId"] = deviceId;
+            responseDoc["state"] = nullptr;
+
+            String response;
+            serializeJson(responseDoc, response);
+            notifyClients(response);
+            return;
+        }
     }
 
     MLOG_ERROR("Device not found for state request: %s", deviceId.c_str());

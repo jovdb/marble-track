@@ -32,6 +32,12 @@ template <typename Derived>
 class SaveableMixin
 {
 public:
+    SaveableMixin()
+    {
+        // Register this mixin with the base class
+        static_cast<Derived*>(this)->registerMixin("saveable");
+    }
+
     virtual ~SaveableMixin() = default;
 
     /**

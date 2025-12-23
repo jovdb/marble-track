@@ -27,6 +27,12 @@ template <typename Derived>
 class RtosMixin
 {
 public:
+    RtosMixin()
+    {
+        // Register this mixin with the base class
+        static_cast<Derived*>(this)->registerMixin("rtos");
+    }
+
     virtual ~RtosMixin()
     {
         stopTask();

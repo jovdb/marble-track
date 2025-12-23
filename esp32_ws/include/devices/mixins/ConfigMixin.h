@@ -19,6 +19,12 @@ template <typename Derived, typename ConfigType>
 class ConfigMixin
 {
 public:
+    ConfigMixin()
+    {
+        // Register this mixin with the base class
+        static_cast<Derived*>(this)->registerMixin("config");
+    }
+
     virtual ~ConfigMixin() = default;
 
     /**

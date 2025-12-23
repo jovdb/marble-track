@@ -30,6 +30,12 @@ template <typename Derived, typename StateType>
 class StateMixin
 {
 public:
+    StateMixin()
+    {
+        // Register this mixin with the base class
+        static_cast<Derived*>(this)->registerMixin("state");
+    }
+
     virtual ~StateMixin() = default;
 
     /**

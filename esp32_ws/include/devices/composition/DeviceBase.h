@@ -50,11 +50,17 @@ public:
     // Pins (for collision detection)
     virtual std::vector<int> getPins() const { return {}; }
 
+    // Mixin detection
+    bool hasMixin(const String &mixinName) const;
+    const std::vector<String> &getMixins() const { return _mixins; }
+    void registerMixin(const String &mixinName);
+
 protected:
     String _id;
     String _type;
     String _name;
     std::vector<DeviceBase *> _children;
+    std::vector<String> _mixins;
 };
 
 #endif // DEVICE_BASE_H

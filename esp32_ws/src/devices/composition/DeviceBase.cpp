@@ -24,3 +24,24 @@ String DeviceBase::toString() const
     upperType.toUpperCase();
     return upperType + "[" + _id + "]";
 }
+
+void DeviceBase::registerMixin(const String &mixinName)
+{
+    // Avoid duplicates
+    for (const auto &mixin : _mixins)
+    {
+        if (mixin == mixinName)
+            return;
+    }
+    _mixins.push_back(mixinName);
+}
+
+bool DeviceBase::hasMixin(const String &mixinName) const
+{
+    for (const auto &mixin : _mixins)
+    {
+        if (mixin == mixinName)
+            return true;
+    }
+    return false;
+}

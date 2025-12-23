@@ -41,6 +41,7 @@ public:
     String getType() const { return _type; }
     String getName() const { return _name; }
     void setName(const String &name) { _name = name; }
+    virtual String toString() const;
 
     // Hierarchy
     void addChild(DeviceBase *child);

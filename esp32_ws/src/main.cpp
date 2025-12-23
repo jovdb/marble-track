@@ -25,6 +25,9 @@
 #include "AutoMode.h"
 #include "ManualMode.h"
 
+// Composition-based LED test
+#include "devices/composition/Led.h"
+
 // Timing variable for automatic mode
 unsigned long lastAutoToggleTime = 0;
 
@@ -68,6 +71,9 @@ DeviceManager deviceManager(globalNotifyClientsCallback);
 
 AutoMode *autoMode = nullptr;
 ManualMode *manualMode = nullptr;
+
+// Test LED using composition pattern
+composition::Led *testLed2 = nullptr;
 
 void setup()
 {
@@ -208,6 +214,12 @@ void setup()
   testServo->setup(servoConfig);
   deviceManager.addTaskDevice(testServo);
 
+  // Create composition LED test on pin 15
+  testLed2 = new composition::Led("led2");
+  testLed2->setup();
+  testLed2->blink(); // Turn on at startup
+  MLOG_INFO("Composition LED test created on pin 15");
+
   MLOG_INFO("System initialization complete!");
 }
 
@@ -220,6 +232,12 @@ void loop()
   if (serialConsole)
   {
     serialConsole->loop();
+  }
+
+  // Update composition LED test
+  if (testLed2)
+  {
+    testLed2->loop();
   }
 
   OtaUpload::loop();

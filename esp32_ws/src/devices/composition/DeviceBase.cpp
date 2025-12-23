@@ -17,3 +17,10 @@ void DeviceBase::addChild(DeviceBase *child)
         _children.push_back(child);
     }
 }
+
+String DeviceBase::toString() const
+{
+    String upperType = _type;
+    upperType.toUpperCase();
+    return upperType + "[" + _id + "]";
+}

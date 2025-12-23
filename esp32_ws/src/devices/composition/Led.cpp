@@ -5,6 +5,7 @@
 
 #include "devices/composition/Led.h"
 #include "Logging.h"
+#include <ArduinoJson.h>
 
 namespace composition
 {
@@ -100,6 +101,13 @@ namespace composition
             // Notify subscribers of state change
             notifyStateChanged();
         }
+    }
+
+    void Led::addStateToJson(JsonDocument &doc)
+    {
+        doc["mode"] = _state.mode;
+        doc["blinkOnTime"] = _state.blinkOnTime;
+        doc["blinkOffTime"] = _state.blinkOffTime;
     }
 
 } // namespace composition

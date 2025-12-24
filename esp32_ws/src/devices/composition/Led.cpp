@@ -9,6 +9,7 @@
 
 namespace composition
 {
+    static bool _isPrevBlinkingOn = false;
 
     Led::Led(const String &id)
         : DeviceBase(id, "led")
@@ -77,8 +78,15 @@ namespace composition
 
     void Led::loop()
     {
+
+        // -1: UnSet, 0: OFF: 1: ON
+        static int _isPrevBlinkingOn = -1;
+
         if (_config.pin == -1 || _state.mode != "BLINKING")
+        {
+            _isPrevBlinkingOn = -1;
             return;
+        }
 
         // Calculate total blink cycle time
         unsigned long cycle = _state.blinkOnTime + _state.blinkOffTime;
@@ -91,15 +99,10 @@ namespace composition
         bool shouldBeOn = position < _state.blinkOnTime;
 
         // Only update GPIO if state changed (check against current mode state)
-        bool isCurrentlyOn = (_state.mode == "ON");
-        if (isCurrentlyOn != shouldBeOn)
+        if ((shouldBeOn && _isPrevBlinkingOn != 1) || (!shouldBeOn && _isPrevBlinkingOn != 0))
         {
-            _state.mode = shouldBeOn ? "ON" : "OFF";
+            _isPrevBlinkingOn = shouldBeOn ? 1 : 0;
             digitalWrite(_config.pin, shouldBeOn ? HIGH : LOW);
-            MLOG_INFO("%s: Blink state changed to %s", toString().c_str(), shouldBeOn ? "ON" : "OFF");
-
-            // Notify subscribers of state change
-            notifyStateChanged();
         }
     }
 
@@ -126,7 +129,7 @@ namespace composition
         {
             unsigned long onTime = 500;
             unsigned long offTime = 500;
-            
+
             if (args)
             {
                 if ((*args)["onTime"].is<unsigned long>())
@@ -134,7 +137,7 @@ namespace composition
                 if ((*args)["offTime"].is<unsigned long>())
                     offTime = (*args)["offTime"].as<unsigned long>();
             }
-            
+
             return blink(onTime, offTime);
         }
         else

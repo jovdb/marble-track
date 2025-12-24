@@ -147,4 +147,17 @@ namespace composition
         }
     }
 
+    void Led::loadConfigFromJson(const JsonDocument &config)
+    {
+        if (config["pin"].is<int>())
+        {
+            _config.pin = config["pin"].as<int>();
+        }
+    }
+
+    void Led::saveConfigToJson(JsonDocument &doc)
+    {
+        doc["pin"] = _config.pin;
+    }
+
 } // namespace composition

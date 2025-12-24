@@ -27,6 +27,7 @@
 
 // Composition-based LED test
 #include "devices/composition/Led.h"
+#include "devices/mixins/ControllableMixin.h"
 
 // Timing variable for automatic mode
 unsigned long lastAutoToggleTime = 0;
@@ -132,6 +133,11 @@ void setup()
   deviceManager.setHasClients([]()
                               { return wsManager.hasClients(); });
 
+  // Set notifyClients callback for ControllableMixin (for composition devices)
+  // This enables automatic WebSocket notifications when device state changes
+  // Using the non-template base class method ensures all specializations share the callback
+  ControllableMixinBase::setNotifyClients(globalNotifyClientsCallback);
+
   // Start server
   server.begin();
 
@@ -223,15 +229,6 @@ void setup()
   testLed2->setConfig(ledConfig);
   deviceManager.addDevice(testLed2);
   testLed2->setup();
-  testLed2->onStateChange([](void *data)
-                          {
-    if (data)
-    {
-      composition::LedState* state = static_cast<composition::LedState*>(data);
-      MLOG_INFO("Composition LED state changed: mode=%s, onTime=%lu, offTime=%lu",
-                state->mode.c_str(), state->blinkOnTime, state->blinkOffTime);
-    } });
-
   testLed2->blink(); // Turn on at startup
   MLOG_INFO("Composition LED test created on pin 15");
 

@@ -5,6 +5,7 @@
 
 #include "devices/composition/Led.h"
 #include "Logging.h"
+#include <ArduinoJson.h>
 
 namespace composition
 {
@@ -102,7 +103,45 @@ namespace composition
         }
     }
 
-    // Controllable mixin temporarily removed; state JSON and control handlers disabled
-}
+    void Led::addStateToJson(JsonDocument &doc)
+    {
+        doc["mode"] = _state.mode;
+        doc["blinkOnTime"] = _state.blinkOnTime;
+        doc["blinkOffTime"] = _state.blinkOffTime;
+    }
 
-// namespace composition
+    bool Led::control(const String &action, JsonObject *args)
+    {
+        if (action == "set")
+        {
+            if (!args || !(*args)["value"].is<bool>())
+            {
+                MLOG_WARN("%s: 'set' action requires 'value' argument", toString().c_str());
+                return false;
+            }
+            bool value = (*args)["value"].as<bool>();
+            return set(value);
+        }
+        else if (action == "blink")
+        {
+            unsigned long onTime = 500;
+            unsigned long offTime = 500;
+            
+            if (args)
+            {
+                if ((*args)["onTime"].is<unsigned long>())
+                    onTime = (*args)["onTime"].as<unsigned long>();
+                if ((*args)["offTime"].is<unsigned long>())
+                    offTime = (*args)["offTime"].as<unsigned long>();
+            }
+            
+            return blink(onTime, offTime);
+        }
+        else
+        {
+            MLOG_WARN("%s: Unknown control action: %s", toString().c_str(), action.c_str());
+            return false;
+        }
+    }
+
+} // namespace composition

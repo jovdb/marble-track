@@ -9,6 +9,7 @@
 #include "devices/composition/DeviceBase.h"
 #include "devices/mixins/StateMixin.h"
 #include "devices/mixins/ConfigMixin.h"
+#include "devices/mixins/ControllableMixin.h"
 
 namespace composition
 {
@@ -37,7 +38,7 @@ namespace composition
      * @class Led
      * @brief LED with configurable pin, state management, and control interface
      */
-    class Led : public DeviceBase, public ConfigMixin<Led, LedConfig>, public StateMixin<Led, LedState>
+    class Led : public DeviceBase, public ConfigMixin<Led, LedConfig>, public StateMixin<Led, LedState>, public ControllableMixin<Led>
     {
     public:
         explicit Led(const String &id);
@@ -48,6 +49,10 @@ namespace composition
 
         bool set(bool value);
         bool blink(unsigned long onTime = 500, unsigned long offTime = 500);
+
+        // ControllableMixin implementation
+        void addStateToJson(JsonDocument &doc) override;
+        bool control(const String &action, JsonObject *args = nullptr) override;
 
     protected:
     };

@@ -5,6 +5,7 @@ import { renderDeviceComponent } from "../Devices";
 import { useWebSocket2, IWebSocketMessage } from "../../hooks/useWebSocket";
 import { BroadcastIcon } from "../icons/Icons";
 import DeviceJsonState from "../DeviceJsonState";
+import DeviceJsonConfig from "../DeviceJsonConfig";
 
 interface DeviceProps {
   id: string;
@@ -22,7 +23,7 @@ export function Device(props: DeviceProps) {
   const configIsAvailable = createMemo(
     () => device()?.config !== null && device()?.config !== undefined
   );
-  const canShowConfigButton = createMemo(() => hasConfig() && configIsAvailable());
+  const canShowConfigButton = createMemo(() => (hasConfig() || configIsAvailable()) && configIsAvailable());
   console.log({
     id: device()?.id,
     hasConfig: hasConfig(),
@@ -216,14 +217,22 @@ export function Device(props: DeviceProps) {
               <For each={device()?.children}>{(child) => renderDeviceComponent(child)}</For>
             </div>
           )}
-          <Show when={showConfig() && props.configComponent}>
+          <Show when={showConfig() && (props.configComponent || configIsAvailable())}>
             <div
               class={styles.device__children}
               id={configPanelId}
               role="region"
               aria-live="polite"
             >
-              {props.configComponent!(() => setShowConfig(false))}
+              <Show when={props.configComponent} fallback={
+                <DeviceJsonConfig 
+                  deviceId={props.id} 
+                  config={device()?.config}
+                  onClose={() => setShowConfig(false)} 
+                />
+              }>
+                {props.configComponent!(() => setShowConfig(false))}
+              </Show>
             </div>
           </Show>
           <Show when={showMessagesPanel()}>

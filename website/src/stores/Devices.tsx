@@ -125,7 +125,7 @@ export function createDevicesStore({
             produce((draft) => {
               const draftDevice = draft.devices[message.deviceId];
               if (draftDevice) {
-                draftDevice.config = message.config ?? {};
+                draftDevice.config = message.config;
                 draftDevice.configErrorMessage = undefined;
               }
             })
@@ -158,6 +158,16 @@ export function createDevicesStore({
                 draftDevice.config = undefined;
                 draftDevice.configErrorMessage =
                   (message as any).message || (message as any).error || "Unknown error";
+              }
+            })
+          );
+        } else {
+          setStore(
+            produce((draft) => {
+              const draftDevice = draft.devices[message.deviceId];
+              if (draftDevice) {
+                draftDevice.config = (message as any)?.config;
+                draftDevice.configErrorMessage = undefined;
               }
             })
           );

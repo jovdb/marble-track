@@ -19,6 +19,16 @@ export function Device(props: DeviceProps) {
   const device = () => deviceStore[0];
 
   const hasConfig = createMemo(() => Boolean(props.configComponent));
+  const configIsAvailable = createMemo(
+    () => device()?.config !== null && device()?.config !== undefined
+  );
+  const canShowConfigButton = createMemo(() => hasConfig() && configIsAvailable());
+  console.log({
+    id: device()?.id,
+    hasConfig: hasConfig(),
+    configIsAvailable: configIsAvailable(),
+    canShowConfigButton: canShowConfigButton(),
+  });
   const [isCollapsed, setIsCollapsed] = createSignal(true);
   const [showChildren, setShowChildren] = createSignal(
     !hasConfig() && !!device()?.children?.length
@@ -84,7 +94,7 @@ export function Device(props: DeviceProps) {
             <Show when={deviceType()}>
               <span class={styles["device__type-badge"]}>{deviceType()}</span>
             </Show>
-            <Show when={hasConfig()}>
+            <Show when={canShowConfigButton()}>
               <button
                 classList={{
                   [styles["device__header-button"]]: true,

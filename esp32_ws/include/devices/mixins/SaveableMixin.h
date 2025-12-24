@@ -1,109 +1,61 @@
 /**
  * @file SaveableMixin.h
- * @brief Configuration persistence mixin
+ * @brief Mixin for devices that can save/load configuration to/from JSON
  *
- * Adds JSON config save/load capabilities to any device class.
- * The derived class must implement:
+ * Requires the derived class to implement:
  * - void loadConfigFromJson(const JsonDocument &config)
- * - void saveConfigToJson(JsonDocument &doc) const
- *
- * Usage:
- *   class MyDevice : public DeviceBase, public SaveableMixin<MyDevice> {
- *       void loadConfigFromJson(const JsonDocument &config) override { ... }
- *       void saveConfigToJson(JsonDocument &doc) const override { ... }
- *   };
+ * - void saveConfigToJson(JsonDocument &doc)
  */
 
 #ifndef SAVEABLE_MIXIN_H
 #define SAVEABLE_MIXIN_H
 
 #include <ArduinoJson.h>
-#include <Arduino.h>
 
 /**
  * @class SaveableMixin
- * @brief Mixin that adds configuration persistence
- * @tparam Derived The derived class (CRTP pattern)
+ * @brief Mixin that provides config persistence capability
  *
- * Provides getConfig() and setConfig() that delegate to
- * the derived class's loadConfigFromJson/saveConfigToJson.
+ * The derived class must implement:
+ * - void loadConfigFromJson(const JsonDocument &config) - Load device config from JSON
+ * - void saveConfigToJson(JsonDocument &doc) - Save device config to JSON
+ * Automatically registers itself with DeviceBase::registerMixin("saveable")
  */
 template <typename Derived>
 class SaveableMixin
 {
-public:
+protected:
     SaveableMixin()
     {
         // Register this mixin with the base class
-        static_cast<Derived*>(this)->registerMixin("saveable");
-    }
-
-    virtual ~SaveableMixin() = default;
-
-    /**
-     * @brief Get the full configuration as JSON
-     * @return JsonDocument with id, type, and device-specific config
-     */
-    JsonDocument getConfig() const
-    {
-        JsonDocument doc;
-        const auto *derived = static_cast<const Derived *>(this);
-
-        // Add base identity (assumes DeviceBase interface)
-        doc["id"] = derived->getId();
-        doc["type"] = derived->getType();
-        doc["name"] = derived->getName();
-
-        // Let derived class add its specific config
-        derived->saveConfigToJson(doc);
-
-        return doc;
-    }
-
-    /**
-     * @brief Apply configuration from JSON
-     * @param config JsonDocument containing configuration
-     */
-    void setConfig(const JsonDocument &config)
-    {
         auto *derived = static_cast<Derived *>(this);
-
-        // Extract name if present
-        if (config["name"].is<String>())
-        {
-            derived->setName(config["name"].as<String>());
-        }
-
-        // Let derived class extract its specific config
-        derived->loadConfigFromJson(config);
+        derived->registerMixin("saveable");
     }
 
-    /**
-     * @brief Setup with configuration
-     * @param config Optional JSON configuration
-     * @return true if setup successful
-     */
-    bool setupWithConfig(const JsonDocument &config = JsonDocument())
-    {
-        setConfig(config);
-        static_cast<Derived *>(this)->setup();
-        return true;
-    }
-
-protected:
     /**
      * @brief Load device-specific config from JSON
-     * Must be implemented by derived class.
+     * Default implementation does nothing. Override in derived class if needed.
      * @param config The JSON document to read from
      */
-    virtual void loadConfigFromJson(const JsonDocument &config) = 0;
+    virtual void loadConfigFromJson(const JsonDocument &config)
+    {
+        // Default: do nothing
+        (void)config; // Suppress unused parameter warning
+    }
 
     /**
      * @brief Save device-specific config to JSON
-     * Must be implemented by derived class.
+     * Default implementation does nothing. Override in derived class if needed.
      * @param doc The JSON document to extend
      */
-    virtual void saveConfigToJson(JsonDocument &doc) const = 0;
+    virtual void saveConfigToJson(JsonDocument &doc)
+    {
+        // Default: do nothing
+        (void)doc; // Suppress unused parameter warning
+    }
+
+public:
+    virtual ~SaveableMixin() = default;
 };
 
 #endif // SAVEABLE_MIXIN_H

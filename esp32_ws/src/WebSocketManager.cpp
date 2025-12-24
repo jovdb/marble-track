@@ -911,6 +911,20 @@ void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
             return;
         }
     }
+    else
+    {
+        // Device exists but is not controllable: return null state
+        JsonDocument responseDoc;
+        responseDoc["type"] = "device-state";
+        responseDoc["success"] = true;
+        responseDoc["deviceId"] = deviceId;
+        responseDoc["state"] = nullptr;
+
+        String response;
+        serializeJson(responseDoc, response);
+        notifyClients(response);
+        return;
+    }
 
     MLOG_ERROR("Device not found for state request: %s", deviceId.c_str());
     String response;

@@ -191,11 +191,12 @@ export function Device(props: DeviceProps) {
             </Show>
 
             <Show when={!device()?.stateErrorMessage}>
-              {props.stateComponent === undefined ? (
+              <Show when={props.stateComponent !== undefined}>
+                {props.stateComponent?.({ state: device()?.state })}
+              </Show>
+              <Show when={props.stateComponent === undefined && device()?.state !== undefined}>
                 <DeviceJsonState state={device()?.state} />
-              ) : (
-                props.stateComponent({ state: device()?.state })
-              )}
+              </Show>
               {props.children}
             </Show>
           </Show>

@@ -2,6 +2,8 @@
 #include <LittleFS.h>
 #include "WebSocketManager.h"
 #include "devices/mixins/IControllable.h"
+#include "devices/mixins/SaveableMixin.h"
+#include "devices/composition/Led.h"
 #include "DeviceManager.h"
 #include "Network.h"
 #include "NetworkSettings.h"
@@ -463,6 +465,45 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
     if (controllableDevice)
     {
         controllableDevice->notifyConfig(false);
+        return;
+    }
+
+    // Check composition devices
+    DeviceBase *compositionDevice = deviceManager->getCompositionDeviceById(deviceId);
+    if (compositionDevice)
+    {
+        bool isControllable = compositionDevice->hasMixin("controllable");
+        bool isSaveable = compositionDevice->hasMixin("saveable");
+
+        JsonDocument response;
+        response["type"] = "device-config";
+        response["triggerBy"] = "get";
+        response["deviceId"] = deviceId;
+
+        if (isControllable && isSaveable)
+        {
+            // Try to cast to composition::Led (we know it supports SaveableMixin)
+            composition::Led *ledDevice = static_cast<composition::Led *>(compositionDevice);
+            if (ledDevice)
+            {
+                JsonDocument configDoc;
+                ledDevice->saveConfigToJson(configDoc);
+                response["config"] = configDoc;
+            }
+            else
+            {
+                response["config"] = nullptr;
+            }
+        }
+        else
+        {
+            // Device found but not controllable or not saveable
+            response["config"] = nullptr;
+        }
+
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
         return;
     }
 

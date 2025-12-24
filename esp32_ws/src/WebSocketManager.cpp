@@ -823,9 +823,36 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
         controllableDevice->control(functionName, &payload);
         return;
     }
+    // Also support controllable composition devices (DeviceBase with ControllableMixin)
     else
     {
-        MLOG_WARN("handleDeviceFunction: Device not found: %s", deviceId.c_str());
+        DeviceBase *compositionDevice = deviceManager->getCompositionDeviceById(deviceId);
+        if (compositionDevice && compositionDevice->hasMixin("controllable"))
+        {
+            IControllable *ctrl = mixins::ControllableRegistry::get(deviceId);
+            if (ctrl)
+            {
+                JsonObject *payloadPtr = nullptr;
+                JsonObject payloadObj;
+                if (doc["args"].is<JsonObject>())
+                {
+                    payloadObj = doc["args"].as<JsonObject>();
+                    payloadPtr = &payloadObj;
+                }
+                MLOG_INFO("%s: Executing action '%s'.", compositionDevice->toString().c_str(), functionName.c_str());
+                ctrl->control(functionName, payloadPtr);
+                return;
+            }
+            else
+            {
+                MLOG_WARN("handleDeviceFunction: Controllable mixin registry has no interface for %s", deviceId.c_str());
+                return;
+            }
+        }
+        else
+        {
+            MLOG_WARN("handleDeviceFunction: Device not found: %s", deviceId.c_str());
+        }
     }
 }
 

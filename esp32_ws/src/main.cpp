@@ -27,6 +27,7 @@
 
 // Composition-based LED test
 #include "devices/composition/Led.h"
+#include "devices/composition/Button.h"
 #include "devices/mixins/ControllableMixin.h"
 
 // Timing variable for automatic mode
@@ -75,6 +76,7 @@ ManualMode *manualMode = nullptr;
 
 // Test LED using composition pattern
 composition::Led *testLed2 = nullptr;
+composition::Button *button2 = nullptr;
 
 void setup()
 {
@@ -226,9 +228,22 @@ void setup()
   composition::LedConfig ledConfig;
   ledConfig.pin = 15;
   testLed2->setConfig(ledConfig);
-  deviceManager.addDevice(testLed2);
   testLed2->setup();
+  deviceManager.addDevice(testLed2);
   MLOG_INFO("Composition LED test created on pin 15");
+
+  // Create composition Button test on pin 7
+  button2 = new composition::Button("button2");
+
+  // Configure button before setup
+  composition::ButtonConfig buttonConfig;
+  buttonConfig.pin = 7;
+  buttonConfig.name = "Test Button 2";
+  buttonConfig.pinMode = composition::PinModeOption::Floating;
+  button2->setConfig(buttonConfig);
+  deviceManager.addDevice(button2);
+  button2->setup();
+  MLOG_INFO("Composition Button test created on pin 7");
 
   MLOG_INFO("System initialization complete!");
 }
@@ -248,6 +263,12 @@ void loop()
   if (testLed2)
   {
     testLed2->loop();
+  }
+
+  // Update composition Button test
+  if (button2)
+  {
+    button2->loop();
   }
 
   OtaUpload::loop();

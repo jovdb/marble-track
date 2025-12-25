@@ -135,8 +135,7 @@ void setup()
 
   // Set notifyClients callback for ControllableMixin (for composition devices)
   // This enables automatic WebSocket notifications when device state changes
-  // Using the non-template base class method ensures all specializations share the callback
-  ControllableMixinBase::setNotifyClients(globalNotifyClientsCallback);
+  ControllableMixin<DeviceBase>::setNotifyClients(globalNotifyClientsCallback);
 
   // Start server
   server.begin();

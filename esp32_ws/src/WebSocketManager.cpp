@@ -403,6 +403,48 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
         return;
     }
 
+    // Support composition devices (DeviceBase) that implement saveable config
+    DeviceBase *compositionDevice = deviceManager->getCompositionDeviceById(deviceId);
+    if (compositionDevice)
+    {
+        if (!doc["config"].is<JsonObject>())
+        {
+            notifyClients(createJsonResponse(false, "No config provided", "", "", "device-save-config", deviceId));
+            return;
+        }
+
+        // Currently support composition::Led which implements SaveableMixin
+        if (compositionDevice->getType() == "led")
+        {
+            composition::Led *ledDevice = static_cast<composition::Led *>(compositionDevice);
+            JsonObject configObj = doc["config"].as<JsonObject>();
+            JsonDocument configDoc;
+            configDoc.set(configObj);
+            ledDevice->loadConfigFromJson(configDoc);
+
+            deviceManager->saveDevicesToJsonFile();
+
+            // Build device-config response after save
+            JsonDocument response;
+            response["type"] = "device-config";
+            response["triggerBy"] = "set";
+            response["deviceId"] = deviceId;
+
+            JsonDocument savedConfig;
+            ledDevice->saveConfigToJson(savedConfig);
+            response["config"] = savedConfig;
+
+            String respStr;
+            serializeJson(response, respStr);
+            notifyClients(respStr);
+            return;
+        }
+
+        // Unknown composition type found but not handled explicitly
+        notifyClients(createJsonResponse(false, "Unsupported composition device type: " + compositionDevice->getType(), "", "", "device-save-config", deviceId));
+        return;
+    }
+
     notifyClients(createJsonResponse(false, "Device not found: " + deviceId, "", "", "device-save-config", deviceId));
 }
 

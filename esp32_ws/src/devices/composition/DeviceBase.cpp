@@ -4,16 +4,35 @@
  */
 
 #include "devices/composition/DeviceBase.h"
+#include "Logging.h"
 
 DeviceBase::DeviceBase(const String &id, const String &type) : _id(id), _type(type), _name(id) {}
 
 void DeviceBase::setup()
 {
+    _isInitialized = true;
+
     for (DeviceBase *child : _children)
     {
         if (child)
         {
             child->setup();
+        }
+    }
+}
+
+void DeviceBase::loop()
+{
+    if (!_isInitialized)
+    {
+        MLOG_WARN("%s: loop() called before setup()", toString().c_str());
+    }
+
+    for (DeviceBase *child : _children)
+    {
+        if (child)
+        {
+            child->loop();
         }
     }
 }

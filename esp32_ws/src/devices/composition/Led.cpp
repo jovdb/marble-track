@@ -18,6 +18,8 @@ namespace composition
 
     void Led::setup()
     {
+        DeviceBase::setup();
+
         if (_config.pin == -1)
         {
             MLOG_WARN("%s: Pin not configured (pin = -1)", toString().c_str());
@@ -95,6 +97,7 @@ namespace composition
 
     void Led::loop()
     {
+        DeviceBase::loop();
 
         // -1: UnSet, 0: OFF: 1: ON
         static int _isPrevBlinkingOn = -1;

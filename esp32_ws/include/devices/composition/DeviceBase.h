@@ -35,7 +35,7 @@ public:
     // Lifecycle
     // Default setup calls setup on children
     virtual void setup();
-    virtual void loop() {}
+    virtual void loop();
 
     // Identity
     String getId() const { return _id; }
@@ -60,6 +60,7 @@ protected:
     String _id;
     String _type;
     String _name;
+    bool _isInitialized = false;
     std::vector<DeviceBase *> _children;
     std::vector<String> _mixins;
 };

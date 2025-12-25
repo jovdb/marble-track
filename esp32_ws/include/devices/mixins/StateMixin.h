@@ -33,7 +33,7 @@ public:
     StateMixin()
     {
         // Register this mixin with the base class
-        static_cast<Derived*>(this)->registerMixin("state");
+        static_cast<Derived *>(this)->registerMixin("state");
     }
 
     virtual ~StateMixin() = default;
@@ -42,7 +42,7 @@ public:
      * @brief Get state (read-only reference)
      * @return Reference to current state
      */
-    const StateType& getState() const
+    const StateType &getState() const
     {
         return _state;
     }

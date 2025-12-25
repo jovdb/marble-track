@@ -72,7 +72,7 @@ namespace composition
             if (isButtonPressed != _state.isPressed)
             {
                 _state.isPressed = isButtonPressed;
-                MLOG_INFO("%s: Contact state changed to %s", toString().c_str(), _state.isPressed ? "CLOSED" : "OPEN");
+                MLOG_INFO("%s: Contact state changed to %s", toString().c_str(), _state.input ? "HIGH" : "LOW");
                 notifyStateChanged();
             }
         }

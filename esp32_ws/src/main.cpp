@@ -28,6 +28,7 @@
 // Composition-based LED test
 #include "devices/composition/Led.h"
 #include "devices/composition/Button.h"
+#include "devices/composition/Test2.h"
 #include "devices/mixins/ControllableMixin.h"
 
 // Timing variable for automatic mode
@@ -77,6 +78,7 @@ ManualMode *manualMode = nullptr;
 // Test LED using composition pattern
 composition::Led *testLed2 = nullptr;
 composition::Button *button2 = nullptr;
+composition::Test2 *test2 = nullptr;
 
 void setup()
 {
@@ -204,10 +206,11 @@ void setup()
   // State change broadcasting is now enabled during setup
 
   // Create TestTaskDevice with its own button and LED children
+  /*
   TestTaskDevice *testTask = new TestTaskDevice("test-task", globalNotifyClientsCallback);
   testTask->setup();
   deviceManager.addTaskDevice(testTask);
-
+*/
   // Create test Servo on pin 16
   Servo *testServo = new Servo("test-servo", globalNotifyClientsCallback);
   JsonDocument servoConfig;
@@ -222,8 +225,8 @@ void setup()
   deviceManager.addTaskDevice(testServo);
 
   // Create composition LED test on pin 15
+  /*
   testLed2 = new composition::Led("led2");
-
   // Configure pin before setup
   composition::LedConfig ledConfig;
   ledConfig.pin = 15;
@@ -237,13 +240,40 @@ void setup()
 
   // Configure button before setup
   composition::ButtonConfig buttonConfig;
-  buttonConfig.pin = 7;
+  buttonConfig.pin = 19;
   buttonConfig.name = "Test Button 2";
   buttonConfig.pinMode = composition::PinModeOption::Floating;
   button2->setConfig(buttonConfig);
   deviceManager.addDevice(button2);
   button2->setup();
   MLOG_INFO("Composition Button test created on pin 7");
+*/
+
+  // Create composition Test2 device (contains LED and Button children)
+  test2 = new composition::Test2("test2");
+
+  // Configure the child devices
+  composition::Led *test2Led = test2->getLed();
+  if (test2Led)
+  {
+    composition::LedConfig ledConfig;
+    ledConfig.pin = 13; // Use pin 13 for Test2 LED
+    test2Led->setConfig(ledConfig);
+  }
+
+  composition::Button *test2Button = test2->getButton();
+  if (test2Button)
+  {
+    composition::ButtonConfig buttonConfig;
+    buttonConfig.pin = 14; // Use pin 14 for Test2 Button
+    buttonConfig.name = "Test2 Button";
+    buttonConfig.pinMode = composition::PinModeOption::Floating;
+    test2Button->setConfig(buttonConfig);
+  }
+
+  deviceManager.addDevice(test2);
+  test2->setup();
+  MLOG_INFO("Composition Test2 device created with LED and Button children");
 
   MLOG_INFO("System initialization complete!");
 }
@@ -269,6 +299,12 @@ void loop()
   if (button2)
   {
     button2->loop();
+  }
+
+  // Update composition Test2 device
+  if (test2)
+  {
+    test2->loop();
   }
 
   OtaUpload::loop();

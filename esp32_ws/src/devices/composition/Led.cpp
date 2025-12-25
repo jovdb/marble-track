@@ -24,9 +24,26 @@ namespace composition
             return;
         }
 
+        // Set the device name
+        setName(_config.name);
+
         pinMode(_config.pin, OUTPUT);
         digitalWrite(_config.pin, LOW);
         MLOG_INFO("%s: Setup on pin %d", toString().c_str(), _config.pin);
+
+        // Apply initial state
+        if (_config.initialState == "ON")
+        {
+            set(true);
+        }
+        else if (_config.initialState == "BLINKING")
+        {
+            blink(_state.blinkOnTime, _state.blinkOffTime);
+        }
+        else
+        {
+            set(false);
+        }
     }
 
     std::vector<int> Led::getPins() const
@@ -153,11 +170,21 @@ namespace composition
         {
             _config.pin = config["pin"].as<int>();
         }
+        if (config["name"].is<String>())
+        {
+            _config.name = config["name"].as<String>();
+        }
+        if (config["initialState"].is<String>())
+        {
+            _config.initialState = config["initialState"].as<String>();
+        }
     }
 
     void Led::saveConfigToJson(JsonDocument &doc)
     {
         doc["pin"] = _config.pin;
+        doc["name"] = _config.name;
+        doc["initialState"] = _config.initialState;
     }
 
 } // namespace composition

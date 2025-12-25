@@ -228,7 +228,6 @@ void setup()
   testLed2->setConfig(ledConfig);
   deviceManager.addDevice(testLed2);
   testLed2->setup();
-  testLed2->blink(); // Turn on at startup
   MLOG_INFO("Composition LED test created on pin 15");
 
   MLOG_INFO("System initialization complete!");

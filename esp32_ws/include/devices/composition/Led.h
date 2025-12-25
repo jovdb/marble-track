@@ -21,7 +21,9 @@ namespace composition
      */
     struct LedConfig
     {
-        int pin = -1; // GPIO pin number (-1 = not configured)
+        int pin = -1;                    // GPIO pin number (-1 = not configured)
+        String name = "Led";             // Device name
+        String initialState = "OFF";     // Initial state: OFF, ON, or BLINKING
     };
 
     /**

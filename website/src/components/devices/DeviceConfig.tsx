@@ -10,7 +10,6 @@ interface DeviceConfigProps {
 }
 
 export default function DeviceConfig(props: DeviceConfigProps) {
-  const [saveError, setSaveError] = createSignal<string | null>(null);
   const hasConfigError = () => !!props.device?.configErrorMessage;
 
   const deviceData = () => props.device;
@@ -26,14 +25,10 @@ export default function DeviceConfig(props: DeviceConfigProps) {
 
   const handleSubmit = (event: Event) => {
     event.preventDefault();
-    setSaveError(null);
 
-    try {
-      props.onSave();
-      props.onClose?.();
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Failed to save configuration");
-    }
+    props.onSave();
+    // Otherwise we don't see the error
+    // props.onClose?.();
   };
 
   return (
@@ -61,15 +56,9 @@ export default function DeviceConfig(props: DeviceConfigProps) {
         </div>
       </Show>
 
-      <Show when={!isLoading()}>
+      <Show when={!isLoading() && !hasConfigError()}>
         <form onSubmit={handleSubmit}>
           <div class={styles["device-config__fields"]}>{props.children}</div>
-
-          <Show when={saveError()}>
-            <div class={styles["device-config__error"]} role="alert">
-              {saveError()}
-            </div>
-          </Show>
 
           <div class={styles["device-config__actions"]}>
             {props.onClose && (

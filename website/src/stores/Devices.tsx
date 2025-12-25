@@ -125,7 +125,7 @@ export function createDevicesStore({
             produce((draft) => {
               const draftDevice = draft.devices[message.deviceId];
               if (draftDevice) {
-                draftDevice.config = message.config;
+                draftDevice.config = message.config ?? {};
                 draftDevice.configErrorMessage = undefined;
               }
             })
@@ -161,12 +161,12 @@ export function createDevicesStore({
               }
             })
           );
-        } else {
+        } else if ("config" in message) {
           setStore(
             produce((draft) => {
               const draftDevice = draft.devices[message.deviceId];
               if (draftDevice) {
-                draftDevice.config = (message as any)?.config;
+                draftDevice.config = message.config;
                 draftDevice.configErrorMessage = undefined;
               }
             })
@@ -193,6 +193,30 @@ export function createDevicesStore({
               if (draftDevice) {
                 draftDevice.stateErrorMessage =
                   (message as any).message || (message as any).error || "Unknown error";
+              }
+            })
+          );
+        }
+        break;
+      }
+      case "device-save-config": {
+        if ("success" in message && !message.success) {
+          setStore(
+            produce((draft) => {
+              const draftDevice = draft.devices[message.deviceId];
+              if (draftDevice) {
+                draftDevice.configErrorMessage =
+                  (message as any).message || (message as any).error || "Unknown error";
+              }
+            })
+          );
+        } else if ("config" in message) {
+          setStore(
+            produce((draft) => {
+              const draftDevice = draft.devices[message.deviceId];
+              if (draftDevice) {
+                draftDevice.config = message.config ?? {};
+                draftDevice.configErrorMessage = undefined;
               }
             })
           );

@@ -23,7 +23,7 @@
  *
  * Provides only core identity and lifecycle. Extend with mixins for:
  * - RTOS task support (withRtos)
- * - Configuration persistence (makeSaveable)
+ * - Configuration persistence (makeSerializable)
  * - WebSocket control (makeControllable)
  */
 class DeviceBase

@@ -167,7 +167,7 @@ namespace composition
         }
     }
 
-    void Led::loadConfigFromJson(const JsonDocument &config)
+    void Led::jsonToConfig(const JsonDocument &config)
     {
         if (config["pin"].is<int>())
         {
@@ -183,7 +183,7 @@ namespace composition
         }
     }
 
-    void Led::saveConfigToJson(JsonDocument &doc)
+    void Led::configToJson(JsonDocument &doc)
     {
         doc["pin"] = _config.pin;
         doc["name"] = _config.name;

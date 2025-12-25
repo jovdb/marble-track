@@ -2,7 +2,7 @@
 #include <LittleFS.h>
 #include "WebSocketManager.h"
 #include "devices/mixins/IControllable.h"
-#include "devices/mixins/SaveableMixin.h"
+#include "devices/mixins/SerializableMixin.h"
 #include "devices/composition/Led.h"
 #include "DeviceManager.h"
 #include "Network.h"
@@ -403,7 +403,7 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
         return;
     }
 
-    // Support composition devices (DeviceBase) that implement saveable config
+    // Support composition devices (DeviceBase) that implement serializable config
     DeviceBase *compositionDevice = deviceManager->getCompositionDeviceById(deviceId);
     if (compositionDevice)
     {
@@ -413,14 +413,14 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
             return;
         }
 
-        // Currently support composition::Led which implements SaveableMixin
+        // Currently support composition::Led which implements SerializableMixin
         if (compositionDevice->getType() == "led")
         {
             composition::Led *ledDevice = static_cast<composition::Led *>(compositionDevice);
             JsonObject configObj = doc["config"].as<JsonObject>();
             JsonDocument configDoc;
             configDoc.set(configObj);
-            ledDevice->loadConfigFromJson(configDoc);
+            ledDevice->jsonToConfig(configDoc);
 
             deviceManager->saveDevicesToJsonFile();
 
@@ -431,7 +431,7 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
             response["deviceId"] = deviceId;
 
             JsonDocument savedConfig;
-            ledDevice->saveConfigToJson(savedConfig);
+            ledDevice->configToJson(savedConfig);
             response["config"] = savedConfig;
 
             String respStr;
@@ -515,21 +515,21 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
     if (compositionDevice)
     {
         bool isControllable = compositionDevice->hasMixin("controllable");
-        bool isSaveable = compositionDevice->hasMixin("saveable");
+        bool isSerializable = compositionDevice->hasMixin("serializable");
 
         JsonDocument response;
         response["type"] = "device-config";
         response["triggerBy"] = "get";
         response["deviceId"] = deviceId;
 
-        if (isControllable && isSaveable)
+        if (isControllable && isSerializable)
         {
-            // Try to cast to composition::Led (we know it supports SaveableMixin)
+            // Try to cast to composition::Led (we know it supports SerializableMixin)
             composition::Led *ledDevice = static_cast<composition::Led *>(compositionDevice);
             if (ledDevice)
             {
                 JsonDocument configDoc;
-                ledDevice->saveConfigToJson(configDoc);
+                ledDevice->configToJson(configDoc);
                 response["config"] = configDoc;
             }
             else
@@ -539,7 +539,7 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
         }
         else
         {
-            // Device found but not controllable or not saveable
+            // Device found but not controllable or not serializable
             response["config"] = nullptr;
         }
 

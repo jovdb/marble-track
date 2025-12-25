@@ -10,7 +10,7 @@
 #include "devices/mixins/StateMixin.h"
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"
-#include "devices/mixins/SaveableMixin.h"
+#include "devices/mixins/SerializableMixin.h"
 
 namespace composition
 {
@@ -65,7 +65,7 @@ namespace composition
                    public ConfigMixin<Button, ButtonConfig>,
                    public StateMixin<Button, ButtonState>,
                    public ControllableMixin<Button>,
-                   public SaveableMixin<Button>
+                   public SerializableMixin<Button>
     {
     public:
         explicit Button(const String &id);
@@ -90,9 +90,9 @@ namespace composition
         void addStateToJson(JsonDocument &doc) override;
         bool control(const String &action, JsonObject *args = nullptr) override;
 
-        // SaveableMixin implementation
-        void loadConfigFromJson(const JsonDocument &config) override;
-        void saveConfigToJson(JsonDocument &doc) override;
+        // SerializableMixin implementation
+        void jsonToConfig(const JsonDocument &config) override;
+        void configToJson(JsonDocument &doc) override;
 
     private:
         bool readIsButtonPressed();

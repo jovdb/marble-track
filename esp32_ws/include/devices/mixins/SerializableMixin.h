@@ -1,35 +1,35 @@
 /**
- * @file SaveableMixin.h
+ * @file SerializableMixin.h
  * @brief Mixin for devices that can save/load configuration to/from JSON
  *
  * Requires the derived class to implement:
- * - void loadConfigFromJson(const JsonDocument &config)
- * - void saveConfigToJson(JsonDocument &doc)
+ * - void jsonToConfig(const JsonDocument &config)
+ * - void configToJson(JsonDocument &doc)
  */
 
-#ifndef SAVEABLE_MIXIN_H
-#define SAVEABLE_MIXIN_H
+#ifndef SERIALIZABLE_MIXIN_H
+#define SERIALIZABLE_MIXIN_H
 
 #include <ArduinoJson.h>
 
 /**
- * @class SaveableMixin
+ * @class SerializableMixin
  * @brief Mixin that provides config persistence capability
  *
  * The derived class must implement:
- * - void loadConfigFromJson(const JsonDocument &config) - Load device config from JSON
- * - void saveConfigToJson(JsonDocument &doc) - Save device config to JSON
- * Automatically registers itself with DeviceBase::registerMixin("saveable")
+ * - void jsonToConfig(const JsonDocument &config) - Load device config from JSON
+ * - void configToJson(JsonDocument &doc) - Save device config to JSON
+ * Automatically registers itself with DeviceBase::registerMixin("serializable")
  */
 template <typename Derived>
-class SaveableMixin
+class SerializableMixin
 {
 protected:
-    SaveableMixin()
+    SerializableMixin()
     {
         // Register this mixin with the base class
         auto *derived = static_cast<Derived *>(this);
-        derived->registerMixin("saveable");
+        derived->registerMixin("serializable");
     }
 
     /**
@@ -37,7 +37,7 @@ protected:
      * Default implementation does nothing. Override in derived class if needed.
      * @param config The JSON document to read from
      */
-    virtual void loadConfigFromJson(const JsonDocument &config)
+    virtual void jsonToConfig(const JsonDocument &config)
     {
         // Default: do nothing
         (void)config; // Suppress unused parameter warning
@@ -48,14 +48,14 @@ protected:
      * Default implementation does nothing. Override in derived class if needed.
      * @param doc The JSON document to extend
      */
-    virtual void saveConfigToJson(JsonDocument &doc)
+    virtual void configToJson(JsonDocument &doc)
     {
         // Default: do nothing
         (void)doc; // Suppress unused parameter warning
     }
 
 public:
-    virtual ~SaveableMixin() = default;
+    virtual ~SerializableMixin() = default;
 };
 
 #endif // SAVEABLE_MIXIN_H

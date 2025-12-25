@@ -10,7 +10,7 @@
 #include "devices/mixins/StateMixin.h"
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"
-#include "devices/mixins/SaveableMixin.h"
+#include "devices/mixins/SerializableMixin.h"
 
 namespace composition
 {
@@ -41,7 +41,7 @@ namespace composition
      * @class Led
      * @brief LED with configurable pin, state management, and control interface
      */
-    class Led : public DeviceBase, public ConfigMixin<Led, LedConfig>, public StateMixin<Led, LedState>, public ControllableMixin<Led>, public SaveableMixin<Led>
+    class Led : public DeviceBase, public ConfigMixin<Led, LedConfig>, public StateMixin<Led, LedState>, public ControllableMixin<Led>, public SerializableMixin<Led>
     {
     public:
         explicit Led(const String &id);
@@ -57,9 +57,9 @@ namespace composition
         void addStateToJson(JsonDocument &doc) override;
         bool control(const String &action, JsonObject *args = nullptr) override;
 
-        // SaveableMixin implementation
-        void loadConfigFromJson(const JsonDocument &config) override;
-        void saveConfigToJson(JsonDocument &doc) override;
+        // SerializableMixin implementation
+        void jsonToConfig(const JsonDocument &config) override;
+        void configToJson(JsonDocument &doc) override;
 
     protected:
     };

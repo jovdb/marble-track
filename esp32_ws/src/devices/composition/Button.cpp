@@ -72,7 +72,7 @@ namespace composition
             if (isButtonPressed != _state.isPressed)
             {
                 _state.isPressed = isButtonPressed;
-                MLOG_INFO("%s: Contact state changed to %s", toString().c_str(), _state.input ? "HIGH" : "LOW");
+                MLOG_INFO("%s: New button data read: %s", toString().c_str(), _state.input ? "HIGH" : "LOW");
                 notifyStateChanged();
             }
         }
@@ -124,7 +124,7 @@ namespace composition
         return false;
     }
 
-    void Button::loadConfigFromJson(const JsonDocument &config)
+    void Button::jsonToConfig(const JsonDocument &config)
     {
         if (config["pin"].is<int>())
             _config.pin = config["pin"].as<int>();
@@ -138,7 +138,7 @@ namespace composition
             _config.buttonType = buttonTypeFromString(config["buttonType"].as<String>());
     }
 
-    void Button::saveConfigToJson(JsonDocument &doc)
+    void Button::configToJson(JsonDocument &doc)
     {
         doc["pin"] = _config.pin;
         doc["name"] = _config.name;

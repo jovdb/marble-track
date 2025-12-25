@@ -33,7 +33,8 @@ public:
     virtual ~DeviceBase() = default;
 
     // Lifecycle
-    virtual void setup() {}
+    // Default setup calls setup on children
+    virtual void setup();
     virtual void loop() {}
 
     // Identity

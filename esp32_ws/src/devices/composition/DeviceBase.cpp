@@ -5,9 +5,17 @@
 
 #include "devices/composition/DeviceBase.h"
 
-DeviceBase::DeviceBase(const String &id, const String &type)
-    : _id(id), _type(type), _name(id)
+DeviceBase::DeviceBase(const String &id, const String &type) : _id(id), _type(type), _name(id) {}
+
+void DeviceBase::setup()
 {
+    for (DeviceBase *child : _children)
+    {
+        if (child)
+        {
+            child->setup();
+        }
+    }
 }
 
 void DeviceBase::addChild(DeviceBase *child)
@@ -31,7 +39,9 @@ void DeviceBase::registerMixin(const String &mixinName)
     for (const auto &mixin : _mixins)
     {
         if (mixin == mixinName)
+        {
             return;
+        }
     }
     _mixins.push_back(mixinName);
 }
@@ -41,7 +51,9 @@ bool DeviceBase::hasMixin(const String &mixinName) const
     for (const auto &mixin : _mixins)
     {
         if (mixin == mixinName)
+        {
             return true;
+        }
     }
     return false;
 }

@@ -63,24 +63,25 @@ const DeviceJsonConfig: Component<Props> = (props) => {
         value={jsonText()}
         onInput={(e) => setJsonText(e.currentTarget.value)}
         style={{
-          "font-family": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+          "font-family":
+            "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
           "font-size": "0.85rem",
-          "padding": "0.5rem",
+          padding: "0.5rem",
           "border-radius": "6px",
-          "border": "1px solid #e1e4e8",
+          border: "1px solid #e1e4e8",
           "min-height": "200px",
-          "resize": "vertical",
-          "background": "#f6f8fa",
+          resize: "vertical",
+          background: "#f6f8fa",
         }}
       />
       {error() && (
         <div
           style={{
             color: "#d1242f",
-            "background": "#ffeef0",
-            "padding": "0.5rem",
+            background: "#ffeef0",
+            padding: "0.5rem",
             "border-radius": "6px",
-            "border": "1px solid #d1242f",
+            border: "1px solid #d1242f",
             "font-size": "0.85rem",
           }}
           role="alert"
@@ -92,11 +93,11 @@ const DeviceJsonConfig: Component<Props> = (props) => {
         <button
           onClick={handleCancel}
           style={{
-            "padding": "0.5rem 1rem",
+            padding: "0.5rem 1rem",
             "border-radius": "6px",
-            "border": "1px solid #e1e4e8",
-            "background": "#fff",
-            "cursor": "pointer",
+            border: "1px solid #e1e4e8",
+            background: "#fff",
+            cursor: "pointer",
             "font-size": "0.9rem",
           }}
         >
@@ -106,14 +107,14 @@ const DeviceJsonConfig: Component<Props> = (props) => {
           onClick={handleSave}
           disabled={!!error()}
           style={{
-            "padding": "0.5rem 1rem",
+            padding: "0.5rem 1rem",
             "border-radius": "6px",
-            "border": "1px solid #1f883d",
-            "background": "#1f883d",
-            "color": "#fff",
-            "cursor": error() ? "not-allowed" : "pointer",
+            border: "1px solid #1f883d",
+            background: "#1f883d",
+            color: "#fff",
+            cursor: error() ? "not-allowed" : "pointer",
             "font-size": "0.9rem",
-            "opacity": error() ? "0.6" : "1",
+            opacity: error() ? "0.6" : "1",
           }}
         >
           Save

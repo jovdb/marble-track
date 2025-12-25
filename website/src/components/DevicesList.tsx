@@ -10,7 +10,16 @@ import {
 } from "../interfaces/WebSockets";
 
 // Available device types
-const DEVICE_TYPES = ["Button", "Buzzer", "Led", "Lift", "PwmMotor", "Servo", "Stepper", "Wheel"] as const;
+const DEVICE_TYPES = [
+  "Button",
+  "Buzzer",
+  "Led",
+  "Lift",
+  "PwmMotor",
+  "Servo",
+  "Stepper",
+  "Wheel",
+] as const;
 
 export function DevicesList() {
   const [devicesState, { loadDevices }] = useDevices();

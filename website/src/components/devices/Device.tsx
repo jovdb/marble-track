@@ -23,7 +23,9 @@ export function Device(props: DeviceProps) {
   const configIsAvailable = createMemo(
     () => device()?.config !== null && device()?.config !== undefined
   );
-  const canShowConfigButton = createMemo(() => (hasConfig() || configIsAvailable()) && configIsAvailable());
+  const canShowConfigButton = createMemo(
+    () => (hasConfig() || configIsAvailable()) && configIsAvailable()
+  );
   console.log({
     id: device()?.id,
     hasConfig: hasConfig(),
@@ -224,13 +226,16 @@ export function Device(props: DeviceProps) {
               role="region"
               aria-live="polite"
             >
-              <Show when={props.configComponent} fallback={
-                <DeviceJsonConfig 
-                  deviceId={props.id} 
-                  config={device()?.config}
-                  onClose={() => setShowConfig(false)} 
-                />
-              }>
+              <Show
+                when={props.configComponent}
+                fallback={
+                  <DeviceJsonConfig
+                    deviceId={props.id}
+                    config={device()?.config}
+                    onClose={() => setShowConfig(false)}
+                  />
+                }
+              >
                 {props.configComponent!(() => setShowConfig(false))}
               </Show>
             </div>

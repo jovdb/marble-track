@@ -13,6 +13,8 @@ export interface IDevice<
   id: string;
   type: string;
   pins?: number[];
+  /** Generic features mirrored from firmware mixins */
+  features?: string[];
   state?: TState;
   stateErrorMessage?: string;
   config?: TConfig;
@@ -20,7 +22,6 @@ export interface IDevice<
   children?: {
     id: string;
     type: string;
-    pins?: number[];
   }[]; // Array of child device IDs
 }
 
@@ -60,6 +61,7 @@ export function createDevicesStore({
                   // Update device
                   deviceDraft.type = device.type;
                   deviceDraft.pins = device.pins;
+                  deviceDraft.features = device.features;
                   deviceDraft.children = device.children || [];
                 } else {
                   // Add device
@@ -67,6 +69,7 @@ export function createDevicesStore({
                     id: device.id,
                     type: device.type,
                     pins: device.pins,
+                    features: device.features,
                     state: undefined,
                     config: undefined,
                     children: device.children || [],
@@ -80,6 +83,7 @@ export function createDevicesStore({
                     // Update child device
                     childDraft.type = child.type;
                     childDraft.pins = child.pins;
+                    childDraft.features = child.features;
                     childDraft.children = child.children || [];
                   } else {
                     // Add child device
@@ -87,6 +91,7 @@ export function createDevicesStore({
                       id: child.id,
                       type: child.type,
                       pins: child.pins,
+                      features: child.features,
                       state: undefined,
                       config: undefined,
                       children: child.children || [],

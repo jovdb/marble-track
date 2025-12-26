@@ -92,6 +92,16 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
                     pinsArr.add(pin);
                 }
 
+                // Generic features: mirror mixins as an array
+                {
+                    const auto &mixins = deviceList[i]->getMixins();
+                    JsonArray featuresArr = deviceObj["features"].to<JsonArray>();
+                    for (const auto &mx : mixins)
+                    {
+                        featuresArr.add(mx);
+                    }
+                }
+
                 // Add children array
                 JsonArray childrenArr = deviceObj["children"].to<JsonArray>();
                 for (DeviceBase *child : deviceList[i]->getChildren())
@@ -108,6 +118,16 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
                         for (int pin : childPins)
                         {
                             childPinsArr.add(pin);
+                        }
+
+                                               // Child features: mirror mixins as an array
+                        {
+                            const auto &childMixins = child->getMixins();
+                            JsonArray childFeaturesArr = childObj["features"].to<JsonArray>();
+                            for (const auto &cmx : childMixins)
+                            {
+                                childFeaturesArr.add(cmx);
+                            }
                         }
                     }
                 }
@@ -239,7 +259,7 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
         notifyClients(createJsonResponse(false, "DeviceManager not available", "", "", "device-save-config", deviceId));
         return;
     }
-    
+
     // Support composition devices (DeviceBase) that implement serializable config
     DeviceBase *device = deviceManager->getDeviceById(deviceId);
     if (device)
@@ -262,7 +282,6 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
                 serializable->jsonToConfig(configDoc);
 
                 deviceManager->saveDevicesToJsonFile();
-
 
                 // Build device-config response after save
                 JsonDocument response;

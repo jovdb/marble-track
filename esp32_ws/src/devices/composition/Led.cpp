@@ -50,7 +50,9 @@ namespace composition
 
     std::vector<int> Led::getPins() const
     {
-        return {_config.pin};
+        if (_config.pin >= 0)
+            return {_config.pin};
+        return {};
     }
 
     bool Led::set(bool value)

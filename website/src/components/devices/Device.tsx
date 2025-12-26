@@ -19,22 +19,17 @@ export function Device(props: DeviceProps) {
   const deviceStore = useDevice(props.id);
   const device = () => deviceStore[0];
 
-  const hasConfig = createMemo(() => Boolean(props.configComponent));
-  const configIsAvailable = createMemo(
-    () => device()?.config !== null && device()?.config !== undefined
-  );
-  const canShowConfigButton = createMemo(
-    () => (hasConfig() || configIsAvailable()) && configIsAvailable()
-  );
+  const hasConfigComponent = createMemo(() => Boolean(props.configComponent));
+  const hasConfigFeature = createMemo(() => device()?.features?.includes("config") ?? false);
+  const canShowConfigButton = createMemo(() => hasConfigFeature() && hasConfigComponent());
   console.log({
     id: device()?.id,
-    hasConfig: hasConfig(),
-    configIsAvailable: configIsAvailable(),
+    hasConfig: hasConfigComponent(),
     canShowConfigButton: canShowConfigButton(),
   });
   const [isCollapsed, setIsCollapsed] = createSignal(true);
   const [showChildren, setShowChildren] = createSignal(
-    !hasConfig() && !!device()?.children?.length
+    !hasConfigComponent() && !!device()?.children?.length
   );
 
   const [showConfig, setShowConfig] = createSignal(false);
@@ -219,7 +214,9 @@ export function Device(props: DeviceProps) {
               <For each={device()?.children}>{(child) => renderDeviceComponent(child)}</For>
             </div>
           )}
-          <Show when={showConfig() && (props.configComponent || configIsAvailable())}>
+          <Show
+            when={showConfig() && props.configComponent && device()?.features?.includes("config")}
+          >
             <div
               class={styles.device__children}
               id={configPanelId}

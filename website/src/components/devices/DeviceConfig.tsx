@@ -1,4 +1,4 @@
-import { JSX, onMount, createSignal, Show } from "solid-js";
+import { JSX, onMount, Show } from "solid-js";
 import styles from "./DeviceConfig.module.css";
 
 interface DeviceConfigProps {

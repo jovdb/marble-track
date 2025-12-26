@@ -55,7 +55,7 @@ const DeviceJsonConfig: Component<Props> = (props) => {
         gap: "0.75rem",
       }}
     >
-      <label htmlFor={`config-textarea-${props.deviceId}`} style={{ "font-weight": "500" }}>
+      <label for={`config-textarea-${props.deviceId}`} style={{ "font-weight": "500" }}>
         Device Configuration (JSON)
       </label>
       <textarea

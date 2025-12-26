@@ -206,19 +206,20 @@ void setup()
   testTask->setup();
   deviceManager.addTaskDevice(testTask);
 */
-  // Create test Servo on pin 16
-  Servo *testServo = new Servo("test-servo", globalNotifyClientsCallback);
-  JsonDocument servoConfig;
-  servoConfig["name"] = "Test Servo";
-  servoConfig["pin"] = 16;
-  servoConfig["mcpwmChannel"] = -1;   // Auto-acquire
-  servoConfig["frequency"] = 50;      // Standard servo frequency
-  servoConfig["minDutyCycle"] = 2.5;  // 0 degrees
-  servoConfig["maxDutyCycle"] = 12.5; // 180 degrees
-  servoConfig["defaultDurationInMs"] = 500;
-  testServo->setup(servoConfig);
-  deviceManager.addTaskDevice(testServo);
-
+  /*
+    // Create test Servo on pin 16
+    Servo *testServo = new Servo("test-servo", globalNotifyClientsCallback);
+    JsonDocument servoConfig;
+    servoConfig["name"] = "Test Servo";
+    servoConfig["pin"] = 16;
+    servoConfig["mcpwmChannel"] = -1;   // Auto-acquire
+    servoConfig["frequency"] = 50;      // Standard servo frequency
+    servoConfig["minDutyCycle"] = 2.5;  // 0 degrees
+    servoConfig["maxDutyCycle"] = 12.5; // 180 degrees
+    servoConfig["defaultDurationInMs"] = 500;
+    testServo->setup(servoConfig);
+    deviceManager.addTaskDevice(testServo);
+  */
   // Create composition LED test on pin 15
   /*
   testLed2 = new composition::Led("led2");

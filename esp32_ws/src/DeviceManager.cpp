@@ -17,8 +17,6 @@
 #include "devices/Lift.h"
 #include "devices/composition/Led.h"
 #include "devices/composition/Button.h"
-#include "devices/composition/Test2.h"
-#include "devices/mixins/SerializableMixin.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
 
@@ -200,10 +198,6 @@ void DeviceManager::loadDevicesFromJsonFile()
             {
                 newDevice = new composition::Button(id);
             }
-            else if (type == "test2")
-            {
-                newDevice = new composition::Test2(id);
-            }
             else
             {
                 MLOG_WARN("Unknown composition device type: %s", type.c_str());
@@ -215,13 +209,16 @@ void DeviceManager::loadDevicesFromJsonFile()
                 // Load config if device is serializable and config exists
                 if (newDevice->hasMixin("serializable") && obj["config"].is<JsonObject>())
                 {
-                    // Use getSerializable() for RTTI-free access to ISerializable interface
-                    ISerializable *serializable = newDevice->getSerializable();
-                    if (serializable)
+                    JsonObject configObj = obj["config"];
+                    if (type == "led")
                     {
-                        JsonDocument configDoc;
-                        configDoc.set(obj["config"].as<JsonObject>());
-                        serializable->jsonToConfig(configDoc);
+                        composition::Led *ledDevice = static_cast<composition::Led *>(newDevice);
+                        ledDevice->jsonToConfig(configObj);
+                    }
+                    else if (type == "button")
+                    {
+                        composition::Button *buttonDevice = static_cast<composition::Button *>(newDevice);
+                        buttonDevice->jsonToConfig(configObj);
                     }
                 }
 
@@ -300,15 +297,30 @@ void DeviceManager::saveDevicesToJsonFile()
             childrenArray.add(child->getId());
         }
 
-        // Only save config for devices that implement SerializableMixin (ISerializable)
+        // Only save config for devices that implement SerializableMixin
         if (device->hasMixin("serializable"))
         {
-            ISerializable *serializable = device->getSerializable();
-            if (serializable)
+            // For now, we handle known serializable composition devices
+            // Led and Button implement SerializableMixin
+            if (device->getType() == "led")
             {
-                JsonDocument configDoc;
-                serializable->configToJson(configDoc);
-                deviceObj["config"] = configDoc.as<JsonObject>();
+                composition::Led *ledDevice = static_cast<composition::Led *>(device);
+                if (ledDevice)
+                {
+                    JsonDocument configDoc;
+                    ledDevice->configToJson(configDoc);
+                    deviceObj["config"] = configDoc.as<JsonObject>();
+                }
+            }
+            else if (device->getType() == "button")
+            {
+                composition::Button *buttonDevice = static_cast<composition::Button *>(device);
+                if (buttonDevice)
+                {
+                    JsonDocument configDoc;
+                    buttonDevice->configToJson(configDoc);
+                    deviceObj["config"] = configDoc.as<JsonObject>();
+                }
             }
         }
     }
@@ -692,6 +704,7 @@ ControllableTaskDevice *DeviceManager::getControllableTaskDeviceById(const Strin
 
 bool DeviceManager::removeDevice(const String &deviceId)
 {
+    // Try to remove from legacy devices array
     for (int i = 0; i < devicesCount; i++)
     {
         if (devices[i] != nullptr && devices[i]->getId() == deviceId)
@@ -706,6 +719,26 @@ bool DeviceManager::removeDevice(const String &deviceId)
             }
             devices[devicesCount - 1] = nullptr;
             devicesCount--;
+
+            return true;
+        }
+    }
+
+    // Try to remove from composition devices array
+    for (int i = 0; i < devices2Count; i++)
+    {
+        if (devices2[i] != nullptr && devices2[i]->getId() == deviceId)
+        {
+            MLOG_INFO("Removing composition device: %s (%s)", devices2[i]->getId().c_str(), devices2[i]->getType().c_str());
+            delete devices2[i];
+
+            // Shift remaining devices down
+            for (int j = i; j < devices2Count - 1; j++)
+            {
+                devices2[j] = devices2[j + 1];
+            }
+            devices2[devices2Count - 1] = nullptr;
+            devices2Count--;
 
             return true;
         }
@@ -830,48 +863,6 @@ bool DeviceManager::addDevice(const String &deviceType, const String &deviceId, 
     return true;
 }
 
-// ======== Composition Device (DeviceBase) Methods ========
-
-DeviceBase *DeviceManager::createCompositionDevice(const String &deviceType, const String &deviceId, JsonVariant config)
-{
-    DeviceBase *newDevice = nullptr;
-    String lowerType = deviceType;
-    lowerType.toLowerCase();
-
-    // Create composition devices based on type
-    if (lowerType == "led")
-    {
-        newDevice = new composition::Led(deviceId);
-    }
-    else if (lowerType == "button")
-    {
-        newDevice = new composition::Button(deviceId);
-    }
-    else if (lowerType == "test2")
-    {
-        newDevice = new composition::Test2(deviceId);
-    }
-    else
-    {
-        MLOG_ERROR("Unknown composition device type: %s", deviceType.c_str());
-        return nullptr;
-    }
-
-    // Load config if provided and device is serializable
-    if (newDevice && newDevice->hasMixin("serializable") && config.is<JsonObject>())
-    {
-        ISerializable *serializable = newDevice->getSerializable();
-        if (serializable)
-        {
-            JsonDocument configDoc;
-            configDoc.set(config.as<JsonObject>());
-            serializable->jsonToConfig(configDoc);
-        }
-    }
-
-    return newDevice;
-}
-
 bool DeviceManager::addCompositionDevice(const String &deviceType, const String &deviceId, JsonVariant config)
 {
     if (devices2Count >= MAX_COMPOSITION_DEVICES)
@@ -887,18 +878,55 @@ bool DeviceManager::addCompositionDevice(const String &deviceType, const String 
         return false;
     }
 
-    DeviceBase *newDevice = createCompositionDevice(deviceType, deviceId, config);
-    if (newDevice == nullptr)
+    DeviceBase *newDevice = nullptr;
+    String lowerType = deviceType;
+    lowerType.toLowerCase();
+
+    // Create composition devices based on type
+    if (lowerType == "led")
     {
+        newDevice = new composition::Led(deviceId);
+    }
+    else if (lowerType == "button")
+    {
+        newDevice = new composition::Button(deviceId);
+    }
+    else
+    {
+        MLOG_ERROR("Unknown composition device type: %s", deviceType.c_str());
         return false;
     }
 
-    devices2[devices2Count] = newDevice;
-    devices2Count++;
+    if (newDevice)
+    {
+        // Load config if device is serializable and config exists
+        if (newDevice->hasMixin("serializable") && config.is<JsonObject>())
+        {
+            JsonObject configObj = config.as<JsonObject>();
+            if (lowerType == "led")
+            {
+                composition::Led *ledDevice = static_cast<composition::Led *>(newDevice);
+                ledDevice->jsonToConfig(configObj);
+            }
+            else if (lowerType == "button")
+            {
+                composition::Button *buttonDevice = static_cast<composition::Button *>(newDevice);
+                buttonDevice->jsonToConfig(configObj);
+            }
+        }
 
-    MLOG_INFO("Added composition device to array: %s (%s)", deviceId.c_str(), deviceType.c_str());
-    return true;
+        // Add to device manager
+        devices2[devices2Count] = newDevice;
+        devices2Count++;
+
+        MLOG_INFO("Added composition device to array: %s (%s)", deviceId.c_str(), deviceType.c_str());
+        return true;
+    }
+
+    return false;
 }
+
+// ======== Composition Device (DeviceBase) Methods ========
 
 bool DeviceManager::addDevice(DeviceBase *device)
 {

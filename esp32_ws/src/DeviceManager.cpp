@@ -84,7 +84,11 @@ void DeviceManager::loadDevicesFromJsonFile()
     }
     devicesCount = 0;
 
-    // Load devices from JSON
+    // First pass: create all devices and keep them in a local list by id
+    struct IdDevicePair { String id; DeviceBase *dev; JsonObject obj; };
+    std::vector<IdDevicePair> created;
+    created.reserve(arr.size());
+
     for (JsonObject obj : arr)
     {
         const String id = obj["id"] | "";
@@ -97,7 +101,6 @@ void DeviceManager::loadDevicesFromJsonFile()
         }
 
         DeviceBase *newDevice = createDevice(id, type);
-
         if (!newDevice)
         {
             continue;
@@ -115,11 +118,75 @@ void DeviceManager::loadDevicesFromJsonFile()
             }
         }
 
-        // Add to device manager
-        addDevice(newDevice);
+        // Keep device and its source JSON object for second pass
+        created.push_back({id, newDevice, obj});
     }
 
-    MLOG_INFO("Loaded %d devices from %s", devicesCount, CONFIG_FILE);
+    // Helper to find a device by id in local list
+    auto findLocalById = [&](const String &searchId) -> DeviceBase * {
+        for (auto &pair : created)
+        {
+            if (pair.id == searchId)
+            {
+                return pair.dev;
+            }
+        }
+        return nullptr;
+    };
+
+    // Track which devices are referenced as children
+    std::vector<String> referencedChildren;
+    referencedChildren.reserve(created.size());
+
+    // Second pass: attach children by id
+    for (auto &pair : created)
+    {
+        JsonObject obj = pair.obj;
+        if (obj["children"].is<JsonArray>())
+        {
+            JsonArray chArr = obj["children"].as<JsonArray>();
+            for (JsonVariant v : chArr)
+            {
+                const String childId = v | "";
+                if (childId.isEmpty())
+                    continue;
+
+                DeviceBase *child = findLocalById(childId);
+                if (child)
+                {
+                    pair.dev->addChild(child);
+                    referencedChildren.push_back(childId);
+                }
+                else
+                {
+                    MLOG_WARN("Child device id '%s' not found for parent '%s'", childId.c_str(), pair.id.c_str());
+                }
+            }
+        }
+    }
+
+    // Third pass: add only root devices (not referenced as children) to manager
+    auto isReferenced = [&](const String &id) -> bool {
+        for (const auto &refId : referencedChildren)
+        {
+            if (refId == id)
+                return true;
+        }
+        return false;
+    };
+
+    int roots = 0;
+    for (auto &pair : created)
+    {
+        if (!isReferenced(pair.id))
+        {
+            addDevice(pair.dev);
+            roots++;
+        }
+    }
+
+    // Log result
+    MLOG_INFO("Loaded %d devices (%d roots) from %s", (int)created.size(), roots, CONFIG_FILE);
 }
 
 /**

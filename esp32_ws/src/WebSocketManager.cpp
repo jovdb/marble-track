@@ -261,9 +261,6 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
                 configDoc.set(configObj);
                 serializable->jsonToConfig(configDoc);
 
-                // Re-initialize the device with the new config
-                device->setup();
-
                 deviceManager->saveDevicesToJsonFile();
 
 

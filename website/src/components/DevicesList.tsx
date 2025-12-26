@@ -9,17 +9,8 @@ import {
   DeviceType,
 } from "../interfaces/WebSockets";
 
-// Available device types
-const DEVICE_TYPES = [
-  "Button",
-  "Buzzer",
-  "Led",
-  "Lift",
-  "PwmMotor",
-  "Servo",
-  "Stepper",
-  "Wheel",
-] as const;
+// Available composition device types (from esp32_ws/include/devices/composition/)
+const COMPOSITION_DEVICE_TYPES = ["Button", "Led", "Test2"] as const;
 
 export function DevicesList() {
   const [devicesState, { loadDevices }] = useDevices();
@@ -365,7 +356,9 @@ export function DevicesList() {
                 class={styles["modal-select"]}
               >
                 <option value="">Select a device type...</option>
-                <For each={DEVICE_TYPES}>{(type) => <option value={type}>{type}</option>}</For>
+                <For each={COMPOSITION_DEVICE_TYPES}>
+                  {(type) => <option value={type}>{type}</option>}
+                </For>
               </select>
             </div>
 

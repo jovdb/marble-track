@@ -75,11 +75,6 @@ DeviceManager deviceManager(globalNotifyClientsCallback);
 AutoMode *autoMode = nullptr;
 ManualMode *manualMode = nullptr;
 
-// Test LED using composition pattern
-composition::Led *testLed2 = nullptr;
-composition::Button *button2 = nullptr;
-composition::Test2 *test2 = nullptr;
-
 void setup()
 {
   // Initialize serial communication
@@ -249,32 +244,6 @@ void setup()
   MLOG_INFO("Composition Button test created on pin 7");
 */
 
-  // Create composition Test2 device (contains LED and Button children)
-  test2 = new composition::Test2("test2");
-
-  // Configure the child devices
-  composition::Led *test2Led = test2->getLed();
-  if (test2Led)
-  {
-    composition::LedConfig ledConfig;
-    ledConfig.pin = 13; // Use pin 13 for Test2 LED
-    test2Led->setConfig(ledConfig);
-  }
-
-  composition::Button *test2Button = test2->getButton();
-  if (test2Button)
-  {
-    composition::ButtonConfig buttonConfig;
-    buttonConfig.pin = 14; // Use pin 14 for Test2 Button
-    buttonConfig.name = "Test2 Button";
-    buttonConfig.pinMode = composition::PinModeOption::Floating;
-    test2Button->setConfig(buttonConfig);
-  }
-
-  deviceManager.addDevice(test2);
-  test2->setup();
-  MLOG_INFO("Composition Test2 device created with LED and Button children");
-
   MLOG_INFO("System initialization complete!");
 }
 
@@ -287,24 +256,6 @@ void loop()
   if (serialConsole)
   {
     serialConsole->loop();
-  }
-
-  // Update composition LED test
-  if (testLed2)
-  {
-    testLed2->loop();
-  }
-
-  // Update composition Button test
-  if (button2)
-  {
-    button2->loop();
-  }
-
-  // Update composition Test2 device
-  if (test2)
-  {
-    test2->loop();
   }
 
   OtaUpload::loop();

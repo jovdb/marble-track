@@ -57,11 +57,12 @@ namespace composition
         void addStateToJson(JsonDocument &doc) override;
         bool control(const String &action, JsonObject *args = nullptr) override;
 
-        // SerializableMixin implementation
+        // SerializableMixin implementation (ISerializable interface)
         void jsonToConfig(const JsonDocument &config) override;
         void configToJson(JsonDocument &doc) override;
 
-    protected:
+        // DeviceBase override for ISerializable access
+        ISerializable *getSerializable() override { return static_cast<ISerializable *>(this); }
     };
 
 } // namespace composition

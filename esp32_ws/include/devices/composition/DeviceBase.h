@@ -17,6 +17,9 @@
 #include <ArduinoJson.h>
 #include <vector>
 
+// Forward declaration
+class ISerializable;
+
 /**
  * @class DeviceBase
  * @brief Minimal base class for devices
@@ -55,6 +58,13 @@ public:
     bool hasMixin(const String &mixinName) const;
     const std::vector<String> &getMixins() const { return _mixins; }
     void registerMixin(const String &mixinName);
+
+    /**
+     * @brief Get ISerializable interface if device supports it
+     * Override in derived classes that implement SerializableMixin
+     * @return Pointer to ISerializable interface, or nullptr if not supported
+     */
+    virtual ISerializable *getSerializable() { return nullptr; }
 
 protected:
     String _id;

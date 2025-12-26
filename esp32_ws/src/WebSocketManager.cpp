@@ -413,35 +413,38 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
             return;
         }
 
-        // Currently support composition::Led which implements SerializableMixin
-        if (compositionDevice->getType() == "led")
+        // Use getSerializable() for RTTI-free access to ISerializable interface
+        if (compositionDevice->hasMixin("serializable"))
         {
-            composition::Led *ledDevice = static_cast<composition::Led *>(compositionDevice);
-            JsonObject configObj = doc["config"].as<JsonObject>();
-            JsonDocument configDoc;
-            configDoc.set(configObj);
-            ledDevice->jsonToConfig(configDoc);
+            ISerializable *serializable = compositionDevice->getSerializable();
+            if (serializable)
+            {
+                JsonObject configObj = doc["config"].as<JsonObject>();
+                JsonDocument configDoc;
+                configDoc.set(configObj);
+                serializable->jsonToConfig(configDoc);
 
-            deviceManager->saveDevicesToJsonFile();
+                deviceManager->saveDevicesToJsonFile();
 
-            // Build device-config response after save
-            JsonDocument response;
-            response["type"] = "device-config";
-            response["triggerBy"] = "set";
-            response["deviceId"] = deviceId;
+                // Build device-config response after save
+                JsonDocument response;
+                response["type"] = "device-config";
+                response["triggerBy"] = "set";
+                response["deviceId"] = deviceId;
 
-            JsonDocument savedConfig;
-            ledDevice->configToJson(savedConfig);
-            response["config"] = savedConfig;
+                JsonDocument savedConfig;
+                serializable->configToJson(savedConfig);
+                response["config"] = savedConfig;
 
-            String respStr;
-            serializeJson(response, respStr);
-            notifyClients(respStr);
-            return;
+                String respStr;
+                serializeJson(response, respStr);
+                notifyClients(respStr);
+                return;
+            }
         }
 
-        // Unknown composition type found but not handled explicitly
-        notifyClients(createJsonResponse(false, "Unsupported composition device type: " + compositionDevice->getType(), "", "", "device-save-config", deviceId));
+        // Device found but not serializable
+        notifyClients(createJsonResponse(false, "Device does not support config serialization: " + compositionDevice->getType(), "", "", "device-save-config", deviceId));
         return;
     }
 
@@ -514,7 +517,6 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
     DeviceBase *compositionDevice = deviceManager->getCompositionDeviceById(deviceId);
     if (compositionDevice)
     {
-        bool isControllable = compositionDevice->hasMixin("controllable");
         bool isSerializable = compositionDevice->hasMixin("serializable");
 
         JsonDocument response;
@@ -522,14 +524,14 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
         response["triggerBy"] = "get";
         response["deviceId"] = deviceId;
 
-        if (isControllable && isSerializable)
+        if (isSerializable)
         {
-            // Try to cast to composition::Led (we know it supports SerializableMixin)
-            composition::Led *ledDevice = static_cast<composition::Led *>(compositionDevice);
-            if (ledDevice)
+            // Use getSerializable() for RTTI-free access to ISerializable interface
+            ISerializable *serializable = compositionDevice->getSerializable();
+            if (serializable)
             {
                 JsonDocument configDoc;
-                ledDevice->configToJson(configDoc);
+                serializable->configToJson(configDoc);
                 response["config"] = configDoc;
             }
             else
@@ -539,7 +541,7 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
         }
         else
         {
-            // Device found but not controllable or not serializable
+            // Device found but not serializable
             response["config"] = nullptr;
         }
 
@@ -1070,8 +1072,8 @@ void WebSocketManager::handleAddDevice(JsonDocument &doc)
         return;
     }
 
-    // Check if device already exists
-    if (deviceManager->getDeviceById(deviceId) != nullptr)
+    // Check if device already exists (check both old devices and composition devices)
+    if (deviceManager->getCompositionDeviceById(deviceId) != nullptr)
     {
         response["error"] = "Device with ID '" + deviceId + "' already exists";
         String respStr;
@@ -1080,7 +1082,8 @@ void WebSocketManager::handleAddDevice(JsonDocument &doc)
         return;
     }
 
-    if (!deviceManager->addDevice(deviceType, deviceId, doc["config"]))
+    // Create composition device using the new factory
+    if (!deviceManager->addCompositionDevice(deviceType, deviceId, doc["config"]))
     {
         response["error"] = "Failed to create and add device of type '" + deviceType + "' with ID '" + deviceId + "'";
         String respStr;
@@ -1090,7 +1093,7 @@ void WebSocketManager::handleAddDevice(JsonDocument &doc)
     }
 
     // Setup the new device
-    Device *newDevice = deviceManager->getDeviceById(deviceId);
+    DeviceBase *newDevice = deviceManager->getCompositionDeviceById(deviceId);
     if (newDevice != nullptr)
     {
         newDevice->setup();
@@ -1111,7 +1114,7 @@ void WebSocketManager::handleAddDevice(JsonDocument &doc)
 
     deviceManager->notifyDevicesChanged();
 
-    MLOG_INFO("Added device: %s (%s)", deviceId.c_str(), deviceType.c_str());
+    MLOG_INFO("Added composition device: %s (%s)", deviceId.c_str(), deviceType.c_str());
 }
 
 void WebSocketManager::handleRemoveDevice(JsonDocument &doc)

@@ -160,6 +160,24 @@ public:
     Device *createDevice(const String &deviceType, const String &deviceId, JsonVariant config = JsonVariant(), NotifyClients notifyCallback = nullptr, HasClients hasClientsCallback = nullptr);
 
     /**
+     * @brief Create a new composition device (DeviceBase) of the specified type
+     * @param deviceType The type of device to create (led, button, test2)
+     * @param deviceId The unique ID for the new device
+     * @param config Optional JSON configuration object
+     * @return Pointer to the created device, or nullptr if creation failed
+     */
+    DeviceBase *createCompositionDevice(const String &deviceType, const String &deviceId, JsonVariant config = JsonVariant());
+
+    /**
+     * @brief Create and add a new composition device to the management system
+     * @param deviceType The type of device to create (led, button, test2)
+     * @param deviceId The unique ID for the new device
+     * @param config Optional JSON configuration object
+     * @return true if device was created and added successfully, false otherwise
+     */
+    bool addCompositionDevice(const String &deviceType, const String &deviceId, JsonVariant config = JsonVariant());
+
+    /**
      * @brief Create and add a new device to the management system
      * @param deviceType The type of device to create (led, button, pwmmotor, etc.)
      * @param deviceId The unique ID for the new device

@@ -15,6 +15,10 @@
 #include "devices/Wheel.h"
 #include "devices/PwmMotor.h"
 #include "devices/Lift.h"
+#include "devices/composition/Led.h"
+#include "devices/composition/Button.h"
+#include "devices/composition/Test2.h"
+#include "devices/mixins/SerializableMixin.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
 
@@ -162,19 +166,73 @@ void DeviceManager::loadDevicesFromJsonFile()
 
     if (arr.size() > 0)
     {
-        clearCurrentDevices();
+        // Clear existing composition devices
+        for (int i = 0; i < devices2Count; i++)
+        {
+            if (devices2[i])
+            {
+                delete devices2[i];
+                devices2[i] = nullptr;
+            }
+        }
+        devices2Count = 0;
 
-        // std::map<String, Device *> loadedDevices;
-        // createDevicesFromArray(arr, loadedDevices);
+        // Load composition devices from JSON
+        for (JsonObject obj : arr)
+        {
+            const String id = obj["id"] | "";
+            const String type = obj["type"] | "";
 
-        // std::set<String> childIds;
-        // collectChildIds(arr, childIds);
+            if (id.isEmpty() || type.isEmpty())
+            {
+                MLOG_WARN("Skipping device with missing id or type");
+                continue;
+            }
 
-        // addTopLevelDevices(loadedDevices, childIds);
+            DeviceBase *newDevice = nullptr;
 
-        // linkChildren(arr, loadedDevices);
+            // Create composition devices based on type
+            if (type == "led")
+            {
+                newDevice = new composition::Led(id);
+            }
+            else if (type == "button")
+            {
+                newDevice = new composition::Button(id);
+            }
+            else if (type == "test2")
+            {
+                newDevice = new composition::Test2(id);
+            }
+            else
+            {
+                MLOG_WARN("Unknown composition device type: %s", type.c_str());
+                continue;
+            }
 
-        // MLOG_INFO("Loaded %d devices from %s", loadedDevices.size(), CONFIG_FILE);
+            if (newDevice)
+            {
+                // Load config if device is serializable and config exists
+                if (newDevice->hasMixin("serializable") && obj["config"].is<JsonObject>())
+                {
+                    // Use getSerializable() for RTTI-free access to ISerializable interface
+                    ISerializable *serializable = newDevice->getSerializable();
+                    if (serializable)
+                    {
+                        JsonDocument configDoc;
+                        configDoc.set(obj["config"].as<JsonObject>());
+                        serializable->jsonToConfig(configDoc);
+                    }
+                }
+
+                // Add to device manager
+                addDevice(newDevice);
+
+                MLOG_INFO("Loaded composition device: %s (%s)", id.c_str(), type.c_str());
+            }
+        }
+
+        MLOG_INFO("Loaded %d composition devices from %s", devices2Count, CONFIG_FILE);
     }
 }
 
@@ -220,44 +278,37 @@ void DeviceManager::saveDevicesToJsonFile()
 
     JsonObject rootObj = doc.as<JsonObject>();
 
-    // Replace devices array with current snapshot to avoid stale entries
+    // Replace devices array with current composition devices snapshot
     rootObj.remove("devices");
     JsonArray devicesArray = rootObj["devices"].to<JsonArray>();
-    std::vector<Device *> allDevices = getAllDevices();
-    for (Device *device : allDevices)
+
+    // Only save composition devices (DeviceBase)
+    for (int i = 0; i < devices2Count; i++)
     {
+        DeviceBase *device = devices2[i];
+        if (!device)
+            continue;
+
         JsonObject deviceObj = devicesArray.add<JsonObject>();
         deviceObj["id"] = device->getId();
         deviceObj["type"] = device->getType();
 
         // Save children IDs
         JsonArray childrenArray = deviceObj["children"].to<JsonArray>();
-        for (Device *child : device->getChildren())
+        for (DeviceBase *child : device->getChildren())
         {
             childrenArray.add(child->getId());
         }
 
-        // Save device configuration
-        String configStr = device->getConfig();
-        if (configStr.length() > 0)
+        // Only save config for devices that implement SerializableMixin (ISerializable)
+        if (device->hasMixin("serializable"))
         {
-            JsonDocument configDoc;
-            DeserializationError err = deserializeJson(configDoc, configStr);
-            if (!err && configDoc.is<JsonObject>())
+            ISerializable *serializable = device->getSerializable();
+            if (serializable)
             {
+                JsonDocument configDoc;
+                serializable->configToJson(configDoc);
                 deviceObj["config"] = configDoc.as<JsonObject>();
-            }
-            else
-            {
-                if (err)
-                {
-                    MLOG_WARN("Device %s: failed to deserialize config for persistence (%s)", device->getId().c_str(), err.c_str());
-                }
-                else
-                {
-                    MLOG_WARN("Device %s: config is not a JSON object, preserving raw string", device->getId().c_str());
-                }
-                deviceObj["config"] = serialized(configStr.c_str());
             }
         }
     }
@@ -268,7 +319,7 @@ void DeviceManager::saveDevicesToJsonFile()
     {
         serializeJson(doc, file);
         file.close();
-        MLOG_INFO("Saved devices list to %s", CONFIG_FILE);
+        MLOG_INFO("Saved composition devices list to %s", CONFIG_FILE);
 
         // Log the saved JSON in pretty format
         // String prettyJson;
@@ -780,6 +831,74 @@ bool DeviceManager::addDevice(const String &deviceType, const String &deviceId, 
 }
 
 // ======== Composition Device (DeviceBase) Methods ========
+
+DeviceBase *DeviceManager::createCompositionDevice(const String &deviceType, const String &deviceId, JsonVariant config)
+{
+    DeviceBase *newDevice = nullptr;
+    String lowerType = deviceType;
+    lowerType.toLowerCase();
+
+    // Create composition devices based on type
+    if (lowerType == "led")
+    {
+        newDevice = new composition::Led(deviceId);
+    }
+    else if (lowerType == "button")
+    {
+        newDevice = new composition::Button(deviceId);
+    }
+    else if (lowerType == "test2")
+    {
+        newDevice = new composition::Test2(deviceId);
+    }
+    else
+    {
+        MLOG_ERROR("Unknown composition device type: %s", deviceType.c_str());
+        return nullptr;
+    }
+
+    // Load config if provided and device is serializable
+    if (newDevice && newDevice->hasMixin("serializable") && config.is<JsonObject>())
+    {
+        ISerializable *serializable = newDevice->getSerializable();
+        if (serializable)
+        {
+            JsonDocument configDoc;
+            configDoc.set(config.as<JsonObject>());
+            serializable->jsonToConfig(configDoc);
+        }
+    }
+
+    return newDevice;
+}
+
+bool DeviceManager::addCompositionDevice(const String &deviceType, const String &deviceId, JsonVariant config)
+{
+    if (devices2Count >= MAX_COMPOSITION_DEVICES)
+    {
+        MLOG_ERROR("Cannot add composition device: Maximum device limit reached (%d)", MAX_COMPOSITION_DEVICES);
+        return false;
+    }
+
+    // Check if device with same ID already exists
+    if (getCompositionDeviceById(deviceId) != nullptr)
+    {
+        MLOG_ERROR("Cannot add composition device: Device with ID '%s' already exists", deviceId.c_str());
+        return false;
+    }
+
+    DeviceBase *newDevice = createCompositionDevice(deviceType, deviceId, config);
+    if (newDevice == nullptr)
+    {
+        return false;
+    }
+
+    devices2[devices2Count] = newDevice;
+    devices2Count++;
+
+    MLOG_INFO("Added composition device to array: %s (%s)", deviceId.c_str(), deviceType.c_str());
+    return true;
+}
 
 bool DeviceManager::addDevice(DeviceBase *device)
 {

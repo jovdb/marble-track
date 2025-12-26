@@ -13,6 +13,31 @@
 #include <ArduinoJson.h>
 
 /**
+ * @class ISerializable
+ * @brief Interface for devices that support config serialization
+ *
+ * This interface provides a type-safe way to call serialization methods
+ * on devices without knowing their concrete type.
+ */
+class ISerializable
+{
+public:
+    virtual ~ISerializable() = default;
+
+    /**
+     * @brief Load device-specific config from JSON
+     * @param config The JSON document to read from
+     */
+    virtual void jsonToConfig(const JsonDocument &config) = 0;
+
+    /**
+     * @brief Save device-specific config to JSON
+     * @param doc The JSON document to extend
+     */
+    virtual void configToJson(JsonDocument &doc) = 0;
+};
+
+/**
  * @class SerializableMixin
  * @brief Mixin that provides config persistence capability
  *
@@ -22,7 +47,7 @@
  * Automatically registers itself with DeviceBase::registerMixin("serializable")
  */
 template <typename Derived>
-class SerializableMixin
+class SerializableMixin : public ISerializable
 {
 protected:
     SerializableMixin()
@@ -37,7 +62,7 @@ protected:
      * Default implementation does nothing. Override in derived class if needed.
      * @param config The JSON document to read from
      */
-    virtual void jsonToConfig(const JsonDocument &config)
+    void jsonToConfig(const JsonDocument &config) override
     {
         // Default: do nothing
         (void)config; // Suppress unused parameter warning
@@ -48,14 +73,11 @@ protected:
      * Default implementation does nothing. Override in derived class if needed.
      * @param doc The JSON document to extend
      */
-    virtual void configToJson(JsonDocument &doc)
+    void configToJson(JsonDocument &doc) override
     {
         // Default: do nothing
         (void)doc; // Suppress unused parameter warning
     }
-
-public:
-    virtual ~SerializableMixin() = default;
 };
 
-#endif // SAVEABLE_MIXIN_H
+#endif // SERIALIZABLE_MIXIN_H

@@ -4,6 +4,7 @@
 #include "devices/mixins/IControllable.h"
 #include "devices/mixins/SerializableMixin.h"
 #include "devices/composition/Led.h"
+#include "devices/composition/Button.h"
 #include "DeviceManager.h"
 #include "Network.h"
 #include "NetworkSettings.h"
@@ -60,7 +61,7 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
     else
     {
         // Get devices from DeviceManager
-        Device *deviceList[20]; // MAX_DEVICES from DeviceManager
+        DeviceBase *deviceList[20];
         int count;
         deviceManager->getDevices(deviceList, count, 20);
 
@@ -93,101 +94,7 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
 
                 // Add children array
                 JsonArray childrenArr = deviceObj["children"].to<JsonArray>();
-                for (Device *child : deviceList[i]->getChildren())
-                {
-                    if (child)
-                    {
-                        JsonObject childObj = childrenArr.add<JsonObject>();
-                        childObj["id"] = child->getId();
-                        childObj["type"] = child->getType();
-
-                        // Add child pins
-                        std::vector<int> childPins = child->getPins();
-                        JsonArray childPinsArr = childObj["pins"].to<JsonArray>();
-                        for (int pin : childPins)
-                        {
-                            childPinsArr.add(pin);
-                        }
-                    }
-                }
-            }
-        }
-
-        // Get task devices from DeviceManager
-        TaskDevice *taskDeviceList[10]; // MAX_TASK_DEVICES from DeviceManager
-        int taskCount;
-        deviceManager->getTaskDevices(taskDeviceList, taskCount, 10);
-
-        for (int i = 0; i < taskCount; i++)
-        {
-            if (taskDeviceList[i] != nullptr)
-            {
-                JsonObject deviceObj = devicesArray.add<JsonObject>();
-                deviceObj["id"] = taskDeviceList[i]->getId();
-                deviceObj["type"] = taskDeviceList[i]->getType();
-
-                // Get pins directly from TaskDevice (now virtual)
-                std::vector<int> pins = taskDeviceList[i]->getPins();
-                JsonArray pinsArr = deviceObj["pins"].to<JsonArray>();
-                for (int pin : pins)
-                {
-                    pinsArr.add(pin);
-                }
-
-                // Add children array
-                JsonArray childrenArr = deviceObj["children"].to<JsonArray>();
-                for (TaskDevice *child : taskDeviceList[i]->getChildren())
-                {
-                    if (child)
-                    {
-                        JsonObject childObj = childrenArr.add<JsonObject>();
-                        childObj["id"] = child->getId();
-                        childObj["type"] = child->getType();
-
-                        // Add child pins
-                        std::vector<int> childPins = child->getPins();
-                        JsonArray childPinsArr = childObj["pins"].to<JsonArray>();
-                        for (int pin : childPins)
-                        {
-                            childPinsArr.add(pin);
-                        }
-                    }
-                }
-            }
-        }
-
-        // Get composition devices (DeviceBase) from DeviceManager
-        DeviceBase *compositionDeviceList[20]; // MAX_COMPOSITION_DEVICES from DeviceManager
-        int compositionCount;
-        deviceManager->getCompositionDevices(compositionDeviceList, compositionCount, 20);
-
-        for (int i = 0; i < compositionCount; i++)
-        {
-            if (compositionDeviceList[i] != nullptr)
-            {
-                // Skip devices that are single children (have exactly one child with no children)
-                auto children = compositionDeviceList[i]->getChildren();
-                bool isSingleChildDevice = (children.size() == 1) && (children[0]->getChildren().empty());
-                if (isSingleChildDevice)
-                {
-                    continue; // Skip this device, it will be included as a child of its parent
-                }
-
-                JsonObject deviceObj = devicesArray.add<JsonObject>();
-                deviceObj["id"] = compositionDeviceList[i]->getId();
-                deviceObj["type"] = compositionDeviceList[i]->getType();
-
-                // Add pins array
-                std::vector<int> pins = compositionDeviceList[i]->getPins();
-                JsonArray pinsArr = deviceObj["pins"].to<JsonArray>();
-                for (int pin : pins)
-                {
-                    pinsArr.add(pin);
-                }
-
-                // Add children array
-                JsonArray childrenArr = deviceObj["children"].to<JsonArray>();
-                for (DeviceBase *child : compositionDeviceList[i]->getChildren())
+                for (DeviceBase *child : deviceList[i]->getChildren())
                 {
                     if (child)
                     {
@@ -332,7 +239,9 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
         notifyClients(createJsonResponse(false, "DeviceManager not available", "", "", "device-save-config", deviceId));
         return;
     }
-    Device *device = deviceManager->getDeviceById(deviceId);
+    
+    // Support composition devices (DeviceBase) that implement serializable config
+    DeviceBase *device = deviceManager->getDeviceById(deviceId);
     if (device)
     {
         if (!doc["config"].is<JsonObject>())
@@ -340,111 +249,63 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
             notifyClients(createJsonResponse(false, "No config provided", "", "", "device-save-config", deviceId));
             return;
         }
-        JsonObject configObj = doc["config"].as<JsonObject>();
-        device->setConfig(&configObj);
 
-        deviceManager->saveDevicesToJsonFile();
-        // notifyClients(createJsonResponse(true, "Config saved", "", ""));
-
-        String configStr = device->getConfig();
-
-        JsonDocument response;
-        response["type"] = "device-config";
-        response["triggerBy"] = "set";
-        response["deviceId"] = deviceId;
-        if (configStr.length() > 0)
+        // Handle Led devices
+        if (device->getType() == "led")
         {
+            composition::Led *ledDevice = static_cast<composition::Led *>(device);
+            JsonObject configObj = doc["config"].as<JsonObject>();
             JsonDocument configDoc;
-            DeserializationError err = deserializeJson(configDoc, configStr);
-            if (!err && configDoc.is<JsonObject>())
-            {
-                response["config"] = configDoc.as<JsonObject>();
-            }
-            else
-            {
-                if (err)
-                {
-                    MLOG_WARN("Device %s: failed to deserialize config after save (%s)", deviceId.c_str(), err.c_str());
-                }
-                else
-                {
-                    MLOG_WARN("Device %s: config after save is not a JSON object, returning raw string", deviceId.c_str());
-                }
-                response["config"] = serialized(configStr.c_str());
-            }
-        }
-        else
-        {
-            response["config"].to<JsonObject>();
-        }
-        String respStr;
-        serializeJson(response, respStr);
+            configDoc.set(configObj);
+            ledDevice->jsonToConfig(configDoc);
 
-        notifyClients(respStr);
-        return;
-    }
+            deviceManager->saveDevicesToJsonFile();
 
-    ControllableTaskDevice *controllableDevice = deviceManager->getControllableTaskDeviceById(deviceId);
-    if (controllableDevice)
-    {
-        if (!doc["config"].is<JsonObject>())
-        {
-            notifyClients(createJsonResponse(false, "No config provided", "", "", "device-save-config", deviceId));
-            return;
-        }
-        JsonObject configObj = doc["config"].as<JsonObject>();
-        JsonDocument configDoc;
-        configDoc.set(configObj);
-        controllableDevice->setConfig(configDoc);
+            // Build device-config response after save
+            JsonDocument response;
+            response["type"] = "device-config";
+            response["triggerBy"] = "set";
+            response["deviceId"] = deviceId;
 
-        deviceManager->saveDevicesToJsonFile();
+            JsonDocument savedConfig;
+            ledDevice->configToJson(savedConfig);
+            response["config"] = savedConfig;
 
-        controllableDevice->notifyConfig(true);
-        return;
-    }
-
-    // Support composition devices (DeviceBase) that implement serializable config
-    DeviceBase *compositionDevice = deviceManager->getCompositionDeviceById(deviceId);
-    if (compositionDevice)
-    {
-        if (!doc["config"].is<JsonObject>())
-        {
-            notifyClients(createJsonResponse(false, "No config provided", "", "", "device-save-config", deviceId));
+            String respStr;
+            serializeJson(response, respStr);
+            notifyClients(respStr);
             return;
         }
 
-        // Use getSerializable() for RTTI-free access to ISerializable interface
-        if (compositionDevice->hasMixin("serializable"))
+        // Handle Button devices
+        if (device->getType() == "button")
         {
-            ISerializable *serializable = compositionDevice->getSerializable();
-            if (serializable)
-            {
-                JsonObject configObj = doc["config"].as<JsonObject>();
-                JsonDocument configDoc;
-                configDoc.set(configObj);
-                serializable->jsonToConfig(configDoc);
+            composition::Button *buttonDevice = static_cast<composition::Button *>(device);
+            JsonObject configObj = doc["config"].as<JsonObject>();
+            JsonDocument configDoc;
+            configDoc.set(configObj);
+            buttonDevice->jsonToConfig(configDoc);
 
-                deviceManager->saveDevicesToJsonFile();
+            deviceManager->saveDevicesToJsonFile();
 
-                // Build device-config response after save
-                JsonDocument response;
-                response["type"] = "device-config";
-                response["triggerBy"] = "set";
-                response["deviceId"] = deviceId;
+            // Build device-config response after save
+            JsonDocument response;
+            response["type"] = "device-config";
+            response["triggerBy"] = "set";
+            response["deviceId"] = deviceId;
 
-                JsonDocument savedConfig;
-                serializable->configToJson(savedConfig);
-                response["config"] = savedConfig;
+            JsonDocument savedConfig;
+            buttonDevice->configToJson(savedConfig);
+            response["config"] = savedConfig;
 
-                String respStr;
-                serializeJson(response, respStr);
-                notifyClients(respStr);
-                return;
-            }
+            String respStr;
+            serializeJson(response, respStr);
+            notifyClients(respStr);
+            return;
         }
 
-        // Device found but not serializable
-        notifyClients(createJsonResponse(false, "Device does not support config serialization: " + compositionDevice->getType(), "", "", "device-save-config", deviceId));
+        // Unknown device type
+        notifyClients(createJsonResponse(false, "Unsupported device type: " + device->getType(), "", "", "device-save-config", deviceId));
         return;
     }
 
@@ -466,82 +327,32 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
         return;
     }
 
-    Device *device = deviceManager->getDeviceById(deviceId);
+    DeviceBase *device = deviceManager->getDeviceById(deviceId);
     if (device)
     {
-        String configStr = device->getConfig();
-
         JsonDocument response;
         response["type"] = "device-config";
         response["triggerBy"] = "get";
         response["deviceId"] = deviceId;
-        if (configStr.length() > 0)
+
+        // Handle Led devices
+        if (device->getType() == "led")
         {
+            composition::Led *ledDevice = static_cast<composition::Led *>(device);
             JsonDocument configDoc;
-            DeserializationError err = deserializeJson(configDoc, configStr);
-            if (!err && configDoc.is<JsonObject>())
-            {
-                response["config"] = configDoc.as<JsonObject>();
-            }
-            else
-            {
-                if (err)
-                {
-                    MLOG_WARN("Device %s: failed to deserialize config on read (%s)", deviceId.c_str(), err.c_str());
-                }
-                else
-                {
-                    MLOG_WARN("Device %s: config read is not a JSON object, returning raw string", deviceId.c_str());
-                }
-                response["config"] = serialized(configStr.c_str());
-            }
+            ledDevice->configToJson(configDoc);
+            response["config"] = configDoc;
+        }
+        // Handle Button devices
+        else if (device->getType() == "button")
+        {
+            composition::Button *buttonDevice = static_cast<composition::Button *>(device);
+            JsonDocument configDoc;
+            buttonDevice->configToJson(configDoc);
+            response["config"] = configDoc;
         }
         else
         {
-            response["config"].to<JsonObject>();
-        }
-        String respStr;
-        serializeJson(response, respStr);
-        notifyClients(respStr);
-        return;
-    }
-
-    ControllableTaskDevice *controllableDevice = deviceManager->getControllableTaskDeviceById(deviceId);
-    if (controllableDevice)
-    {
-        controllableDevice->notifyConfig(false);
-        return;
-    }
-
-    // Check composition devices
-    DeviceBase *compositionDevice = deviceManager->getCompositionDeviceById(deviceId);
-    if (compositionDevice)
-    {
-        bool isSerializable = compositionDevice->hasMixin("serializable");
-
-        JsonDocument response;
-        response["type"] = "device-config";
-        response["triggerBy"] = "get";
-        response["deviceId"] = deviceId;
-
-        if (isSerializable)
-        {
-            // Use getSerializable() for RTTI-free access to ISerializable interface
-            ISerializable *serializable = compositionDevice->getSerializable();
-            if (serializable)
-            {
-                JsonDocument configDoc;
-                serializable->configToJson(configDoc);
-                response["config"] = configDoc;
-            }
-            else
-            {
-                response["config"] = nullptr;
-            }
-        }
-        else
-        {
-            // Device found but not serializable
             response["config"] = nullptr;
         }
 
@@ -891,53 +702,32 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
         return;
     }
 
-    Device *device = deviceManager->getDeviceById(deviceId);
-    if (device)
+    DeviceBase *device = deviceManager->getDeviceById(deviceId);
+    if (device && device->hasMixin("controllable"))
     {
-        MLOG_INFO("%s: Executing action '%s'.", deviceId.c_str(), functionName.c_str());
-        JsonObject payload = doc["args"].as<JsonObject>();
-        device->control(functionName, &payload);
-        return;
-    }
-
-    ControllableTaskDevice *controllableDevice = deviceManager->getControllableTaskDeviceById(deviceId);
-    if (controllableDevice)
-    {
-        MLOG_INFO("%s: Executing action '%s'.", controllableDevice->toString().c_str(), functionName.c_str());
-        JsonObject payload = doc["args"].as<JsonObject>();
-        controllableDevice->control(functionName, &payload);
-        return;
-    }
-    // Also support controllable composition devices (DeviceBase with ControllableMixin)
-    else
-    {
-        DeviceBase *compositionDevice = deviceManager->getCompositionDeviceById(deviceId);
-        if (compositionDevice && compositionDevice->hasMixin("controllable"))
+        IControllable *ctrl = mixins::ControllableRegistry::get(deviceId);
+        if (ctrl)
         {
-            IControllable *ctrl = mixins::ControllableRegistry::get(deviceId);
-            if (ctrl)
+            JsonObject *payloadPtr = nullptr;
+            JsonObject payloadObj;
+            if (doc["args"].is<JsonObject>())
             {
-                JsonObject *payloadPtr = nullptr;
-                JsonObject payloadObj;
-                if (doc["args"].is<JsonObject>())
-                {
-                    payloadObj = doc["args"].as<JsonObject>();
-                    payloadPtr = &payloadObj;
-                }
-                MLOG_INFO("%s: Executing action '%s'.", compositionDevice->toString().c_str(), functionName.c_str());
-                ctrl->control(functionName, payloadPtr);
-                return;
+                payloadObj = doc["args"].as<JsonObject>();
+                payloadPtr = &payloadObj;
             }
-            else
-            {
-                MLOG_WARN("handleDeviceFunction: Controllable mixin registry has no interface for %s", deviceId.c_str());
-                return;
-            }
+            MLOG_INFO("%s: Executing action '%s'.", device->toString().c_str(), functionName.c_str());
+            ctrl->control(functionName, payloadPtr);
+            return;
         }
         else
         {
-            MLOG_WARN("handleDeviceFunction: Device not found: %s", deviceId.c_str());
+            MLOG_WARN("handleDeviceFunction: Controllable mixin registry has no interface for %s", deviceId.c_str());
+            return;
         }
+    }
+    else
+    {
+        MLOG_WARN("handleDeviceFunction: Device not found or not controllable: %s", deviceId.c_str());
     }
 }
 
@@ -957,26 +747,11 @@ void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
         return;
     }
 
-    Device *device = deviceManager->getDeviceById(deviceId);
+    DeviceBase *device = deviceManager->getDeviceById(deviceId);
     if (device)
     {
-        device->notifyStateChange();
-        return;
-    }
-
-    ControllableTaskDevice *controllableDevice = deviceManager->getControllableTaskDeviceById(deviceId);
-    if (controllableDevice)
-    {
-        controllableDevice->notifyStateChange(false);
-        return;
-    }
-
-    // Check composition devices (DeviceBase)
-    DeviceBase *compositionDevice = deviceManager->getCompositionDeviceById(deviceId);
-    if (compositionDevice)
-    {
         // If the device implements the controllable mixin, return its JSON state
-        if (compositionDevice->hasMixin("controllable"))
+        if (device->hasMixin("controllable"))
         {
             // Lookup controllable interface via global registry (base remains agnostic)
             IControllable *ctrl = mixins::ControllableRegistry::get(deviceId);
@@ -996,36 +771,8 @@ void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
                 notifyClients(response);
                 return;
             }
-            // Fallback: controllable flag set but no interface, return null
-            JsonDocument responseDoc;
-            responseDoc["type"] = "device-state";
-            responseDoc["success"] = true;
-            responseDoc["deviceId"] = deviceId;
-            responseDoc["state"] = nullptr;
-
-            String response;
-            serializeJson(responseDoc, response);
-            notifyClients(response);
-            return;
         }
-        else
-        {
-            // Device exists but is not controllable: return null state
-            JsonDocument responseDoc;
-            responseDoc["type"] = "device-state";
-            responseDoc["success"] = true;
-            responseDoc["deviceId"] = deviceId;
-            responseDoc["state"] = nullptr;
-
-            String response;
-            serializeJson(responseDoc, response);
-            notifyClients(response);
-            return;
-        }
-    }
-    else
-    {
-        // Device exists but is not controllable: return null state
+        // Device exists but is not controllable or no interface: return null state
         JsonDocument responseDoc;
         responseDoc["type"] = "device-state";
         responseDoc["success"] = true;
@@ -1072,8 +819,8 @@ void WebSocketManager::handleAddDevice(JsonDocument &doc)
         return;
     }
 
-    // Check if device already exists (check both old devices and composition devices)
-    if (deviceManager->getCompositionDeviceById(deviceId) != nullptr)
+    // Check if device already exists
+    if (deviceManager->getDeviceById(deviceId) != nullptr)
     {
         response["error"] = "Device with ID '" + deviceId + "' already exists";
         String respStr;
@@ -1082,8 +829,8 @@ void WebSocketManager::handleAddDevice(JsonDocument &doc)
         return;
     }
 
-    // Create composition device using the new factory
-    if (!deviceManager->addCompositionDevice(deviceType, deviceId, doc["config"]))
+    // Create device using the factory
+    if (!deviceManager->addDevice(deviceType, deviceId, doc["config"]))
     {
         response["error"] = "Failed to create and add device of type '" + deviceType + "' with ID '" + deviceId + "'";
         String respStr;
@@ -1093,7 +840,7 @@ void WebSocketManager::handleAddDevice(JsonDocument &doc)
     }
 
     // Setup the new device
-    DeviceBase *newDevice = deviceManager->getCompositionDeviceById(deviceId);
+    DeviceBase *newDevice = deviceManager->getDeviceById(deviceId);
     if (newDevice != nullptr)
     {
         newDevice->setup();

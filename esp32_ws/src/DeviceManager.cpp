@@ -1,68 +1,48 @@
 #include <ArduinoJson.h>
 #include <vector>
-#include <map>
-#include <set>
 #include "LittleFS.h"
 #include "Logging.h"
-#include "TimeManager.h"
 #include "DeviceManager.h"
-#include "Network.h"
-#include "WebSocketManager.h"
-#include "devices/Led.h"
-#include "devices/Buzzer.h"
-#include "devices/Button.h"
-#include "devices/Stepper.h"
-#include "devices/Wheel.h"
-#include "devices/PwmMotor.h"
-#include "devices/Lift.h"
 #include "devices/composition/Led.h"
 #include "devices/composition/Button.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
 
-JsonArray DeviceManager::getDevicesFromJsonFile(JsonDocument& doc)
+void DeviceManager::loadDevicesFromJsonFile()
 {
     if (!LittleFS.exists(CONFIG_FILE))
     {
         MLOG_INFO("File %s not found.", CONFIG_FILE);
-        return JsonArray();
+        return;
     }
 
     File file = LittleFS.open(CONFIG_FILE, FILE_READ);
-    if (file)
-    {
-        DeserializationError err = deserializeJson(doc, file);
-        file.close();
-
-        if (!err && doc.is<JsonObject>())
-        {
-            JsonObject rootObj = doc.as<JsonObject>();
-
-            // Check if devices array exists
-            if (rootObj["devices"].is<JsonArray>())
-            {
-                return rootObj["devices"];
-            }
-            else
-            {
-                MLOG_INFO("No devices array found in config file");
-            }
-        }
-        else
-        {
-            MLOG_ERROR("Failed to parse config JSON file");
-        }
-    }
-    else
+    if (!file)
     {
         MLOG_ERROR("Failed to open config JSON file for reading");
+        return;
     }
 
-    return JsonArray();
-}
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, file);
+    file.close();
 
-void DeviceManager::clearCurrentDevices()
-{
+    if (err || !doc.is<JsonObject>())
+    {
+        MLOG_ERROR("Failed to parse config JSON file");
+        return;
+    }
+
+    JsonObject rootObj = doc.as<JsonObject>();
+    if (!rootObj["devices"].is<JsonArray>())
+    {
+        MLOG_INFO("No devices array found in config file");
+        return;
+    }
+
+    JsonArray arr = rootObj["devices"];
+
+    // Clear existing devices
     for (int i = 0; i < devicesCount; i++)
     {
         if (devices[i])
@@ -72,165 +52,62 @@ void DeviceManager::clearCurrentDevices()
         }
     }
     devicesCount = 0;
-}
 
-void DeviceManager::createDevicesFromArray(JsonArray arr, std::map<String, Device*>& loadedDevices)
-{
+    // Load devices from JSON
     for (JsonObject obj : arr)
     {
         const String id = obj["id"] | "";
         const String type = obj["type"] | "";
 
-        if (loadedDevices.find(id) != loadedDevices.end())
+        if (id.isEmpty() || type.isEmpty())
         {
-            MLOG_WARN("Duplicate device ID '%s' in config, skipping", id.c_str());
+            MLOG_WARN("Skipping device with missing id or type");
             continue;
         }
 
-        Device *newDevice = createDevice(type, id, obj["config"], notifyClients, hasClients);
-        if (newDevice == nullptr)
+        DeviceBase *newDevice = nullptr;
+
+        // Create devices based on type
+        if (type == "led")
+        {
+            newDevice = new composition::Led(id);
+        }
+        else if (type == "button")
+        {
+            newDevice = new composition::Button(id);
+        }
+        else
         {
             MLOG_WARN("Unknown device type: %s", type.c_str());
             continue;
         }
-        loadedDevices[id] = newDevice;
-    }
-}
 
-void DeviceManager::collectChildIds(JsonArray arr, std::set<String>& childIds)
-{
-    for (JsonObject obj : arr)
-    {
-        if (obj["children"].is<JsonArray>())
+        if (newDevice)
         {
-            JsonArray childrenArr = obj["children"];
-            for (String childId : childrenArr)
+            // Load config if device is serializable and config exists
+            if (newDevice->hasMixin("serializable") && obj["config"].is<JsonObject>())
             {
-                childIds.insert(childId);
-            }
-        }
-    }
-}
-
-void DeviceManager::addTopLevelDevices(std::map<String, Device*>& loadedDevices, std::set<String>& childIds)
-{
-    for (auto &pair : loadedDevices)
-    {
-        if (childIds.find(pair.first) == childIds.end())
-        {
-            if (devicesCount < MAX_DEVICES)
-            {
-                devices[devicesCount++] = pair.second;
-            }
-            else
-            {
-                MLOG_WARN("Maximum device limit reached, cannot add top-level device: %s", pair.first.c_str());
-                delete pair.second;
-            }
-        }
-    }
-}
-
-void DeviceManager::linkChildren(JsonArray arr, std::map<String, Device*>& loadedDevices)
-{
-    for (JsonObject obj : arr)
-    {
-        const String id = obj["id"] | "";
-        auto it = loadedDevices.find(id);
-        if (it != loadedDevices.end() && obj["children"].is<JsonArray>())
-        {
-            Device *parent = it->second;
-            JsonArray childrenArr = obj["children"];
-            for (String childId : childrenArr)
-            {
-                auto childIt = loadedDevices.find(childId);
-                if (childIt != loadedDevices.end())
+                JsonObject configObj = obj["config"];
+                if (type == "led")
                 {
-                    parent->addChild(childIt->second);
+                    composition::Led *ledDevice = static_cast<composition::Led *>(newDevice);
+                    ledDevice->jsonToConfig(configObj);
                 }
-                else
+                else if (type == "button")
                 {
-                    MLOG_WARN("Child device '%s' not found for parent '%s'", childId.c_str(), id.c_str());
+                    composition::Button *buttonDevice = static_cast<composition::Button *>(newDevice);
+                    buttonDevice->jsonToConfig(configObj);
                 }
             }
+
+            // Add to device manager
+            addDevice(newDevice);
+
+            MLOG_INFO("Loaded device: %s (%s)", id.c_str(), type.c_str());
         }
     }
-}
 
-void DeviceManager::loadDevicesFromJsonFile()
-{
-    JsonDocument doc;
-    JsonArray arr = getDevicesFromJsonFile(doc);
-
-    if (arr.size() > 0)
-    {
-        // Clear existing composition devices
-        for (int i = 0; i < devices2Count; i++)
-        {
-            if (devices2[i])
-            {
-                delete devices2[i];
-                devices2[i] = nullptr;
-            }
-        }
-        devices2Count = 0;
-
-        // Load composition devices from JSON
-        for (JsonObject obj : arr)
-        {
-            const String id = obj["id"] | "";
-            const String type = obj["type"] | "";
-
-            if (id.isEmpty() || type.isEmpty())
-            {
-                MLOG_WARN("Skipping device with missing id or type");
-                continue;
-            }
-
-            DeviceBase *newDevice = nullptr;
-
-            // Create composition devices based on type
-            if (type == "led")
-            {
-                newDevice = new composition::Led(id);
-            }
-            else if (type == "button")
-            {
-                newDevice = new composition::Button(id);
-            }
-            else
-            {
-                MLOG_WARN("Unknown composition device type: %s", type.c_str());
-                continue;
-            }
-
-            if (newDevice)
-            {
-                // Load config if device is serializable and config exists
-                if (newDevice->hasMixin("serializable") && obj["config"].is<JsonObject>())
-                {
-                    JsonObject configObj = obj["config"];
-                    if (type == "led")
-                    {
-                        composition::Led *ledDevice = static_cast<composition::Led *>(newDevice);
-                        ledDevice->jsonToConfig(configObj);
-                    }
-                    else if (type == "button")
-                    {
-                        composition::Button *buttonDevice = static_cast<composition::Button *>(newDevice);
-                        buttonDevice->jsonToConfig(configObj);
-                    }
-                }
-
-                // Add to device manager
-                addDevice(newDevice);
-
-                MLOG_INFO("Loaded composition device: %s (%s)", id.c_str(), type.c_str());
-            }
-        }
-
-        MLOG_INFO("Loaded %d composition devices from %s", devices2Count, CONFIG_FILE);
-    }
+    MLOG_INFO("Loaded %d devices from %s", devicesCount, CONFIG_FILE);
 }
 
 void DeviceManager::saveDevicesToJsonFile()
@@ -251,19 +128,19 @@ void DeviceManager::saveDevicesToJsonFile()
             {
                 MLOG_ERROR("Failed to parse existing configuration file, creating new one");
                 doc.clear();
-                doc.to<JsonObject>(); // Create empty object
+                doc.to<JsonObject>();
             }
         }
         else
         {
             MLOG_ERROR("Failed to read existing configuration file, creating new one");
             doc.clear();
-            doc.to<JsonObject>(); // Create empty object
+            doc.to<JsonObject>();
         }
     }
     else
     {
-        doc.to<JsonObject>(); // Create empty object
+        doc.to<JsonObject>();
     }
 
     // Ensure we have a root object
@@ -275,14 +152,13 @@ void DeviceManager::saveDevicesToJsonFile()
 
     JsonObject rootObj = doc.as<JsonObject>();
 
-    // Replace devices array with current composition devices snapshot
+    // Replace devices array with current devices snapshot
     rootObj.remove("devices");
     JsonArray devicesArray = rootObj["devices"].to<JsonArray>();
 
-    // Only save composition devices (DeviceBase)
-    for (int i = 0; i < devices2Count; i++)
+    for (int i = 0; i < devicesCount; i++)
     {
-        DeviceBase *device = devices2[i];
+        DeviceBase *device = devices[i];
         if (!device)
             continue;
 
@@ -300,8 +176,6 @@ void DeviceManager::saveDevicesToJsonFile()
         // Only save config for devices that implement SerializableMixin
         if (device->hasMixin("serializable"))
         {
-            // For now, we handle known serializable composition devices
-            // Led and Button implement SerializableMixin
             if (device->getType() == "led")
             {
                 composition::Led *ledDevice = static_cast<composition::Led *>(device);
@@ -331,12 +205,7 @@ void DeviceManager::saveDevicesToJsonFile()
     {
         serializeJson(doc, file);
         file.close();
-        MLOG_INFO("Saved composition devices list to %s", CONFIG_FILE);
-
-        // Log the saved JSON in pretty format
-        // String prettyJson;
-        // serializeJsonPretty(doc, prettyJson);
-        // MLOG_INFO("Saved config JSON:\n%s", prettyJson.c_str());
+        MLOG_INFO("Saved devices list to %s", CONFIG_FILE);
     }
     else
     {
@@ -365,7 +234,6 @@ NetworkSettings DeviceManager::loadNetworkSettings()
         {
             JsonObject rootObj = doc.as<JsonObject>();
 
-            // Check if network settings exist
             if (rootObj["network"].is<JsonObject>())
             {
                 JsonObject networkObj = rootObj["network"];
@@ -394,7 +262,6 @@ NetworkSettings DeviceManager::loadNetworkSettings()
 
 bool DeviceManager::saveNetworkSettings(const NetworkSettings &settings)
 {
-    // First, read the existing configuration
     JsonDocument doc;
     bool fileExists = LittleFS.exists(CONFIG_FILE);
 
@@ -410,22 +277,21 @@ bool DeviceManager::saveNetworkSettings(const NetworkSettings &settings)
             {
                 MLOG_ERROR("Failed to parse existing configuration file, creating new one");
                 doc.clear();
-                doc.to<JsonObject>(); // Create empty object
+                doc.to<JsonObject>();
             }
         }
         else
         {
             MLOG_ERROR("Failed to read existing configuration file, creating new one");
             doc.clear();
-            doc.to<JsonObject>(); // Create empty object
+            doc.to<JsonObject>();
         }
     }
     else
     {
-        doc.to<JsonObject>(); // Create empty object
+        doc.to<JsonObject>();
     }
 
-    // Ensure we have a root object
     if (!doc.is<JsonObject>())
     {
         doc.clear();
@@ -434,12 +300,10 @@ bool DeviceManager::saveNetworkSettings(const NetworkSettings &settings)
 
     JsonObject rootObj = doc.as<JsonObject>();
 
-    // Add/update network settings
     JsonObject networkObj = rootObj["network"].to<JsonObject>();
     networkObj["ssid"] = settings.ssid;
     networkObj["password"] = settings.password;
 
-    // Save back to file
     File file = LittleFS.open(CONFIG_FILE, FILE_WRITE);
     if (file)
     {
@@ -455,32 +319,21 @@ bool DeviceManager::saveNetworkSettings(const NetworkSettings &settings)
     }
 }
 
-DeviceManager::DeviceManager(NotifyClients callback) : devicesCount(0), taskDevicesCount(0), devices2Count(0), notifyClients(callback), hasClients(nullptr)
+DeviceManager::DeviceManager(NotifyClients callback) : devicesCount(0), notifyClients(callback), hasClients(nullptr)
 {
-    // Initialize device array to nullptr
     for (int i = 0; i < MAX_DEVICES; i++)
     {
         devices[i] = nullptr;
     }
-    // Initialize task device array to nullptr
-    for (int i = 0; i < MAX_TASK_DEVICES; i++)
-    {
-        taskDevices[i] = nullptr;
-    }
-    // Initialize composition device array to nullptr
-    for (int i = 0; i < MAX_COMPOSITION_DEVICES; i++)
-    {
-        devices2[i] = nullptr;
-    }
 }
 
-bool DeviceManager::addDevice(Device *device)
+bool DeviceManager::addDevice(DeviceBase *device)
 {
     if (devicesCount < MAX_DEVICES && device != nullptr)
     {
         devices[devicesCount] = device;
         devicesCount++;
-        MLOG_INFO("Added device: %s (%s)", device->getId().c_str(), device->getName().c_str());
+        MLOG_INFO("Added device: %s (%s)", device->getId().c_str(), device->getType().c_str());
         return true;
     }
 
@@ -495,346 +348,6 @@ bool DeviceManager::addDevice(Device *device)
     return false;
 }
 
-bool DeviceManager::addTaskDevice(TaskDevice *device)
-{
-    if (taskDevicesCount < MAX_TASK_DEVICES && device != nullptr)
-    {
-        taskDevices[taskDevicesCount] = device;
-        taskDevicesCount++;
-        MLOG_INFO("Added task device: %s", device->toString().c_str());
-        return true;
-    }
-
-    if (device == nullptr)
-    {
-        MLOG_ERROR("Error: Cannot add null task device");
-    }
-    else
-    {
-        MLOG_ERROR("Error: Task device array is full, cannot add device: %s", device->getId().c_str());
-    }
-    return false;
-}
-
-void DeviceManager::getDevices(Device **deviceList, int &count, int maxResults)
-{
-    count = 0;
-    for (int i = 0; i < devicesCount && count < maxResults; i++)
-    {
-        if (devices[i] != nullptr)
-        {
-            deviceList[count] = devices[i];
-            count++;
-        }
-    }
-}
-
-void DeviceManager::getTaskDevices(TaskDevice **deviceList, int &count, int maxResults)
-{
-    count = 0;
-    for (int i = 0; i < taskDevicesCount && count < maxResults; i++)
-    {
-        if (taskDevices[i] != nullptr)
-        {
-            deviceList[count] = taskDevices[i];
-            count++;
-        }
-    }
-}
-
-void DeviceManager::setup()
-{
-    // Set the notify callback on all devices recursively
-    std::function<void(Device *)> setCallbackRecursive = [&](Device *dev)
-    {
-        if (!dev)
-            return;
-        dev->setNotifyClients(notifyClients);
-        dev->setHasClients(hasClients);
-        for (Device *child : dev->getChildren())
-        {
-            setCallbackRecursive(child);
-        }
-    };
-
-    for (int i = 0; i < devicesCount; i++)
-    {
-        if (devices[i])
-        {
-            setCallbackRecursive(devices[i]);
-        }
-    }
-
-    for (int i = 0; i < devicesCount; i++)
-    {
-        if (devices[i])
-        {
-            devices[i]->setup();
-        }
-    }
-
-    // Setup composition devices (DeviceBase)
-    for (int i = 0; i < devices2Count; i++)
-    {
-        if (devices2[i])
-        {
-            devices2[i]->setup();
-        }
-    }
-}
-
-void DeviceManager::loop()
-{
-    // Call loop() on all registered devices
-    for (int i = 0; i < devicesCount; i++)
-    {
-        if (devices[i] != nullptr)
-        {
-            devices[i]->loop();
-        }
-    }
-
-    // Call loop() on all composition devices
-    for (int i = 0; i < devices2Count; i++)
-    {
-        if (devices2[i] != nullptr)
-        {
-            devices2[i]->loop();
-        }
-    }
-}
-
-Device *DeviceManager::getDeviceById(const String &deviceId) const
-{
-    // Helper function for recursive search
-    std::function<Device *(Device *)> findRecursive = [&](Device *dev) -> Device *
-    {
-        if (!dev)
-            return nullptr;
-        if (dev->getId() == deviceId)
-            return dev;
-        for (Device *child : dev->getChildren())
-        {
-            Device *found = findRecursive(child);
-            if (found)
-                return found;
-        }
-        return nullptr;
-    };
-    for (int i = 0; i < devicesCount; i++)
-    {
-        if (devices[i] != nullptr)
-        {
-            Device *found = findRecursive(devices[i]);
-            if (found)
-                return found;
-        }
-    }
-    return nullptr;
-}
-
-TaskDevice *DeviceManager::getTaskDeviceById(const String &deviceId) const
-{
-    // Helper function for recursive search
-    std::function<TaskDevice *(TaskDevice *)> findRecursive = [&](TaskDevice *dev) -> TaskDevice *
-    {
-        if (!dev)
-            return nullptr;
-        if (dev->getId() == deviceId)
-            return dev;
-        for (TaskDevice *child : dev->getChildren())
-        {
-            TaskDevice *found = findRecursive(child);
-            if (found)
-                return found;
-        }
-        return nullptr;
-    };
-
-    for (int i = 0; i < taskDevicesCount; i++)
-    {
-        if (taskDevices[i] != nullptr)
-        {
-            TaskDevice *found = findRecursive(taskDevices[i]);
-            if (found)
-                return found;
-        }
-    }
-    return nullptr;
-}
-
-// Recursively search for the first device of the given type
-Device *DeviceManager::getDeviceByType(const String &deviceType) const
-{
-    std::function<Device *(Device *)> findRecursive = [&](Device *dev) -> Device *
-    {
-        if (!dev)
-            return nullptr;
-        if (dev->getType() == deviceType)
-            return dev;
-        for (Device *child : dev->getChildren())
-        {
-            Device *found = findRecursive(child);
-            if (found)
-                return found;
-        }
-        return nullptr;
-    };
-    for (int i = 0; i < devicesCount; i++)
-    {
-        if (devices[i] != nullptr)
-        {
-            Device *found = findRecursive(devices[i]);
-            if (found)
-                return found;
-        }
-    }
-    return nullptr;
-}
-
-ControllableTaskDevice *DeviceManager::getControllableTaskDeviceById(const String &deviceId) const
-{
-    TaskDevice *taskDev = getTaskDeviceById(deviceId);
-    if (taskDev && taskDev->isControllable())
-    {
-        return static_cast<ControllableTaskDevice *>(taskDev);
-    }
-    return nullptr;
-}
-
-bool DeviceManager::removeDevice(const String &deviceId)
-{
-    // Try to remove from legacy devices array
-    for (int i = 0; i < devicesCount; i++)
-    {
-        if (devices[i] != nullptr && devices[i]->getId() == deviceId)
-        {
-            MLOG_INFO("Removing device: %s (%s)", devices[i]->getId().c_str(), devices[i]->getType().c_str());
-            delete devices[i];
-
-            // Shift remaining devices down
-            for (int j = i; j < devicesCount - 1; j++)
-            {
-                devices[j] = devices[j + 1];
-            }
-            devices[devicesCount - 1] = nullptr;
-            devicesCount--;
-
-            return true;
-        }
-    }
-
-    // Try to remove from composition devices array
-    for (int i = 0; i < devices2Count; i++)
-    {
-        if (devices2[i] != nullptr && devices2[i]->getId() == deviceId)
-        {
-            MLOG_INFO("Removing composition device: %s (%s)", devices2[i]->getId().c_str(), devices2[i]->getType().c_str());
-            delete devices2[i];
-
-            // Shift remaining devices down
-            for (int j = i; j < devices2Count - 1; j++)
-            {
-                devices2[j] = devices2[j + 1];
-            }
-            devices2[devices2Count - 1] = nullptr;
-            devices2Count--;
-
-            return true;
-        }
-    }
-
-    MLOG_WARN("Device not found for removal: %s", deviceId.c_str());
-    return false;
-}
-
-std::vector<Device *> DeviceManager::getAllDevices()
-{
-    std::vector<Device *> allDevices;
-
-    std::function<void(Device *)> collectRecursive = [&](Device *device)
-    {
-        if (!device)
-            return;
-        allDevices.push_back(device);
-        for (Device *child : device->getChildren())
-        {
-            collectRecursive(child);
-        }
-    };
-
-    for (int i = 0; i < devicesCount; i++)
-    {
-        if (devices[i])
-        {
-            collectRecursive(devices[i]);
-        }
-    }
-
-    return allDevices;
-}
-
-Device *DeviceManager::createDevice(const String &deviceType, const String &deviceId, JsonVariant config, NotifyClients notifyCallback, HasClients hasClientsCallback)
-{
-    Device *newDevice = nullptr;
-    String lowerType = deviceType;
-    lowerType.toLowerCase();
-
-    if (lowerType == "led")
-    {
-        newDevice = new Led(deviceId, notifyCallback);
-    }
-    else if (lowerType == "buzzer")
-    {
-        newDevice = new Buzzer(deviceId, notifyCallback);
-    }
-    else if (lowerType == "button")
-    {
-        newDevice = new Button(deviceId, notifyCallback);
-    }
-    else if (lowerType == "stepper")
-    {
-        newDevice = new Stepper(deviceId, notifyCallback);
-    }
-    else if (lowerType == "pwmmotor")
-    {
-        newDevice = new PwmMotor(deviceId, notifyCallback);
-    }
-    else if (lowerType == "wheel")
-    {
-        newDevice = new Wheel(deviceId, notifyCallback);
-    }
-    else if (lowerType == "lift")
-    {
-        newDevice = new Lift(deviceId, notifyCallback);
-    }
-    else
-    {
-        MLOG_ERROR("Unknown device type: %s", deviceType.c_str());
-        return nullptr;
-    }
-
-    if (newDevice != nullptr)
-    {
-        // Set hasClients callback if provided
-        if (hasClientsCallback)
-        {
-            newDevice->setHasClients(hasClientsCallback);
-        }
-        
-        // Apply configuration if provided
-        if (config.is<JsonObject>())
-        {
-            JsonObject configObj = config.as<JsonObject>();
-            newDevice->setConfig(&configObj);
-        }
-
-        // MLOG_INFO("Created device: %s (%s)", deviceId.c_str(), deviceType.c_str());
-    }
-
-    return newDevice;
-}
-
 bool DeviceManager::addDevice(const String &deviceType, const String &deviceId, JsonVariant config)
 {
     if (devicesCount >= MAX_DEVICES)
@@ -843,38 +356,9 @@ bool DeviceManager::addDevice(const String &deviceType, const String &deviceId, 
         return false;
     }
 
-    // Check if device with same ID already exists
     if (getDeviceById(deviceId) != nullptr)
     {
         MLOG_ERROR("Cannot add device: Device with ID '%s' already exists", deviceId.c_str());
-        return false;
-    }
-
-    Device *newDevice = createDevice(deviceType, deviceId, config, notifyClients, hasClients);
-    if (newDevice == nullptr)
-    {
-        return false;
-    }
-
-    devices[devicesCount] = newDevice;
-    devicesCount++;
-
-    MLOG_INFO("Added device to array: %s (%s)", deviceId.c_str(), deviceType.c_str());
-    return true;
-}
-
-bool DeviceManager::addCompositionDevice(const String &deviceType, const String &deviceId, JsonVariant config)
-{
-    if (devices2Count >= MAX_COMPOSITION_DEVICES)
-    {
-        MLOG_ERROR("Cannot add composition device: Maximum device limit reached (%d)", MAX_COMPOSITION_DEVICES);
-        return false;
-    }
-
-    // Check if device with same ID already exists
-    if (getCompositionDeviceById(deviceId) != nullptr)
-    {
-        MLOG_ERROR("Cannot add composition device: Device with ID '%s' already exists", deviceId.c_str());
         return false;
     }
 
@@ -882,7 +366,6 @@ bool DeviceManager::addCompositionDevice(const String &deviceType, const String 
     String lowerType = deviceType;
     lowerType.toLowerCase();
 
-    // Create composition devices based on type
     if (lowerType == "led")
     {
         newDevice = new composition::Led(deviceId);
@@ -893,7 +376,7 @@ bool DeviceManager::addCompositionDevice(const String &deviceType, const String 
     }
     else
     {
-        MLOG_ERROR("Unknown composition device type: %s", deviceType.c_str());
+        MLOG_ERROR("Unknown device type: %s", deviceType.c_str());
         return false;
     }
 
@@ -915,60 +398,58 @@ bool DeviceManager::addCompositionDevice(const String &deviceType, const String 
             }
         }
 
-        // Add to device manager
-        devices2[devices2Count] = newDevice;
-        devices2Count++;
+        devices[devicesCount] = newDevice;
+        devicesCount++;
 
-        MLOG_INFO("Added composition device to array: %s (%s)", deviceId.c_str(), deviceType.c_str());
+        MLOG_INFO("Added device to array: %s (%s)", deviceId.c_str(), deviceType.c_str());
         return true;
     }
 
     return false;
 }
 
-// ======== Composition Device (DeviceBase) Methods ========
-
-bool DeviceManager::addDevice(DeviceBase *device)
-{
-    if (devices2Count < MAX_COMPOSITION_DEVICES && device != nullptr)
-    {
-        devices2[devices2Count] = device;
-        devices2Count++;
-        MLOG_INFO("Added composition device: %s (%s)", device->getId().c_str(), device->getType().c_str());
-        return true;
-    }
-
-    if (device == nullptr)
-    {
-        MLOG_ERROR("Error: Cannot add null composition device");
-    }
-    else
-    {
-        MLOG_ERROR("Error: Composition device array is full, cannot add device: %s", device->getId().c_str());
-    }
-    return false;
-}
-
-void DeviceManager::getCompositionDevices(DeviceBase **deviceList, int &count, int maxResults)
+void DeviceManager::getDevices(DeviceBase **deviceList, int &count, int maxResults)
 {
     count = 0;
-    for (int i = 0; i < devices2Count && count < maxResults; i++)
+    for (int i = 0; i < devicesCount && count < maxResults; i++)
     {
-        if (devices2[i] != nullptr)
+        if (devices[i] != nullptr)
         {
-            deviceList[count] = devices2[i];
+            deviceList[count] = devices[i];
             count++;
         }
     }
 }
 
-DeviceBase *DeviceManager::getCompositionDeviceById(const String &deviceId) const
+void DeviceManager::setup()
 {
-    for (int i = 0; i < devices2Count; i++)
+    for (int i = 0; i < devicesCount; i++)
     {
-        if (devices2[i] != nullptr)
+        if (devices[i])
         {
-            DeviceBase *found = findCompositionDeviceRecursiveById(devices2[i], deviceId);
+            devices[i]->setup();
+        }
+    }
+}
+
+void DeviceManager::loop()
+{
+    for (int i = 0; i < devicesCount; i++)
+    {
+        if (devices[i] != nullptr)
+        {
+            devices[i]->loop();
+        }
+    }
+}
+
+DeviceBase *DeviceManager::getDeviceById(const String &deviceId) const
+{
+    for (int i = 0; i < devicesCount; i++)
+    {
+        if (devices[i] != nullptr)
+        {
+            DeviceBase *found = findDeviceRecursiveById(devices[i], deviceId);
             if (found)
                 return found;
         }
@@ -976,7 +457,7 @@ DeviceBase *DeviceManager::getCompositionDeviceById(const String &deviceId) cons
     return nullptr;
 }
 
-DeviceBase *DeviceManager::findCompositionDeviceRecursiveById(DeviceBase *root, const String &deviceId) const
+DeviceBase *DeviceManager::findDeviceRecursiveById(DeviceBase *root, const String &deviceId) const
 {
     if (!root)
         return nullptr;
@@ -984,9 +465,89 @@ DeviceBase *DeviceManager::findCompositionDeviceRecursiveById(DeviceBase *root, 
         return root;
     for (DeviceBase *child : root->getChildren())
     {
-        DeviceBase *found = findCompositionDeviceRecursiveById(child, deviceId);
+        DeviceBase *found = findDeviceRecursiveById(child, deviceId);
         if (found)
             return found;
     }
     return nullptr;
+}
+
+DeviceBase *DeviceManager::getDeviceByType(const String &deviceType) const
+{
+    for (int i = 0; i < devicesCount; i++)
+    {
+        if (devices[i] != nullptr)
+        {
+            DeviceBase *found = findDeviceRecursiveByType(devices[i], deviceType);
+            if (found)
+                return found;
+        }
+    }
+    return nullptr;
+}
+
+DeviceBase *DeviceManager::findDeviceRecursiveByType(DeviceBase *root, const String &deviceType) const
+{
+    if (!root)
+        return nullptr;
+    if (root->getType() == deviceType)
+        return root;
+    for (DeviceBase *child : root->getChildren())
+    {
+        DeviceBase *found = findDeviceRecursiveByType(child, deviceType);
+        if (found)
+            return found;
+    }
+    return nullptr;
+}
+
+bool DeviceManager::removeDevice(const String &deviceId)
+{
+    for (int i = 0; i < devicesCount; i++)
+    {
+        if (devices[i] != nullptr && devices[i]->getId() == deviceId)
+        {
+            MLOG_INFO("Removing device: %s (%s)", devices[i]->getId().c_str(), devices[i]->getType().c_str());
+            delete devices[i];
+
+            // Shift remaining devices down
+            for (int j = i; j < devicesCount - 1; j++)
+            {
+                devices[j] = devices[j + 1];
+            }
+            devices[devicesCount - 1] = nullptr;
+            devicesCount--;
+
+            return true;
+        }
+    }
+
+    MLOG_WARN("Device not found for removal: %s", deviceId.c_str());
+    return false;
+}
+
+std::vector<DeviceBase *> DeviceManager::getAllDevices()
+{
+    std::vector<DeviceBase *> allDevices;
+
+    std::function<void(DeviceBase *)> collectRecursive = [&](DeviceBase *device)
+    {
+        if (!device)
+            return;
+        allDevices.push_back(device);
+        for (DeviceBase *child : device->getChildren())
+        {
+            collectRecursive(child);
+        }
+    };
+
+    for (int i = 0; i < devicesCount; i++)
+    {
+        if (devices[i])
+        {
+            collectRecursive(devices[i]);
+        }
+    }
+
+    return allDevices;
 }

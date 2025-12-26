@@ -20,53 +20,58 @@ ManualMode::ManualMode(DeviceManager &deviceManager) : deviceManager(deviceManag
 
 void ManualMode::setup()
 {
-    _wheelNextBtn = deviceManager.getDeviceByIdAs<Button>("wheel-next-btn");
-    if (_wheelNextBtn == nullptr)
-    {
-        MLOG_ERROR("Required device 'wheel-next-btn' not found!");
-    }
+    // TODO: Re-enable when legacy devices are converted to composition devices
+    // _wheelNextBtn = deviceManager.getDeviceByIdAs<Button>("wheel-next-btn");
+    // if (_wheelNextBtn == nullptr)
+    // {
+    //     MLOG_ERROR("Required device 'wheel-next-btn' not found!");
+    // }
 
-    _wheel = deviceManager.getDeviceByIdAs<Wheel>("wheel");
-    if (_wheel == nullptr)
-    {
-        MLOG_ERROR("Required device 'wheel' not found!");
-    }
+    // _wheel = deviceManager.getDeviceByIdAs<Wheel>("wheel");
+    // if (_wheel == nullptr)
+    // {
+    //     MLOG_ERROR("Required device 'wheel' not found!");
+    // }
 
-    _buzzer = deviceManager.getDeviceByIdAs<Buzzer>("buzzer");
-    if (_buzzer == nullptr)
-    {
-        MLOG_ERROR("Required device 'buzzer' not found!");
-    }
+    // _buzzer = deviceManager.getDeviceByIdAs<Buzzer>("buzzer");
+    // if (_buzzer == nullptr)
+    // {
+    //     MLOG_ERROR("Required device 'buzzer' not found!");
+    // }
 
-    _wheelBtnLed = deviceManager.getDeviceByIdAs<Led>("wheel-btn-led");
-    if (_wheelBtnLed == nullptr)
-    {
-        MLOG_ERROR("Required device 'wheel-btn-led' not found!");
-    }
+    // _wheelBtnLed = deviceManager.getDeviceByIdAs<Led>("wheel-btn-led");
+    // if (_wheelBtnLed == nullptr)
+    // {
+    //     MLOG_ERROR("Required device 'wheel-btn-led' not found!");
+    // }
 
-    _splitter = deviceManager.getDeviceByIdAs<Wheel>("splitter");
-    if (_splitter == nullptr)
-    {
-        MLOG_ERROR("Required device 'splitter' not found!");
-    }
+    // _splitter = deviceManager.getDeviceByIdAs<Wheel>("splitter");
+    // if (_splitter == nullptr)
+    // {
+    //     MLOG_ERROR("Required device 'splitter' not found!");
+    // }
 
-    _splitterNextBtn = deviceManager.getDeviceByIdAs<Button>("splitter-next-btn");
-    if (_splitterNextBtn == nullptr)
-    {
-        MLOG_ERROR("Required device 'splitter-next-btn' not found!");
-    }
+    // _splitterNextBtn = deviceManager.getDeviceByIdAs<Button>("splitter-next-btn");
+    // if (_splitterNextBtn == nullptr)
+    // {
+    //     MLOG_ERROR("Required device 'splitter-next-btn' not found!");
+    // }
 
-    _splitterBtnLed = deviceManager.getDeviceByIdAs<Led>("splitter-btn-led");
-    if (_splitterBtnLed == nullptr)
-    {
-        MLOG_ERROR("Required device 'splitter-btn-led' not found!");
-    }
+    // _splitterBtnLed = deviceManager.getDeviceByIdAs<Led>("splitter-btn-led");
+    // if (_splitterBtnLed == nullptr)
+    // {
+    //     MLOG_ERROR("Required device 'splitter-btn-led' not found!");
+    // }
 
-    MLOG_INFO("ManualMode setup complete");
+    MLOG_INFO("ManualMode setup complete (disabled - waiting for composition devices)");
 }
 
 void ManualMode::loop()
 {
+    // TODO: Re-enable when legacy devices are converted to composition devices
+    // ManualMode is currently disabled
+    return;
+
     bool ledBlinkFast = millis() % 500 > 250;
     bool ledBlinkSlow = millis() % 1000 > 500;
 

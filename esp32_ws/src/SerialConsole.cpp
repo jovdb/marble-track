@@ -8,7 +8,7 @@
 #include "DeviceManager.h"
 #include "Network.h"
 #include "Logging.h"
-#include "devices/Device.h"
+#include "devices/composition/DeviceBase.h"
 
 SerialConsole::SerialConsole(DeviceManager &deviceManager, Network *&networkRef, AutoMode *&autoModeRef, ManualMode *&manualModeRef)
     : m_deviceManager(deviceManager), m_network(networkRef), m_autoMode(autoModeRef), m_manualMode(manualModeRef)
@@ -114,7 +114,7 @@ void SerialConsole::handleCommand(const String &input)
 
     if (input.equalsIgnoreCase("devices"))
     {
-        std::vector<Device*> allDevices = m_deviceManager.getAllDevices();
+        std::vector<DeviceBase*> allDevices = m_deviceManager.getAllDevices();
 
         Serial.printf("⚙️  Devices: %d total | Mode: %s\n",
                       static_cast<int>(allDevices.size()),
@@ -132,11 +132,12 @@ void SerialConsole::handleCommand(const String &input)
                                   allDevices[i]->getId().c_str(),
                                   allDevices[i]->getName().c_str());
 
-                    String state = allDevices[i]->getState();
-                    Serial.printf("     State:  %s\n", state.c_str());
-
-                    String config = allDevices[i]->getConfig();
-                    Serial.printf("     Config: %s\n", config.c_str());
+                    // State and config not available on DeviceBase
+                    // TODO: Re-enable when devices implement IControllable/ISerializable
+                    // String state = allDevices[i]->getState();
+                    // Serial.printf("     State:  %s\n", state.c_str());
+                    // String config = allDevices[i]->getConfig();
+                    // Serial.printf("     Config: %s\n", config.c_str());
 
                     // Show children IDs
                     auto children = allDevices[i]->getChildren();
@@ -685,7 +686,7 @@ void SerialConsole::saveAndApplyNetworkSettings()
 
 void SerialConsole::startDeleteDeviceFlow()
 {
-    Device *deviceList[20];
+    DeviceBase *deviceList[20];
     int deviceCount = 0;
     m_deviceManager.getDevices(deviceList, deviceCount, 20);
 

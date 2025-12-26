@@ -159,42 +159,45 @@ void setup()
     }
     
     // Recreate mode based on button state
-    const Button *manualBtn = deviceManager.getDeviceByIdAs<Button>("manual-btn");
-    if (manualBtn && manualBtn->isPressed())
-    {
-      MLOG_INFO("Device changed: Initializing MANUAL mode");
-      manualMode = new ManualMode(deviceManager);
-      manualMode->setup();
-    }
-    else
-    {
-      MLOG_INFO("Device changed: Initializing AUTOMATIC mode");
-      autoMode = new AutoMode(deviceManager);
-      autoMode->setup();
-    } });
-
-  const Button *manualBtn = deviceManager.getDeviceByIdAs<Button>("manual-btn");
-
-  if (manualBtn && manualBtn->isPressed())
-  {
-    MLOG_INFO("Operation mode: MANUAL");
-    manualMode = new ManualMode(deviceManager);
-    manualMode->setup();
-  }
-  else
-  {
-    MLOG_INFO("Operation mode: AUTOMATIC");
+    // TODO: Re-enable when Button is converted to composition device
+    // const Button *manualBtn = deviceManager.getDeviceByIdAs<Button>("manual-btn");
+    // if (manualBtn && manualBtn->isPressed())
+    // {
+    //   MLOG_INFO("Device changed: Initializing MANUAL mode");
+    //   manualMode = new ManualMode(deviceManager);
+    //   manualMode->setup();
+    // }
+    // else
+    // {
+    MLOG_INFO("Device changed: Initializing AUTOMATIC mode");
     autoMode = new AutoMode(deviceManager);
     autoMode->setup();
-  }
+    // }
+  });
+
+  // TODO: Re-enable when Button is converted to composition device
+  // const Button *manualBtn = deviceManager.getDeviceByIdAs<Button>("manual-btn");
+  // if (manualBtn && manualBtn->isPressed())
+  // {
+  //   MLOG_INFO("Operation mode: MANUAL");
+  //   manualMode = new ManualMode(deviceManager);
+  //   manualMode->setup();
+  // }
+  // else
+  // {
+  MLOG_INFO("Operation mode: AUTOMATIC");
+  autoMode = new AutoMode(deviceManager);
+  autoMode->setup();
+  // }
 
   // Startup sound
-  Buzzer *buzzer = deviceManager.getDeviceByTypeAs<Buzzer>("buzzer");
-  if (buzzer)
-  {
-    MLOG_INFO("Startup tone");
-    buzzer->startupTone(); // Play startup tone sequence
-  }
+  // TODO: Re-enable when Buzzer is converted to composition device
+  // Buzzer *buzzer = deviceManager.getDeviceByTypeAs<Buzzer>("buzzer");
+  // if (buzzer)
+  // {
+  //   MLOG_INFO("Startup tone");
+  //   buzzer->startupTone(); // Play startup tone sequence
+  // }
 
   // MLOG_INFO("Device management initialized - Total devices: %d", deviceManager.getDeviceCount());
 

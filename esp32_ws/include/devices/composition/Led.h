@@ -61,10 +61,10 @@ namespace composition
         void jsonToConfig(const JsonDocument &config) override;
         void configToJson(JsonDocument &doc) override;
 
-        // DeviceBase override for ISerializable access
-        ISerializable *getSerializable() override { return static_cast<ISerializable *>(this); }
-    };
+            };
 
 } // namespace composition
 
 #endif // COMPOSITION_LED_H
+
+

@@ -21,48 +21,51 @@ AutoMode::AutoMode(DeviceManager &deviceManager) : deviceManager(deviceManager)
 
 void AutoMode::setup()
 {
+    // TODO: Re-enable when legacy devices are converted to composition devices
+    // _wheel = deviceManager.getDeviceByIdAs<Wheel>("wheel");
+    // if (_wheel == nullptr)
+    // {
+    //     MLOG_ERROR("Required device 'wheel' not found!");
+    // }
 
-    _wheel = deviceManager.getDeviceByIdAs<Wheel>("wheel");
-    if (_wheel == nullptr)
-    {
-        MLOG_ERROR("Required device 'wheel' not found!");
-    }
+    // _buzzer = deviceManager.getDeviceByIdAs<Buzzer>("buzzer");
+    // if (_buzzer == nullptr)
+    // {
+    //     MLOG_ERROR("Required device 'buzzer' not found!");
+    // }
 
-    _buzzer = deviceManager.getDeviceByIdAs<Buzzer>("buzzer");
-    if (_buzzer == nullptr)
-    {
-        MLOG_ERROR("Required device 'buzzer' not found!");
-    }
+    // _wheelBtnLed = deviceManager.getDeviceByIdAs<Led>("wheel-btn-led");
+    // if (_wheelBtnLed == nullptr)
+    // {
+    //     MLOG_ERROR("Required device 'wheel-btn-led' not found!");
+    // }
 
-    _wheelBtnLed = deviceManager.getDeviceByIdAs<Led>("wheel-btn-led");
-    if (_wheelBtnLed == nullptr)
-    {
-        MLOG_ERROR("Required device 'wheel-btn-led' not found!");
-    }
+    // _splitter = deviceManager.getDeviceByIdAs<Wheel>("splitter");
+    // if (_splitter == nullptr)
+    // {
+    //     MLOG_ERROR("Required device 'splitter' not found!");
+    // }
 
-    _splitter = deviceManager.getDeviceByIdAs<Wheel>("splitter");
-    if (_splitter == nullptr)
-    {
-        MLOG_ERROR("Required device 'splitter' not found!");
-    }
+    // _splitterBtnLed = deviceManager.getDeviceByIdAs<Led>("splitter-btn-led");
+    // if (_splitterBtnLed == nullptr)
+    // {
+    //     MLOG_ERROR("Required device 'splitter-btn-led' not found!");
+    // }
 
-    _splitterBtnLed = deviceManager.getDeviceByIdAs<Led>("splitter-btn-led");
-    if (_splitterBtnLed == nullptr)
-    {
-        MLOG_ERROR("Required device 'splitter-btn-led' not found!");
-    }
+    // _lift = deviceManager.getDeviceByIdAs<Lift>("lift");
+    // if (_lift == nullptr)
+    // {
+    //     MLOG_ERROR("Required device 'lift' not found!");
+    // }
 
-    _lift = deviceManager.getDeviceByIdAs<Lift>("lift");
-    if (_lift == nullptr)
-    {
-        MLOG_ERROR("Required device 'lift' not found!");
-    }
-
-    MLOG_INFO("AutoMode setup complete");
+    MLOG_INFO("AutoMode setup complete (disabled - waiting for composition devices)");
 }
 
 void AutoMode::loop()
 {
+    // TODO: Re-enable when legacy devices are converted to composition devices
+    // AutoMode is currently disabled
+    return;
 
     const ulong currentMillis = millis();
 

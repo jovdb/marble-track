@@ -94,9 +94,6 @@ namespace composition
         void jsonToConfig(const JsonDocument &config) override;
         void configToJson(JsonDocument &doc) override;
 
-        // DeviceBase override for ISerializable access
-        ISerializable *getSerializable() override { return static_cast<ISerializable *>(this); }
-
     private:
         bool readIsButtonPressed();
         String pinModeToString(PinModeOption mode) const;

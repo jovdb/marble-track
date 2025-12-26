@@ -63,7 +63,7 @@ export default function DeviceConfig(props: DeviceConfigProps) {
           <div class={styles["device-config__actions"]}>
             {props.onClose && (
               <button type="button" class={styles["device-config__close"]} onClick={props.onClose}>
-                Cancel
+                Close
               </button>
             )}
             <button type="submit" class={styles["device-config__submit"]}>

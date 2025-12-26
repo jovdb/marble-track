@@ -1,5 +1,7 @@
 #include <ArduinoJson.h>
 #include <vector>
+#include <algorithm>
+#include <functional>
 #include "LittleFS.h"
 #include "Logging.h"
 #include "DeviceManager.h"
@@ -120,6 +122,17 @@ void DeviceManager::loadDevicesFromJsonFile()
     MLOG_INFO("Loaded %d devices from %s", devicesCount, CONFIG_FILE);
 }
 
+/**
+ * @brief Saves all devices (including children) to the config file
+ * 
+ * Saves devices in a flat list by:
+ * 1. Walking the device tree to get all devices (parents + children)
+ * 2. Serializing each device
+ * 3. For devices with the serializable mixin, including their config property
+ * 
+ * This ensures child devices (e.g., LED and Button in a Test2 device) are
+ * persisted alongside their parent devices.
+ */
 void DeviceManager::saveDevicesToJsonFile()
 {
     // First, read the existing configuration to preserve other properties
@@ -166,9 +179,30 @@ void DeviceManager::saveDevicesToJsonFile()
     rootObj.remove("devices");
     JsonArray devicesArray = rootObj["devices"].to<JsonArray>();
 
-    for (int i = 0; i < devicesCount; i++)
+    // Populate devices array using shared helper
+    addDevicesToJsonArray(devicesArray);
+
+    // Save back to file
+    File file = LittleFS.open(CONFIG_FILE, FILE_WRITE);
+    if (file)
     {
-        DeviceBase *device = devices[i];
+        serializeJson(doc, file);
+        file.close();
+        MLOG_INFO("Saved devices list to %s", CONFIG_FILE);
+    }
+    else
+    {
+        MLOG_ERROR("Failed to open %s for writing", CONFIG_FILE);
+    }
+}
+
+void DeviceManager::addDevicesToJsonArray(JsonArray &devicesArray)
+{
+    // Get flat list of all devices (parents + children)
+    std::vector<DeviceBase *> allDevices = getAllDevices();
+
+    for (DeviceBase *device : allDevices)
+    {
         if (!device)
             continue;
 
@@ -194,19 +228,6 @@ void DeviceManager::saveDevicesToJsonFile()
                 deviceObj["config"] = configDoc.as<JsonObject>();
             }
         }
-    }
-
-    // Save back to file
-    File file = LittleFS.open(CONFIG_FILE, FILE_WRITE);
-    if (file)
-    {
-        serializeJson(doc, file);
-        file.close();
-        MLOG_INFO("Saved devices list to %s", CONFIG_FILE);
-    }
-    else
-    {
-        MLOG_ERROR("Failed to open %s for writing", CONFIG_FILE);
     }
 }
 

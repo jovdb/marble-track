@@ -416,26 +416,17 @@ void WebSocketManager::handleGetDevicesConfig(JsonDocument &doc)
 
     JsonDocument response;
     response["type"] = "devices-config";
-    // Read config.json from LittleFS
-    File file = LittleFS.open("/config.json", "r");
-    if (!file)
+    if (!deviceManager)
     {
-        response["error"] = "config.json not found";
+        response["error"] = "DeviceManager not available";
     }
     else
     {
-        // Parse file contents as JSON
+        // Build a config snapshot that mirrors saveDevicesToJsonFile()
         JsonDocument configDoc;
-        DeserializationError err = deserializeJson(configDoc, file);
-        if (err)
-        {
-            response["error"] = "Failed to parse config.json";
-        }
-        else
-        {
-            response["config"] = configDoc;
-        }
-        file.close();
+        JsonArray devicesArray = configDoc["devices"].to<JsonArray>();
+        deviceManager->addDevicesToJsonArray(devicesArray);
+        response["config"] = configDoc;
     }
     String respStr;
     serializeJson(response, respStr);

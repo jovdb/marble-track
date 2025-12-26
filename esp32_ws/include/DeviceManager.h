@@ -16,7 +16,7 @@ class DeviceManager
 {
 
 private:
-    static const int MAX_DEVICES = 20;
+    static const int MAX_DEVICES = 30;
     DeviceBase *devices[MAX_DEVICES];
     int devicesCount;
 
@@ -73,6 +73,15 @@ public:
 
     void loadDevicesFromJsonFile();
     void saveDevicesToJsonFile();
+
+    /**
+     * @brief Populate a JSON array with a flat snapshot of all devices
+     *
+     * The output mirrors the structure written by saveDevicesToJsonFile():
+     * - Each entry has `id`, `type`, `children` (array of child IDs)
+     * - If a device implements the serializable mixin, a `config` object is included
+     */
+    void addDevicesToJsonArray(JsonArray &devicesArray);
 
 private:
     DeviceBase *findDeviceRecursiveById(DeviceBase *root, const String &deviceId) const;

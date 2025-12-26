@@ -3,5 +3,33 @@
     "ssid": "telenet-182FE",
     "password": "cPQdRWmFx1eM"
   },
-  "devices": []
+  "devices": [
+    {
+      "id": "test2",
+      "type": "test2",
+      "children": ["test2_led", "test2_button"]
+    },
+    {
+      "id": "test2_led",
+      "type": "led",
+      "children": [],
+      "config": {
+        "pin": 17,
+        "name": "Led",
+        "initialState": "BLINKING"
+      }
+    },
+    {
+      "id": "test2_button",
+      "type": "button",
+      "children": [],
+      "config": {
+        "pin": 18,
+        "name": "Button",
+        "debounceTimeInMs": 50,
+        "pinMode": "Floating",
+        "buttonType": "NormalOpen"
+      }
+    }
+  ]
 }

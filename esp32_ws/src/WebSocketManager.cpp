@@ -250,62 +250,42 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
             return;
         }
 
-        // Handle Led devices
-        if (device->getType() == "led")
+        // Use registry to get serializable interface - works for any device type
+        if (device->hasMixin("serializable"))
         {
-            composition::Led *ledDevice = static_cast<composition::Led *>(device);
-            JsonObject configObj = doc["config"].as<JsonObject>();
-            JsonDocument configDoc;
-            configDoc.set(configObj);
-            ledDevice->jsonToConfig(configDoc);
+            ISerializable *serializable = mixins::SerializableRegistry::get(deviceId);
+            if (serializable)
+            {
+                JsonObject configObj = doc["config"].as<JsonObject>();
+                JsonDocument configDoc;
+                configDoc.set(configObj);
+                serializable->jsonToConfig(configDoc);
 
-            deviceManager->saveDevicesToJsonFile();
+                // Re-initialize the device with the new config
+                device->setup();
 
-            // Build device-config response after save
-            JsonDocument response;
-            response["type"] = "device-config";
-            response["triggerBy"] = "set";
-            response["deviceId"] = deviceId;
+                deviceManager->saveDevicesToJsonFile();
 
-            JsonDocument savedConfig;
-            ledDevice->configToJson(savedConfig);
-            response["config"] = savedConfig;
 
-            String respStr;
-            serializeJson(response, respStr);
-            notifyClients(respStr);
-            return;
+                // Build device-config response after save
+                JsonDocument response;
+                response["type"] = "device-config";
+                response["triggerBy"] = "set";
+                response["deviceId"] = deviceId;
+
+                JsonDocument savedConfig;
+                serializable->configToJson(savedConfig);
+                response["config"] = savedConfig;
+
+                String respStr;
+                serializeJson(response, respStr);
+                notifyClients(respStr);
+                return;
+            }
         }
 
-        // Handle Button devices
-        if (device->getType() == "button")
-        {
-            composition::Button *buttonDevice = static_cast<composition::Button *>(device);
-            JsonObject configObj = doc["config"].as<JsonObject>();
-            JsonDocument configDoc;
-            configDoc.set(configObj);
-            buttonDevice->jsonToConfig(configDoc);
-
-            deviceManager->saveDevicesToJsonFile();
-
-            // Build device-config response after save
-            JsonDocument response;
-            response["type"] = "device-config";
-            response["triggerBy"] = "set";
-            response["deviceId"] = deviceId;
-
-            JsonDocument savedConfig;
-            buttonDevice->configToJson(savedConfig);
-            response["config"] = savedConfig;
-
-            String respStr;
-            serializeJson(response, respStr);
-            notifyClients(respStr);
-            return;
-        }
-
-        // Unknown device type
-        notifyClients(createJsonResponse(false, "Unsupported device type: " + device->getType(), "", "", "device-save-config", deviceId));
+        // Device exists but doesn't support serializable
+        notifyClients(createJsonResponse(false, "Device does not support config: " + device->getType(), "", "", "device-save-config", deviceId));
         return;
     }
 
@@ -335,21 +315,20 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
         response["triggerBy"] = "get";
         response["deviceId"] = deviceId;
 
-        // Handle Led devices
-        if (device->getType() == "led")
+        // Use registry to get serializable interface - works for any device type
+        if (device->hasMixin("serializable"))
         {
-            composition::Led *ledDevice = static_cast<composition::Led *>(device);
-            JsonDocument configDoc;
-            ledDevice->configToJson(configDoc);
-            response["config"] = configDoc;
-        }
-        // Handle Button devices
-        else if (device->getType() == "button")
-        {
-            composition::Button *buttonDevice = static_cast<composition::Button *>(device);
-            JsonDocument configDoc;
-            buttonDevice->configToJson(configDoc);
-            response["config"] = configDoc;
+            ISerializable *serializable = mixins::SerializableRegistry::get(deviceId);
+            if (serializable)
+            {
+                JsonDocument configDoc;
+                serializable->configToJson(configDoc);
+                response["config"] = configDoc;
+            }
+            else
+            {
+                response["config"] = nullptr;
+            }
         }
         else
         {

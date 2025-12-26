@@ -54,6 +54,14 @@ public:
     bool removeDevice(const String &deviceId);
     bool addDevice(const String &deviceType, const String &deviceId, JsonVariant config = JsonVariant());
 
+    /**
+     * @brief Factory method to create a device based on type
+     * @param deviceId The unique identifier for the device
+     * @param deviceType The type of device to create ("led", "button", etc.)
+     * @return Pointer to the created device, or nullptr if type is unknown
+     */
+    DeviceBase *createDevice(const String &deviceId, const String &deviceType);
+
     void getDevices(DeviceBase **deviceList, int &count, int maxResults);
 
     void setup();

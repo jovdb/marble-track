@@ -11,6 +11,8 @@
 #define SERIALIZABLE_MIXIN_H
 
 #include <ArduinoJson.h>
+#include <Arduino.h>
+#include <map>
 
 /**
  * @class ISerializable
@@ -38,6 +40,21 @@ public:
 };
 
 /**
+ * @namespace mixins
+ * @brief Registry for looking up ISerializable interfaces by device ID
+ */
+namespace mixins
+{
+    class SerializableRegistry
+    {
+    public:
+        static void registerDevice(const String &id, ISerializable *ptr);
+        static void unregisterDevice(const String &id);
+        static ISerializable *get(const String &id);
+    };
+}
+
+/**
  * @class SerializableMixin
  * @brief Mixin that provides config persistence capability
  *
@@ -45,16 +62,26 @@ public:
  * - void jsonToConfig(const JsonDocument &config) - Load device config from JSON
  * - void configToJson(JsonDocument &doc) - Save device config to JSON
  * Automatically registers itself with DeviceBase::registerMixin("serializable")
+ * and with SerializableRegistry for lookup by device ID.
  */
 template <typename Derived>
 class SerializableMixin : public ISerializable
 {
+public:
+    virtual ~SerializableMixin()
+    {
+        // Unregister on destruction
+        auto *derived = static_cast<Derived *>(this);
+        mixins::SerializableRegistry::unregisterDevice(derived->getId());
+    }
+
 protected:
     SerializableMixin()
     {
         // Register this mixin with the base class
         auto *derived = static_cast<Derived *>(this);
         derived->registerMixin("serializable");
+        mixins::SerializableRegistry::registerDevice(derived->getId(), this);
     }
 
     /**

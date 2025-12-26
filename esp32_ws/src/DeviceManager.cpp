@@ -5,8 +5,27 @@
 #include "DeviceManager.h"
 #include "devices/composition/Led.h"
 #include "devices/composition/Button.h"
+#include "devices/mixins/SerializableMixin.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
+
+DeviceBase *DeviceManager::createDevice(const String &deviceId, const String &deviceType)
+{
+    String lowerType = deviceType;
+    lowerType.toLowerCase();
+
+    if (lowerType == "led")
+    {
+        return new composition::Led(deviceId);
+    }
+    else if (lowerType == "button")
+    {
+        return new composition::Button(deviceId);
+    }
+
+    MLOG_WARN("Unknown device type: %s", deviceType.c_str());
+    return nullptr;
+}
 
 void DeviceManager::loadDevicesFromJsonFile()
 {
@@ -65,46 +84,27 @@ void DeviceManager::loadDevicesFromJsonFile()
             continue;
         }
 
-        DeviceBase *newDevice = nullptr;
+        DeviceBase *newDevice = createDevice(id, type);
 
-        // Create devices based on type
-        if (type == "led")
+        if (!newDevice)
         {
-            newDevice = new composition::Led(id);
-        }
-        else if (type == "button")
-        {
-            newDevice = new composition::Button(id);
-        }
-        else
-        {
-            MLOG_WARN("Unknown device type: %s", type.c_str());
             continue;
         }
 
-        if (newDevice)
+        // Load config if device is serializable and config exists
+        if (newDevice->hasMixin("serializable") && obj["config"].is<JsonObject>())
         {
-            // Load config if device is serializable and config exists
-            if (newDevice->hasMixin("serializable") && obj["config"].is<JsonObject>())
+            ISerializable *serializable = mixins::SerializableRegistry::get(id);
+            if (serializable)
             {
-                JsonObject configObj = obj["config"];
-                if (type == "led")
-                {
-                    composition::Led *ledDevice = static_cast<composition::Led *>(newDevice);
-                    ledDevice->jsonToConfig(configObj);
-                }
-                else if (type == "button")
-                {
-                    composition::Button *buttonDevice = static_cast<composition::Button *>(newDevice);
-                    buttonDevice->jsonToConfig(configObj);
-                }
+                JsonDocument configDoc;
+                configDoc.set(obj["config"].as<JsonObject>());
+                serializable->jsonToConfig(configDoc);
             }
-
-            // Add to device manager
-            addDevice(newDevice);
-
-            MLOG_INFO("Loaded device: %s (%s)", id.c_str(), type.c_str());
         }
+
+        // Add to device manager
+        addDevice(newDevice);
     }
 
     MLOG_INFO("Loaded %d devices from %s", devicesCount, CONFIG_FILE);
@@ -176,25 +176,12 @@ void DeviceManager::saveDevicesToJsonFile()
         // Only save config for devices that implement SerializableMixin
         if (device->hasMixin("serializable"))
         {
-            if (device->getType() == "led")
+            ISerializable *serializable = mixins::SerializableRegistry::get(device->getId());
+            if (serializable)
             {
-                composition::Led *ledDevice = static_cast<composition::Led *>(device);
-                if (ledDevice)
-                {
-                    JsonDocument configDoc;
-                    ledDevice->configToJson(configDoc);
-                    deviceObj["config"] = configDoc.as<JsonObject>();
-                }
-            }
-            else if (device->getType() == "button")
-            {
-                composition::Button *buttonDevice = static_cast<composition::Button *>(device);
-                if (buttonDevice)
-                {
-                    JsonDocument configDoc;
-                    buttonDevice->configToJson(configDoc);
-                    deviceObj["config"] = configDoc.as<JsonObject>();
-                }
+                JsonDocument configDoc;
+                serializable->configToJson(configDoc);
+                deviceObj["config"] = configDoc.as<JsonObject>();
             }
         }
     }
@@ -333,7 +320,7 @@ bool DeviceManager::addDevice(DeviceBase *device)
     {
         devices[devicesCount] = device;
         devicesCount++;
-        MLOG_INFO("Added device: %s (%s)", device->getId().c_str(), device->getType().c_str());
+        MLOG_INFO("Added device: %s", device->toString().c_str());
         return true;
     }
 
@@ -362,50 +349,30 @@ bool DeviceManager::addDevice(const String &deviceType, const String &deviceId, 
         return false;
     }
 
-    DeviceBase *newDevice = nullptr;
-    String lowerType = deviceType;
-    lowerType.toLowerCase();
+    DeviceBase *newDevice = createDevice(deviceId, deviceType);
 
-    if (lowerType == "led")
+    if (!newDevice)
     {
-        newDevice = new composition::Led(deviceId);
-    }
-    else if (lowerType == "button")
-    {
-        newDevice = new composition::Button(deviceId);
-    }
-    else
-    {
-        MLOG_ERROR("Unknown device type: %s", deviceType.c_str());
         return false;
     }
 
-    if (newDevice)
+    // Load config if device is serializable and config exists
+    if (newDevice->hasMixin("serializable") && config.is<JsonObject>())
     {
-        // Load config if device is serializable and config exists
-        if (newDevice->hasMixin("serializable") && config.is<JsonObject>())
+        ISerializable *serializable = mixins::SerializableRegistry::get(deviceId);
+        if (serializable)
         {
-            JsonObject configObj = config.as<JsonObject>();
-            if (lowerType == "led")
-            {
-                composition::Led *ledDevice = static_cast<composition::Led *>(newDevice);
-                ledDevice->jsonToConfig(configObj);
-            }
-            else if (lowerType == "button")
-            {
-                composition::Button *buttonDevice = static_cast<composition::Button *>(newDevice);
-                buttonDevice->jsonToConfig(configObj);
-            }
+            JsonDocument configDoc;
+            configDoc.set(config.as<JsonObject>());
+            serializable->jsonToConfig(configDoc);
         }
-
-        devices[devicesCount] = newDevice;
-        devicesCount++;
-
-        MLOG_INFO("Added device to array: %s (%s)", deviceId.c_str(), deviceType.c_str());
-        return true;
     }
 
-    return false;
+    devices[devicesCount] = newDevice;
+    devicesCount++;
+
+    MLOG_INFO("Added device to array: %s (%s)", deviceId.c_str(), deviceType.c_str());
+    return true;
 }
 
 void DeviceManager::getDevices(DeviceBase **deviceList, int &count, int maxResults)

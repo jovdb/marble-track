@@ -75,15 +75,31 @@ public:
     void saveDevicesToJsonFile();
 
     /**
-     * @brief Populate a JSON array with a flat snapshot of all devices
+     * @brief Populate a JSON array with a tree snapshot of all root devices
      *
-     * The output mirrors the structure written by saveDevicesToJsonFile():
-     * - Each entry has `id`, `type`, `children` (array of child IDs)
+     * The output uses a tree structure where:
+     * - Only root devices are in the array
+     * - Child devices are nested within their parents in a `children` array (as objects, not IDs)
+     * - Each device object includes `id`, `type`, `children` (array of nested device objects)
      * - If a device implements the serializable mixin, a `config` object is included
      */
     void addDevicesToJsonArray(JsonArray &devicesArray);
 
 private:
+    /**
+     * @brief Recursively load a device and its children from JSON
+     * @param deviceObj JSON object with id, type, optional children array and config
+     * @return Pointer to created device with fully populated tree, or nullptr if failed
+     */
+    DeviceBase *loadDeviceFromJsonObject(JsonObject deviceObj);
+
+    /**
+     * @brief Recursively add a device and its children to JSON array
+     * @param device Device to serialize
+     * @param deviceObj JSON object to populate
+     */
+    void addDeviceToJsonObject(DeviceBase *device, JsonObject deviceObj);
+
     DeviceBase *findDeviceRecursiveById(DeviceBase *root, const String &deviceId) const;
     DeviceBase *findDeviceRecursiveByType(DeviceBase *root, const String &deviceType) const;
 };

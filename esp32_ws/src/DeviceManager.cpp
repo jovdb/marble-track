@@ -39,6 +39,64 @@ DeviceBase *DeviceManager::createDevice(const String &deviceId, const String &de
     return nullptr;
 }
 
+/**
+ * @brief Recursively load devices from a JSON object (tree structure)
+ * @param deviceObj JSON object containing device definition with optional children array
+ * @return Pointer to the created device, or nullptr if creation failed
+ *
+ * This function:
+ * 1. Creates the device from id and type
+ * 2. Recursively creates and attaches child devices
+ * 3. Applies config via setConfig (for devices with serializable mixin)
+ */
+DeviceBase *DeviceManager::loadDeviceFromJsonObject(JsonObject deviceObj)
+{
+    const String id = deviceObj["id"] | "";
+    const String type = deviceObj["type"] | "";
+
+    if (id.isEmpty() || type.isEmpty())
+    {
+        MLOG_WARN("Skipping device with missing id or type");
+        return nullptr;
+    }
+
+    DeviceBase *newDevice = createDevice(id, type);
+    if (!newDevice)
+    {
+        return nullptr;
+    }
+
+    // Set Config
+    // Apply config if device is serializable and config exists
+    if (newDevice->hasMixin("serializable") && deviceObj["config"].is<JsonObject>())
+    {
+        ISerializable *serializable = mixins::SerializableRegistry::get(id);
+        if (serializable)
+        {
+            MLOG_INFO("Loading config for device %s: config: %s", id.c_str(), deviceObj["config"].as<JsonObject>().as<String>().c_str());
+            JsonDocument configDoc;
+            configDoc.set(deviceObj["config"].as<JsonObject>());
+            serializable->jsonToConfig(configDoc);
+        }
+    }
+
+    // Recursively load and attach child devices
+    if (deviceObj["children"].is<JsonArray>())
+    {
+        JsonArray childrenArray = deviceObj["children"].as<JsonArray>();
+        for (JsonObject childObj : childrenArray)
+        {
+            DeviceBase *child = loadDeviceFromJsonObject(childObj);
+            if (child)
+            {
+                newDevice->addChild(child);
+            }
+        }
+    }
+
+    return newDevice;
+}
+
 void DeviceManager::loadDevicesFromJsonFile()
 {
     if (!LittleFS.exists(CONFIG_FILE))
@@ -84,119 +142,30 @@ void DeviceManager::loadDevicesFromJsonFile()
     }
     devicesCount = 0;
 
-    // First pass: create all devices and keep them in a local list by id
-    struct IdDevicePair { String id; DeviceBase *dev; JsonObject obj; };
-    std::vector<IdDevicePair> created;
-    created.reserve(arr.size());
-
-    for (JsonObject obj : arr)
-    {
-        const String id = obj["id"] | "";
-        const String type = obj["type"] | "";
-
-        if (id.isEmpty() || type.isEmpty())
-        {
-            MLOG_WARN("Skipping device with missing id or type");
-            continue;
-        }
-
-        DeviceBase *newDevice = createDevice(id, type);
-        if (!newDevice)
-        {
-            continue;
-        }
-
-        // Load config if device is serializable and config exists
-        if (newDevice->hasMixin("serializable") && obj["config"].is<JsonObject>())
-        {
-            ISerializable *serializable = mixins::SerializableRegistry::get(id);
-            if (serializable)
-            {
-                JsonDocument configDoc;
-                configDoc.set(obj["config"].as<JsonObject>());
-                serializable->jsonToConfig(configDoc);
-            }
-        }
-
-        // Keep device and its source JSON object for second pass
-        created.push_back({id, newDevice, obj});
-    }
-
-    // Helper to find a device by id in local list
-    auto findLocalById = [&](const String &searchId) -> DeviceBase * {
-        for (auto &pair : created)
-        {
-            if (pair.id == searchId)
-            {
-                return pair.dev;
-            }
-        }
-        return nullptr;
-    };
-
-    // Track which devices are referenced as children
-    std::vector<String> referencedChildren;
-    referencedChildren.reserve(created.size());
-
-    // Second pass: attach children by id
-    for (auto &pair : created)
-    {
-        JsonObject obj = pair.obj;
-        if (obj["children"].is<JsonArray>())
-        {
-            JsonArray chArr = obj["children"].as<JsonArray>();
-            for (JsonVariant v : chArr)
-            {
-                const String childId = v | "";
-                if (childId.isEmpty())
-                    continue;
-
-                DeviceBase *child = findLocalById(childId);
-                if (child)
-                {
-                    pair.dev->addChild(child);
-                    referencedChildren.push_back(childId);
-                }
-                else
-                {
-                    MLOG_WARN("Child device id '%s' not found for parent '%s'", childId.c_str(), pair.id.c_str());
-                }
-            }
-        }
-    }
-
-    // Third pass: add only root devices (not referenced as children) to manager
-    auto isReferenced = [&](const String &id) -> bool {
-        for (const auto &refId : referencedChildren)
-        {
-            if (refId == id)
-                return true;
-        }
-        return false;
-    };
-
+    // Load only root devices from the array (children are loaded recursively)
     int roots = 0;
-    for (auto &pair : created)
+    for (JsonObject deviceObj : arr)
     {
-        if (!isReferenced(pair.id))
+        DeviceBase *newDevice = loadDeviceFromJsonObject(deviceObj);
+        if (newDevice)
         {
-            addDevice(pair.dev);
+            addDevice(newDevice);
             roots++;
         }
     }
 
     // Log result
-    MLOG_INFO("Loaded %d devices (%d roots) from %s", (int)created.size(), roots, CONFIG_FILE);
+    MLOG_INFO("Loaded %d root devices from %s", roots, CONFIG_FILE);
 }
 
 /**
  * @brief Saves all devices (including children) to the config file
- * 
+ *
  * Saves devices in a flat list by:
  * 1. Walking the device tree to get all devices (parents + children)
  * 2. Serializing each device
  * 3. For devices with the serializable mixin, including their config property
- * 
+ *
  * This ensures child devices (e.g., LED and Button in a Test2 device) are
  * persisted alongside their parent devices.
  */
@@ -263,37 +232,49 @@ void DeviceManager::saveDevicesToJsonFile()
     }
 }
 
+/**
+ * @brief Recursively add a device and its children to JSON using tree structure
+ * @param device Device to serialize
+ * @param deviceObj JSON object to populate
+ */
+void DeviceManager::addDeviceToJsonObject(DeviceBase *device, JsonObject deviceObj)
+{
+    if (!device)
+        return;
+
+    deviceObj["id"] = device->getId();
+    deviceObj["type"] = device->getType();
+
+    // Recursively add children as nested objects in children array
+    JsonArray childrenArray = deviceObj["children"].to<JsonArray>();
+    for (DeviceBase *child : device->getChildren())
+    {
+        JsonObject childObj = childrenArray.add<JsonObject>();
+        addDeviceToJsonObject(child, childObj);
+    }
+
+    // Only save config for devices that implement SerializableMixin
+    if (device->hasMixin("serializable"))
+    {
+        ISerializable *serializable = mixins::SerializableRegistry::get(device->getId());
+        if (serializable)
+        {
+            JsonDocument configDoc;
+            serializable->configToJson(configDoc);
+            deviceObj["config"] = configDoc.as<JsonObject>();
+        }
+    }
+}
+
 void DeviceManager::addDevicesToJsonArray(JsonArray &devicesArray)
 {
-    // Get flat list of all devices (parents + children)
-    std::vector<DeviceBase *> allDevices = getAllDevices();
-
-    for (DeviceBase *device : allDevices)
+    // Add only root devices (those in the devices array) with their full tree
+    for (int i = 0; i < devicesCount; i++)
     {
-        if (!device)
-            continue;
-
-        JsonObject deviceObj = devicesArray.add<JsonObject>();
-        deviceObj["id"] = device->getId();
-        deviceObj["type"] = device->getType();
-
-        // Save children IDs
-        JsonArray childrenArray = deviceObj["children"].to<JsonArray>();
-        for (DeviceBase *child : device->getChildren())
+        if (devices[i])
         {
-            childrenArray.add(child->getId());
-        }
-
-        // Only save config for devices that implement SerializableMixin
-        if (device->hasMixin("serializable"))
-        {
-            ISerializable *serializable = mixins::SerializableRegistry::get(device->getId());
-            if (serializable)
-            {
-                JsonDocument configDoc;
-                serializable->configToJson(configDoc);
-                deviceObj["config"] = configDoc.as<JsonObject>();
-            }
+            JsonObject deviceObj = devicesArray.add<JsonObject>();
+            addDeviceToJsonObject(devices[i], deviceObj);
         }
     }
 }

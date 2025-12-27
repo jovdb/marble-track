@@ -30,7 +30,6 @@ namespace composition
         setName(_config.name);
 
         pinMode(_config.pin, OUTPUT);
-        digitalWrite(_config.pin, LOW);
         MLOG_INFO("%s: Setup on pin %d", toString().c_str(), _config.pin);
 
         // Apply initial state
@@ -88,7 +87,7 @@ namespace composition
         _state.blinkOnTime = onTime;
         _state.blinkOffTime = offTime;
 
-        digitalWrite(_config.pin, HIGH);
+        // Pin set by loop()
         MLOG_INFO("%s: Blinking with on=%lums, off=%lums", toString().c_str(), onTime, offTime);
 
         // Notify subscribers

@@ -30,7 +30,7 @@ public:
     RtosMixin()
     {
         // Register this mixin with the base class
-        static_cast<Derived*>(this)->registerMixin("rtos");
+        static_cast<Derived *>(this)->registerMixin("rtos");
     }
 
     virtual ~RtosMixin()
@@ -54,6 +54,7 @@ public:
             return true; // Already running
         }
 
+        MLOG_DEBUG("%s: Starting RTOS task '%s'", static_cast<Derived *>(this)->toString().c_str(), taskName.c_str());
         BaseType_t result = xTaskCreatePinnedToCore(
             _taskTrampoline,
             taskName.c_str(),

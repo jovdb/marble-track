@@ -18,7 +18,7 @@ namespace composition
         // https://github.com/end2endzone/NonBlockingRTTTL/blob/master/src/NonBlockingRtttl.cpp#L90C5-L99C6
         _ledcChannel = 0;
         LedcChannels::acquireSpecific(_ledcChannel);
-        
+
         // Create mutex for thread-safe state access
         _stateMutex = xSemaphoreCreateMutex();
     }
@@ -29,7 +29,7 @@ namespace composition
         {
             LedcChannels::release(_ledcChannel);
         }
-        
+
         // Clean up mutex
         if (_stateMutex != nullptr)
         {
@@ -62,10 +62,6 @@ namespace composition
         {
             MLOG_ERROR("%s: Failed to start RTOS task", toString().c_str());
         }
-        else
-        {
-            MLOG_INFO("%s: RTOS task started with priority 2", toString().c_str());
-        }
     }
 
     void Buzzer::loop()
@@ -95,7 +91,7 @@ namespace composition
         {
             bool isPlaying = (_state.mode == "TONE" || _state.mode == "TUNE");
             xSemaphoreGive(_stateMutex);
-            
+
             if (isPlaying)
             {
                 MLOG_WARN("%s: Device busy playing, rejecting tone command", toString().c_str());
@@ -109,7 +105,7 @@ namespace composition
             MLOG_ERROR("%s: Invalid frequency %dHz (range: 20-20000)", toString().c_str(), frequency);
             return false;
         }
-        
+
         if (duration < 1 || duration > 10000)
         {
             MLOG_ERROR("%s: Invalid duration %dms (range: 1-10000)", toString().c_str(), duration);
@@ -138,7 +134,7 @@ namespace composition
         {
             bool wasPlaying = (_state.mode == "TONE" || _state.mode == "TUNE");
             xSemaphoreGive(_stateMutex);
-            
+
             if (!wasPlaying)
             {
                 MLOG_INFO("%s: Not playing, stop ignored", toString().c_str());
@@ -148,12 +144,12 @@ namespace composition
 
         // Stop any current playback by stopping the tone and setting stop flag
         ledcWriteTone(_ledcChannel, 0);
-        
+
         // Set stop flag for RTOS task
         xSemaphoreTake(_stateMutex, portMAX_DELAY);
         _state.stopRequested = true;
         xSemaphoreGive(_stateMutex);
-        
+
         // Wake up the RTOS task to check the stop flag
         notifyTask();
 
@@ -174,7 +170,7 @@ namespace composition
         {
             bool isPlaying = (_state.mode == "TONE" || _state.mode == "TUNE");
             xSemaphoreGive(_stateMutex);
-            
+
             if (isPlaying)
             {
                 MLOG_WARN("%s: Device busy playing, rejecting tune command", toString().c_str());
@@ -319,44 +315,44 @@ namespace composition
      */
     void Buzzer::task()
     {
-        MLOG_INFO("%s: RTOS task started", toString().c_str());
-        
+        MLOG_DEBUG("%s: RTOS task started", toString().c_str());
+
         while (true)
         {
             // Wait for command or timeout (longer timeout for better responsiveness)
             ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(50));
-            
+
             // Check for pending commands
             xSemaphoreTake(_stateMutex, portMAX_DELAY);
-            
+
             // Handle tone command
             if (_state.toneCommand.pending)
             {
                 int frequency = _state.toneCommand.frequency;
                 int duration = _state.toneCommand.duration;
                 _state.toneCommand.pending = false;
-                
+
                 // Update state
                 _state.mode = "TONE";
                 _state.playStartTime = millis();
                 _state.toneDuration = duration;
                 xSemaphoreGive(_stateMutex);
-                
+
                 // Notify that tone has started
                 notifyStateChanged();
-                
+
                 // Play the tone
                 ledcWriteTone(_ledcChannel, frequency);
                 vTaskDelay(pdMS_TO_TICKS(duration));
                 ledcWriteTone(_ledcChannel, 0); // Stop tone
-                
+
                 // Update state back to idle
                 xSemaphoreTake(_stateMutex, portMAX_DELAY);
                 _state.mode = "IDLE";
                 _state.playStartTime = 0;
                 _state.toneDuration = 0;
                 xSemaphoreGive(_stateMutex);
-                
+
                 MLOG_INFO("%s: Tone playback completed", toString().c_str());
                 notifyStateChanged();
             }
@@ -365,33 +361,33 @@ namespace composition
             {
                 String rtttl = _state.tuneCommand.rtttl;
                 _state.tuneCommand.pending = false;
-                
+
                 // Update state
                 _state.mode = "TUNE";
                 _state.currentTune = rtttl;
                 xSemaphoreGive(_stateMutex);
-                
+
                 // Start the RTTTL tune
                 rtttl::begin(_config.pin, rtttl.c_str());
-                
+
                 // Check if RTTTL started successfully
                 if (!rtttl::isPlaying())
                 {
                     MLOG_ERROR("%s: Failed to start RTTTL playback", toString().c_str());
-                    
+
                     // Clean up state
                     xSemaphoreTake(_stateMutex, portMAX_DELAY);
                     _state.mode = "IDLE";
                     _state.currentTune = "";
                     xSemaphoreGive(_stateMutex);
-                    
+
                     notifyStateChanged();
                     continue;
                 }
-                
+
                 MLOG_INFO("%s: Starting RTTTL tune playback", toString().c_str());
                 notifyStateChanged();
-                
+
                 // Play the tune until finished with adaptive timing
                 unsigned long lastPlayTime = millis();
                 bool wasStopped = false;
@@ -407,27 +403,27 @@ namespace composition
                         break; // Exit the playback loop
                     }
                     xSemaphoreGive(_stateMutex);
-                    
+
                     rtttl::play();
-                    
+
                     // Adaptive delay based on tune timing (NonBlockingRTTTL needs ~10-20ms between calls)
                     unsigned long currentTime = millis();
                     unsigned long timeSinceLastPlay = currentTime - lastPlayTime;
-                    
+
                     if (timeSinceLastPlay < 15) // 15ms minimum between calls
                     {
                         vTaskDelay(pdMS_TO_TICKS(15 - timeSinceLastPlay));
                     }
-                    
+
                     lastPlayTime = millis();
                 }
-                
+
                 // Tune finished or was stopped
                 xSemaphoreTake(_stateMutex, portMAX_DELAY);
                 _state.mode = "IDLE";
                 _state.currentTune = "";
                 xSemaphoreGive(_stateMutex);
-                
+
                 if (wasStopped)
                 {
                     MLOG_INFO("%s: Tune playback stopped by user", toString().c_str());

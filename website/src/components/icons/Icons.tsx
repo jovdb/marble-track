@@ -331,6 +331,8 @@ export const getDeviceIcon = (type: string, props?: IconProps) => {
       return <ButtonIcon {...props} />;
     case "BUZZER":
       return <BuzzerIcon {...props} />;
+    case "SERVO":
+      return <ServoIcon {...props} />;
     case "STEPPER":
       return <StepperIcon {...props} />;
     case "PWMMOTOR":

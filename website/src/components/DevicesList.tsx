@@ -10,7 +10,7 @@ import {
 } from "../interfaces/WebSockets";
 
 // Available composition device types (from esp32_ws/include/devices/composition/)
-const COMPOSITION_DEVICE_TYPES = ["Button", "Buzzer", "Led", "Test2"] as const;
+const COMPOSITION_DEVICE_TYPES = ["Button", "Buzzer", "Led", "Servo", "Test2"] as const;
 
 export function DevicesList() {
   const [devicesState, { loadDevices }] = useDevices();
@@ -28,9 +28,9 @@ export function DevicesList() {
   createEffect(() => {
     const devices = Object.values(devicesState.devices);
     const devicesWithChildren = devices
-      .filter(device => device.children && device.children.length > 0)
-      .map(device => device.id);
-    
+      .filter((device) => device.children && device.children.length > 0)
+      .map((device) => device.id);
+
     setCollapsedDevices(new Set(devicesWithChildren));
   });
 

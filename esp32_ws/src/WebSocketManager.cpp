@@ -120,7 +120,7 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
                             childPinsArr.add(pin);
                         }
 
-                                               // Child features: mirror mixins as an array
+                        // Child features: mirror mixins as an array
                         {
                             const auto &childMixins = child->getMixins();
                             JsonArray childFeaturesArr = childObj["features"].to<JsonArray>();
@@ -291,6 +291,8 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
 
                 JsonDocument savedConfig;
                 serializable->configToJson(savedConfig);
+                device->setup(); // Re-setup device with new config
+
                 response["config"] = savedConfig;
 
                 String respStr;
@@ -847,7 +849,7 @@ void WebSocketManager::handleAddDevice(JsonDocument &doc)
 
     deviceManager->notifyDevicesChanged();
 
-    MLOG_INFO("Added composition device: %s (%s)", deviceId.c_str(), deviceType.c_str());
+    MLOG_INFO("Added device: %s (%s)", deviceId.c_str(), deviceType.c_str());
 }
 
 void WebSocketManager::handleRemoveDevice(JsonDocument &doc)

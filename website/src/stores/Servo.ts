@@ -28,7 +28,7 @@ export function useServo(deviceId: string) {
 
   const setValue = (value: number, durationMs?: number) => {
     const args: { value: number; durationMs?: number } = { value };
-    if (durationMs !== undefined && durationMs > 0) {
+    if (durationMs !== undefined) {
       args.durationMs = durationMs;
     }
 

@@ -18,6 +18,8 @@ DeviceBase *DeviceManager::createDevice(const String &deviceId, const String &de
     String lowerType = deviceType;
     lowerType.toLowerCase();
 
+    MLOG_DEBUG("Creating device of type: '%s' with ID: '%s'", deviceType.c_str(), deviceId.c_str());
+
     if (lowerType == "led")
     {
         return new composition::Led(deviceId);
@@ -40,65 +42,69 @@ DeviceBase *DeviceManager::createDevice(const String &deviceId, const String &de
 }
 
 /**
- * @brief Recursively load devices from a JSON object (tree structure)
- * @param deviceObj JSON object containing device definition with optional children array
- * @return Pointer to the created device, or nullptr if creation failed
- *
- * This function:
- * 1. Creates the device from id and type
- * 2. Recursively creates and attaches child devices
- * 3. Applies config via setConfig (for devices with serializable mixin)
+ * @brief Recursively apply config to devices from JSON
+ * @param device The device to apply config to
+ * @param deviceObj JSON object with optional children array and config
  */
-DeviceBase *DeviceManager::loadDeviceFromJsonObject(JsonObject deviceObj)
+void DeviceManager::loadDeviceConfigFromJson(DeviceBase *device, JsonObject deviceObj)
 {
-    const String id = deviceObj["id"] | "";
-    const String type = deviceObj["type"] | "";
-
-    if (id.isEmpty() || type.isEmpty())
+    if (!device)
     {
-        MLOG_WARN("Skipping device with missing id or type");
-        return nullptr;
+        MLOG_WARN("Null device passed to loadDeviceConfigFromJson");
+        return;
     }
 
-    DeviceBase *newDevice = createDevice(id, type);
-    if (!newDevice)
-    {
-        return nullptr;
-    }
-
-    // Set Config
     // Apply config if device is serializable and config exists
-    if (newDevice->hasMixin("serializable") && deviceObj["config"].is<JsonObject>())
+    if (device->hasMixin("serializable"))
     {
-        ISerializable *serializable = mixins::SerializableRegistry::get(id);
+        ISerializable *serializable = mixins::SerializableRegistry::get(device->getId());
         if (serializable)
         {
+            MLOG_DEBUG("%s: loading JSON config", device->toString().c_str());
             JsonDocument configDoc;
-            configDoc.set(deviceObj["config"].as<JsonObject>());
+            if (deviceObj["config"].is<JsonObject>())
+            {
+                configDoc.set(deviceObj["config"].as<JsonObject>());
+            }
             serializable->jsonToConfig(configDoc);
-            newDevice->setName(configDoc["name"] | id);
+            device->setName(configDoc["name"] | device->getId());
         }
     }
 
-    // Recursively load and attach child devices
-    if (deviceObj["children"].is<JsonArray>())
+    // Recursively apply config to children by walking device children
+    for (DeviceBase *childDevice : device->getChildren())
     {
-        JsonArray childrenArray = deviceObj["children"].as<JsonArray>();
-        for (JsonObject childObj : childrenArray)
+        const String childId = childDevice->getId();
+        JsonObject childObj;
+        bool found = false;
+        if (deviceObj["children"].is<JsonArray>())
         {
-            DeviceBase *child = loadDeviceFromJsonObject(childObj);
-            if (child)
+            JsonArray childrenArray = deviceObj["children"].as<JsonArray>();
+            for (JsonObject obj : childrenArray)
             {
-                newDevice->addChild(child);
+                if (childId == (obj["id"] | ""))
+                {
+                    childObj = obj;
+                    found = true;
+                    break;
+                }
             }
         }
+        if (found)
+        {
+            loadDeviceConfigFromJson(childDevice, childObj);
+        }
+        else
+        {
+            MLOG_WARN("No JSON config found for child device: %s", childId.c_str());
+        }
     }
-
-    return newDevice;
 }
 
 void DeviceManager::loadDevicesFromJsonFile()
 {
+    MLOG_DEBUG("Loading devices from JSON file: %s", CONFIG_FILE);
+
     if (!LittleFS.exists(CONFIG_FILE))
     {
         MLOG_INFO("File %s not found.", CONFIG_FILE);
@@ -122,6 +128,9 @@ void DeviceManager::loadDevicesFromJsonFile()
         return;
     }
 
+    // Clear existing devices
+    deleteAllDevices();
+
     JsonObject rootObj = doc.as<JsonObject>();
     if (!rootObj["devices"].is<JsonArray>())
     {
@@ -129,18 +138,7 @@ void DeviceManager::loadDevicesFromJsonFile()
         return;
     }
 
-    // Clear existing devices
-    for (int i = 0; i < devicesCount; i++)
-    {
-        if (devices[i])
-        {
-            delete devices[i];
-            devices[i] = nullptr;
-        }
-    }
-    devicesCount = 0;
-
-    // Load only root devices from the array (children are loaded recursively)
+    // Load only root devices from the array (children are created by parent devices during config application)
     JsonArray arr = rootObj["devices"];
     if (arr.size() == 0)
     {
@@ -151,11 +149,12 @@ void DeviceManager::loadDevicesFromJsonFile()
     int roots = 0;
     for (JsonObject deviceObj : arr)
     {
-        DeviceBase *newDevice = loadDeviceFromJsonObject(deviceObj);
+        const String id = deviceObj["id"] | "";
+        const String type = deviceObj["type"] | "";
+        DeviceBase *newDevice = createDevice(id, type);
         if (newDevice)
         {
-            MLOG_DEBUG("Loaded device: %s", newDevice->toString().c_str());
-
+            loadDeviceConfigFromJson(newDevice, deviceObj);
             addDevice(newDevice);
             roots++;
         }
@@ -479,6 +478,7 @@ void DeviceManager::getDevices(DeviceBase **deviceList, int &count, int maxResul
 
 void DeviceManager::setup()
 {
+    MLOG_DEBUG("DeviceManager setup started (root only devices)");
     for (int i = 0; i < devicesCount; i++)
     {
         if (devices[i])
@@ -486,6 +486,7 @@ void DeviceManager::setup()
             devices[i]->setup();
         }
     }
+    MLOG_DEBUG("DeviceManager setup ended");
 }
 
 void DeviceManager::loop()
@@ -606,4 +607,17 @@ std::vector<DeviceBase *> DeviceManager::getAllDevices()
     }
 
     return allDevices;
+}
+
+void DeviceManager::deleteAllDevices()
+{
+    for (int i = 0; i < devicesCount; i++)
+    {
+        if (devices[i])
+        {
+            delete devices[i];
+            devices[i] = nullptr;
+        }
+    }
+    devicesCount = 0;
 }

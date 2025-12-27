@@ -87,11 +87,11 @@ public:
 
 private:
     /**
-     * @brief Recursively load a device and its children from JSON
-     * @param deviceObj JSON object with id, type, optional children array and config
-     * @return Pointer to created device with fully populated tree, or nullptr if failed
+     * @brief Recursively apply config to devices from JSON
+     * @param device The device to apply config to
+     * @param deviceObj JSON object with optional children array and config
      */
-    DeviceBase *loadDeviceFromJsonObject(JsonObject deviceObj);
+    void loadDeviceConfigFromJson(DeviceBase *device, JsonObject deviceObj);
 
     /**
      * @brief Recursively add a device and its children to JSON array
@@ -102,6 +102,8 @@ private:
 
     DeviceBase *findDeviceRecursiveById(DeviceBase *root, const String &deviceId) const;
     DeviceBase *findDeviceRecursiveByType(DeviceBase *root, const String &deviceType) const;
+
+    void deleteAllDevices();
 };
 
 #endif // DEVICEMANAGER_H

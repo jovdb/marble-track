@@ -27,10 +27,19 @@
             "name": "Button",
             "debounceTimeInMs": 50,
             "pinMode": "Floating",
-            "buttonType": "NormalOpen"
+            "buttonType": "NormalClosed"
           }
         }
       ]
+    },
+    {
+      "id": "buzz",
+      "type": "buzzer",
+      "children": [],
+      "config": {
+        "pin": 3,
+        "name": "Buzzer"
+      }
     }
   ]
 }

@@ -11,7 +11,9 @@ export function Buzzer(props: { id: string }) {
   const actions = buzzerStore[1];
 
   const deviceState = createMemo(() => device()?.state);
-  const isPlaying = createMemo(() => deviceState()?.mode === "TONE" || deviceState()?.mode === "TUNE");
+  const isPlaying = createMemo(
+    () => deviceState()?.mode === "TONE" || deviceState()?.mode === "TUNE"
+  );
 
   const [frequency, setFrequency] = createSignal(440);
   const [rtttl, setRtttl] = createSignal(
@@ -67,7 +69,10 @@ export function Buzzer(props: { id: string }) {
           onInput={(e) => setFrequency(Number(e.currentTarget.value))}
         />
         <div class={deviceStyles.device__controls}>
-          <button class={deviceStyles.device__button} onClick={isPlaying() ? stopPlayback : playTone}>
+          <button
+            class={deviceStyles.device__button}
+            onClick={isPlaying() ? stopPlayback : playTone}
+          >
             {isPlaying() ? "Stop" : "Play Tone"}
           </button>
         </div>

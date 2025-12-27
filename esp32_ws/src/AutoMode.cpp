@@ -1,7 +1,7 @@
 #include "AutoMode.h"
 #include "Logging.h"
 #include "devices/Button.h"
-#include "devices/Buzzer.h"
+#include "devices/composition/Buzzer.h"
 #include "devices/Wheel.h"
 #include "devices/Led.h"
 #include "devices/Lift.h"

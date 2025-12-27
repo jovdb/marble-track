@@ -18,6 +18,9 @@ namespace composition
         // https://github.com/end2endzone/NonBlockingRTTTL/blob/master/src/NonBlockingRtttl.cpp#L90C5-L99C6
         _ledcChannel = 0;
         LedcChannels::acquireSpecific(_ledcChannel);
+        
+        // Create mutex for thread-safe state access
+        _stateMutex = xSemaphoreCreateMutex();
     }
 
     Buzzer::~Buzzer()
@@ -25,6 +28,12 @@ namespace composition
         if (_ledcChannel >= 0)
         {
             LedcChannels::release(_ledcChannel);
+        }
+        
+        // Clean up mutex
+        if (_stateMutex != nullptr)
+        {
+            vSemaphoreDelete(_stateMutex);
         }
     }
 
@@ -41,45 +50,42 @@ namespace composition
         // Set the device name
         setName(_config.name);
 
-        pinMode(_config.pin, OUTPUT);
-        digitalWrite(_config.pin, LOW);
+        // Configure LEDC for tone generation
+        ledcSetup(_ledcChannel, 2000, 8); // 2kHz frequency, 8-bit resolution
+        ledcAttachPin(_config.pin, _ledcChannel);
 
-        _state.mode = "IDLE";
-        _state.currentTune = "";
-        noTone(_config.pin);
+        MLOG_INFO("%s: Setup on pin %d, LEDC channel %d", toString().c_str(), _config.pin, _ledcChannel);
 
-        MLOG_INFO("%s: Setup on pin %d", toString().c_str(), _config.pin);
+        // Start the RTOS task for non-blocking tone/tune playback
+        if (!startTask("BuzzerTask", 4096, 1, 1))
+        {
+            MLOG_ERROR("%s: Failed to start RTOS task", toString().c_str());
+        }
+        else
+        {
+            MLOG_INFO("%s: RTOS task started", toString().c_str());
+        }
     }
 
     void Buzzer::loop()
     {
         DeviceBase::loop();
-
-        // Handle RTTTL tune playback
-        if (rtttl::isPlaying())
+        
+        // Handle tune playback timing in main loop
+        if (_state.mode == "TUNE" && _state.currentTune.length() > 0)
         {
+            // Update NonBlockingRTTTL
             rtttl::play();
-        }
-        else if (_state.mode == "TUNE")
-        {
-            // Tune was playing but has now finished
-            _state.mode = "IDLE";
-            _state.currentTune = "";
-
-            notifyStateChanged();
-        }
-
-        // Check if we're currently playing a tone and if the duration has elapsed
-        if (_state.mode == "TONE" && _state.toneDuration > 0)
-        {
-            unsigned long elapsed = millis() - _state.playStartTime;
-            if (elapsed >= _state.toneDuration)
+            
+            if (!rtttl::isPlaying())
             {
-                // Tone playback duration has finished
+                // Tune finished
+                xSemaphoreTake(_stateMutex, portMAX_DELAY);
                 _state.mode = "IDLE";
                 _state.currentTune = "";
-                _state.toneDuration = 0;
-
+                xSemaphoreGive(_stateMutex);
+                
+                MLOG_INFO("%s: Tune playback completed", toString().c_str());
                 notifyStateChanged();
             }
         }
@@ -98,45 +104,73 @@ namespace composition
     {
         if (_config.pin == -1)
         {
-            MLOG_WARN("%s: Pin not configured", toString().c_str());
+            MLOG_WARN("%s: Pin not configured, ignoring tone command", toString().c_str());
             return false;
         }
 
-        MLOG_INFO("%s: Playing tone %dHz for %dms", toString().c_str(), frequency, duration);
-        ::tone(_config.pin, frequency, duration);
+        // Validate parameters
+        if (frequency < 20 || frequency > 20000)
+        {
+            MLOG_ERROR("%s: Invalid frequency %dHz (range: 20-20000)", toString().c_str(), frequency);
+            return false;
+        }
+        
+        if (duration < 1 || duration > 10000)
+        {
+            MLOG_ERROR("%s: Invalid duration %dms (range: 1-10000)", toString().c_str(), duration);
+            return false;
+        }
 
-        _state.mode = "TONE";
-        _state.playStartTime = millis();
-        _state.toneDuration = duration;
-        _state.currentTune = "";
+        // Thread-safe update of tone command
+        xSemaphoreTake(_stateMutex, portMAX_DELAY);
+        _state.toneCommand.pending = true;
+        _state.toneCommand.frequency = frequency;
+        _state.toneCommand.duration = duration;
+        xSemaphoreGive(_stateMutex);
 
-        notifyStateChanged();
+        // Wake up the RTOS task
+        notifyTask();
+
+        MLOG_INFO("%s: Queued tone %dHz for %dms", toString().c_str(), frequency, duration);
         return true;
     }
 
-    bool Buzzer::tune(const String &rtttlStr)
+    bool Buzzer::tune(const String &rtttl)
     {
         if (_config.pin == -1)
         {
-            MLOG_WARN("%s: Pin not configured", toString().c_str());
+            MLOG_WARN("%s: Pin not configured, ignoring tune command", toString().c_str());
             return false;
         }
 
-        MLOG_INFO("%s: Playing RTTTL tune: %s", toString().c_str(), rtttlStr.c_str());
+        if (rtttl.length() == 0)
+        {
+            MLOG_ERROR("%s: Empty RTTTL string", toString().c_str());
+            return false;
+        }
 
-        rtttl::begin(_config.pin, rtttlStr.c_str());
+        // Start the RTTTL tune
+        rtttl::begin(_config.pin, rtttl.c_str());
 
-        _state.currentTune = rtttlStr;
+        // Thread-safe update of state
+        xSemaphoreTake(_stateMutex, portMAX_DELAY);
         _state.mode = "TUNE";
-        _state.playStartTime = millis();
+        _state.currentTune = rtttl;
+        xSemaphoreGive(_stateMutex);
 
+        MLOG_INFO("%s: Starting RTTTL tune playback", toString().c_str());
         notifyStateChanged();
         return true;
     }
 
     void Buzzer::addStateToJson(JsonDocument &doc)
     {
-        doc["mode"] = _state.mode;
+        // Thread-safe state read
+        if (xSemaphoreTake(_stateMutex, portMAX_DELAY) == pdTRUE)
+        {
+            doc["mode"] = _state.mode;
+            xSemaphoreGive(_stateMutex);
+        }
     }
 
     bool Buzzer::control(const String &action, JsonObject *args)
@@ -226,6 +260,59 @@ namespace composition
     {
         doc["pin"] = _config.pin;
         doc["name"] = _config.name;
+    }
+
+    /**
+     * @brief RTOS task for buzzer operations
+     *
+     * Handles timing for tone and tune playback in a separate thread.
+     */
+    void Buzzer::task()
+    {
+        MLOG_INFO("%s: RTOS task started", toString().c_str());
+        
+        while (true)
+        {
+            // Wait for tone command or timeout
+            ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(100));
+            
+            // Check for pending tone command
+            xSemaphoreTake(_stateMutex, portMAX_DELAY);
+            if (_state.toneCommand.pending)
+            {
+                int frequency = _state.toneCommand.frequency;
+                int duration = _state.toneCommand.duration;
+                _state.toneCommand.pending = false;
+                
+                // Update state
+                _state.mode = "TONE";
+                _state.playStartTime = millis();
+                _state.toneDuration = duration;
+                xSemaphoreGive(_stateMutex);
+                
+                // Notify that tone has started
+                notifyStateChanged();
+                
+                // Play the tone
+                ledcWriteTone(_ledcChannel, frequency);
+                vTaskDelay(pdMS_TO_TICKS(duration));
+                ledcWriteTone(_ledcChannel, 0); // Stop tone
+                
+                // Update state back to idle
+                xSemaphoreTake(_stateMutex, portMAX_DELAY);
+                _state.mode = "IDLE";
+                _state.playStartTime = 0;
+                _state.toneDuration = 0;
+                xSemaphoreGive(_stateMutex);
+                
+                MLOG_INFO("%s: Tone playback completed", toString().c_str());
+                notifyStateChanged();
+            }
+            else
+            {
+                xSemaphoreGive(_stateMutex);
+            }
+        }
     }
 
 } // namespace composition

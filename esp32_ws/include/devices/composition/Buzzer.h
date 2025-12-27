@@ -11,7 +11,9 @@
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"
 #include "devices/mixins/SerializableMixin.h"
+#include "devices/mixins/RtosMixin.h"
 #include "LedcChannels.h"
+#include <freertos/semphr.h>
 
 namespace composition
 {
@@ -27,6 +29,17 @@ namespace composition
     };
 
     /**
+     * @struct ToneCommand
+     * @brief Inter-thread communication for tone requests
+     */
+    struct ToneCommand
+    {
+        bool pending = false;      // True if a tone request is waiting
+        int frequency = 0;         // Frequency in Hz for pending tone
+        int duration = 0;          // Duration in ms for pending tone
+    };
+
+    /**
      * @struct BuzzerState
      * @brief State structure for Buzzer device
      */
@@ -36,6 +49,7 @@ namespace composition
         unsigned long playStartTime = 0;
         unsigned long toneDuration = 0;
         String currentTune = "";
+        ToneCommand toneCommand; // Inter-thread tone communication
     };
 
     /**
@@ -46,7 +60,8 @@ namespace composition
                    public ConfigMixin<Buzzer, BuzzerConfig>,
                    public StateMixin<Buzzer, BuzzerState>,
                    public ControllableMixin<Buzzer>,
-                   public SerializableMixin<Buzzer>
+                   public SerializableMixin<Buzzer>,
+                   public RtosMixin<Buzzer>
     {
     public:
         explicit Buzzer(const String &id);
@@ -79,8 +94,12 @@ namespace composition
         void jsonToConfig(const JsonDocument &config) override;
         void configToJson(JsonDocument &doc) override;
 
+        // RTOS task implementation
+        void task() override;
+
     private:
         int _ledcChannel = -1; // LEDC channel assigned to this buzzer
+        SemaphoreHandle_t _stateMutex; // Mutex for thread-safe state access
     };
 
 } // namespace composition

@@ -12,7 +12,7 @@
 #include "devices/Button.h"
 #include "devices/Device.h"
 #include "DeviceManager.h"
-#include <devices/Buzzer.h>
+#include "devices/composition/Buzzer.h"
 #include "esp_log.h"
 
 #include "devices/Stepper.h"

@@ -1,7 +1,6 @@
 import { For, createMemo, createSignal } from "solid-js";
 import { BuzzerIcon } from "../icons/Icons";
 import deviceStyles from "./Device.module.css";
-import buzzerStyles from "./Buzzer.module.css";
 import { useBuzzer } from "../../stores/Buzzer";
 import { Device } from "./Device";
 import BuzzerConfig from "./BuzzerConfig";
@@ -13,7 +12,6 @@ export function Buzzer(props: { id: string }) {
 
   const deviceState = createMemo(() => device()?.state);
   const isPlaying = createMemo(() => deviceState()?.playing ?? false);
-  const isPlayingTune = createMemo(() => Boolean(deviceState()?.currentTune && isPlaying()));
 
   const [frequency, setFrequency] = createSignal(440);
   const [rtttl, setRtttl] = createSignal(
@@ -50,20 +48,6 @@ export function Buzzer(props: { id: string }) {
       configComponent={(onClose) => <BuzzerConfig id={props.id} onClose={onClose} />}
       icon={<BuzzerIcon />}
     >
-      <div class={deviceStyles.device__status}>
-        <div
-          classList={{
-            [buzzerStyles["buzzer__status-indicator"]]: true,
-            [buzzerStyles["buzzer__status-indicator--on"]]: isPlaying(),
-            [buzzerStyles["buzzer__status-indicator--off"]]: !isPlaying(),
-          }}
-        ></div>
-        <span class={deviceStyles["device__status-text"]}>
-          {isPlaying() ? "Playing" : "Idle"}
-          {isPlayingTune() && " (Melody)"}
-        </span>
-      </div>
-
       <div class={deviceStyles["device__input-group"]}>
         <label class={deviceStyles.device__label} for={`freq-${props.id}`}>
           Tone Frequency: {frequency()}Hz

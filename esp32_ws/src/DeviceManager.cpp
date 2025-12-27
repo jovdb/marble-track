@@ -129,8 +129,6 @@ void DeviceManager::loadDevicesFromJsonFile()
         return;
     }
 
-    JsonArray arr = rootObj["devices"];
-
     // Clear existing devices
     for (int i = 0; i < devicesCount; i++)
     {
@@ -143,12 +141,21 @@ void DeviceManager::loadDevicesFromJsonFile()
     devicesCount = 0;
 
     // Load only root devices from the array (children are loaded recursively)
+    JsonArray arr = rootObj["devices"];
+    if (arr.size() == 0)
+    {
+        MLOG_INFO("No devices to load");
+        return;
+    }
+
     int roots = 0;
     for (JsonObject deviceObj : arr)
     {
         DeviceBase *newDevice = loadDeviceFromJsonObject(deviceObj);
         if (newDevice)
         {
+            MLOG_DEBUG("Loaded device: %s", newDevice->toString().c_str());
+
             addDevice(newDevice);
             roots++;
         }
@@ -399,7 +406,7 @@ bool DeviceManager::addDevice(DeviceBase *device)
     {
         devices[devicesCount] = device;
         devicesCount++;
-        MLOG_INFO("Added device: %s", device->toString().c_str());
+        MLOG_DEBUG("Added device: %s", device->toString().c_str());
         return true;
     }
 
@@ -435,12 +442,15 @@ bool DeviceManager::addDevice(const String &deviceType, const String &deviceId, 
         return false;
     }
 
+    MLOG_DEBUG("Device added: %s", newDevice->toString().c_str());
+
     // Load config if device is serializable and config exists
     if (newDevice->hasMixin("serializable") && config.is<JsonObject>())
     {
         ISerializable *serializable = mixins::SerializableRegistry::get(deviceId);
         if (serializable)
         {
+            MLOG_DEBUG("Loading config for device %s", newDevice->toString().c_str());
             JsonDocument configDoc;
             configDoc.set(config.as<JsonObject>());
             serializable->jsonToConfig(configDoc);

@@ -148,32 +148,34 @@ void setup()
   // Set callback for device changes
   deviceManager.setOnDevicesChanged([]()
                                     {
-    // Cleanup existing modes
-    if (autoMode) {
-      delete autoMode;
-      autoMode = nullptr;
-    }
-    if (manualMode) {
-      delete manualMode;
-      manualMode = nullptr;
-    }
-    
-    // Recreate mode based on button state
-    // TODO: Re-enable when Button is converted to composition device
-    // const Button *manualBtn = deviceManager.getDeviceByIdAs<Button>("manual-btn");
-    // if (manualBtn && manualBtn->isPressed())
-    // {
-    //   MLOG_INFO("Device changed: Initializing MANUAL mode");
-    //   manualMode = new ManualMode(deviceManager);
-    //   manualMode->setup();
-    // }
-    // else
-    // {
-    MLOG_INFO("Device changed: Initializing AUTOMATIC mode");
-    autoMode = new AutoMode(deviceManager);
-    autoMode->setup();
-    // }
-  });
+                                      // Cleanup existing modes
+                                      if (autoMode)
+                                      {
+                                        delete autoMode;
+                                        autoMode = nullptr;
+                                      }
+                                      if (manualMode)
+                                      {
+                                        delete manualMode;
+                                        manualMode = nullptr;
+                                      }
+
+                                      // Recreate mode based on button state
+                                      // TODO: Re-enable when Button is converted to composition device
+                                      // const Button *manualBtn = deviceManager.getDeviceByIdAs<Button>("manual-btn");
+                                      // if (manualBtn && manualBtn->isPressed())
+                                      // {
+                                      //   MLOG_INFO("Device changed: Initializing MANUAL mode");
+                                      //   manualMode = new ManualMode(deviceManager);
+                                      //   manualMode->setup();
+                                      // }
+                                      // else
+                                      // {
+                                      MLOG_INFO("Device changed: Initializing AUTOMATIC mode");
+                                      autoMode = new AutoMode(deviceManager);
+                                      autoMode->setup();
+                                      // }
+                                    });
 
   // TODO: Re-enable when Button is converted to composition device
   // const Button *manualBtn = deviceManager.getDeviceByIdAs<Button>("manual-btn");

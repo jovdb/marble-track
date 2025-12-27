@@ -742,13 +742,14 @@ void SerialConsole::showLoggingMenu()
 {
     Serial.println();
     Serial.println("📋 Logging Configuration:");
-    Serial.printf("  1. INFO       : %s\n", LogConfig::isEnabled(LOG_INFO) ? "✅ Enabled" : "❌ Disabled");
-    Serial.printf("  2. WARN       : %s\n", LogConfig::isEnabled(LOG_WARN) ? "✅ Enabled" : "❌ Disabled");
-    Serial.printf("  3. ERROR      : %s\n", LogConfig::isEnabled(LOG_ERROR) ? "✅ Enabled" : "❌ Disabled");
-    Serial.printf("  4. WS_RECEIVE : %s\n", LogConfig::isEnabled(LOG_WS_RECEIVE) ? "✅ Enabled" : "❌ Disabled");
-    Serial.printf("  5. WS_SEND    : %s\n", LogConfig::isEnabled(LOG_WS_SEND) ? "✅ Enabled" : "❌ Disabled");
+    Serial.printf("  1. DEBUG      : %s\n", LogConfig::isEnabled(LOG_DEBUG) ? "✅ Enabled" : "❌ Disabled");
+    Serial.printf("  2. INFO       : %s\n", LogConfig::isEnabled(LOG_INFO) ? "✅ Enabled" : "❌ Disabled");
+    Serial.printf("  3. WARN       : %s\n", LogConfig::isEnabled(LOG_WARN) ? "✅ Enabled" : "❌ Disabled");
+    Serial.printf("  4. ERROR      : %s\n", LogConfig::isEnabled(LOG_ERROR) ? "✅ Enabled" : "❌ Disabled");
+    Serial.printf("  5. WS_RECEIVE : %s\n", LogConfig::isEnabled(LOG_WS_RECEIVE) ? "✅ Enabled" : "❌ Disabled");
+    Serial.printf("  6. WS_SEND    : %s\n", LogConfig::isEnabled(LOG_WS_SEND) ? "✅ Enabled" : "❌ Disabled");
     Serial.println();
-    Serial.println("Press 1-5 to toggle, 'a' for all, 'n' for none, Enter or Esc to exit.");
+    Serial.println("Press 1-6 to toggle, 'a' for all, 'n' for none, Enter or Esc to exit.");
     Serial.println();
 }
 
@@ -778,22 +779,26 @@ void SerialConsole::handleLoggingMenuInput(char incoming)
     switch (incoming)
     {
         case '1':
+            type = LOG_DEBUG;
+            typeName = "DEBUG";
+            break;
+        case '2':
             type = LOG_INFO;
             typeName = "INFO";
             break;
-        case '2':
+        case '3':
             type = LOG_WARN;
             typeName = "WARN";
             break;
-        case '3':
+        case '4':
             type = LOG_ERROR;
             typeName = "ERROR";
             break;
-        case '4':
+        case '5':
             type = LOG_WS_RECEIVE;
             typeName = "WS_RECEIVE";
             break;
-        case '5':
+        case '6':
             type = LOG_WS_SEND;
             typeName = "WS_SEND";
             break;

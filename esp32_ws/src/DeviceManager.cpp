@@ -73,7 +73,6 @@ DeviceBase *DeviceManager::loadDeviceFromJsonObject(JsonObject deviceObj)
         ISerializable *serializable = mixins::SerializableRegistry::get(id);
         if (serializable)
         {
-            MLOG_INFO("Loading config for device %s: config: %s", id.c_str(), deviceObj["config"].as<JsonObject>().as<String>().c_str());
             JsonDocument configDoc;
             configDoc.set(deviceObj["config"].as<JsonObject>());
             serializable->jsonToConfig(configDoc);

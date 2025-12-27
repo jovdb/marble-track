@@ -77,6 +77,7 @@ DeviceBase *DeviceManager::loadDeviceFromJsonObject(JsonObject deviceObj)
             JsonDocument configDoc;
             configDoc.set(deviceObj["config"].as<JsonObject>());
             serializable->jsonToConfig(configDoc);
+            newDevice->setName(configDoc["name"] | id);
         }
     }
 

@@ -40,6 +40,16 @@ namespace composition
     };
 
     /**
+     * @struct TuneCommand
+     * @brief Inter-thread communication for tune requests
+     */
+    struct TuneCommand
+    {
+        bool pending = false;      // True if a tune request is waiting
+        String rtttl = "";         // RTTTL string for pending tune
+    };
+
+    /**
      * @struct BuzzerState
      * @brief State structure for Buzzer device
      */
@@ -50,6 +60,7 @@ namespace composition
         unsigned long toneDuration = 0;
         String currentTune = "";
         ToneCommand toneCommand; // Inter-thread tone communication
+        TuneCommand tuneCommand; // Inter-thread tune communication
     };
 
     /**

@@ -70,25 +70,6 @@ namespace composition
     void Buzzer::loop()
     {
         DeviceBase::loop();
-        
-        // Handle tune playback timing in main loop
-        if (_state.mode == "TUNE" && _state.currentTune.length() > 0)
-        {
-            // Update NonBlockingRTTTL
-            rtttl::play();
-            
-            if (!rtttl::isPlaying())
-            {
-                // Tune finished
-                xSemaphoreTake(_stateMutex, portMAX_DELAY);
-                _state.mode = "IDLE";
-                _state.currentTune = "";
-                xSemaphoreGive(_stateMutex);
-                
-                MLOG_INFO("%s: Tune playback completed", toString().c_str());
-                notifyStateChanged();
-            }
-        }
     }
 
     std::vector<int> Buzzer::getPins() const
@@ -149,17 +130,16 @@ namespace composition
             return false;
         }
 
-        // Start the RTTTL tune
-        rtttl::begin(_config.pin, rtttl.c_str());
-
-        // Thread-safe update of state
+        // Thread-safe update of tune command
         xSemaphoreTake(_stateMutex, portMAX_DELAY);
-        _state.mode = "TUNE";
-        _state.currentTune = rtttl;
+        _state.tuneCommand.pending = true;
+        _state.tuneCommand.rtttl = rtttl;
         xSemaphoreGive(_stateMutex);
 
-        MLOG_INFO("%s: Starting RTTTL tune playback", toString().c_str());
-        notifyStateChanged();
+        // Wake up the RTOS task
+        notifyTask();
+
+        MLOG_INFO("%s: Queued RTTTL tune playback", toString().c_str());
         return true;
     }
 
@@ -273,11 +253,13 @@ namespace composition
         
         while (true)
         {
-            // Wait for tone command or timeout
+            // Wait for command or timeout
             ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(100));
             
-            // Check for pending tone command
+            // Check for pending commands
             xSemaphoreTake(_stateMutex, portMAX_DELAY);
+            
+            // Handle tone command
             if (_state.toneCommand.pending)
             {
                 int frequency = _state.toneCommand.frequency;
@@ -306,6 +288,39 @@ namespace composition
                 xSemaphoreGive(_stateMutex);
                 
                 MLOG_INFO("%s: Tone playback completed", toString().c_str());
+                notifyStateChanged();
+            }
+            // Handle tune command
+            else if (_state.tuneCommand.pending)
+            {
+                String rtttl = _state.tuneCommand.rtttl;
+                _state.tuneCommand.pending = false;
+                
+                // Update state
+                _state.mode = "TUNE";
+                _state.currentTune = rtttl;
+                xSemaphoreGive(_stateMutex);
+                
+                // Start the RTTTL tune
+                rtttl::begin(_config.pin, rtttl.c_str());
+                
+                MLOG_INFO("%s: Starting RTTTL tune playback", toString().c_str());
+                notifyStateChanged();
+                
+                // Play the tune until finished
+                while (rtttl::isPlaying())
+                {
+                    rtttl::play();
+                    vTaskDelay(pdMS_TO_TICKS(10)); // Small delay to prevent busy waiting
+                }
+                
+                // Tune finished
+                xSemaphoreTake(_stateMutex, portMAX_DELAY);
+                _state.mode = "IDLE";
+                _state.currentTune = "";
+                xSemaphoreGive(_stateMutex);
+                
+                MLOG_INFO("%s: Tune playback completed", toString().c_str());
                 notifyStateChanged();
             }
             else

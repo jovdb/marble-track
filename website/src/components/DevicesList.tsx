@@ -24,6 +24,16 @@ export function DevicesList() {
   // Track collapsed state for devices with children
   const [collapsedDevices, setCollapsedDevices] = createSignal<Set<string>>(new Set());
 
+  // Initialize collapsed devices - start all devices with children collapsed
+  createEffect(() => {
+    const devices = Object.values(devicesState.devices);
+    const devicesWithChildren = devices
+      .filter(device => device.children && device.children.length > 0)
+      .map(device => device.id);
+    
+    setCollapsedDevices(new Set(devicesWithChildren));
+  });
+
   const toggleCollapse = (deviceId: string) => {
     setCollapsedDevices((prev) => {
       const next = new Set(prev);

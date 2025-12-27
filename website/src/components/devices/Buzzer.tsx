@@ -28,8 +28,16 @@ export function Buzzer(props: { id: string }) {
       "mario:d=4,o=5,b=100:16e6,16e6,32p,8e6,16c6,8e6,8g6,8p,8g,8p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,16p",
     "Star Wars":
       "starwars:d=4,o=5,b=45:32p,32f#,32f#,32f#,8b.,8f#.6,32e6,32d#6,32c#6,8b.6,16f#.6,32e6,32d#6,32c#6,8b.6,16f#.6,32e6,32d#6,32e6,8c#.6,32f#,32f#,32f#,8b.,8f#.6,32e6,32d#6,32c#6,8b.6,16f#.6,32e6,32d#6,32c#6,8b.6,16f#.6,32e6,32d#6,32e6,8c#6",
-    "Happy Birthday":
-      "birthday:d=4,o=5,b=125:8c,8c,8d,8c,8f,2e,8c,8c,8d,8c,8g,2f,8c,8c,8c6,8a,8f,8e,8d,8a#,8a#,8a,8f,8g,2f",
+    "Tubular Bells":
+      "Bells:d=4,o=5,b=280:c6,f6,c6,g6,c6,d#6,f6,c6,g#6,c6,a#6,c6,g6,g#6,c6,g6,c6,f6,c6,g6,c6,d#6,f6,c6,g#6,c6,a#6,c6,g6,g#6,c6,g6,c6,f6,c6,g6,c6,d#6,f6,c6,g#6,c6,a#6,c6,g6,g#6,c6,g6,c6,f6,c6,g6,c6,d#6,f6,c6,g#6,c6,a#6,c6,g6,g#6",
+    Axel:
+      "Axel:d=8,o=5,b=125:16g,16g,a#.,16g,16p,16g,c6,g,f,4g,d.6,16g,16p,16g,d#6,d6,a#,g,d6,g6,16g,16f,16p,16f,d,a#,2g,4p,16f6,d6,c6,a#,4g,a#.,16g,16p,16g,c6,g,f,4g,d.6,16g,16p,16g,d#6,d6,a#,g,d6,g6,16g,16f,16p,16f,d,a#,2g",
+    "Adams Family":
+      "Adams Family:d=8,o=5,b=160:c,4f,a,4f,c,4b4,2g,f,4e,g,4e,g4,4c,2f,c,4f,a,4f,c,4b4,2g,f,4e,c,4d,e,1f,c,d,e,f,1p,d,e,f#,g,1p,d,e,f#,g,4p,d,e,f#,g,4p,c,d,e,f",
+    Entertainer:
+      "Entertainer:d=8,o=5,b=140:d,d#,e,4c6,e,4c6,e,2c.6,c6,d6,d#6,e6,c6,d6,4e6,b,4d6,2c6,4p,d,d#,e,4c6,e,4c6,e,2c.6,p,a,g,f#,a,c6,4e6,d6,c6,a,2d6",
+    "Knight Rider":
+      "Knight Rider:d=32,o=5,b=63:16e,f,e,8b,16e6,f6,e6,8b,16e,f,e,16b,16e6,4d6,8p,4p,16e,f,e,8b,16e6,f6,e6,8b,16e,f,e,16b,16e6,4f6",
   };
 
   const playTone = () => {

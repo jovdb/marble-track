@@ -53,7 +53,10 @@ namespace composition
      */
     struct ButtonState
     {
+        /** Indicates it is currently not in its default state */
         bool isPressed = false;
+
+        /** pin input state: 0=LOW, 1=HIGH */
         int input = 0;
     };
 

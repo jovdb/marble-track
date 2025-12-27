@@ -27,6 +27,7 @@ namespace composition
         // Call base to setup all children
         DeviceBase::setup();
 
+        // Only check if button state changes, if we need to do something
         _button->onStateChange([this](void *data)
                                { update(); });
     }

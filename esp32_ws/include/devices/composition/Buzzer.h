@@ -59,6 +59,7 @@ namespace composition
         unsigned long playStartTime = 0;
         unsigned long toneDuration = 0;
         String currentTune = "";
+        bool stopRequested = false; // Flag to interrupt current playback
         ToneCommand toneCommand; // Inter-thread tone communication
         TuneCommand tuneCommand; // Inter-thread tune communication
     };
@@ -89,6 +90,12 @@ namespace composition
          * @return true if tone started, false if not configured
          */
         bool tone(int frequency, int duration);
+
+        /**
+         * @brief Stop any current playback
+         * @return true if stopped, false if not playing
+         */
+        bool stop();
 
         /**
          * @brief Play a tune from RTTTL string

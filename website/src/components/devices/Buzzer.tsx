@@ -11,7 +11,7 @@ export function Buzzer(props: { id: string }) {
   const actions = buzzerStore[1];
 
   const deviceState = createMemo(() => device()?.state);
-  const isPlaying = createMemo(() => deviceState()?.playing ?? false);
+  const isPlaying = createMemo(() => deviceState()?.mode === "TONE" || deviceState()?.mode === "TUNE");
 
   const [frequency, setFrequency] = createSignal(440);
   const [rtttl, setRtttl] = createSignal(
@@ -42,6 +42,10 @@ export function Buzzer(props: { id: string }) {
     actions.tune(rtttl());
   };
 
+  const stopPlayback = () => {
+    actions.stop();
+  };
+
   return (
     <Device
       id={props.id}
@@ -63,8 +67,8 @@ export function Buzzer(props: { id: string }) {
           onInput={(e) => setFrequency(Number(e.currentTarget.value))}
         />
         <div class={deviceStyles.device__controls}>
-          <button class={deviceStyles.device__button} onClick={playTone} disabled={isPlaying()}>
-            Play Tone
+          <button class={deviceStyles.device__button} onClick={isPlaying() ? stopPlayback : playTone}>
+            {isPlaying() ? "Stop" : "Play Tone"}
           </button>
         </div>
       </div>
@@ -90,10 +94,10 @@ export function Buzzer(props: { id: string }) {
         <div class={deviceStyles.device__controls}>
           <button
             class={deviceStyles.device__button}
-            onClick={playTune}
-            disabled={isPlaying() || rtttl().trim().length === 0}
+            onClick={isPlaying() ? stopPlayback : playTune}
+            disabled={!isPlaying() && rtttl().trim().length === 0}
           >
-            Play Melody
+            {isPlaying() ? "Stop" : "Play Tune"}
           </button>
           <select
             class={deviceStyles.device__select}

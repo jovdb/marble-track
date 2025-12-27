@@ -37,12 +37,22 @@ export function useBuzzer(deviceId: string) {
       args: { rtttl },
     });
 
+  const stop = () =>
+    sendMessage({
+      type: "device-fn",
+      deviceId,
+      deviceType,
+      fn: "stop",
+      args: {},
+    });
+
   return [
     device,
     {
       ...actions,
       tone,
       tune,
+      stop,
     },
   ] as const;
 }

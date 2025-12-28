@@ -32,9 +32,14 @@ namespace composition
         // Call base to setup all children
         DeviceBase::setup();
 
-        // Only check if button state changes, if we need to do something
-        _button->onStateChange([this](void *data)
-                               { update(); });
+        // Unsubscribe from previous button state changes if any
+        if (_buttonUnsubscribe) {
+            // Only check if button state changes, if we need to do something
+            _buttonUnsubscribe();
+        }
+
+        _buttonUnsubscribe = _button->onStateChange([this](void *data)
+                                                   { update(); });
     }
 
     void Test2::update()

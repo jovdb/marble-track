@@ -17,6 +17,7 @@
 
 #include <functional>
 #include <vector>
+#include <algorithm>
 
 using EventCallback = std::function<void(void *)>;
 
@@ -50,10 +51,20 @@ public:
     /**
      * @brief Subscribe to state change events
      * @param callback Function to call when state changes
+     * @return Function to unsubscribe from state changes
      */
-    void onStateChange(EventCallback callback)
+    std::function<void()> onStateChange(EventCallback callback)
     {
-        _stateChangeCallbacks.push_back(callback);
+        size_t callbackId = _nextCallbackId++;
+        _stateChangeCallbacks.emplace_back(callbackId, callback);
+        // Return unsubscribe function
+        return [this, callbackId]() {
+            auto it = std::find_if(_stateChangeCallbacks.begin(), _stateChangeCallbacks.end(),
+                [callbackId](const CallbackEntry& entry) { return entry.id == callbackId; });
+            if (it != _stateChangeCallbacks.end()) {
+                _stateChangeCallbacks.erase(it);
+            }
+        };
     }
 
 protected:
@@ -67,25 +78,24 @@ protected:
      */
     void notifyStateChanged()
     {
-        for (auto &callback : _stateChangeCallbacks)
+        for (auto &entry : _stateChangeCallbacks)
         {
-            if (callback)
+            if (entry.callback)
             {
-                callback(&_state);
+                entry.callback(&_state);
             }
         }
     }
 
 private:
-    std::vector<EventCallback> _stateChangeCallbacks;
+    struct CallbackEntry {
+        size_t id;
+        EventCallback callback;
+        CallbackEntry(size_t id, EventCallback callback) : id(id), callback(callback) {}
+    };
 
-    /**
-     * @brief Clear all state change subscriptions
-     */
-    void clearStateChangeCallbacks()
-    {
-        _stateChangeCallbacks.clear();
-    }
+    std::vector<CallbackEntry> _stateChangeCallbacks;
+    size_t _nextCallbackId = 0;
 };
 
 #endif // STATE_MIXIN_H

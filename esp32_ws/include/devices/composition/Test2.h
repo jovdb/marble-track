@@ -11,6 +11,7 @@
 #include "devices/composition/Led.h"
 #include "devices/composition/Button.h"
 #include "devices/composition/Servo.h"
+#include <functional>
 
 namespace composition {
 
@@ -19,6 +20,7 @@ private:
     Led* _led;
     Button* _button;
     Servo* _servo;
+    std::function<void()> _buttonUnsubscribe;
 
 public:
     explicit Test2(const String &id);

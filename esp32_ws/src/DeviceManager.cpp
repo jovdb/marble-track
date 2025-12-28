@@ -10,6 +10,7 @@
 #include "devices/composition/Test2.h"
 #include "devices/composition/Buzzer.h"
 #include "devices/composition/Servo.h"
+#include "devices/composition/Stepper.h"
 #include "devices/mixins/SerializableMixin.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
@@ -40,6 +41,10 @@ DeviceBase *DeviceManager::createDevice(const String &deviceId, const String &de
     else if (lowerType == "servo")
     {
         return new composition::Servo(deviceId);
+    }
+    else if (lowerType == "stepper")
+    {
+        return new composition::Stepper(deviceId);
     }
 
     MLOG_WARN("Unknown device type: %s", deviceType.c_str());

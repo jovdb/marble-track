@@ -6,6 +6,7 @@
 #include "devices/composition/Test2.h"
 #include "devices/composition/Led.h"
 #include "devices/composition/Button.h"
+#include "devices/composition/Servo.h"
 
 namespace composition
 {
@@ -20,6 +21,10 @@ namespace composition
         // Create and add child Button device
         _button = new Button(id + "_button");
         addChild(_button);
+
+        // Create and add child Servo device
+        _servo = new Servo(id + "_servo");
+        addChild(_servo);
     }
 
     void Test2::setup()
@@ -40,11 +45,18 @@ namespace composition
         if (btnState.isPressed && ledState.mode != "BLINKING")
         {
             _led->blink(100, 100);
+            _servo->setValue(0.0f, 2000); // Move servo to max position when button pressed
         }
         else if (btnState.isPressed && ledState.mode != "false")
         {
             _led->set(false);
+            _servo->setValue(1.0f, 600); // Move servo to max position when button pressed
         }
     };
+
+    // Getter implementations
+    Led *Test2::getLed() { return _led; }
+    Button *Test2::getButton() { return _button; }
+    Servo *Test2::getServo() { return _servo; }
 
 } // namespace composition

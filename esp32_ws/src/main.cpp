@@ -33,9 +33,8 @@
 unsigned long lastAutoToggleTime = 0;
 
 #include "NetworkSettings.h"
-#include <devices/LedDevice.h>
+#include "devices/composition/Led.h"
 #include <devices/ButtonDevice.h>
-#include <devices/TestTaskDevice.h>
 
 // Create network and server instances
 Network *network = nullptr; // Will be created after loading settings
@@ -46,7 +45,6 @@ WebsiteHost *websiteHost = nullptr; // Will be created after network initializat
 WebSocketManager wsManager(nullptr, nullptr, "/ws");
 
 // Global status LED
-LedDevice *statusLed = nullptr;
 
 // Button press toggle for LED blinking
 bool blinkingActive = false;
@@ -207,12 +205,6 @@ void setup()
 
   // State change broadcasting is now enabled during setup
 
-  // Create TestTaskDevice with its own button and LED children
-  /*
-  TestTaskDevice *testTask = new TestTaskDevice("test-task", globalNotifyClientsCallback);
-  testTask->setup();
-  deviceManager.addTaskDevice(testTask);
-*/
   /*
     // Create test Servo on pin 16
     Servo *testServo = new Servo("test-servo", globalNotifyClientsCallback);

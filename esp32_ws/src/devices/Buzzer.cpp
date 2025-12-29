@@ -123,7 +123,7 @@ namespace devices
         // Wake up the RTOS task
         notifyTask();
 
-        MLOG_INFO("%s: Queued tone %dHz for %dms", toString().c_str(), frequency, duration);
+        // MLOG_INFO("%s: Queued tone %dHz for %dms", toString().c_str(), frequency, duration);
         return true;
     }
 
@@ -201,7 +201,7 @@ namespace devices
         // Wake up the RTOS task
         notifyTask();
 
-        MLOG_INFO("%s: Queued RTTTL tune playback", toString().c_str());
+        // MLOG_INFO("%s: Queued RTTTL tune playback", toString().c_str());
         return true;
     }
 
@@ -385,7 +385,9 @@ namespace devices
                     continue;
                 }
 
-                MLOG_INFO("%s: Starting RTTTL tune playback", toString().c_str());
+                int colonIndex = rtttl.indexOf(':');
+                String tuneName = (colonIndex > 0) ? rtttl.substring(0, colonIndex) : rtttl;
+                MLOG_INFO("%s: Starting RTTTL tune playback: %s", toString().c_str(), tuneName.c_str());
                 notifyStateChanged();
 
                 // Play the tune until finished with adaptive timing

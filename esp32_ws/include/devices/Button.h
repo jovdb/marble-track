@@ -89,6 +89,12 @@ namespace devices
          */
         bool isReleased() const;
 
+        /**
+         * @brief Check if the button state changed in the last loop
+         * @return true if state changed, false otherwise
+         */
+        bool isStateChanged() const { return _isStateChanged; }
+
         // ControllableMixin implementation
         void addStateToJson(JsonDocument &doc) override;
         bool control(const String &action, JsonObject *args = nullptr) override;

@@ -112,6 +112,9 @@ namespace composition
         // Simulation support
         bool _isSimulated = false;
         bool _simulatedIsPressed = false;
+
+        // Can be used for edge detection and simulating events on change
+        bool _isStateChanged = false;
     };
 
 } // namespace composition

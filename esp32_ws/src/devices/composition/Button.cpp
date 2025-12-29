@@ -59,6 +59,9 @@ namespace composition
         if (_config.pin == -1)
             return;
 
+        // Reset state change flag for next loop
+        _isStateChanged = false;
+
         bool isButtonPressed = readIsButtonPressed();
 
         if (isButtonPressed != _lastIsButtonPressed)
@@ -73,6 +76,7 @@ namespace composition
             {
                 _state.isPressed = isButtonPressed;
                 MLOG_INFO("%s: New button data read: %s", toString().c_str(), _state.input ? "HIGH" : "LOW");
+                _isStateChanged = true;
                 notifyStateChanged();
             }
         }

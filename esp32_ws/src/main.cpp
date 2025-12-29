@@ -19,7 +19,6 @@
 #include "devices/PwmMotor.h"
 #include "devices/Servo.h"
 
-#include <devices/Wheel.h>
 #include "SerialConsole.h"
 #include "OtaUpload.h"
 #include "AutoMode.h"

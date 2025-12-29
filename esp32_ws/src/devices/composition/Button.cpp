@@ -49,7 +49,7 @@ namespace composition
         _state.input = contactStateToPinState(_state.isPressed);
         _lastIsButtonPressed = _state.isPressed;
 
-        MLOG_INFO("%s: Setup on pin %d", toString().c_str(), _config.pin);
+        MLOG_DEBUG("%s: Setup on pin %d", toString().c_str(), _config.pin);
     }
 
     void Button::loop()

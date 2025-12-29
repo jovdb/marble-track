@@ -19,6 +19,18 @@ namespace composition
         : DeviceBase(id, "wheel")
     {
         _stateMutex = xSemaphoreCreateMutex();
+
+        // Create stepper child
+        _stepper = new Stepper(getId() + "-stepper");
+        addChild(_stepper);
+
+        // Create zero sensor button
+        _zeroSensor = new Button(getId() + "-zero-sensor");
+        addChild(_zeroSensor);
+
+        // Create next button
+        _nextButton = new Button(getId() + "-btn-next");
+        addChild(_nextButton);
     }
 
     Wheel::~Wheel()
@@ -31,17 +43,6 @@ namespace composition
 
     void Wheel::setup()
     {
-        // Create stepper child
-        _stepper = new Stepper(getId() + "-stepper");
-        addChild(_stepper);
-
-        // Create zero sensor button
-        _zeroSensor = new Button(getId() + "-zero-sensor");
-        addChild(_zeroSensor);
-
-        // Create next button
-        _nextButton = new Button(getId() + "-btn-next");
-        addChild(_nextButton);
         DeviceBase::setup();
 
         setName(_config.name);
@@ -52,7 +53,7 @@ namespace composition
             _config.breakPoints.assign(std::begin(defaultBreakpoints), std::end(defaultBreakpoints));
         }
 
-        MLOG_INFO("%s: Setup complete with %d children", toString().c_str(), getChildren().size());
+        MLOG_DEBUG("%s: Setup complete", toString().c_str());
     }
 
     void Wheel::loop()

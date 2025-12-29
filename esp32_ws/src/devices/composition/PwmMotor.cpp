@@ -34,7 +34,7 @@ void PwmMotor::setup()
     }
 
     _isSetup = true;
-    MLOG_INFO("PwmMotor [%s]: Setup complete", getId().c_str());
+    MLOG_DEBUG("%s: Setup complete", toString().c_str());
 }
 
 void PwmMotor::loop()

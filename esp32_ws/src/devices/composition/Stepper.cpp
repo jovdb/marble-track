@@ -51,7 +51,7 @@ namespace composition
                 disableStepper();
             }
 
-            MLOG_INFO("%s: Setup complete for %s type", toString().c_str(), _config.stepperType.c_str());
+            MLOG_DEBUG("%s: Setup complete for %s type", toString().c_str(), _config.stepperType.c_str());
 
             if (!startTask("StepperTask", 4096, 1, 1))
             {

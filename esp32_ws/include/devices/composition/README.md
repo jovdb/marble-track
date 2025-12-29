@@ -1,10 +1,10 @@
 # Device Composition Pattern
 
-This folder contains an experimental approach to device architecture using **composition** instead of deep inheritance hierarchies.
+This folder contains the current device architecture using **composition** with mixins instead of deep inheritance hierarchies.
 
-## Problem with Current Approach
+## Previous Approach (Removed)
 
-The current device hierarchy:
+The old device hierarchy that was removed:
 ```
 Device
   └─ TaskDevice
@@ -12,11 +12,11 @@ Device
              └─ ControllableTaskDevice
 ```
 
-This forces every controllable device to also be saveable and task-based, even when not needed.
+This forced every controllable device to also be saveable and task-based, even when not needed.
 
-## New Composition Approach
+## Current Composition Approach
 
-Instead, we use **mixins** (via CRTP - Curiously Recurring Template Pattern) to compose devices:
+We now use **mixins** (via CRTP - Curiously Recurring Template Pattern) to compose devices:
 
 ```cpp
 class MyDevice : public DeviceBase,
@@ -176,11 +176,9 @@ public:
 4. **Testability**: Mixins can be tested in isolation
 5. **Explicit dependencies**: No hidden base class requirements
 
-## Migration Path
+## Migration Complete
 
-1. New devices can use composition pattern
-2. Existing devices continue to work
-3. Gradually migrate as needed
+The migration from inheritance to composition is now complete. All legacy TaskDevice-based classes have been removed and replaced with composition-based implementations.
 
 ## Files
 

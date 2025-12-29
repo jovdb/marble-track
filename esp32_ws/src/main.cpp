@@ -199,45 +199,6 @@ void setup()
 
   // State change broadcasting is now enabled during setup
 
-  /*
-    // Create test Servo on pin 16
-    Servo *testServo = new Servo("test-servo", globalNotifyClientsCallback);
-    JsonDocument servoConfig;
-    servoConfig["name"] = "Test Servo";
-    servoConfig["pin"] = 16;
-    servoConfig["mcpwmChannel"] = -1;   // Auto-acquire
-    servoConfig["frequency"] = 50;      // Standard servo frequency
-    servoConfig["minDutyCycle"] = 2.5;  // 0 degrees
-    servoConfig["maxDutyCycle"] = 12.5; // 180 degrees
-    servoConfig["defaultDurationInMs"] = 500;
-    testServo->setup(servoConfig);
-    deviceManager.addTaskDevice(testServo);
-  */
-  // Create composition LED test on pin 15
-  /*
-  testLed2 = new composition::Led("led2");
-  // Configure pin before setup
-  composition::LedConfig ledConfig;
-  ledConfig.pin = 15;
-  testLed2->setConfig(ledConfig);
-  testLed2->setup();
-  deviceManager.addDevice(testLed2);
-  MLOG_INFO("Composition LED test created on pin 15");
-
-  // Create composition Button test on pin 7
-  button2 = new composition::Button("button2");
-
-  // Configure button before setup
-  composition::ButtonConfig buttonConfig;
-  buttonConfig.pin = 19;
-  buttonConfig.name = "Test Button 2";
-  buttonConfig.pinMode = composition::PinModeOption::Floating;
-  button2->setConfig(buttonConfig);
-  deviceManager.addDevice(button2);
-  button2->setup();
-  MLOG_INFO("Composition Button test created on pin 7");
-*/
-
   MLOG_INFO("System initialization complete!");
 }
 

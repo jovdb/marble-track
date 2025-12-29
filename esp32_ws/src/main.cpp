@@ -16,7 +16,6 @@
 #include "esp_log.h"
 
 #include "devices/Stepper.h"
-#include "devices/PwmMotor.h"
 #include "devices/Servo.h"
 
 #include "SerialConsole.h"

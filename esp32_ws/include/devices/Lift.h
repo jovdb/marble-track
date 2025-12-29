@@ -57,9 +57,6 @@ namespace devices
         bool isBallWaiting = false; // Whether ball is waiting to be loaded
         bool isLoaded = false;      // Whether lift has a ball loaded
         int initStep = 0;           // Current initialization step
-        unsigned long loadStartTime = 0;   // Load operation start time
-        unsigned long unloadStartTime = 0; // Unload operation start time
-        unsigned long unloadEndTime = 0;   // Unload operation end time
         bool onError = false;       // Error flag
     };
 
@@ -129,6 +126,12 @@ namespace devices
          */
         bool isLoaded() const;
 
+        /**
+         * @brief Check if the lift is initialized
+         * @return true if initialized (not in INIT or UNKNOWN state)
+         */
+        bool isInitialized() const;
+
         // ControllableMixin implementation
         void addStateToJson(JsonDocument &doc) override;
         bool control(const String &action, JsonObject *args = nullptr) override;
@@ -143,6 +146,10 @@ namespace devices
         DeviceBase *_ballSensor;  // Ball sensor child device
         DeviceBase *_loader;      // Loader motor child device
         DeviceBase *_unloader;    // Unloader motor child device
+
+        unsigned long _loadStartTime = 0;   // Load operation start time
+        unsigned long _unloadStartTime = 0; // Unload operation start time
+        unsigned long _unloadEndTime = 0;   // Unload operation end time
 
     private:
         /**

@@ -112,7 +112,7 @@ namespace devices
                 break;
             case LiftStateEnum::LIFT_DOWN_LOADING:
                 // Wait 1 second after starting load, then end the loading process
-                if (millis() - _state.loadStartTime >= 1000)
+                if (millis() - _loadStartTime >= 1000)
                 {
                     loadBallEnd();
                 }
@@ -121,7 +121,7 @@ namespace devices
                 break;
             case LiftStateEnum::LIFT_UP_UNLOADING:
                 // Wait 2 seconds after starting unload, then end the unloading process
-                if (millis() - _state.unloadStartTime >= 2000)
+                if (millis() - _unloadStartTime >= 2000)
                 {
                     unloadBallEnd();
                 }
@@ -364,6 +364,11 @@ namespace devices
         return _state.isLoaded;
     }
 
+    bool Lift::isInitialized() const
+    {
+        return _state.state != LiftStateEnum::INIT && _state.state != LiftStateEnum::UNKNOWN;
+    }
+
     void Lift::addStateToJson(JsonDocument &doc)
     {
         doc["state"] = stateToString(_state.state);
@@ -482,7 +487,7 @@ namespace devices
 
         MLOG_INFO("Lift [%s]: Loading ball...", getId().c_str());
         _state.state = LiftStateEnum::LIFT_DOWN_LOADING;
-        _state.loadStartTime = millis();
+        _loadStartTime = millis();
         _state.isLoaded = true;
         notifyStateChanged();
 
@@ -517,7 +522,7 @@ namespace devices
 
         MLOG_INFO("Lift [%s]: Unloading ball...", getId().c_str());
         _state.state = LiftStateEnum::LIFT_UP_UNLOADING;
-        _state.unloadStartTime = millis();
+        _unloadStartTime = millis();
         _state.isLoaded = false;
         notifyStateChanged();
 

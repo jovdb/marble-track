@@ -10,7 +10,16 @@ import {
 } from "../interfaces/WebSockets";
 
 // Available composition device types (from esp32_ws/include/devices/composition/)
-const COMPOSITION_DEVICE_TYPES = ["Button", "Buzzer", "Led", "Lift", "Servo", "Stepper", "Test2", "Wheel"] as const;
+const COMPOSITION_DEVICE_TYPES = [
+  "Button",
+  "Buzzer",
+  "Led",
+  "Lift",
+  "Servo",
+  "Stepper",
+  "Test2",
+  "Wheel",
+] as const;
 
 export function DevicesList() {
   const [devicesState, { loadDevices }] = useDevices();

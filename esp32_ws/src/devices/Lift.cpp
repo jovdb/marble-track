@@ -13,24 +13,43 @@ namespace devices
     Lift::Lift(const String &id)
         : DeviceBase(id, "lift")
     {
-        _stepper = nullptr;
-        _limitSwitch = nullptr;
-        _ballSensor = nullptr;
-        _loader = nullptr;
-        _unloader = nullptr;
+        // _stepper = nullptr;
+        // _limitSwitch = nullptr;
+        // _ballSensor = nullptr;
+        // _loader = nullptr;
+        // _unloader = nullptr;
 
         _stateMutex = xSemaphoreCreateMutex();
 
         // Create children
         _stepper = new Stepper(getId() + "-stepper");
-        _limitSwitch = new Button(getId() + "-limit");
-        _ballSensor = new Button(getId() + "-ball-sensor");
-        _loader = new Servo(getId() + "-loader");
-        _unloader = new Servo(getId() + "-unloader");
+        auto stepperCfg = _stepper->getConfig();
+        stepperCfg.name = "Lift Stepper";
+        _stepper->setConfig(stepperCfg);
         addChild(_stepper);
+
+        _limitSwitch = new Button(getId() + "-limit");
+        auto limitSwitchCfg = _limitSwitch->getConfig();
+        limitSwitchCfg.name = "Lift Limit Switch";
+        _limitSwitch->setConfig(limitSwitchCfg);
         addChild(_limitSwitch);
+
+        _ballSensor = new Button(getId() + "-ball-sensor");
+        auto ballSensorCfg = _ballSensor->getConfig();
+        ballSensorCfg.name = "Lift Ball Sensor";
+        _ballSensor->setConfig(ballSensorCfg);
         addChild(_ballSensor);
+
+        _loader = new Servo(getId() + "-loader");
+        auto loaderCfg = _loader->getConfig();
+        loaderCfg.name = "Lift Loader";
+        _loader->setConfig(loaderCfg);
         addChild(_loader);
+
+        _unloader = new Servo(getId() + "-unloader");
+        auto unloaderCfg = _unloader->getConfig();
+        unloaderCfg.name = "Lift Unloader";
+        _unloader->setConfig(unloaderCfg);
         addChild(_unloader);
     }
 
@@ -53,21 +72,10 @@ namespace devices
     {
         DeviceBase::loop();
 
-        if (!_stepper)
-            return;
-
         // Check ball sensor state and notify if changed
-        bool ballWaiting = false;
-        if (_ballSensor)
-        {
-            auto ballSensor = getBallSensor();
-            if (ballSensor && ballSensor->hasMixin("state"))
-            {
-                // This is a simplified check - in real implementation would need to access state
-                ballWaiting = true; // Placeholder
-            }
-        }
+        bool ballWaiting = _ballSensor ? _ballSensor->getState().isPressed : false;
 
+        /*
         if (xSemaphoreTake(_stateMutex, portMAX_DELAY) == pdTRUE)
         {
             bool changed = (_state.isBallWaiting != ballWaiting);
@@ -75,7 +83,7 @@ namespace devices
 
             if (changed)
             {
-                MLOG_INFO("Lift [%s]: Ball waiting state changed to %s", getId().c_str(), ballWaiting ? "true" : "false");
+                MLOG_INFO("%s: Ball waiting state changed to %s", toString().c_str(), ballWaiting ? "true" : "false");
                 notifyStateChanged();
             }
 
@@ -133,7 +141,7 @@ namespace devices
             case LiftStateEnum::MOVING_UP:
                 if (isStepperIdle())
                 {
-                    MLOG_INFO("Lift [%s]: Top reached", getId().c_str());
+                    MLOG_INFO("%s: Top reached", toString().c_str());
                     _state.state = _state.isLoaded ? LiftStateEnum::LIFT_UP_LOADED : LiftStateEnum::LIFT_UP_UNLOADED;
                     notifyStateChanged();
                 }
@@ -142,13 +150,13 @@ namespace devices
                 // When stepper stops moving, return to appropriate idle state
                 if (isStepperIdle())
                 {
-                    MLOG_INFO("Lift [%s]: Movement complete", getId().c_str());
+                    MLOG_INFO("%s: Movement complete", toString().c_str());
                     _state.state = _state.isLoaded ? LiftStateEnum::LIFT_DOWN_LOADED : LiftStateEnum::LIFT_DOWN_UNLOADED;
                     notifyStateChanged();
                 }
                 else if (isAtLimit() && _state.state == LiftStateEnum::MOVING_DOWN)
                 {
-                    MLOG_WARN("Lift [%s]: Limit switch triggered during downward movement - stopping", getId().c_str());
+                    MLOG_WARN("%s: Limit switch triggered during downward movement - stopping", toString().c_str());
                     stopStepper();
                     _state.state = LiftStateEnum::LIFT_DOWN_UNLOADED;
                     notifyStateChanged();
@@ -160,6 +168,7 @@ namespace devices
 
             xSemaphoreGive(_stateMutex);
         }
+        */
     }
 
     std::vector<int> Lift::getPins() const
@@ -179,6 +188,8 @@ namespace devices
         if (xSemaphoreTake(_stateMutex, portMAX_DELAY) != pdTRUE)
             return false;
 
+        bool isSuccess = false;
+
         switch (_state.state)
         {
         case LiftStateEnum::UNKNOWN:
@@ -188,9 +199,8 @@ namespace devices
         case LiftStateEnum::LIFT_UP_UNLOADED:
         case LiftStateEnum::LIFT_UP_LOADED:
         case LiftStateEnum::LIFT_UP_UNLOADING:
-            MLOG_WARN("Lift [%s]: Cannot move up, state is %s", getId().c_str(), stateToString(_state.state).c_str());
-            xSemaphoreGive(_stateMutex);
-            return false;
+            MLOG_WARN("%s: Cannot move up, state is %s", toString().c_str(), stateToString(_state.state).c_str());
+            break;
 
         case LiftStateEnum::LIFT_DOWN_UNLOADED:
         case LiftStateEnum::LIFT_DOWN_LOADED:
@@ -201,22 +211,23 @@ namespace devices
             long currentPos = getCurrentPosition();
             if (currentPos >= _config.maxSteps)
             {
-                MLOG_WARN("Lift [%s]: Cannot move up - already at max position (current: %ld, max: %ld)", getId().c_str(), currentPos, _config.maxSteps);
-                xSemaphoreGive(_stateMutex);
-                return false;
+                MLOG_WARN("%s: Cannot move up - already at max position (current: %ld, max: %ld)", toString().c_str(), currentPos, _config.maxSteps);
+                break;
             }
 
-            MLOG_INFO("Lift [%s]: Moving up to %ld steps", getId().c_str(), _config.maxSteps);
+            MLOG_INFO("%s: Moving up to %ld steps", toString().c_str(), _config.maxSteps);
             _state.state = LiftStateEnum::MOVING_UP;
             notifyStateChanged();
-            xSemaphoreGive(_stateMutex);
-            return moveStepperTo(_config.maxSteps, speedRatio);
+            isSuccess = moveStepperTo(_config.maxSteps, speedRatio);
+            break;
         }
         default:
             setError("LIFT_UNKNOWN_STATE_UP", "Unknown state encountered in up()");
-            xSemaphoreGive(_stateMutex);
-            return false;
+            break;
         }
+
+        xSemaphoreGive(_stateMutex);
+        return isSuccess;
     }
 
     bool Lift::down(float speedRatio)
@@ -233,7 +244,7 @@ namespace devices
         case LiftStateEnum::LIFT_DOWN_LOADED:
         case LiftStateEnum::LIFT_DOWN_LOADING:
         case LiftStateEnum::LIFT_UP_UNLOADING:
-            MLOG_WARN("Lift [%s]: Cannot move down, state is %s", getId().c_str(), stateToString(_state.state).c_str());
+            MLOG_WARN("%s: Cannot move down, state is %s", toString().c_str(), stateToString(_state.state).c_str());
             xSemaphoreGive(_stateMutex);
             return false;
 
@@ -246,7 +257,7 @@ namespace devices
             long currentPos = getCurrentPosition();
             if (currentPos <= _config.minSteps)
             {
-                MLOG_WARN("Lift [%s]: Cannot move down - already at min position (current: %ld, min: %ld)", getId().c_str(), currentPos, _config.minSteps);
+                MLOG_WARN("%s: Cannot move down - already at min position (current: %ld, min: %ld)", toString().c_str(), currentPos, _config.minSteps);
                 xSemaphoreGive(_stateMutex);
                 return false;
             }
@@ -268,15 +279,15 @@ namespace devices
     {
         if (xSemaphoreTake(_stateMutex, portMAX_DELAY) != pdTRUE)
             return false;
-
-        if (!_stepper || !_limitSwitch)
-        {
-            MLOG_WARN("Lift [%s]: Stepper or limit switch not initialized", getId().c_str());
-            xSemaphoreGive(_stateMutex);
-            return false;
-        }
-
-        MLOG_INFO("Lift [%s]: Starting init sequence", getId().c_str());
+        /*
+                if (!_stepper || !_limitSwitch)
+                {
+                    MLOG_WARN("%s: Stepper or limit switch not initialized", toString().c_str());
+                    xSemaphoreGive(_stateMutex);
+                    return false;
+                }
+        */
+        MLOG_INFO("%s: Starting init sequence", toString().c_str());
 
         _state.state = LiftStateEnum::INIT;
         _state.initStep = 1; // unload end
@@ -303,7 +314,7 @@ namespace devices
         case LiftStateEnum::LIFT_UP_UNLOADING:
         case LiftStateEnum::MOVING_DOWN:
         case LiftStateEnum::LIFT_DOWN_LOADED:
-            MLOG_WARN("Lift [%s]: Cannot load ball, state is %s", getId().c_str(), stateToString(_state.state).c_str());
+            MLOG_WARN("%s: Cannot load ball, state is %s", toString().c_str(), stateToString(_state.state).c_str());
             xSemaphoreGive(_stateMutex);
             return false;
 
@@ -336,7 +347,7 @@ namespace devices
         case LiftStateEnum::MOVING_DOWN:
         case LiftStateEnum::LIFT_DOWN_LOADED:
         case LiftStateEnum::LIFT_DOWN_UNLOADED:
-            MLOG_WARN("Lift [%s]: Cannot unload ball, state is %s", getId().c_str(), stateToString(_state.state).c_str());
+            MLOG_WARN("%s: Cannot unload ball, state is %s", toString().c_str(), stateToString(_state.state).c_str());
             xSemaphoreGive(_stateMutex);
             return false;
 
@@ -411,7 +422,7 @@ namespace devices
         }
         else
         {
-            MLOG_WARN("Lift [%s]: Unknown action '%s'", getId().c_str(), action.c_str());
+            MLOG_WARN("%s: Unknown action '%s'", toString().c_str(), action.c_str());
         }
 
         return false;
@@ -481,11 +492,11 @@ namespace devices
         auto loader = getLoader();
         if (!loader)
         {
-            MLOG_WARN("Lift [%s]: Lift Loader not initialized", getId().c_str());
+            MLOG_WARN("%s: Lift Loader not initialized", toString().c_str());
             return false;
         }
 
-        MLOG_INFO("Lift [%s]: Loading ball...", getId().c_str());
+        MLOG_INFO("%s: Loading ball...", toString().c_str());
         _state.state = LiftStateEnum::LIFT_DOWN_LOADING;
         _loadStartTime = millis();
         _state.isLoaded = true;
@@ -500,7 +511,7 @@ namespace devices
         auto loader = getLoader();
         if (!loader)
         {
-            MLOG_WARN("Lift [%s]: Lift Loader not initialized", getId().c_str());
+            MLOG_WARN("%s: Lift Loader not initialized", toString().c_str());
             return false;
         }
 
@@ -516,11 +527,11 @@ namespace devices
         auto unloader = getUnloader();
         if (!unloader)
         {
-            MLOG_WARN("Lift [%s]: Lift Unloader not initialized", getId().c_str());
+            MLOG_WARN("%s: Lift Unloader not initialized", toString().c_str());
             return false;
         }
 
-        MLOG_INFO("Lift [%s]: Unloading ball...", getId().c_str());
+        MLOG_INFO("%s: Unloading ball...", toString().c_str());
         _state.state = LiftStateEnum::LIFT_UP_UNLOADING;
         _unloadStartTime = millis();
         _state.isLoaded = false;
@@ -535,7 +546,7 @@ namespace devices
         auto unloader = getUnloader();
         if (!unloader)
         {
-            MLOG_WARN("Lift [%s]: Lift Unloader not initialized", getId().c_str());
+            MLOG_WARN("%s: Lift Unloader not initialized", toString().c_str());
             return false;
         }
 
@@ -610,7 +621,7 @@ namespace devices
 
     void Lift::setError(const String &errorCode, const String &message)
     {
-        MLOG_ERROR("Lift [%s]: %s - %s", getId().c_str(), errorCode.c_str(), message.c_str());
+        MLOG_ERROR("%s: %s - %s", toString().c_str(), errorCode.c_str(), message.c_str());
         _state.state = LiftStateEnum::ERROR;
         _state.onError = true;
         notifyStateChanged();

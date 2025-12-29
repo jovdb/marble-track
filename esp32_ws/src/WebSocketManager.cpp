@@ -849,7 +849,7 @@ void WebSocketManager::handleAddDevice(JsonDocument &doc)
 
     deviceManager->notifyDevicesChanged();
 
-    MLOG_INFO("Added device: %s (%s)", deviceId.c_str(), deviceType.c_str());
+    // MLOG_INFO("Added device: %s (%s)", deviceId.c_str(), deviceType.c_str());
 }
 
 void WebSocketManager::handleRemoveDevice(JsonDocument &doc)

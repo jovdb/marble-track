@@ -36,6 +36,9 @@ ManualMode::~ManualMode()
 
 void ManualMode::setup()
 {
+
+    MLOG_DEBUG("ManualMode: Starting setup");
+
     _buzzer = deviceManager.getDeviceByIdAs<devices::Buzzer>("buzzer");
     if (_buzzer == nullptr)
     {

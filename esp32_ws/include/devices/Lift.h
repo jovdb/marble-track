@@ -11,6 +11,9 @@
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"
 #include "devices/mixins/SerializableMixin.h"
+#include "devices/Stepper.h"
+#include "devices/Button.h"
+#include "devices/Servo.h"
 #include <freertos/semphr.h>
 
 namespace devices
@@ -41,9 +44,9 @@ namespace devices
      */
     struct LiftConfig
     {
-        String name = "Lift";     // Device name
-        long minSteps = 0;        // Minimum steps (bottom position)
-        long maxSteps = 1000;     // Maximum steps (top position)
+        String name = "Lift";      // Device name
+        long minSteps = 0;         // Minimum steps (bottom position)
+        long maxSteps = 1000;      // Maximum steps (top position)
         float downFactor = 1.015f; // Extra movement factor when going down
     };
 
@@ -54,10 +57,10 @@ namespace devices
     struct LiftState
     {
         LiftStateEnum state = LiftStateEnum::UNKNOWN; // Current lift state
-        bool isBallWaiting = false; // Whether ball is waiting to be loaded
-        bool isLoaded = false;      // Whether lift has a ball loaded
-        int initStep = 0;           // Current initialization step
-        bool onError = false;       // Error flag
+        bool isBallWaiting = false;                   // Whether ball is waiting to be loaded
+        bool isLoaded = false;                        // Whether lift has a ball loaded
+        int initStep = 0;                             // Current initialization step
+        bool onError = false;                         // Error flag
     };
 
     /**
@@ -141,11 +144,11 @@ namespace devices
         void configToJson(JsonDocument &doc) override;
 
     protected:
-        DeviceBase *_stepper;     // Stepper motor child device
-        DeviceBase *_limitSwitch; // Limit switch child device
-        DeviceBase *_ballSensor;  // Ball sensor child device
-        DeviceBase *_loader;      // Loader motor child device
-        DeviceBase *_unloader;    // Unloader motor child device
+        Stepper *_stepper;    // Stepper motor child device
+        Button *_limitSwitch; // Limit switch child device
+        Button *_ballSensor;  // Ball sensor child device
+        Servo *_loader;       // Loader motor child device
+        Servo *_unloader;     // Unloader motor child device
 
         unsigned long _loadStartTime = 0;   // Load operation start time
         unsigned long _unloadStartTime = 0; // Unload operation start time

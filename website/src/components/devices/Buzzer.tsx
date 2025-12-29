@@ -47,8 +47,6 @@ export function Buzzer(props: { id: string }) {
       "Back to the Future:d=16,o=5,b=200:4g.,p,4c.,p,2f#.,p,g.,p,a.,p,8g,p,8e,p,8c,p,4f#,p,g.,p,a.,p,8g.,p,8d.,p,8g.,p,8d.6,p,4d.6,p,4c#6,p,b.,p,c#.6,p,2d.6",
     "Barbie Girl":
       "Barbie Girl:d=8,o=5,b=125:g#,e,g#,c#6,4a,4p,f#,d#,f#,b,4g#,f#,e,4p,e,c#,4f#,4c#,4p,f#,e,4g#,4f#",
-    Batman:
-      "Batman:d=8,o=5,b=180:d,d,c#,c#,c,c,c#,c#,d,d,c#,c#,c,c,c#,c#,d,d#,c,c#,c,c,c#,c#,f,p,4f",
     "Benny Hill":
       "Benny Hill:d=16,o=5,b=125:8d.,e,8g,8g,e,d,a4,b4,d,b4,8e,d,b4,a4,b4,8a4,a4,a#4,b4,d,e,d,4g,4p,d,e,d,8g,8g,e,d,a4,b4,d,b4,8e,d,b4,a4,b4,8d,d,d,f#,a,8f,4d,4p,d,e,d,8g,g,g,8g,g,g,8g,8g,e,8e.,8c,8c,8c,8c,e,g,a,g,a#,8g,a,b,a#,b,a,b,8d6,a,b,d6,8b,8g,8d,e6,b,b,d,8a,8g,4g",
     Beethoven: "Beethoven:d=4,o=5,b=160:c,e,c,g,c,c6,8b,8a,8g,8a,8g,8f,8e,8f,8e,8d,c,e,g,e,c6,g.",
@@ -71,8 +69,6 @@ export function Buzzer(props: { id: string }) {
     "Deep Purple-Smoke on the Water":
       "Deep Purple-Smoke on the Water:d=4,o=4,b=112:c,d#,f.,c,d#,8f#,f,p,c,d#,f.,d#,c,2p,8p,c,d#,f.,c,d#,8f#,f,p,c,d#,f.,d#,c",
     "Don't Care": "Don't Care:d=16,o=5,b=125:f,e,f,e,f,e,8d,e,d,e,d,e,d,c,d,4d",
-    Dragonballz:
-      "Dragonballz:d=16,o=5,b=140:4f6,48f.6,4g#6,4c7,48f.7,4g#6,4c7,48f.7,2p,2f6,2f,2f6,48f.,48f.,48f.,48f.,48f.,48f.,32p,48d#.6,48d#.,48d#.6,48d#.,48d#.,48d#.,48d#.,48d#.,48d#.,32€,48f.6,48f.,48f.6,48f.,48f.,48f.,48f.,48f.,48f.,6p,8f,8f7,8f6,8f,8f7,48f.6,48f.6,48f.6,48f.6,48f.6,48f.6,48f.6,p,a#,a#,p,c6,c,c6",
     Dream:
       "Dream:d=8,o=4,b=220:c3,4p.,c,4p,d#3,p,d#,d#3,p,d#,p,d#3,p,f3,4p.,f,4p,g3,p,g,g3,p,a#3,p,c,p,c3,p,f5,p,c,p,c5,d#3,f5,d#,d#3,p,d#,f5,d#3,g5,f3,p,f5,p,f,p,f5,g3,g5,g,g3,p,a#3,p,c,p,c3,g5,f5,p,c,g5,c5,d#3,f5,d#,d#3,p,d#,f5,d#3,g5,f3,g,f5,p,f,g5,f5,g3,g5,g,g3,p,a#3,d#5,c,p,c3,g5,f5,c5,c,g5,c5,d#3,f5,d#,d#3,g5,d#,f5,d#3,g5,f3,g,f5,d#5,f,g5,f5,g3,g5,g,g3,f5,a#3,d#5,c,c5,c3,g5,f5,p,c,g5,c5,d#3,f5,d#,d#3,p,d#,f5,d#3,g5,f3,g,f5,p,f,g5,f5,g3,g5,g,g3,p,a#3,d#5,c,p,c3,p,f5,p,c,p,c5,d#3,f5,d#,d#3,p,d#,f5,d#3,g5,f3,p,f5,p,f,p,f5,g3,g5,g,g3,p,a#3,p,c,p,c3,4p.,c,4p,d#3,p,d#,d#3,p,d#,p,d#3,p,f3,4p.,f,4p,g3,p,g,g3,p,a#3,p,c",
     "Duelling Banjos":
@@ -95,15 +91,12 @@ export function Buzzer(props: { id: string }) {
       "Flute:d=8,o=5,b=160:16a,16g,16a,16a#,c6,c6,c6,c6,c6,c6,c6,c6,4f.,4p,32f,16e,16f,16g,a,a,a,a,a,a,a,a,4d.,4p,16d,16c,16d,16e,f,f,f,c,g,g,g,c,a,f,a,c6,f6,c6,d6,a#,c6,f,a,c6,f6,c6,d6,a#,4c6,4p,4f.,f,4a4,4p,4e,4p,f,g,f,a,a#,a,f,g,f,d,e,d,c#,d,c#,a4,b4,a4,c#,d,c#,e,f,e,f,g,f,a,a#,a,f,g,f,d,e.",
     "Fraggle Rock":
       "Fraggle Rock:d=8,o=5,b=112:c6,16c6,c6,16c6,a,2p,b,b,a,g,16e6,d6,c6,16a,g,c6,16c6,c6,16d6,a,2p,b,16b,a,16b,c6",
-    Friends: "Friends:d=4,o=5,b=80:c,g,a#4,f,c,g,a#4,8a#,8e,c,g,a#4,f,c,g,a#4,8a#,8e",
     "Fruit and Nut":
       "Fruit and Nut:d=16,o=5,b=70:d,c#,d,c#,d,p,c#,p,e,p,32d,32f#,32a,32d6,8f#.6,p,g6,f#6,g6,f#6,e6,d6,a,f#,8d.,32f#,32d6,8c#.6,p,b,b4,b4,32b4,32c#,b4,p,a4,p,b,b4,b4,32b4,32c#,b4,p,a4,p,d6,d,d,d,d,c#,e,d,d,c#,b4,a4,8g6,32e6,32c#6,32g,32e,d,c#,d,c#,d,p,c#,p,e,p,32d,32f#,32a,32d6,8f#.6,32p,g6,f#6,g6,f#6,e6,d6,a,f#,8d.,32f#,32d6,8c#.6,p,b,b4,b4,32b4,32c#,b4,p,a4,p,b,b4,b4,32b4,32c#,b4,p,a4,p,b,b4,8b4,8c#,32p,8c#,8d.",
     "Funky Town":
       "Funky Town:d=8,o=4,b=125:c6,c6,a#5,c6,p,g5,p,g5,c6,f6,e6,c6,2p,c6,c6,a#5,c6,p,g5,p,g5,c6,f6,e6,c6",
     Futurama:
       "Futurama:d=8,o=5,b=112:e,4e,4e,a,4a,4d,4d,e,4e,4e,e,4a,4g#,4d,d,f#,f#,4e,4e,e,4a,4g#,4b,16b,16b,g,g,f#,f#,4e,4e,a,4a,4d,4d,e,g,f#,4e,e,4a,4g#,4d,d,f#,f#,4e,4e,e,4a,4g#,4b,16b,16b,g,g,f#,f#,p,16e,16e,e,d#,d,d,c#,c#",
-    "GB National Anthem":
-      "GB National Anthem:d=4,o=5,b=90:g,g,a,f#.,8g,a,b,b,c6,b.,8a,g,a,g,f#,g.,8a,8b,8c6,d6,d6,d6,d.6,8c6,b,c6,c6,c6,c.6,8b,a,b,8c6,8b,8a,8g,b.,8c6,d6,8e6,8c6,b,a,g.",
     "Ghost Busters":
       "Ghost Busters:d=8,o=5,b=145:16c6,32p,16c6,e6,c6,d6,a#,2p,32c6,32p,32c6,32p,c6,a#,c6",
     Greensleaves:
@@ -158,14 +151,8 @@ export function Buzzer(props: { id: string }) {
       "Phantom:d=8,o=5,b=120:4d6,d6,4a6,a6,4b6,g6,4a6,a6,4d6,d6,4a6,a6,a6,g6,f6,4e6,e6,4d6,d6,4a6,a6,4b6,g6,4a6,a6,4d6,d6,4a6,a6,f6,e6,c#6,4d6,d6.",
     Piccolo:
       "Piccolo:d=8,o=5,b=320:d6,4g6,4g,4g6,d6,e6,d6,b,4g,4d,g,a,b,c6,4d6,4g6,1d6,4d6,4g6,4g,4g6,d6,e6,b,4g,4d,f,g,a,b,4c6,4f6,1c6",
-    Pienian:
-      "Pienian:d=8,o=5,b=160:a4,a4,d,d,f#,f#,2d,f#,f#,e,d,4c#,e,a4,c#,c#,e,e,2c#,e,e,d,c#,4d,f#,d,4g,b,b,4g,b,g,4a,4f#,4f#,p,f#,e,e,e,e,p,e,f#,g#,a,4a4,4a4,b4,c#,d,d,f#,f#,2d,f#,f#,e,d,4c#,4e,4a,4p,4c#,4p,4d.",
-    Pilipom:
-      "Pilipom:d=16,o=5,b=160:e,p,e,p,g,p,g,p,b4,c#,d,p,g,p,g,p,e,p,e,p,g,p,g,p,b,g,b,e6,8d#6,8p,d#6,d6,b,a#,d#6,d6,b,a#,d#6,d6,b,a#,b,c6,d6,d#6,b,a#,g,f#,e,d#,c,b4,e,f#,d#,b4,8e,p",
     "Pinky and the Brain":
       "Pinky and the Brain:d=16,o=6,b=200:b.5,p,8e.,p,d#.,p,8e.,p,g.,p,4d#.,4p,b.5,p,8e.,p,d#.,p,8e.,p,g.,p,4d#.,4p,4e,8p,8e.,p,g.,p,8a#.,p,4a#,8p,a#.,p,8b.,p,a.,p,4g,8p,4f#,4p,e.,p,8a.,p,g#.,p,8a.,p,b.,p,4g#,4p,e.,p,8a.,p,g#.,p,8a.,p,b.,p,4g#,4p,c.,p,8b.5,p,8b.5,8p,b.5,p",
-    Polka:
-      "Polka:d=16,o=5,b=140:d,c#,d,e,f,e,f,f#,g,f#,g,a,a#,a,g,a#,a,a4,c#,e,a,g,f,e,f,e,d,c#,d,a4,b4,c#,d,c#,d,e,f,e,f,f#,g,f#,g,a,a#,a,g,a#,a,a4,c#,e,a,g,f,e,d,4p,2c#,8d,8a4,8d",
     Popcorn:
       "Popcorn:d=16,o=5,b=160:a,p,g,p,a,p,e,p,c,p,e,p,8a4,8p,a,p,g,p,a,p,e,p,c,p,e,p,8a4,8p,a,p,b,p,c6,p,b,p,c6,p,a,p,b,p,a,p,b,p,g,p,a,p,g,p,a,p,f,8a,8p,a,p,g,p,a,p,e,p,c,p,e,p,8a4,8p,a,p,g,p,a,p,e,p,c,p,e,p,8a4,8p,a,p,b,p,c6,p,b,p,c6,p,a,p,b,p,a,p,b,p,g,p,a,p,g,p,a,p,b,4c6",
     Popeye:
@@ -203,7 +190,6 @@ export function Buzzer(props: { id: string }) {
       "Simpsons:d=8,o=5,b=160:c.6,4e6,4f#6,a6,4g.6,4e6,4c6,a,f#,f#,f#,2g,p,p,f#,f#,f#,g,4a#.,c6,c6,c6,4c6",
     Smurfs:
       "Smurfs:d=4,o=5,b=200:2c6,f.6,8c6,d6,a#,2g,c.6,8a,f,a,2g,p,16g,16a,16a#,16b,2c6,f.6,8c6,d6,a#,2g,c.6,8a,a#,e,2f,p,16g,16a,16a#,16b,2c6,f.6,8c6,d6,a#,2g,c.6,8a,f,a,2g,p,16g,16a,16a#,16b,2c6,f.6,8c6,d6,a#,2g,c.6,8a,a#,e,2f.,1p",
-    Soap: "Soap:d=8,o=5,b=125:g,a,c6,p,a,4c6,4p,a,g,e,c,4p,4g,a,c6,4p,4b,4p,a,g,e,c#,2p,4p,a,c6,2p,4p,a,g,2p,a,g,e,4c",
     "Sorcerers Apprentice":
       "Sorcerers Apprentice:d=18,o=6,b=125:4c,4g,g.5,a.5,b.5,c.,12p,d#.,c.,12p,d#.,d.,c.,b.5,c.,12p,d#.,c.,12p,d#.,d.,c.,b.5,c.,12p,d#.,c.,d#.,d.,c.,d.,d#.,d.,f.,d#.,d.,12p,f#.,c.,12p,d#.,d.,f.,d#.,d.,12p,f#.,c.,12p,d#.,d.,d#.,f.,g.,g.,g.,g.,g.,g.,2g.",
     "South Park":
@@ -245,8 +231,6 @@ export function Buzzer(props: { id: string }) {
       "To The Dump To The Dump To The Dump Dump Dump:d=8,o=5,b=270:c,c,4c,c,c,4c,c,c,f,p,g,p,4a,c,c,4c,c,c,4c,a,a,g,p,e,p,4c,c,c,4c,c,c,4c,c,c,f,p,g,p,4a,f,a,1c6,a,g,f,p,a.,p,f",
     Toccata: "Toccata:d=16,o=5,b=160:a,g,1a,g,f,e,d,2c#,p,2d,2p,a,g,1a,8e.,4f,2c#,2d",
     Tones: "Tones:d=8,o=5,b=500:b,16p,b,2p,g,16p,g,2p,d6,16p,d6,2p,d,16p,d.",
-    "Top Car":
-      "Top Cat:d=16,o=5,b=125:8g,8c6,p,g,8c6,c6,8g,8c6,p,8c6,g,g,f#,g,g#,a,a#,b,8c6,8c6,p,g,4g,48g#.,48a.,48a#.,48b.,c6,p,c6,8c6,a,8b,a,8g,8c6,p,8c6,p,d#,8e,g,8a,c6,8p,c6,8c6,a,8b,a,8g",
     Transformers:
       "Transformers:d=16,o=6,b=285:e7,f7,e7,d#7,4d7,4p,d,d,d,d,d,d,d,d,e,e,e,e,f,f,f,f,f,f,f,f,8a7,8a#7,8a7,8p,4d7,2p,d,d7,d,d7,d,d7,d,d7,e,e7,e,e7,f,f7,f,f7,f,f7,f,f7,a5,a5,a5,a5,a#5,a#,a#5,a#,a#5,a#,a#5,a#,a#5,a#,a#5,a#,4p,8d,8p,4e,4f,4p,4f,4p,2g,4a,4a#,4p,g,g7,g,g7,g,g7,g,g7,4e,4g,4a,4p,f,f7,f,f7,f,f7,f,f7,4e,4f,4g,4p,e,e7,e,e7,e,e7,e,e7,e,e7,e,e7,4p,4d,4c#,8e,8p,4d,2d,d,d7,d,d7,d,d7,d,d7",
     "Trim Phone": "Trim Phone:d=16,o=5,b=350:a,b,a,b,a,b,a,4p,a,b,a,b,a,b,a,b,a.",

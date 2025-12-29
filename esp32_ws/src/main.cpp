@@ -161,7 +161,7 @@ void setup()
                                       // }
                                       // else
                                       // {
-                                      MLOG_INFO("Device changed: Initializing AUTOMATIC mode");
+                                      // MLOG_INFO("Device changed: Initializing AUTOMATIC mode");
                                       // autoMode = new AutoMode(deviceManager);
                                       // autoMode->setup();
 

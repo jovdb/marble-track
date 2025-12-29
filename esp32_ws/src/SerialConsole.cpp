@@ -8,7 +8,7 @@
 #include "DeviceManager.h"
 #include "Network.h"
 #include "Logging.h"
-#include "devices/composition/DeviceBase.h"
+#include "devices/DeviceBase.h"
 
 SerialConsole::SerialConsole(DeviceManager &deviceManager, Network *&networkRef, AutoMode *&autoModeRef, ManualMode *&manualModeRef)
     : m_deviceManager(deviceManager), m_network(networkRef), m_autoMode(autoModeRef), m_manualMode(manualModeRef)

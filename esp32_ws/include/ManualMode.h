@@ -4,10 +4,10 @@
 #include <Arduino.h>
 #include <functional>
 #include "DeviceManager.h"
-#include "devices/composition/Button.h"
-#include "devices/composition/Wheel.h"
-#include "devices/composition/Buzzer.h"
-#include "devices/composition/Led.h"
+#include "devices/Button.h"
+#include "devices/Wheel.h"
+#include "devices/Buzzer.h"
+#include "devices/Led.h"
 
 class ManualMode
 {

@@ -3,7 +3,7 @@
  * @brief Buzzer implementation using DeviceBase and composition mixins
  */
 
-#include "devices/composition/Buzzer.h"
+#include "devices/Buzzer.h"
 #include "Logging.h"
 #include <NonBlockingRtttl.h>
 #include <ArduinoJson.h>

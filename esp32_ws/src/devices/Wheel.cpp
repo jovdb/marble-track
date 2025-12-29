@@ -3,9 +3,9 @@
  * @brief Wheel implementation using DeviceBase and composition mixins
  */
 
-#include "devices/composition/Wheel.h"
-#include "devices/composition/Stepper.h"
-#include "devices/composition/Button.h"
+#include "devices/Wheel.h"
+#include "devices/Stepper.h"
+#include "devices/Button.h"
 #include "Logging.h"
 #include <ArduinoJson.h>
 

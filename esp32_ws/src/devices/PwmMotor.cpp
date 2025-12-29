@@ -1,4 +1,4 @@
-#include "devices/composition/PwmMotor.h"
+#include "devices/PwmMotor.h"
 #include "Logging.h"
 
 namespace devices

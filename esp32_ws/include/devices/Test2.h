@@ -7,10 +7,10 @@
 #define COMPOSITION_TEST2_H
 
 #include "Logging.h"
-#include "devices/composition/DeviceBase.h"
-#include "devices/composition/Led.h"
-#include "devices/composition/Button.h"
-#include "devices/composition/Servo.h"
+#include "devices/DeviceBase.h"
+#include "devices/Led.h"
+#include "devices/Button.h"
+#include "devices/Servo.h"
 #include <functional>
 
 namespace devices {

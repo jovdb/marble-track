@@ -3,7 +3,7 @@
  * @brief Implementation of minimal device base class
  */
 
-#include "devices/composition/DeviceBase.h"
+#include "devices/DeviceBase.h"
 #include "Logging.h"
 
 DeviceBase::DeviceBase(const String &id, const String &type) : _id(id), _type(type), _name(id) {}

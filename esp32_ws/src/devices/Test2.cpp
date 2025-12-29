@@ -3,10 +3,10 @@
  * @brief Test2 device implementation with Led and Button children
  */
 
-#include "devices/composition/Test2.h"
-#include "devices/composition/Led.h"
-#include "devices/composition/Button.h"
-#include "devices/composition/Servo.h"
+#include "devices/Test2.h"
+#include "devices/Led.h"
+#include "devices/Button.h"
+#include "devices/Servo.h"
 
 namespace devices
 {

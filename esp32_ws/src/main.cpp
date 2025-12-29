@@ -9,7 +9,7 @@
 #include "WebSocketManager.h"
 #include "TimeManager.h"
 #include "DeviceManager.h"
-#include "devices/composition/Buzzer.h"
+#include "devices/Buzzer.h"
 #include "esp_log.h"
 
 #include "SerialConsole.h"
@@ -18,11 +18,11 @@
 #include "ManualMode.h"
 
 // Composition-based devices
-#include "devices/composition/Led.h"
-#include "devices/composition/Button.h"
-#include "devices/composition/Stepper.h"
-#include "devices/composition/Servo.h"
-#include "devices/composition/Test2.h"
+#include "devices/Led.h"
+#include "devices/Button.h"
+#include "devices/Stepper.h"
+#include "devices/Servo.h"
+#include "devices/Test2.h"
 #include "devices/mixins/ControllableMixin.h"
 
 // Timing variable for automatic mode

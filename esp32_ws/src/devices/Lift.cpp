@@ -1,7 +1,7 @@
-#include "devices/composition/Lift.h"
-#include "devices/composition/Stepper.h"
-#include "devices/composition/Button.h"
-#include "devices/composition/Servo.h"
+#include "devices/Lift.h"
+#include "devices/Stepper.h"
+#include "devices/Button.h"
+#include "devices/Servo.h"
 #include "Logging.h"
 
 namespace devices

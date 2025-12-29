@@ -6,7 +6,7 @@
 #include <Arduino.h>
 #include "NetworkSettings.h"
 #include <vector>
-#include "devices/composition/DeviceBase.h"
+#include "devices/DeviceBase.h"
 
 // Function types for WebSocket notifications
 using NotifyClients = std::function<void(const String &message)>;

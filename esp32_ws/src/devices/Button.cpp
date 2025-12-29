@@ -3,7 +3,7 @@
  * @brief Button implementation using DeviceBase composition pattern with mixins
  */
 
-#include "devices/composition/Button.h"
+#include "devices/Button.h"
 #include "Logging.h"
 #include <ArduinoJson.h>
 

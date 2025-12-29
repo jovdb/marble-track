@@ -3,7 +3,7 @@
  * @brief Stepper implementation using DeviceBase and composition mixins
  */
 
-#include "devices/composition/Stepper.h"
+#include "devices/Stepper.h"
 #include "Logging.h"
 #include <ArduinoJson.h>
 

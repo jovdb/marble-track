@@ -3,7 +3,7 @@
  * @brief Simple LED implementation using DeviceBase, ConfigMixin, and StateMixin
  */
 
-#include "devices/composition/Led.h"
+#include "devices/Led.h"
 #include "Logging.h"
 #include <ArduinoJson.h>
 

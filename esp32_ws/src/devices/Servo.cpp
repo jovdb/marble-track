@@ -3,7 +3,7 @@
  * @brief Servo implementation using DeviceBase and composition mixins
  */
 
-#include "devices/composition/Servo.h"
+#include "devices/Servo.h"
 #include "Logging.h"
 #include <ArduinoJson.h>
 

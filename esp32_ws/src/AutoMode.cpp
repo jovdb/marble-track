@@ -1,10 +1,10 @@
 #include "AutoMode.h"
 #include "Logging.h"
-#include "devices/composition/Button.h"
-#include "devices/composition/Buzzer.h"
-#include "devices/composition/Wheel.h"
-#include "devices/composition/Led.h"
-#include "devices/composition/Lift.h"
+#include "devices/Button.h"
+#include "devices/Buzzer.h"
+#include "devices/Wheel.h"
+#include "devices/Led.h"
+#include "devices/Lift.h"
 
 AutoMode::AutoMode(DeviceManager &deviceManager) : deviceManager(deviceManager)
 {

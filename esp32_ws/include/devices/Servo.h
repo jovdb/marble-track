@@ -6,7 +6,7 @@
 #ifndef COMPOSITION_SERVO_H
 #define COMPOSITION_SERVO_H
 
-#include "devices/composition/DeviceBase.h"
+#include "devices/DeviceBase.h"
 #include "devices/mixins/StateMixin.h"
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"

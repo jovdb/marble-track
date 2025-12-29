@@ -7,7 +7,7 @@
 #include "Logging.h"
 #include <ArduinoJson.h>
 
-namespace composition
+namespace devices
 {
 
     Stepper::Stepper(const String &id)
@@ -424,4 +424,4 @@ namespace composition
         return true;
     }
 
-} // namespace composition
+} // namespace devices

@@ -26,35 +26,35 @@ DeviceBase *DeviceManager::createDevice(const String &deviceId, const String &de
 
     if (lowerType == "led")
     {
-        return new composition::Led(deviceId);
+        return new devices::Led(deviceId);
     }
     else if (lowerType == "button")
     {
-        return new composition::Button(deviceId);
+        return new devices::Button(deviceId);
     }
     else if (lowerType == "test2")
     {
-        return new composition::Test2(deviceId);
+        return new devices::Test2(deviceId);
     }
     else if (lowerType == "buzzer")
     {
-        return new composition::Buzzer(deviceId);
+        return new devices::Buzzer(deviceId);
     }
     else if (lowerType == "servo")
     {
-        return new composition::Servo(deviceId);
+        return new devices::Servo(deviceId);
     }
     else if (lowerType == "stepper")
     {
-        return new composition::Stepper(deviceId);
+        return new devices::Stepper(deviceId);
     }
     else if (lowerType == "wheel")
     {
-        return new composition::Wheel(deviceId);
+        return new devices::Wheel(deviceId);
     }
     else if (lowerType == "lift")
     {
-        return new composition::Lift(deviceId);
+        return new devices::Lift(deviceId);
     }
 
     MLOG_WARN("Unknown device type: %s", deviceType.c_str());

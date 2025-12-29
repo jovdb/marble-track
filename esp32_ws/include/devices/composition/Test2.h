@@ -13,7 +13,7 @@
 #include "devices/composition/Servo.h"
 #include <functional>
 
-namespace composition {
+namespace devices {
 
 class Test2 : public DeviceBase {
 private:
@@ -34,6 +34,6 @@ public:
     Servo* getServo();
 };
 
-} // namespace composition
+} // namespace devices
 
 #endif // COMPOSITION_TEST2_H

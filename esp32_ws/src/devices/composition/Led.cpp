@@ -7,7 +7,7 @@
 #include "Logging.h"
 #include <ArduinoJson.h>
 
-namespace composition
+namespace devices
 {
     static bool _isPrevBlinkingOn = false;
 
@@ -191,4 +191,4 @@ namespace composition
         doc["initialState"] = _config.initialState;
     }
 
-} // namespace composition
+} // namespace devices

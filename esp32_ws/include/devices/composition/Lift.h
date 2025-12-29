@@ -13,7 +13,7 @@
 #include "devices/mixins/SerializableMixin.h"
 #include <freertos/semphr.h>
 
-namespace composition
+namespace devices
 {
 
     /**
@@ -261,6 +261,6 @@ namespace composition
         SemaphoreHandle_t _stateMutex; // Mutex for thread-safe state access
     };
 
-} // namespace composition
+} // namespace devices
 
 #endif // COMPOSITION_LIFT_H

@@ -15,7 +15,7 @@
 #include <AccelStepper.h>
 #include <freertos/semphr.h>
 
-namespace composition
+namespace devices
 {
 
     /**
@@ -141,6 +141,6 @@ namespace composition
         bool ensureReady(const char *action = nullptr, bool logWarning = true) const;
     };
 
-} // namespace composition
+} // namespace devices
 
 #endif // COMPOSITION_STEPPER_H

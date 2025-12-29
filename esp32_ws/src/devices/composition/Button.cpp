@@ -7,7 +7,7 @@
 #include "Logging.h"
 #include <ArduinoJson.h>
 
-namespace composition
+namespace devices
 {
 
     Button::Button(const String &id)
@@ -226,4 +226,4 @@ namespace composition
         return ButtonType::NormalOpen;
     }
 
-} // namespace composition
+} // namespace devices

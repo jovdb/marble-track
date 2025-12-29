@@ -21,7 +21,7 @@ ManualMode::ManualMode(DeviceManager &deviceManager) : deviceManager(deviceManag
 void ManualMode::setup()
 {
     // TODO: Re-enable when legacy devices are converted to composition devices
-    // _wheelNextBtn = deviceManager.getDeviceByIdAs<composition::Button>("wheel-next-btn");
+    // _wheelNextBtn = deviceManager.getDeviceByIdAs<devices::Button>("wheel-next-btn");
     // if (_wheelNextBtn == nullptr)
     // {
     //     MLOG_ERROR("Required device 'wheel-next-btn' not found!");
@@ -46,19 +46,19 @@ void ManualMode::setup()
 
     //                                                                     } });
 
-    //     _wheel = deviceManager.getDeviceByIdAs<composition::Wheel>("wheel");
+    //     _wheel = deviceManager.getDeviceByIdAs<devices::Wheel>("wheel");
     //     if (_wheel == nullptr)
     //     {
     //         MLOG_ERROR("Required device 'wheel' not found!");
     //     }
 
-    //     _buzzer = deviceManager.getDeviceByIdAs<composition::Buzzer>("buzzer");
+    //     _buzzer = deviceManager.getDeviceByIdAs<devices::Buzzer>("buzzer");
     //     if (_buzzer == nullptr)
     //     {
     //         MLOG_ERROR("Required device 'buzzer' not found!");
     //     }
 
-    //     _wheelBtnLed = deviceManager.getDeviceByIdAs<composition::Led>("wheel-btn-led");
+    //     _wheelBtnLed = deviceManager.getDeviceByIdAs<devices::Led>("wheel-btn-led");
     //     if (_wheelBtnLed == nullptr)
     //     {
     //         MLOG_ERROR("Required device 'wheel-btn-led' not found!");
@@ -100,7 +100,7 @@ void ManualMode::loop()
     if (_wheelNextBtn && _wheel && _wheelNextBtn->isPressed())
     {
         auto wheelState = _wheel->getState();
-        if (wheelState.state == composition::WheelStateEnum::IDLE || wheelState.state == composition::WheelStateEnum::UNKNOWN)
+        if (wheelState.state == devices::WheelStateEnum::IDLE || wheelState.state == devices::WheelStateEnum::UNKNOWN)
         {
             if (_buzzer != nullptr)
                 _buzzer->tone(200, 100);
@@ -121,16 +121,16 @@ void ManualMode::loop()
 
             switch (wheelState.state)
             {
-            case composition::WheelStateEnum::MOVING:
-            case composition::WheelStateEnum::CALIBRATING:
-            case composition::WheelStateEnum::INIT:
+            case devices::WheelStateEnum::MOVING:
+            case devices::WheelStateEnum::CALIBRATING:
+            case devices::WheelStateEnum::INIT:
                 _wheelBtnLed->set(ledBlinkFast);
                 break;
-            case composition::WheelStateEnum::ERROR:
+            case devices::WheelStateEnum::ERROR:
                 _wheelBtnLed->set(false);
                 break;
-            case composition::WheelStateEnum::UNKNOWN:
-            case composition::WheelStateEnum::IDLE:
+            case devices::WheelStateEnum::UNKNOWN:
+            case devices::WheelStateEnum::IDLE:
                 _wheelBtnLed->set(true);
                 break;
 
@@ -156,7 +156,7 @@ void ManualMode::loop()
     // // Splitter Button
     // if (_splitterNextBtn && _splitter && _splitterNextBtn->isPressed())
     // {
-    //     if (_splitter->getState().state == composition::WheelStateEnum::IDLE || _splitter->getState().state == composition::WheelStateEnum::UNKNOWN)
+    //     if (_splitter->getState().state == devices::WheelStateEnum::IDLE || _splitter->getState().state == devices::WheelStateEnum::UNKNOWN)
     //     {
     //         if (_buzzer != nullptr)
     //             _buzzer->tone(200, 100);
@@ -175,16 +175,16 @@ void ManualMode::loop()
     //     {
     //         switch (_splitter->getState().state)
     //         {
-    //         case composition::WheelStateEnum::MOVING:
-    //         case composition::WheelStateEnum::CALIBRATING:
-    //         case composition::WheelStateEnum::INIT:
+    //         case devices::WheelStateEnum::MOVING:
+    //         case devices::WheelStateEnum::CALIBRATING:
+    //         case devices::WheelStateEnum::INIT:
     //             _splitterBtnLed->set(ledBlinkFast);
     //             break;
-    //         case composition::WheelStateEnum::ERROR:
+    //         case devices::WheelStateEnum::ERROR:
     //             _splitterBtnLed->set(false);
     //             break;
-    //         case composition::WheelStateEnum::UNKNOWN:
-    //         case composition::WheelStateEnum::IDLE:
+    //         case devices::WheelStateEnum::UNKNOWN:
+    //         case devices::WheelStateEnum::IDLE:
     //             _splitterBtnLed->set(true);
     //             break;
     //         default:

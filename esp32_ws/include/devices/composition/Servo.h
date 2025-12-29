@@ -16,7 +16,7 @@
 #include <atomic>
 #include <freertos/semphr.h>
 
-namespace composition
+namespace devices
 {
 
     /**
@@ -151,6 +151,6 @@ namespace composition
         SemaphoreHandle_t _stateMutex; // Mutex for thread-safe state access
     };
 
-} // namespace composition
+} // namespace devices
 
 #endif // COMPOSITION_SERVO_H

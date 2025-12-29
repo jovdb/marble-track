@@ -15,7 +15,7 @@
 #include "soc/mcpwm_periph.h"
 #include "McPwmChannels.h"
 
-namespace composition
+namespace devices
 {
 
     /**
@@ -140,6 +140,6 @@ namespace composition
         float easeInOutQuad(float t);
     };
 
-} // namespace composition
+} // namespace devices
 
 #endif // COMPOSITION_PWM_MOTOR_H

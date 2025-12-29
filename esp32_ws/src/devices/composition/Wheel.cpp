@@ -9,7 +9,7 @@
 #include "Logging.h"
 #include <ArduinoJson.h>
 
-namespace composition
+namespace devices
 {
 
     // Default breakpoints (same as original)
@@ -472,4 +472,4 @@ namespace composition
         return _nextButton;
     }
 
-} // namespace composition
+} // namespace devices

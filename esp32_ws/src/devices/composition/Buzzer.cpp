@@ -8,7 +8,7 @@
 #include <NonBlockingRtttl.h>
 #include <ArduinoJson.h>
 
-namespace composition
+namespace devices
 {
 
     Buzzer::Buzzer(const String &id)
@@ -441,4 +441,4 @@ namespace composition
         }
     }
 
-} // namespace composition
+} // namespace devices

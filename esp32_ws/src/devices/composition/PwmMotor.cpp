@@ -1,7 +1,7 @@
 #include "devices/composition/PwmMotor.h"
 #include "Logging.h"
 
-namespace composition
+namespace devices
 {
 
 PwmMotor::PwmMotor(const String &id)
@@ -304,4 +304,4 @@ float PwmMotor::easeInOutQuad(float t)
     return t < 0.5f ? 2.0f * t * t : 1.0f - (-2.0f * t + 2.0f) * (-2.0f * t + 2.0f) / 2.0f;
 }
 
-} // namespace composition
+} // namespace devices

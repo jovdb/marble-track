@@ -7,7 +7,7 @@
 #include "Logging.h"
 #include <ArduinoJson.h>
 
-namespace composition
+namespace devices
 {
 
     Servo::Servo(const String &id)
@@ -527,4 +527,4 @@ namespace composition
         }
     }
 
-} // namespace composition
+} // namespace devices

@@ -8,7 +8,7 @@
 #include "devices/composition/Button.h"
 #include "devices/composition/Servo.h"
 
-namespace composition
+namespace devices
 {
 
     Test2::Test2(const String &id)
@@ -64,4 +64,4 @@ namespace composition
     Button *Test2::getButton() { return _button; }
     Servo *Test2::getServo() { return _servo; }
 
-} // namespace composition
+} // namespace devices

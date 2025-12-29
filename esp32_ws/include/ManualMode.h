@@ -18,13 +18,13 @@ public:
 
 private:
     DeviceManager &deviceManager;
-    composition::Button *_wheelNextBtn;
-    composition::Wheel *_wheel;
-    composition::Buzzer *_buzzer;
-    composition::Led *_wheelBtnLed;
-    composition::Button *_splitterNextBtn;
-    composition::Led *_splitterBtnLed;
-    composition::Wheel *_splitter;
+    devices::Button *_wheelNextBtn;
+    devices::Wheel *_wheel;
+    devices::Buzzer *_buzzer;
+    devices::Led *_wheelBtnLed;
+    devices::Button *_splitterNextBtn;
+    devices::Led *_splitterBtnLed;
+    devices::Wheel *_splitter;
     std::function<void()> _wheelNextBtnUnsubscribe;
 };
 

@@ -12,7 +12,7 @@
 #include "devices/mixins/ControllableMixin.h"
 #include "devices/mixins/SerializableMixin.h"
 
-namespace composition
+namespace devices
 {
 
     /**
@@ -117,6 +117,6 @@ namespace composition
         bool _isStateChanged = false;
     };
 
-} // namespace composition
+} // namespace devices
 
 #endif // COMPOSITION_BUTTON_H

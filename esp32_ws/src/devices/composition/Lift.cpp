@@ -4,7 +4,7 @@
 #include "devices/composition/Servo.h"
 #include "Logging.h"
 
-namespace composition
+namespace devices
 {
 
     /* Move 2% extra down */
@@ -629,4 +629,4 @@ namespace composition
         }
     }
 
-} // namespace composition
+} // namespace devices

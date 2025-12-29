@@ -7,7 +7,7 @@
 // Forward declarations
 class Button;
 
-namespace composition
+namespace devices
 {
     class Buzzer;
     class Wheel;
@@ -26,17 +26,17 @@ private:
     DeviceManager &deviceManager;
     
     // Device references
-    composition::Buzzer *_buzzer;
+    devices::Buzzer *_buzzer;
     
-    composition::Wheel *_wheel;
+    devices::Wheel *_wheel;
     Button *_wheelNextBtn;
-    composition::Led *_wheelBtnLed;
+    devices::Led *_wheelBtnLed;
     
-    composition::Wheel *_splitter;
+    devices::Wheel *_splitter;
     Button *_splitterNextBtn;
-    composition::Led *_splitterBtnLed;
+    devices::Led *_splitterBtnLed;
 
-    composition::Lift *_lift;
+    devices::Lift *_lift;
 };
 
 #endif // AUTOMODE_H

@@ -172,8 +172,9 @@ void setup()
                                       // else
                                       // {
                                       MLOG_INFO("Device changed: Initializing AUTOMATIC mode");
-                                      autoMode = new AutoMode(deviceManager);
-                                      autoMode->setup();
+                                      // autoMode = new AutoMode(deviceManager);
+                                      // autoMode->setup();
+
                                       // }
                                     });
 
@@ -187,9 +188,12 @@ void setup()
   // }
   // else
   // {
-  MLOG_INFO("Operation mode: AUTOMATIC");
-  autoMode = new AutoMode(deviceManager);
-  autoMode->setup();
+  // MLOG_INFO("Operation mode: AUTOMATIC");
+  // autoMode = new AutoMode(deviceManager);
+  // autoMode->setup();
+
+  manualMode = new ManualMode(deviceManager);
+  manualMode->setup();
   // }
 
   // Startup sound

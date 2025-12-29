@@ -21,69 +21,69 @@ ManualMode::ManualMode(DeviceManager &deviceManager) : deviceManager(deviceManag
 void ManualMode::setup()
 {
     // TODO: Re-enable when legacy devices are converted to composition devices
-    _wheelNextBtn = deviceManager.getDeviceByIdAs<composition::Button>("wheel-next-btn");
-    if (_wheelNextBtn == nullptr)
-    {
-        MLOG_ERROR("Required device 'wheel-next-btn' not found!");
-    }
-    else
-    {
-        // Second call: unsubscribe from previous callback
-        if (_wheelNextBtnUnsubscribe)
-        {
-            _wheelNextBtnUnsubscribe();
-            _wheelNextBtnUnsubscribe = nullptr;
-        }
+    // _wheelNextBtn = deviceManager.getDeviceByIdAs<composition::Button>("wheel-next-btn");
+    // if (_wheelNextBtn == nullptr)
+    // {
+    //     MLOG_ERROR("Required device 'wheel-next-btn' not found!");
+    // }
+    // else
+    // {
+    //     // Second call: unsubscribe from previous callback
+    //     if (_wheelNextBtnUnsubscribe)
+    //     {
+    //         _wheelNextBtnUnsubscribe();
+    //         _wheelNextBtnUnsubscribe = nullptr;
+    //     }
 
-        // First call: subscribe to button state changes
-        _wheelNextBtnUnsubscribe = _wheelNextBtn->onStateChange([this](void *data)
-                                                                {
-                                                                        // Handle button press - move to next breakpoint if wheel is idle
-                                                                        if (_wheelNextBtn &&  _wheelNextBtn->isPressed())
-                                                                        {
-                                                                            if (_buzzer != nullptr)
-                                                                                _buzzer->tone(1000, 100);
+    //     // First call: subscribe to button state changes
+    //     _wheelNextBtnUnsubscribe = _wheelNextBtn->onStateChange([this](void *data)
+    //                                                             {
+    //                                                                     // Handle button press - move to next breakpoint if wheel is idle
+    //                                                                     if (_wheelNextBtn &&  _wheelNextBtn->isPressed())
+    //                                                                     {
+    //                                                                         if (_buzzer != nullptr)
+    //                                                                             _buzzer->tone(1000, 100);
 
-                                                                        } });
+    //                                                                     } });
 
-        _wheel = deviceManager.getDeviceByIdAs<composition::Wheel>("wheel");
-        if (_wheel == nullptr)
-        {
-            MLOG_ERROR("Required device 'wheel' not found!");
-        }
+    //     _wheel = deviceManager.getDeviceByIdAs<composition::Wheel>("wheel");
+    //     if (_wheel == nullptr)
+    //     {
+    //         MLOG_ERROR("Required device 'wheel' not found!");
+    //     }
 
-        _buzzer = deviceManager.getDeviceByIdAs<composition::Buzzer>("buzzer");
-        if (_buzzer == nullptr)
-        {
-            MLOG_ERROR("Required device 'buzzer' not found!");
-        }
+    //     _buzzer = deviceManager.getDeviceByIdAs<composition::Buzzer>("buzzer");
+    //     if (_buzzer == nullptr)
+    //     {
+    //         MLOG_ERROR("Required device 'buzzer' not found!");
+    //     }
 
-        _wheelBtnLed = deviceManager.getDeviceByIdAs<composition::Led>("wheel-btn-led");
-        if (_wheelBtnLed == nullptr)
-        {
-            MLOG_ERROR("Required device 'wheel-btn-led' not found!");
-        }
+    //     _wheelBtnLed = deviceManager.getDeviceByIdAs<composition::Led>("wheel-btn-led");
+    //     if (_wheelBtnLed == nullptr)
+    //     {
+    //         MLOG_ERROR("Required device 'wheel-btn-led' not found!");
+    //     }
 
-        // _splitter = deviceManager.getDeviceByIdAs<Wheel>("splitter");
-        // if (_splitter == nullptr)
-        // {
-        //     MLOG_ERROR("Required device 'splitter' not found!");
-        // }
+    //     // _splitter = deviceManager.getDeviceByIdAs<Wheel>("splitter");
+    //     // if (_splitter == nullptr)
+    //     // {
+    //     //     MLOG_ERROR("Required device 'splitter' not found!");
+    //     // }
 
-        // _splitterNextBtn = deviceManager.getDeviceByIdAs<Button>("splitter-next-btn");
-        // if (_splitterNextBtn == nullptr)
-        // {
-        //     MLOG_ERROR("Required device 'splitter-next-btn' not found!");
-        // }
+    //     // _splitterNextBtn = deviceManager.getDeviceByIdAs<Button>("splitter-next-btn");
+    //     // if (_splitterNextBtn == nullptr)
+    //     // {
+    //     //     MLOG_ERROR("Required device 'splitter-next-btn' not found!");
+    //     // }
 
-        // _splitterBtnLed = deviceManager.getDeviceByIdAs<Led>("splitter-btn-led");
-        // if (_splitterBtnLed == nullptr)
-        // {
-        //     MLOG_ERROR("Required device 'splitter-btn-led' not found!");
-        // }
+    //     // _splitterBtnLed = deviceManager.getDeviceByIdAs<Led>("splitter-btn-led");
+    //     // if (_splitterBtnLed == nullptr)
+    //     // {
+    //     //     MLOG_ERROR("Required device 'splitter-btn-led' not found!");
+    //     // }
 
-        MLOG_INFO("ManualMode setup complete");
-    }
+    //     MLOG_INFO("ManualMode setup complete");
+    // }
 }
 
 void ManualMode::loop()
@@ -97,7 +97,7 @@ void ManualMode::loop()
 
     // Wheel Button
     /*
-    if (_wheelNextBtn && _wheel && _wheelNextBtn->getState().())
+    if (_wheelNextBtn && _wheel && _wheelNextBtn->isPressed())
     {
         auto wheelState = _wheel->getState();
         if (wheelState.state == composition::WheelStateEnum::IDLE || wheelState.state == composition::WheelStateEnum::UNKNOWN)
@@ -146,7 +146,7 @@ void ManualMode::loop()
     }
 
     // Check for wheel error and buzz
-    if (_wheel && _wheel->getOnError() && _buzzer)
+    if (_wheel && _wheel->getState().onError && _buzzer)
     {
         _buzzer->tone(1000, 500); // Long buzz for error
     }
@@ -154,9 +154,9 @@ void ManualMode::loop()
     */
 
     // // Splitter Button
-    // if (_splitterNextBtn && _splitter && _splitterNextBtn->onPressed())
+    // if (_splitterNextBtn && _splitter && _splitterNextBtn->isPressed())
     // {
-    //     if (_splitter->wheelState == Wheel::WheelState::IDLE || _splitter->wheelState == Wheel::WheelState::UNKNOWN)
+    //     if (_splitter->getState().state == composition::WheelStateEnum::IDLE || _splitter->getState().state == composition::WheelStateEnum::UNKNOWN)
     //     {
     //         if (_buzzer != nullptr)
     //             _buzzer->tone(200, 100);
@@ -173,18 +173,18 @@ void ManualMode::loop()
     // {
     //     if (_splitter)
     //     {
-    //         switch (_splitter->wheelState)
+    //         switch (_splitter->getState().state)
     //         {
-    //         case Wheel::WheelState::MOVING:
-    //         case Wheel::WheelState::CALIBRATING:
-    //         case Wheel::WheelState::INIT:
+    //         case composition::WheelStateEnum::MOVING:
+    //         case composition::WheelStateEnum::CALIBRATING:
+    //         case composition::WheelStateEnum::INIT:
     //             _splitterBtnLed->set(ledBlinkFast);
     //             break;
-    //         case Wheel::WheelState::ERROR:
+    //         case composition::WheelStateEnum::ERROR:
     //             _splitterBtnLed->set(false);
     //             break;
-    //         case Wheel::WheelState::UNKNOWN:
-    //         case Wheel::WheelState::IDLE:
+    //         case composition::WheelStateEnum::UNKNOWN:
+    //         case composition::WheelStateEnum::IDLE:
     //             _splitterBtnLed->set(true);
     //             break;
     //         default:
@@ -199,7 +199,7 @@ void ManualMode::loop()
     // }
 
     // // Check for splitter error and buzz
-    // if (_splitter && _splitter->getOnError() && _buzzer)
+    // if (_splitter && _splitter->getState().onError && _buzzer)
     // {
     //     _buzzer->tone(1000, 500); // Long buzz for error
     // }

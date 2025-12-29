@@ -6,10 +6,14 @@
 
 // Forward declarations
 class Button;
-class Buzzer;
-class Wheel;
-class Led;
-class Lift;
+
+namespace composition
+{
+    class Buzzer;
+    class Wheel;
+    class Lift;
+    class Led;
+}
 
 class AutoMode
 {
@@ -22,17 +26,17 @@ private:
     DeviceManager &deviceManager;
     
     // Device references
-    Buzzer *_buzzer;
+    composition::Buzzer *_buzzer;
     
-    Wheel *_wheel;
+    composition::Wheel *_wheel;
     Button *_wheelNextBtn;
-    Led *_wheelBtnLed;
+    composition::Led *_wheelBtnLed;
     
-    Wheel *_splitter;
+    composition::Wheel *_splitter;
     Button *_splitterNextBtn;
-    Led *_splitterBtnLed;
+    composition::Led *_splitterBtnLed;
 
-    Lift *_lift;
+    composition::Lift *_lift;
 };
 
 #endif // AUTOMODE_H

@@ -2,9 +2,9 @@
 #include "Logging.h"
 #include "devices/Button.h"
 #include "devices/composition/Buzzer.h"
-#include "devices/Wheel.h"
-#include "devices/Led.h"
-#include "devices/Lift.h"
+#include "devices/composition/Wheel.h"
+#include "devices/composition/Led.h"
+#include "devices/composition/Lift.h"
 
 AutoMode::AutoMode(DeviceManager &deviceManager) : deviceManager(deviceManager)
 {
@@ -22,37 +22,37 @@ AutoMode::AutoMode(DeviceManager &deviceManager) : deviceManager(deviceManager)
 void AutoMode::setup()
 {
     // TODO: Re-enable when legacy devices are converted to composition devices
-    // _wheel = deviceManager.getDeviceByIdAs<Wheel>("wheel");
+    // _wheel = deviceManager.getDeviceByIdAs<composition::Wheel>("wheel");
     // if (_wheel == nullptr)
     // {
     //     MLOG_ERROR("Required device 'wheel' not found!");
     // }
 
-    // _buzzer = deviceManager.getDeviceByIdAs<Buzzer>("buzzer");
+    // _buzzer = deviceManager.getDeviceByIdAs<composition::Buzzer>("buzzer");
     // if (_buzzer == nullptr)
     // {
     //     MLOG_ERROR("Required device 'buzzer' not found!");
     // }
 
-    // _wheelBtnLed = deviceManager.getDeviceByIdAs<Led>("wheel-btn-led");
+    // _wheelBtnLed = deviceManager.getDeviceByIdAs<composition::Led>("wheel-btn-led");
     // if (_wheelBtnLed == nullptr)
     // {
     //     MLOG_ERROR("Required device 'wheel-btn-led' not found!");
     // }
 
-    // _splitter = deviceManager.getDeviceByIdAs<Wheel>("splitter");
+    // _splitter = deviceManager.getDeviceByIdAs<composition::Wheel>("splitter");
     // if (_splitter == nullptr)
     // {
     //     MLOG_ERROR("Required device 'splitter' not found!");
     // }
 
-    // _splitterBtnLed = deviceManager.getDeviceByIdAs<Led>("splitter-btn-led");
+    // _splitterBtnLed = deviceManager.getDeviceByIdAs<composition::Led>("splitter-btn-led");
     // if (_splitterBtnLed == nullptr)
     // {
     //     MLOG_ERROR("Required device 'splitter-btn-led' not found!");
     // }
 
-    // _lift = deviceManager.getDeviceByIdAs<Lift>("lift");
+    // _lift = deviceManager.getDeviceByIdAs<composition::Lift>("lift");
     // if (_lift == nullptr)
     // {
     //     MLOG_ERROR("Required device 'lift' not found!");
@@ -63,21 +63,17 @@ void AutoMode::setup()
 
 void AutoMode::loop()
 {
-    // TODO: Re-enable when legacy devices are converted to composition devices
-    // AutoMode is currently disabled
-    return;
-
     const ulong currentMillis = millis();
 
     // Reset devices at start
-    if (_wheel && _wheel->wheelState == Wheel::WheelState::UNKNOWN)
+    if (_wheel && _wheel->getState().state == composition::WheelStateEnum::UNKNOWN)
     {
         MLOG_INFO("Initializing Wheel");
         _wheel->init();
     }
 
     static ulong liftInitStartTime = 0;
-    if (_lift && _lift->liftState == Lift::LiftState::UNKNOWN)
+    if (_lift && _lift->getState().state == composition::LiftStateEnum::UNKNOWN)
     {
         if (liftInitStartTime == 0)
         {
@@ -92,7 +88,7 @@ void AutoMode::loop()
     }
 
     static ulong splitterInitStartTime = 0;
-    if (_splitter && _splitter->wheelState == Wheel::WheelState::UNKNOWN)
+    if (_splitter && _splitter->getState().state == composition::WheelStateEnum::UNKNOWN)
     {
         if (splitterInitStartTime == 0)
         {
@@ -121,7 +117,7 @@ void AutoMode::loop()
     // Wheel ball exit counting
     static uint wheelExitMaxBallCount = 2; // Max number of ball loaded due to reset
     static ulong lastWheelExitTime = 0;
-    if (_wheel && _wheel->onCurrentBreakpointIndexChanged)
+    if (_wheel && _wheel->getState().breakpointChanged)
     {
         // Increase on Ball Exit breakpoints
         const int currentIndex = _wheel->getCurrentBreakpointIndex();
@@ -134,9 +130,9 @@ void AutoMode::loop()
     }
     /*
         const bool allInitialized =
-            (_wheel && _wheel->wheelState != Wheel::WheelState::UNKNOWN) &&
-            (_splitter && _splitter->wheelState != Wheel::WheelState::UNKNOWN) &&
-            (_lift && _lift->liftState != Lift::LiftState::UNKNOWN);
+            (_wheel && _wheel->getState().state != composition::WheelStateEnum::UNKNOWN) &&
+            (_splitter && _splitter->getState().state != composition::WheelStateEnum::UNKNOWN) &&
+            (_lift && _lift->getState().state != composition::LiftStateEnum::UNKNOWN);
 
         if (!allInitialized)
             return;
@@ -147,18 +143,18 @@ void AutoMode::loop()
     static bool wheelDelaySet = false;
 
     if (_wheel)
-        switch (_wheel->wheelState)
+        switch (_wheel->getState().state)
         {
-        case Wheel::WheelState::UNKNOWN:
-        case Wheel::WheelState::CALIBRATING:
-        case Wheel::WheelState::INIT:
-        case Wheel::WheelState::ERROR:
+        case composition::WheelStateEnum::UNKNOWN:
+        case composition::WheelStateEnum::CALIBRATING:
+        case composition::WheelStateEnum::INIT:
+        case composition::WheelStateEnum::ERROR:
             wheelDelaySet = false;
             break;
-        case Wheel::WheelState::MOVING:
+        case composition::WheelStateEnum::MOVING:
             wheelDelaySet = false;
             break;
-        case Wheel::WheelState::IDLE:
+        case composition::WheelStateEnum::IDLE:
             if (!wheelDelaySet)
             {
                 wheelIdleStartTime = currentMillis;
@@ -180,15 +176,15 @@ void AutoMode::loop()
 
     // Splitter
     if (_splitter)
-        switch (_splitter->wheelState)
+        switch (_splitter->getState().state)
         {
-        case Wheel::WheelState::UNKNOWN:
-        case Wheel::WheelState::CALIBRATING:
-        case Wheel::WheelState::INIT:
-        case Wheel::WheelState::MOVING:
-        case Wheel::WheelState::ERROR:
+        case composition::WheelStateEnum::UNKNOWN:
+        case composition::WheelStateEnum::CALIBRATING:
+        case composition::WheelStateEnum::INIT:
+        case composition::WheelStateEnum::MOVING:
+        case composition::WheelStateEnum::ERROR:
             break;
-        case Wheel::WheelState::IDLE:
+        case composition::WheelStateEnum::IDLE:
             if (wheelExitMaxBallCount > 0)
             {
 
@@ -230,24 +226,24 @@ void AutoMode::loop()
     // Lift
     static bool _speedMoveDownCalled = false;
     if (_lift)
-        switch (_lift->liftState)
+        switch (_lift->getState().state)
         {
-        case Lift::LiftState::UNKNOWN:
-        case Lift::LiftState::INIT:
-        case Lift::LiftState::ERROR:
-        case Lift::LiftState::MOVING_UP:
-        case Lift::LiftState::LIFT_DOWN_LOADING:
-        case Lift::LiftState::LIFT_UP_UNLOADING:
+        case composition::LiftStateEnum::UNKNOWN:
+        case composition::LiftStateEnum::INIT:
+        case composition::LiftStateEnum::ERROR:
+        case composition::LiftStateEnum::MOVING_UP:
+        case composition::LiftStateEnum::LIFT_DOWN_LOADING:
+        case composition::LiftStateEnum::LIFT_UP_UNLOADING:
             _speedMoveDownCalled = false; // Reset flag when state changes
             break;
-        case Lift::LiftState::MOVING_DOWN:
+        case composition::LiftStateEnum::MOVING_DOWN:
             if (_lift->isBallWaiting() && !_speedMoveDownCalled)
             {
                 _lift->down();
                 _speedMoveDownCalled = true;
             }
             break;
-        case Lift::LiftState::LIFT_DOWN_UNLOADED:
+        case composition::LiftStateEnum::LIFT_DOWN_UNLOADED:
             _speedMoveDownCalled = false; // Reset flag when state changes
             if (_lift->isBallWaiting())
             {
@@ -277,15 +273,15 @@ void AutoMode::loop()
                 }
             }
             break;
-        case Lift::LiftState::LIFT_DOWN_LOADED:
+        case composition::LiftStateEnum::LIFT_DOWN_LOADED:
             _speedMoveDownCalled = false; // Reset flag when state changes
             _lift->up();
             break;
-        case Lift::LiftState::LIFT_UP_LOADED:
+        case composition::LiftStateEnum::LIFT_UP_LOADED:
             _speedMoveDownCalled = false; // Reset flag when state changes
             _lift->unloadBall();
             break;
-        case Lift::LiftState::LIFT_UP_UNLOADED:
+        case composition::LiftStateEnum::LIFT_UP_UNLOADED:
             _speedMoveDownCalled = false; // Reset flag when state changes
             _lift->down(_lift->isBallWaiting() ? 1.0f : 0.25f);
             break;

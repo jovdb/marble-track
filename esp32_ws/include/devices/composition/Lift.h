@@ -1,0 +1,266 @@
+/**
+ * @file Lift.h
+ * @brief Lift device using DeviceBase with composition mixins
+ */
+
+#ifndef COMPOSITION_LIFT_H
+#define COMPOSITION_LIFT_H
+
+#include "devices/composition/DeviceBase.h"
+#include "devices/mixins/StateMixin.h"
+#include "devices/mixins/ConfigMixin.h"
+#include "devices/mixins/ControllableMixin.h"
+#include "devices/mixins/SerializableMixin.h"
+#include <freertos/semphr.h>
+
+namespace composition
+{
+
+    /**
+     * @enum LiftStateEnum
+     * @brief Enumeration of possible lift states
+     */
+    enum class LiftStateEnum
+    {
+        UNKNOWN,
+        ERROR,
+        INIT,
+        LIFT_DOWN_LOADING,
+        LIFT_DOWN_LOADED,
+        LIFT_DOWN_UNLOADED,
+        LIFT_UP_UNLOADING,
+        LIFT_UP_UNLOADED,
+        LIFT_UP_LOADED,
+        MOVING_UP,
+        MOVING_DOWN
+    };
+
+    /**
+     * @struct LiftConfig
+     * @brief Configuration for Lift device
+     */
+    struct LiftConfig
+    {
+        String name = "Lift";     // Device name
+        long minSteps = 0;        // Minimum steps (bottom position)
+        long maxSteps = 1000;     // Maximum steps (top position)
+        float downFactor = 1.015f; // Extra movement factor when going down
+    };
+
+    /**
+     * @struct LiftState
+     * @brief State structure for Lift device
+     */
+    struct LiftState
+    {
+        LiftStateEnum state = LiftStateEnum::UNKNOWN; // Current lift state
+        bool isBallWaiting = false; // Whether ball is waiting to be loaded
+        bool isLoaded = false;      // Whether lift has a ball loaded
+        int initStep = 0;           // Current initialization step
+        unsigned long loadStartTime = 0;   // Load operation start time
+        unsigned long unloadStartTime = 0; // Unload operation start time
+        unsigned long unloadEndTime = 0;   // Unload operation end time
+        bool onError = false;       // Error flag
+    };
+
+    /**
+     * @class Lift
+     * @brief Lift device with stepper motor and sensor control
+     *
+     * Manages a lift mechanism with stepper motor positioning, limit switch,
+     * ball sensor, and loader/unloader motors.
+     * Uses composition pattern with children devices.
+     */
+    class Lift : public DeviceBase,
+                 public ConfigMixin<Lift, LiftConfig>,
+                 public StateMixin<Lift, LiftState>,
+                 public ControllableMixin<Lift>,
+                 public SerializableMixin<Lift>
+    {
+    public:
+        explicit Lift(const String &id);
+        ~Lift();
+
+        void setup() override;
+        void loop() override;
+        std::vector<int> getPins() const override;
+
+        /**
+         * @brief Move the lift up to the top position
+         * @param speedRatio Speed ratio (1.0 = default speed)
+         * @return true if move initiated, false otherwise
+         */
+        bool up(float speedRatio = 1.0f);
+
+        /**
+         * @brief Move the lift down to the bottom position
+         * @param speedRatio Speed ratio (1.0 = default speed)
+         * @return true if move initiated, false otherwise
+         */
+        bool down(float speedRatio = 1.0f);
+
+        /**
+         * @brief Initialize the lift (calibration sequence)
+         * @return true if init started, false otherwise
+         */
+        bool init();
+
+        /**
+         * @brief Load a ball into the lift
+         * @return true if load started, false otherwise
+         */
+        bool loadBall();
+
+        /**
+         * @brief Unload a ball from the lift
+         * @return true if unload started, false otherwise
+         */
+        bool unloadBall();
+
+        /**
+         * @brief Check if a ball is waiting to be loaded
+         * @return true if ball is waiting
+         */
+        bool isBallWaiting() const;
+
+        /**
+         * @brief Check if the lift has a ball loaded
+         * @return true if loaded
+         */
+        bool isLoaded() const;
+
+        // ControllableMixin implementation
+        void addStateToJson(JsonDocument &doc) override;
+        bool control(const String &action, JsonObject *args = nullptr) override;
+
+        // SerializableMixin implementation
+        void jsonToConfig(const JsonDocument &config) override;
+        void configToJson(JsonDocument &doc) override;
+
+    protected:
+        DeviceBase *_stepper;     // Stepper motor child device
+        DeviceBase *_limitSwitch; // Limit switch child device
+        DeviceBase *_ballSensor;  // Ball sensor child device
+        DeviceBase *_loader;      // Loader motor child device
+        DeviceBase *_unloader;    // Unloader motor child device
+
+    private:
+        /**
+         * @brief Convert LiftStateEnum to string
+         * @param state State enum value
+         * @return String representation
+         */
+        String stateToString(LiftStateEnum state) const;
+
+        /**
+         * @brief Start loading a ball
+         * @return true if started
+         */
+        bool loadBallStart();
+
+        /**
+         * @brief End loading a ball
+         * @return true if ended
+         */
+        bool loadBallEnd();
+
+        /**
+         * @brief Start unloading a ball
+         * @return true if started
+         */
+        bool unloadBallStart();
+
+        /**
+         * @brief End unloading a ball
+         * @return true if ended
+         */
+        bool unloadBallEnd();
+
+        /**
+         * @brief Get pointer to stepper child device
+         * @return Stepper device pointer or nullptr
+         */
+        DeviceBase *getStepper() const;
+
+        /**
+         * @brief Get pointer to limit switch child device
+         * @return Button device pointer or nullptr
+         */
+        DeviceBase *getLimitSwitch() const;
+
+        /**
+         * @brief Get pointer to ball sensor child device
+         * @return Button device pointer or nullptr
+         */
+        DeviceBase *getBallSensor() const;
+
+        /**
+         * @brief Get pointer to loader child device
+         * @return Servo device pointer or nullptr
+         */
+        DeviceBase *getLoader() const;
+
+        /**
+         * @brief Get pointer to unloader child device
+         * @return Servo device pointer or nullptr
+         */
+        DeviceBase *getUnloader() const;
+
+        /**
+         * @brief Get current stepper position
+         * @return Current position
+         */
+        long getCurrentPosition() const;
+
+        /**
+         * @brief Check if stepper is idle
+         * @return true if idle
+         */
+        bool isStepperIdle() const;
+
+        /**
+         * @brief Check if at limit switch
+         * @return true if at limit
+         */
+        bool isAtLimit() const;
+
+        /**
+         * @brief Move stepper by steps
+         * @param steps Number of steps
+         * @param speedRatio Speed ratio
+         * @return true if moved
+         */
+        bool moveStepper(long steps, float speedRatio);
+
+        /**
+         * @brief Move stepper to position
+         * @param position Target position
+         * @param speedRatio Speed ratio
+         * @return true if moved
+         */
+        bool moveStepperTo(long position, float speedRatio);
+
+        /**
+         * @brief Stop the stepper
+         * @return true if stopped
+         */
+        bool stopStepper();
+
+        /**
+         * @brief Set error state
+         * @param errorCode Error code
+         * @param message Error message
+         */
+        void setError(const String &errorCode, const String &message);
+
+        /**
+         * @brief Handle initialization sequence
+         */
+        void handleInitSequence();
+
+        SemaphoreHandle_t _stateMutex; // Mutex for thread-safe state access
+    };
+
+} // namespace composition
+
+#endif // COMPOSITION_LIFT_H

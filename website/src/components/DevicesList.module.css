@@ -157,7 +157,6 @@
 .devices-list__device-cell {
   display: flex;
   align-items: center;
-  gap: var(--spacing-3);
 }
 
 .devices-list__type-badge {

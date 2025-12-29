@@ -1,6 +1,6 @@
 #include "AutoMode.h"
 #include "Logging.h"
-#include "devices/Button.h"
+#include "devices/composition/Button.h"
 #include "devices/composition/Buzzer.h"
 #include "devices/composition/Wheel.h"
 #include "devices/composition/Led.h"

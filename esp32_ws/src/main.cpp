@@ -8,24 +8,20 @@
 #include "WebsiteHost.h"
 #include "WebSocketManager.h"
 #include "TimeManager.h"
-#include "devices/Led.h"
-#include "devices/Button.h"
-#include "devices/Device.h"
 #include "DeviceManager.h"
 #include "devices/composition/Buzzer.h"
 #include "esp_log.h"
-
-#include "devices/Stepper.h"
-#include "devices/Servo.h"
 
 #include "SerialConsole.h"
 #include "OtaUpload.h"
 #include "AutoMode.h"
 #include "ManualMode.h"
 
-// Composition-based LED test
+// Composition-based devices
 #include "devices/composition/Led.h"
 #include "devices/composition/Button.h"
+#include "devices/composition/Stepper.h"
+#include "devices/composition/Servo.h"
 #include "devices/composition/Test2.h"
 #include "devices/mixins/ControllableMixin.h"
 
@@ -33,8 +29,6 @@
 unsigned long lastAutoToggleTime = 0;
 
 #include "NetworkSettings.h"
-#include "devices/composition/Led.h"
-#include <devices/ButtonDevice.h>
 
 // Create network and server instances
 Network *network = nullptr; // Will be created after loading settings

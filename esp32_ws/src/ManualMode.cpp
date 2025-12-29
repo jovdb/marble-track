@@ -16,10 +16,36 @@ ManualMode::ManualMode(DeviceManager &deviceManager) : deviceManager(deviceManag
     _splitter = nullptr;
     _splitterNextBtn = nullptr;
     _splitterBtnLed = nullptr;
+
+    _lift = nullptr;
+    _liftButton = nullptr;
+    _liftLed = nullptr;
+}
+
+ManualMode::~ManualMode()
+{
+    if (_wheelNextBtnUnsubscribe)
+    {
+        _wheelNextBtnUnsubscribe();
+    }
+    if (_liftButtonUnsubscribe)
+    {
+        _liftButtonUnsubscribe();
+    }
 }
 
 void ManualMode::setup()
 {
+    _buzzer = deviceManager.getDeviceByIdAs<devices::Buzzer>("buzzer");
+    if (_buzzer == nullptr)
+    {
+        MLOG_ERROR("Required device 'buzzer' not found!");
+    }
+    else
+    {
+        _buzzer->tune("scale_up:d=32,o=5,b=300:c,c#,d#,e,f#,g#,a#,b");
+    }
+
     // TODO: Re-enable when legacy devices are converted to composition devices
     // _wheelNextBtn = deviceManager.getDeviceByIdAs<devices::Button>("wheel-next-btn");
     // if (_wheelNextBtn == nullptr)
@@ -82,16 +108,52 @@ void ManualMode::setup()
     //     //     MLOG_ERROR("Required device 'splitter-btn-led' not found!");
     //     // }
 
-    //     MLOG_INFO("ManualMode setup complete");
-    // }
+    _lift = deviceManager.getDeviceByIdAs<devices::Lift>("lift");
+    if (_lift == nullptr)
+    {
+        MLOG_ERROR("Required device 'lift' not found!");
+    }
+
+    if (_liftButton && _liftButtonUnsubscribe)
+    {
+        _liftButtonUnsubscribe();
+        _liftButtonUnsubscribe = nullptr;
+    }
+    _liftButton = deviceManager.getDeviceByIdAs<devices::Button>("lift-btn");
+    if (_liftButton == nullptr)
+    {
+        MLOG_ERROR("Required device 'lift-btn' not found!");
+    }
+    else
+    {
+        _liftButtonUnsubscribe = _liftButton->onStateChange([this](void *data)
+                                                            { Serial.println("Lift button state changed"); });
+        if (_buzzer)
+            _buzzer->tone(1000, 100);
+
+        if (_lift)
+        {
+            if (_lift->isInitialized())
+            {
+                _lift->loadBall();
+            }
+            else
+            {
+                _lift->init();
+            }
+            //        _lift->getState().
+        }
+    }
+
+    _liftLed = deviceManager.getDeviceByIdAs<devices::Led>("lift-led");
+    if (_liftLed == nullptr)
+    {
+        MLOG_ERROR("Required device 'lift-led' not found!");
+    }
 }
 
 void ManualMode::loop()
 {
-    // TODO: Re-enable when legacy devices are converted to composition devices
-    // ManualMode is currently disabled
-    return;
-
     bool ledBlinkFast = millis() % 500 > 250;
     bool ledBlinkSlow = millis() % 1000 > 500;
 

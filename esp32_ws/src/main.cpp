@@ -182,8 +182,8 @@ void setup()
   // autoMode = new AutoMode(deviceManager);
   // autoMode->setup();
 
-  // manualMode = new ManualMode(deviceManager);
-  // manualMode->setup();
+  manualMode = new ManualMode(deviceManager);
+  manualMode->setup();
   // }
 
   // Startup sound

@@ -16,7 +16,9 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 #include <Arduino.h>
+#include "devices/Device.h"
 
 /**
  * @class RtosMixin
@@ -29,6 +31,7 @@ class RtosMixin
 public:
     RtosMixin()
     {
+        _taskStartedSemaphore = xSemaphoreCreateBinary();
         // Register this mixin with the base class
         static_cast<Derived *>(this)->registerMixin("rtos");
     }
@@ -36,6 +39,10 @@ public:
     virtual ~RtosMixin()
     {
         stopTask();
+        if (_taskStartedSemaphore != nullptr)
+        {
+            vSemaphoreDelete(_taskStartedSemaphore);
+        }
     }
 
     /**
@@ -64,7 +71,18 @@ public:
             &_taskHandle,
             core);
 
-        return result == pdPASS;
+        if (result == pdPASS)
+        {
+            // Wait for the task to signal that it has started
+            if (xSemaphoreTake(_taskStartedSemaphore, pdMS_TO_TICKS(1000)) != pdTRUE)
+            {
+                MLOG_ERROR("%s: Task did not start within timeout", static_cast<Derived *>(this)->toString().c_str());
+                stopTask();
+                return false;
+            }
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -123,8 +141,21 @@ public:
 
     TaskHandle_t getTaskHandle() const { return _taskHandle; }
 
+    /**
+     * @brief Override Device setup to start the RTOS task after base setup
+     */
+    virtual void setup()
+    {
+        // Call the base Device setup
+        static_cast<Device *>(static_cast<Derived *>(this))->setup();
+        // Start the RTOS task with default parameters
+        String taskName = static_cast<Derived *>(this)->getId();
+        startTask(taskName);
+    }
+
 protected:
     TaskHandle_t _taskHandle = nullptr;
+    SemaphoreHandle_t _taskStartedSemaphore = nullptr;
 
     /**
      * @brief Main task loop - must be implemented by derived class
@@ -135,6 +166,8 @@ private:
     static void _taskTrampoline(void *arg)
     {
         auto *self = static_cast<RtosMixin *>(arg);
+        // Signal that the task has started
+        xSemaphoreGive(self->_taskStartedSemaphore);
         static_cast<Derived *>(self)->task();
         // If task() returns, clean up
         self->_taskHandle = nullptr;

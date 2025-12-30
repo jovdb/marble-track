@@ -1,13 +1,13 @@
 /**
  * @file Test2.h
- * @brief Test2 device based on DeviceBase with Led and Button children
+ * @brief Test2 device based on Device with Led and Button children
  */
 
 #ifndef COMPOSITION_TEST2_H
 #define COMPOSITION_TEST2_H
 
 #include "Logging.h"
-#include "devices/DeviceBase.h"
+#include "devices/Device.h"
 #include "devices/Led.h"
 #include "devices/Button.h"
 #include "devices/Servo.h"
@@ -15,7 +15,7 @@
 
 namespace devices {
 
-class Test2 : public DeviceBase {
+class Test2 : public Device {
 private:
     Led* _led;
     Button* _button;

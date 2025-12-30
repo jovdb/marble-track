@@ -17,7 +17,7 @@
 
 static constexpr const char *CONFIG_FILE = "/config.json";
 
-DeviceBase *DeviceManager::createDevice(const String &deviceId, const String &deviceType)
+Device *DeviceManager::createDevice(const String &deviceId, const String &deviceType)
 {
     String lowerType = deviceType;
     lowerType.toLowerCase();
@@ -66,7 +66,7 @@ DeviceBase *DeviceManager::createDevice(const String &deviceId, const String &de
  * @param device The device to apply config to
  * @param deviceObj JSON object with optional children array and config
  */
-void DeviceManager::loadDeviceConfigFromJson(DeviceBase *device, JsonObject deviceObj)
+void DeviceManager::loadDeviceConfigFromJson(Device *device, JsonObject deviceObj)
 {
     if (!device)
     {
@@ -92,7 +92,7 @@ void DeviceManager::loadDeviceConfigFromJson(DeviceBase *device, JsonObject devi
     }
 
     // Recursively apply config to children by walking device children
-    for (DeviceBase *childDevice : device->getChildren())
+    for (Device *childDevice : device->getChildren())
     {
         const String childId = childDevice->getId();
         JsonObject childObj;
@@ -171,7 +171,7 @@ void DeviceManager::loadDevicesFromJsonFile()
     {
         const String id = deviceObj["id"] | "";
         const String type = deviceObj["type"] | "";
-        DeviceBase *newDevice = createDevice(id, type);
+        Device *newDevice = createDevice(id, type);
         if (newDevice)
         {
             loadDeviceConfigFromJson(newDevice, deviceObj);
@@ -263,7 +263,7 @@ void DeviceManager::saveDevicesToJsonFile()
  * @param device Device to serialize
  * @param deviceObj JSON object to populate
  */
-void DeviceManager::addDeviceToJsonObject(DeviceBase *device, JsonObject deviceObj)
+void DeviceManager::addDeviceToJsonObject(Device *device, JsonObject deviceObj)
 {
     if (!device)
         return;
@@ -273,7 +273,7 @@ void DeviceManager::addDeviceToJsonObject(DeviceBase *device, JsonObject deviceO
 
     // Recursively add children as nested objects in children array
     JsonArray childrenArray = deviceObj["children"].to<JsonArray>();
-    for (DeviceBase *child : device->getChildren())
+    for (Device *child : device->getChildren())
     {
         JsonObject childObj = childrenArray.add<JsonObject>();
         addDeviceToJsonObject(child, childObj);
@@ -419,7 +419,7 @@ DeviceManager::DeviceManager(NotifyClients callback) : devicesCount(0), notifyCl
     }
 }
 
-bool DeviceManager::addDevice(DeviceBase *device)
+bool DeviceManager::addDevice(Device *device)
 {
     if (devicesCount < MAX_DEVICES && device != nullptr)
     {
@@ -454,7 +454,7 @@ bool DeviceManager::addDevice(const String &deviceType, const String &deviceId, 
         return false;
     }
 
-    DeviceBase *newDevice = createDevice(deviceId, deviceType);
+    Device *newDevice = createDevice(deviceId, deviceType);
 
     if (!newDevice)
     {
@@ -483,7 +483,7 @@ bool DeviceManager::addDevice(const String &deviceType, const String &deviceId, 
     return true;
 }
 
-void DeviceManager::getDevices(DeviceBase **deviceList, int &count, int maxResults)
+void DeviceManager::getDevices(Device **deviceList, int &count, int maxResults)
 {
     count = 0;
     for (int i = 0; i < devicesCount && count < maxResults; i++)
@@ -520,13 +520,13 @@ void DeviceManager::loop()
     }
 }
 
-DeviceBase *DeviceManager::getDeviceById(const String &deviceId) const
+Device *DeviceManager::getDeviceById(const String &deviceId) const
 {
     for (int i = 0; i < devicesCount; i++)
     {
         if (devices[i] != nullptr)
         {
-            DeviceBase *found = findDeviceRecursiveById(devices[i], deviceId);
+            Device *found = findDeviceRecursiveById(devices[i], deviceId);
             if (found)
                 return found;
         }
@@ -534,28 +534,28 @@ DeviceBase *DeviceManager::getDeviceById(const String &deviceId) const
     return nullptr;
 }
 
-DeviceBase *DeviceManager::findDeviceRecursiveById(DeviceBase *root, const String &deviceId) const
+Device *DeviceManager::findDeviceRecursiveById(Device *root, const String &deviceId) const
 {
     if (!root)
         return nullptr;
     if (root->getId() == deviceId)
         return root;
-    for (DeviceBase *child : root->getChildren())
+    for (Device *child : root->getChildren())
     {
-        DeviceBase *found = findDeviceRecursiveById(child, deviceId);
+        Device *found = findDeviceRecursiveById(child, deviceId);
         if (found)
             return found;
     }
     return nullptr;
 }
 
-DeviceBase *DeviceManager::getDeviceByType(const String &deviceType) const
+Device *DeviceManager::getDeviceByType(const String &deviceType) const
 {
     for (int i = 0; i < devicesCount; i++)
     {
         if (devices[i] != nullptr)
         {
-            DeviceBase *found = findDeviceRecursiveByType(devices[i], deviceType);
+            Device *found = findDeviceRecursiveByType(devices[i], deviceType);
             if (found)
                 return found;
         }
@@ -563,15 +563,15 @@ DeviceBase *DeviceManager::getDeviceByType(const String &deviceType) const
     return nullptr;
 }
 
-DeviceBase *DeviceManager::findDeviceRecursiveByType(DeviceBase *root, const String &deviceType) const
+Device *DeviceManager::findDeviceRecursiveByType(Device *root, const String &deviceType) const
 {
     if (!root)
         return nullptr;
     if (root->getType() == deviceType)
         return root;
-    for (DeviceBase *child : root->getChildren())
+    for (Device *child : root->getChildren())
     {
-        DeviceBase *found = findDeviceRecursiveByType(child, deviceType);
+        Device *found = findDeviceRecursiveByType(child, deviceType);
         if (found)
             return found;
     }
@@ -603,16 +603,16 @@ bool DeviceManager::removeDevice(const String &deviceId)
     return false;
 }
 
-std::vector<DeviceBase *> DeviceManager::getAllDevices()
+std::vector<Device *> DeviceManager::getAllDevices()
 {
-    std::vector<DeviceBase *> allDevices;
+    std::vector<Device *> allDevices;
 
-    std::function<void(DeviceBase *)> collectRecursive = [&](DeviceBase *device)
+    std::function<void(Device *)> collectRecursive = [&](Device *device)
     {
         if (!device)
             return;
         allDevices.push_back(device);
-        for (DeviceBase *child : device->getChildren())
+        for (Device *child : device->getChildren())
         {
             collectRecursive(child);
         }

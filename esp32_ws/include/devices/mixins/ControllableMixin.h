@@ -47,7 +47,7 @@ public:
  *
  * The derived class must implement:
  * - void addStateToJson(JsonDocument &doc) - Add device state to a JSON document
- * Automatically registers itself with DeviceBase::registerMixin("ControllableMixin")
+ * Automatically registers itself with Device::registerMixin("ControllableMixin")
  */
 template <typename Derived>
 class ControllableMixin : public IControllable, public ControllableMixinBase
@@ -66,7 +66,7 @@ public:
      */
     virtual bool control(const String &action, JsonObject *args = nullptr) = 0;
 
-    // Provide DeviceBase virtual override via mixin when combined
+    // Provide Device virtual override via mixin when combined
     virtual IControllable *getControllableInterface() { return this; }
 
 protected:

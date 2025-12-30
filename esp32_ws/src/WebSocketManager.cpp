@@ -61,7 +61,7 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
     else
     {
         // Get devices from DeviceManager
-        DeviceBase *deviceList[20];
+        Device *deviceList[20];
         int count;
         deviceManager->getDevices(deviceList, count, 20);
 
@@ -104,7 +104,7 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
 
                 // Add children array
                 JsonArray childrenArr = deviceObj["children"].to<JsonArray>();
-                for (DeviceBase *child : deviceList[i]->getChildren())
+                for (Device *child : deviceList[i]->getChildren())
                 {
                     if (child)
                     {
@@ -260,8 +260,8 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
         return;
     }
 
-    // Support composition devices (DeviceBase) that implement serializable config
-    DeviceBase *device = deviceManager->getDeviceById(deviceId);
+    // Support composition devices (Device) that implement serializable config
+    Device *device = deviceManager->getDeviceById(deviceId);
     if (device)
     {
         if (!doc["config"].is<JsonObject>())
@@ -325,7 +325,7 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
         return;
     }
 
-    DeviceBase *device = deviceManager->getDeviceById(deviceId);
+    Device *device = deviceManager->getDeviceById(deviceId);
     if (device)
     {
         JsonDocument response;
@@ -690,7 +690,7 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
         return;
     }
 
-    DeviceBase *device = deviceManager->getDeviceById(deviceId);
+    Device *device = deviceManager->getDeviceById(deviceId);
     if (device && device->hasMixin("controllable"))
     {
         IControllable *ctrl = mixins::ControllableRegistry::get(deviceId);
@@ -735,7 +735,7 @@ void WebSocketManager::handleDeviceGetState(JsonDocument &doc)
         return;
     }
 
-    DeviceBase *device = deviceManager->getDeviceById(deviceId);
+    Device *device = deviceManager->getDeviceById(deviceId);
     if (device)
     {
         // If the device implements the controllable mixin, return its JSON state
@@ -828,7 +828,7 @@ void WebSocketManager::handleAddDevice(JsonDocument &doc)
     }
 
     // Setup the new device
-    DeviceBase *newDevice = deviceManager->getDeviceById(deviceId);
+    Device *newDevice = deviceManager->getDeviceById(deviceId);
     if (newDevice != nullptr)
     {
         newDevice->setup();

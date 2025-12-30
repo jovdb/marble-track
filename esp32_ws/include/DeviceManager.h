@@ -6,7 +6,7 @@
 #include <Arduino.h>
 #include "NetworkSettings.h"
 #include <vector>
-#include "devices/DeviceBase.h"
+#include "devices/Device.h"
 
 // Function types for WebSocket notifications
 using NotifyClients = std::function<void(const String &message)>;
@@ -17,7 +17,7 @@ class DeviceManager
 
 private:
     static const int MAX_DEVICES = 30;
-    DeviceBase *devices[MAX_DEVICES];
+    Device *devices[MAX_DEVICES];
     int devicesCount;
 
     NotifyClients notifyClients;
@@ -28,7 +28,7 @@ public:
     NetworkSettings loadNetworkSettings();
     bool saveNetworkSettings(const NetworkSettings& settings);
 
-    DeviceBase *getDeviceByType(const String &deviceType) const;
+    Device *getDeviceByType(const String &deviceType) const;
 
     template <typename T>
     T *getDeviceByTypeAs(const String &deviceType) const
@@ -36,7 +36,7 @@ public:
         return static_cast<T *>(getDeviceByType(deviceType));
     }
 
-    DeviceBase *getDeviceById(const String &deviceId) const;
+    Device *getDeviceById(const String &deviceId) const;
 
     template <typename T>
     T *getDeviceByIdAs(const String &deviceId) const
@@ -50,7 +50,7 @@ public:
     void setHasClients(HasClients callback) { hasClients = callback; }
     void notifyDevicesChanged() { if (onDevicesChanged) onDevicesChanged(); }
 
-    bool addDevice(DeviceBase *device);
+    bool addDevice(Device *device);
     bool removeDevice(const String &deviceId);
     bool addDevice(const String &deviceType, const String &deviceId, JsonVariant config = JsonVariant());
 
@@ -60,16 +60,16 @@ public:
      * @param deviceType The type of device to create ("led", "button", etc.)
      * @return Pointer to the created device, or nullptr if type is unknown
      */
-    DeviceBase *createDevice(const String &deviceId, const String &deviceType);
+    Device *createDevice(const String &deviceId, const String &deviceType);
 
-    void getDevices(DeviceBase **deviceList, int &count, int maxResults);
+    void getDevices(Device **deviceList, int &count, int maxResults);
 
     void setup();
     void loop();
 
     int getDeviceCount() const { return devicesCount; }
 
-    std::vector<DeviceBase*> getAllDevices();
+    std::vector<Device*> getAllDevices();
 
     void loadDevicesFromJsonFile();
     void saveDevicesToJsonFile();
@@ -91,17 +91,17 @@ private:
      * @param device The device to apply config to
      * @param deviceObj JSON object with optional children array and config
      */
-    void loadDeviceConfigFromJson(DeviceBase *device, JsonObject deviceObj);
+    void loadDeviceConfigFromJson(Device *device, JsonObject deviceObj);
 
     /**
      * @brief Recursively add a device and its children to JSON array
      * @param device Device to serialize
      * @param deviceObj JSON object to populate
      */
-    void addDeviceToJsonObject(DeviceBase *device, JsonObject deviceObj);
+    void addDeviceToJsonObject(Device *device, JsonObject deviceObj);
 
-    DeviceBase *findDeviceRecursiveById(DeviceBase *root, const String &deviceId) const;
-    DeviceBase *findDeviceRecursiveByType(DeviceBase *root, const String &deviceType) const;
+    Device *findDeviceRecursiveById(Device *root, const String &deviceId) const;
+    Device *findDeviceRecursiveByType(Device *root, const String &deviceType) const;
 
     void deleteAllDevices();
 };

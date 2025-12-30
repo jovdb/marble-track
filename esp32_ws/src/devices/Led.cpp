@@ -1,6 +1,6 @@
 /**
  * @file Led.cpp
- * @brief Simple LED implementation using DeviceBase, ConfigMixin, and StateMixin
+ * @brief Simple LED implementation using Device, ConfigMixin, and StateMixin
  */
 
 #include "devices/Led.h"
@@ -12,13 +12,13 @@ namespace devices
     static bool _isPrevBlinkingOn = false;
 
     Led::Led(const String &id)
-        : DeviceBase(id, "led")
+        : Device(id, "led")
     {
     }
 
     void Led::setup()
     {
-        DeviceBase::setup();
+        Device::setup();
 
         if (_config.pin == -1)
         {
@@ -98,7 +98,7 @@ namespace devices
 
     void Led::loop()
     {
-        DeviceBase::loop();
+        Device::loop();
 
         // -1: UnSet, 0: OFF: 1: ON
         static int _isPrevBlinkingOn = -1;

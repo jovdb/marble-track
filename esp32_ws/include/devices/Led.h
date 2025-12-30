@@ -1,12 +1,12 @@
 /**
  * @file Led.h
- * @brief Simple LED device using only DeviceBase (no mixins)
+ * @brief Simple LED device using only Device (no mixins)
  */
 
 #ifndef COMPOSITION_LED_H
 #define COMPOSITION_LED_H
 
-#include "devices/DeviceBase.h"
+#include "devices/Device.h"
 #include "devices/mixins/StateMixin.h"
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"
@@ -41,7 +41,7 @@ namespace devices
      * @class Led
      * @brief LED with configurable pin, state management, and control interface
      */
-    class Led : public DeviceBase, public ConfigMixin<Led, LedConfig>, public StateMixin<Led, LedState>, public ControllableMixin<Led>, public SerializableMixin<Led>
+    class Led : public Device, public ConfigMixin<Led, LedConfig>, public StateMixin<Led, LedState>, public ControllableMixin<Led>, public SerializableMixin<Led>
     {
     public:
         explicit Led(const String &id);

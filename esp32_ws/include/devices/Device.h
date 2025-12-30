@@ -1,5 +1,5 @@
 /**
- * @file DeviceBase.h
+ * @file Device.h
  * @brief Minimal base class for all devices using composition pattern
  *
  * This is the core device class that only provides:
@@ -10,15 +10,15 @@
  * All other functionality is added via composition mixins.
  */
 
-#ifndef DEVICE_BASE_H
-#define DEVICE_BASE_H
+#ifndef DEVICE_H
+#define DEVICE_H
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <vector>
 
 /**
- * @class DeviceBase
+ * @class Device
  * @brief Minimal base class for devices
  *
  * Provides only core identity and lifecycle. Extend with mixins for:
@@ -26,11 +26,11 @@
  * - Configuration persistence (makeSerializable)
  * - WebSocket control (makeControllable)
  */
-class DeviceBase
+class Device
 {
 public:
-    DeviceBase(const String &id, const String &type);
-    virtual ~DeviceBase() = default;
+    Device(const String &id, const String &type);
+    virtual ~Device() = default;
 
     // Lifecycle
     // Default setup calls setup on children
@@ -45,8 +45,8 @@ public:
     virtual String toString() const;
 
     // Hierarchy
-    void addChild(DeviceBase *child);
-    const std::vector<DeviceBase *> &getChildren() const { return _children; }
+    void addChild(Device *child);
+    const std::vector<Device *> &getChildren() const { return _children; }
 
     // Pins (for collision detection)
     virtual std::vector<int> getPins() const { return {}; }
@@ -61,8 +61,8 @@ protected:
     String _type;
     String _name;
     bool _isInitialized = false;
-    std::vector<DeviceBase *> _children;
+    std::vector<Device *> _children;
     std::vector<String> _mixins;
 };
 
-#endif // DEVICE_BASE_H
+#endif // DEVICE_H

@@ -1,6 +1,6 @@
 /**
  * @file Buzzer.cpp
- * @brief Buzzer implementation using DeviceBase and composition mixins
+ * @brief Buzzer implementation using Device and composition mixins
  */
 
 #include "devices/Buzzer.h"
@@ -12,7 +12,7 @@ namespace devices
 {
 
     Buzzer::Buzzer(const String &id)
-        : DeviceBase(id, "buzzer")
+        : Device(id, "buzzer")
     {
         // Fixed channel 0 for buzzer (required by NonBlockingRTTTL library)
         // https://github.com/end2endzone/NonBlockingRTTTL/blob/master/src/NonBlockingRtttl.cpp#L90C5-L99C6
@@ -39,7 +39,7 @@ namespace devices
 
     void Buzzer::setup()
     {
-        DeviceBase::setup();
+        Device::setup();
 
         if (_config.pin == -1)
         {
@@ -66,7 +66,7 @@ namespace devices
 
     void Buzzer::loop()
     {
-        DeviceBase::loop();
+        Device::loop();
     }
 
     std::vector<int> Buzzer::getPins() const

@@ -1,12 +1,12 @@
 /**
  * @file Button.h
- * @brief Button device using DeviceBase composition pattern with mixins
+ * @brief Button device using Device composition pattern with mixins
  */
 
 #ifndef COMPOSITION_BUTTON_H
 #define COMPOSITION_BUTTON_H
 
-#include "devices/DeviceBase.h"
+#include "devices/Device.h"
 #include "devices/mixins/StateMixin.h"
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"
@@ -64,7 +64,7 @@ namespace devices
      * @class Button
      * @brief Button with configurable pin, state management, and control interface
      */
-    class Button : public DeviceBase,
+    class Button : public Device,
                    public ConfigMixin<Button, ButtonConfig>,
                    public StateMixin<Button, ButtonState>,
                    public ControllableMixin<Button>,

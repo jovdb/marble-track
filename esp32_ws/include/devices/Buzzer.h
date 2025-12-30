@@ -1,12 +1,12 @@
 /**
  * @file Buzzer.h
- * @brief Buzzer device using DeviceBase with composition mixins
+ * @brief Buzzer device using Device with composition mixins
  */
 
 #ifndef COMPOSITION_BUZZER_H
 #define COMPOSITION_BUZZER_H
 
-#include "devices/DeviceBase.h"
+#include "devices/Device.h"
 #include "devices/mixins/StateMixin.h"
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"
@@ -68,7 +68,7 @@ namespace devices
      * @class Buzzer
      * @brief Buzzer with configurable pin, tone/tune playback, and control interface
      */
-    class Buzzer : public DeviceBase,
+    class Buzzer : public Device,
                    public ConfigMixin<Buzzer, BuzzerConfig>,
                    public StateMixin<Buzzer, BuzzerState>,
                    public ControllableMixin<Buzzer>,

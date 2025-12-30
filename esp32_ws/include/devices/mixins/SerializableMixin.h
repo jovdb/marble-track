@@ -61,7 +61,7 @@ namespace mixins
  * The derived class must implement:
  * - void jsonToConfig(const JsonDocument &config) - Load device config from JSON
  * - void configToJson(JsonDocument &doc) - Save device config to JSON
- * Automatically registers itself with DeviceBase::registerMixin("serializable")
+ * Automatically registers itself with Device::registerMixin("serializable")
  * and with SerializableRegistry for lookup by device ID.
  */
 template <typename Derived>

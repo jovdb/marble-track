@@ -1,18 +1,18 @@
 /**
- * @file DeviceBase.cpp
+ * @file Device.cpp
  * @brief Implementation of minimal device base class
  */
 
-#include "devices/DeviceBase.h"
+#include "devices/Device.h"
 #include "Logging.h"
 
-DeviceBase::DeviceBase(const String &id, const String &type) : _id(id), _type(type), _name(id) {}
+Device::Device(const String &id, const String &type) : _id(id), _type(type), _name(id) {}
 
-void DeviceBase::setup()
+void Device::setup()
 {
     _isInitialized = true;
 
-    for (DeviceBase *child : _children)
+    for (Device *child : _children)
     {
         if (child)
         {
@@ -21,14 +21,14 @@ void DeviceBase::setup()
     }
 }
 
-void DeviceBase::loop()
+void Device::loop()
 {
     if (!_isInitialized)
     {
         MLOG_WARN("%s: loop() called before setup()", toString().c_str());
     }
 
-    for (DeviceBase *child : _children)
+    for (Device *child : _children)
     {
         if (child)
         {
@@ -37,7 +37,7 @@ void DeviceBase::loop()
     }
 }
 
-void DeviceBase::addChild(DeviceBase *child)
+void Device::addChild(Device *child)
 {
     if (child)
     {
@@ -45,14 +45,14 @@ void DeviceBase::addChild(DeviceBase *child)
     }
 }
 
-String DeviceBase::toString() const
+String Device::toString() const
 {
     String upperType = _type;
     upperType.toUpperCase();
     return upperType + "[" + _id + "]";
 }
 
-void DeviceBase::registerMixin(const String &mixinName)
+void Device::registerMixin(const String &mixinName)
 {
     // Avoid duplicates
     for (const auto &mixin : _mixins)
@@ -65,7 +65,7 @@ void DeviceBase::registerMixin(const String &mixinName)
     _mixins.push_back(mixinName);
 }
 
-bool DeviceBase::hasMixin(const String &mixinName) const
+bool Device::hasMixin(const String &mixinName) const
 {
     for (const auto &mixin : _mixins)
     {

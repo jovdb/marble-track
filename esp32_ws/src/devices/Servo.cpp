@@ -1,6 +1,6 @@
 /**
  * @file Servo.cpp
- * @brief Servo implementation using DeviceBase and composition mixins
+ * @brief Servo implementation using Device and composition mixins
  */
 
 #include "devices/Servo.h"
@@ -11,7 +11,7 @@ namespace devices
 {
 
     Servo::Servo(const String &id)
-        : DeviceBase(id, "servo")
+        : Device(id, "servo")
     {
         // Create mutex for thread-safe state access
         _stateMutex = xSemaphoreCreateMutex();
@@ -33,7 +33,7 @@ namespace devices
 
     void Servo::setup()
     {
-        DeviceBase::setup();
+        Device::setup();
 
         if (_config.pin == -1)
         {
@@ -62,7 +62,7 @@ namespace devices
 
     void Servo::loop()
     {
-        DeviceBase::loop();
+        Device::loop();
     }
 
     std::vector<int> Servo::getPins() const

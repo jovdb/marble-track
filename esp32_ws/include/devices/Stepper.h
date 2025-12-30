@@ -1,12 +1,12 @@
 /**
  * @file Stepper.h
- * @brief Stepper device using DeviceBase with composition mixins
+ * @brief Stepper device using Device with composition mixins
  */
 
 #ifndef COMPOSITION_STEPPER_H
 #define COMPOSITION_STEPPER_H
 
-#include "devices/DeviceBase.h"
+#include "devices/Device.h"
 #include "devices/mixins/StateMixin.h"
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"
@@ -71,7 +71,7 @@ namespace devices
      * @class Stepper
      * @brief Stepper motor control with configurable pins and movement control
      */
-    class Stepper : public DeviceBase,
+    class Stepper : public Device,
                     public ConfigMixin<Stepper, StepperConfig>,
                     public StateMixin<Stepper, StepperState>,
                     public ControllableMixin<Stepper>,

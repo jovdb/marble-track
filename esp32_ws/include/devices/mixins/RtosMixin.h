@@ -6,7 +6,7 @@
  * Uses Curiously Recurring Template Pattern (CRTP) for static polymorphism.
  *
  * Usage:
- *   class MyDevice : public DeviceBase, public RtosMixin<MyDevice> {
+ *   class MyDevice : public Device, public RtosMixin<MyDevice> {
  *       void task() override { ... }
  *   };
  */

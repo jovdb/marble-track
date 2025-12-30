@@ -1,6 +1,6 @@
 /**
  * @file Stepper.cpp
- * @brief Stepper implementation using DeviceBase and composition mixins
+ * @brief Stepper implementation using Device and composition mixins
  */
 
 #include "devices/Stepper.h"
@@ -11,7 +11,7 @@ namespace devices
 {
 
     Stepper::Stepper(const String &id)
-        : DeviceBase(id, "stepper")
+        : Device(id, "stepper")
     {
         _stateMutex = xSemaphoreCreateMutex();
     }
@@ -27,7 +27,7 @@ namespace devices
 
     void Stepper::setup()
     {
-        DeviceBase::setup();
+        Device::setup();
 
         setName(_config.name);
 
@@ -66,7 +66,7 @@ namespace devices
 
     void Stepper::loop()
     {
-        DeviceBase::loop();
+        Device::loop();
     }
 
     std::vector<int> Stepper::getPins() const

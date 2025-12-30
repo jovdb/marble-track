@@ -11,7 +11,7 @@ namespace devices
     const float DOWN_FACTOR = 1.015f; // Move 2% extra when going down to ensure full descent
 
     Lift::Lift(const String &id)
-        : DeviceBase(id, "lift")
+        : Device(id, "lift")
     {
         // _stepper = nullptr;
         // _limitSwitch = nullptr;
@@ -63,14 +63,14 @@ namespace devices
 
     void Lift::setup()
     {
-        DeviceBase::setup();
+        Device::setup();
 
         MLOG_DEBUG("%s: Setup complete", toString().c_str());
     }
 
     void Lift::loop()
     {
-        DeviceBase::loop();
+        Device::loop();
 
         // Check ball sensor state and notify if changed
         bool ballWaiting = _ballSensor ? _ballSensor->getState().isPressed : false;
@@ -557,27 +557,27 @@ namespace devices
         return true; // Placeholder
     }
 
-    DeviceBase *Lift::getStepper() const
+    Device *Lift::getStepper() const
     {
         return _stepper;
     }
 
-    DeviceBase *Lift::getLimitSwitch() const
+    Device *Lift::getLimitSwitch() const
     {
         return _limitSwitch;
     }
 
-    DeviceBase *Lift::getBallSensor() const
+    Device *Lift::getBallSensor() const
     {
         return _ballSensor;
     }
 
-    DeviceBase *Lift::getLoader() const
+    Device *Lift::getLoader() const
     {
         return _loader;
     }
 
-    DeviceBase *Lift::getUnloader() const
+    Device *Lift::getUnloader() const
     {
         return _unloader;
     }

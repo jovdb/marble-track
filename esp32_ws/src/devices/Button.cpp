@@ -1,6 +1,6 @@
 /**
  * @file Button.cpp
- * @brief Button implementation using DeviceBase composition pattern with mixins
+ * @brief Button implementation using Device composition pattern with mixins
  */
 
 #include "devices/Button.h"
@@ -11,13 +11,13 @@ namespace devices
 {
 
     Button::Button(const String &id)
-        : DeviceBase(id, "button")
+        : Device(id, "button")
     {
     }
 
     void Button::setup()
     {
-        DeviceBase::setup();
+        Device::setup();
 
         if (_config.pin == -1)
         {
@@ -54,7 +54,7 @@ namespace devices
 
     void Button::loop()
     {
-        DeviceBase::loop();
+        Device::loop();
 
         if (_config.pin == -1)
             return;

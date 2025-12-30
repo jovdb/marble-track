@@ -12,7 +12,7 @@ namespace devices
 {
 
     Test2::Test2(const String &id)
-        : DeviceBase(id, "test2")
+        : Device(id, "test2")
     {
         // Create and add child LED device
         _led = new Led(id + "_led");
@@ -30,7 +30,7 @@ namespace devices
     void Test2::setup()
     {
         // Call base to setup all children
-        DeviceBase::setup();
+        Device::setup();
 
         // Unsubscribe from previous button state changes if any
         if (_buttonUnsubscribe) {

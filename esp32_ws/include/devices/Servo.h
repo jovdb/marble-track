@@ -1,12 +1,12 @@
 /**
  * @file Servo.h
- * @brief Servo device using DeviceBase with composition mixins
+ * @brief Servo device using Device with composition mixins
  */
 
 #ifndef COMPOSITION_SERVO_H
 #define COMPOSITION_SERVO_H
 
-#include "devices/DeviceBase.h"
+#include "devices/Device.h"
 #include "devices/mixins/StateMixin.h"
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"
@@ -51,7 +51,7 @@ namespace devices
      * @class Servo
      * @brief Servo with configurable pin, position control, and animation
      */
-    class Servo : public DeviceBase,
+    class Servo : public Device,
                   public ConfigMixin<Servo, ServoConfig>,
                   public StateMixin<Servo, ServoState>,
                   public ControllableMixin<Servo>,

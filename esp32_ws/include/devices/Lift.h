@@ -1,12 +1,12 @@
 /**
  * @file Lift.h
- * @brief Lift device using DeviceBase with composition mixins
+ * @brief Lift device using Device with composition mixins
  */
 
 #ifndef COMPOSITION_LIFT_H
 #define COMPOSITION_LIFT_H
 
-#include "devices/DeviceBase.h"
+#include "devices/Device.h"
 #include "devices/mixins/StateMixin.h"
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"
@@ -71,7 +71,7 @@ namespace devices
      * ball sensor, and loader/unloader motors.
      * Uses composition pattern with children devices.
      */
-    class Lift : public DeviceBase,
+    class Lift : public Device,
                  public ConfigMixin<Lift, LiftConfig>,
                  public StateMixin<Lift, LiftState>,
                  public ControllableMixin<Lift>,
@@ -190,31 +190,31 @@ namespace devices
          * @brief Get pointer to stepper child device
          * @return Stepper device pointer or nullptr
          */
-        DeviceBase *getStepper() const;
+        Device *getStepper() const;
 
         /**
          * @brief Get pointer to limit switch child device
          * @return Button device pointer or nullptr
          */
-        DeviceBase *getLimitSwitch() const;
+        Device *getLimitSwitch() const;
 
         /**
          * @brief Get pointer to ball sensor child device
          * @return Button device pointer or nullptr
          */
-        DeviceBase *getBallSensor() const;
+        Device *getBallSensor() const;
 
         /**
          * @brief Get pointer to loader child device
          * @return Servo device pointer or nullptr
          */
-        DeviceBase *getLoader() const;
+        Device *getLoader() const;
 
         /**
          * @brief Get pointer to unloader child device
          * @return Servo device pointer or nullptr
          */
-        DeviceBase *getUnloader() const;
+        Device *getUnloader() const;
 
         /**
          * @brief Get current stepper position

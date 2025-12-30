@@ -1,12 +1,12 @@
 /**
  * @file Wheel.h
- * @brief Wheel device using DeviceBase with composition mixins
+ * @brief Wheel device using Device with composition mixins
  */
 
 #ifndef COMPOSITION_WHEEL_H
 #define COMPOSITION_WHEEL_H
 
-#include "devices/DeviceBase.h"
+#include "devices/Device.h"
 #include "devices/mixins/StateMixin.h"
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"
@@ -67,7 +67,7 @@ namespace devices
      * Manages a wheel with stepper motor positioning, zero sensor, and breakpoint navigation.
      * Uses composition pattern with children devices (Stepper, Button sensors).
      */
-    class Wheel : public DeviceBase,
+    class Wheel : public Device,
                   public ConfigMixin<Wheel, WheelConfig>,
                   public StateMixin<Wheel, WheelState>,
                   public ControllableMixin<Wheel>,
@@ -134,9 +134,9 @@ namespace devices
         void configToJson(JsonDocument &doc) override;
 
     protected:
-        DeviceBase *_stepper;    // Stepper motor child device
-        DeviceBase *_zeroSensor; // Zero sensor child device
-        DeviceBase *_nextButton; // Next button child device
+        Device *_stepper;    // Stepper motor child device
+        Device *_zeroSensor; // Zero sensor child device
+        Device *_nextButton; // Next button child device
 
     private:
         /**
@@ -156,19 +156,19 @@ namespace devices
          * @brief Get pointer to stepper child device
          * @return Stepper device pointer or nullptr
          */
-        DeviceBase *getStepper() const;
+        Device *getStepper() const;
 
         /**
          * @brief Get pointer to zero sensor child device
          * @return Button device pointer or nullptr
          */
-        DeviceBase *getZeroSensor() const;
+        Device *getZeroSensor() const;
 
         /**
          * @brief Get pointer to next button child device
          * @return Button device pointer or nullptr
          */
-        DeviceBase *getNextButton() const;
+        Device *getNextButton() const;
 
         SemaphoreHandle_t _stateMutex; // Mutex for thread-safe state access
     };

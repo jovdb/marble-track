@@ -1,6 +1,6 @@
 /**
  * @file Wheel.cpp
- * @brief Wheel implementation using DeviceBase and composition mixins
+ * @brief Wheel implementation using Device and composition mixins
  */
 
 #include "devices/Wheel.h"
@@ -16,7 +16,7 @@ namespace devices
     static const float defaultBreakpoints[] = {45.0, 90.0, 180.0, 30.0, 270.0};
 
     Wheel::Wheel(const String &id)
-        : DeviceBase(id, "wheel")
+        : Device(id, "wheel")
     {
         _stateMutex = xSemaphoreCreateMutex();
 
@@ -43,7 +43,7 @@ namespace devices
 
     void Wheel::setup()
     {
-        DeviceBase::setup();
+        Device::setup();
 
         setName(_config.name);
 
@@ -58,7 +58,7 @@ namespace devices
 
     void Wheel::loop()
     {
-        DeviceBase::loop();
+        Device::loop();
 
         if (!_stepper || !_zeroSensor)
         {
@@ -457,17 +457,17 @@ namespace devices
         MLOG_INFO("%s: Measured steps per revolution: %ld", toString().c_str(), steps);
     }
 
-    DeviceBase *Wheel::getStepper() const
+    Device *Wheel::getStepper() const
     {
         return _stepper;
     }
 
-    DeviceBase *Wheel::getZeroSensor() const
+    Device *Wheel::getZeroSensor() const
     {
         return _zeroSensor;
     }
 
-    DeviceBase *Wheel::getNextButton() const
+    Device *Wheel::getNextButton() const
     {
         return _nextButton;
     }

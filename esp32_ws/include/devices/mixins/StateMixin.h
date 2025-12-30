@@ -7,7 +7,7 @@
  *
  * Usage:
  *   struct MyState { int value; String mode; };
- *   class MyDevice : public DeviceBase, public StateMixin<MyDevice, MyState> {
+ *   class MyDevice : public Device, public StateMixin<MyDevice, MyState> {
  *       void onStateChange(EventCallback callback) override;
  *   };
  */

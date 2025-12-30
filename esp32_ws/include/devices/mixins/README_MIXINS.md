@@ -2,14 +2,14 @@
 
 ## Overview
 
-All mixins automatically register themselves with `DeviceBase`, allowing runtime detection of device capabilities.
+All mixins automatically register themselves with `Device`, allowing runtime detection of device capabilities.
 
 ## Usage
 
 ### Checking if a device has a mixin:
 
 ```cpp
-DeviceBase* device = deviceManager->getCompositionDeviceById("led1");
+Device* device = deviceManager->getCompositionDeviceById("led1");
 
 if (device->hasMixin("controllable")) {
     // Device can be controlled via WebSocket

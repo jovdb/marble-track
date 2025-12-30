@@ -62,6 +62,12 @@ namespace devices
             return false;
         }
 
+        // Skip if already OK
+        if (_state.mode == (value ? "ON" : "OFF"))
+        {
+            return true;
+        }
+
         // Update state
         _state.mode = value ? "ON" : "OFF";
 
@@ -80,6 +86,12 @@ namespace devices
         {
             MLOG_WARN("%s: Pin not configured", toString().c_str());
             return false;
+        }
+
+        // Skip if already OK
+        if (_state.mode == "BLINKING" && _state.blinkOnTime == onTime && _state.blinkOffTime == offTime)
+        {
+            return true;
         }
 
         // Update state

@@ -58,6 +58,9 @@ namespace devices
 
         /** pin input state: 0=LOW, 1=HIGH */
         int input = 0;
+
+        /** Indicates if the button state changed in the last loop */
+        bool isPressedChanged = false;
     };
 
     /**
@@ -89,12 +92,6 @@ namespace devices
          */
         bool isReleased() const;
 
-        /**
-         * @brief Check if the button state changed in the last loop
-         * @return true if state changed, false otherwise
-         */
-        bool isStateChanged() const { return _isStateChanged; }
-
         // ControllableMixin implementation
         void addStateToJson(JsonDocument &doc) override;
         bool control(const String &action, JsonObject *args = nullptr) override;
@@ -120,7 +117,6 @@ namespace devices
         bool _simulatedIsPressed = false;
 
         // Can be used for edge detection and simulating events on change
-        bool _isStateChanged = false;
     };
 
 } // namespace devices

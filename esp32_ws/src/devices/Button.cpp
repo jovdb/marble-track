@@ -60,7 +60,7 @@ namespace devices
             return;
 
         // Reset state change flag for next loop
-        _isStateChanged = false;
+        _state.isPressedChanged = false;
 
         bool isButtonPressed = readIsButtonPressed();
 
@@ -75,8 +75,8 @@ namespace devices
             if (isButtonPressed != _state.isPressed)
             {
                 _state.isPressed = isButtonPressed;
+                _state.isPressedChanged = true;
                 MLOG_INFO("%s: New button data read: %s", toString().c_str(), _state.input ? "HIGH" : "LOW");
-                _isStateChanged = true;
                 notifyStateChanged();
             }
         }
@@ -103,6 +103,7 @@ namespace devices
     {
         doc["value"] = _state.input;
         doc["isPressed"] = _state.isPressed;
+        doc["isPressedChanged"] = _state.isPressedChanged;
     }
 
     bool Button::control(const String &action, JsonObject *args)

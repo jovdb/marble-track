@@ -6,6 +6,7 @@ const deviceType = "button";
 interface IButtonState extends IDeviceState {
   isPressed: boolean;
   value: number;
+  isPressedChanged: boolean;
   [key: string]: unknown;
 }
 

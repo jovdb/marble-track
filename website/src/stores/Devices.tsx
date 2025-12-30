@@ -73,7 +73,7 @@ export function createDevicesStore({
                   deviceDraft.type = device.type;
                   deviceDraft.pins = device.pins;
                   deviceDraft.features = device.features;
-                  deviceDraft.children = device.children?.map(child => ({ id: child.id })) || [];
+                  deviceDraft.children = device.children?.map(child => ({ id: child.id, type: child.type })) || [];
                 } else {
                   // Add device
                   draft.devices[device.id] = {
@@ -83,7 +83,7 @@ export function createDevicesStore({
                     features: device.features,
                     state: undefined,
                     config: undefined,
-                    children: device.children?.map(child => ({ id: child.id })) || [],
+                    children: device.children?.map(child => ({ id: child.id, type: child.type })) || [],
                   };
                 }
 

@@ -39,6 +39,17 @@ namespace devices
     };
 
     /**
+     * @enum LiftErrorCode
+     * @brief Enumeration of possible lift error codes
+     */
+    enum class LiftErrorCode
+    {
+        NONE,
+        LIFT_CONFIGURATION_ERROR,
+        LIFT_STATE_ERROR,
+    };
+
+    /**
      * @struct LiftConfig
      * @brief Configuration for Lift device
      */
@@ -56,13 +67,13 @@ namespace devices
      */
     struct LiftState
     {
-        LiftStateEnum state = LiftStateEnum::UNKNOWN; // Current lift state
-        bool isBallWaiting = false;                   // Whether ball is waiting to be loaded
-        bool isLoaded = false;                        // Whether lift has a ball loaded
-        int initStep = 0;                             // Current initialization step
-        bool onErrorChange = false;     // Error flag
-        String errorMessage = ""; // Last error message
-        String errorCode = "";    // Last error code
+        LiftStateEnum state = LiftStateEnum::UNKNOWN;  // Current lift state
+        bool isBallWaiting = false;                    // Whether ball is waiting to be loaded
+        bool isLoaded = false;                         // Whether lift has a ball loaded
+        int initStep = 0;                              // Current initialization step
+        bool onErrorChange = false;                    // Error flag
+        String errorMessage = "";                      // Last error message
+        LiftErrorCode errorCode = LiftErrorCode::NONE; // Last error code
     };
 
     /**
@@ -165,6 +176,13 @@ namespace devices
         String stateToString(LiftStateEnum state) const;
 
         /**
+         * @brief Convert LiftErrorCode to string
+         * @param errorCode Error code enum value
+         * @return String representation
+         */
+        String errorCodeToString(LiftErrorCode errorCode) const;
+
+        /**
          * @brief Start loading a ball
          * @return true if started
          */
@@ -263,7 +281,7 @@ namespace devices
          * @param errorCode Error code
          * @param message Error message
          */
-        void setError(const String &errorCode, const String &message);
+        void setError(LiftErrorCode errorCode, const String &message);
 
         /**
          * @brief Handle initialization sequence

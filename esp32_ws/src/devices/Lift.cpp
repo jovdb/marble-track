@@ -67,41 +67,41 @@ namespace devices
 
         if (_stepper->getPins().empty())
         {
-            setError("LIFT_CONFIGURATION_ERROR", "No pins configured for stepper");
+            setError(LiftErrorCode::LIFT_CONFIGURATION_ERROR, "No pins configured for stepper");
         }
 
         if (_limitSwitch->getPins().empty())
         {
-            setError("LIFT_CONFIGURATION_ERROR", "No pins configured for limit switch");
+            setError(LiftErrorCode::LIFT_CONFIGURATION_ERROR, "No pins configured for limit switch");
         }
 
         if (_ballSensor->getPins().empty())
         {
-            setError("LIFT_CONFIGURATION_ERROR", "No pins configured for ball sensor");
+            setError(LiftErrorCode::LIFT_CONFIGURATION_ERROR, "No pins configured for ball sensor");
         }
 
         if (_loader->getPins().empty())
         {
-            setError("LIFT_CONFIGURATION_ERROR", "No pins configured for loader servo");
+            setError(LiftErrorCode::LIFT_CONFIGURATION_ERROR, "No pins configured for loader servo");
         }
 
         if (_unloader->getPins().empty())
         {
-            setError("LIFT_CONFIGURATION_ERROR", "No pins configured for unloader servo");
+            setError(LiftErrorCode::LIFT_CONFIGURATION_ERROR, "No pins configured for unloader servo");
         }
 
         // Validate configuration
         if (_config.minSteps >= _config.maxSteps)
         {
-            setError("LIFT_CONFIGURATION_ERROR", "minSteps must be less than maxSteps");
+            setError(LiftErrorCode::LIFT_CONFIGURATION_ERROR, "minSteps must be less than maxSteps");
         }
         if (_config.minSteps < 0 || _config.maxSteps < 0)
         {
-            setError("LIFT_CONFIGURATION_ERROR", "minSteps and maxSteps must be non-negative");
+            setError(LiftErrorCode::LIFT_CONFIGURATION_ERROR, "minSteps and maxSteps must be non-negative");
         }
         if (_config.downFactor <= 0.0f)
         {
-            setError("LIFT_CONFIGURATION_ERROR", "downFactor must be positive");
+            setError(LiftErrorCode::LIFT_CONFIGURATION_ERROR, "downFactor must be positive");
         }
 
         MLOG_DEBUG("%s: Setup complete", toString().c_str());
@@ -211,7 +211,7 @@ namespace devices
                 }
                 break;
             default:
-                setError("LIFT_UNKNOWN_STATE_LOOP", "Unknown state encountered in loop()");
+                setError(LiftErrorCode::LIFT_STATE_ERROR, "Unknown state encountered in loop()");
             }
 
             xSemaphoreGive(_stateMutex);
@@ -270,7 +270,7 @@ namespace devices
             break;
         }
         default:
-            setError("LIFT_UNKNOWN_STATE_UP", "Unknown state encountered in up()");
+            setError(LiftErrorCode::LIFT_STATE_ERROR, "Unknown state encountered in loop()");
             break;
         }
 
@@ -317,7 +317,7 @@ namespace devices
             return moveStepper(steps, speedRatio);
         }
         default:
-            setError("LIFT_UNKNOWN_STATE_DOWN", "Unknown state encountered in down()");
+            setError(LiftErrorCode::LIFT_STATE_ERROR, "Unknown state encountered in up()");
             xSemaphoreGive(_stateMutex);
             return false;
         }
@@ -373,7 +373,7 @@ namespace devices
             return result;
         }
         default:
-            setError("LIFT_UNKNOWN_STATE_LOAD_BALL", "Unknown state encountered in loadBall()");
+            setError(LiftErrorCode::LIFT_STATE_ERROR, "Unknown state encountered in down()");
             xSemaphoreGive(_stateMutex);
             return false;
         }
@@ -407,7 +407,7 @@ namespace devices
             return result;
         }
         default:
-            setError("LIFT_UNKNOWN_STATE_UNLOAD_BALL", "Unknown state encountered in unloadBall()");
+            setError(LiftErrorCode::LIFT_STATE_ERROR, "Unknown state encountered in unloadBall()");
             xSemaphoreGive(_stateMutex);
             return false;
         }
@@ -435,7 +435,7 @@ namespace devices
         doc["isLoaded"] = _state.isLoaded;
         doc["currentPosition"] = getCurrentPosition();
         doc["errorMessage"] = _state.errorMessage;
-        doc["errorCode"] = _state.errorCode;
+        doc["errorCode"] = errorCodeToString(_state.errorCode);
     }
 
     bool Lift::control(const String &action, JsonObject *args)
@@ -534,6 +534,21 @@ namespace devices
             return "MovingDown";
         default:
             return "Unknown";
+        }
+    }
+
+    String Lift::errorCodeToString(LiftErrorCode errorCode) const
+    {
+        switch (errorCode)
+        {
+        case LiftErrorCode::NONE:
+            return "";
+        case LiftErrorCode::LIFT_CONFIGURATION_ERROR:
+            return "LIFT_CONFIGURATION_ERROR";
+        case LiftErrorCode::LIFT_STATE_ERROR:
+            return "LIFT_STATE_ERROR";
+        default:
+            return "UNKNOWN_ERROR_CODE";
         }
     }
 
@@ -669,7 +684,7 @@ namespace devices
         return true;
     }
 
-    void Lift::setError(const String &errorCode, const String &message)
+    void Lift::setError(LiftErrorCode errorCode, const String &message)
     {
         if (xSemaphoreTake(_stateMutex, portMAX_DELAY) != pdTRUE)
         {
@@ -677,49 +692,11 @@ namespace devices
             return;
         }
 
-        MLOG_ERROR("%s: %s - %s", toString().c_str(), errorCode.c_str(), message.c_str());
+        MLOG_ERROR("%s: %s - %s", toString().c_str(), errorCodeToString(errorCode).c_str(), message.c_str());
         _state.state = LiftStateEnum::ERROR;
         _state.onErrorChange = true;
         _state.errorMessage = message; // Store the error message
         _state.errorCode = errorCode;  // Store the error code
-
-        // Handle specific error codes
-        if (errorCode == "LIFT_UNKNOWN_STATE_LOOP")
-        {
-            // Handle unknown state in loop - perhaps reset to init
-            _state.state = LiftStateEnum::INIT;
-        }
-        else if (errorCode == "LIFT_UNKNOWN_STATE_UP")
-        {
-            // Handle unknown state during up movement - stop stepper
-            stopStepper();
-        }
-        else if (errorCode == "LIFT_UNKNOWN_STATE_DOWN")
-        {
-            // Handle unknown state during down movement - stop stepper
-            stopStepper();
-        }
-        else if (errorCode == "LIFT_UNKNOWN_STATE_LOAD_BALL")
-        {
-            // Handle unknown state during ball loading - reset loader
-            // Placeholder: could reset servo position
-        }
-        else if (errorCode == "LIFT_UNKNOWN_STATE_UNLOAD_BALL")
-        {
-            // Handle unknown state during ball unloading - reset unloader
-            // Placeholder: could reset servo position
-        }
-        else if (errorCode == "LIFT_CONFIGURATION_ERROR")
-        {
-            // Handle configuration error - set to error state and prevent operation
-            // Configuration errors are critical and require manual intervention
-            MLOG_ERROR("%s: Configuration error detected - device will not function until fixed", toString().c_str());
-        }
-        else
-        {
-            // Default handling for unknown error codes
-            MLOG_WARN("%s: Unknown error code: %s", toString().c_str(), errorCode.c_str());
-        }
 
         notifyStateChanged();
         xSemaphoreGive(_stateMutex);

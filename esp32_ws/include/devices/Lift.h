@@ -96,7 +96,6 @@ namespace devices
 
         void setup() override;
         void loop() override;
-        std::vector<int> getPins() const override;
 
         /**
          * @brief Move the lift up to the top position

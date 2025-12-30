@@ -219,18 +219,6 @@ namespace devices
         */
     }
 
-    std::vector<int> Lift::getPins() const
-    {
-        std::vector<int> pins;
-        // Collect pins from all children
-        for (auto child : getChildren())
-        {
-            auto childPins = child->getPins();
-            pins.insert(pins.end(), childPins.begin(), childPins.end());
-        }
-        return pins;
-    }
-
     bool Lift::up(float speedRatio)
     {
         if (xSemaphoreTake(_stateMutex, portMAX_DELAY) != pdTRUE)

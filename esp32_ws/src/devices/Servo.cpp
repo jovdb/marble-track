@@ -35,6 +35,9 @@ namespace devices
     {
         Device::setup();
 
+        // Determine if auto-assignment was requested
+        _wasAutoAssigned = (_config.mcpwmChannel == -1);
+
         if (_config.pin == -1)
         {
             MLOG_WARN("%s: Pin not configured (pin = -1)", toString().c_str());
@@ -261,8 +264,8 @@ namespace devices
         }
 
         // Acquire new channel
-        int channelToUse = _config.mcpwmChannel;
-        if (channelToUse == -1)
+        int channelToUse;
+        if (_wasAutoAssigned)
         {
             channelToUse = McPwmChannels::acquireFree();
             if (channelToUse == -1)
@@ -271,9 +274,12 @@ namespace devices
                 _isSetup = false;
                 return false;
             }
+            // Save the assigned channel in config
+            _config.mcpwmChannel = channelToUse;
         }
         else
         {
+            channelToUse = _config.mcpwmChannel;
             if (!McPwmChannels::acquireSpecific(channelToUse))
             {
                 MLOG_ERROR("%s: MCPWM channel %d already in use or invalid.", toString().c_str(), channelToUse);

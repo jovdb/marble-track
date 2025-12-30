@@ -149,6 +149,7 @@ namespace devices
 
         bool _isSetup = false;
         SemaphoreHandle_t _stateMutex; // Mutex for thread-safe state access
+        bool _wasAutoAssigned = false; // Flag to track if channel was auto-assigned
     };
 
 } // namespace devices

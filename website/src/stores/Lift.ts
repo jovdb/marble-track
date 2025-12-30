@@ -17,6 +17,8 @@ export interface ILiftState extends IDeviceState {
     | "MovingDown";
   currentPosition?: number;
   isBallWaiting: boolean;
+  errorMessage?: string;
+  errorCode?: string;
   [key: string]: unknown;
 }
 

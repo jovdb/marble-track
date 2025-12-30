@@ -12,13 +12,14 @@ export function Lift(props: { id: string }) {
 
   const state = () => device()?.state;
   const config = () => device()?.config;
-  // TODO: Handle error state - might need to be added to device state
-  const error = () => undefined; // Placeholder until error handling is implemented
+  const error = () => state()?.errorMessage || (state()?.state === "Error" ? "Device is in error state" : undefined);
 
   const isMoving = createMemo(
     () =>
       state()?.state === "Reset" || state()?.state === "MovingUp" || state()?.state === "MovingDown"
   );
+
+  const isInError = createMemo(() => state()?.state === "Error");
 
   const canLoad = createMemo(
     () => state()?.state === "LiftDownUnloaded" || state()?.state === "LiftDownLoaded"
@@ -189,14 +190,14 @@ export function Lift(props: { id: string }) {
             <button
               class={styles.device__button}
               onClick={() => actions.init()}
-              disabled={isMoving()}
+              disabled={isMoving() || isInError()}
             >
               Init
             </button>
             <button
               class={styles.device__button}
               onClick={handleLoadUnload}
-              disabled={!canLoadOrUnload()}
+              disabled={!canLoadOrUnload() || isInError()}
             >
               {getLoadUnloadText()}
             </button>
@@ -209,7 +210,7 @@ export function Lift(props: { id: string }) {
                   actions.up();
                 }
               }}
-              disabled={isLiftUp() ? !canDown() : !canUp()}
+              disabled={(isLiftUp() ? !canDown() : !canUp()) || isInError()}
             >
               {isLiftUp() ? "Down" : "Up"}
             </button>

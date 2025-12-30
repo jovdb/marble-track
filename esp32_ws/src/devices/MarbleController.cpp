@@ -1,5 +1,6 @@
 #include "devices/MarbleController.h"
 #include "Logging.h"
+#include "DeviceManager.h"
 #include "devices/Button.h"
 #include "devices/Buzzer.h"
 #include "devices/Wheel.h"
@@ -10,308 +11,127 @@ extern DeviceManager deviceManager;
 namespace devices
 {
 
-MarbleController::MarbleController(const String &id) : Device(id, "MarbleController"), _deviceManager(&deviceManager)
-{
-    _buzzer = nullptr;
-
-    _wheel = nullptr;
-    _wheelNextBtn = nullptr;
-    _wheelBtnLed = nullptr;
-
-    _splitter = nullptr;
-    _splitterNextBtn = nullptr;
-    _splitterBtnLed = nullptr;
-
-    _lift = nullptr;
-    _liftButton = nullptr;
-    _liftLed = nullptr;
-}
-
-MarbleController::~MarbleController()
-{
-    if (_wheelNextBtnUnsubscribe)
+    MarbleController::MarbleController(const String &id) : Device(id, "MarbleController")
     {
-        _wheelNextBtnUnsubscribe();
-    }
-    if (_liftButtonUnsubscribe)
-    {
-        _liftButtonUnsubscribe();
-    }
-}
+        _buzzer = new devices::Buzzer("buzzer");
+        JsonDocument buzzerConfigDoc;
+        buzzerConfigDoc["name"] = "Buzzer";
+        buzzerConfigDoc["pin"] = 14;
+        _buzzer->jsonToConfig(buzzerConfigDoc);
+        addChild(_buzzer);
 
-void MarbleController::setup()
-{
+        _lift = new devices::Lift("lift");
+        JsonDocument liftConfigDoc;
+        liftConfigDoc["name"] = "Lift";
+        liftConfigDoc["minSteps"] = 0;
+        liftConfigDoc["maxSteps"] = 1500;
+        _lift->jsonToConfig(liftConfigDoc);
+        addChild(_lift);
 
-    MLOG_DEBUG("MarbleController: Starting setup");
+        _liftLed = new devices::Led("lift-led");
+        JsonDocument configDoc;
+        configDoc["name"] = "Lift Led";
+        configDoc["pin"] = 15;
+        _liftLed->jsonToConfig(configDoc);
+        addChild(_liftLed);
 
-    _buzzer = _deviceManager->getDeviceByIdAs<devices::Buzzer>("buzzer");
-    if (_buzzer == nullptr)
-    {
-        MLOG_ERROR("Required device 'buzzer' not found!");
-    }
-    else
-    {
-        // _buzzer->tune("scale_up:d=32,o=5,b=300:c,c#,d#,e,f#,g#,a#,b");
+        _liftButton = new devices::Button("lift-button");
+        JsonDocument buttonConfigDoc;
+        buttonConfigDoc["name"] = "Lift Button";
+        buttonConfigDoc["pin"] = 16;
+        buttonConfigDoc["pinMode"] = "pullup";
+        buttonConfigDoc["debounceTimeInMs"] = 50;
+        buttonConfigDoc["buttonType"] = "NormalOpen";
+        _liftButton->jsonToConfig(buttonConfigDoc);
+        addChild(_liftButton);
     }
 
-    // TODO: Re-enable when legacy devices are converted to composition devices
-    // _wheelNextBtn = deviceManager.getDeviceByIdAs<devices::Button>("wheel-next-btn");
-    // if (_wheelNextBtn == nullptr)
-    // {
-    //     MLOG_ERROR("Required device 'wheel-next-btn' not found!");
-    // }
-    // else
-    // {
-    //     // Second call: unsubscribe from previous callback
-    //     if (_wheelNextBtnUnsubscribe)
-    //     {
-    //         _wheelNextBtnUnsubscribe();
-    //         _wheelNextBtnUnsubscribe = nullptr;
-    //     }
-
-    //     // First call: subscribe to button state changes
-    //     _wheelNextBtnUnsubscribe = _wheelNextBtn->onStateChange([this](void *data)
-    //                                                             {
-    //                                                                     // Handle button press - move to next breakpoint if wheel is idle
-    //                                                                     if (_wheelNextBtn &&  _wheelNextBtn->isPressed())
-    //                                                                     {
-    //                                                                         if (_buzzer != nullptr)
-    //                                                                             _buzzer->tone(1000, 100);
-
-    //                                                                     } });
-
-    //     _wheel = deviceManager.getDeviceByIdAs<devices::Wheel>("wheel");
-    //     if (_wheel == nullptr)
-    //     {
-    //         MLOG_ERROR("Required device 'wheel' not found!");
-    //     }
-
-    //     _buzzer = deviceManager.getDeviceByIdAs<devices::Buzzer>("buzzer");
-    //     if (_buzzer == nullptr)
-    //     {
-    //         MLOG_ERROR("Required device 'buzzer' not found!");
-    //     }
-
-    //     _wheelBtnLed = deviceManager.getDeviceByIdAs<devices::Led>("wheel-btn-led");
-    //     if (_wheelBtnLed == nullptr)
-    //     {
-    //         MLOG_ERROR("Required device 'wheel-btn-led' not found!");
-    //     }
-
-    //     // _splitter = deviceManager.getDeviceByIdAs<Wheel>("splitter");
-    //     // if (_splitter == nullptr)
-    //     // {
-    //     //     MLOG_ERROR("Required device 'splitter' not found!");
-    //     // }
-
-    //     // _splitterNextBtn = deviceManager.getDeviceByIdAs<Button>("splitter-next-btn");
-    //     // if (_splitterNextBtn == nullptr)
-    //     // {
-    //     //     MLOG_ERROR("Required device 'splitter-next-btn' not found!");
-    //     // }
-
-    //     // _splitterBtnLed = deviceManager.getDeviceByIdAs<Led>("splitter-btn-led");
-    //     // if (_splitterBtnLed == nullptr)
-    //     // {
-    //     //     MLOG_ERROR("Required device 'splitter-btn-led' not found!");
-    //     // }
-
-    _lift = _deviceManager->getDeviceByIdAs<devices::Lift>("lift");
-    if (_lift == nullptr)
+    void MarbleController::loop()
     {
-        MLOG_ERROR("Required device 'lift' not found!");
+        Device::loop();
+
+        // bool ledBlinkFast = millis() % 500 > 250;
+        // bool ledBlinkSlow = millis() % 1000 > 500;
+
+        loopLift();
     }
 
-    if (_liftButton && _liftButtonUnsubscribe)
+    void MarbleController::loopLift()
     {
-        _liftButtonUnsubscribe();
-        _liftButtonUnsubscribe = nullptr;
-    }
-    _liftButton = _deviceManager->getDeviceByIdAs<devices::Button>("lift-btn");
-    if (_liftButton == nullptr)
-    {
-        MLOG_ERROR("Required device 'lift-btn' not found!");
-    }
+        // Lift control logic
 
-    _liftLed = _deviceManager->getDeviceByIdAs<devices::Led>("lift-led");
-    if (_liftLed == nullptr)
-    {
-        MLOG_ERROR("Required device 'lift-led' not found!");
-    }
-}
-
-void MarbleController::loop()
-{
-    bool ledBlinkFast = millis() % 500 > 250;
-    bool ledBlinkSlow = millis() % 1000 > 500;
-
-    // Lift
-    if (_lift)
-    {
         auto liftState = _lift->getState();
 
         switch (liftState.state)
         {
-        case devices::LiftStateEnum::LIFT_DOWN_LOADING:
-        case devices::LiftStateEnum::LIFT_UP_UNLOADING:
-        case devices::LiftStateEnum::MOVING_UP:
-        case devices::LiftStateEnum::MOVING_DOWN:
-            if (_liftLed)
-                _liftLed->set(true);
-            break;
-        case devices::LiftStateEnum::LIFT_DOWN_UNLOADED:
-            if (_liftLed)
-                _liftLed->set(ledBlinkSlow);
-
-            if (_liftButton)
-            {
-                auto liftBtnState = _liftButton->getState();
-                if (liftBtnState.isPressed && liftBtnState.isPressedChanged)
-                {
-                    _lift->loadBall();
-                }
-            }
-            break;
-        case devices::LiftStateEnum::LIFT_DOWN_LOADED:
-        case devices::LiftStateEnum::LIFT_UP_UNLOADED:
-        case devices::LiftStateEnum::LIFT_UP_LOADED:
-            if (_liftLed)
-                _liftLed->set(ledBlinkSlow);
-            break;
-        case devices::LiftStateEnum::INIT:
         case devices::LiftStateEnum::UNKNOWN:
-            if (_liftLed)
-                _liftLed->set(false);
+            // Wait for initialization
+            _liftLed->set(false);
+            _lift->init();
             break;
         case devices::LiftStateEnum::ERROR:
-            // Only once
-            if (liftState.onErrorChange)
+            // Handle error state - maybe blink LED faster
+            _liftLed->set(false);
+            break;
+        case devices::LiftStateEnum::INIT:
+            // Initialization in progress
+            _liftLed->blink(500, 500);
+            break;
+        case devices::LiftStateEnum::LIFT_DOWN_LOADING:
+            // Loading in progress
+            _liftLed->blink(500, 500);
+            break;
+        case devices::LiftStateEnum::LIFT_DOWN_LOADED:
+            // Ball is loaded at bottom, unload when button pressed
+            _liftLed->set(true);
+
+            if (_liftButton->isPressed())
             {
-                // Notify error
-                if (_buzzer)
-                {
-                    MLOG_DEBUG("MarbleController: Lift error detected, buzzing");
-                    _buzzer->stop();
-                    _buzzer->tone(60, 400); // Long buzz for error
-                }
+                _lift->up();
             }
-            if (_liftLed)
-                _liftLed->set(false); // Turn off LED on error
+            break;
+        case devices::LiftStateEnum::LIFT_DOWN_UNLOADED:
+            // No ball loaded at bottom, load when button pressed
+            if (_liftButton->isPressed())
+            {
+                _lift->loadBall();
+            }
+            break;
+        case devices::LiftStateEnum::LIFT_UP_UNLOADING:
+            _liftLed->blink(500, 500);
+
+            break;
+        case devices::LiftStateEnum::LIFT_UP_UNLOADED:
+            _liftLed->set(true);
+
+            // Ball unloaded at top, move down when button pressed
+            if (_liftButton->isPressed())
+            {
+                _lift->down();
+            }
+            break;
+        case devices::LiftStateEnum::LIFT_UP_LOADED:
+            // Ball loaded at top, unload when button pressed
+            _liftLed->set(true);
+
+            if (_liftButton->isPressed())
+            {
+                _lift->unloadBall();
+            }
+            break;
+        case devices::LiftStateEnum::MOVING_UP:
+            _liftLed->blink(500, 500);
+
+            // Moving up, wait for completion
+            break;
+        case devices::LiftStateEnum::MOVING_DOWN:
+            _liftLed->blink(500, 500);
+
+            // Moving down, wait for completion
             break;
         default:
-            MLOG_ERROR("MarbleController: Unhandled lift state");
             break;
         }
     }
-
-    // Wheel Button
-    /*
-    if (_wheelNextBtn && _wheel && _wheelNextBtn->isPressed())
-    {
-        auto wheelState = _wheel->getState();
-        if (wheelState.state == devices::WheelStateEnum::IDLE || wheelState.state == devices::WheelStateEnum::UNKNOWN)
-        {
-            if (_buzzer != nullptr)
-                _buzzer->tone(200, 100);
-            _wheel->nextBreakPoint();
-        }
-        else
-        {
-            MLOG_WARN("Wheel [%s]: Next button pressed, but wheel ignored, wheel not idle", _wheel->getId().c_str());
-        }
-    }
-
-    // Wheel Led
-    if (_wheelBtnLed)
-    {
-        if (_wheel)
-        {
-            auto wheelState = _wheel->getState();
-
-            switch (wheelState.state)
-            {
-            case devices::WheelStateEnum::MOVING:
-            case devices::WheelStateEnum::CALIBRATING:
-            case devices::WheelStateEnum::INIT:
-                _wheelBtnLed->set(ledBlinkFast);
-                break;
-            case devices::WheelStateEnum::ERROR:
-                _wheelBtnLed->set(false);
-                break;
-            case devices::WheelStateEnum::UNKNOWN:
-            case devices::WheelStateEnum::IDLE:
-                _wheelBtnLed->set(true);
-                break;
-
-            default:
-                MLOG_ERROR("MarbleController: Unknown wheel state");
-                break;
-            }
-        }
-        else
-        {
-            _wheelBtnLed->set(false);
-        }
-    }
-
-    // Check for wheel error and buzz
-    if (_wheel && _wheel->getState().onError && _buzzer)
-    {
-        _buzzer->tone(1000, 500); // Long buzz for error
-    }
-
-    */
-
-    // // Splitter Button
-    // if (_splitterNextBtn && _splitter && _splitterNextBtn->isPressed())
-    // {
-    //     if (_splitter->getState().state == devices::WheelStateEnum::IDLE || _splitter->getState().state == devices::WheelStateEnum::UNKNOWN)
-    //     {
-    //         if (_buzzer != nullptr)
-    //             _buzzer->tone(200, 100);
-    //         _splitter->nextBreakPoint();
-    //     }
-    //     else
-    //     {
-    //         MLOG_WARN("Splitter [%s]: Next button pressed, but splitter ignored, wheel not idle", _splitter->getId().c_str());
-    //     }
-    // }
-
-    // // Splitter Led
-    // if (_splitterBtnLed)
-    // {
-    //     if (_splitter)
-    //     {
-    //         switch (_splitter->getState().state)
-    //         {
-    //         case devices::WheelStateEnum::MOVING:
-    //         case devices::WheelStateEnum::CALIBRATING:
-    //         case devices::WheelStateEnum::INIT:
-    //             _splitterBtnLed->set(ledBlinkFast);
-    //             break;
-    //         case devices::WheelStateEnum::ERROR:
-    //             _splitterBtnLed->set(false);
-    //             break;
-    //         case devices::WheelStateEnum::UNKNOWN:
-    //         case devices::WheelStateEnum::IDLE:
-    //             _splitterBtnLed->set(true);
-    //             break;
-    //         default:
-    //             MLOG_ERROR("MarbleController: Unknown wheel state");
-    //             break;
-    //         }
-    //     }
-    //     else
-    //     {
-    //         _wheelBtnLed->set(false);
-    //     }
-    // }
-
-    // // Check for splitter error and buzz
-    // if (_splitter && _splitter->getState().onError && _buzzer)
-    // {
-    //     _buzzer->tone(1000, 500); // Long buzz for error
-    // }
-}
 
 } // namespace devices

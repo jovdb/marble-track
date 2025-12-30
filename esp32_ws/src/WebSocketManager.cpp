@@ -734,7 +734,7 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
                 payloadObj = doc["args"].as<JsonObject>();
                 payloadPtr = &payloadObj;
             }
-            MLOG_INFO("%s: Executing action '%s'.", device->toString().c_str(), functionName.c_str());
+            MLOG_INFO("%s: Starting action '%s'.", device->toString().c_str(), functionName.c_str());
             ctrl->control(functionName, payloadPtr);
             return;
         }

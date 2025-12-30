@@ -19,8 +19,6 @@ namespace devices
         // _loader = nullptr;
         // _unloader = nullptr;
 
-        _stateMutex = xSemaphoreCreateMutex();
-
         // Create children
         _stepper = new Stepper(getId() + "-stepper");
         auto stepperCfg = _stepper->getConfig();
@@ -55,10 +53,6 @@ namespace devices
 
     Lift::~Lift()
     {
-        if (_stateMutex)
-        {
-            vSemaphoreDelete(_stateMutex);
-        }
     }
 
     void Lift::setup()
@@ -221,9 +215,6 @@ namespace devices
 
     bool Lift::up(float speedRatio)
     {
-        if (xSemaphoreTake(_stateMutex, portMAX_DELAY) != pdTRUE)
-            return false;
-
         bool isSuccess = false;
 
         switch (_state.state)
@@ -262,15 +253,11 @@ namespace devices
             break;
         }
 
-        xSemaphoreGive(_stateMutex);
         return isSuccess;
     }
 
     bool Lift::down(float speedRatio)
     {
-        if (xSemaphoreTake(_stateMutex, portMAX_DELAY) != pdTRUE)
-            return false;
-
         switch (_state.state)
         {
         case LiftStateEnum::UNKNOWN:
@@ -281,7 +268,6 @@ namespace devices
         case LiftStateEnum::LIFT_DOWN_LOADING:
         case LiftStateEnum::LIFT_UP_UNLOADING:
             MLOG_WARN("%s: Cannot move down, state is %s", toString().c_str(), stateToString(_state.state).c_str());
-            xSemaphoreGive(_stateMutex);
             return false;
 
         case LiftStateEnum::LIFT_UP_UNLOADED:
@@ -294,32 +280,25 @@ namespace devices
             if (currentPos <= _config.minSteps)
             {
                 MLOG_WARN("%s: Cannot move down - already at min position (current: %ld, min: %ld)", toString().c_str(), currentPos, _config.minSteps);
-                xSemaphoreGive(_stateMutex);
                 return false;
             }
 
             long steps = (_config.minSteps - currentPos) * DOWN_FACTOR;
             _state.state = LiftStateEnum::MOVING_DOWN;
             notifyStateChanged();
-            xSemaphoreGive(_stateMutex);
             return moveStepper(steps, speedRatio);
         }
         default:
             setError(LiftErrorCode::LIFT_STATE_ERROR, "Unknown state encountered in up()");
-            xSemaphoreGive(_stateMutex);
             return false;
         }
     }
 
     bool Lift::init()
     {
-        if (xSemaphoreTake(_stateMutex, portMAX_DELAY) != pdTRUE)
-            return false;
-
         if (!_stepper || !_limitSwitch)
         {
             MLOG_WARN("%s: Stepper or limit switch not initialized", toString().c_str());
-            xSemaphoreGive(_stateMutex);
             return false;
         }
 
@@ -329,15 +308,11 @@ namespace devices
         _state.initStep = 1; // unload end
 
         notifyStateChanged();
-        xSemaphoreGive(_stateMutex);
         return true;
     }
 
     bool Lift::loadBall()
     {
-        if (xSemaphoreTake(_stateMutex, portMAX_DELAY) != pdTRUE)
-            return false;
-
         switch (_state.state)
         {
         case LiftStateEnum::UNKNOWN:
@@ -351,27 +326,21 @@ namespace devices
         case LiftStateEnum::MOVING_DOWN:
         case LiftStateEnum::LIFT_DOWN_LOADED:
             MLOG_WARN("%s: Cannot load ball, state is %s", toString().c_str(), stateToString(_state.state).c_str());
-            xSemaphoreGive(_stateMutex);
             return false;
 
         case LiftStateEnum::LIFT_DOWN_UNLOADED:
         {
             bool result = loadBallStart();
-            xSemaphoreGive(_stateMutex);
             return result;
         }
         default:
             setError(LiftErrorCode::LIFT_STATE_ERROR, "Unknown state encountered in down()");
-            xSemaphoreGive(_stateMutex);
             return false;
         }
     }
 
     bool Lift::unloadBall()
     {
-        if (xSemaphoreTake(_stateMutex, portMAX_DELAY) != pdTRUE)
-            return false;
-
         switch (_state.state)
         {
         case LiftStateEnum::UNKNOWN:
@@ -384,19 +353,16 @@ namespace devices
         case LiftStateEnum::LIFT_DOWN_LOADED:
         case LiftStateEnum::LIFT_DOWN_UNLOADED:
             MLOG_WARN("%s: Cannot unload ball, state is %s", toString().c_str(), stateToString(_state.state).c_str());
-            xSemaphoreGive(_stateMutex);
             return false;
 
         case LiftStateEnum::LIFT_UP_UNLOADED:
         case LiftStateEnum::LIFT_UP_LOADED:
         {
             bool result = unloadBallStart();
-            xSemaphoreGive(_stateMutex);
             return result;
         }
         default:
             setError(LiftErrorCode::LIFT_STATE_ERROR, "Unknown state encountered in unloadBall()");
-            xSemaphoreGive(_stateMutex);
             return false;
         }
     }
@@ -674,12 +640,6 @@ namespace devices
 
     void Lift::setError(LiftErrorCode errorCode, const String &message)
     {
-        if (xSemaphoreTake(_stateMutex, portMAX_DELAY) != pdTRUE)
-        {
-            MLOG_ERROR("%s: Failed to acquire state mutex in setError", toString().c_str());
-            return;
-        }
-
         MLOG_ERROR("%s: %s - %s", toString().c_str(), errorCodeToString(errorCode).c_str(), message.c_str());
         _state.state = LiftStateEnum::ERROR;
         _state.onErrorChange = true;
@@ -687,7 +647,6 @@ namespace devices
         _state.errorCode = errorCode;  // Store the error code
 
         notifyStateChanged();
-        xSemaphoreGive(_stateMutex);
     }
 
     void Lift::handleInitSequence()

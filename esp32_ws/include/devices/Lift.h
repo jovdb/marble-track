@@ -287,7 +287,6 @@ namespace devices
          */
         void handleInitSequence();
 
-        SemaphoreHandle_t _stateMutex; // Mutex for thread-safe state access
     };
 
 } // namespace devices

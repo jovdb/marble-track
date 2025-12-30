@@ -18,8 +18,6 @@ namespace devices
     Wheel::Wheel(const String &id)
         : Device(id, "wheel")
     {
-        _stateMutex = xSemaphoreCreateMutex();
-
         // Create stepper child
         _stepper = new Stepper(getId() + "-stepper");
         addChild(_stepper);
@@ -35,10 +33,6 @@ namespace devices
 
     Wheel::~Wheel()
     {
-        if (_stateMutex != nullptr)
-        {
-            vSemaphoreDelete(_stateMutex);
-        }
     }
 
     void Wheel::setup()
@@ -342,17 +336,13 @@ namespace devices
 
     void Wheel::addStateToJson(JsonDocument &doc)
     {
-        if (xSemaphoreTake(_stateMutex, portMAX_DELAY) == pdTRUE)
-        {
-            doc["state"] = stateToString(_state.state);
-            doc["lastZeroPosition"] = _state.lastZeroPosition;
-            doc["currentBreakpointIndex"] = _state.currentBreakpointIndex;
-            doc["targetBreakpointIndex"] = _state.targetBreakpointIndex;
-            doc["targetAngle"] = _state.targetAngle;
-            doc["onError"] = _state.onError;
-            doc["breakpointChanged"] = _state.breakpointChanged;
-            xSemaphoreGive(_stateMutex);
-        }
+        doc["state"] = stateToString(_state.state);
+        doc["lastZeroPosition"] = _state.lastZeroPosition;
+        doc["currentBreakpointIndex"] = _state.currentBreakpointIndex;
+        doc["targetBreakpointIndex"] = _state.targetBreakpointIndex;
+        doc["targetAngle"] = _state.targetAngle;
+        doc["onError"] = _state.onError;
+        doc["breakpointChanged"] = _state.breakpointChanged;
     }
 
     bool Wheel::control(const String &action, JsonObject *args)

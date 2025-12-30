@@ -170,7 +170,6 @@ namespace devices
          */
         Device *getNextButton() const;
 
-        SemaphoreHandle_t _stateMutex; // Mutex for thread-safe state access
     };
 
 } // namespace devices

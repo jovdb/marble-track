@@ -44,25 +44,36 @@ export function createDevicesStore({
           setStore(
             produce((draft) => {
               const { devices } = message;
+              
+              // Helper function to recursively collect all device IDs from nested structure
+              const collectAllDeviceIds = (deviceList: DeviceInfo[]): string[] => {
+                const ids: string[] = [];
+                const processDevice = (device: DeviceInfo) => {
+                  ids.push(device.id);
+                  device.children?.forEach(processDevice);
+                };
+                deviceList.forEach(processDevice);
+                return ids;
+              };
+              
+              const allDeviceIds = collectAllDeviceIds(devices);
+              
               // Remove unknown devices
               Object.keys(draft.devices).forEach((key) => {
-                if (
-                  !devices.find((d) => d.id === key) &&
-                  !devices.some((d) => d.children?.find((c) => c.id === key))
-                ) {
+                if (!allDeviceIds.includes(key)) {
                   delete draft.devices[key];
                 }
               });
 
-              // Add update devices and their children
-              devices.forEach((device) => {
+              // Helper function to recursively add/update devices
+              const addDeviceRecursively = (device: DeviceInfo) => {
                 const deviceDraft = draft.devices[device.id];
                 if (deviceDraft) {
                   // Update device
                   deviceDraft.type = device.type;
                   deviceDraft.pins = device.pins;
                   deviceDraft.features = device.features;
-                  deviceDraft.children = device.children || [];
+                  deviceDraft.children = device.children?.map(child => ({ id: child.id })) || [];
                 } else {
                   // Add device
                   draft.devices[device.id] = {
@@ -72,33 +83,16 @@ export function createDevicesStore({
                     features: device.features,
                     state: undefined,
                     config: undefined,
-                    children: device.children || [],
+                    children: device.children?.map(child => ({ id: child.id })) || [],
                   };
                 }
 
-                // Add child devices to the store
-                device.children?.forEach((child) => {
-                  const childDraft = draft.devices[child.id];
-                  if (childDraft) {
-                    // Update child device
-                    childDraft.type = child.type;
-                    childDraft.pins = child.pins;
-                    childDraft.features = child.features;
-                    childDraft.children = child.children || [];
-                  } else {
-                    // Add child device
-                    draft.devices[child.id] = {
-                      id: child.id,
-                      type: child.type,
-                      pins: child.pins,
-                      features: child.features,
-                      state: undefined,
-                      config: undefined,
-                      children: child.children || [],
-                    };
-                  }
-                });
-              });
+                // Recursively process children
+                device.children?.forEach(addDeviceRecursively);
+              };
+
+              // Add/update all devices recursively
+              devices.forEach(addDeviceRecursively);
             })
           );
         }

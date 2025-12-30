@@ -7,6 +7,7 @@
 #include <ArduinoJson.h>
 
 // Forward declaration
+class Device;
 class DeviceManager;
 #include "Network.h"
 
@@ -32,6 +33,7 @@ private:
     void handleDeviceState(JsonDocument &doc);
     void handleDeviceGetState(JsonDocument &doc);
     void handleGetDevices(JsonDocument &doc);
+    void serializeDeviceToJson(Device *device, JsonObject deviceObj);
 
 public:
     WebSocketManager(DeviceManager *deviceManager, Network *network, const char *path = "/ws");

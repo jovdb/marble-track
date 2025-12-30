@@ -5,6 +5,7 @@
 #include "devices/mixins/SerializableMixin.h"
 #include "devices/Led.h"
 #include "devices/Button.h"
+#include "devices/Device.h"
 #include "DeviceManager.h"
 #include "Network.h"
 #include "NetworkSettings.h"
@@ -80,57 +81,8 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
                     continue; // Skip this device, it will be included as a child of its parent
                 }
 
-                JsonObject deviceObj = devicesArray.add<JsonObject>();
-                deviceObj["id"] = deviceList[i]->getId();
-                deviceObj["type"] = deviceList[i]->getType();
-
-                // Add pins array
-                std::vector<int> pins = deviceList[i]->getPins();
-                JsonArray pinsArr = deviceObj["pins"].to<JsonArray>();
-                for (int pin : pins)
-                {
-                    pinsArr.add(pin);
-                }
-
-                // Generic features: mirror mixins as an array
-                {
-                    const auto &mixins = deviceList[i]->getMixins();
-                    JsonArray featuresArr = deviceObj["features"].to<JsonArray>();
-                    for (const auto &mx : mixins)
-                    {
-                        featuresArr.add(mx);
-                    }
-                }
-
-                // Add children array
-                JsonArray childrenArr = deviceObj["children"].to<JsonArray>();
-                for (Device *child : deviceList[i]->getChildren())
-                {
-                    if (child)
-                    {
-                        JsonObject childObj = childrenArr.add<JsonObject>();
-                        childObj["id"] = child->getId();
-                        childObj["type"] = child->getType();
-
-                        // Add child pins
-                        std::vector<int> childPins = child->getPins();
-                        JsonArray childPinsArr = childObj["pins"].to<JsonArray>();
-                        for (int pin : childPins)
-                        {
-                            childPinsArr.add(pin);
-                        }
-
-                        // Child features: mirror mixins as an array
-                        {
-                            const auto &childMixins = child->getMixins();
-                            JsonArray childFeaturesArr = childObj["features"].to<JsonArray>();
-                            for (const auto &cmx : childMixins)
-                            {
-                                childFeaturesArr.add(cmx);
-                            }
-                        }
-                    }
-                }
+                // Recursively serialize this device and its children
+                serializeDeviceToJson(deviceList[i], devicesArray.add<JsonObject>());
             }
         }
     }
@@ -139,6 +91,49 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
     serializeJson(response, message);
 
     notifyClients(message);
+}
+
+/**
+ * @brief Recursively serialize a device and its children to JSON
+ * @param device The device to serialize
+ * @param deviceObj The JSON object to populate
+ */
+void WebSocketManager::serializeDeviceToJson(Device *device, JsonObject deviceObj)
+{
+    if (!device)
+        return;
+
+    deviceObj["id"] = device->getId();
+    deviceObj["type"] = device->getType();
+
+    // Add pins array
+    std::vector<int> pins = device->getPins();
+    JsonArray pinsArr = deviceObj["pins"].to<JsonArray>();
+    for (int pin : pins)
+    {
+        pinsArr.add(pin);
+    }
+
+    // Generic features: mirror mixins as an array
+    {
+        const auto &mixins = device->getMixins();
+        JsonArray featuresArr = deviceObj["features"].to<JsonArray>();
+        for (const auto &mx : mixins)
+        {
+            featuresArr.add(mx);
+        }
+    }
+
+    // Add children array recursively
+    JsonArray childrenArr = deviceObj["children"].to<JsonArray>();
+    for (Device *child : device->getChildren())
+    {
+        if (child)
+        {
+            JsonObject childObj = childrenArr.add<JsonObject>();
+            serializeDeviceToJson(child, childObj);
+        }
+    }
 }
 
 /**

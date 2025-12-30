@@ -22,7 +22,6 @@
 #include "devices/Button.h"
 #include "devices/Stepper.h"
 #include "devices/Servo.h"
-#include "devices/Test2.h"
 #include "devices/mixins/ControllableMixin.h"
 
 // Timing variable for automatic mode

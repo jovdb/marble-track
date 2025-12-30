@@ -7,7 +7,6 @@
 #include "DeviceManager.h"
 #include "devices/Led.h"
 #include "devices/Button.h"
-#include "devices/Test2.h"
 #include "devices/Buzzer.h"
 #include "devices/Servo.h"
 #include "devices/Stepper.h"
@@ -188,7 +187,7 @@ void DeviceManager::loadDevicesFromJsonFile()
  * 2. Serializing each device
  * 3. For devices with the serializable mixin, including their config property
  *
- * This ensures child devices (e.g., LED and Button in a Test2 device) are
+ * This ensures child devices (e.g., LED and Button in composite devices) are
  * persisted alongside their parent devices.
  */
 void DeviceManager::saveDevicesToJsonFile()

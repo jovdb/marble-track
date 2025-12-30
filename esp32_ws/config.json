@@ -5,34 +5,6 @@
   },
   "devices": [
     {
-      "id": "test3",
-      "type": "test2",
-      "children": [
-        {
-          "id": "test3_led",
-          "type": "led",
-          "children": [],
-          "config": {
-            "pin": 18,
-            "name": "Led",
-            "initialState": "BLINKING"
-          }
-        },
-        {
-          "id": "test3_button",
-          "type": "button",
-          "children": [],
-          "config": {
-            "pin": 17,
-            "name": "Button",
-            "debounceTimeInMs": 50,
-            "pinMode": "Floating",
-            "buttonType": "NormalClosed"
-          }
-        }
-      ]
-    },
-    {
       "id": "buzz",
       "type": "buzzer",
       "children": [],

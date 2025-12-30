@@ -17,7 +17,6 @@ const COMPOSITION_DEVICE_TYPES = [
   "Lift",
   "Servo",
   "Stepper",
-  "Test2",
   "Wheel",
 ] as const;
 

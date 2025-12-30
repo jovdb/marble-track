@@ -105,7 +105,10 @@ namespace devices
     {
         Device::loop();
 
+        _state.onErrorChange = false;
+
         // In case of error, skip processing
+        // TODO: move to switch
         if (_state.errorMessage != "")
             return;
 
@@ -114,7 +117,6 @@ namespace devices
 
         // TODO in semaphore?
         // TODO: stack of errors?
-        _state.onErrorChange = false;
         _state.errorMessage = ""; // Clear error message when error is resolved
 
         /*

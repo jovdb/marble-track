@@ -46,7 +46,7 @@ void ManualMode::setup()
     }
     else
     {
-        _buzzer->tune("scale_up:d=32,o=5,b=300:c,c#,d#,e,f#,g#,a#,b");
+        // _buzzer->tune("scale_up:d=32,o=5,b=300:c,c#,d#,e,f#,g#,a#,b");
     }
 
     // TODO: Re-enable when legacy devices are converted to composition devices
@@ -127,26 +127,6 @@ void ManualMode::setup()
     {
         MLOG_ERROR("Required device 'lift-btn' not found!");
     }
-    else
-    {
-        _liftButtonUnsubscribe = _liftButton->onStateChange([this](void *data)
-                                                            { Serial.println("Lift button state changed"); });
-        if (_buzzer)
-            _buzzer->tone(1000, 100);
-
-        if (_lift)
-        {
-            if (_lift->isInitialized())
-            {
-                _lift->loadBall();
-            }
-            else
-            {
-                _lift->init();
-            }
-            //        _lift->getState().
-        }
-    }
 
     _liftLed = deviceManager.getDeviceByIdAs<devices::Led>("lift-led");
     if (_liftLed == nullptr)
@@ -159,6 +139,65 @@ void ManualMode::loop()
 {
     bool ledBlinkFast = millis() % 500 > 250;
     bool ledBlinkSlow = millis() % 1000 > 500;
+
+    // Lift
+    if (_lift)
+    {
+        auto liftState = _lift->getState();
+
+        switch (liftState.state)
+        {
+        case devices::LiftStateEnum::LIFT_DOWN_LOADING:
+        case devices::LiftStateEnum::LIFT_UP_UNLOADING:
+        case devices::LiftStateEnum::MOVING_UP:
+        case devices::LiftStateEnum::MOVING_DOWN:
+            if (_liftLed)
+                _liftLed->set(true);
+            break;
+        case devices::LiftStateEnum::LIFT_DOWN_UNLOADED:
+            if (_liftLed)
+                _liftLed->set(ledBlinkSlow);
+
+            if (_liftButton)
+            {
+                auto liftBtnState = _liftButton->getState();
+                if (liftBtnState.isPressed && liftBtnState.isPressedChanged)
+                {
+                    _lift->loadBall();
+                }
+            }
+            break;
+        case devices::LiftStateEnum::LIFT_DOWN_LOADED:
+        case devices::LiftStateEnum::LIFT_UP_UNLOADED:
+        case devices::LiftStateEnum::LIFT_UP_LOADED:
+            if (_liftLed)
+                _liftLed->set(ledBlinkSlow);
+            break;
+        case devices::LiftStateEnum::INIT:
+        case devices::LiftStateEnum::UNKNOWN:
+            if (_liftLed)
+                _liftLed->set(false);
+            break;
+        case devices::LiftStateEnum::ERROR:
+            // Only once
+            if (liftState.onErrorChange)
+            {
+                // Notify error
+                if (_buzzer)
+                {
+                    MLOG_DEBUG("ManualMode: Lift error detected, buzzing");
+                    _buzzer->stop();
+                    _buzzer->tone(60, 400); // Long buzz for error
+                }
+            }
+            if (_liftLed)
+                _liftLed->set(false); // Turn off LED on error
+            break;
+        default:
+            MLOG_ERROR("ManualMode: Unhandled lift state");
+            break;
+        }
+    }
 
     // Wheel Button
     /*

@@ -343,6 +343,7 @@ namespace devices
 
                 // Play the tone
                 ledcWriteTone(_ledcChannel, frequency);
+                MLOG_INFO("%s: Started tone playback: %dHz for %dms", toString().c_str(), frequency, duration);
                 vTaskDelay(pdMS_TO_TICKS(duration));
                 ledcWriteTone(_ledcChannel, 0); // Stop tone
 

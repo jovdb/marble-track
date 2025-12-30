@@ -59,7 +59,13 @@ namespace devices
     {
         Device::setup();
 
+        _state.state = LiftStateEnum::UNKNOWN;
+        _state.errorCode = LiftErrorCode::NONE;
+        _state.errorMessage = "";
+        _state.onErrorChange = false;
+
         if (_stepper->getPins().empty())
+
         {
             setError(LiftErrorCode::LIFT_CONFIGURATION_ERROR, "No pins configured for stepper");
         }

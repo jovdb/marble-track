@@ -19,40 +19,36 @@ static constexpr const char *CONFIG_FILE = "/config.json";
 
 Device *DeviceManager::createDevice(const String &deviceId, const String &deviceType)
 {
-    String lowerType = deviceType;
-    lowerType.toLowerCase();
+    String upperType = deviceType;
+    upperType.toUpperCase();
 
-    MLOG_DEBUG("Creating device of type: '%s' with ID: '%s'", deviceType.c_str(), deviceId.c_str());
+    MLOG_DEBUG("Creating device of type: '%s' with ID: '%s'", upperType.c_str(), deviceId.c_str());
 
-    if (lowerType == "led")
+    if (upperType == "LED")
     {
         return new devices::Led(deviceId);
     }
-    else if (lowerType == "button")
+    else if (upperType == "BUTTON")
     {
         return new devices::Button(deviceId);
     }
-    else if (lowerType == "test2")
-    {
-        return new devices::Test2(deviceId);
-    }
-    else if (lowerType == "buzzer")
+    else if (upperType == "BUZZER")
     {
         return new devices::Buzzer(deviceId);
     }
-    else if (lowerType == "servo")
+    else if (upperType == "SERVO")
     {
         return new devices::Servo(deviceId);
     }
-    else if (lowerType == "stepper")
+    else if (upperType == "STEPPER")
     {
         return new devices::Stepper(deviceId);
     }
-    else if (lowerType == "wheel")
+    else if (upperType == "WHEEL")
     {
         return new devices::Wheel(deviceId);
     }
-    else if (lowerType == "lift")
+    else if (upperType == "LIFT")
     {
         return new devices::Lift(deviceId);
     }

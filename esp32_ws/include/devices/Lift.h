@@ -60,7 +60,9 @@ namespace devices
         bool isBallWaiting = false;                   // Whether ball is waiting to be loaded
         bool isLoaded = false;                        // Whether lift has a ball loaded
         int initStep = 0;                             // Current initialization step
-        bool onError = false;                         // Error flag
+        bool onErrorChange = false;     // Error flag
+        String errorMessage = ""; // Last error message
+        String errorCode = "";    // Last error code
     };
 
     /**

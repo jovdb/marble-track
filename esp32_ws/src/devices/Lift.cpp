@@ -65,6 +65,45 @@ namespace devices
     {
         Device::setup();
 
+        if (_stepper->getPins().empty())
+        {
+            setError("LIFT_CONFIGURATION_ERROR", "No pins configured for stepper");
+        }
+
+        if (_limitSwitch->getPins().empty())
+        {
+            setError("LIFT_CONFIGURATION_ERROR", "No pins configured for limit switch");
+        }
+
+        if (_ballSensor->getPins().empty())
+        {
+            setError("LIFT_CONFIGURATION_ERROR", "No pins configured for ball sensor");
+        }
+
+        if (_loader->getPins().empty())
+        {
+            setError("LIFT_CONFIGURATION_ERROR", "No pins configured for loader servo");
+        }
+
+        if (_unloader->getPins().empty())
+        {
+            setError("LIFT_CONFIGURATION_ERROR", "No pins configured for unloader servo");
+        }
+
+        // Validate configuration
+        if (_config.minSteps >= _config.maxSteps)
+        {
+            setError("LIFT_CONFIGURATION_ERROR", "minSteps must be less than maxSteps");
+        }
+        if (_config.minSteps < 0 || _config.maxSteps < 0)
+        {
+            setError("LIFT_CONFIGURATION_ERROR", "minSteps and maxSteps must be non-negative");
+        }
+        if (_config.downFactor <= 0.0f)
+        {
+            setError("LIFT_CONFIGURATION_ERROR", "downFactor must be positive");
+        }
+
         MLOG_DEBUG("%s: Setup complete", toString().c_str());
     }
 
@@ -72,8 +111,17 @@ namespace devices
     {
         Device::loop();
 
+        // In case of error, skip processing
+        if (_state.errorMessage != "")
+            return;
+
         // Check ball sensor state and notify if changed
         bool ballWaiting = _ballSensor ? _ballSensor->getState().isPressed : false;
+
+        // TODO in semaphore?
+        // TODO: stack of errors?
+        _state.onErrorChange = false;
+        _state.errorMessage = ""; // Clear error message when error is resolved
 
         /*
         if (xSemaphoreTake(_stateMutex, portMAX_DELAY) == pdTRUE)
@@ -279,14 +327,14 @@ namespace devices
     {
         if (xSemaphoreTake(_stateMutex, portMAX_DELAY) != pdTRUE)
             return false;
-        /*
-                if (!_stepper || !_limitSwitch)
-                {
-                    MLOG_WARN("%s: Stepper or limit switch not initialized", toString().c_str());
-                    xSemaphoreGive(_stateMutex);
-                    return false;
-                }
-        */
+
+        if (!_stepper || !_limitSwitch)
+        {
+            MLOG_WARN("%s: Stepper or limit switch not initialized", toString().c_str());
+            xSemaphoreGive(_stateMutex);
+            return false;
+        }
+
         MLOG_INFO("%s: Starting init sequence", toString().c_str());
 
         _state.state = LiftStateEnum::INIT;
@@ -386,6 +434,8 @@ namespace devices
         doc["isBallWaiting"] = _state.isBallWaiting;
         doc["isLoaded"] = _state.isLoaded;
         doc["currentPosition"] = getCurrentPosition();
+        doc["errorMessage"] = _state.errorMessage;
+        doc["errorCode"] = _state.errorCode;
     }
 
     bool Lift::control(const String &action, JsonObject *args)
@@ -621,10 +671,58 @@ namespace devices
 
     void Lift::setError(const String &errorCode, const String &message)
     {
+        if (xSemaphoreTake(_stateMutex, portMAX_DELAY) != pdTRUE)
+        {
+            MLOG_ERROR("%s: Failed to acquire state mutex in setError", toString().c_str());
+            return;
+        }
+
         MLOG_ERROR("%s: %s - %s", toString().c_str(), errorCode.c_str(), message.c_str());
         _state.state = LiftStateEnum::ERROR;
-        _state.onError = true;
+        _state.onErrorChange = true;
+        _state.errorMessage = message; // Store the error message
+        _state.errorCode = errorCode;  // Store the error code
+
+        // Handle specific error codes
+        if (errorCode == "LIFT_UNKNOWN_STATE_LOOP")
+        {
+            // Handle unknown state in loop - perhaps reset to init
+            _state.state = LiftStateEnum::INIT;
+        }
+        else if (errorCode == "LIFT_UNKNOWN_STATE_UP")
+        {
+            // Handle unknown state during up movement - stop stepper
+            stopStepper();
+        }
+        else if (errorCode == "LIFT_UNKNOWN_STATE_DOWN")
+        {
+            // Handle unknown state during down movement - stop stepper
+            stopStepper();
+        }
+        else if (errorCode == "LIFT_UNKNOWN_STATE_LOAD_BALL")
+        {
+            // Handle unknown state during ball loading - reset loader
+            // Placeholder: could reset servo position
+        }
+        else if (errorCode == "LIFT_UNKNOWN_STATE_UNLOAD_BALL")
+        {
+            // Handle unknown state during ball unloading - reset unloader
+            // Placeholder: could reset servo position
+        }
+        else if (errorCode == "LIFT_CONFIGURATION_ERROR")
+        {
+            // Handle configuration error - set to error state and prevent operation
+            // Configuration errors are critical and require manual intervention
+            MLOG_ERROR("%s: Configuration error detected - device will not function until fixed", toString().c_str());
+        }
+        else
+        {
+            // Default handling for unknown error codes
+            MLOG_WARN("%s: Unknown error code: %s", toString().c_str(), errorCode.c_str());
+        }
+
         notifyStateChanged();
+        xSemaphoreGive(_stateMutex);
     }
 
     void Lift::handleInitSequence()

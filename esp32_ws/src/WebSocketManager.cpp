@@ -291,13 +291,44 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
 
                 JsonDocument savedConfig;
                 serializable->configToJson(savedConfig);
-                device->setup(); // Re-setup device with new config
+                // Note: Re-setup all root devices after config change
+                deviceManager->setup();
 
                 response["config"] = savedConfig;
 
                 String respStr;
                 serializeJson(response, respStr);
                 notifyClients(respStr);
+
+                deviceManager->notifyDevicesChanged();
+
+                // Send updated device information after config change and setup
+                beginBatch();
+
+                // Send updated devices list
+                JsonDocument emptyDoc;
+                handleGetDevices(emptyDoc);
+
+                std::vector<Device *> allDevices = deviceManager->getAllDevices();
+
+                // Send config for all devices
+                for (Device *device : allDevices)
+                {
+                    JsonDocument configDoc;
+                    configDoc["deviceId"] = device->getId();
+                    handleDeviceReadConfig(configDoc);
+                }
+
+                // Send state for all devices
+                for (Device *device : allDevices)
+                {r
+                    JsonDocument stateDoc;
+                    stateDoc["deviceId"] = device->getId();
+                    handleDeviceGetState(stateDoc);
+                }
+
+                endBatch();
+
                 return;
             }
         }

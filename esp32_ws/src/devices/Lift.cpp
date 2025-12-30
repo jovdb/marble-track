@@ -13,40 +13,69 @@ namespace devices
     Lift::Lift(const String &id)
         : Device(id, "lift")
     {
-        // _stepper = nullptr;
-        // _limitSwitch = nullptr;
-        // _ballSensor = nullptr;
-        // _loader = nullptr;
-        // _unloader = nullptr;
+        // Set default lift configuration
+        _config.name = "Lift";
+        _config.minSteps = 0;
+        _config.maxSteps = 2255;
 
-        // Create children
+        // Create children with default configurations
         _stepper = new Stepper(getId() + "-stepper");
         auto stepperCfg = _stepper->getConfig();
         stepperCfg.name = "Lift Stepper";
+        stepperCfg.stepperType = "DRIVER";
+        stepperCfg.maxSpeed = 400.0f;
+        stepperCfg.maxAcceleration = 100.0f;
+        stepperCfg.defaultSpeed = 150.0f;
+        stepperCfg.defaultAcceleration = 50.0f;
+        stepperCfg.stepPin = 1;
+        stepperCfg.dirPin = 2;
+        stepperCfg.enablePin = 42;
+        stepperCfg.invertEnable = true;
         _stepper->setConfig(stepperCfg);
         addChild(_stepper);
 
         _limitSwitch = new Button(getId() + "-limit");
         auto limitSwitchCfg = _limitSwitch->getConfig();
         limitSwitchCfg.name = "Lift Limit Switch";
+        limitSwitchCfg.pin = 41;
+        limitSwitchCfg.pinMode = PinModeOption::PullUp;
+        limitSwitchCfg.buttonType = ButtonType::NormalOpen;
         _limitSwitch->setConfig(limitSwitchCfg);
         addChild(_limitSwitch);
 
         _ballSensor = new Button(getId() + "-ball-sensor");
         auto ballSensorCfg = _ballSensor->getConfig();
         ballSensorCfg.name = "Lift Ball Sensor";
+        ballSensorCfg.pin = 40;
+        ballSensorCfg.pinMode = PinModeOption::PullUp;
+        ballSensorCfg.debounceTimeInMs = 100;
+        ballSensorCfg.buttonType = ButtonType::NormalOpen;
         _ballSensor->setConfig(ballSensorCfg);
         addChild(_ballSensor);
 
         _loader = new Servo(getId() + "-loader");
         auto loaderCfg = _loader->getConfig();
         loaderCfg.name = "Lift Loader";
+        loaderCfg.pin = 39;
+        loaderCfg.mcpwmChannel = 0;
+        loaderCfg.frequency = 50;
+        loaderCfg.resolutionBits = 10;
+        loaderCfg.minDutyCycle = 9.5f;
+        loaderCfg.maxDutyCycle = 5.5f;
+        loaderCfg.defaultDurationInMs = 200;
         _loader->setConfig(loaderCfg);
         addChild(_loader);
 
         _unloader = new Servo(getId() + "-unloader");
         auto unloaderCfg = _unloader->getConfig();
         unloaderCfg.name = "Lift Unloader";
+        unloaderCfg.pin = 38;
+        unloaderCfg.mcpwmChannel = 0;
+        unloaderCfg.frequency = 50;
+        unloaderCfg.resolutionBits = 10;
+        unloaderCfg.minDutyCycle = 12.2f;
+        unloaderCfg.maxDutyCycle = 4.0f;
+        unloaderCfg.defaultDurationInMs = 1200;
         _unloader->setConfig(unloaderCfg);
         addChild(_unloader);
     }

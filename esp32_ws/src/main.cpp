@@ -15,7 +15,7 @@
 #include "SerialConsole.h"
 #include "OtaUpload.h"
 #include "AutoMode.h"
-#include "ManualMode.h"
+#include "devices/MarbleController.h"
 
 // Composition-based devices
 #include "devices/Led.h"
@@ -62,7 +62,7 @@ void globalNotifyClientsCallback(const String &message)
 DeviceManager deviceManager(globalNotifyClientsCallback);
 
 AutoMode *autoMode = nullptr;
-ManualMode *manualMode = nullptr;
+devices::MarbleController *marbleController = nullptr;
 
 void setup()
 {
@@ -88,7 +88,7 @@ void setup()
   network = new Network(networkSettings);
 
   // Now create SerialConsole after network is initialized
-  serialConsole = new SerialConsole(deviceManager, network, autoMode, manualMode);
+  serialConsole = new SerialConsole(deviceManager, network);
 
   // Initialize Network (will try WiFi, fall back to AP if needed)
   bool networkInitialized = network->setup();
@@ -143,10 +143,10 @@ void setup()
                                         delete autoMode;
                                         autoMode = nullptr;
                                       }
-                                      if (manualMode)
+                                      if (marbleController)
                                       {
-                                        delete manualMode;
-                                        manualMode = nullptr;
+                                        delete marbleController;
+                                        marbleController = nullptr;
                                       }
 
                                       // Recreate mode based on button state
@@ -155,8 +155,8 @@ void setup()
                                       // if (manualBtn && manualBtn->isPressed())
                                       // {
                                       //   MLOG_INFO("Device changed: Initializing MANUAL mode");
-                                      //   manualMode = new ManualMode(deviceManager);
-                                      //   manualMode->setup();
+                                      //   marbleController = deviceManager.getDeviceByIdAs<MarbleController>("marble-controller");
+                                      //   marbleController->setup();
                                       // }
                                       // else
                                       // {
@@ -172,8 +172,8 @@ void setup()
   // if (manualBtn && manualBtn->isPressed())
   // {
   //   MLOG_INFO("Operation mode: MANUAL");
-  //   manualMode = new ManualMode(deviceManager);
-  //   manualMode->setup();
+  //   marbleController = deviceManager.getDeviceByIdAs<MarbleController>("marble-controller");
+  //   marbleController->setup();
   // }
   // else
   // {
@@ -181,8 +181,7 @@ void setup()
   // autoMode = new AutoMode(deviceManager);
   // autoMode->setup();
 
-  manualMode = new ManualMode(deviceManager);
-  manualMode->setup();
+  marbleController = deviceManager.getDeviceByIdAs<devices::MarbleController>("marble-controller");
   // }
 
   // Startup sound
@@ -229,9 +228,9 @@ void loop()
   deviceManager.loop();
 
   // Run the active mode
-  if (manualMode)
+  if (marbleController)
   {
-    manualMode->loop();
+    // Since it's a device, loop is called via deviceManager.loop()
   }
   if (autoMode)
   {

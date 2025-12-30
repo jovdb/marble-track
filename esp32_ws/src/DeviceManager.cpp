@@ -12,6 +12,7 @@
 #include "devices/Stepper.h"
 #include "devices/Wheel.h"
 #include "devices/Lift.h"
+#include "devices/MarbleController.h"
 #include "devices/mixins/SerializableMixin.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
@@ -50,6 +51,10 @@ Device *DeviceManager::createDevice(const String &deviceId, const String &device
     else if (upperType == "LIFT")
     {
         return new devices::Lift(deviceId);
+    }
+    else if (upperType == "MARBLECONTROLLER")
+    {
+        return new devices::MarbleController(deviceId);
     }
 
     MLOG_WARN("Unknown device type: %s", deviceType.c_str());

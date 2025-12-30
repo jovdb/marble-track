@@ -8,21 +8,17 @@
 
 class DeviceManager;
 class Network;
-class AutoMode;
-class ManualMode;
 
 class SerialConsole
 {
 public:
-    SerialConsole(DeviceManager &deviceManager, Network *&networkRef, AutoMode *&autoModeRef, ManualMode *&manualModeRef);
+    SerialConsole(DeviceManager &deviceManager, Network *&networkRef);
 
     void loop();
 
 private:
     DeviceManager &m_deviceManager;
     Network *&m_network;
-    AutoMode *&m_autoMode;
-    ManualMode *&m_manualMode;
 
     struct NetworkOption
     {

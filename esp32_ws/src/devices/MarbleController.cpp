@@ -1,11 +1,16 @@
-#include "ManualMode.h"
+#include "devices/MarbleController.h"
 #include "Logging.h"
 #include "devices/Button.h"
 #include "devices/Buzzer.h"
 #include "devices/Wheel.h"
 #include "devices/Led.h"
 
-ManualMode::ManualMode(DeviceManager &deviceManager) : deviceManager(deviceManager)
+extern DeviceManager deviceManager;
+
+namespace devices
+{
+
+MarbleController::MarbleController(const String &id) : Device(id, "MarbleController"), _deviceManager(&deviceManager)
 {
     _buzzer = nullptr;
 
@@ -22,7 +27,7 @@ ManualMode::ManualMode(DeviceManager &deviceManager) : deviceManager(deviceManag
     _liftLed = nullptr;
 }
 
-ManualMode::~ManualMode()
+MarbleController::~MarbleController()
 {
     if (_wheelNextBtnUnsubscribe)
     {
@@ -34,12 +39,12 @@ ManualMode::~ManualMode()
     }
 }
 
-void ManualMode::setup()
+void MarbleController::setup()
 {
 
-    MLOG_DEBUG("ManualMode: Starting setup");
+    MLOG_DEBUG("MarbleController: Starting setup");
 
-    _buzzer = deviceManager.getDeviceByIdAs<devices::Buzzer>("buzzer");
+    _buzzer = _deviceManager->getDeviceByIdAs<devices::Buzzer>("buzzer");
     if (_buzzer == nullptr)
     {
         MLOG_ERROR("Required device 'buzzer' not found!");
@@ -111,7 +116,7 @@ void ManualMode::setup()
     //     //     MLOG_ERROR("Required device 'splitter-btn-led' not found!");
     //     // }
 
-    _lift = deviceManager.getDeviceByIdAs<devices::Lift>("lift");
+    _lift = _deviceManager->getDeviceByIdAs<devices::Lift>("lift");
     if (_lift == nullptr)
     {
         MLOG_ERROR("Required device 'lift' not found!");
@@ -122,20 +127,20 @@ void ManualMode::setup()
         _liftButtonUnsubscribe();
         _liftButtonUnsubscribe = nullptr;
     }
-    _liftButton = deviceManager.getDeviceByIdAs<devices::Button>("lift-btn");
+    _liftButton = _deviceManager->getDeviceByIdAs<devices::Button>("lift-btn");
     if (_liftButton == nullptr)
     {
         MLOG_ERROR("Required device 'lift-btn' not found!");
     }
 
-    _liftLed = deviceManager.getDeviceByIdAs<devices::Led>("lift-led");
+    _liftLed = _deviceManager->getDeviceByIdAs<devices::Led>("lift-led");
     if (_liftLed == nullptr)
     {
         MLOG_ERROR("Required device 'lift-led' not found!");
     }
 }
 
-void ManualMode::loop()
+void MarbleController::loop()
 {
     bool ledBlinkFast = millis() % 500 > 250;
     bool ledBlinkSlow = millis() % 1000 > 500;
@@ -185,7 +190,7 @@ void ManualMode::loop()
                 // Notify error
                 if (_buzzer)
                 {
-                    MLOG_DEBUG("ManualMode: Lift error detected, buzzing");
+                    MLOG_DEBUG("MarbleController: Lift error detected, buzzing");
                     _buzzer->stop();
                     _buzzer->tone(60, 400); // Long buzz for error
                 }
@@ -194,7 +199,7 @@ void ManualMode::loop()
                 _liftLed->set(false); // Turn off LED on error
             break;
         default:
-            MLOG_ERROR("ManualMode: Unhandled lift state");
+            MLOG_ERROR("MarbleController: Unhandled lift state");
             break;
         }
     }
@@ -239,7 +244,7 @@ void ManualMode::loop()
                 break;
 
             default:
-                MLOG_ERROR("ManualMode: Unknown wheel state");
+                MLOG_ERROR("MarbleController: Unknown wheel state");
                 break;
             }
         }
@@ -292,7 +297,7 @@ void ManualMode::loop()
     //             _splitterBtnLed->set(true);
     //             break;
     //         default:
-    //             MLOG_ERROR("ManualMode: Unknown wheel state");
+    //             MLOG_ERROR("MarbleController: Unknown wheel state");
     //             break;
     //         }
     //     }
@@ -308,3 +313,5 @@ void ManualMode::loop()
     //     _buzzer->tone(1000, 500); // Long buzz for error
     // }
 }
+
+} // namespace devices

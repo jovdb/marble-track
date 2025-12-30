@@ -321,7 +321,7 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
 
                 // Send state for all devices
                 for (Device *device : allDevices)
-                {r
+                {
                     JsonDocument stateDoc;
                     stateDoc["deviceId"] = device->getId();
                     handleDeviceGetState(stateDoc);

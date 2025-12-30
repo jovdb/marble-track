@@ -10,6 +10,7 @@ import { Servo } from "./devices/Servo";
 import { Stepper } from "./devices/Stepper";
 import { Wheel } from "./devices/Wheel";
 import { Lift } from "./devices/Lift";
+import { MarbleController } from "./devices/MarbleController";
 import { Device } from "./devices/Device";
 
 import styles from "./Devices.module.css";
@@ -71,6 +72,8 @@ export function renderDeviceComponent(device: {
       return <Servo id={device.id} />;
     case "lift":
       return <Lift id={device.id} />;
+    case "marblecontroller":
+      return <MarbleController id={device.id} />;
     default:
       // For unknown device types with children, render them in a parent device block
       if (device.children && device.children.length > 0) {

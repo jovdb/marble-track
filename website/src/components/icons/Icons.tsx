@@ -360,6 +360,8 @@ export const getDeviceIcon = (type: string, props?: IconProps) => {
       return <WheelIcon {...props} />;
     case "LIFT":
       return <LiftIcon {...props} />;
+    case "MARBLECONTROLLER":
+      return <ClipboardIcon {...props} />;
     default:
       return null; // Default fallback
   }

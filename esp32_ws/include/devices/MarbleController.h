@@ -1,8 +1,9 @@
-#ifndef MANUALMODE_H
-#define MANUALMODE_H
+#ifndef MARBLECONTROLLER_H
+#define MARBLECONTROLLER_H
 
 #include <Arduino.h>
 #include <functional>
+#include "Device.h"
 #include "DeviceManager.h"
 #include "devices/Button.h"
 #include "devices/Wheel.h"
@@ -10,13 +11,16 @@
 #include "devices/Led.h"
 #include "devices/Lift.h"
 
-class ManualMode
+namespace devices
+{
+
+class MarbleController : public Device
 {
 public:
-    ManualMode(DeviceManager &deviceManager);
-    ~ManualMode();
-    void setup();
-    void loop();
+    MarbleController(const String &id);
+    ~MarbleController();
+    void setup() override;
+    void loop() override;
 
     /**
      * @brief Get the current state of the lift
@@ -31,7 +35,7 @@ public:
     bool isLiftInitialized() const;
 
 private:
-    DeviceManager &deviceManager;
+    DeviceManager *_deviceManager;
     devices::Button *_wheelNextBtn;
     devices::Wheel *_wheel;
     devices::Buzzer *_buzzer;
@@ -46,4 +50,6 @@ private:
     std::function<void()> _liftButtonUnsubscribe;
 };
 
-#endif // MANUALMODE_H
+} // namespace devices
+
+#endif // MARBLECONTROLLER_H

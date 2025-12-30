@@ -12,7 +12,8 @@ export function Lift(props: { id: string }) {
 
   const state = () => device()?.state;
   const config = () => device()?.config;
-  const error = () => state()?.errorMessage || (state()?.state === "Error" ? "Device is in error state" : undefined);
+  const error = () =>
+    state()?.errorMessage || (state()?.state === "Error" ? "Device is in error state" : undefined);
 
   const isMoving = createMemo(
     () =>

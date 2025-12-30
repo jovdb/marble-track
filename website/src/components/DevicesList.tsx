@@ -15,6 +15,7 @@ const COMPOSITION_DEVICE_TYPES = [
   "Buzzer",
   "Led",
   "Lift",
+  "MarbleController",
   "Servo",
   "Stepper",
   "Wheel",

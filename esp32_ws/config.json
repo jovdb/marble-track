@@ -12,6 +12,11 @@
         "pin": 3,
         "name": "Buzzer"
       }
+    },
+    {
+      "id": "marble-controller",
+      "type": "marblecontroller",
+      "name": "MarbleController"
     }
   ]
 }

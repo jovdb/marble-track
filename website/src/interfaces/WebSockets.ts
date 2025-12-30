@@ -5,6 +5,7 @@ export type DeviceType =
   | "gate"
   | "led"
   | "lift"
+  | "marblecontroller"
   | "servo"
   | "stepper"
   | "wheel";

@@ -30,7 +30,7 @@ namespace devices
         setName(_config.name);
 
         pinMode(_config.pin, OUTPUT);
-        MLOG_DEBUG("%s: Setup on pin %d", toString().c_str(), _config.pin);
+        MLOG_INFO("%s: Setup on pin %d", toString().c_str(), _config.pin);
 
         // Apply initial state
         if (_config.initialState == "ON")

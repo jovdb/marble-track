@@ -49,7 +49,7 @@ namespace devices
         _state.input = contactStateToPinState(_state.isPressed);
         _lastIsButtonPressed = _state.isPressed;
 
-        MLOG_DEBUG("%s: Setup on pin %d", toString().c_str(), _config.pin);
+        MLOG_INFO("%s: Setup on pin %d", toString().c_str(), _config.pin);
     }
 
     void Button::loop()
@@ -111,7 +111,7 @@ namespace devices
         if (action == "press" || action == "release")
         {
             bool isPress = (action == "press");
-            MLOG_INFO("%s: Simulated button %s", toString().c_str(), isPress ? "PRESS" : "RELEASE");
+            // MLOG_INFO("%s: Simulated button %s", toString().c_str(), isPress ? "PRESS" : "RELEASE");
 
             _isSimulated = true;
             // Pressing: NO closes (true), NC opens (false)

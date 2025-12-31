@@ -59,6 +59,13 @@ namespace devices
 
         auto liftState = _lift->getState();
 
+        // Reset button timing state when not in LIFT_UP_LOADED
+        if (liftState.state != devices::LiftStateEnum::LIFT_UP_LOADED)
+        {
+            _waitingForLiftButtonRelease = false;
+            _liftButtonPressStartTime = 0;
+        }
+
         switch (liftState.state)
         {
         case devices::LiftStateEnum::UNKNOWN:
@@ -115,7 +122,27 @@ namespace devices
             _liftLed->set(true);
             if (_liftButton->isPressed())
             {
-                _lift->unloadBall();
+                if (!_waitingForLiftButtonRelease)
+                {
+                    // Button just pressed - start timing
+                    _liftButtonPressStartTime = millis();
+                    _waitingForLiftButtonRelease = true;
+                }
+            }
+            else if (_waitingForLiftButtonRelease)
+            {
+                // Button just released - determine duration based on press time
+                unsigned long pressDuration = millis() - _liftButtonPressStartTime;
+                float durationRatio = (pressDuration >= 500) ? 1.0f : 0.6f;
+                _lift->unloadBall(durationRatio);
+
+                if (pressDuration >= 500)
+                {
+                    _buzzer->tune("Power Up:d=32,o=5,b=300:c,c#,d#,e,f#,g#,a#,b"); // Play error tune
+                }
+                // Reset timing state
+                _waitingForLiftButtonRelease = false;
+                _liftButtonPressStartTime = 0;
             }
             break;
         }

@@ -189,7 +189,7 @@ namespace devices
         }
         case LiftStateEnum::INIT:
             // Handle reset sequence steps
-            handleInitSequence();
+            initLoop();
             break;
         case LiftStateEnum::ERROR:
             // In error state, do nothing - requires manual reset
@@ -598,19 +598,19 @@ namespace devices
 
     bool Lift::moveStepper(long steps, float speedRatio)
     {
-        // Placeholder - would need to control stepper
+        _stepper->move(steps, _stepper->getConfig().defaultSpeed * speedRatio);
         return true;
     }
 
     bool Lift::moveStepperTo(long position, float speedRatio)
     {
-        // Placeholder - would need to control stepper
+        _stepper->moveTo(position, _stepper->getConfig().defaultSpeed * speedRatio);
         return true;
     }
 
     bool Lift::stopStepper()
     {
-        // Placeholder - would need to control stepper
+        _stepper->stop();
         return true;
     }
 
@@ -625,8 +625,9 @@ namespace devices
         notifyStateChanged();
     }
 
-    void Lift::handleInitSequence()
+    void Lift::initLoop()
     {
+        // wait between steps
         static long nextInitStepTime = 0;
         if (millis() < nextInitStepTime)
         {
@@ -637,67 +638,128 @@ namespace devices
         switch (_state.initStep)
         {
         case 1:
+        {
             // Move unload out of the way
             _state.initStep = 2;
             _unloader->setValue(100);
             nextInitStepTime = millis() + _unloader->getConfig().defaultDurationInMs;
             break;
+        }
         case 2:
+        {
             _state.initStep = 3;
-            unloadBallEnd();
+            _unloader->setValue(0);
             nextInitStepTime = millis() + _unloader->getConfig().defaultDurationInMs;
             break;
+        }
         case 3:
+        {
             // Move slowly down to find limit switch
             _state.initStep = 4;
             long steps = (_config.minSteps - _config.maxSteps) * DOWN_FACTOR;
             moveStepper(steps, 0.5);
             break;
+        }
         case 4:
+        {
+
+            // Timeout
+            if (millis() > nextInitStepTime + 20000)
+            {
+                setError(LiftErrorCode::LIFT_NO_ZERO, "Initialization timeout: limit switch not triggered");
+                return; // Wait until next step time
+            }
+
+            if (!_stepper->getState().isMoving && (millis() > nextInitStepTime + 100))
+            {
+                setError(LiftErrorCode::LIFT_NO_ZERO, "Initialization failed: limit switch not triggered");
+                return; // Wait until next step time
+            }
+
             // wait until down
             if (!_limitSwitch->getState().isPressed)
             {
                 return;
             }
-            // Timeout
-            if (millis() + 20000 < nextInitStepTime)
-            {
-                setError(LiftErrorCode::LIFT_NO_ZERO, "Initialization timeout: limit switch not triggered");
-                return; // Wait until next step time
-            }
+
+            _stepper->stop(100000);
+            _stepper->setCurrentPosition(0);
+
             // load ball
             _state.initStep = 5;
             _loader->setValue(100);
             nextInitStepTime = millis() + _loader->getConfig().defaultDurationInMs;
             break;
-        /*case 5:
-            // TODO
+        }
+        case 5:
+        {
             _state.initStep = 6;
-            loadBallEnd();
+            _loader->setValue(0);
+            nextInitStepTime = millis() + _loader->getConfig().defaultDurationInMs + 500;
             break;
+        }
         case 6:
+        {
             // Move ball up
             _state.initStep = 7;
+            _loader->setValue(100);
+            _stepper->moveTo(_config.maxSteps, _stepper->getConfig().defaultSpeed * 0.5f);
             up();
+        }
         case 7:
+        {
             _state.initStep = 8;
-            unloadBallStart();
+            _unloader->setValue(100);
+            nextInitStepTime = millis() + _unloader->getConfig().defaultDurationInMs;
             break;
+        }
         case 8:
+        {
             _state.initStep = 9;
-            unloadBallEnd();
+            _unloader->setValue(0);
+            nextInitStepTime = millis() + _unloader->getConfig().defaultDurationInMs;
             break;
+        }
         case 9:
+        {
             _state.initStep = 10;
-            down();
+            long steps = (_config.minSteps - _config.maxSteps) * DOWN_FACTOR;
+            _stepper->move(steps, _stepper->getConfig().defaultSpeed * 0.5f);
             break;
-            */
-        default:
+        }
+        case 10:
+        {
+            // Timeout
+            if (millis() > nextInitStepTime + 20000)
+            {
+                setError(LiftErrorCode::LIFT_NO_ZERO, "Initialization timeout: limit switch not triggered");
+                return; // Wait until next step time
+            }
+
+            if (!_stepper->getState().isMoving && (millis() > nextInitStepTime + 100))
+            {
+                setError(LiftErrorCode::LIFT_NO_ZERO, "Initialization failed: limit switch not triggered");
+                return; // Wait until next step time
+            }
+
+            // wait until down
+            if (!_limitSwitch->getState().isPressed)
+            {
+                return;
+            }
+
+            _stepper->stop(100000);
+            _stepper->setCurrentPosition(0);
+
+            // Init complete
+            MLOG_INFO("%s: Initialization complete", toString().c_str());
             _state.state = LiftStateEnum::LIFT_DOWN_UNLOADED;
             _state.initStep = 0;
             notifyStateChanged();
             break;
         }
+        }
+
     }
 
 } // namespace devices

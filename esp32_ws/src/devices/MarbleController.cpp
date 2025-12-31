@@ -50,9 +50,6 @@ namespace devices
     {
         Device::loop();
 
-        // bool ledBlinkFast = millis() % 500 > 250;
-        // bool ledBlinkSlow = millis() % 1000 > 500;
-
         loopLift();
     }
 
@@ -69,72 +66,57 @@ namespace devices
             _liftLed->set(false);
             _lift->init();
             break;
+
         case devices::LiftStateEnum::ERROR:
             // Handle error state - maybe blink LED faster
             _liftLed->set(false);
 
-            // For new Errors
-            if (_lift->getState().onErrorChange)
+            // Play sound for new errors
+            if (liftState.onErrorChange)
             {
                 playErrorSound();
             }
             break;
-        case devices::LiftStateEnum::INIT:
-            _liftLed->blink(500, 500);
-            break;
-        case devices::LiftStateEnum::LIFT_DOWN_LOADING:
-            // Loading in progress
-            _liftLed->blink(500, 500);
-            break;
-        case devices::LiftStateEnum::LIFT_DOWN_LOADED:
-            // Ball is loaded at bottom, unload when button pressed
-            _liftLed->set(true);
 
+        // BUSY
+        case devices::LiftStateEnum::INIT:
+        case devices::LiftStateEnum::LIFT_DOWN_LOADING:
+        case devices::LiftStateEnum::LIFT_UP_UNLOADING:
+        case devices::LiftStateEnum::MOVING_UP:
+        case devices::LiftStateEnum::MOVING_DOWN: // Loading in progress
+            _liftLed->blink(500, 500);
+            break;
+
+        case devices::LiftStateEnum::LIFT_DOWN_LOADED:
+            _liftLed->set(true);
             if (_liftButton->isPressed())
             {
                 _lift->up();
             }
             break;
+
         case devices::LiftStateEnum::LIFT_DOWN_UNLOADED:
-            // No ball loaded at bottom, load when button pressed
+            _liftLed->set(true);
             if (_liftButton->isPressed())
             {
                 _lift->loadBall();
             }
             break;
-        case devices::LiftStateEnum::LIFT_UP_UNLOADING:
-            _liftLed->blink(500, 500);
 
-            break;
         case devices::LiftStateEnum::LIFT_UP_UNLOADED:
             _liftLed->set(true);
-
-            // Ball unloaded at top, move down when button pressed
             if (_liftButton->isPressed())
             {
                 _lift->down();
             }
             break;
-        case devices::LiftStateEnum::LIFT_UP_LOADED:
-            // Ball loaded at top, unload when button pressed
-            _liftLed->set(true);
 
+        case devices::LiftStateEnum::LIFT_UP_LOADED:
+            _liftLed->set(true);
             if (_liftButton->isPressed())
             {
                 _lift->unloadBall();
             }
-            break;
-        case devices::LiftStateEnum::MOVING_UP:
-            _liftLed->blink(500, 500);
-
-            // Moving up, wait for completion
-            break;
-        case devices::LiftStateEnum::MOVING_DOWN:
-            _liftLed->blink(500, 500);
-
-            // Moving down, wait for completion
-            break;
-        default:
             break;
         }
     }

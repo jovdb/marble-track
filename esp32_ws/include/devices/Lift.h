@@ -255,7 +255,7 @@ namespace devices
         /**
          * @brief Handle initialization sequence
          */
-        void handleInitSequence();
+        void initLoop();
     };
 
 } // namespace devices

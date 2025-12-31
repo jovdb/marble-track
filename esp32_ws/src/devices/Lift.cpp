@@ -504,6 +504,7 @@ namespace devices
         case LiftStateEnum::MOVING_DOWN:
             return "MovingDown";
         default:
+            MLOG_ERROR("%s: Unknown lift state code in stateToString: %d", toString().c_str(), static_cast<int>(state));
             return "Unknown";
         }
     }
@@ -518,7 +519,10 @@ namespace devices
             return "LIFT_CONFIGURATION_ERROR";
         case LiftErrorCode::LIFT_STATE_ERROR:
             return "LIFT_STATE_ERROR";
+        case LiftErrorCode::LIFT_NO_ZERO:
+            return "LIFT_NO_ZERO";
         default:
+            MLOG_ERROR("%s: Unknown Lift error code in errorCodeToString: %d", toString().c_str(), static_cast<int>(errorCode));
             return "UNKNOWN_ERROR_CODE";
         }
     }

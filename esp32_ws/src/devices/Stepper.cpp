@@ -296,6 +296,7 @@ namespace devices
                     _state.targetPosition = _stepper->targetPosition();
                     xSemaphoreGive(_stateMutex);
 
+                    MLOG_INFO("%s: Started moving %ld steps", toString().c_str(), cmd.steps);
                     notifyStateChanged();
                 }
                 else if (cmd.type == "moveTo")
@@ -311,6 +312,7 @@ namespace devices
                     _state.targetPosition = cmd.position;
                     xSemaphoreGive(_stateMutex);
 
+                    MLOG_INFO("%s: Started moving to position %ld", toString().c_str(), cmd.position);
                     notifyStateChanged();
                 }
                 else if (cmd.type == "stop")
@@ -351,6 +353,7 @@ namespace devices
                     if (wasMoving && !isRunning)
                     {
                         disableStepper();
+                        MLOG_INFO("%s: Movement completed at position %ld", toString().c_str(), _stepper->currentPosition());
                         notifyStateChanged();
                     }
                 }

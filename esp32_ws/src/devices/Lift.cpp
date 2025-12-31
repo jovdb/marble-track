@@ -637,6 +637,7 @@ namespace devices
         case 1:
         {
             // Move unload out of the way
+            MLOG_DEBUG("%s: Init step 1: Unloading start", toString().c_str());
             _state.initStep = 2;
             _unloader->setValue(100);
             nextInitStepTime = millis() + _unloader->getConfig().defaultDurationInMs;
@@ -644,6 +645,7 @@ namespace devices
         }
         case 2:
         {
+            MLOG_DEBUG("%s: Init step 2: Unloading end", toString().c_str());
             _state.initStep = 3;
             _unloader->setValue(0);
             nextInitStepTime = millis() + _unloader->getConfig().defaultDurationInMs;
@@ -651,6 +653,7 @@ namespace devices
         }
         case 3:
         {
+            MLOG_DEBUG("%s: Init step 3: Moving down to find limit switch", toString().c_str());
             // Move slowly down to find limit switch
             _state.initStep = 4;
             long steps = (_config.minSteps - _config.maxSteps) * DOWN_FACTOR;
@@ -659,14 +662,6 @@ namespace devices
         }
         case 4:
         {
-
-            // Timeout
-            if (millis() > nextInitStepTime + 20000)
-            {
-                setError(LiftErrorCode::LIFT_NO_ZERO, "Initialization timeout: limit switch not triggered");
-                return; // Wait until next step time
-            }
-
             if (!_stepper->getState().isMoving && (millis() > nextInitStepTime + 100))
             {
                 setError(LiftErrorCode::LIFT_NO_ZERO, "Initialization failed: limit switch not triggered");
@@ -679,6 +674,7 @@ namespace devices
                 return;
             }
 
+            MLOG_DEBUG("%s: Init step 4: Loading start", toString().c_str());
             _stepper->stop(100000);
             _stepper->setCurrentPosition(0);
 
@@ -690,6 +686,7 @@ namespace devices
         }
         case 5:
         {
+            MLOG_DEBUG("%s: Init step 5: Loading end", toString().c_str());
             _state.initStep = 6;
             _loader->setValue(0);
             nextInitStepTime = millis() + _loader->getConfig().defaultDurationInMs + 500;
@@ -697,7 +694,7 @@ namespace devices
         }
         case 6:
         {
-            // Move ball up
+            MLOG_DEBUG("%s: Init step 6: Moving possible loaded list up", toString().c_str());
             _state.initStep = 7;
             _loader->setValue(100);
             _stepper->moveTo(_config.maxSteps, _stepper->getConfig().defaultSpeed * 0.5f);
@@ -705,6 +702,7 @@ namespace devices
         }
         case 7:
         {
+            MLOG_DEBUG("%s: Init step 7: Unloading start", toString().c_str());
             _state.initStep = 8;
             _unloader->setValue(100);
             nextInitStepTime = millis() + _unloader->getConfig().defaultDurationInMs;
@@ -712,6 +710,7 @@ namespace devices
         }
         case 8:
         {
+            MLOG_DEBUG("%s: Init step 8: Unloading end", toString().c_str());
             _state.initStep = 9;
             _unloader->setValue(0);
             nextInitStepTime = millis() + _unloader->getConfig().defaultDurationInMs;
@@ -719,6 +718,7 @@ namespace devices
         }
         case 9:
         {
+            MLOG_DEBUG("%s: Init step 9: Moving back down until limit switch", toString().c_str());
             _state.initStep = 10;
             long steps = (_config.minSteps - _config.maxSteps) * DOWN_FACTOR;
             _stepper->move(steps, _stepper->getConfig().defaultSpeed * 0.5f);
@@ -726,13 +726,6 @@ namespace devices
         }
         case 10:
         {
-            // Timeout
-            if (millis() > nextInitStepTime + 20000)
-            {
-                setError(LiftErrorCode::LIFT_NO_ZERO, "Initialization timeout: limit switch not triggered");
-                return; // Wait until next step time
-            }
-
             if (!_stepper->getState().isMoving && (millis() > nextInitStepTime + 100))
             {
                 setError(LiftErrorCode::LIFT_NO_ZERO, "Initialization failed: limit switch not triggered");

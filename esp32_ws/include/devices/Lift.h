@@ -125,9 +125,10 @@ namespace devices
 
         /**
          * @brief Unload a ball from the lift
+         * @param durationRatio Duration ratio for servo animation (1.0 = default duration)
          * @return true if unload started, false otherwise
          */
-        bool unloadBall();
+        bool unloadBall(float durationRatio = 1.0f);
 
         /**
          * @brief Check if a ball is waiting to be loaded
@@ -195,15 +196,17 @@ namespace devices
 
         /**
          * @brief Start unloading a ball
+         * @param durationRatio Duration ratio for servo animation (1.0 = default duration)
          * @return true if started
          */
-        bool unloadBallStart();
+        bool unloadBallStart(float durationRatio = 1.0f);
 
         /**
          * @brief End unloading a ball
+         * @param durationRatio Duration ratio for servo animation (1.0 = default duration)
          * @return true if ended
          */
-        bool unloadBallEnd();
+        bool unloadBallEnd(float durationRatio = 1.0f);
 
         /**
          * @brief Get current stepper position

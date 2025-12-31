@@ -1,6 +1,7 @@
 import { createStore, produce } from "solid-js/store";
 import { createContext, onCleanup, onMount, useContext } from "solid-js";
 import { IWebSocketActions, useWebSocket2 } from "../hooks/useWebSocket";
+import { DeviceInfo } from "../interfaces/WebSockets";
 
 export type IDeviceConfig = Record<string, unknown>;
 

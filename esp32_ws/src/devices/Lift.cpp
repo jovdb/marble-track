@@ -171,20 +171,6 @@ namespace devices
         {
         case LiftStateEnum::UNKNOWN:
         {
-            /*
-            if (_limitSwitch->hasMixin("state"))
-            {
-                _stepper->setCurrentPosition(0);
-
-                // Check if at limit - simplified check
-                if (_stepper->hasMixin("state"))
-                {
-                    // Set current position to 0 if at limit
-                  //  _state.state = LiftStateEnum::LIFT_DOWN_UNLOADED;
-                  //  notifyStateChanged();
-                }
-            }
-                */
             break;
         }
         case LiftStateEnum::INIT:
@@ -196,7 +182,7 @@ namespace devices
             break;
         case LiftStateEnum::LIFT_DOWN_LOADING:
             // Wait 1 second after starting load, then end the loading process
-            if (millis() - _loadStartTime >= 1000)
+            if (millis() - _loadStartTime >= _loader->getConfig().defaultDurationInMs + 500)
             {
                 loadBallEnd();
             }
@@ -207,9 +193,9 @@ namespace devices
             break;
         case LiftStateEnum::LIFT_UP_UNLOADING:
             // Wait 2 seconds after starting unload, then end the unloading process
-            if (millis() - _unloadStartTime >= 2000)
+            if (millis() - _unloadStartTime >= _unloader->getConfig().defaultDurationInMs + 1000)
             {
-                unloadBallEnd();
+                unloadBallEnd(1.0f);
             }
             break;
         case LiftStateEnum::LIFT_UP_UNLOADED:
@@ -365,7 +351,7 @@ namespace devices
         }
     }
 
-    bool Lift::unloadBall()
+    bool Lift::unloadBall(float durationRatio)
     {
         switch (_state.state)
         {
@@ -384,7 +370,7 @@ namespace devices
         case LiftStateEnum::LIFT_UP_UNLOADED:
         case LiftStateEnum::LIFT_UP_LOADED:
         {
-            bool result = unloadBallStart();
+            bool result = unloadBallStart(durationRatio);
             return result;
         }
         default:
@@ -448,7 +434,12 @@ namespace devices
         }
         else if (action == "unloadBall")
         {
-            return unloadBall();
+            float durationRatio = 1.0f;
+            if (args && (*args)["durationRatio"].is<float>())
+            {
+                durationRatio = (*args)["durationRatio"];
+            }
+            return unloadBall(durationRatio);
         }
         else
         {
@@ -554,7 +545,7 @@ namespace devices
         return _loader->setValue(0);
     }
 
-    bool Lift::unloadBallStart()
+    bool Lift::unloadBallStart(float durationRatio)
     {
 
         MLOG_INFO("%s: Unloading ball...", toString().c_str());
@@ -563,18 +554,20 @@ namespace devices
         _state.isLoaded = false;
         notifyStateChanged();
 
-        // Set unloader to 100 (fully open) - simplified control
-        return _unloader->setValue(100);
+        // Set unloader to 100 (fully open) - with duration
+        int durationMs = _unloader->getConfig().defaultDurationInMs * durationRatio;
+        return _unloader->setValue(100, durationMs);
     }
 
-    bool Lift::unloadBallEnd()
+    bool Lift::unloadBallEnd(float durationRatio)
     {
 
         _state.state = LiftStateEnum::LIFT_UP_UNLOADED;
         notifyStateChanged();
 
-        // Set unloader to 0 (fully closed) - simplified control
-        return _unloader->setValue(0);
+        // Set unloader to 0 (fully closed) - with duration
+        int durationMs = _unloader->getConfig().defaultDurationInMs * durationRatio;
+        return _unloader->setValue(0, durationMs);
     }
 
     // Helper methods for stepper control - simplified implementations
@@ -759,7 +752,6 @@ namespace devices
             break;
         }
         }
-
     }
 
 } // namespace devices

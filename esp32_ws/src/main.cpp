@@ -219,6 +219,7 @@ void loop()
   // Process captive portal for access point mode
   if (network)
   {
+    network->loop(); // Handle non-blocking network connection
     network->processCaptivePortal();
   }
 

@@ -112,6 +112,17 @@ public:
      */
     void processCaptivePortal();
 
+    /**
+     * @brief Process network operations (call in main loop)
+     */
+    void loop();
+
+    /**
+     * @brief Check if network is currently connecting
+     * @return true if attempting to connect, false otherwise
+     */
+    bool isConnecting() const { return _isConnecting; }
+
 private:
     // WiFi credentials
     String _wifi_ssid;
@@ -123,9 +134,14 @@ private:
     // DNS server for captive portal
     DNSServer *_dnsServer;
 
+    // Connection state tracking for non-blocking operation
+    bool _isConnecting;
+    unsigned long _connectionStartTime;
+    bool _wifiConnectionAttempted;
+
     // Private methods
-    bool connectToWiFi();
     bool startAccessPoint();
+    void setupMDNS();
 };
 
 #endif // NETWORK_H

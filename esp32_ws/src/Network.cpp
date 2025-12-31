@@ -5,12 +5,14 @@
 #include "Logging.h"
 
 Network::Network(const char *wifi_ssid, const char *wifi_password)
-    : _wifi_ssid(wifi_ssid), _wifi_password(wifi_password), _currentMode(NetworkMode::DISCONNECTED), _dnsServer(nullptr)
+    : _wifi_ssid(wifi_ssid), _wifi_password(wifi_password), _currentMode(NetworkMode::DISCONNECTED), _dnsServer(nullptr),
+      _isConnecting(false), _connectionStartTime(0), _wifiConnectionAttempted(false)
 {
 }
 
 Network::Network(const NetworkSettings& settings)
-    : _wifi_ssid(settings.ssid), _wifi_password(settings.password), _currentMode(NetworkMode::DISCONNECTED), _dnsServer(nullptr)
+    : _wifi_ssid(settings.ssid), _wifi_password(settings.password), _currentMode(NetworkMode::DISCONNECTED), _dnsServer(nullptr),
+      _isConnecting(false), _connectionStartTime(0), _wifiConnectionAttempted(false)
 {
 }
 
@@ -38,91 +40,29 @@ Network::~Network()
 
 bool Network::setup()
 {
-    // First, try to connect to WiFi
-    if (connectToWiFi())
-    {
-        _currentMode = NetworkMode::WIFI_CLIENT;
-    }
-
-    // If WiFi fails, start Access Point
-    if (_currentMode == NetworkMode::DISCONNECTED && startAccessPoint())
-    {
-        _currentMode = NetworkMode::ACCESS_POINT;
-    }
-
-    // Start mDNS responder for marble-track.local using ESP-IDF mDNS
-    if (_currentMode != NetworkMode::DISCONNECTED)
-    {
-        // Start mDNS
-        if (mdns_init() == ESP_OK)
-        {
-            // Set hostname without .local suffix - mDNS will append it automatically
-            if (mdns_hostname_set("marble-track") == ESP_OK)
-            {
-                mdns_instance_name_set("Marble Track Controller");
-                
-                // Add HTTP service
-                if (mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0) == ESP_OK)
-                {
-                    MLOG_INFO("mDNS: http://marble-track.local : OK");
-                }
-                else
-                {
-                    MLOG_WARN("mDNS: HTTP service registration failed");
-                }
-            }
-            else
-            {
-                MLOG_ERROR("mDNS: hostname setup failed");
-            }
-        }
-        else
-        {
-            MLOG_ERROR("mDNS: initialization failed");
-        }
-
-        return true; // Allow successful setup if mDNS fails
-    }
-
+    // Reset connection state
+    _isConnecting = false;
+    _connectionStartTime = 0;
+    _wifiConnectionAttempted = false;
     _currentMode = NetworkMode::DISCONNECTED;
-    MLOG_ERROR("No network connection!");
-    return false;
-}
 
-bool Network::connectToWiFi()
-{
-    // Don't attempt to connect if SSID is empty or not configured
-    if (_wifi_ssid.isEmpty())
+    // Start WiFi connection attempt (non-blocking)
+    if (!_wifi_ssid.isEmpty())
     {
-        MLOG_INFO("WiFi SSID not configured, skipping WiFi connection");
-        return false;
-    }
-
-    MLOG_INFO("Connect to WiFi network '%s' ..", _wifi_ssid.c_str());
-
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(_wifi_ssid.c_str(), _wifi_password.c_str());
-
-    unsigned long startTime = millis();
-
-    while (WiFi.status() != WL_CONNECTED && (millis() - startTime) < WIFI_TIMEOUT_MS)
-    {
-        delay(CONNECTION_CHECK_INTERVAL_MS);
-        // ESP_LOGI(TAG, "."); // Optionally log progress
-    }
-
-    if (WiFi.status() == WL_CONNECTED)
-    {
-        MLOG_INFO(": OK, http://%s", WiFi.localIP().toString().c_str());
-        // ESP_LOGI(TAG, "Signal Strength: %d dBm", WiFi.RSSI());
-        return true;
+        MLOG_INFO("Starting WiFi connection to '%s' (non-blocking)...", _wifi_ssid.c_str());
+        WiFi.mode(WIFI_STA);
+        WiFi.begin(_wifi_ssid.c_str(), _wifi_password.c_str());
+        _isConnecting = true;
+        _connectionStartTime = millis();
+        _wifiConnectionAttempted = true;
     }
     else
     {
-        MLOG_ERROR(": ERROR: Could not connect");
-        WiFi.disconnect();
-        return false;
+        MLOG_INFO("WiFi SSID not configured, will start Access Point mode");
+        _wifiConnectionAttempted = true; // Skip WiFi attempt
     }
+
+    return true; // Setup initiated successfully
 }
 
 bool Network::startAccessPoint()
@@ -155,6 +95,37 @@ bool Network::startAccessPoint()
     {
         MLOG_ERROR(": ERROR: Failed to start Access Point!");
         return false;
+    }
+}
+
+void Network::setupMDNS()
+{
+    // Start mDNS responder for marble-track.local using ESP-IDF mDNS
+    if (mdns_init() == ESP_OK)
+    {
+        // Set hostname without .local suffix - mDNS will append it automatically
+        if (mdns_hostname_set("marble-track") == ESP_OK)
+        {
+            mdns_instance_name_set("Marble Track Controller");
+            
+            // Add HTTP service
+            if (mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0) == ESP_OK)
+            {
+                MLOG_INFO("mDNS: http://marble-track.local : OK");
+            }
+            else
+            {
+                MLOG_WARN("mDNS: HTTP service registration failed");
+            }
+        }
+        else
+        {
+            MLOG_ERROR("mDNS: hostname setup failed");
+        }
+    }
+    else
+    {
+        MLOG_ERROR("mDNS: initialization failed");
     }
 }
 
@@ -239,6 +210,47 @@ String Network::getStatusJSON() const
     }
 }
 
+void Network::loop()
+{
+    // Handle WiFi connection process
+    if (_isConnecting)
+    {
+        wl_status_t status = WiFi.status();
+        
+        if (status == WL_CONNECTED)
+        {
+            // WiFi connected successfully
+            _isConnecting = false;
+            _currentMode = NetworkMode::WIFI_CLIENT;
+            MLOG_INFO("WiFi connected: OK, http://%s", WiFi.localIP().toString().c_str());
+            
+            // Start mDNS
+            setupMDNS();
+        }
+        else if (millis() - _connectionStartTime >= WIFI_TIMEOUT_MS)
+        {
+            // Connection timeout - stop trying WiFi and start AP mode
+            _isConnecting = false;
+            MLOG_ERROR("WiFi connection timeout - starting Access Point mode");
+            WiFi.disconnect();
+            
+            if (startAccessPoint())
+            {
+                _currentMode = NetworkMode::ACCESS_POINT;
+                setupMDNS();
+            }
+            else
+            {
+                _currentMode = NetworkMode::DISCONNECTED;
+                MLOG_ERROR("Failed to start Access Point - no network connection!");
+            }
+        }
+    }
+    
+    // Handle captive portal processing
+    processCaptivePortal();
+}
+
 NetworkMode Network::applySettings(const NetworkSettings &settings)
 {
     _wifi_ssid = settings.ssid;
@@ -258,7 +270,11 @@ NetworkMode Network::applySettings(const NetworkSettings &settings)
     mdns_free();
 #endif
 
+    // Reset state and restart setup
     _currentMode = NetworkMode::DISCONNECTED;
+    _isConnecting = false;
+    _connectionStartTime = 0;
+    _wifiConnectionAttempted = false;
 
     setup();
 

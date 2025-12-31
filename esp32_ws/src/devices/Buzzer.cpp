@@ -54,6 +54,9 @@ namespace devices
         ledcSetup(_ledcChannel, 2000, 8); // 2kHz frequency, 8-bit resolution
         ledcAttachPin(_config.pin, _ledcChannel);
 
+        // Detach pin initially to prevent passive buzzer oscillation when idle
+        ledcDetachPin(_config.pin);
+
         MLOG_INFO("%s: Setup on pin %d, LEDC channel %d", toString().c_str(), _config.pin, _ledcChannel);
 
         // Start the RTOS task for non-blocking tone/tune playback
@@ -142,8 +145,9 @@ namespace devices
             }
         }
 
-        // Stop any current playback by stopping the tone and setting stop flag
+        // Stop any current playback by stopping the tone and detaching the pin
         ledcWriteTone(_ledcChannel, 0);
+        ledcDetachPin(_config.pin);
 
         // Set stop flag for RTOS task
         xSemaphoreTake(_stateMutex, portMAX_DELAY);
@@ -341,11 +345,17 @@ namespace devices
                 // Notify that tone has started
                 notifyStateChanged();
 
+                // Reattach pin to LEDC for tone playback
+                ledcAttachPin(_config.pin, _ledcChannel);
+
                 // Play the tone
                 ledcWriteTone(_ledcChannel, frequency);
                 MLOG_INFO("%s: Started tone playback: %dHz for %dms", toString().c_str(), frequency, duration);
                 vTaskDelay(pdMS_TO_TICKS(duration));
                 ledcWriteTone(_ledcChannel, 0); // Stop tone
+
+                // Detach pin from LEDC to prevent oscillation
+                ledcDetachPin(_config.pin);
 
                 // Update state back to idle
                 xSemaphoreTake(_stateMutex, portMAX_DELAY);
@@ -368,6 +378,9 @@ namespace devices
                 _state.currentTune = rtttl;
                 xSemaphoreGive(_stateMutex);
 
+                // Reattach pin to LEDC for tune playback (RTTTL library uses LEDC internally)
+                ledcAttachPin(_config.pin, _ledcChannel);
+
                 // Start the RTTTL tune
                 rtttl::begin(_config.pin, rtttl.c_str());
 
@@ -375,6 +388,9 @@ namespace devices
                 if (!rtttl::isPlaying())
                 {
                     MLOG_ERROR("%s: Failed to start RTTTL playback", toString().c_str());
+
+                    // Detach pin to prevent oscillation
+                    ledcDetachPin(_config.pin);
 
                     // Clean up state
                     xSemaphoreTake(_stateMutex, portMAX_DELAY);
@@ -420,6 +436,9 @@ namespace devices
 
                     lastPlayTime = millis();
                 }
+
+                // Detach pin from LEDC to prevent oscillation
+                ledcDetachPin(_config.pin);
 
                 // Tune finished or was stopped
                 xSemaphoreTake(_stateMutex, portMAX_DELAY);

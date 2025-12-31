@@ -14,7 +14,6 @@
 #include "devices/Stepper.h"
 #include "devices/Button.h"
 #include "devices/Servo.h"
-#include <freertos/semphr.h>
 
 namespace devices
 {
@@ -47,6 +46,7 @@ namespace devices
         NONE,
         LIFT_CONFIGURATION_ERROR,
         LIFT_STATE_ERROR,
+        LIFT_NO_ZERO,
     };
 
     /**
@@ -206,36 +206,6 @@ namespace devices
         bool unloadBallEnd();
 
         /**
-         * @brief Get pointer to stepper child device
-         * @return Stepper device pointer or nullptr
-         */
-        Device *getStepper() const;
-
-        /**
-         * @brief Get pointer to limit switch child device
-         * @return Button device pointer or nullptr
-         */
-        Device *getLimitSwitch() const;
-
-        /**
-         * @brief Get pointer to ball sensor child device
-         * @return Button device pointer or nullptr
-         */
-        Device *getBallSensor() const;
-
-        /**
-         * @brief Get pointer to loader child device
-         * @return Servo device pointer or nullptr
-         */
-        Device *getLoader() const;
-
-        /**
-         * @brief Get pointer to unloader child device
-         * @return Servo device pointer or nullptr
-         */
-        Device *getUnloader() const;
-
-        /**
          * @brief Get current stepper position
          * @return Current position
          */
@@ -286,7 +256,6 @@ namespace devices
          * @brief Handle initialization sequence
          */
         void handleInitSequence();
-
     };
 
 } // namespace devices

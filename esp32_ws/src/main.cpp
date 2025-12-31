@@ -198,6 +198,7 @@ void setup()
   // State change broadcasting is now enabled during setup
 
   MLOG_INFO("System initialization complete!");
+  MLOG_INFO("--------------------------");
 }
 
 void loop()

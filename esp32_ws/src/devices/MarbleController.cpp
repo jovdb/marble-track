@@ -72,9 +72,14 @@ namespace devices
         case devices::LiftStateEnum::ERROR:
             // Handle error state - maybe blink LED faster
             _liftLed->set(false);
+
+            // For new Errors
+            if (_lift->getState().onErrorChange)
+            {
+                playErrorSound();
+            }
             break;
         case devices::LiftStateEnum::INIT:
-            // Initialization in progress
             _liftLed->blink(500, 500);
             break;
         case devices::LiftStateEnum::LIFT_DOWN_LOADING:
@@ -131,6 +136,15 @@ namespace devices
             break;
         default:
             break;
+        }
+    }
+
+    void MarbleController::playErrorSound()
+    {
+        if (_buzzer)
+        {
+            // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
+            _buzzer->tune("Error:d=4,o=4,b=100:a,d"); // Play error tune
         }
     }
 

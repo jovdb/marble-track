@@ -57,7 +57,7 @@ namespace devices
         auto loaderCfg = _loader->getConfig();
         loaderCfg.name = "Lift Loader";
         loaderCfg.pin = 39;
-        loaderCfg.mcpwmChannel = 0;
+        loaderCfg.mcpwmChannel = -1;
         loaderCfg.frequency = 50;
         loaderCfg.resolutionBits = 10;
         loaderCfg.minDutyCycle = 9.5f;
@@ -70,7 +70,7 @@ namespace devices
         auto unloaderCfg = _unloader->getConfig();
         unloaderCfg.name = "Lift Unloader";
         unloaderCfg.pin = 38;
-        unloaderCfg.mcpwmChannel = 0;
+        unloaderCfg.mcpwmChannel = -1;
         unloaderCfg.frequency = 50;
         unloaderCfg.resolutionBits = 10;
         unloaderCfg.minDutyCycle = 12.2f;
@@ -142,112 +142,107 @@ namespace devices
 
         _state.onErrorChange = false;
 
-        // In case of error, skip processing
-        // TODO: move to switch
-        if (_state.errorMessage != "")
-            return;
+        if (_state.state == LiftStateEnum::ERROR)
+        {
+            _state.errorMessage = ""; // Clear error message when error is resolved
+            _state.errorCode = LiftErrorCode::NONE;
+        }
 
         // Check ball sensor state and notify if changed
-        bool ballWaiting = _ballSensor ? _ballSensor->getState().isPressed : false;
+        // bool ballWaiting = _ballSensor ? _ballSensor->getState().isPressed : false;
 
         // TODO in semaphore?
         // TODO: stack of errors?
-        _state.errorMessage = ""; // Clear error message when error is resolved
 
         /*
-        if (xSemaphoreTake(_stateMutex, portMAX_DELAY) == pdTRUE)
-        {
-            bool changed = (_state.isBallWaiting != ballWaiting);
-            _state.isBallWaiting = ballWaiting;
+        bool changed = (_state.isBallWaiting != ballWaiting);
+        _state.isBallWaiting = ballWaiting;
 
-            if (changed)
+        if (changed)
+        {
+            MLOG_INFO("%s: Ball waiting state changed to %s", toString().c_str(), ballWaiting ? "true" : "false");
+            notifyStateChanged();
+        }
+
+    }
+    */
+        // State machine logic
+        switch (_state.state)
+        {
+        case LiftStateEnum::UNKNOWN:
+        {
+            /*
+            if (_limitSwitch->hasMixin("state"))
             {
-                MLOG_INFO("%s: Ball waiting state changed to %s", toString().c_str(), ballWaiting ? "true" : "false");
+                _stepper->setCurrentPosition(0);
+
+                // Check if at limit - simplified check
+                if (_stepper->hasMixin("state"))
+                {
+                    // Set current position to 0 if at limit
+                  //  _state.state = LiftStateEnum::LIFT_DOWN_UNLOADED;
+                  //  notifyStateChanged();
+                }
+            }
+                */
+            break;
+        }
+        case LiftStateEnum::INIT:
+            // Handle reset sequence steps
+            handleInitSequence();
+            break;
+        case LiftStateEnum::ERROR:
+            // In error state, do nothing - requires manual reset
+            break;
+        case LiftStateEnum::LIFT_DOWN_LOADING:
+            // Wait 1 second after starting load, then end the loading process
+            if (millis() - _loadStartTime >= 1000)
+            {
+                loadBallEnd();
+            }
+            break;
+        case LiftStateEnum::LIFT_DOWN_LOADED:
+            break;
+        case LiftStateEnum::LIFT_DOWN_UNLOADED:
+            break;
+        case LiftStateEnum::LIFT_UP_UNLOADING:
+            // Wait 2 seconds after starting unload, then end the unloading process
+            if (millis() - _unloadStartTime >= 2000)
+            {
+                unloadBallEnd();
+            }
+            break;
+        case LiftStateEnum::LIFT_UP_UNLOADED:
+            break;
+        case LiftStateEnum::LIFT_UP_LOADED:
+            break;
+        case LiftStateEnum::MOVING_UP:
+            if (isStepperIdle())
+            {
+                MLOG_INFO("%s: Top reached", toString().c_str());
+                _state.state = _state.isLoaded ? LiftStateEnum::LIFT_UP_LOADED : LiftStateEnum::LIFT_UP_UNLOADED;
                 notifyStateChanged();
             }
-
-            xSemaphoreGive(_stateMutex);
-        }
-
-        // State machine logic
-        if (xSemaphoreTake(_stateMutex, portMAX_DELAY) == pdTRUE)
-        {
-            switch (_state.state)
+            break;
+        case LiftStateEnum::MOVING_DOWN:
+            // When stepper stops moving, return to appropriate idle state
+            if (isStepperIdle())
             {
-            case LiftStateEnum::UNKNOWN:
+                MLOG_INFO("%s: Movement complete", toString().c_str());
+                _state.state = _state.isLoaded ? LiftStateEnum::LIFT_DOWN_LOADED : LiftStateEnum::LIFT_DOWN_UNLOADED;
+                notifyStateChanged();
+            }
+            else if (isAtLimit() && _state.state == LiftStateEnum::MOVING_DOWN)
             {
-                auto limitSwitch = getLimitSwitch();
-                if (limitSwitch && limitSwitch->hasMixin("state"))
-                {
-                    // Check if at limit - simplified check
-                    auto stepper = getStepper();
-                    if (stepper && stepper->hasMixin("state"))
-                    {
-                        // Set current position to 0 if at limit
-                        _state.state = LiftStateEnum::LIFT_DOWN_UNLOADED;
-                        notifyStateChanged();
-                    }
-                }
-                break;
+                MLOG_WARN("%s: Limit switch triggered during downward movement - stopping", toString().c_str());
+                stopStepper();
+                _state.state = LiftStateEnum::LIFT_DOWN_UNLOADED;
+                notifyStateChanged();
             }
-            case LiftStateEnum::INIT:
-                // Handle reset sequence steps
-                handleInitSequence();
-                break;
-            case LiftStateEnum::ERROR:
-                // In error state, do nothing - requires manual reset
-                break;
-            case LiftStateEnum::LIFT_DOWN_LOADING:
-                // Wait 1 second after starting load, then end the loading process
-                if (millis() - _loadStartTime >= 1000)
-                {
-                    loadBallEnd();
-                }
-                break;
-            case LiftStateEnum::LIFT_DOWN_LOADED:
-                break;
-            case LiftStateEnum::LIFT_UP_UNLOADING:
-                // Wait 2 seconds after starting unload, then end the unloading process
-                if (millis() - _unloadStartTime >= 2000)
-                {
-                    unloadBallEnd();
-                }
-                break;
-            case LiftStateEnum::LIFT_UP_UNLOADED:
-                break;
-            case LiftStateEnum::LIFT_UP_LOADED:
-                break;
-            case LiftStateEnum::MOVING_UP:
-                if (isStepperIdle())
-                {
-                    MLOG_INFO("%s: Top reached", toString().c_str());
-                    _state.state = _state.isLoaded ? LiftStateEnum::LIFT_UP_LOADED : LiftStateEnum::LIFT_UP_UNLOADED;
-                    notifyStateChanged();
-                }
-                break;
-            case LiftStateEnum::MOVING_DOWN:
-                // When stepper stops moving, return to appropriate idle state
-                if (isStepperIdle())
-                {
-                    MLOG_INFO("%s: Movement complete", toString().c_str());
-                    _state.state = _state.isLoaded ? LiftStateEnum::LIFT_DOWN_LOADED : LiftStateEnum::LIFT_DOWN_UNLOADED;
-                    notifyStateChanged();
-                }
-                else if (isAtLimit() && _state.state == LiftStateEnum::MOVING_DOWN)
-                {
-                    MLOG_WARN("%s: Limit switch triggered during downward movement - stopping", toString().c_str());
-                    stopStepper();
-                    _state.state = LiftStateEnum::LIFT_DOWN_UNLOADED;
-                    notifyStateChanged();
-                }
-                break;
-            default:
-                setError(LiftErrorCode::LIFT_STATE_ERROR, "Unknown state encountered in loop()");
-            }
-
-            xSemaphoreGive(_stateMutex);
+            break;
+        default:
+            setError(LiftErrorCode::LIFT_STATE_ERROR, "Unknown state encountered in loop(): " + stateToString(_state.state));
         }
-        */
     }
 
     bool Lift::up(float speedRatio)
@@ -286,7 +281,7 @@ namespace devices
             break;
         }
         default:
-            setError(LiftErrorCode::LIFT_STATE_ERROR, "Unknown state encountered in loop()");
+            setError(LiftErrorCode::LIFT_STATE_ERROR, "Unknown state encountered in up(): " + stateToString(_state.state));
             break;
         }
 
@@ -333,12 +328,6 @@ namespace devices
 
     bool Lift::init()
     {
-        if (!_stepper || !_limitSwitch)
-        {
-            MLOG_WARN("%s: Stepper or limit switch not initialized", toString().c_str());
-            return false;
-        }
-
         MLOG_INFO("%s: Starting init sequence", toString().c_str());
 
         _state.state = LiftStateEnum::INIT;
@@ -545,13 +534,6 @@ namespace devices
 
     bool Lift::loadBallStart()
     {
-        auto loader = getLoader();
-        if (!loader)
-        {
-            MLOG_WARN("%s: Lift Loader not initialized", toString().c_str());
-            return false;
-        }
-
         MLOG_INFO("%s: Loading ball...", toString().c_str());
         _state.state = LiftStateEnum::LIFT_DOWN_LOADING;
         _loadStartTime = millis();
@@ -559,33 +541,21 @@ namespace devices
         notifyStateChanged();
 
         // Set loader to 100 (fully open) - simplified control
-        return true; // Placeholder
+        return _loader->setValue(100);
     }
 
     bool Lift::loadBallEnd()
     {
-        auto loader = getLoader();
-        if (!loader)
-        {
-            MLOG_WARN("%s: Lift Loader not initialized", toString().c_str());
-            return false;
-        }
 
         _state.state = LiftStateEnum::LIFT_DOWN_LOADED;
         notifyStateChanged();
 
         // Set loader to 0 (fully closed) - simplified control
-        return true; // Placeholder
+        return _loader->setValue(0);
     }
 
     bool Lift::unloadBallStart()
     {
-        auto unloader = getUnloader();
-        if (!unloader)
-        {
-            MLOG_WARN("%s: Lift Unloader not initialized", toString().c_str());
-            return false;
-        }
 
         MLOG_INFO("%s: Unloading ball...", toString().c_str());
         _state.state = LiftStateEnum::LIFT_UP_UNLOADING;
@@ -594,48 +564,17 @@ namespace devices
         notifyStateChanged();
 
         // Set unloader to 100 (fully open) - simplified control
-        return true; // Placeholder
+        return _unloader->setValue(100);
     }
 
     bool Lift::unloadBallEnd()
     {
-        auto unloader = getUnloader();
-        if (!unloader)
-        {
-            MLOG_WARN("%s: Lift Unloader not initialized", toString().c_str());
-            return false;
-        }
 
         _state.state = LiftStateEnum::LIFT_UP_UNLOADED;
         notifyStateChanged();
 
         // Set unloader to 0 (fully closed) - simplified control
-        return true; // Placeholder
-    }
-
-    Device *Lift::getStepper() const
-    {
-        return _stepper;
-    }
-
-    Device *Lift::getLimitSwitch() const
-    {
-        return _limitSwitch;
-    }
-
-    Device *Lift::getBallSensor() const
-    {
-        return _ballSensor;
-    }
-
-    Device *Lift::getLoader() const
-    {
-        return _loader;
-    }
-
-    Device *Lift::getUnloader() const
-    {
-        return _unloader;
+        return _unloader->setValue(0);
     }
 
     // Helper methods for stepper control - simplified implementations
@@ -688,14 +627,71 @@ namespace devices
 
     void Lift::handleInitSequence()
     {
+        static long nextInitStepTime = 0;
+        if (millis() < nextInitStepTime)
+        {
+            return; // Wait until next step time
+        }
+
         // Simplified init sequence - would need full implementation
         switch (_state.initStep)
         {
         case 1:
             // Move unload out of the way
             _state.initStep = 2;
+            _unloader->setValue(100);
+            nextInitStepTime = millis() + _unloader->getConfig().defaultDurationInMs;
             break;
-        // ... more steps would be implemented
+        case 2:
+            _state.initStep = 3;
+            unloadBallEnd();
+            nextInitStepTime = millis() + _unloader->getConfig().defaultDurationInMs;
+            break;
+        case 3:
+            // Move slowly down to find limit switch
+            _state.initStep = 4;
+            long steps = (_config.minSteps - _config.maxSteps) * DOWN_FACTOR;
+            moveStepper(steps, 0.5);
+            break;
+        case 4:
+            // wait until down
+            if (!_limitSwitch->getState().isPressed)
+            {
+                return;
+            }
+            // Timeout
+            if (millis() + 20000 < nextInitStepTime)
+            {
+                setError(LiftErrorCode::LIFT_NO_ZERO, "Initialization timeout: limit switch not triggered");
+                return; // Wait until next step time
+            }
+            // load ball
+            _state.initStep = 5;
+            _loader->setValue(100);
+            nextInitStepTime = millis() + _loader->getConfig().defaultDurationInMs;
+            break;
+        /*case 5:
+            // TODO
+            _state.initStep = 6;
+            loadBallEnd();
+            break;
+        case 6:
+            // Move ball up
+            _state.initStep = 7;
+            up();
+        case 7:
+            _state.initStep = 8;
+            unloadBallStart();
+            break;
+        case 8:
+            _state.initStep = 9;
+            unloadBallEnd();
+            break;
+        case 9:
+            _state.initStep = 10;
+            down();
+            break;
+            */
         default:
             _state.state = LiftStateEnum::LIFT_DOWN_UNLOADED;
             _state.initStep = 0;

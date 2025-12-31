@@ -19,6 +19,11 @@ namespace devices
         MarbleController(const String &id);
         void loop() override;
 
+        /**
+         * @brief Play an error sound using the buzzer
+         */
+        void playErrorSound();
+
     private:
         void loopLift();
         devices::Buzzer *_buzzer;

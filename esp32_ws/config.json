@@ -5,18 +5,128 @@
   },
   "devices": [
     {
-      "id": "buzz",
-      "type": "buzzer",
-      "children": [],
-      "config": {
-        "pin": 3,
-        "name": "Buzzer"
-      }
-    },
-    {
-      "id": "marble-controller",
-      "type": "marblecontroller",
-      "name": "MarbleController"
+      "id": "controller",
+      "type": "MarbleController",
+      "children": [
+        {
+          "id": "buzzer",
+          "type": "buzzer",
+          "children": [],
+          "config": {
+            "pin": 14,
+            "name": "Buzzer"
+          }
+        },
+        {
+          "id": "lift",
+          "type": "lift",
+          "children": [
+            {
+              "id": "lift-stepper",
+              "type": "stepper",
+              "children": [],
+              "config": {
+                "name": "Lift Stepper",
+                "stepperType": "DRIVER",
+                "maxSpeed": 400,
+                "maxAcceleration": 100,
+                "defaultSpeed": 150,
+                "defaultAcceleration": 50,
+                "stepPin": 1,
+                "dirPin": 2,
+                "pin1": -1,
+                "pin2": -1,
+                "pin3": -1,
+                "pin4": -1,
+                "enablePin": 42,
+                "invertEnable": true
+              }
+            },
+            {
+              "id": "lift-limit",
+              "type": "button",
+              "children": [],
+              "config": {
+                "pin": 41,
+                "name": "Lift Limit Switch",
+                "debounceTimeInMs": 50,
+                "pinMode": "PullUp",
+                "buttonType": "NormalOpen"
+              }
+            },
+            {
+              "id": "lift-ball-sensor",
+              "type": "button",
+              "children": [],
+              "config": {
+                "pin": 40,
+                "name": "Lift Ball Sensor",
+                "debounceTimeInMs": 100,
+                "pinMode": "PullUp",
+                "buttonType": "NormalOpen"
+              }
+            },
+            {
+              "id": "lift-loader",
+              "type": "servo",
+              "children": [],
+              "config": {
+                "pin": 39,
+                "name": "Lift Loader",
+                "mcpwmChannel": 0,
+                "frequency": 50,
+                "resolutionBits": 10,
+                "minDutyCycle": 9.5,
+                "maxDutyCycle": 5.5,
+                "defaultDurationInMs": 200
+              }
+            },
+            {
+              "id": "lift-unloader",
+              "type": "servo",
+              "children": [],
+              "config": {
+                "pin": 38,
+                "name": "Lift Unloader",
+                "mcpwmChannel": 1,
+                "frequency": 50,
+                "resolutionBits": 10,
+                "minDutyCycle": 12.2,
+                "maxDutyCycle": 4,
+                "defaultDurationInMs": 1200
+              }
+            }
+          ],
+          "config": {
+            "name": "Lift",
+            "minSteps": 0,
+            "maxSteps": 1500,
+            "downFactor": 1.015
+          }
+        },
+        {
+          "id": "lift-led",
+          "type": "led",
+          "children": [],
+          "config": {
+            "pin": 15,
+            "name": "Lift Led",
+            "initialState": "OFF"
+          }
+        },
+        {
+          "id": "lift-button",
+          "type": "button",
+          "children": [],
+          "config": {
+            "pin": 16,
+            "name": "Lift Button",
+            "debounceTimeInMs": 50,
+            "pinMode": "PullUp",
+            "buttonType": "NormalOpen"
+          }
+        }
+      ]
     }
   ]
 }

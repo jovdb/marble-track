@@ -418,7 +418,7 @@ namespace devices
         _state.targetDurationMs = durationMs;
         xSemaphoreGive(_stateMutex);
 
-        MLOG_INFO("%s: Starting transition from %.1f%% to %.1f%% over %dms",
+        MLOG_INFO("%s: Moving from %.1f%% to %.1f%% over %dms",
                   toString().c_str(), _startDutyCycle.load(), _targetDutyCycle.load(), durationMs);
 
         // Notify that animation has started

@@ -105,14 +105,21 @@ void setupHttpOtaEndpoint(AsyncWebServer &server) {
 namespace OtaUpload {
 
 void setup(Network &network, AsyncWebServer &server) {
+  attemptSetup(network, server);
+}
+
+void attemptSetup(Network &network, AsyncWebServer &server) {
   if (gConfigured) {
     return;
   }
 
+  // Only setup OTA if network is connected (WiFi client or AP mode)
+  if (network.getCurrentMode() == NetworkMode::DISCONNECTED) {
+    return; // Silently return - will retry in loop()
+  }
+
   const String hostname = network.getHostname();
   MLOG_INFO("Configuring OTA services with hostname: %s", hostname.c_str());
-
-  delay(1000);
 
   ArduinoOTA.setHostname(hostname.c_str());
   ArduinoOTA.setPassword("marbletrack");
@@ -138,8 +145,10 @@ void setup(Network &network, AsyncWebServer &server) {
   gConfigured = true;
 }
 
-void loop() {
+void loop(Network &network, AsyncWebServer &server) {
   if (!gConfigured) {
+    // Try to setup OTA if not configured yet and network becomes available
+    attemptSetup(network, server);
     return;
   }
 

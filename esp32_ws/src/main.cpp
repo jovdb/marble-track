@@ -212,7 +212,7 @@ void loop()
     serialConsole->loop();
   }
 
-  OtaUpload::loop();
+  OtaUpload::loop(*network, server);
 
   littleFSManager.loop();
 

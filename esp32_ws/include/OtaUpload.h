@@ -7,8 +7,7 @@ class Network;
 namespace OtaUpload {
 
 void setup(Network &network, AsyncWebServer &server);
-void loop(Network &network, AsyncWebServer &server);
-void attemptSetup(Network &network, AsyncWebServer &server);
+void loop();
 
 }
 

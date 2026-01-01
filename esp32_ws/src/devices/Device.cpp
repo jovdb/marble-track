@@ -45,6 +45,18 @@ void Device::addChild(Device *child)
     }
 }
 
+Device *Device::getChildById(const String &id) const
+{
+    for (Device *child : _children)
+    {
+        if (child && child->getId() == id)
+        {
+            return child;
+        }
+    }
+    return nullptr;
+}
+
 String Device::toString() const
 {
     String upperType = _type;

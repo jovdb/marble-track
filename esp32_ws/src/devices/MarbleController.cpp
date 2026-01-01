@@ -14,45 +14,99 @@ namespace devices
     MarbleController::MarbleController(const String &id) : Device(id, "MarbleController")
     {
         _buzzer = new devices::Buzzer("buzzer");
-        JsonDocument buzzerConfigDoc;
-        buzzerConfigDoc["name"] = "Buzzer";
-        buzzerConfigDoc["pin"] = 14;
-        _buzzer->jsonToConfig(buzzerConfigDoc);
+        auto buzzerConfig = _buzzer->getConfig();
+        buzzerConfig.name = "Buzzer";
+        buzzerConfig.pin = 14;
+        _buzzer->setConfig(buzzerConfig);
         addChild(_buzzer);
 
         _lift = new devices::Lift("lift");
-        JsonDocument liftConfigDoc;
-        liftConfigDoc["name"] = "Lift";
-        liftConfigDoc["minSteps"] = 0;
-        liftConfigDoc["maxSteps"] = 1500;
-        _lift->jsonToConfig(liftConfigDoc);
+        auto liftConfig = _lift->getConfig();
+        liftConfig.name = "Lift";
+        liftConfig.minSteps = 0;
+        liftConfig.maxSteps = 1500;
+        _lift->setConfig(liftConfig);
         addChild(_lift);
 
+        // Configure lift's child device pins
+        auto liftStepper = _lift->getChildByIdAs<devices::Stepper>("lift-stepper");
+        if (liftStepper)
+        {
+            auto liftStepperConfig = liftStepper->getConfig();
+            liftStepperConfig.stepPin = 1;
+            liftStepperConfig.dirPin = 2;
+            liftStepperConfig.enablePin = 42;
+            liftStepperConfig.invertEnable = true;
+            liftStepper->setConfig(liftStepperConfig);
+        }
+
+        auto liftLimitSwitch = _lift->getChildByIdAs<devices::Button>("lift-limit");
+        if (liftLimitSwitch)
+        {
+            auto liftLimitSwitchConfig = liftLimitSwitch->getConfig();
+            liftLimitSwitchConfig.pin = 41;
+            liftLimitSwitchConfig.pinMode = PinModeOption::PullUp;
+            liftLimitSwitch->setConfig(liftLimitSwitchConfig);
+        }
+
+        auto liftBallSensor = _lift->getChildByIdAs<devices::Button>("lift-ball-sensor");
+        if (liftBallSensor)
+        {
+            auto liftBallSensorConfig = liftBallSensor->getConfig();
+            liftBallSensorConfig.pin = 40;
+            liftBallSensorConfig.pinMode = PinModeOption::PullUp;
+            liftBallSensor->setConfig(liftBallSensorConfig);
+        }
+
+        auto liftLoader = _lift->getChildByIdAs<devices::Servo>("lift-loader");
+        if (liftLoader)
+        {
+            auto liftLoaderConfig = liftLoader->getConfig();
+            liftLoaderConfig.pin = 39;
+            liftLoaderConfig.mcpwmChannel = -1;
+            liftLoaderConfig.frequency = 50;
+            liftLoaderConfig.resolutionBits = 10;
+            liftLoaderConfig.minDutyCycle = 9.5f;
+            liftLoaderConfig.maxDutyCycle = 5.5f;
+            liftLoaderConfig.defaultDurationInMs = 200;
+            liftLoader->setConfig(liftLoaderConfig);
+        }
+
+        auto liftUnloader = _lift->getChildByIdAs<devices::Servo>("lift-unloader");
+        if (liftUnloader)
+        {
+            auto liftUnloaderConfig = liftUnloader->getConfig();
+            liftUnloaderConfig.pin = 38;
+            liftUnloaderConfig.mcpwmChannel = -1;
+            liftUnloaderConfig.frequency = 50;
+            liftUnloaderConfig.resolutionBits = 10;
+            liftUnloaderConfig.minDutyCycle = 12.2f;
+            liftUnloaderConfig.maxDutyCycle = 4.0f;
+            liftUnloaderConfig.defaultDurationInMs = 1200;
+            liftUnloader->setConfig(liftUnloaderConfig);
+        }
+
         _liftLed = new devices::Led("lift-led");
-        JsonDocument configDoc;
-        configDoc["name"] = "Lift Led";
-        configDoc["pin"] = 45;
-        _liftLed->jsonToConfig(configDoc);
+        auto liftLedConfig = _liftLed->getConfig();
+        liftLedConfig.name = "Lift Led";
+        liftLedConfig.pin = 45;
+        _liftLed->setConfig(liftLedConfig);
         addChild(_liftLed);
 
         _liftButton = new devices::Button("lift-button");
-        JsonDocument buttonConfigDoc;
-        buttonConfigDoc["name"] = "Lift Button";
-        buttonConfigDoc["pin"] = 48;
-        buttonConfigDoc["pinMode"] = "pullup";
-        buttonConfigDoc["debounceTimeInMs"] = 50;
-        buttonConfigDoc["buttonType"] = "NormalOpen";
-        _liftButton->jsonToConfig(buttonConfigDoc);
+        auto liftButtonConfig = _liftButton->getConfig();
+        liftButtonConfig.name = "Lift Button";
+        liftButtonConfig.pin = 48;
+        liftButtonConfig.pinMode = PinModeOption::PullUp;
+        _liftButton->setConfig(liftButtonConfig);
         addChild(_liftButton);
 
         _manualButton = new devices::Button("manual-btn");
-        JsonDocument manualButtonConfigDoc;
-        manualButtonConfigDoc["name"] = "Manual Mode Button";
-        manualButtonConfigDoc["pin"] = 12;
-        manualButtonConfigDoc["pinMode"] = "pullup";
-        manualButtonConfigDoc["debounceMs"] = 50;
-        manualButtonConfigDoc["buttonType"] = "NormalOpen";
-        _manualButton->jsonToConfig(manualButtonConfigDoc);
+        auto manualButtonConfig = _manualButton->getConfig();
+        manualButtonConfig.name = "Manual Mode Button";
+        manualButtonConfig.pin = 12;
+        manualButtonConfig.pinMode = PinModeOption::PullUp;
+        _manualButton->setConfig(manualButtonConfig);
         addChild(_manualButton);
     }
 

@@ -27,55 +27,35 @@ namespace devices
         stepperCfg.maxAcceleration = 100.0f;
         stepperCfg.defaultSpeed = 150.0f;
         stepperCfg.defaultAcceleration = 50.0f;
-        stepperCfg.stepPin = 1;
-        stepperCfg.dirPin = 2;
-        stepperCfg.enablePin = 42;
-        stepperCfg.invertEnable = true;
+        // Pins will be configured by parent MarbleController
         _stepper->setConfig(stepperCfg);
         addChild(_stepper);
 
         _limitSwitch = new Button(getId() + "-limit");
         auto limitSwitchCfg = _limitSwitch->getConfig();
         limitSwitchCfg.name = "Lift Limit Switch";
-        limitSwitchCfg.pin = 41;
-        limitSwitchCfg.pinMode = PinModeOption::PullUp;
-        limitSwitchCfg.buttonType = ButtonType::NormalOpen;
+        // Pin will be configured by parent MarbleController
         _limitSwitch->setConfig(limitSwitchCfg);
         addChild(_limitSwitch);
 
         _ballSensor = new Button(getId() + "-ball-sensor");
         auto ballSensorCfg = _ballSensor->getConfig();
         ballSensorCfg.name = "Lift Ball Sensor";
-        ballSensorCfg.pin = 40;
-        ballSensorCfg.pinMode = PinModeOption::PullUp;
-        ballSensorCfg.debounceTimeInMs = 100;
-        ballSensorCfg.buttonType = ButtonType::NormalOpen;
+        // Pin will be configured by parent MarbleController
         _ballSensor->setConfig(ballSensorCfg);
         addChild(_ballSensor);
 
         _loader = new Servo(getId() + "-loader");
         auto loaderCfg = _loader->getConfig();
         loaderCfg.name = "Lift Loader";
-        loaderCfg.pin = 39;
-        loaderCfg.mcpwmChannel = -1;
-        loaderCfg.frequency = 50;
-        loaderCfg.resolutionBits = 10;
-        loaderCfg.minDutyCycle = 9.5f;
-        loaderCfg.maxDutyCycle = 5.5f;
-        loaderCfg.defaultDurationInMs = 200;
+        // Pin will be configured by parent MarbleController
         _loader->setConfig(loaderCfg);
         addChild(_loader);
 
         _unloader = new Servo(getId() + "-unloader");
         auto unloaderCfg = _unloader->getConfig();
         unloaderCfg.name = "Lift Unloader";
-        unloaderCfg.pin = 38;
-        unloaderCfg.mcpwmChannel = -1;
-        unloaderCfg.frequency = 50;
-        unloaderCfg.resolutionBits = 10;
-        unloaderCfg.minDutyCycle = 12.2f;
-        unloaderCfg.maxDutyCycle = 4.0f;
-        unloaderCfg.defaultDurationInMs = 1200;
+        // Pin will be configured by parent MarbleController
         _unloader->setConfig(unloaderCfg);
         addChild(_unloader);
     }

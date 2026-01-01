@@ -95,32 +95,43 @@ namespace devices
             break;
 
         case devices::LiftStateEnum::LIFT_DOWN_LOADED:
+        {
             _liftLed->set(true);
-            if (_liftButton->isPressed())
+            auto liftButtonState = _liftButton->getState();
+            if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
                 _lift->up();
             }
             break;
+        }
 
         case devices::LiftStateEnum::LIFT_DOWN_UNLOADED:
+        {
             _liftLed->set(true);
-            if (_liftButton->isPressed())
+            auto liftButtonState = _liftButton->getState();
+            if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
                 _lift->loadBall();
             }
             break;
+        }
 
         case devices::LiftStateEnum::LIFT_UP_UNLOADED:
+        {
             _liftLed->set(true);
-            if (_liftButton->isPressed())
+            auto liftButtonState = _liftButton->getState();
+            if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
                 _lift->down();
             }
             break;
+        }
 
         case devices::LiftStateEnum::LIFT_UP_LOADED:
+        {
             _liftLed->set(true);
-            if (_liftButton->isPressed())
+            auto liftButtonState = _liftButton->getState();
+            if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
                 if (!_waitingForLiftButtonRelease)
                 {
@@ -145,6 +156,7 @@ namespace devices
                 _liftButtonPressStartTime = 0;
             }
             break;
+        }
         }
     }
 

@@ -665,7 +665,7 @@ namespace devices
             if (!_stepper->getState().isMoving && (millis() > nextInitStepTime + 100))
             {
                 setError(LiftErrorCode::LIFT_NO_ZERO, "Initialization failed: limit switch not triggered");
-                return; // Wait until next step time
+                return;
             }
 
             // wait until down
@@ -675,8 +675,8 @@ namespace devices
             }
 
             MLOG_DEBUG("%s: Init step 4: Loading start", toString().c_str());
-            _stepper->stop(100000);
             _stepper->setCurrentPosition(0);
+            _stepper->stop(100000);
 
             // load ball
             _state.initStep = 5;
@@ -738,8 +738,8 @@ namespace devices
                 return;
             }
 
-            _stepper->stop(100000);
             _stepper->setCurrentPosition(0);
+            _stepper->stop(100000);
 
             // Init complete
             MLOG_INFO("%s: Initialization complete", toString().c_str());

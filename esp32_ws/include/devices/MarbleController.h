@@ -17,6 +17,7 @@ namespace devices
     {
     public:
         MarbleController(const String &id);
+        void setup() override;
         void loop() override;
 
         /**
@@ -25,7 +26,8 @@ namespace devices
         void playErrorSound();
 
     private:
-        void loopLift();
+        void loopManualLift();
+        void loopAutoLift();
         devices::Buzzer *_buzzer;
         devices::Lift *_lift;
         devices::Led *_liftLed;
@@ -35,6 +37,12 @@ namespace devices
         // Button timing for unload duration control
         unsigned long _liftButtonPressStartTime = 0;
         bool _waitingForLiftButtonRelease = false;
+        
+        // Auto lift timing control
+        unsigned long _autoLiftDelayStart = 0;
+        unsigned long _autoLiftDelayMs = 1000; // 1 second delay between auto operations
+        
+        bool isAutoMode = false;
     };
 
 } // namespace devices

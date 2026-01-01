@@ -47,7 +47,7 @@ namespace devices
 
         _manualButton = new devices::Button("manual-btn");
         JsonDocument manualButtonConfigDoc;
-        manualButtonConfigDoc["name"] = "";
+        manualButtonConfigDoc["name"] = "Manual Mode Button";
         manualButtonConfigDoc["pin"] = 12;
         manualButtonConfigDoc["pinMode"] = "pullup";
         manualButtonConfigDoc["debounceMs"] = 50;
@@ -56,14 +56,32 @@ namespace devices
         addChild(_manualButton);
     }
 
+    void MarbleController::setup()
+    {
+        Device::setup();
+
+        // Set auto mode based on manual button state during setup
+        isAutoMode = !_manualButton->getState().isPressed;
+
+        // Log the operating mode
+        MLOG_INFO("MarbleController initialized in %s mode", isAutoMode ? "AUTO" : "MANUAL");
+    }
+
     void MarbleController::loop()
     {
         Device::loop();
 
-        loopLift();
+        if (isAutoMode)
+        {
+            loopAutoLift();
+        }
+        else
+        {
+            loopManualLift();
+        }
     }
 
-    void MarbleController::loopLift()
+    void MarbleController::loopManualLift()
     {
         // Lift control logic
 
@@ -157,6 +175,89 @@ namespace devices
                 // Reset timing state
                 _waitingForLiftButtonRelease = false;
                 _liftButtonPressStartTime = 0;
+            }
+            break;
+        }
+        }
+    }
+
+    void MarbleController::loopAutoLift()
+    {
+        // Auto lift control logic - automatic cycling through lift operations
+        auto liftState = _lift->getState();
+
+        switch (liftState.state)
+        {
+        case devices::LiftStateEnum::UNKNOWN:
+            // Wait for initialization
+            _liftLed->set(false);
+            _lift->init();
+            break;
+
+        case devices::LiftStateEnum::ERROR:
+            // Handle error state - maybe blink LED faster
+            _liftLed->set(false);
+
+            // Play sound for new errors
+            if (liftState.onErrorChange)
+            {
+                playErrorSound();
+            }
+            break;
+
+        // BUSY states - just blink LED
+        case devices::LiftStateEnum::INIT:
+        case devices::LiftStateEnum::LIFT_DOWN_LOADING:
+        case devices::LiftStateEnum::LIFT_UP_UNLOADING:
+        case devices::LiftStateEnum::MOVING_UP:
+        case devices::LiftStateEnum::MOVING_DOWN:
+            _liftLed->blink(500, 500);
+            break;
+
+        case devices::LiftStateEnum::LIFT_DOWN:
+        {
+            // Check if we need to wait before next operation
+            if (_autoLiftDelayStart > 0 && (millis() - _autoLiftDelayStart) < _autoLiftDelayMs)
+            {
+                // Still waiting, do nothing
+                break;
+            }
+
+            if (liftState.isLoaded)
+            {
+                // Loaded: move up to unload position
+                _lift->up();
+                _autoLiftDelayStart = 0; // Reset delay timer
+            }
+            else if (liftState.isBallWaiting)
+            {
+                // Not loaded: load a ball
+                _lift->loadBall();
+                _autoLiftDelayStart = 0; // Reset delay timer
+            }
+            break;
+        }
+
+        case devices::LiftStateEnum::LIFT_UP:
+        {
+            // Check if we need to wait before next operation
+            if (_autoLiftDelayStart > 0 && (millis() - _autoLiftDelayStart) < _autoLiftDelayMs)
+            {
+                // Still waiting, do nothing
+                break;
+            }
+
+            if (liftState.isLoaded)
+            {
+                // Loaded: unload the ball
+                _lift->unloadBall(1.0f); // Full unload
+                _autoLiftDelayStart = 0; // Reset delay timer
+            }
+            else
+            {
+                // Not loaded: move down to loading position
+                _lift->down();
+                _autoLiftDelayStart = 0; // Reset delay timer
             }
             break;
         }

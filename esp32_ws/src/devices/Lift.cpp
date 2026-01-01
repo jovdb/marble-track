@@ -149,12 +149,8 @@ namespace devices
         }
 
         // Check ball sensor state and notify if changed
-        // bool ballWaiting = _ballSensor ? _ballSensor->getState().isPressed : false;
+        bool ballWaiting = _ballSensor ? _ballSensor->getState().isPressed : false;
 
-        // TODO in semaphore?
-        // TODO: stack of errors?
-
-        /*
         bool changed = (_state.isBallWaiting != ballWaiting);
         _state.isBallWaiting = ballWaiting;
 

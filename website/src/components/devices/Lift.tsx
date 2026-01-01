@@ -178,13 +178,14 @@ export function Lift(props: { id: string }) {
         <LiftConfig device={device()} actions={actions} onClose={onClose} />
       )}
     >
-      <svg viewBox="0 0 50 200" width="50" height="200" style="margin: 5 auto; display: block;">
-        <line x1={25} y1={0} x2={25} y2={200} stroke="black" stroke-width={2}></line>
-        <g transform={`translate(25, ${188 - animatedPosition() * 180})`}>
+      <svg viewBox="0 0 100 200" width="100" height="200" style="margin: 5 auto; display: block;">
+        <line x1={50} y1={0} x2={50} y2={200} stroke="black" stroke-width={2}></line>
+        <circle cx={75} cy={10} r={8} fill={state()?.state === "LiftUpUnloading" && state()?.isLoaded ? "#4444ff" : "transparent"} />
+        <circle cx={75} cy={188} r={8} fill={state()?.isBallWaiting ? "#4444ff" : "transparent"} />
+        <g transform={`translate(50, ${188 - animatedPosition() * 180})`}>
           <circle cx={0} cy={0} r={8} fill={state()?.isLoaded ? "#4444ff" : "transparent"} />
           <path d="M -10 0 A 10 10 0 0 0 10 0" fill="transparent" stroke="black" stroke-width={2} />
         </g>
-        <circle cx={18} cy={190} r={8} fill={state()?.isBallWaiting ? "#4444ff" : "transparent"} />
       </svg>
 
       {error() && <div class={styles.device__error}>{error()}</div>}

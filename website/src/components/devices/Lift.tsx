@@ -175,49 +175,32 @@ export function Lift(props: { id: string }) {
       </div>
 
       {error() && <div class={styles.device__error}>{error()}</div>}
-      {!error() && (
-        <>
-          <div class={styles.device__status}>
-            <div>
-              <span class={styles["device__status-text"]}>
-                Status: {getStateString(state()?.state)}
-              </span>
-            </div>
-            <div style={{ "font-size": "0.9em", opacity: 0.7, "margin-top": "0.5em" }}>
-              Ball: {state()?.isBallWaiting ? "Waiting" : "Not waiting"}
-            </div>
-          </div>
-          <div class={styles.device__controls}>
-            <button
-              class={styles.device__button}
-              onClick={() => actions.init()}
-              disabled={isMoving() || isInError()}
-            >
-              Init
-            </button>
-            <button
-              class={styles.device__button}
-              onClick={handleLoadUnload}
-              disabled={!canLoadOrUnload() || isInError()}
-            >
-              {getLoadUnloadText()}
-            </button>
-            <button
-              class={styles.device__button}
-              onClick={() => {
-                if (isLiftUp()) {
-                  actions.down();
-                } else {
-                  actions.up();
-                }
-              }}
-              disabled={(isLiftUp() ? !canDown() : !canUp()) || isInError()}
-            >
-              {isLiftUp() ? "Down" : "Up"}
-            </button>
-          </div>
-        </>
-      )}
+
+      <div class={styles.device__controls}>
+        <button class={styles.device__button} onClick={() => actions.init()} disabled={isMoving()}>
+          Init
+        </button>
+        <button
+          class={styles.device__button}
+          onClick={handleLoadUnload}
+          disabled={!canLoadOrUnload() || isInError()}
+        >
+          {getLoadUnloadText()}
+        </button>
+        <button
+          class={styles.device__button}
+          onClick={() => {
+            if (isLiftUp()) {
+              actions.down();
+            } else {
+              actions.up();
+            }
+          }}
+          disabled={(isLiftUp() ? !canDown() : !canUp()) || isInError()}
+        >
+          {isLiftUp() ? "Down" : "Up"}
+        </button>
+      </div>
     </Device>
   );
 }

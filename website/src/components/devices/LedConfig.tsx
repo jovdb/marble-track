@@ -1,6 +1,7 @@
 import { For, createEffect, createSignal } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { LED_INITIAL_STATES, LedInitialState, useLed } from "../../stores/Led";
+import PinSelect from "../PinSelect";
 
 interface LedConfigProps {
   id: string;
@@ -61,13 +62,11 @@ export default function LedConfig(props: LedConfigProps) {
         </DeviceConfigRow>
         <DeviceConfigRow>
           <DeviceConfigItem name="Pin:">
-            <input
-              type="number"
-              value={pin() || "1"}
-              min={-1}
-              max={50}
-              onInput={(e) => setPin(Number(e.currentTarget.value))}
+            <PinSelect
+              value={pin()}
+              onChange={setPin}
               style={{ "margin-left": "0.5rem" }}
+              excludeDeviceId={props.id}
             />
           </DeviceConfigItem>
         </DeviceConfigRow>

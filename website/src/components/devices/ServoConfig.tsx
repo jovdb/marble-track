@@ -1,6 +1,7 @@
 import { createEffect, createSignal } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { useServo } from "../../stores/Servo";
+import PinSelect from "../PinSelect";
 
 interface ServoConfigProps {
   id: string;
@@ -100,14 +101,12 @@ export default function ServoConfig(props: ServoConfigProps) {
         </DeviceConfigRow>
         <DeviceConfigRow>
           <DeviceConfigItem name="Pin:">
-            <input
-              type="number"
+            <PinSelect
               value={pin()}
-              min={-1}
-              max={50}
-              onInput={(event) => setPin(Number(event.currentTarget.value))}
-              style={{ width: "4em", "margin-left": "0.5rem" }}
-              title="GPIO pin number for servo PWM output (-1 to disable, 0-39)"
+              onChange={setPin}
+              style={{ "margin-left": "0.5rem" }}
+              title="GPIO pin number for servo PWM output"
+              excludeDeviceId={props.id}
             />
           </DeviceConfigItem>
         </DeviceConfigRow>

@@ -94,24 +94,20 @@ namespace devices
             _liftLed->blink(500, 500);
             break;
 
-        case devices::LiftStateEnum::LIFT_DOWN_LOADED:
+        case devices::LiftStateEnum::LIFT_DOWN:
         {
             _liftLed->set(true);
             auto liftButtonState = _liftButton->getState();
             if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
-                _lift->up();
-            }
-            break;
-        }
-
-        case devices::LiftStateEnum::LIFT_DOWN_UNLOADED:
-        {
-            _liftLed->set(true);
-            auto liftButtonState = _liftButton->getState();
-            if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
-            {
-                _lift->loadBall();
+                if (liftState.isLoaded)
+                {
+                    _lift->up();
+                }
+                else
+                {
+                    _lift->loadBall();
+                }
             }
             break;
         }

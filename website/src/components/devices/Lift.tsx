@@ -22,7 +22,7 @@ export function Lift(props: { id: string }) {
 
   const isInError = createMemo(() => state()?.state === "Error");
 
-  const canLoad = createMemo(() => state()?.state === "LiftDownUnloaded");
+  const canLoad = createMemo(() => state()?.state === "LiftDown" && !state()?.isLoaded);
 
   const canUnload = createMemo(
     () => state()?.state === "LiftUp"
@@ -31,8 +31,7 @@ export function Lift(props: { id: string }) {
   const canUp = createMemo(() => {
     const currentState = state()?.state;
     return (
-      currentState === "LiftDownUnloaded" ||
-      currentState === "LiftDownLoaded" ||
+      currentState === "LiftDown" ||
       currentState === "MovingDown"
     );
   });
@@ -73,9 +72,8 @@ export function Lift(props: { id: string }) {
 
   const positionPercent = createMemo(() => {
     switch (state()?.state) {
-      case "LiftDownUnloaded":
-      case "LiftDownLoaded":
       case "LiftDownLoading":
+      case "LiftDown":
         return 0;
       case "LiftUp":
       case "LiftUpUnloading":

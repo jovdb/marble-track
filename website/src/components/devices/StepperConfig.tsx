@@ -1,6 +1,7 @@
 import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { IStepperConfig, StepperType, STEPPER_TYPES, useStepper } from "../../stores/Stepper";
+import PinSelect from "../PinSelect";
 
 const STEPPER_TYPE_OPTIONS: { value: StepperType; label: string }[] = [
   { value: "DRIVER", label: "Driver (2-pin)" },
@@ -158,31 +159,28 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
         <Show when={!isFourPin()}>
           <DeviceConfigRow>
             <DeviceConfigItem name="Step pin">
-              <input
-                type="number"
-                min={0}
+              <PinSelect
                 value={stepPin()}
-                onInput={(event) => setStepPin(Number(event.currentTarget.value))}
+                onChange={setStepPin}
+                excludeDeviceId={props.id}
               />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>
             <DeviceConfigItem name="Direction pin">
-              <input
-                type="number"
-                min={0}
+              <PinSelect
                 value={dirPin()}
-                onInput={(event) => setDirPin(Number(event.currentTarget.value))}
+                onChange={setDirPin}
+                excludeDeviceId={props.id}
               />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>
             <DeviceConfigItem name="Enable pin">
-              <input
-                type="number"
-                min={-1}
+              <PinSelect
                 value={enablePin()}
-                onInput={(event) => setEnablePin(Number(event.currentTarget.value))}
+                onChange={setEnablePin}
+                excludeDeviceId={props.id}
               />
               <span
                 style={{ "margin-left": "0.5rem", "font-size": "0.8rem", color: "#666" }}
@@ -202,51 +200,46 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
         <Show when={isFourPin()}>
           <DeviceConfigRow>
             <DeviceConfigItem name="Pin 1">
-              <input
-                type="number"
-                min={0}
+              <PinSelect
                 value={pin1()}
-                onInput={(event) => setPin1(Number(event.currentTarget.value))}
+                onChange={setPin1}
+                excludeDeviceId={props.id}
               />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>
             <DeviceConfigItem name="Pin 2">
-              <input
-                type="number"
-                min={0}
+              <PinSelect
                 value={pin2()}
-                onInput={(event) => setPin2(Number(event.currentTarget.value))}
+                onChange={setPin2}
+                excludeDeviceId={props.id}
               />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>
             <DeviceConfigItem name="Pin 3">
-              <input
-                type="number"
-                min={0}
+              <PinSelect
                 value={pin3()}
-                onInput={(event) => setPin3(Number(event.currentTarget.value))}
+                onChange={setPin3}
+                excludeDeviceId={props.id}
               />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>
             <DeviceConfigItem name="Pin 4">
-              <input
-                type="number"
-                min={0}
+              <PinSelect
                 value={pin4()}
-                onInput={(event) => setPin4(Number(event.currentTarget.value))}
+                onChange={setPin4}
+                excludeDeviceId={props.id}
               />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>
             <DeviceConfigItem name="Enable pin">
-              <input
-                type="number"
-                min={-1}
+              <PinSelect
                 value={enablePin()}
-                onInput={(event) => setEnablePin(Number(event.currentTarget.value))}
+                onChange={setEnablePin}
+                excludeDeviceId={props.id}
               />
             </DeviceConfigItem>
           </DeviceConfigRow>

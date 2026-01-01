@@ -1,6 +1,7 @@
 import { For, createEffect, createSignal } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { useButton } from "../../stores/Button";
+import PinSelect from "../PinSelect";
 
 interface ButtonConfigProps {
   id: string;
@@ -110,12 +111,11 @@ export default function ButtonConfig(props: ButtonConfigProps) {
         </DeviceConfigRow>
         <DeviceConfigRow>
           <DeviceConfigItem name="Pin:">
-            <input
-              type="number"
+            <PinSelect
               value={pin()}
-              min={-1}
-              onInput={(event) => setPin(Number(event.currentTarget.value))}
-              style={{ "margin-left": "0.5rem", width: "5rem" }}
+              onChange={setPin}
+              style={{ "margin-left": "0.5rem" }}
+              excludeDeviceId={props.id}
             />
           </DeviceConfigItem>
         </DeviceConfigRow>

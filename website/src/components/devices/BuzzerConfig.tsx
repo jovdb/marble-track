@@ -1,6 +1,7 @@
 import { createEffect, createSignal } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { useBuzzer } from "../../stores/Buzzer";
+import PinSelect from "../PinSelect";
 
 interface BuzzerConfigProps {
   id: string;
@@ -51,13 +52,11 @@ export default function BuzzerConfig(props: BuzzerConfigProps) {
         </DeviceConfigRow>
         <DeviceConfigRow>
           <DeviceConfigItem name="Pin:">
-            <input
-              type="number"
-              value={pin() ?? ""}
-              min={-1}
-              max={50}
-              onInput={(event) => setPin(Number(event.currentTarget.value))}
+            <PinSelect
+              value={pin()}
+              onChange={setPin}
               style={{ "margin-left": "0.5rem" }}
+              excludeDeviceId={props.id}
             />
           </DeviceConfigItem>
         </DeviceConfigRow>

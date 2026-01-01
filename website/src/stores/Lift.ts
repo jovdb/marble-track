@@ -6,19 +6,22 @@ export interface ILiftState extends IDeviceState {
   state:
     | "Unknown"
     | "Error"
-    | "Reset"
+    | "Init"
     | "LiftDownLoading"
     | "LiftDownLoaded"
+    | "LiftDownUnloaded"
     | "LiftUpUnloading"
     | "LiftUpUnloaded"
     | "LiftUpLoaded"
-    | "LiftDownUnloaded"
     | "MovingUp"
     | "MovingDown";
   currentPosition?: number;
   isBallWaiting: boolean;
+  isLoaded: boolean;
+  initStep: number;
+  onErrorChange: boolean;
   errorMessage?: string;
-  errorCode?: string;
+  errorCode?: "None" | "LiftConfigurationError" | "LiftStateError" | "LiftNoZero";
   [key: string]: unknown;
 }
 

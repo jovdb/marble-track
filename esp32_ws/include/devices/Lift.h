@@ -163,10 +163,10 @@ namespace devices
         Servo *_loader;       // Loader motor child device
         Servo *_unloader;     // Unloader motor child device
 
-        unsigned long _loadStartTime = 0;   // Load operation start time
-        unsigned long _unloadStartTime = 0; // Unload operation start time
-        unsigned long _unloadEndTime = 0;   // Unload operation end time
-        bool _moveJustStarted = false;       // Whether stepper movement just started
+        unsigned long _loadStartTime = 0;    // Load operation start time
+        unsigned long _unloadStartTime = 0;  // Unload operation start time
+        unsigned long _unloadEndTime = 0;    // Unload operation end time
+        unsigned long _stepperStartTime = 0; // Stepper start time (0 when stopped)
 
     private:
         /**
@@ -214,18 +214,6 @@ namespace devices
          * @return Current position
          */
         long getCurrentPosition() const;
-
-        /**
-         * @brief Check if stepper is idle
-         * @return true if idle
-         */
-        bool isStepperIdle() const;
-
-        /**
-         * @brief Check if at limit switch
-         * @return true if at limit
-         */
-        bool isAtLimit() const;
 
         /**
          * @brief Move stepper by steps

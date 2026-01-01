@@ -3,7 +3,6 @@
 ## Repository layout
 - `website/` SolidJS + Vite dashboard, builds into `esp32_ws/data` so firmware can serve the assets.
 - `esp32_ws/` PlatformIO Arduino firmware built around `DeviceManager`, `WebSocketManager`, and LittleFS-hosted UI.
-- `ws-mock/` lightweight Node WebSocket server used for UI development (`npm install && npm run dev`).
 - Root scripts (`deploy-website.ps1`, `platformio.ini`) coordinate building and flashing both halves of the system.
 
 ## Frontend essentials (`website/`)
@@ -21,14 +20,12 @@
 - Build & upload with PlatformIO (`PlatformIO Build` task or `platformio run --target uploadfs` for data, plain `run` for firmware). Board is `4d_systems_esp32s3_gen4_r8n16` with PSRAM and LittleFS.
 
 ## Workflows & tools
-- Frontend dev: `npm install`, then `npm run dev` (set `VITE_MARBLE_WS` in `website/.env` to point at hardware or the mock server).
+- Frontend dev: `npm install`, then `npm run dev` (set `VITE_MARBLE_WS` in `website/.env` to point at hardware).
 - Tests: use `npx vitest run`; lint with `npm run lint` (Solid + TypeScript rules).
 - Full deploy: run `deploy-website.ps1` to rebuild the UI, scrub `.env`, copy assets into LittleFS, and trigger `platformio.exe run --target uploadfs`.
-- Mock backend: `cd ws-mock && npm run dev` launches a WS server on `ws://localhost:5173/ws`; set the env variable so the UI can talk to it.
 
 ## Patterns & gotchas
 - WebSocket-driven flows rely on JSON command/response pairs (`add-device`, `devices-config`, etc.); always handle both success and error variants defined in the interfaces.
 - Keep message history short—`useWebSocket2` trims to 20 entries; follow that approach for new logs to avoid unbounded growth.
 - Device removals expect optimistic UI updates while the firmware broadcasts refreshed lists; refresh by calling the provided `loadDevices()` action rather than mutating local state.
-- When adding firmware features that alter network state, also extend the corresponding handlers in `ws-mock/handlers` so the UI can be tested offline.
 - Builds target ESNext; avoid CommonJS patterns and ensure any new dependencies support ESM.

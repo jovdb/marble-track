@@ -577,20 +577,17 @@ namespace devices
     // Helper methods for stepper control - simplified implementations
     long Lift::getCurrentPosition() const
     {
-        // Placeholder - would need to access stepper state
-        return 0;
+        return _stepper->getState().currentPosition;
     }
 
     bool Lift::isStepperIdle() const
     {
-        // Placeholder - would need to access stepper state
-        return true;
+        return !_stepper->getState().isMoving;
     }
 
     bool Lift::isAtLimit() const
     {
-        // Placeholder - would need to access limit switch state
-        return false;
+        return _stepper->getState().currentPosition <= 0;
     }
 
     bool Lift::moveStepper(long steps, float speedRatio)

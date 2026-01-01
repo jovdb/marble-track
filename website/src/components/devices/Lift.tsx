@@ -1,5 +1,5 @@
 import { Device } from "./Device";
-import { createMemo } from "solid-js";
+import { createMemo, createSignal, onMount, createEffect } from "solid-js";
 import styles from "./Device.module.css";
 
 import { LiftConfig } from "./LiftConfig";
@@ -17,7 +17,7 @@ export function Lift(props: { id: string }) {
 
   const isMoving = createMemo(
     () =>
-      state()?.state === "Reset" || state()?.state === "MovingUp" || state()?.state === "MovingDown"
+      state()?.state === "Init" || state()?.state === "MovingUp" || state()?.state === "MovingDown"
   );
 
   const isInError = createMemo(() => state()?.state === "Error");
@@ -32,7 +32,6 @@ export function Lift(props: { id: string }) {
 
   const canUp = createMemo(() => {
     const currentState = state()?.state;
-    console.log("canUp", currentState);
     return (
       currentState === "LiftDownUnloaded" ||
       currentState === "LiftDownLoaded" ||
@@ -42,7 +41,6 @@ export function Lift(props: { id: string }) {
 
   const canDown = createMemo(() => {
     const currentState = state()?.state;
-    console.log("canDown", currentState);
     return (
       currentState === "LiftUpUnloaded" ||
       currentState === "LiftUpLoaded" ||
@@ -78,40 +76,34 @@ export function Lift(props: { id: string }) {
       state()?.state === "LiftUpUnloading" ||
       state()?.state === "MovingUp"
   );
-
-  const currentPosition = () => state()?.currentPosition ?? 0;
+  /*
   const minSteps = () => config()?.minSteps ?? 0;
   const maxSteps = () => config()?.maxSteps ?? 1000;
+*/
 
-  // Track lift direction toggle state
-  function getStateString(state: string | undefined) {
-    switch (state) {
-      case "Unknown":
-        return "Unknown";
-      case "Reset":
-        return "Resetting...";
-      case "Error":
-        return "Error";
-      case "LiftDownLoading":
-        return "Lift Down Loading";
-      case "LiftDownLoaded":
-        return "Lift Down Loaded";
-      case "LiftUpUnloading":
-        return "Lift Up Unloading";
-      case "LiftUpUnloaded":
-        return "Lift Up Unloaded";
-      case "LiftUpLoaded":
-        return "Lift Up Loaded";
+
+
+  const positionPercent = createMemo(() => {
+    switch (state()?.state) {
       case "LiftDownUnloaded":
-        return "Lift Down Unloaded";
+      case "LiftDownLoaded":
+      case "LiftDownLoading":
+        return 0;
+      case "LiftUpUnloaded":
+      case "LiftUpLoaded":
+      case "LiftUpUnloading":
+        return 1;
       case "MovingUp":
-        return "Moving Up";
       case "MovingDown":
-        return "Moving Down";
+        // TODO: animate
+        return 0.5;
+      case "Init":
+      case "Error":
+      case "Unknown":
       default:
-        return "Unknown";
+        return 0.5;
     }
-  }
+  });
 
   return (
     <Device
@@ -120,59 +112,13 @@ export function Lift(props: { id: string }) {
         <LiftConfig device={device()} actions={actions} onClose={onClose} />
       )}
     >
-      <div style={{ "max-width": "300px", margin: "0 auto", "text-align": "center" }}>
-        {/* Lift visualization - simple bar */}
-        <div
-          style={{
-            width: "50px",
-            height: "200px",
-            border: "2px solid currentColor",
-            margin: "0 auto 1em",
-            position: "relative",
-            background: "currentColor",
-            opacity: 0.1,
-          }}
-        >
-          {/* Lift position indicator */}
-          <div
-            style={{
-              position: "absolute",
-              bottom: `${(currentPosition() / (maxSteps() - minSteps())) * 100}%`,
-              left: "0",
-              right: "0",
-              height: "20px",
-              background: "currentColor",
-              border: "1px solid currentColor",
-              transition: "bottom 0.3s ease",
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                color: "white",
-                "font-size": "10px",
-                "font-weight": "bold",
-                "text-shadow": "0 0 2px black",
-              }}
-            >
-              {currentPosition()}
-            </div>
-          </div>
-        </div>
-
-        {/* Position display */}
-        <div style={{ "margin-bottom": "1em" }}>
-          <div style={{ "font-size": "1.2em", "font-weight": "bold" }}>
-            Position: {currentPosition()} steps
-          </div>
-          <div style={{ "font-size": "0.9em", opacity: 0.7 }}>
-            Range: {minSteps()} - {maxSteps()}
-          </div>
-        </div>
-      </div>
+      <svg viewBox="0 0 50 200" width="50" height="200" style="margin: 5 auto; display: block;">
+        <line x1={25} y1={0} x2={25} y2={200} stroke="black" stroke-width={2}></line>
+        <g transform={`translate(25, ${188 - positionPercent() * 180})`}>
+          <circle cx={0} cy={0} r={8} fill={state()?.isLoaded ? "#4444ff" : "transparent"} />
+          <path d="M -10 0 A 10 10 0 0 0 10 0" fill="transparent" stroke="black" stroke-width={2} />
+        </g>
+      </svg>
 
       {error() && <div class={styles.device__error}>{error()}</div>}
 

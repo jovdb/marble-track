@@ -174,6 +174,7 @@ void DeviceManager::loadDevicesFromJsonFile()
         Device *newDevice = createDevice(id, type);
         if (newDevice)
         {
+            // Disable this if esp32 keeps rebooting due to config error
             loadDeviceConfigFromJson(newDevice, deviceObj);
             addDevice(newDevice);
             roots++;

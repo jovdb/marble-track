@@ -109,7 +109,7 @@
           "type": "led",
           "children": [],
           "config": {
-            "pin": 15,
+            "pin": 45,
             "name": "Lift Led",
             "initialState": "OFF"
           }
@@ -119,7 +119,7 @@
           "type": "button",
           "children": [],
           "config": {
-            "pin": 16,
+            "pin": 48,
             "name": "Lift Button",
             "debounceTimeInMs": 50,
             "pinMode": "PullUp",

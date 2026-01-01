@@ -31,14 +31,14 @@ namespace devices
         _liftLed = new devices::Led("lift-led");
         JsonDocument configDoc;
         configDoc["name"] = "Lift Led";
-        configDoc["pin"] = 15;
+        configDoc["pin"] = 45;
         _liftLed->jsonToConfig(configDoc);
         addChild(_liftLed);
 
         _liftButton = new devices::Button("lift-button");
         JsonDocument buttonConfigDoc;
         buttonConfigDoc["name"] = "Lift Button";
-        buttonConfigDoc["pin"] = 16;
+        buttonConfigDoc["pin"] = 48;
         buttonConfigDoc["pinMode"] = "pullup";
         buttonConfigDoc["debounceTimeInMs"] = 50;
         buttonConfigDoc["buttonType"] = "NormalOpen";

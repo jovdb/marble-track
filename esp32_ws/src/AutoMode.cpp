@@ -243,14 +243,17 @@ void AutoMode::loop()
                 _speedMoveDownCalled = true;
             }
             break;
-        case devices::LiftStateEnum::LIFT_DOWN_UNLOADED:
+        case devices::LiftStateEnum::LIFT_DOWN:
             _speedMoveDownCalled = false; // Reset flag when state changes
-            if (_lift->isBallWaiting())
+            if (_lift->isBallWaiting() && !_lift->isLoaded())
             {
                 MLOG_INFO("AutoMode: Loading ball into lift");
                 _lift->loadBall();
             }
-
+            else if (_lift->isLoaded())
+            {
+                _lift->up();
+            }
             // Sometimes with random delay, try to load a ball
             // Maybe switch is not detected properly
             else
@@ -272,10 +275,6 @@ void AutoMode::loop()
                     liftDelaySet = false;
                 }
             }
-            break;
-        case devices::LiftStateEnum::LIFT_DOWN_LOADED:
-            _speedMoveDownCalled = false; // Reset flag when state changes
-            _lift->up();
             break;
         case devices::LiftStateEnum::LIFT_UP:
             _speedMoveDownCalled = false; // Reset flag when state changes

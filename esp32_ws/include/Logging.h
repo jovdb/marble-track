@@ -71,6 +71,9 @@ public:
     }
 };
 
+// Minimum characters for task name placeholder (with leading zeros)
+const int minTaskPlaceholderChars = 11;
+
 // Conditional logging macros
 
 // By wrapping it in do { ... } while(0), the macro:
@@ -84,7 +87,7 @@ public:
     {                                                                                                   \
         if (LogConfig::isEnabled(LOG_DEBUG))                                                            \
         {                                                                                               \
-            Serial.printf("[%6lu][D][%s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
+            Serial.printf("[%6lu][D][%-13s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
         }                                                                                               \
     } while (0)
 
@@ -94,7 +97,7 @@ public:
     {                                                                                                   \
         if (LogConfig::isEnabled(LOG_INFO))                                                             \
         {                                                                                               \
-            Serial.printf("[%6lu][I][%s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
+            Serial.printf("[%6lu][I][%-13s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
         }                                                                                               \
     } while (0)
 
@@ -103,7 +106,7 @@ public:
     {                                                                                                   \
         if (LogConfig::isEnabled(LOG_ERROR))                                                            \
         {                                                                                               \
-            Serial.printf("[%6lu][E][%s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
+            Serial.printf("[%6lu][E][%-13s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
         }                                                                                               \
     } while (0)
 
@@ -112,7 +115,7 @@ public:
     {                                                                                                   \
         if (LogConfig::isEnabled(LOG_WARN))                                                             \
         {                                                                                               \
-            Serial.printf("[%6lu][W][%s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
+            Serial.printf("[%6lu][W][%-13s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
         }                                                                                               \
     } while (0)
 
@@ -121,7 +124,7 @@ public:
     {                                                                                                         \
         if (LogConfig::isEnabled(LOG_WS_SEND))                                                                \
         {                                                                                                     \
-            Serial.printf("[%6lu][WS_SEND][%s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
+            Serial.printf("[%6lu][WS_SEND][%-13s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
         }                                                                                                     \
     } while (0)
 
@@ -130,7 +133,7 @@ public:
     {                                                                                                         \
         if (LogConfig::isEnabled(LOG_WS_RECEIVE))                                                             \
         {                                                                                                     \
-            Serial.printf("[%6lu][WS_RECV][%s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
+            Serial.printf("[%6lu][WS_RECV][%-13s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
         }                                                                                                     \
     } while (0)
 

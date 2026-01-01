@@ -118,7 +118,7 @@ export function Lift(props: { id: string }) {
   const isInError = createMemo(() => state()?.state === "Error");
 
   const canLoad = createMemo(
-    () => state()?.state === "LiftDownUnloaded" || state()?.state === "LiftDownLoaded"
+    () => state()?.state === "LiftDownUnloaded"
   );
 
   const canUnload = createMemo(
@@ -146,13 +146,8 @@ export function Lift(props: { id: string }) {
   const canLoadOrUnload = createMemo(() => canLoad() || canUnload());
 
   const getLoadUnloadText = createMemo(() => {
-    if (
-      state()?.state === "LiftUpLoaded" ||
-      state()?.state === "LiftUpUnloading" ||
-      state()?.state === "LiftUpUnloaded" ||
-      state()?.state === "MovingUp"
-    )
-      return "Unload";
+    if (canUnload()) return "Unload";
+    if (canLoad()) return "Load";
     return "Load"; // fallback
   });
 

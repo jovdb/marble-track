@@ -163,12 +163,6 @@ namespace devices
             notifyStateChanged();
         }
 
-        // Reset moveJustStarted flag after first loop iteration
-        if (_moveJustStarted)
-        {
-            _moveJustStarted = false;
-        }
-
         // State machine logic
         switch (_state.state)
         {
@@ -206,28 +200,33 @@ namespace devices
         case LiftStateEnum::LIFT_UP_LOADED:
             break;
         case LiftStateEnum::MOVING_UP:
-            if (isStepperIdle())
+            if (!_stepper->getState().isMoving && (millis() > _stepperStartTime + 10))
             {
                 MLOG_INFO("%s: Top reached", toString().c_str());
                 _state.state = _state.isLoaded ? LiftStateEnum::LIFT_UP_LOADED : LiftStateEnum::LIFT_UP_UNLOADED;
+                _stepperStartTime = 0;
                 notifyStateChanged();
             }
             break;
         case LiftStateEnum::MOVING_DOWN:
-            // When stepper stops moving, return to appropriate idle state
-            if (isStepperIdle())
+            if (!_stepper->getState().isMoving && (millis() > _stepperStartTime + 100))
             {
-                MLOG_INFO("%s: Movement complete", toString().c_str());
-                _state.state = _state.isLoaded ? LiftStateEnum::LIFT_DOWN_LOADED : LiftStateEnum::LIFT_DOWN_UNLOADED;
-                notifyStateChanged();
+                setError(LiftErrorCode::LIFT_NO_ZERO, "limit switch not triggered when moving down");
+                return;
             }
-            else if (isAtLimit() && _state.state == LiftStateEnum::MOVING_DOWN)
+
+            // wait until down
+            if (!_limitSwitch->getState().isPressed)
             {
-                MLOG_WARN("%s: Limit switch triggered during downward movement - stopping", toString().c_str());
-                stopStepper();
-                _state.state = LiftStateEnum::LIFT_DOWN_UNLOADED;
-                notifyStateChanged();
+                return;
             }
+
+            MLOG_DEBUG("%s: Reached bottom with limit switch", toString().c_str());
+            _stepper->setCurrentPosition(0);
+            _stepper->stop(100000);
+            _stepperStartTime = 0;
+            _state.state = _state.isLoaded ? LiftStateEnum::LIFT_DOWN_LOADED : LiftStateEnum::LIFT_DOWN_UNLOADED;
+            notifyStateChanged();
             break;
         default:
             setError(LiftErrorCode::LIFT_STATE_ERROR, "Unknown state encountered in loop(): " + stateToString(_state.state));
@@ -265,8 +264,8 @@ namespace devices
 
             MLOG_INFO("%s: Moving up to %ld steps", toString().c_str(), _config.maxSteps);
             _state.state = LiftStateEnum::MOVING_UP;
-            notifyStateChanged();
             isSuccess = moveStepperTo(_config.maxSteps, speedRatio);
+            notifyStateChanged();
             break;
         }
         default:
@@ -279,6 +278,7 @@ namespace devices
 
     bool Lift::down(float speedRatio)
     {
+        bool isSuccess = false;
         switch (_state.state)
         {
         case LiftStateEnum::UNKNOWN:
@@ -289,7 +289,8 @@ namespace devices
         case LiftStateEnum::LIFT_DOWN_LOADING:
         case LiftStateEnum::LIFT_UP_UNLOADING:
             MLOG_WARN("%s: Cannot move down, state is %s", toString().c_str(), stateToString(_state.state).c_str());
-            return false;
+            isSuccess = false;
+            break;
 
         case LiftStateEnum::LIFT_UP_UNLOADED:
         case LiftStateEnum::LIFT_UP_LOADED:
@@ -301,18 +302,22 @@ namespace devices
             if (currentPos <= _config.minSteps)
             {
                 MLOG_WARN("%s: Cannot move down - already at min position (current: %ld, min: %ld)", toString().c_str(), currentPos, _config.minSteps);
-                return false;
+                isSuccess = false;
+                break;
             }
 
             long steps = (_config.minSteps - currentPos) * DOWN_FACTOR;
             _state.state = LiftStateEnum::MOVING_DOWN;
+            isSuccess = moveStepper(steps, speedRatio);
             notifyStateChanged();
-            return moveStepper(steps, speedRatio);
+            break;
         }
         default:
             setError(LiftErrorCode::LIFT_STATE_ERROR, "Unknown state encountered in up()");
-            return false;
+            isSuccess = false;
+            break;
         }
+        return isSuccess;
     }
 
     bool Lift::init()
@@ -587,33 +592,26 @@ namespace devices
         return _stepper->getState().currentPosition;
     }
 
-    bool Lift::isStepperIdle() const
-    {
-        return !_stepper->getState().isMoving && !_moveJustStarted;
-    }
-
-    bool Lift::isAtLimit() const
-    {
-        return _stepper->getState().currentPosition <= 0;
-    }
-
     bool Lift::moveStepper(long steps, float speedRatio)
     {
         _stepper->move(steps, _stepper->getConfig().defaultSpeed * speedRatio);
-        _moveJustStarted = true;
+
+        _stepperStartTime = millis();
         return true;
     }
 
     bool Lift::moveStepperTo(long position, float speedRatio)
     {
         _stepper->moveTo(position, _stepper->getConfig().defaultSpeed * speedRatio);
-        _moveJustStarted = true;
+
+        _stepperStartTime = millis();
         return true;
     }
 
     bool Lift::stopStepper()
     {
         _stepper->stop();
+        _stepperStartTime = 0;
         return true;
     }
 
@@ -683,6 +681,7 @@ namespace devices
             MLOG_DEBUG("%s: Init step 4: Loading start", toString().c_str());
             _stepper->setCurrentPosition(0);
             _stepper->stop(100000);
+            _stepperStartTime = 0;
 
             // load ball
             _state.initStep = 5;

@@ -28,8 +28,10 @@ namespace devices
     private:
         void loopManualLift();
         void loopAutoLift();
+        void loopAutoWheel();
         devices::Buzzer *_buzzer;
         devices::Lift *_lift;
+        devices::Wheel *_wheel;
         devices::Led *_liftLed;
         devices::Button *_liftButton;
         devices::Button *_manualButton;
@@ -41,6 +43,10 @@ namespace devices
         // Auto lift timing control
         unsigned long _autoLiftDelayStart = 0;
         unsigned long _autoLiftDelayMs = 1000; // 1 second delay between auto operations
+        
+        // Auto wheel timing control
+        unsigned long _wheelIdleStartTime = 0;
+        unsigned long _randomWheelDelayMs = 0;
         
         bool isAutoMode = false;
     };

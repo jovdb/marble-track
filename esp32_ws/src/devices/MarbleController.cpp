@@ -5,6 +5,7 @@
 #include "devices/Buzzer.h"
 #include "devices/Wheel.h"
 #include "devices/Led.h"
+#include "devices/Stepper.h"
 
 extern DeviceManager deviceManager;
 
@@ -108,6 +109,46 @@ namespace devices
         manualButtonConfig.pinMode = PinModeOption::PullUp;
         _manualButton->setConfig(manualButtonConfig);
         addChild(_manualButton);
+
+        // Create wheel with proper config
+        _wheel = new devices::Wheel("wheel");
+
+        auto wheelConfig = _wheel->getConfig();
+        wheelConfig.name = "Wheel";
+        wheelConfig.stepsPerRevolution = 138259;
+        wheelConfig.maxStepsPerRevolution = 150000;
+        wheelConfig.zeroPointDegree = 180;
+        wheelConfig.breakPoints = {82.0f, 160.0f, 285.0f, 317.0f};
+        _wheel->setConfig(wheelConfig);
+        addChild(_wheel);
+
+        // Get wheel's child devices and configure them
+        auto wheelStepper = _wheel->getChildByIdAs<devices::Stepper>("wheel-stepper");
+        if (wheelStepper)
+        {
+            auto wheelStepperConfig = wheelStepper->getConfig();
+            wheelStepperConfig.name = "wheel Stepper";
+            wheelStepperConfig.stepperType = "DRIVER";
+            wheelStepperConfig.maxSpeed = 3000;
+            wheelStepperConfig.maxAcceleration = 3000;
+            wheelStepperConfig.defaultSpeed = 1000;
+            wheelStepperConfig.defaultAcceleration = 200;
+            wheelStepperConfig.stepPin = 4;
+            wheelStepperConfig.dirPin = 5;
+            wheelStepperConfig.enablePin = 6;
+            wheelStepperConfig.invertEnable = true;
+            wheelStepper->setConfig(wheelStepperConfig);
+        }
+
+        auto wheelSensor = _wheel->getChildByIdAs<devices::Button>("wheel-zero-sensor");
+        if (wheelSensor)
+        {
+            auto wheelSensorConfig = wheelSensor->getConfig();
+            wheelSensorConfig.name = "Wheel Zero Sensor";
+            wheelSensorConfig.pin = 7;
+            wheelSensorConfig.pinMode = PinModeOption::PullUp;
+            wheelSensor->setConfig(wheelSensorConfig);
+        }
     }
 
     void MarbleController::setup()
@@ -128,6 +169,7 @@ namespace devices
         if (isAutoMode)
         {
             loopAutoLift();
+            loopAutoWheel();
         }
         else
         {
@@ -315,6 +357,47 @@ namespace devices
             }
             break;
         }
+        }
+    }
+
+    void MarbleController::loopAutoWheel()
+    {
+        // Auto wheel control logic - similar to AutoMode.cpp
+        auto wheelState = _wheel->getState();
+
+        switch (wheelState.state)
+        {
+        case devices::WheelStateEnum::UNKNOWN:
+            // Initialize wheel
+            _wheel->init();
+            break;
+
+        case devices::WheelStateEnum::CALIBRATING:
+        case devices::WheelStateEnum::INIT:
+        case devices::WheelStateEnum::ERROR:
+        case devices::WheelStateEnum::MOVING:
+            // Busy states - do nothing
+            break;
+
+        case devices::WheelStateEnum::IDLE:
+            // When idle, wait for random delay then trigger next breakpoint
+            if (_wheelIdleStartTime == 0)
+            {
+                _wheelIdleStartTime = millis();
+                _randomWheelDelayMs = random(100, 20000);
+                MLOG_INFO("MarbleController: Next wheel trigger in %d ms", _randomWheelDelayMs);
+            }
+            else if (millis() >= _wheelIdleStartTime + _randomWheelDelayMs)
+            {
+                MLOG_INFO("MarbleController: Triggering wheel next breakpoint");
+                _wheel->nextBreakPoint();
+                _wheelIdleStartTime = 0;
+            }
+            break;
+
+        default:
+            MLOG_WARN("MarbleController: Unknown wheel state");
+            break;
         }
     }
 

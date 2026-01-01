@@ -195,15 +195,13 @@ namespace devices
                 unloadBallEnd(1.0f);
             }
             break;
-        case LiftStateEnum::LIFT_UP_UNLOADED:
-            break;
-        case LiftStateEnum::LIFT_UP_LOADED:
+        case LiftStateEnum::LIFT_UP:
             break;
         case LiftStateEnum::MOVING_UP:
             if (!_stepper->getState().isMoving && (millis() > _stepperStartTime + 10))
             {
                 MLOG_INFO("%s: Top reached", toString().c_str());
-                _state.state = _state.isLoaded ? LiftStateEnum::LIFT_UP_LOADED : LiftStateEnum::LIFT_UP_UNLOADED;
+                _state.state = LiftStateEnum::LIFT_UP;
                 _stepperStartTime = 0;
                 notifyStateChanged();
             }
@@ -243,8 +241,7 @@ namespace devices
         case LiftStateEnum::INIT:
         case LiftStateEnum::ERROR:
         case LiftStateEnum::LIFT_DOWN_LOADING:
-        case LiftStateEnum::LIFT_UP_UNLOADED:
-        case LiftStateEnum::LIFT_UP_LOADED:
+        case LiftStateEnum::LIFT_UP:
         case LiftStateEnum::LIFT_UP_UNLOADING:
             MLOG_WARN("%s: Cannot move up, state is %s", toString().c_str(), stateToString(_state.state).c_str());
             break;
@@ -292,8 +289,7 @@ namespace devices
             isSuccess = false;
             break;
 
-        case LiftStateEnum::LIFT_UP_UNLOADED:
-        case LiftStateEnum::LIFT_UP_LOADED:
+        case LiftStateEnum::LIFT_UP:
         case LiftStateEnum::MOVING_DOWN: // for changed speed
         case LiftStateEnum::MOVING_UP:
         {
@@ -340,8 +336,7 @@ namespace devices
         case LiftStateEnum::ERROR:
         case LiftStateEnum::MOVING_UP:
         case LiftStateEnum::LIFT_DOWN_LOADING:
-        case LiftStateEnum::LIFT_UP_UNLOADED:
-        case LiftStateEnum::LIFT_UP_LOADED:
+        case LiftStateEnum::LIFT_UP:
         case LiftStateEnum::LIFT_UP_UNLOADING:
         case LiftStateEnum::MOVING_DOWN:
         case LiftStateEnum::LIFT_DOWN_LOADED:
@@ -375,8 +370,7 @@ namespace devices
             MLOG_WARN("%s: Cannot unload ball, state is %s", toString().c_str(), stateToString(_state.state).c_str());
             return false;
 
-        case LiftStateEnum::LIFT_UP_UNLOADED:
-        case LiftStateEnum::LIFT_UP_LOADED:
+        case LiftStateEnum::LIFT_UP:
         {
             bool result = unloadBallStart(durationRatio);
             return result;
@@ -505,10 +499,8 @@ namespace devices
             return "LiftDownLoaded";
         case LiftStateEnum::LIFT_UP_UNLOADING:
             return "LiftUpUnloading";
-        case LiftStateEnum::LIFT_UP_UNLOADED:
-            return "LiftUpUnloaded";
-        case LiftStateEnum::LIFT_UP_LOADED:
-            return "LiftUpLoaded";
+        case LiftStateEnum::LIFT_UP:
+            return "LiftUp";
         case LiftStateEnum::LIFT_DOWN_UNLOADED:
             return "LiftDownUnloaded";
         case LiftStateEnum::MOVING_UP:
@@ -577,7 +569,7 @@ namespace devices
     bool Lift::unloadBallEnd(float durationRatio)
     {
 
-        _state.state = LiftStateEnum::LIFT_UP_UNLOADED;
+        _state.state = LiftStateEnum::LIFT_UP;
         _state.isLoaded = false;
         notifyStateChanged();
 

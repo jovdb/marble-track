@@ -44,6 +44,16 @@ namespace devices
         buttonConfigDoc["buttonType"] = "NormalOpen";
         _liftButton->jsonToConfig(buttonConfigDoc);
         addChild(_liftButton);
+
+        _manualButton = new devices::Button("manual-btn");
+        JsonDocument manualButtonConfigDoc;
+        manualButtonConfigDoc["name"] = "";
+        manualButtonConfigDoc["pin"] = 12;
+        manualButtonConfigDoc["pinMode"] = "pullup";
+        manualButtonConfigDoc["debounceMs"] = 50;
+        manualButtonConfigDoc["buttonType"] = "NormalOpen";
+        _manualButton->jsonToConfig(manualButtonConfigDoc);
+        addChild(_manualButton);
     }
 
     void MarbleController::loop()

@@ -30,6 +30,7 @@ namespace devices
         devices::Lift *_lift;
         devices::Led *_liftLed;
         devices::Button *_liftButton;
+        devices::Button *_manualButton;
 
         // Button timing for unload duration control
         unsigned long _liftButtonPressStartTime = 0;

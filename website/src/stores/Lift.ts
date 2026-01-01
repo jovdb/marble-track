@@ -11,8 +11,7 @@ export interface ILiftState extends IDeviceState {
     | "LiftDownLoaded"
     | "LiftDownUnloaded"
     | "LiftUpUnloading"
-    | "LiftUpUnloaded"
-    | "LiftUpLoaded"
+    | "LiftUp"
     | "MovingUp"
     | "MovingDown";
   currentPosition?: number;

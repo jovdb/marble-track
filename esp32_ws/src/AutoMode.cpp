@@ -277,13 +277,19 @@ void AutoMode::loop()
             _speedMoveDownCalled = false; // Reset flag when state changes
             _lift->up();
             break;
-        case devices::LiftStateEnum::LIFT_UP_LOADED:
+        case devices::LiftStateEnum::LIFT_UP:
             _speedMoveDownCalled = false; // Reset flag when state changes
-            _lift->unloadBall();
-            break;
-        case devices::LiftStateEnum::LIFT_UP_UNLOADED:
-            _speedMoveDownCalled = false; // Reset flag when state changes
-            _lift->down(_lift->isBallWaiting() ? 1.0f : 0.25f);
+            {
+                auto liftState = _lift->getState();
+                if (liftState.isLoaded)
+                {
+                    _lift->unloadBall();
+                }
+                else
+                {
+                    _lift->down(_lift->isBallWaiting() ? 1.0f : 0.25f);
+                }
+            }
             break;
         default:
             MLOG_WARN("AutoMode: Unknown lift state");

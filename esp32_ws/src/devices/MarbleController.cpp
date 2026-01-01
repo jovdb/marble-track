@@ -59,8 +59,8 @@ namespace devices
 
         auto liftState = _lift->getState();
 
-        // Reset button timing state when not in LIFT_UP_LOADED
-        if (liftState.state != devices::LiftStateEnum::LIFT_UP_LOADED)
+        // Reset button timing state when not in LIFT_UP
+        if (liftState.state != devices::LiftStateEnum::LIFT_UP)
         {
             _waitingForLiftButtonRelease = false;
             _liftButtonPressStartTime = 0;
@@ -116,33 +116,30 @@ namespace devices
             break;
         }
 
-        case devices::LiftStateEnum::LIFT_UP_UNLOADED:
+        case devices::LiftStateEnum::LIFT_UP:
         {
             _liftLed->set(true);
             auto liftButtonState = _liftButton->getState();
             if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
-                _lift->down();
-            }
-            break;
-        }
-
-        case devices::LiftStateEnum::LIFT_UP_LOADED:
-        {
-            _liftLed->set(true);
-            auto liftButtonState = _liftButton->getState();
-            if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
-            {
-                if (!_waitingForLiftButtonRelease)
+                if (liftState.isLoaded)
                 {
-                    // Button just pressed - start timing
-                    _liftButtonPressStartTime = millis();
-                    _waitingForLiftButtonRelease = true;
+                    // Loaded: start timing for unload duration
+                    if (!_waitingForLiftButtonRelease)
+                    {
+                        _liftButtonPressStartTime = millis();
+                        _waitingForLiftButtonRelease = true;
+                    }
+                }
+                else
+                {
+                    // Unloaded: move down
+                    _lift->down();
                 }
             }
-            else if (_waitingForLiftButtonRelease)
+            else if (_waitingForLiftButtonRelease && !liftButtonState.isPressed)
             {
-                // Button just released - determine duration based on press time
+                // Button released after timing for unload
                 unsigned long pressDuration = millis() - _liftButtonPressStartTime;
                 float durationRatio = (pressDuration >= 500) ? 1.0f : 0.6f;
                 _lift->unloadBall(durationRatio);

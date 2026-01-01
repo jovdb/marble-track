@@ -31,8 +31,7 @@ namespace devices
         LIFT_DOWN_LOADED,
         LIFT_DOWN_UNLOADED,
         LIFT_UP_UNLOADING,
-        LIFT_UP_UNLOADED,
-        LIFT_UP_LOADED,
+        LIFT_UP,
         MOVING_UP,
         MOVING_DOWN
     };

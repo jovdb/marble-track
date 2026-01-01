@@ -149,12 +149,11 @@ namespace devices
         }
 
         // Check ball sensor state and notify if changed
-        // bool ballWaiting = _ballSensor ? _ballSensor->getState().isPressed : false;
+        bool ballWaiting = _ballSensor ? _ballSensor->getState().isPressed : false;
 
         // TODO in semaphore?
         // TODO: stack of errors?
 
-        /*
         bool changed = (_state.isBallWaiting != ballWaiting);
         _state.isBallWaiting = ballWaiting;
 
@@ -563,7 +562,6 @@ namespace devices
         MLOG_INFO("%s: Unloading ball...", toString().c_str());
         _state.state = LiftStateEnum::LIFT_UP_UNLOADING;
         _unloadStartTime = millis();
-        _state.isLoaded = false;
         notifyStateChanged();
 
         // Set unloader to 100 (fully open) - with duration
@@ -575,6 +573,7 @@ namespace devices
     {
 
         _state.state = LiftStateEnum::LIFT_UP_UNLOADED;
+        _state.isLoaded = false;
         notifyStateChanged();
 
         // Set unloader to 0 (fully closed) - with duration

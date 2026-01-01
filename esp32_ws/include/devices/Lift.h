@@ -166,6 +166,7 @@ namespace devices
         unsigned long _loadStartTime = 0;   // Load operation start time
         unsigned long _unloadStartTime = 0; // Unload operation start time
         unsigned long _unloadEndTime = 0;   // Unload operation end time
+        bool _moveJustStarted = false;       // Whether stepper movement just started
 
     private:
         /**

@@ -47,6 +47,13 @@ public:
     // Hierarchy
     void addChild(Device *child);
     const std::vector<Device *> &getChildren() const { return _children; }
+    Device *getChildById(const String &id) const;
+
+    template <typename T>
+    T *getChildByIdAs(const String &id) const
+    {
+        return static_cast<T *>(getChildById(id));
+    }
 
     // Pins (for collision detection)
     virtual std::vector<int> getPins() const { return {}; }

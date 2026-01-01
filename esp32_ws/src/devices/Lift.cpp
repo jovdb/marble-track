@@ -164,8 +164,12 @@ namespace devices
             notifyStateChanged();
         }
 
-    }
-    */
+        // Reset moveJustStarted flag after first loop iteration
+        if (_moveJustStarted)
+        {
+            _moveJustStarted = false;
+        }
+
         // State machine logic
         switch (_state.state)
         {
@@ -399,7 +403,11 @@ namespace devices
         doc["state"] = stateToString(_state.state);
         doc["isBallWaiting"] = _state.isBallWaiting;
         doc["isLoaded"] = _state.isLoaded;
-        doc["currentPosition"] = getCurrentPosition();
+        // Only include currentPosition when stepper is not moving to avoid constant notifications
+        if (_state.state != LiftStateEnum::MOVING_UP && _state.state != LiftStateEnum::MOVING_DOWN)
+        {
+            doc["currentPosition"] = getCurrentPosition();
+        }
         doc["errorMessage"] = _state.errorMessage;
         doc["errorCode"] = errorCodeToString(_state.errorCode);
     }
@@ -582,7 +590,7 @@ namespace devices
 
     bool Lift::isStepperIdle() const
     {
-        return !_stepper->getState().isMoving;
+        return !_stepper->getState().isMoving && !_moveJustStarted;
     }
 
     bool Lift::isAtLimit() const
@@ -593,12 +601,14 @@ namespace devices
     bool Lift::moveStepper(long steps, float speedRatio)
     {
         _stepper->move(steps, _stepper->getConfig().defaultSpeed * speedRatio);
+        _moveJustStarted = true;
         return true;
     }
 
     bool Lift::moveStepperTo(long position, float speedRatio)
     {
         _stepper->moveTo(position, _stepper->getConfig().defaultSpeed * speedRatio);
+        _moveJustStarted = true;
         return true;
     }
 

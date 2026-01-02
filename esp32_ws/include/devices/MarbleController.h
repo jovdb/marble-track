@@ -27,6 +27,7 @@ namespace devices
 
     private:
         void loopManualLift();
+        void loopManualWheel();
         void loopAutoLift();
         void loopAutoWheel();
         Buzzer *_buzzer;

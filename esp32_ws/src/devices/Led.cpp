@@ -80,7 +80,7 @@ namespace devices
         return true;
     }
 
-    bool Led::blink(unsigned long onTime, unsigned long offTime)
+    bool Led::blink(unsigned long onTime, unsigned long offTime, unsigned long delay)
     {
         if (_config.pin == -1)
         {
@@ -89,7 +89,7 @@ namespace devices
         }
 
         // Skip if already OK
-        if (_state.mode == "BLINKING" && _state.blinkOnTime == onTime && _state.blinkOffTime == offTime)
+        if (_state.mode == "BLINKING" && _state.blinkOnTime == onTime && _state.blinkOffTime == offTime && _state.blinkDelay == delay)
         {
             return true;
         }
@@ -98,9 +98,11 @@ namespace devices
         _state.mode = "BLINKING";
         _state.blinkOnTime = onTime;
         _state.blinkOffTime = offTime;
+        _state.blinkDelay = delay;
 
         // Pin set by loop()
-        MLOG_INFO("%s: Blinking with on=%lums, off=%lums", toString().c_str(), onTime, offTime);
+        MLOG_INFO("%s: Blinking with delay=%lums, on=%lums, off=%lums (total cycle: %lums)", 
+                  toString().c_str(), delay, onTime, offTime, delay + onTime + offTime);
 
         // Notify subscribers
         notifyStateChanged();
@@ -121,15 +123,21 @@ namespace devices
             return;
         }
 
-        // Calculate total blink cycle time
-        unsigned long cycle = _state.blinkOnTime + _state.blinkOffTime;
+        // Calculate total blink cycle time (including delay)
+        unsigned long cycle = _state.blinkDelay + _state.blinkOnTime + _state.blinkOffTime;
 
         // Use modulo to find position in cycle (0 to cycle-1)
-        // This ensures all LEDs using the same timings blink in sync
         unsigned long position = millis() % cycle;
 
-        // LED should be ON if position is within the ON time
-        bool shouldBeOn = position < _state.blinkOnTime;
+        // Determine LED state based on position in cycle:
+        // 0 to delay-1: OFF (delay period)
+        // delay to delay+onTime-1: ON (on period)  
+        // delay+onTime to cycle-1: OFF (off period)
+        bool shouldBeOn = false;
+        if (position >= _state.blinkDelay && position < _state.blinkDelay + _state.blinkOnTime)
+        {
+            shouldBeOn = true;
+        }
 
         // Only update GPIO if state changed (check against current mode state)
         if ((shouldBeOn && _isPrevBlinkingOn != 1) || (!shouldBeOn && _isPrevBlinkingOn != 0))
@@ -144,6 +152,7 @@ namespace devices
         doc["mode"] = _state.mode;
         doc["blinkOnTime"] = _state.blinkOnTime;
         doc["blinkOffTime"] = _state.blinkOffTime;
+        doc["blinkDelay"] = _state.blinkDelay;
     }
 
     bool Led::control(const String &action, JsonObject *args)
@@ -162,6 +171,7 @@ namespace devices
         {
             unsigned long onTime = 500;
             unsigned long offTime = 500;
+            unsigned long delay = 0;
 
             if (args)
             {
@@ -169,9 +179,11 @@ namespace devices
                     onTime = (*args)["onTime"].as<unsigned long>();
                 if ((*args)["offTime"].is<unsigned long>())
                     offTime = (*args)["offTime"].as<unsigned long>();
+                if ((*args)["delay"].is<unsigned long>())
+                    delay = (*args)["delay"].as<unsigned long>();
             }
 
-            return blink(onTime, offTime);
+            return blink(onTime, offTime, delay);
         }
         else
         {

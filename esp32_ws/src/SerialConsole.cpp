@@ -747,8 +747,9 @@ void SerialConsole::showLoggingMenu()
     Serial.printf("  4. ERROR      : %s\n", LogConfig::isEnabled(LOG_ERROR) ? "✅ Enabled" : "❌ Disabled");
     Serial.printf("  5. WS_RECEIVE : %s\n", LogConfig::isEnabled(LOG_WS_RECEIVE) ? "✅ Enabled" : "❌ Disabled");
     Serial.printf("  6. WS_SEND    : %s\n", LogConfig::isEnabled(LOG_WS_SEND) ? "✅ Enabled" : "❌ Disabled");
+    Serial.printf("  7. PLOT       : %s\n", LogConfig::isEnabled(LOG_PLOT) ? "✅ Enabled" : "❌ Disabled");
     Serial.println();
-    Serial.println("Press 1-6 to toggle, 'a' for all, 'n' for none, Enter or Esc to exit.");
+    Serial.println("Press 1-7 to toggle, 'a' for all, 'n' for none, Enter or Esc to exit.");
     Serial.println();
 }
 
@@ -800,6 +801,10 @@ void SerialConsole::handleLoggingMenuInput(char incoming)
         case '6':
             type = LOG_WS_SEND;
             typeName = "WS_SEND";
+            break;
+        case '7':
+            type = LOG_PLOT;
+            typeName = "PLOT";
             break;
         case 'a':
         case 'A':

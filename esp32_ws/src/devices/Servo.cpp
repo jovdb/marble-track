@@ -232,6 +232,19 @@ namespace devices
         doc["defaultDurationInMs"] = _config.defaultDurationInMs;
     }
 
+    void Servo::plotState()
+    {
+        if (xSemaphoreTake(_stateMutex, portMAX_DELAY) == pdTRUE)
+        {
+            MLOG_PLOT("%s_running:%d,%s_value:%.2f,%s_targetValue:%.2f,%s_targetDurationMs:%lu", 
+                      _id.c_str(), _state.running ? 1 : 0,
+                      _id.c_str(), _state.value,
+                      _id.c_str(), _state.targetValue,
+                      _id.c_str(), _state.targetDurationMs);
+            xSemaphoreGive(_stateMutex);
+        }
+    }
+
     bool Servo::setupServo()
     {
         if (_config.pin < 0)

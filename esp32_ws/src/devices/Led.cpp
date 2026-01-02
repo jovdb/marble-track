@@ -203,4 +203,18 @@ namespace devices
         doc["initialState"] = _config.initialState;
     }
 
+    void Led::plotState()
+    {
+        // Plot numeric values: blinkOnTime, blinkOffTime
+        // Convert mode to numeric: 0=OFF, 1=ON, 2=BLINKING
+        int modeNumeric = 0;
+        if (_state.mode == "ON") modeNumeric = 1;
+        else if (_state.mode == "BLINKING") modeNumeric = 2;
+        
+        MLOG_PLOT("%s_mode:%d,%s_blinkOnTime:%lu,%s_blinkOffTime:%lu", 
+                  _id.c_str(), modeNumeric,
+                  _id.c_str(), _state.blinkOnTime,
+                  _id.c_str(), _state.blinkOffTime);
+    }
+
 } // namespace devices

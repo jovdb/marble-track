@@ -129,6 +129,9 @@ namespace devices
         // RTOS task implementation
         void task() override;
 
+        // Plotting
+        void plotState() override;
+
     private:
         AccelStepper *_stepper = nullptr;
         SemaphoreHandle_t _stateMutex;

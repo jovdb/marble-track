@@ -41,7 +41,8 @@ enum LogType : uint8_t
     LOG_WARN = 0x04,
     LOG_ERROR = 0x08,
     LOG_WS_RECEIVE = 0x10,
-    LOG_WS_SEND = 0x20
+    LOG_WS_SEND = 0x20,
+    LOG_PLOT = 0x40
 };
 
 // Global logging configuration
@@ -87,7 +88,7 @@ const int minTaskPlaceholderChars = 11;
     {                                                                                                   \
         if (LogConfig::isEnabled(LOG_DEBUG))                                                            \
         {                                                                                               \
-            Serial.printf("[%6lu][D][%-13s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
+            Serial.printf("[%6lu][D][%-13s]: " format "\r\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
         }                                                                                               \
     } while (0)
 
@@ -97,7 +98,7 @@ const int minTaskPlaceholderChars = 11;
     {                                                                                                   \
         if (LogConfig::isEnabled(LOG_INFO))                                                             \
         {                                                                                               \
-            Serial.printf("[%6lu][I][%-13s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
+            Serial.printf("[%6lu][I][%-13s]: " format "\r\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
         }                                                                                               \
     } while (0)
 
@@ -106,7 +107,7 @@ const int minTaskPlaceholderChars = 11;
     {                                                                                                   \
         if (LogConfig::isEnabled(LOG_ERROR))                                                            \
         {                                                                                               \
-            Serial.printf("[%6lu][E][%-13s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
+            Serial.printf("[%6lu][E][%-13s]: " format "\r\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
         }                                                                                               \
     } while (0)
 
@@ -115,7 +116,7 @@ const int minTaskPlaceholderChars = 11;
     {                                                                                                   \
         if (LogConfig::isEnabled(LOG_WARN))                                                             \
         {                                                                                               \
-            Serial.printf("[%6lu][W][%-13s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
+            Serial.printf("[%6lu][W][%-13s]: " format "\r\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
         }                                                                                               \
     } while (0)
 
@@ -124,7 +125,7 @@ const int minTaskPlaceholderChars = 11;
     {                                                                                                         \
         if (LogConfig::isEnabled(LOG_WS_SEND))                                                                \
         {                                                                                                     \
-            Serial.printf("[%6lu][WS_SEND][%-13s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
+            Serial.printf("[%6lu][WS_SEND][%-13s]: " format "\r\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
         }                                                                                                     \
     } while (0)
 
@@ -133,10 +134,18 @@ const int minTaskPlaceholderChars = 11;
     {                                                                                                         \
         if (LogConfig::isEnabled(LOG_WS_RECEIVE))                                                             \
         {                                                                                                     \
-            Serial.printf("[%6lu][WS_RECV][%-13s]: " format "\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
+            Serial.printf("[%6lu][WS_RECV][%-13s]: " format "\r\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
         }                                                                                                     \
     } while (0)
 
+#define MLOG_PLOT(format, ...)                                                                                \
+    do                                                                                                        \
+    {                                                                                                         \
+        if (LogConfig::isEnabled(LOG_PLOT))                                                                   \
+        {                                                                                                     \
+            Serial.printf(">" format "\r\n", ##__VA_ARGS__);                                                 \
+        }                                                                                                     \
+    } while (0)
 #else
 // Logging disabled - all macros become no-ops (zero overhead)
 #define MLOG_INFO(format, ...)
@@ -145,6 +154,7 @@ const int minTaskPlaceholderChars = 11;
 #define MLOG_DEBUG(format, ...)
 #define MLOG_WS_SEND(format, ...)
 #define MLOG_WS_RECEIVE(format, ...)
+#define MLOG_PLOT(format, ...)
 #endif
 
 #endif // LOGGING_H

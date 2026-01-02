@@ -51,7 +51,7 @@ namespace devices
 
         // Button timing for unload duration control
         unsigned long _liftButtonPressStartTime = 0;
-        bool _waitingForLiftButtonRelease = false;
+        bool _isBallStillLoaded = false;
         
         // Auto lift timing control
         unsigned long _autoLiftDelayStart = 0;

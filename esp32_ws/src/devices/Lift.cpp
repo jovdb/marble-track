@@ -168,7 +168,7 @@ namespace devices
             break;
         case LiftStateEnum::LIFT_UP_UNLOADING:
             // Wait 2 seconds after starting unload, then end the unloading process
-            if (millis() - _unloadStartTime >= _unloader->getConfig().defaultDurationInMs + 1000)
+            if (millis() - _unloadStartTime >= _unloader->getConfig().defaultDurationInMs + 200)
             {
                 unloadBallEnd(1.0f);
             }

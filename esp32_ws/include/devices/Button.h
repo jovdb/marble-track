@@ -100,9 +100,6 @@ namespace devices
         void jsonToConfig(const JsonDocument &config) override;
         void configToJson(JsonDocument &doc) override;
 
-        // Plotting
-        void plotState() override;
-
     private:
         bool readIsButtonPressed();
         String pinModeToString(PinModeOption mode) const;

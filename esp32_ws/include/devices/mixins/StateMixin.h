@@ -74,19 +74,10 @@ protected:
     StateType _state;
 
     /**
-     * @brief Plot current state for serial monitoring (override in derived class)
-     * Default implementation does nothing.
-     */
-    virtual void plotState() {}
-
-    /**
      * @brief Notify all subscribers that state has changed
      */
     void notifyStateChanged()
     {
-        // Call plotState for serial monitoring
-        plotState();
-
         for (auto &entry : _stateChangeCallbacks)
         {
             if (entry.callback)

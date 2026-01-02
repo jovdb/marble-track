@@ -61,10 +61,10 @@ namespace devices
         void jsonToConfig(const JsonDocument &config) override;
         void configToJson(JsonDocument &doc) override;
 
-        // Plotting
-        void plotState() override;
-    };
+            };
 
 } // namespace devices
 
 #endif // COMPOSITION_LED_H
+
+

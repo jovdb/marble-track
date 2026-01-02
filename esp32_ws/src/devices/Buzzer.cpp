@@ -312,23 +312,6 @@ namespace devices
         doc["name"] = _config.name;
     }
 
-    void Buzzer::plotState()
-    {
-        if (xSemaphoreTake(_stateMutex, portMAX_DELAY) == pdTRUE)
-        {
-            // Convert mode to numeric: 0=IDLE, 1=TONE, 2=TUNE
-            int modeNumeric = 0;
-            if (_state.mode == "TONE") modeNumeric = 1;
-            else if (_state.mode == "TUNE") modeNumeric = 2;
-            
-            MLOG_PLOT("%s_mode:%d,%s_playStartTime:%lu,%s_toneDuration:%lu", 
-                      _id.c_str(), modeNumeric,
-                      _id.c_str(), _state.playStartTime,
-                      _id.c_str(), _state.toneDuration);
-            xSemaphoreGive(_stateMutex);
-        }
-    }
-
     /**
      * @brief RTOS task for buzzer operations
      *

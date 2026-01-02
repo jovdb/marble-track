@@ -35,6 +35,7 @@ namespace devices
         String mode = "OFF"; // OFF, ON, or BLINKING
         unsigned long blinkOnTime = 500;
         unsigned long blinkOffTime = 500;
+        unsigned long blinkDelay = 0; // Delay before starting blink cycle
     };
 
     /**
@@ -51,7 +52,7 @@ namespace devices
         std::vector<int> getPins() const override;
 
         bool set(bool value);
-        bool blink(unsigned long onTime = 500, unsigned long offTime = 500);
+        bool blink(unsigned long onTime = 500, unsigned long offTime = 500, unsigned long delay = 0);
 
         // ControllableMixin implementation
         void addStateToJson(JsonDocument &doc) override;

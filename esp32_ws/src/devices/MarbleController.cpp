@@ -243,13 +243,14 @@ namespace devices
 
         // BUSY
         case devices::LiftStateEnum::INIT:
-            _liftLed->blink(250, 250);
+            _liftLed->blink(240);
             break;
         case devices::LiftStateEnum::LIFT_DOWN_LOADING:
         case devices::LiftStateEnum::LIFT_UP_UNLOADING:
         case devices::LiftStateEnum::MOVING_UP:
         case devices::LiftStateEnum::MOVING_DOWN: // Loading in progress
-            _liftLed->blink(500, 500);
+            // blink 960
+            _liftLed->blink(480, 480);
             break;
 
         case devices::LiftStateEnum::LIFT_DOWN:
@@ -347,7 +348,7 @@ namespace devices
         case devices::LiftStateEnum::LIFT_UP_UNLOADING:
         case devices::LiftStateEnum::MOVING_UP:
         case devices::LiftStateEnum::MOVING_DOWN:
-            _liftLed->blink(500, 500);
+            _liftLed->blink(480, 480, 0);
             break;
 
         case devices::LiftStateEnum::LIFT_DOWN:
@@ -454,7 +455,7 @@ namespace devices
         }
         else if (wheelState.state == devices::WheelStateEnum::MOVING)
         {
-            _wheelBtnLed->blink(500, 500); // LED blinks when moving
+            _wheelBtnLed->blink(160, 480, 320); // LED blinks when moving
         }
         else
         {
@@ -510,7 +511,7 @@ namespace devices
     void MarbleController::playClickSound()
     {
         // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
-        _buzzer->tone(320, 100);
+        _buzzer->tone(640, 50);
     }
 
 } // namespace devices

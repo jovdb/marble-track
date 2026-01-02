@@ -7,6 +7,8 @@
 #define COMPOSITION_WHEEL_H
 
 #include "devices/Device.h"
+#include "devices/Stepper.h"
+#include "devices/Button.h"
 #include "devices/mixins/StateMixin.h"
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"
@@ -134,9 +136,8 @@ namespace devices
         void configToJson(JsonDocument &doc) override;
 
     protected:
-        Device *_stepper;    // Stepper motor child device
-        Device *_zeroSensor; // Zero sensor child device
-        Device *_nextButton; // Next button child device
+        Stepper *_stepper;    // Stepper motor child device
+        Button *_zeroSensor; // Zero sensor child device
 
     private:
         /**
@@ -151,24 +152,6 @@ namespace devices
          * @param steps Number of steps measured
          */
         void notifyStepsPerRevolution(long steps);
-
-        /**
-         * @brief Get pointer to stepper child device
-         * @return Stepper device pointer or nullptr
-         */
-        Device *getStepper() const;
-
-        /**
-         * @brief Get pointer to zero sensor child device
-         * @return Button device pointer or nullptr
-         */
-        Device *getZeroSensor() const;
-
-        /**
-         * @brief Get pointer to next button child device
-         * @return Button device pointer or nullptr
-         */
-        Device *getNextButton() const;
 
     };
 

@@ -180,7 +180,7 @@ namespace devices
         isAutoMode = false;
 
         // Log the operating mode
-        MLOG_INFO("MarbleController initialized in %s mode", isAutoMode ? "AUTO" : "MANUAL");
+        MLOG_INFO("%s initialized in %s mode", toString().c_str(), isAutoMode ? "AUTO" : "MANUAL");
     }
 
     void MarbleController::loop()
@@ -216,13 +216,13 @@ namespace devices
         {
         case devices::LiftStateEnum::UNKNOWN:
         {
-            // Wait for first button press to start initialization
+            // Init will start at press
             _liftLed->set(true);
 
             auto liftButtonState = _liftButton->getState();
             if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
-                MLOG_INFO("MarbleController: Starting lift initialization on first button press");
+                playClickSound();
                 _lift->init();
             }
             break;
@@ -256,6 +256,7 @@ namespace devices
             auto liftButtonState = _liftButton->getState();
             if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
+                playClickSound();
                 if (liftState.isLoaded)
                 {
                     _lift->up();
@@ -274,6 +275,7 @@ namespace devices
             auto liftButtonState = _liftButton->getState();
             if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
+                playClickSound();
                 if (liftState.isLoaded)
                 {
                     // Loaded: start timing for unload duration
@@ -299,6 +301,10 @@ namespace devices
                 if (pressDuration >= 500)
                 {
                     _buzzer->tune("Power Up:d=32,o=5,b=300:c,c#,d#,e,f#,g#,a#,b"); // Play error tune
+                }
+                else
+                {
+                    playClickSound();
                 }
                 // Reset timing state
                 _waitingForLiftButtonRelease = false;
@@ -417,18 +423,18 @@ namespace devices
             {
                 _wheelIdleStartTime = millis();
                 _randomWheelDelayMs = random(100, 20000);
-                MLOG_INFO("MarbleController: Next wheel trigger in %d ms", _randomWheelDelayMs);
+                MLOG_INFO("%s: Next wheel trigger in %d ms", toString().c_str(), _randomWheelDelayMs);
             }
             else if (millis() >= _wheelIdleStartTime + _randomWheelDelayMs)
             {
-                MLOG_INFO("MarbleController: Triggering wheel next breakpoint");
+                MLOG_INFO("%s: Triggering wheel next breakpoint", toString().c_str());
                 _wheel->nextBreakPoint();
                 _wheelIdleStartTime = 0;
             }
             break;
 
         default:
-            MLOG_WARN("MarbleController: Unknown wheel state");
+            MLOG_WARN("%s: Unknown wheel state", toString().c_str());
             break;
         }
     }
@@ -456,36 +462,53 @@ namespace devices
         // Control wheel movement based on button state
         if (wheelButtonState.isPressed && wheelButtonState.isPressedChanged)
         {
+
             // Button just pressed - start continuous movement only if wheel is idle
             // Don't allow button usage when wheel is in error or init states
-            if (wheelState.state == devices::WheelStateEnum::IDLE)
+            if (wheelState.state == devices::WheelStateEnum::IDLE || wheelState.state == devices::WheelStateEnum::UNKNOWN || wheelState.state == devices::WheelStateEnum::MOVING)
             {
-                MLOG_INFO("MarbleController: Starting manual wheel movement");
-                // Move a large number of steps to simulate continuous movement
-                _wheel->move(1000000); // Large positive number for continuous movement
+                playClickSound();
+
+                MLOG_INFO("%s: Starting manual wheel movement as long button is pressed", toString().c_str());
+                // Reset current position to prevent overflow;
+                // if (wheelState.state != devices::WheelStateEnum::MOVING)
+                // {
+                // }
+                _wheel->move(100000); // Large positive number for continuous movement
             }
             else if (wheelState.state == devices::WheelStateEnum::ERROR ||
                      wheelState.state == devices::WheelStateEnum::INIT)
             {
-                MLOG_WARN("MarbleController: Cannot start manual wheel movement - wheel is in %s state",
-                          wheelState.state == devices::WheelStateEnum::ERROR ? "error" : "init");
+                MLOG_WARN("%s: Cannot start manual wheel movement - wheel is in %s state",
+                          toString().c_str(), wheelState.state == devices::WheelStateEnum::ERROR ? "error" : "init");
             }
         }
-        else if (!wheelButtonState.isPressed && wheelState.state == devices::WheelStateEnum::MOVING)
+        else if (!wheelButtonState.isPressed && wheelButtonState.isPressedChanged && wheelState.state == devices::WheelStateEnum::MOVING)
         {
+            // playClickSound();
+
             // Button released while moving - stop the wheel
-            MLOG_INFO("MarbleController: Stopping manual wheel movement");
+            MLOG_INFO("%s: Stopping manual wheel movement", toString().c_str());
             _wheel->stop();
         }
     }
 
+    void MarbleController::playStartupSound()
+    {
+        _buzzer->tune("Error:d=4,o=5,b=100:a,d,g"); // Play error tune
+    }
+
     void MarbleController::playErrorSound()
     {
-        if (_buzzer)
-        {
-            // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
-            _buzzer->tune("Error:d=4,o=4,b=100:a,d"); // Play error tune
-        }
+
+        // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
+        _buzzer->tune("Error:d=4,o=4,b=100:a,d"); // Play error tune
+    }
+
+    void MarbleController::playClickSound()
+    {
+        // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
+        _buzzer->tone(320, 100);
     }
 
 } // namespace devices

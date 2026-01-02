@@ -215,10 +215,18 @@ namespace devices
         switch (liftState.state)
         {
         case devices::LiftStateEnum::UNKNOWN:
-            // Wait for initialization
-            _liftLed->set(false);
-            _lift->init();
+        {
+            // Wait for first button press to start initialization
+            _liftLed->set(true);
+
+            auto liftButtonState = _liftButton->getState();
+            if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
+            {
+                MLOG_INFO("MarbleController: Starting lift initialization on first button press");
+                _lift->init();
+            }
             break;
+        }
 
         case devices::LiftStateEnum::ERROR:
             // Handle error state - maybe blink LED faster
@@ -233,6 +241,8 @@ namespace devices
 
         // BUSY
         case devices::LiftStateEnum::INIT:
+            _liftLed->blink(250, 250);
+            break;
         case devices::LiftStateEnum::LIFT_DOWN_LOADING:
         case devices::LiftStateEnum::LIFT_UP_UNLOADING:
         case devices::LiftStateEnum::MOVING_UP:
@@ -454,11 +464,11 @@ namespace devices
                 // Move a large number of steps to simulate continuous movement
                 _wheel->move(1000000); // Large positive number for continuous movement
             }
-            else if (wheelState.state == devices::WheelStateEnum::ERROR || 
+            else if (wheelState.state == devices::WheelStateEnum::ERROR ||
                      wheelState.state == devices::WheelStateEnum::INIT)
             {
-                MLOG_WARN("MarbleController: Cannot start manual wheel movement - wheel is in %s state", 
-                         wheelState.state == devices::WheelStateEnum::ERROR ? "error" : "init");
+                MLOG_WARN("MarbleController: Cannot start manual wheel movement - wheel is in %s state",
+                          wheelState.state == devices::WheelStateEnum::ERROR ? "error" : "init");
             }
         }
         else if (!wheelButtonState.isPressed && wheelState.state == devices::WheelStateEnum::MOVING)

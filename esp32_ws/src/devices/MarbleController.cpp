@@ -176,7 +176,8 @@ namespace devices
         Device::setup();
 
         // Set auto mode based on manual button state during setup
-        isAutoMode = !_manualButton->getState().isPressed;
+        // isAutoMode = !_manualButton->getState().isPressed;
+        isAutoMode = false;
 
         // Log the operating mode
         MLOG_INFO("MarbleController initialized in %s mode", isAutoMode ? "AUTO" : "MANUAL");
@@ -194,6 +195,7 @@ namespace devices
         else
         {
             loopManualLift();
+            loopManualWheel();
         }
     }
 
@@ -418,6 +420,52 @@ namespace devices
         default:
             MLOG_WARN("MarbleController: Unknown wheel state");
             break;
+        }
+    }
+
+    void MarbleController::loopManualWheel()
+    {
+        // Manual wheel control logic
+        auto wheelState = _wheel->getState();
+        auto wheelButtonState = _wheelNextBtn->getState();
+
+        // Control wheel LED based on error state and movement
+        if (wheelState.state == devices::WheelStateEnum::ERROR)
+        {
+            _wheelBtnLed->set(false); // LED off when in error
+        }
+        else if (wheelState.state == devices::WheelStateEnum::MOVING)
+        {
+            _wheelBtnLed->blink(500, 500); // LED blinks when moving
+        }
+        else
+        {
+            _wheelBtnLed->set(true); // LED on when idle and not in error
+        }
+
+        // Control wheel movement based on button state
+        if (wheelButtonState.isPressed && wheelButtonState.isPressedChanged)
+        {
+            // Button just pressed - start continuous movement only if wheel is idle
+            // Don't allow button usage when wheel is in error or init states
+            if (wheelState.state == devices::WheelStateEnum::IDLE)
+            {
+                MLOG_INFO("MarbleController: Starting manual wheel movement");
+                // Move a large number of steps to simulate continuous movement
+                _wheel->move(1000000); // Large positive number for continuous movement
+            }
+            else if (wheelState.state == devices::WheelStateEnum::ERROR || 
+                     wheelState.state == devices::WheelStateEnum::INIT)
+            {
+                MLOG_WARN("MarbleController: Cannot start manual wheel movement - wheel is in %s state", 
+                         wheelState.state == devices::WheelStateEnum::ERROR ? "error" : "init");
+            }
+        }
+        else if (!wheelButtonState.isPressed && wheelState.state == devices::WheelStateEnum::MOVING)
+        {
+            // Button released while moving - stop the wheel
+            MLOG_INFO("MarbleController: Stopping manual wheel movement");
+            _wheel->stop();
         }
     }
 

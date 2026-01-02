@@ -26,9 +26,24 @@ namespace devices
         _zeroSensor = new Button(getId() + "-zero-sensor");
         addChild(_zeroSensor);
 
-        // Create next button
-        _nextButton = new Button(getId() + "-btn-next");
-        addChild(_nextButton);
+        // Set default config for stepper
+        JsonDocument stepperConfig;
+        stepperConfig["name"] = "Wheel Stepper";
+        stepperConfig["stepperType"] = "DRIVER";
+        stepperConfig["maxSpeed"] = 3000;
+        stepperConfig["maxAcceleration"] = 3000;
+        stepperConfig["defaultSpeed"] = 1000;
+        stepperConfig["defaultAcceleration"] = 200;
+
+        _stepper->jsonToConfig(stepperConfig);
+
+        // Set default config for zero sensor
+        JsonDocument sensorConfig;
+        sensorConfig["name"] = "Wheel Zero Sensor";
+        sensorConfig["pinMode"] = "pullup";
+        sensorConfig["debounceMs"] = 50;
+        sensorConfig["buttonType"] = "NormalOpen";
+        _zeroSensor->jsonToConfig(sensorConfig);
     }
 
     Wheel::~Wheel()
@@ -79,13 +94,7 @@ namespace devices
         {
         case WheelStateEnum::IDLE:
         {
-            // Check if next button is pressed
-            if (_nextButton && _nextButton->hasMixin("state"))
-            {
-                // This would need to be implemented based on Button's state
-                // For now, we'll skip this check
-            }
-
+            // Idle state - no specific actions needed
             break;
         }
         case WheelStateEnum::MOVING:
@@ -93,25 +102,28 @@ namespace devices
             // Check if movement completed
             // This would need stepper state integration
             // For now, assume movement is complete after some time
+            if (!_stepper->getState().isMoving)
+            {
+                MLOG_INFO("%s: Movement to target completed", toString().c_str());
+                _state.state = WheelStateEnum::IDLE;
+                notifyStateChanged();
+            }
 
             // Check zero sensor
-            if (_zeroSensor && _zeroSensor->hasMixin("state"))
-            {
-                // Handle zero sensor trigger
-                long currentPosition = 0; // Would get from stepper
-                _state.stepsInLastRevolution = currentPosition - _state.lastZeroPosition;
-                _state.lastZeroPosition = currentPosition;
+            // Handle zero sensor trigger
+            long currentPosition = 0; // Would get from stepper
+            _state.stepsInLastRevolution = currentPosition - _state.lastZeroPosition;
+            _state.lastZeroPosition = currentPosition;
 
-                // Check revolution consistency
-                if (_config.stepsPerRevolution > 0)
+            // Check revolution consistency
+            if (_config.stepsPerRevolution > 0 && _state.stepsInLastRevolution > 0)
+            {
+                float percentDiff = abs(_state.stepsInLastRevolution - _config.stepsPerRevolution) /
+                                    (float)_config.stepsPerRevolution * 100.0f;
+                if (percentDiff > 0.1f)
                 {
-                    float percentDiff = abs(_state.stepsInLastRevolution - _config.stepsPerRevolution) /
-                                        (float)_config.stepsPerRevolution * 100.0f;
-                    if (percentDiff > 0.1f)
-                    {
-                        MLOG_ERROR("%s: Steps per revolution mismatch - measured: %ld, configured: %ld (%.2f%% difference)",
-                                   toString().c_str(), _state.stepsInLastRevolution, _config.stepsPerRevolution, percentDiff);
-                    }
+                    MLOG_ERROR("%s: Steps per revolution mismatch - measured: %ld, configured: %ld (%.2f%% difference)",
+                               toString().c_str(), _state.stepsInLastRevolution, _config.stepsPerRevolution, percentDiff);
                 }
             }
 
@@ -130,7 +142,7 @@ namespace devices
         case WheelStateEnum::INIT:
         {
             // Check for zero sensor during init
-            if (_zeroSensor && _zeroSensor->hasMixin("state"))
+            if (_zeroSensor->hasMixin("state"))
             {
                 long currentPosition = 0; // Would get from stepper
                 _state.lastZeroPosition = currentPosition;
@@ -164,7 +176,7 @@ namespace devices
         case WheelStateEnum::CALIBRATING:
         {
             // Check for zero sensor during calibration
-            if (_zeroSensor && _zeroSensor->hasMixin("state"))
+            if (_zeroSensor->hasMixin("state"))
             {
                 if (_state.lastZeroPosition == 0)
                 {
@@ -207,26 +219,16 @@ namespace devices
 
     bool Wheel::move(long steps)
     {
-        if (!_stepper)
-        {
-            MLOG_WARN("%s: Stepper not available", toString().c_str());
-            return false;
-        }
+        // Set state to MOVING regardless of current state
+        _state.state = WheelStateEnum::MOVING;
+        notifyStateChanged();
 
-        // This would need to call stepper's move method
-        // For now, return true
-        MLOG_INFO("%s: Moving %ld steps", toString().c_str(), steps);
-        return true;
+        // Call stepper's move method
+        return _stepper->move(steps);
     }
 
     bool Wheel::calibrate()
     {
-        if (!_stepper)
-        {
-            MLOG_WARN("%s: Stepper not available for calibration", toString().c_str());
-            return false;
-        }
-
         MLOG_INFO("%s: Calibration started", toString().c_str());
         _state.state = WheelStateEnum::CALIBRATING;
         _state.lastZeroPosition = 0;
@@ -240,12 +242,6 @@ namespace devices
 
     bool Wheel::init()
     {
-        if (!_stepper)
-        {
-            MLOG_WARN("%s: Stepper not available for init", toString().c_str());
-            return false;
-        }
-
         MLOG_INFO("%s: Init started", toString().c_str());
         _state.state = WheelStateEnum::INIT;
         notifyStateChanged();
@@ -257,12 +253,6 @@ namespace devices
 
     bool Wheel::moveToAngle(float angle)
     {
-        if (!_stepper)
-        {
-            MLOG_WARN("%s: Stepper not available", toString().c_str());
-            return false;
-        }
-
         if (_config.stepsPerRevolution <= 0)
         {
             MLOG_WARN("%s: Cannot move to angle - steps per revolution not calibrated", toString().c_str());
@@ -319,14 +309,8 @@ namespace devices
 
     bool Wheel::stop()
     {
-        if (!_stepper)
-        {
-            return false;
-        }
-
-        // This would call stepper's stop method
-        MLOG_INFO("%s: Stop requested", toString().c_str());
-        return true;
+        // Call stepper's stop method
+        return _stepper->stop();
     }
 
     int Wheel::getCurrentBreakpointIndex() const
@@ -445,21 +429,6 @@ namespace devices
     {
         // This would notify via WebSocket if needed
         MLOG_INFO("%s: Measured steps per revolution: %ld", toString().c_str(), steps);
-    }
-
-    Device *Wheel::getStepper() const
-    {
-        return _stepper;
-    }
-
-    Device *Wheel::getZeroSensor() const
-    {
-        return _zeroSensor;
-    }
-
-    Device *Wheel::getNextButton() const
-    {
-        return _nextButton;
     }
 
 } // namespace devices

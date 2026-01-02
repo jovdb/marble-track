@@ -25,6 +25,16 @@ namespace devices
          */
         void playErrorSound();
 
+        /**
+         * @brief Play a click sound using the buzzer
+         */
+        void playClickSound();
+
+        /**
+         * @brief Play a startup sound using the buzzer
+         */
+        void playStartupSound();
+
     private:
         void loopManualLift();
         void loopManualWheel();

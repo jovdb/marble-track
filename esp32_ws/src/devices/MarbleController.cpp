@@ -149,6 +149,26 @@ namespace devices
             wheelSensorConfig.pinMode = PinModeOption::PullUp;
             wheelSensor->setConfig(wheelSensorConfig);
         }
+
+        // Add wheel button LED
+        _wheelBtnLed = new devices::Led("wheel-btn-led");
+        auto wheelBtnLedConfig = _wheelBtnLed->getConfig();
+        wheelBtnLedConfig.name = "";
+        wheelBtnLedConfig.pin = 15;
+        wheelBtnLedConfig.initialState = "OFF";
+        _wheelBtnLed->setConfig(wheelBtnLedConfig);
+        addChild(_wheelBtnLed);
+
+        // Add wheel next button
+        _wheelNextBtn = new devices::Button("wheel-next-btn");
+        auto wheelNextBtnConfig = _wheelNextBtn->getConfig();
+        wheelNextBtnConfig.name = "";
+        wheelNextBtnConfig.pin = 16;
+        wheelNextBtnConfig.pinMode = PinModeOption::PullUp;
+        wheelNextBtnConfig.debounceTimeInMs = 50;
+        wheelNextBtnConfig.buttonType = ButtonType::NormalOpen;
+        _wheelNextBtn->setConfig(wheelNextBtnConfig);
+        addChild(_wheelNextBtn);
     }
 
     void MarbleController::setup()

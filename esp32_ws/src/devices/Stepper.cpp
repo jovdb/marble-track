@@ -298,8 +298,10 @@ namespace devices
                 if (cmd.type == "move")
                 {
                     enableStepper();
-                    _driver->setMaxSpeed(cmd.speed > 0 ? cmd.speed : _config.defaultSpeed);
-                    _driver->setAcceleration(cmd.acceleration > 0 ? cmd.acceleration : _config.defaultAcceleration);
+                    float actualSpeed = cmd.speed > 0 ? cmd.speed : _config.defaultSpeed;
+                    float actualAcceleration = cmd.acceleration > 0 ? cmd.acceleration : _config.defaultAcceleration;
+                    _driver->setMaxSpeed(actualSpeed);
+                    _driver->setAcceleration(actualAcceleration);
                     _driver->move(cmd.steps);
 
                     xSemaphoreTake(_stateMutex, portMAX_DELAY);
@@ -309,14 +311,16 @@ namespace devices
                     _state.targetPosition = _driver->targetPosition();
                     xSemaphoreGive(_stateMutex);
 
-                    MLOG_INFO("%s: Started moving %ld steps", toString().c_str(), cmd.steps);
+                    MLOG_INFO("%s: Started moving %ld steps at %.1f steps/sec, accel %.1f steps/sec²", toString().c_str(), cmd.steps, actualSpeed, actualAcceleration);
                     notifyStateChanged();
                 }
                 else if (cmd.type == "moveTo")
                 {
                     enableStepper();
-                    _driver->setMaxSpeed(cmd.speed > 0 ? cmd.speed : _config.defaultSpeed);
-                    _driver->setAcceleration(cmd.acceleration > 0 ? cmd.acceleration : _config.defaultAcceleration);
+                    float actualSpeed = cmd.speed > 0 ? cmd.speed : _config.defaultSpeed;
+                    float actualAcceleration = cmd.acceleration > 0 ? cmd.acceleration : _config.defaultAcceleration;
+                    _driver->setMaxSpeed(actualSpeed);
+                    _driver->setAcceleration(actualAcceleration);
                     _driver->moveTo(cmd.position);
 
                     xSemaphoreTake(_stateMutex, portMAX_DELAY);
@@ -326,7 +330,7 @@ namespace devices
                     _state.targetPosition = cmd.position;
                     xSemaphoreGive(_stateMutex);
 
-                    MLOG_INFO("%s: Started moving to position %ld", toString().c_str(), cmd.position);
+                    MLOG_INFO("%s: Started moving to position %ld at %.1f steps/sec, accel %.1f steps/sec²", toString().c_str(), cmd.position, actualSpeed, actualAcceleration);
                     notifyStateChanged();
                 }
                 else if (cmd.type == "stop")

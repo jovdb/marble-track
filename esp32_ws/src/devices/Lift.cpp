@@ -462,22 +462,6 @@ namespace devices
         doc["downFactor"] = _config.downFactor;
     }
 
-    void Lift::plotState()
-    {
-        // Convert state enum to numeric: 0=UNKNOWN, 1=ERROR, 2=INIT, 3=LIFT_DOWN_LOADING, 4=LIFT_DOWN, 5=LIFT_UP_UNLOADING, 6=LIFT_UP, 7=MOVING_UP, 8=MOVING_DOWN
-        int stateNumeric = static_cast<int>(_state.state);
-        // Convert error code enum to numeric: 0=NONE, 1=LIFT_CONFIGURATION_ERROR, 2=LIFT_STATE_ERROR, 3=LIFT_NO_ZERO
-        int errorCodeNumeric = static_cast<int>(_state.errorCode);
-        
-        MLOG_PLOT("%s_state:%d,%s_isBallWaiting:%d,%s_isLoaded:%d,%s_initStep:%d,%s_onErrorChange:%d,%s_errorCode:%d", 
-                  _id.c_str(), stateNumeric,
-                  _id.c_str(), _state.isBallWaiting ? 1 : 0,
-                  _id.c_str(), _state.isLoaded ? 1 : 0,
-                  _id.c_str(), _state.initStep,
-                  _id.c_str(), _state.onErrorChange ? 1 : 0,
-                  _id.c_str(), errorCodeNumeric);
-    }
-
     String Lift::stateToString(LiftStateEnum state) const
     {
         switch (state)

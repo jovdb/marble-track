@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 #include <functional>
-#include "devices/Device.h"
+#include "Device.h"
 #include "devices/Button.h"
 #include "devices/Wheel.h"
 #include "devices/Buzzer.h"
@@ -25,19 +25,16 @@ namespace devices
          */
         void playErrorSound();
 
-        // Plotting
-        void plotState();
-
     private:
         void loopManualLift();
         void loopAutoLift();
         void loopAutoWheel();
-        Buzzer *_buzzer;
-        Lift *_lift;
-        Wheel *_wheel;
-        Led *_liftLed;
-        Button *_liftButton;
-        Button *_manualButton;
+        devices::Buzzer *_buzzer;
+        devices::Lift *_lift;
+        devices::Wheel *_wheel;
+        devices::Led *_liftLed;
+        devices::Button *_liftButton;
+        devices::Button *_manualButton;
 
         // Button timing for unload duration control
         unsigned long _liftButtonPressStartTime = 0;

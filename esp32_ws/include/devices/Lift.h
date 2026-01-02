@@ -154,9 +154,6 @@ namespace devices
         void jsonToConfig(const JsonDocument &config) override;
         void configToJson(JsonDocument &doc) override;
 
-        // Plotting
-        void plotState() override;
-
     protected:
         Stepper *_stepper;    // Stepper motor child device
         Button *_limitSwitch; // Limit switch child device

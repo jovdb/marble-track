@@ -410,16 +410,4 @@ namespace devices
         }
     }
 
-    void MarbleController::plotState()
-    {
-        MLOG_PLOT("%s_isAutoMode:%d,%s_liftButtonPressStartTime:%lu,%s_waitingForLiftButtonRelease:%d,%s_autoLiftDelayStart:%lu,%s_autoLiftDelayMs:%lu,%s_wheelIdleStartTime:%lu,%s_randomWheelDelayMs:%lu", 
-                  _id.c_str(), isAutoMode ? 1 : 0,
-                  _id.c_str(), _liftButtonPressStartTime,
-                  _id.c_str(), _waitingForLiftButtonRelease ? 1 : 0,
-                  _id.c_str(), _autoLiftDelayStart,
-                  _id.c_str(), _autoLiftDelayMs,
-                  _id.c_str(), _wheelIdleStartTime,
-                  _id.c_str(), _randomWheelDelayMs);
-    }
-
 } // namespace devices

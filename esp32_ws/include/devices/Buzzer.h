@@ -115,9 +115,6 @@ namespace devices
         // RTOS task implementation
         void task() override;
 
-        // Plotting
-        void plotState() override;
-
     private:
         int _ledcChannel = -1; // LEDC channel assigned to this buzzer
         SemaphoreHandle_t _stateMutex; // Mutex for thread-safe state access

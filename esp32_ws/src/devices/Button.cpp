@@ -152,14 +152,6 @@ namespace devices
         doc["buttonType"] = buttonTypeToString(_config.buttonType);
     }
 
-    void Button::plotState()
-    {
-        MLOG_PLOT("%s_isPressed:%d,%s_input:%d,%s_isPressedChanged:%d", 
-                  _id.c_str(), _state.isPressed ? 1 : 0,
-                  _id.c_str(), _state.input,
-                  _id.c_str(), _state.isPressedChanged ? 1 : 0);
-    }
-
     bool Button::readIsButtonPressed()
     {
         if (_isSimulated)

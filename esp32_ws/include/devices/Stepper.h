@@ -130,7 +130,7 @@ namespace devices
         void task() override;
 
     private:
-        AccelStepper *_stepper = nullptr;
+        AccelStepper *_driver = nullptr;
         SemaphoreHandle_t _stateMutex;
 
         void initializeAccelStepper();

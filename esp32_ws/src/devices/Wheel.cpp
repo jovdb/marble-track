@@ -420,6 +420,22 @@ namespace devices
         }
     }
 
+    void Wheel::plotState()
+    {
+        // Convert state enum to numeric: 0=UNKNOWN, 1=CALIBRATING, 2=IDLE, 3=MOVING, 4=INIT, 5=ERROR
+        int stateNumeric = static_cast<int>(_state.state);
+        
+        MLOG_PLOT("%s_state:%d,%s_lastZeroPosition:%ld,%s_stepsInLastRevolution:%ld,%s_currentBreakpointIndex:%d,%s_targetBreakpointIndex:%d,%s_targetAngle:%.1f,%s_onError:%d,%s_breakpointChanged:%d", 
+                  _id.c_str(), stateNumeric,
+                  _id.c_str(), _state.lastZeroPosition,
+                  _id.c_str(), _state.stepsInLastRevolution,
+                  _id.c_str(), _state.currentBreakpointIndex,
+                  _id.c_str(), _state.targetBreakpointIndex,
+                  _id.c_str(), _state.targetAngle,
+                  _id.c_str(), _state.onError ? 1 : 0,
+                  _id.c_str(), _state.breakpointChanged ? 1 : 0);
+    }
+
     String Wheel::stateToString(WheelStateEnum state) const
     {
         switch (state)

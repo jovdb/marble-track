@@ -91,6 +91,9 @@ namespace devices
         // RTOS task implementation
         void task() override;
 
+        // Plotting
+        void plotState() override;
+
     private:
         /**
          * @brief Setup MCPWM for servo control

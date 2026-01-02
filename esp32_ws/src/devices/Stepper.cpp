@@ -266,6 +266,18 @@ namespace devices
         doc["invertEnable"] = _config.invertEnable;
     }
 
+    void Stepper::plotState()
+    {
+        if (xSemaphoreTake(_stateMutex, portMAX_DELAY) == pdTRUE)
+        {
+            MLOG_PLOT("%s_currentPosition:%ld,%s_targetPosition:%ld,%s_isMoving:%d", 
+                      _id.c_str(), _state.currentPosition,
+                      _id.c_str(), _state.targetPosition,
+                      _id.c_str(), _state.isMoving ? 1 : 0);
+            xSemaphoreGive(_stateMutex);
+        }
+    }
+
     void Stepper::task()
     {
         MLOG_DEBUG("%s: RTOS task started", toString().c_str());

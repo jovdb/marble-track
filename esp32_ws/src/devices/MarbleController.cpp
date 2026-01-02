@@ -210,7 +210,7 @@ namespace devices
         // Reset button timing state when not in LIFT_UP
         if (liftState.state != devices::LiftStateEnum::LIFT_UP)
         {
-            _waitingForLiftButtonRelease = false;
+            _isBallStillLoaded = false;
             _liftButtonPressStartTime = 0;
         }
 
@@ -278,15 +278,12 @@ namespace devices
             auto liftButtonState = _liftButton->getState();
             if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
-                playClickSound();
                 if (liftState.isLoaded)
                 {
+                    MLOG_INFO("NEW CODE");
                     // Loaded: start timing for unload duration
-                    if (!_waitingForLiftButtonRelease)
-                    {
-                        _liftButtonPressStartTime = millis();
-                        _waitingForLiftButtonRelease = true;
-                    }
+                    _liftButtonPressStartTime = millis();
+                    _isBallStillLoaded = true;
                 }
                 else
                 {
@@ -294,24 +291,24 @@ namespace devices
                     _lift->down();
                 }
             }
-            else if (_waitingForLiftButtonRelease && !liftButtonState.isPressed)
+            else if (_isBallStillLoaded && liftButtonState.isPressed)
             {
-                // Button released after timing for unload
+                // Button still pressed - check if we've reached the 500ms threshold
                 unsigned long pressDuration = millis() - _liftButtonPressStartTime;
-                float durationRatio = (pressDuration >= 500) ? 1.0f : 0.6f;
-                _lift->unloadBall(durationRatio);
-
                 if (pressDuration >= 500)
                 {
-                    _buzzer->tune("Power Up:d=32,o=5,b=300:c,c#,d#,e,f#,g#,a#,b"); // Play error tune
+                    // Long press: unload with full speed immediately
+                    _lift->unloadBall(1.0f);
+                    _buzzer->tune("Power Up:d=32,o=5,b=300:c,c#,d#,e,f#,g#,a#,b"); // Play power up tune
+                    _isBallStillLoaded = false;
                 }
-                else
-                {
-                    playClickSound();
-                }
-                // Reset timing state
-                _waitingForLiftButtonRelease = false;
-                _liftButtonPressStartTime = 0;
+            }
+            else if (_isBallStillLoaded && !liftButtonState.isPressed)
+            {
+                // Slow unload
+                _lift->unloadBall(0.5f);
+                playClickSound();
+                _isBallStillLoaded = false;
             }
             break;
         }

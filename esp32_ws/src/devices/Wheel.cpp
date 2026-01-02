@@ -141,31 +141,28 @@ namespace devices
         }
         case WheelStateEnum::INIT:
         {
-            // Check for zero sensor during init
-            if (_zeroSensor->hasMixin("state"))
-            {
-                long currentPosition = 0; // Would get from stepper
-                _state.lastZeroPosition = currentPosition;
 
-                // Move to first breakpoint
-                if (!_config.breakPoints.empty() && _config.stepsPerRevolution > 0)
-                {
-                    MLOG_INFO("%s: Zero point found, moving to first breakpoint", toString().c_str());
-                    _state.currentBreakpointIndex = -1;
-                    _state.targetBreakpointIndex = 0;
-                    _state.state = WheelStateEnum::MOVING;
-                    _state.targetAngle = _config.breakPoints[0];
-                    moveToAngle(_config.breakPoints[0]);
-                    notifyStateChanged();
-                }
-                else
-                {
-                    MLOG_INFO("%s: Zero point found, no breakpoints yet", toString().c_str());
-                    _state.state = WheelStateEnum::MOVING;
-                    // Stop movement
-                    stop();
-                    notifyStateChanged();
-                }
+            long currentPosition = 0; // Would get from stepper
+            _state.lastZeroPosition = currentPosition;
+
+            // Move to first breakpoint
+            if (!_config.breakPoints.empty() && _config.stepsPerRevolution > 0)
+            {
+                MLOG_INFO("%s: Zero point found, moving to first breakpoint", toString().c_str());
+                _state.currentBreakpointIndex = -1;
+                _state.targetBreakpointIndex = 0;
+                _state.state = WheelStateEnum::MOVING;
+                _state.targetAngle = _config.breakPoints[0];
+                moveToAngle(_config.breakPoints[0]);
+                notifyStateChanged();
+            }
+            else
+            {
+                MLOG_INFO("%s: Zero point found, no breakpoints yet", toString().c_str());
+                _state.state = WheelStateEnum::MOVING;
+                // Stop movement
+                stop();
+                notifyStateChanged();
             }
 
             // Check if init failed (no zero found)
@@ -175,27 +172,24 @@ namespace devices
         }
         case WheelStateEnum::CALIBRATING:
         {
-            // Check for zero sensor during calibration
-            if (_zeroSensor->hasMixin("state"))
+
+            if (_state.lastZeroPosition == 0)
             {
-                if (_state.lastZeroPosition == 0)
-                {
-                    MLOG_INFO("%s: Calibration: zero found, counting steps per revolution", toString().c_str());
-                    long currentPosition = 0; // Would get from stepper
-                    _state.lastZeroPosition = currentPosition;
-                }
-                else
-                {
-                    long currentPos = 0; // Would get from stepper
-                    _state.stepsInLastRevolution = currentPos - _state.lastZeroPosition;
-                    MLOG_INFO("%s: Calibration complete, steps per revolution: %d", toString().c_str(), _state.stepsInLastRevolution);
-                    _state.lastZeroPosition = currentPos;
+                MLOG_INFO("%s: Calibration: zero found, counting steps per revolution", toString().c_str());
+                long currentPosition = 0; // Would get from stepper
+                _state.lastZeroPosition = currentPosition;
+            }
+            else
+            {
+                long currentPos = 0; // Would get from stepper
+                _state.stepsInLastRevolution = currentPos - _state.lastZeroPosition;
+                MLOG_INFO("%s: Calibration complete, steps per revolution: %d", toString().c_str(), _state.stepsInLastRevolution);
+                _state.lastZeroPosition = currentPos;
 
-                    notifyStepsPerRevolution(_state.stepsInLastRevolution);
+                notifyStepsPerRevolution(_state.stepsInLastRevolution);
 
-                    _state.state = WheelStateEnum::MOVING;
-                    notifyStateChanged();
-                }
+                _state.state = WheelStateEnum::MOVING;
+                notifyStateChanged();
             }
 
             break;

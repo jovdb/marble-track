@@ -181,6 +181,8 @@ namespace devices
 
         // Log the operating mode
         MLOG_INFO("%s initialized in %s mode", toString().c_str(), isAutoMode ? "AUTO" : "MANUAL");
+
+        playStartupSound();
     }
 
     void MarbleController::loop()
@@ -495,14 +497,14 @@ namespace devices
 
     void MarbleController::playStartupSound()
     {
-        _buzzer->tune("Error:d=4,o=5,b=100:a,d,g"); // Play error tune
+        _buzzer->tune("Startup:d=4,o=6,b=1000:c,f,b#"); // Play error tune
     }
 
     void MarbleController::playErrorSound()
     {
 
         // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
-        _buzzer->tune("Error:d=4,o=4,b=100:a,d"); // Play error tune
+        _buzzer->tune("Error:d=3,o=4,b=100:a,d"); // Play error tune
     }
 
     void MarbleController::playClickSound()

@@ -21,43 +21,6 @@ AutoMode::AutoMode(DeviceManager &deviceManager) : deviceManager(deviceManager)
 
 void AutoMode::setup()
 {
-    // TODO: Re-enable when legacy devices are converted to composition devices
-    // _wheel = deviceManager.getDeviceByIdAs<devices::Wheel>("wheel");
-    // if (_wheel == nullptr)
-    // {
-    //     MLOG_ERROR("Required device 'wheel' not found!");
-    // }
-
-    // _buzzer = deviceManager.getDeviceByIdAs<devices::Buzzer>("buzzer");
-    // if (_buzzer == nullptr)
-    // {
-    //     MLOG_ERROR("Required device 'buzzer' not found!");
-    // }
-
-    // _wheelBtnLed = deviceManager.getDeviceByIdAs<devices::Led>("wheel-btn-led");
-    // if (_wheelBtnLed == nullptr)
-    // {
-    //     MLOG_ERROR("Required device 'wheel-btn-led' not found!");
-    // }
-
-    // _splitter = deviceManager.getDeviceByIdAs<devices::Wheel>("splitter");
-    // if (_splitter == nullptr)
-    // {
-    //     MLOG_ERROR("Required device 'splitter' not found!");
-    // }
-
-    // _splitterBtnLed = deviceManager.getDeviceByIdAs<devices::Led>("splitter-btn-led");
-    // if (_splitterBtnLed == nullptr)
-    // {
-    //     MLOG_ERROR("Required device 'splitter-btn-led' not found!");
-    // }
-
-    // _lift = deviceManager.getDeviceByIdAs<devices::Lift>("lift");
-    // if (_lift == nullptr)
-    // {
-    //     MLOG_ERROR("Required device 'lift' not found!");
-    // }
-
     MLOG_INFO("AutoMode setup complete (disabled - waiting for composition devices)");
 }
 

@@ -101,7 +101,7 @@ namespace devices
         _state.blinkDelay = delay;
 
         // Pin set by loop()
-        MLOG_INFO("%s: Blinking with delay=%lums, on=%lums, off=%lums (total cycle: %lums)", 
+        MLOG_INFO("%s: Blinking with delay=%lums, on=%lums, off=%lums (total cycle: %lums)",
                   toString().c_str(), delay, onTime, offTime, delay + onTime + offTime);
 
         // Notify subscribers
@@ -126,18 +126,14 @@ namespace devices
         // Calculate total blink cycle time (including delay)
         unsigned long cycle = _state.blinkDelay + _state.blinkOnTime + _state.blinkOffTime;
 
-        // Use modulo to find position in cycle (0 to cycle-1)
-        unsigned long position = millis() % cycle;
+        // Use modulo to find value in cycle (0 to cycle-1)
+        unsigned long value = millis() % cycle;
 
-        // Determine LED state based on position in cycle:
+        // Determine LED state based on value in cycle:
         // 0 to delay-1: OFF (delay period)
-        // delay to delay+onTime-1: ON (on period)  
+        // delay to delay+onTime-1: ON (on period)
         // delay+onTime to cycle-1: OFF (off period)
-        bool shouldBeOn = false;
-        if (position >= _state.blinkDelay && position < _state.blinkDelay + _state.blinkOnTime)
-        {
-            shouldBeOn = true;
-        }
+        bool shouldBeOn = (value >= _state.blinkDelay && value < _state.blinkDelay + _state.blinkOnTime);
 
         // Only update GPIO if state changed (check against current mode state)
         if ((shouldBeOn && _isPrevBlinkingOn != 1) || (!shouldBeOn && _isPrevBlinkingOn != 0))

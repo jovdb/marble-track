@@ -39,11 +39,11 @@ namespace devices
 
         initializeAccelStepper();
 
-        if (_stepper)
+        if (_driver)
         {
-            _stepper->setMaxSpeed(_config.maxSpeed);
-            _stepper->setAcceleration(_config.maxAcceleration);
-            _stepper->setCurrentPosition(0);
+            _driver->setMaxSpeed(_config.maxSpeed);
+            _driver->setAcceleration(_config.maxAcceleration);
+            _driver->setCurrentPosition(0);
 
             if (_config.enablePin >= 0)
             {
@@ -51,7 +51,19 @@ namespace devices
                 disableStepper();
             }
 
-            MLOG_INFO("%s: Setup complete for %s type", toString().c_str(), _config.stepperType.c_str());
+            // Log all pins used
+            std::vector<int> pins = getPins();
+            String pinStr = "";
+            if (!pins.empty())
+            {
+                for (size_t i = 0; i < pins.size(); i++)
+                {
+                    if (i > 0)
+                        pinStr += ", ";
+                    pinStr += String(pins[i]);
+                }
+            }
+            MLOG_INFO("%s: Setup complete on pins %s, type: %s", toString().c_str(), pinStr.c_str(), _config.stepperType.c_str());
 
             if (!startTask("StepperTask", 4096, 1, 1))
             {
@@ -156,7 +168,7 @@ namespace devices
         if (!ensureReady("setCurrentPosition"))
             return false;
 
-        _stepper->setCurrentPosition(position);
+        _driver->setCurrentPosition(position);
 
         xSemaphoreTake(_stateMutex, portMAX_DELAY);
         _state.currentPosition = position;
@@ -286,14 +298,15 @@ namespace devices
                 if (cmd.type == "move")
                 {
                     enableStepper();
-                    _stepper->setMaxSpeed(cmd.speed > 0 ? cmd.speed : _config.defaultSpeed);
-                    _stepper->setAcceleration(cmd.acceleration > 0 ? cmd.acceleration : _config.defaultAcceleration);
-                    _stepper->move(cmd.steps);
+                    _driver->setMaxSpeed(cmd.speed > 0 ? cmd.speed : _config.defaultSpeed);
+                    _driver->setAcceleration(cmd.acceleration > 0 ? cmd.acceleration : _config.defaultAcceleration);
+                    _driver->move(cmd.steps);
 
                     xSemaphoreTake(_stateMutex, portMAX_DELAY);
                     _state.isMoving = true;
                     _state.moveJustStarted = true;
-                    _state.targetPosition = _stepper->targetPosition();
+                    _state.currentPosition = _driver->currentPosition();
+                    _state.targetPosition = _driver->targetPosition();
                     xSemaphoreGive(_stateMutex);
 
                     MLOG_INFO("%s: Started moving %ld steps", toString().c_str(), cmd.steps);
@@ -302,13 +315,14 @@ namespace devices
                 else if (cmd.type == "moveTo")
                 {
                     enableStepper();
-                    _stepper->setMaxSpeed(cmd.speed > 0 ? cmd.speed : _config.defaultSpeed);
-                    _stepper->setAcceleration(cmd.acceleration > 0 ? cmd.acceleration : _config.defaultAcceleration);
-                    _stepper->moveTo(cmd.position);
+                    _driver->setMaxSpeed(cmd.speed > 0 ? cmd.speed : _config.defaultSpeed);
+                    _driver->setAcceleration(cmd.acceleration > 0 ? cmd.acceleration : _config.defaultAcceleration);
+                    _driver->moveTo(cmd.position);
 
                     xSemaphoreTake(_stateMutex, portMAX_DELAY);
                     _state.isMoving = true;
                     _state.moveJustStarted = true;
+                    _state.currentPosition = _driver->currentPosition();
                     _state.targetPosition = cmd.position;
                     xSemaphoreGive(_stateMutex);
 
@@ -317,8 +331,8 @@ namespace devices
                 }
                 else if (cmd.type == "stop")
                 {
-                    _stepper->setAcceleration(cmd.acceleration > 0 ? cmd.acceleration : _config.defaultAcceleration);
-                    _stepper->stop();
+                    _driver->setAcceleration(cmd.acceleration > 0 ? cmd.acceleration : _config.defaultAcceleration);
+                    _driver->stop();
                     // Don't set _state.isMoving = false here, let the run loop handle it
                 }
             }
@@ -328,7 +342,7 @@ namespace devices
             }
 
             // Run the stepper
-            if (_stepper)
+            if (_driver)
             {
                 xSemaphoreTake(_stateMutex, portMAX_DELAY);
                 bool wasMoving = _state.isMoving;
@@ -343,17 +357,17 @@ namespace devices
                 }
                 else
                 {
-                    bool isRunning = _stepper->run();
+                    bool isRunning = _driver->run();
 
                     xSemaphoreTake(_stateMutex, portMAX_DELAY);
                     _state.isMoving = isRunning;
-                    _state.currentPosition = _stepper->currentPosition();
+                    _state.currentPosition = _driver->currentPosition();
                     xSemaphoreGive(_stateMutex);
 
                     if (wasMoving && !isRunning)
                     {
                         disableStepper();
-                        MLOG_INFO("%s: Movement completed at position %ld", toString().c_str(), _stepper->currentPosition());
+                        MLOG_INFO("%s: Movement completed at position %ld", toString().c_str(), _driver->currentPosition());
                         notifyStateChanged();
                     }
                 }
@@ -367,24 +381,29 @@ namespace devices
 
         if (_config.stepperType == "DRIVER")
         {
-            _stepper = new AccelStepper(AccelStepper::DRIVER, _config.stepPin, _config.dirPin);
+            _driver = new AccelStepper(AccelStepper::DRIVER, _config.stepPin, _config.dirPin);
         }
         else if (_config.stepperType == "HALF4WIRE")
         {
-            _stepper = new AccelStepper(AccelStepper::HALF4WIRE, _config.pin1, _config.pin3, _config.pin2, _config.pin4);
+            _driver = new AccelStepper(AccelStepper::HALF4WIRE, _config.pin1, _config.pin3, _config.pin2, _config.pin4);
         }
         else if (_config.stepperType == "FULL4WIRE")
         {
-            _stepper = new AccelStepper(AccelStepper::FULL4WIRE, _config.pin1, _config.pin3, _config.pin2, _config.pin4);
+            _driver = new AccelStepper(AccelStepper::FULL4WIRE, _config.pin1, _config.pin3, _config.pin2, _config.pin4);
+        }
+        else
+        {
+            MLOG_ERROR("%s: Unknown stepper type: %s", toString().c_str(), _config.stepperType.c_str());
+            _driver = nullptr;
         }
     }
 
     void Stepper::cleanupAccelStepper()
     {
-        if (_stepper)
+        if (_driver)
         {
-            delete _stepper;
-            _stepper = nullptr;
+            delete _driver;
+            _driver = nullptr;
         }
     }
 
@@ -418,7 +437,7 @@ namespace devices
 
     bool Stepper::ensureReady(const char *action, bool logWarning) const
     {
-        if (!_stepper)
+        if (!_driver)
         {
             if (logWarning && action)
                 MLOG_WARN("%s: Stepper not initialized - cannot %s", toString().c_str(), action);

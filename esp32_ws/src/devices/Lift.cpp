@@ -185,7 +185,7 @@ namespace devices
             }
             break;
         case LiftStateEnum::MOVING_DOWN:
-            if (!_stepper->getState().isMoving && (millis() > _stepperStartTime + 100))
+            if (!_stepper->getState().isMoving && (millis() > _stepperStartTime + 10))
             {
                 setError(LiftErrorCode::LIFT_NO_ZERO, "limit switch not triggered when moving down");
                 return;
@@ -564,7 +564,6 @@ namespace devices
     bool Lift::moveStepper(long steps, float speedRatio)
     {
         _stepper->move(steps, _stepper->getConfig().defaultSpeed * speedRatio);
-
         _stepperStartTime = millis();
         return true;
     }
@@ -572,7 +571,6 @@ namespace devices
     bool Lift::moveStepperTo(long position, float speedRatio)
     {
         _stepper->moveTo(position, _stepper->getConfig().defaultSpeed * speedRatio);
-
         _stepperStartTime = millis();
         return true;
     }
@@ -631,11 +629,12 @@ namespace devices
             _state.initStep = 4;
             long steps = (_config.minSteps - _config.maxSteps) * DOWN_FACTOR;
             moveStepper(steps, 0.5);
+            nextInitStepTime = millis() + 100;
             break;
         }
         case 4:
         {
-            if (!_stepper->getState().isMoving && (millis() > nextInitStepTime + 100))
+            if (!_stepper->getState().isMoving)
             {
                 setError(LiftErrorCode::LIFT_NO_ZERO, "Initialization failed: limit switch not triggered");
                 return;
@@ -668,14 +667,20 @@ namespace devices
         }
         case 6:
         {
-            MLOG_DEBUG("%s: Init step 6: Moving possible loaded list up", toString().c_str());
+            MLOG_DEBUG("%s: Init step 6: Moving possible loaded lift up", toString().c_str());
             _state.initStep = 7;
-            _loader->setValue(100);
-            _stepper->moveTo(_config.maxSteps, _stepper->getConfig().defaultSpeed * 0.5f);
-            up();
+            moveStepperTo(_config.maxSteps, _stepper->getConfig().defaultSpeed * 0.5f);
+            nextInitStepTime = millis() + 10; // wait until move started
+            break;
         }
         case 7:
         {
+            // Wait until top reached
+            if (_stepper->getState().isMoving)
+            {
+                return; // Wait until move completed
+            }
+
             MLOG_DEBUG("%s: Init step 7: Unloading start", toString().c_str());
             _state.initStep = 8;
             _unloader->setValue(100);
@@ -695,12 +700,13 @@ namespace devices
             MLOG_DEBUG("%s: Init step 9: Moving back down until limit switch", toString().c_str());
             _state.initStep = 10;
             long steps = (_config.minSteps - _config.maxSteps) * DOWN_FACTOR;
-            _stepper->move(steps, _stepper->getConfig().defaultSpeed * 0.5f);
+            moveStepper(steps, _stepper->getConfig().defaultSpeed);
+            nextInitStepTime = millis() + 100;
             break;
         }
         case 10:
         {
-            if (!_stepper->getState().isMoving && (millis() > nextInitStepTime + 100))
+            if (!_stepper->getState().isMoving)
             {
                 setError(LiftErrorCode::LIFT_NO_ZERO, "Initialization failed: limit switch not triggered");
                 return; // Wait until next step time

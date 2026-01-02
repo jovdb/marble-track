@@ -11,9 +11,7 @@
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"
 #include "devices/mixins/SerializableMixin.h"
-#include "devices/mixins/RtosMixin.h"
 #include <AccelStepper.h>
-#include <freertos/semphr.h>
 
 namespace devices
 {
@@ -41,20 +39,6 @@ namespace devices
     };
 
     /**
-     * @struct MoveCommand
-     * @brief Inter-thread communication for move requests
-     */
-    struct MoveCommand
-    {
-        bool pending = false;
-        String type = ""; // "move", "moveTo", "stop"
-        long steps = 0;
-        long position = 0;
-        float speed = -1;
-        float acceleration = -1;
-    };
-
-    /**
      * @struct StepperState
      * @brief State structure for Stepper device
      */
@@ -63,8 +47,6 @@ namespace devices
         long currentPosition = 0;
         long targetPosition = 0;
         bool isMoving = false;
-        bool moveJustStarted = false;
-        MoveCommand moveCommand;
     };
 
     /**
@@ -75,8 +57,7 @@ namespace devices
                     public ConfigMixin<Stepper, StepperConfig>,
                     public StateMixin<Stepper, StepperState>,
                     public ControllableMixin<Stepper>,
-                    public SerializableMixin<Stepper>,
-                    public RtosMixin<Stepper>
+                    public SerializableMixin<Stepper>
     {
     public:
         explicit Stepper(const String &id);
@@ -126,12 +107,8 @@ namespace devices
         void jsonToConfig(const JsonDocument &config) override;
         void configToJson(JsonDocument &doc) override;
 
-        // RTOS task implementation
-        void task() override;
-
     private:
         AccelStepper *_driver = nullptr;
-        SemaphoreHandle_t _stateMutex;
 
         void initializeAccelStepper();
         void cleanupAccelStepper();

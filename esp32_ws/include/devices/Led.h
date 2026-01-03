@@ -49,6 +49,8 @@ namespace devices
     public:
         explicit Led(const String &id);
 
+        ~Led() override;
+
         void setup() override;
         void loop() override;
         std::vector<int> getPins() const override;
@@ -65,7 +67,7 @@ namespace devices
         void configToJson(JsonDocument &doc) override;
 
     private:
-        pins::GpioPin _pin;  // Pin abstraction for LED output
+        pins::IPin* _pin;  // Pin abstraction for LED output
     };
 
 } // namespace devices

@@ -13,24 +13,15 @@ GpioPin::GpioPin()
     {
     }
 
-    void GpioPin::setPinNumber(int pinNumber)
+    bool GpioPin::setup(int pinNumber, PinMode mode)
     {
-        if (_isSetup)
-        {
-            MLOG_WARN("GpioPin: Cannot change pin number after setup (was %d, tried %d)", _pinNumber, pinNumber);
-            return;
-        }
-        _pinNumber = pinNumber;
-    }
-
-    bool GpioPin::setup(PinMode mode)
-    {
-        if (_pinNumber < 0)
+        if (pinNumber < 0)
         {
             MLOG_WARN("GpioPin: Cannot setup unconfigured pin (pin = -1)");
             return false;
         }
 
+        _pinNumber = pinNumber;
         _mode = mode;
 
         // Convert our PinMode to Arduino pinMode

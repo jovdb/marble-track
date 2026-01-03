@@ -114,6 +114,36 @@ export const LiftIcon = (props: IconProps) => (
   </svg>
 );
 
+export const IoExpanderIcon = (props: IconProps) => (
+  <svg
+    width={props.width || 24}
+    height={props.height || 24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class={props.class}
+    style={props.style}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+    {/* IC chip body */}
+    <rect x="6" y="4" width="12" height="16" rx="1" />
+    {/* Left pins */}
+    <path d="M6 8h-3" />
+    <path d="M6 12h-3" />
+    <path d="M6 16h-3" />
+    {/* Right pins */}
+    <path d="M18 8h3" />
+    <path d="M18 12h3" />
+    <path d="M18 16h3" />
+    {/* Chip notch */}
+    <path d="M10 4v1a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-1" />
+  </svg>
+);
+
 export const ClipboardIcon = (props: IconProps) => (
   <img
     src={devicesIcon}
@@ -362,6 +392,8 @@ export const getDeviceIcon = (type: string, props?: IconProps) => {
       return <LiftIcon {...props} />;
     case "MARBLECONTROLLER":
       return <ClipboardIcon {...props} />;
+    case "IOEXPANDER":
+      return <IoExpanderIcon {...props} />;
     default:
       return null; // Default fallback
   }

@@ -159,29 +159,17 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
         <Show when={!isFourPin()}>
           <DeviceConfigRow>
             <DeviceConfigItem name="Step pin">
-              <PinSelect
-                value={stepPin()}
-                onChange={setStepPin}
-                excludeDeviceId={props.id}
-              />
+              <PinSelect value={stepPin()} onChange={setStepPin} excludeDeviceId={props.id} />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>
             <DeviceConfigItem name="Direction pin">
-              <PinSelect
-                value={dirPin()}
-                onChange={setDirPin}
-                excludeDeviceId={props.id}
-              />
+              <PinSelect value={dirPin()} onChange={setDirPin} excludeDeviceId={props.id} />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>
             <DeviceConfigItem name="Enable pin">
-              <PinSelect
-                value={enablePin()}
-                onChange={setEnablePin}
-                excludeDeviceId={props.id}
-              />
+              <PinSelect value={enablePin()} onChange={setEnablePin} excludeDeviceId={props.id} />
               <span
                 style={{ "margin-left": "0.5rem", "font-size": "0.8rem", color: "#666" }}
               ></span>
@@ -200,47 +188,27 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
         <Show when={isFourPin()}>
           <DeviceConfigRow>
             <DeviceConfigItem name="Pin 1">
-              <PinSelect
-                value={pin1()}
-                onChange={setPin1}
-                excludeDeviceId={props.id}
-              />
+              <PinSelect value={pin1()} onChange={setPin1} excludeDeviceId={props.id} />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>
             <DeviceConfigItem name="Pin 2">
-              <PinSelect
-                value={pin2()}
-                onChange={setPin2}
-                excludeDeviceId={props.id}
-              />
+              <PinSelect value={pin2()} onChange={setPin2} excludeDeviceId={props.id} />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>
             <DeviceConfigItem name="Pin 3">
-              <PinSelect
-                value={pin3()}
-                onChange={setPin3}
-                excludeDeviceId={props.id}
-              />
+              <PinSelect value={pin3()} onChange={setPin3} excludeDeviceId={props.id} />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>
             <DeviceConfigItem name="Pin 4">
-              <PinSelect
-                value={pin4()}
-                onChange={setPin4}
-                excludeDeviceId={props.id}
-              />
+              <PinSelect value={pin4()} onChange={setPin4} excludeDeviceId={props.id} />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>
             <DeviceConfigItem name="Enable pin">
-              <PinSelect
-                value={enablePin()}
-                onChange={setEnablePin}
-                excludeDeviceId={props.id}
-              />
+              <PinSelect value={enablePin()} onChange={setEnablePin} excludeDeviceId={props.id} />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>

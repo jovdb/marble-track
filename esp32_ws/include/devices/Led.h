@@ -11,6 +11,8 @@
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"
 #include "devices/mixins/SerializableMixin.h"
+#include "pins/IPin.h"
+#include "pins/GpioPin.h"
 
 namespace devices
 {
@@ -62,7 +64,9 @@ namespace devices
         void jsonToConfig(const JsonDocument &config) override;
         void configToJson(JsonDocument &doc) override;
 
-            };
+    private:
+        pins::GpioPin _pin;  // Pin abstraction for LED output
+    };
 
 } // namespace devices
 

@@ -65,10 +65,10 @@ namespace devices
         }
     }
 
-    std::vector<int> Led::getPins() const
+    std::vector<String> Led::getPins() const
     {
-        if (_config.pinConfig.pin >= 0)
-            return {_config.pinConfig.pin};
+        if (_pin != nullptr)
+            return {_pin->toString()};
         return {};
     }
 

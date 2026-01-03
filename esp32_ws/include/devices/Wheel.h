@@ -81,7 +81,7 @@ namespace devices
 
         void setup() override;
         void loop() override;
-        std::vector<int> getPins() const override;
+        std::vector<String> getPins() const override;
 
         /**
          * @brief Move the wheel by a specified number of steps

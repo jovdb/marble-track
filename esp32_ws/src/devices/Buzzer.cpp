@@ -72,13 +72,13 @@ namespace devices
         Device::loop();
     }
 
-    std::vector<int> Buzzer::getPins() const
+    std::vector<String> Buzzer::getPins() const
     {
         if (_config.pin == -1)
         {
             return {};
         }
-        return {_config.pin};
+        return {String(_config.pin)};
     }
 
     bool Buzzer::tone(int frequency, int duration)

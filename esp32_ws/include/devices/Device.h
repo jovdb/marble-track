@@ -56,7 +56,7 @@ public:
     }
 
     // Pins (for collision detection)
-    virtual std::vector<int> getPins() const { return {}; }
+    virtual std::vector<String> getPins() const { return {}; }
 
     // Mixin detection
     bool hasMixin(const String &mixinName) const;

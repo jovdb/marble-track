@@ -64,7 +64,7 @@ namespace devices
 
         void setup() override;
         void loop() override;
-        std::vector<int> getPins() const override;
+        std::vector<String> getPins() const override;
 
         /**
          * @brief Set servo position with optional animation

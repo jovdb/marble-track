@@ -107,9 +107,9 @@ void WebSocketManager::serializeDeviceToJson(Device *device, JsonObject deviceOb
     deviceObj["type"] = device->getType();
 
     // Add pins array
-    std::vector<int> pins = device->getPins();
+    std::vector<String> pins = device->getPins();
     JsonArray pinsArr = deviceObj["pins"].to<JsonArray>();
-    for (int pin : pins)
+    for (String pin : pins)
     {
         pinsArr.add(pin);
     }

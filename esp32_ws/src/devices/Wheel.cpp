@@ -199,10 +199,10 @@ namespace devices
         }
     }
 
-    std::vector<int> Wheel::getPins() const
+    std::vector<String> Wheel::getPins() const
     {
         // Collect pins from all children
-        std::vector<int> allPins;
+        std::vector<String> allPins;
         for (auto child : getChildren())
         {
             auto childPins = child->getPins();

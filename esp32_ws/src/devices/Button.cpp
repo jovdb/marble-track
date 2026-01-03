@@ -82,10 +82,12 @@ namespace devices
         }
     }
 
-    std::vector<int> Button::getPins() const
+    std::vector<String> Button::getPins() const
     {
         if (_config.pin >= 0)
-            return {_config.pin};
+        {
+            return {String(_config.pin)};
+        }
         return {};
     }
 

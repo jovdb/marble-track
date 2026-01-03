@@ -90,29 +90,7 @@ GpioPin::GpioPin()
 
     String GpioPin::toString() const
     {
-        if (_pinNumber < 0)
-        {
-            return "GPIO:unconfigured";
-        }
-
-        String modeStr;
-        switch (_mode)
-        {
-        case PinMode::Input:
-            modeStr = "INPUT";
-            break;
-        case PinMode::InputPullUp:
-            modeStr = "INPUT_PULLUP";
-            break;
-        case PinMode::InputPullDown:
-            modeStr = "INPUT_PULLDOWN";
-            break;
-        case PinMode::Output:
-            modeStr = "OUTPUT";
-            break;
-        }
-
-        return "GPIO:" + String(_pinNumber) + "(" + modeStr + ")";
+        return String(_pinNumber);
     }
 
 } // namespace pins

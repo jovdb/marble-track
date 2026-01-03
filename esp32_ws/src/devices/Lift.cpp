@@ -134,8 +134,16 @@ namespace devices
         // TODO in semaphore?
         // TODO: stack of errors?
 
-        bool changed = (_state.isBallWaiting != ballWaiting);
-        _state.isBallWaiting = ballWaiting;
+        bool wasWaiting = (_state.ballWaitingSince > 0);
+        bool changed = (wasWaiting != ballWaiting);
+        
+        if (ballWaiting && !wasWaiting) {
+            // Ball started waiting - record timestamp
+            _state.ballWaitingSince = millis();
+        } else if (!ballWaiting && wasWaiting) {
+            // Ball stopped waiting - reset timestamp
+            _state.ballWaitingSince = 0;
+        }
 
         if (changed)
         {
@@ -362,7 +370,7 @@ namespace devices
 
     bool Lift::isBallWaiting() const
     {
-        return _state.isBallWaiting;
+        return _state.ballWaitingSince > 0;
     }
 
     bool Lift::isLoaded() const
@@ -378,7 +386,7 @@ namespace devices
     void Lift::addStateToJson(JsonDocument &doc)
     {
         doc["state"] = stateToString(_state.state);
-        doc["isBallWaiting"] = _state.isBallWaiting;
+        doc["ballWaitingSince"] = _state.ballWaitingSince;
         doc["isLoaded"] = _state.isLoaded;
         // Only include currentPosition when stepper is not moving to avoid constant notifications
         if (_state.state != LiftStateEnum::MOVING_UP && _state.state != LiftStateEnum::MOVING_DOWN)

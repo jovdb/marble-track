@@ -25,7 +25,7 @@ namespace devices
         auto liftConfig = _lift->getConfig();
         liftConfig.name = "Lift";
         liftConfig.minSteps = 0;
-        liftConfig.maxSteps = 1500;
+        liftConfig.maxSteps = 2242;
         _lift->setConfig(liftConfig);
         addChild(_lift);
 
@@ -34,6 +34,12 @@ namespace devices
         if (liftStepper)
         {
             auto liftStepperConfig = liftStepper->getConfig();
+            liftStepperConfig.name = "lift-stepper";
+            liftStepperConfig.stepperType = "DRIVER";
+            liftStepperConfig.maxSpeed = 4000;
+            liftStepperConfig.maxAcceleration = 1000;
+            liftStepperConfig.defaultSpeed = 400;
+            liftStepperConfig.defaultAcceleration = 50;
             liftStepperConfig.stepPin = 1;
             liftStepperConfig.dirPin = 2;
             liftStepperConfig.enablePin = 42;
@@ -69,7 +75,7 @@ namespace devices
             liftLoaderConfig.resolutionBits = 10;
             liftLoaderConfig.minDutyCycle = 9.5f;
             liftLoaderConfig.maxDutyCycle = 5.5f;
-            liftLoaderConfig.defaultDurationInMs = 200;
+            liftLoaderConfig.defaultDurationInMs = 400;
             liftLoader->setConfig(liftLoaderConfig);
         }
 
@@ -81,9 +87,9 @@ namespace devices
             liftUnloaderConfig.mcpwmChannel = -1;
             liftUnloaderConfig.frequency = 50;
             liftUnloaderConfig.resolutionBits = 10;
-            liftUnloaderConfig.minDutyCycle = 12.2f;
-            liftUnloaderConfig.maxDutyCycle = 4.0f;
-            liftUnloaderConfig.defaultDurationInMs = 1200;
+            liftUnloaderConfig.minDutyCycle = 12.5f;
+            liftUnloaderConfig.maxDutyCycle = 3.0f;
+            liftUnloaderConfig.defaultDurationInMs = 700;
             liftUnloader->setConfig(liftUnloaderConfig);
         }
 
@@ -91,6 +97,7 @@ namespace devices
         auto liftLedConfig = _liftLed->getConfig();
         liftLedConfig.name = "Lift Led";
         liftLedConfig.pin = 45;
+        liftLedConfig.initialState = "OFF";
         _liftLed->setConfig(liftLedConfig);
         addChild(_liftLed);
 
@@ -99,6 +106,8 @@ namespace devices
         liftButtonConfig.name = "Lift Button";
         liftButtonConfig.pin = 48;
         liftButtonConfig.pinMode = PinModeOption::PullUp;
+        liftButtonConfig.debounceTimeInMs = 50;
+        liftButtonConfig.buttonType = ButtonType::NormalOpen;
         _liftButton->setConfig(liftButtonConfig);
         addChild(_liftButton);
 
@@ -107,6 +116,8 @@ namespace devices
         manualButtonConfig.name = "Manual Mode Button";
         manualButtonConfig.pin = 12;
         manualButtonConfig.pinMode = PinModeOption::PullUp;
+        manualButtonConfig.debounceTimeInMs = 50;
+        manualButtonConfig.buttonType = ButtonType::NormalOpen;
         _manualButton->setConfig(manualButtonConfig);
         addChild(_manualButton);
 
@@ -147,6 +158,8 @@ namespace devices
             wheelSensorConfig.name = "Wheel Zero Sensor";
             wheelSensorConfig.pin = 7;
             wheelSensorConfig.pinMode = PinModeOption::PullUp;
+            wheelSensorConfig.debounceTimeInMs = 50;
+            wheelSensorConfig.buttonType = ButtonType::NormalOpen;
             wheelSensor->setConfig(wheelSensorConfig);
         }
 

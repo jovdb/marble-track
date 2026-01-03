@@ -14,7 +14,7 @@ export interface ILiftState extends IDeviceState {
     | "MovingUp"
     | "MovingDown";
   currentPosition?: number;
-  isBallWaiting: boolean;
+  ballWaitingSince?: number;
   isLoaded: boolean;
   initStep: number;
   onErrorChange: boolean;

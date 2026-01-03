@@ -66,7 +66,7 @@ namespace devices
     struct LiftState
     {
         LiftStateEnum state = LiftStateEnum::UNKNOWN;  // Current lift state
-        bool isBallWaiting = false;                    // Whether ball is waiting to be loaded
+        unsigned long ballWaitingSince = 0;            // Timestamp when ball started waiting (0 = not waiting)
         bool isLoaded = false;                         // Whether lift has a ball loaded
         int initStep = 0;                              // Current initialization step
         bool onErrorChange = false;                    // Error flag

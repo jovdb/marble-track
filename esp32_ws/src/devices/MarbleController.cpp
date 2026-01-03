@@ -363,7 +363,7 @@ namespace devices
                 _lift->up();
                 _autoLiftDelayStart = 0; // Reset delay timer
             }
-            else if (liftState.isBallWaiting)
+            else if (liftState.ballWaitingSince > 0)
             {
                 // Not loaded: load a ball
                 _lift->loadBall();

@@ -45,7 +45,7 @@ export function createDevicesStore({
           setStore(
             produce((draft) => {
               const { devices } = message;
-              
+
               // Helper function to recursively collect all device IDs from nested structure
               const collectAllDeviceIds = (deviceList: DeviceInfo[]): string[] => {
                 const ids: string[] = [];
@@ -56,9 +56,9 @@ export function createDevicesStore({
                 deviceList.forEach(processDevice);
                 return ids;
               };
-              
+
               const allDeviceIds = collectAllDeviceIds(devices);
-              
+
               // Remove unknown devices
               Object.keys(draft.devices).forEach((key) => {
                 if (!allDeviceIds.includes(key)) {
@@ -74,7 +74,8 @@ export function createDevicesStore({
                   deviceDraft.type = device.type;
                   deviceDraft.pins = device.pins;
                   deviceDraft.features = device.features;
-                  deviceDraft.children = device.children?.map(child => ({ id: child.id, type: child.type })) || [];
+                  deviceDraft.children =
+                    device.children?.map((child) => ({ id: child.id, type: child.type })) || [];
                 } else {
                   // Add device
                   draft.devices[device.id] = {
@@ -84,7 +85,8 @@ export function createDevicesStore({
                     features: device.features,
                     state: undefined,
                     config: undefined,
-                    children: device.children?.map(child => ({ id: child.id, type: child.type })) || [],
+                    children:
+                      device.children?.map((child) => ({ id: child.id, type: child.type })) || [],
                   };
                 }
 

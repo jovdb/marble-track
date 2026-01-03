@@ -13,6 +13,7 @@
 #include "devices/Wheel.h"
 #include "devices/Lift.h"
 #include "devices/MarbleController.h"
+#include "devices/IoExpander.h"
 #include "devices/mixins/SerializableMixin.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
@@ -56,8 +57,12 @@ Device *DeviceManager::createDevice(const String &deviceId, const String &device
     {
         return new devices::MarbleController(deviceId);
     }
+    else if (upperType == "IOEXPANDER")
+    {
+        return new devices::IoExpander(deviceId);
+    }
 
-    MLOG_WARN("Unknown device type: %s", deviceType.c_str());
+    MLOG_WARN("Unknown device type: %s", upperType.c_str());
     return nullptr;
 }
 

@@ -3,6 +3,7 @@ export type DeviceType =
   | "button"
   | "buzzer"
   | "gate"
+  | "ioexpander"
   | "led"
   | "lift"
   | "marblecontroller"

@@ -25,7 +25,7 @@ export function Lift(props: { id: string }) {
   createEffect(() => {
     const anim = animationStart();
     if (anim) {
-      const speedScaleFactor = 0.6 ; // Try to more correct to reality
+      const speedScaleFactor = 0.6; // Try to more correct to reality
       const distance = Math.abs(anim.targetPos - anim.startPos);
       const stepper = stepperDevice;
       const speed =

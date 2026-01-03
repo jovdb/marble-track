@@ -6,6 +6,7 @@ import { logger } from "../stores/logger";
 import { Button } from "./devices/Button";
 import { Buzzer } from "./devices/Buzzer";
 import { Gate } from "./devices/Gate";
+import { IoExpander } from "./devices/IoExpander";
 import { Servo } from "./devices/Servo";
 import { Stepper } from "./devices/Stepper";
 import { Wheel } from "./devices/Wheel";
@@ -66,6 +67,8 @@ export function renderDeviceComponent(device: {
       return <Stepper id={device.id} />;
     case "gate":
       return <Gate id={device.id} />;
+    case "ioexpander":
+      return <IoExpander id={device.id} />;
     case "wheel":
       return <Wheel id={device.id} />;
     case "servo":

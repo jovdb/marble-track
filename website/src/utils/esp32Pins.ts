@@ -8,7 +8,7 @@
 // Available GPIO pins for device configuration (0-49, excluding 35, 36, 37)
 export const ESP32_AVAILABLE_PINS = [
   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
-  27, 28, 29, 30, 31, 32, 33, 34, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49
+  27, 28, 29, 30, 31, 32, 33, 34, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
 ];
 
 // Reserved pins that should not be available for user configuration
@@ -28,7 +28,10 @@ export function isPinReserved(pin: number): boolean {
 }
 
 // Helper function to get all used pins from devices, excluding a specific device
-export function getUsedPins(devices: Record<string, any>, excludeDeviceId?: string): Map<number, string> {
+export function getUsedPins(
+  devices: Record<string, any>,
+  excludeDeviceId?: string
+): Map<number, string> {
   const usedPins = new Map<number, string>();
 
   Object.entries(devices).forEach(([deviceId, device]) => {

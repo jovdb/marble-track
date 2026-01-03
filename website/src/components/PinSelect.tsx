@@ -32,7 +32,8 @@ export default function PinSelect(props: PinSelectProps) {
           const deviceId = getPinUsage(pinNum);
           return (
             <option value={pinNum}>
-              {pinNum}{deviceId ? ` (used by '${deviceId}')` : ""}
+              {pinNum}
+              {deviceId ? ` (used by '${deviceId}')` : ""}
             </option>
           );
         }}

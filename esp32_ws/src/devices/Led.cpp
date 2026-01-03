@@ -12,8 +12,17 @@ namespace devices
     static bool _isPrevBlinkingOn = false;
 
     Led::Led(const String &id)
-        : Device(id, "led"), _pin()
+        : Device(id, "led"), _pin(nullptr)
     {
+    }
+
+    Led::~Led()
+    {
+        if (_pin != nullptr)
+        {
+            delete _pin;
+            _pin = nullptr;
+        }
     }
 
     void Led::setup()
@@ -29,14 +38,14 @@ namespace devices
             return;
         }
 
-        // Configure and setup the pin using the abstraction
-        _pin.setPinNumber(_config.pin);
-        if (!_pin.setup(pins::PinMode::Output))
+        // Create and configure the pin using the abstraction
+        _pin = new pins::GpioPin();
+        if (!_pin->setup(_config.pin, pins::PinMode::Output))
         {
             MLOG_ERROR("%s: Failed to setup pin %d", toString().c_str(), _config.pin);
             return;
         }
-        MLOG_INFO("%s: Setup on %s", toString().c_str(), _pin.toString().c_str());
+        MLOG_INFO("%s: Setup on %s", toString().c_str(), _pin->toString().c_str());
 
         // Apply initial state
         if (_config.initialState == "ON")
@@ -62,7 +71,7 @@ namespace devices
 
     bool Led::set(bool value)
     {
-        if (!_pin.isConfigured())
+        if (!_pin->isConfigured())
         {
             MLOG_WARN("%s: Pin not configured", toString().c_str());
             return false;
@@ -77,7 +86,7 @@ namespace devices
         // Update state
         _state.mode = value ? "ON" : "OFF";
 
-        _pin.write(value ? HIGH : LOW);
+        _pin->write(value ? HIGH : LOW);
         MLOG_INFO("%s: Set to %s", toString().c_str(), value ? "ON" : "OFF");
 
         // Notify subscribers
@@ -88,7 +97,7 @@ namespace devices
 
     bool Led::blink(unsigned long onTime, unsigned long offTime, unsigned long delay)
     {
-        if (!_pin.isConfigured())
+        if (!_pin->isConfigured())
         {
             MLOG_WARN("%s: Pin not configured", toString().c_str());
             return false;
@@ -123,7 +132,7 @@ namespace devices
         // -1: UnSet, 0: OFF: 1: ON
         static int _isPrevBlinkingOn = -1;
 
-        if (!_pin.isConfigured() || _state.mode != "BLINKING")
+        if (!_pin->isConfigured() || _state.mode != "BLINKING")
         {
             _isPrevBlinkingOn = -1;
             return;
@@ -145,7 +154,7 @@ namespace devices
         if ((shouldBeOn && _isPrevBlinkingOn != 1) || (!shouldBeOn && _isPrevBlinkingOn != 0))
         {
             _isPrevBlinkingOn = shouldBeOn ? 1 : 0;
-            _pin.write(shouldBeOn ? HIGH : LOW);
+            _pin->write(shouldBeOn ? HIGH : LOW);
         }
     }
 

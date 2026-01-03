@@ -42,11 +42,12 @@ namespace pins
         virtual ~IPin() = default;
 
         /**
-         * @brief Setup the pin with the specified mode
+         * @brief Setup the pin with the specified pin number and mode
+         * @param pinNumber The GPIO pin number
          * @param mode The pin mode (Input, InputPullUp, InputPullDown, Output)
          * @return true if setup was successful
          */
-        virtual bool setup(PinMode mode) = 0;
+        virtual bool setup(int pinNumber, PinMode mode) = 0;
 
         /**
          * @brief Read the current state of the pin

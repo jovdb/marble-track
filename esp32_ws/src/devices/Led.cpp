@@ -38,11 +38,31 @@ namespace devices
             return;
         }
 
-        // Create and configure the pin using the abstraction
-        _pin = new pins::GpioPin();
+        // Create the appropriate pin type based on configuration
+        switch (_config.pinType)
+        {
+        case LedPinType::GPIO:
+            _pin = new pins::GpioPin();
+            break;
+        case LedPinType::I2C_PCF8574:
+            _pin = new pins::I2cExpanderPin(pins::I2cExpanderType::PCF8574, _config.i2cAddress);
+            break;
+        case LedPinType::I2C_PCF8575:
+            _pin = new pins::I2cExpanderPin(pins::I2cExpanderType::PCF8575, _config.i2cAddress);
+            break;
+        case LedPinType::I2C_MCP23017:
+            _pin = new pins::I2cExpanderPin(pins::I2cExpanderType::MCP23017, _config.i2cAddress);
+            break;
+        default:
+            _pin = new pins::GpioPin();
+            break;
+        }
+
         if (!_pin->setup(_config.pin, pins::PinMode::Output))
         {
             MLOG_ERROR("%s: Failed to setup pin %d", toString().c_str(), _config.pin);
+            delete _pin;
+            _pin = nullptr;
             return;
         }
         MLOG_INFO("%s: Setup on %s", toString().c_str(), _pin->toString().c_str());
@@ -217,6 +237,30 @@ namespace devices
         {
             _config.initialState = config["initialState"].as<String>();
         }
+        if (config["pinType"].is<String>())
+        {
+            String pinTypeStr = config["pinType"].as<String>();
+            if (pinTypeStr == "GPIO" || pinTypeStr == "gpio")
+            {
+                _config.pinType = LedPinType::GPIO;
+            }
+            else if (pinTypeStr == "PCF8574" || pinTypeStr == "pcf8574")
+            {
+                _config.pinType = LedPinType::I2C_PCF8574;
+            }
+            else if (pinTypeStr == "PCF8575" || pinTypeStr == "pcf8575")
+            {
+                _config.pinType = LedPinType::I2C_PCF8575;
+            }
+            else if (pinTypeStr == "MCP23017" || pinTypeStr == "mcp23017")
+            {
+                _config.pinType = LedPinType::I2C_MCP23017;
+            }
+        }
+        if (config["i2cAddress"].is<int>())
+        {
+            _config.i2cAddress = config["i2cAddress"].as<uint8_t>();
+        }
     }
 
     void Led::configToJson(JsonDocument &doc)
@@ -224,6 +268,26 @@ namespace devices
         doc["pin"] = _config.pin;
         doc["name"] = _config.name;
         doc["initialState"] = _config.initialState;
+        
+        // Serialize pin type
+        switch (_config.pinType)
+        {
+        case LedPinType::GPIO:
+            doc["pinType"] = "GPIO";
+            break;
+        case LedPinType::I2C_PCF8574:
+            doc["pinType"] = "PCF8574";
+            doc["i2cAddress"] = _config.i2cAddress;
+            break;
+        case LedPinType::I2C_PCF8575:
+            doc["pinType"] = "PCF8575";
+            doc["i2cAddress"] = _config.i2cAddress;
+            break;
+        case LedPinType::I2C_MCP23017:
+            doc["pinType"] = "MCP23017";
+            doc["i2cAddress"] = _config.i2cAddress;
+            break;
+        }
     }
 
 } // namespace devices

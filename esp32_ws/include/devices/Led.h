@@ -12,8 +12,7 @@
 #include "devices/mixins/ControllableMixin.h"
 #include "devices/mixins/SerializableMixin.h"
 #include "pins/IPin.h"
-#include "pins/GpioPin.h"
-#include "pins/I2cExpanderPin.h"
+#include "pins/Pins.h"
 
 namespace devices
 {
@@ -23,29 +22,14 @@ namespace devices
      * @brief Configuration for LED device
      */
     /**
-     * @brief Pin source type for LED
-     */
-    enum class LedPinType
-    {
-        GPIO,       // Native ESP32 GPIO pin
-        I2C_PCF8574,  // PCF8574 I2C expander
-        I2C_PCF8575,  // PCF8575 I2C expander
-        I2C_MCP23017  // MCP23017 I2C expander
-    };
-
-    /**
      * @struct LedConfig
      * @brief Configuration for LED device
      */
     struct LedConfig
     {
-        int pin = -1;                    // GPIO or expander pin number (-1 = not configured)
+        PinConfig pinConfig;             // Pin configuration (type, address, pin number)
         String name = "Led";             // Device name
         String initialState = "OFF";     // Initial state: OFF, ON, or BLINKING
-        
-        // I2C expander settings (only used when pinType != GPIO)
-        LedPinType pinType = LedPinType::GPIO;  // Pin source type
-        uint8_t i2cAddress = 0x20;              // I2C address for expander (default 0x20)
     };
 
     /**

@@ -96,7 +96,7 @@ namespace devices
         _liftLed = new devices::Led("lift-led");
         auto liftLedConfig = _liftLed->getConfig();
         liftLedConfig.name = "Lift Led";
-        liftLedConfig.pin = 45;
+        liftLedConfig.pinConfig.pin = 45;
         liftLedConfig.initialState = "OFF";
         _liftLed->setConfig(liftLedConfig);
         addChild(_liftLed);
@@ -167,7 +167,7 @@ namespace devices
         _wheelBtnLed = new devices::Led("wheel-btn-led");
         auto wheelBtnLedConfig = _wheelBtnLed->getConfig();
         wheelBtnLedConfig.name = "";
-        wheelBtnLedConfig.pin = 15;
+        wheelBtnLedConfig.pinConfig.pin = 15;
         wheelBtnLedConfig.initialState = "OFF";
         _wheelBtnLed->setConfig(wheelBtnLedConfig);
         addChild(_wheelBtnLed);

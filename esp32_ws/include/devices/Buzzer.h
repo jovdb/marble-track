@@ -81,7 +81,7 @@ namespace devices
 
         void setup() override;
         void loop() override;
-        std::vector<int> getPins() const override;
+        std::vector<String> getPins() const override;
 
         /**
          * @brief Play a tone with specified frequency and duration

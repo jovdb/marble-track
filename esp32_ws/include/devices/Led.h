@@ -57,7 +57,7 @@ namespace devices
 
         void setup() override;
         void loop() override;
-        std::vector<int> getPins() const override;
+        std::vector<String> getPins() const override;
 
         bool set(bool value);
         bool blink(unsigned long onTime = 500, unsigned long offTime = 500, unsigned long delay = 0);

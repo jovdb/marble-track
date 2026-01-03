@@ -78,7 +78,7 @@ namespace devices
 
         void setup() override;
         void loop() override;
-        std::vector<int> getPins() const override;
+        std::vector<String> getPins() const override;
 
         /**
          * @brief Get the current pressed state of the button

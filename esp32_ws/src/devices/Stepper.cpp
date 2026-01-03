@@ -52,7 +52,7 @@ namespace devices
             }
 
             // Log all pins used
-            std::vector<int> pins = getPins();
+            std::vector<String> pins = getPins();
             String pinStr = "";
             if (!pins.empty())
             {
@@ -60,7 +60,7 @@ namespace devices
                 {
                     if (i > 0)
                         pinStr += ", ";
-                    pinStr += String(pins[i]);
+                    pinStr += pins[i];
                 }
             }
             MLOG_INFO("%s: Setup complete on pins %s, type: %s", toString().c_str(), pinStr.c_str(), _config.stepperType.c_str());
@@ -81,29 +81,29 @@ namespace devices
         Device::loop();
     }
 
-    std::vector<int> Stepper::getPins() const
+    std::vector<String> Stepper::getPins() const
     {
-        std::vector<int> pins;
+        std::vector<String> pins;
         if (_config.stepperType == "DRIVER")
         {
             if (_config.stepPin >= 0)
-                pins.push_back(_config.stepPin);
+                pins.push_back(String(_config.stepPin));
             if (_config.dirPin >= 0)
-                pins.push_back(_config.dirPin);
+                pins.push_back(String(_config.dirPin));
         }
         else if (_config.stepperType == "HALF4WIRE" || _config.stepperType == "FULL4WIRE")
         {
             if (_config.pin1 >= 0)
-                pins.push_back(_config.pin1);
+                pins.push_back(String(_config.pin1));
             if (_config.pin2 >= 0)
-                pins.push_back(_config.pin2);
+                pins.push_back(String(_config.pin2));
             if (_config.pin3 >= 0)
-                pins.push_back(_config.pin3);
+                pins.push_back(String(_config.pin3));
             if (_config.pin4 >= 0)
-                pins.push_back(_config.pin4);
+                pins.push_back(String(_config.pin4));
         }
         if (_config.enablePin >= 0)
-            pins.push_back(_config.enablePin);
+            pins.push_back(String(_config.enablePin));
         return pins;
     }
 

@@ -68,13 +68,13 @@ namespace devices
         Device::loop();
     }
 
-    std::vector<int> Servo::getPins() const
+    std::vector<String> Servo::getPins() const
     {
         if (_config.pin == -1)
         {
             return {};
         }
-        return {_config.pin};
+        return {String(_config.pin)};
     }
 
     bool Servo::setValue(float value, int durationMs)

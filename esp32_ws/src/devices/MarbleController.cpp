@@ -203,9 +203,43 @@ namespace devices
 
     void MarbleController::loopManualLift()
     {
-        // Lift control logic
 
         auto liftState = _lift->getState();
+
+        // LED
+        switch (liftState.state)
+        {
+        case devices::LiftStateEnum::ERROR:
+        {
+            _liftLed->set(false);
+            break;
+        }
+        case devices::LiftStateEnum::INIT:
+        {
+            _liftLed->blink(240, 240);
+            break;
+        }
+        case devices::LiftStateEnum::LIFT_DOWN_LOADING:
+        case devices::LiftStateEnum::LIFT_UP_UNLOADING:
+        case devices::LiftStateEnum::MOVING_UP:
+        case devices::LiftStateEnum::MOVING_DOWN:
+            _liftLed->blink(480, 480);
+            break;
+        case devices::LiftStateEnum::UNKNOWN:
+        case devices::LiftStateEnum::LIFT_DOWN:
+        case devices::LiftStateEnum::LIFT_UP:
+        {
+            if (liftState.ballWaitingSince > 0 && liftState.ballWaitingSince + 60000 < millis())
+            {
+                _liftLed->blink(360, 120); // Needs attention
+            }
+            else
+            {
+                _liftLed->set(true);
+            }
+            break;
+        }
+        }
 
         // Reset button timing state when not in LIFT_UP
         if (liftState.state != devices::LiftStateEnum::LIFT_UP)
@@ -214,13 +248,12 @@ namespace devices
             _liftButtonPressStartTime = 0;
         }
 
+        // Lift Logic
         switch (liftState.state)
         {
         case devices::LiftStateEnum::UNKNOWN:
         {
             // Init will start at press
-            _liftLed->set(true);
-
             auto liftButtonState = _liftButton->getState();
             if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
@@ -232,7 +265,6 @@ namespace devices
 
         case devices::LiftStateEnum::ERROR:
             // Handle error state - maybe blink LED faster
-            _liftLed->set(false);
 
             // Play sound for new errors
             if (liftState.onErrorChange)
@@ -243,19 +275,15 @@ namespace devices
 
         // BUSY
         case devices::LiftStateEnum::INIT:
-            _liftLed->blink(100, 100);
-            break;
         case devices::LiftStateEnum::LIFT_DOWN_LOADING:
         case devices::LiftStateEnum::LIFT_UP_UNLOADING:
         case devices::LiftStateEnum::MOVING_UP:
         case devices::LiftStateEnum::MOVING_DOWN: // Loading in progress
-            // blink 960
-            _liftLed->blink(480, 480);
+            // Busy, no new actions can be started
             break;
 
         case devices::LiftStateEnum::LIFT_DOWN:
         {
-            _liftLed->set(true);
             auto liftButtonState = _liftButton->getState();
             if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
@@ -269,18 +297,17 @@ namespace devices
                     _lift->loadBall();
                 }
             }
+
             break;
         }
 
         case devices::LiftStateEnum::LIFT_UP:
         {
-            _liftLed->set(true);
             auto liftButtonState = _liftButton->getState();
             if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
                 if (liftState.isLoaded)
                 {
-                    MLOG_INFO("NEW CODE");
                     // Loaded: start timing for unload duration
                     _liftButtonPressStartTime = millis();
                     _isBallStillLoaded = true;

@@ -16,16 +16,18 @@ export default function IoExpanderConfig(props: IoExpanderConfigProps) {
   const [device] = useDevice(props.id);
   const [, { sendMessage }] = useWebSocket2();
 
-  const [name, setName] = createSignal(device()?.config?.name ?? "IO Expander");
+  const [name, setName] = createSignal<string>((device?.config?.name as string) ?? "IO Expander");
   const [expanderType, setExpanderType] = createSignal<ExpanderType>(
-    (device()?.config?.expanderType as ExpanderType) ?? "PCF8574"
+    (device?.config?.expanderType as ExpanderType) ?? "PCF8574"
   );
-  const [i2cAddress, setI2cAddress] = createSignal(device()?.config?.i2cAddress ?? 0x20);
-  const [sdaPin, setSdaPin] = createSignal(device()?.config?.sdaPin ?? 21);
-  const [sclPin, setSclPin] = createSignal(device()?.config?.sclPin ?? 22);
+  const [i2cAddress, setI2cAddress] = createSignal<number>(
+    (device?.config?.i2cAddress as number) ?? 0x20
+  );
+  const [sdaPin, setSdaPin] = createSignal<number>((device?.config?.sdaPin as number) ?? 21);
+  const [sclPin, setSclPin] = createSignal<number>((device?.config?.sclPin as number) ?? 22);
 
   createEffect(() => {
-    const config = device()?.config;
+    const config = device?.config;
     if (!config) {
       return;
     }
@@ -65,7 +67,7 @@ export default function IoExpanderConfig(props: IoExpanderConfigProps) {
   };
 
   return (
-    <DeviceConfig device={device()} onSave={handleSave} onClose={props.onClose}>
+    <DeviceConfig device={device} onSave={handleSave} onClose={props.onClose}>
       <DeviceConfigTable>
         <DeviceConfigRow>
           <DeviceConfigItem name="Name:">

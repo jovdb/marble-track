@@ -52,7 +52,6 @@
   width: 32px;
   height: 32px;
   border-radius: var(--radius-md);
-  background-color: var(--color-primary-50);
   color: var(--color-primary-600);
 }
 

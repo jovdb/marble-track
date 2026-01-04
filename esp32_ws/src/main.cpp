@@ -75,11 +75,12 @@ void setup()
   // esp_log_level_set("Network", ESP_LOG_DEBUG);
 
   // Using simplified logging macros
-  MLOG_INFO("Starting Marble Track System");
+  MLOG_INFO("Starting Marble Track System2");
   MLOG_INFO("Build version: %s %s", __DATE__, __TIME__);
 
   // First mount so config file can be loaded
   littleFSManager.setup();
+
 
   // Load network settings from configuration
   NetworkSettings networkSettings = deviceManager.loadNetworkSettings();

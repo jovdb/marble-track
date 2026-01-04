@@ -6,12 +6,12 @@ import IoExpanderConfig from "./IoExpanderConfig";
 export function IoExpander(props: { id: string }) {
   const [device] = useDevice(props.id);
 
-  const deviceType = device()?.type;
-  const config = () => device()?.config;
+  const deviceType = device?.type;
+  const config = () => device?.config;
 
-  const expanderType = () => config()?.expanderType ?? "Unknown";
+  const expanderType = () => (config()?.expanderType as string) ?? "Unknown";
   const i2cAddress = () => {
-    const addr = config()?.i2cAddress;
+    const addr = config()?.i2cAddress as number | undefined;
     return addr !== undefined ? `0x${addr.toString(16).toUpperCase().padStart(2, "0")}` : "Unknown";
   };
   const pinCount = () => {

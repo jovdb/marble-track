@@ -5,6 +5,7 @@
     "esp-build": "%USERPROFILE%\\.platformio\\penv\\Scripts\\platformio.exe run --environment 4d_systems_esp32s3_gen4_r8n16",
     "esp-deploy": "%USERPROFILE%\\.platformio\\penv\\Scripts\\platformio.exe run --target upload -t nobuild --environment 4d_systems_esp32s3_gen4_r8n16",
     "esp-deploy-ota": "%USERPROFILE%\\.platformio\\penv\\Scripts\\platformio.exe run --target upload -t nobuild --environment 4d_systems_esp32s3_gen4_r8n16_ota",
+    "esp-clean": "%USERPROFILE%\\.platformio\\penv\\Scripts\\platformio.exe run --target clean",
     "esp-mon": "%USERPROFILE%\\.platformio\\penv\\Scripts\\platformio.exe device monitor --environment 4d_systems_esp32s3_gen4_r8n16",
     "esp-connect": "start https://thelastoutpostworkshop.github.io/microcontroller_devkit/espconnect/",
     "web-dev": "npm run dev --prefix ./website",

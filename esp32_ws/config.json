@@ -5,6 +5,12 @@
   },
   "devices": [
     {
+      "id": "ex",
+      "type": "ioexpander",
+      "children": [],
+      "config": {}
+    },
+    {
       "id": "controller",
       "type": "MarbleController",
       "children": [

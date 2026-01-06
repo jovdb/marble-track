@@ -25,6 +25,9 @@ namespace devices
         // Set the device name
         setName(_config.name);
 
+        // End any previous I2C setup
+        Wire.end();
+
         // Initialize I2C with configured pins
         Wire.begin(_config.sdaPin, _config.sclPin);
 

@@ -32,6 +32,13 @@ namespace devices
         // Set the device name
         setName(_config.name);
 
+        // Clean up any existing pin
+        if (_pin != nullptr)
+        {
+            delete _pin;
+            _pin = nullptr;
+        }
+
         if (_config.pinConfig.pin == -1)
         {
             MLOG_WARN("%s: Pin not configured (pin = -1)", toString().c_str());
@@ -208,7 +215,14 @@ namespace devices
 
     void Led::jsonToConfig(const JsonDocument &config)
     {
-        if (config["pin"].is<JsonVariant>())
+
+        if (config["pin"].is<uint8_t>())
+        {
+            _config.pinConfig.pinType = PinType::GPIO;
+            _config.pinConfig.pin = config["pin"].as<uint8_t>();
+            _config.pinConfig.i2cAddress = 0x20; // Default, not used for GPIO
+        }
+        else if (config["pin"].is<JsonVariant>())
         {
             _config.pinConfig = PinFactory::jsonToConfig(config["pin"]);
         }

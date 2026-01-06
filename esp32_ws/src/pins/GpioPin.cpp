@@ -48,7 +48,7 @@ GpioPin::GpioPin()
         pinMode(_pinNumber, arduinoMode);
         _isSetup = true;
 
-        MLOG_INFO("GpioPin: Setup %s", toString().c_str());
+        // MLOG_INFO("GpioPin: Setup %s", toString().c_str());
         return true;
     }
 

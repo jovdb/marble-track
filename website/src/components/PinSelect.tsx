@@ -18,7 +18,6 @@ export default function PinSelect(props: PinSelectProps) {
   const usedPins = createMemo(() => getUsedPins(devicesStore.devices, props.excludeDeviceId));
   const getPinUsage = (pin: number) => usedPins().get(pin);
 
-
   const expanderPinOptions = createMemo(() => {
     const options: { value: PinConfig; label: string }[] = [];
     Object.values(devicesStore.devices).forEach((device) => {
@@ -30,9 +29,10 @@ export default function PinSelect(props: PinSelectProps) {
         if (expanderType === "PCF8575" || expanderType === "MCP23017") {
           pinCount = 16;
         }
-        
+
         // Log expander pins when available
         for (let pin = 0; pin < pinCount; pin++) {
+          const pinString = `${expanderType}:0x${i2cAddress.toString(16).padStart(2, "0").toUpperCase()}:${pin}`;
           options.push({
             value: {
               pinType: expanderType as PinConfig["pinType"],
@@ -101,11 +101,7 @@ export default function PinSelect(props: PinSelectProps) {
         }}
       </For>
       <For each={expanderPinOptions()}>
-        {(option) => (
-          <option value={JSON.stringify(option.value)}>
-            {option.label}
-          </option>
-        )}
+        {(option) => <option value={JSON.stringify(option.value)}>{option.label}</option>}
       </For>
     </select>
   );

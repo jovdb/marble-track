@@ -1,5 +1,6 @@
 import { IDeviceConfig, IDeviceState } from "./Device";
 import { useDevice } from "./Devices";
+import { PinConfig } from "../interfaces/WebSockets";
 
 const deviceType = "button";
 
@@ -12,7 +13,7 @@ interface IButtonState extends IDeviceState {
 
 export interface IButtonConfig extends IDeviceConfig {
   name?: string;
-  pin?: number;
+  pin?: PinConfig;
   pinMode?: "Floating" | "PullUp" | "PullDown";
   buttonType?: "NormalOpen" | "NormalClosed";
   debounceTimeInMs?: number;

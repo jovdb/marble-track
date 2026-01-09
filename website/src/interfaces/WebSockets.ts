@@ -33,7 +33,7 @@ export function deserializePinConfig(pin: number | Record<string, any>): PinConf
   }
 
   // Handle object format
-  const pinType = pin.pinType as PinType || "GPIO";
+  const pinType = (pin.pinType as PinType) || "GPIO";
   const pinNum = typeof pin.pin === "number" ? pin.pin : 0;
   const i2cAddress = typeof pin.i2cAddress === "number" ? pin.i2cAddress : 0x20;
 

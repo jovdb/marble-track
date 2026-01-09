@@ -11,36 +11,65 @@ namespace devices
 {
 
     Button::Button(const String &id)
-        : Device(id, "button")
+        : Device(id, "button"), _pin(nullptr)
     {
+    }
+
+    Button::~Button()
+    {
+        if (_pin != nullptr)
+        {
+            delete _pin;
+            _pin = nullptr;
+        }
     }
 
     void Button::setup()
     {
         Device::setup();
 
-        if (_config.pin == -1)
+        // Set the device name
+        setName(_config.name);
+
+        // Clean up any existing pin
+        if (_pin != nullptr)
+        {
+            delete _pin;
+            _pin = nullptr;
+        }
+
+        if (_config.pinConfig.pin == -1)
         {
             MLOG_WARN("%s: Pin not configured (pin = -1)", toString().c_str());
             return;
         }
 
-        // Set the device name
-        setName(_config.name);
+        // Create the pin using the factory
+        _config.pinConfig.pin = _config.pinConfig.pin;
+        _pin = PinFactory::createPin(_config.pinConfig);
 
-        // Configure pin mode
+        // Determine pin mode for setup
+        pins::PinMode pinSetupMode;
         switch (_config.pinMode)
         {
         case PinModeOption::PullUp:
-            pinMode(_config.pin, INPUT_PULLUP);
+            pinSetupMode = pins::PinMode::InputPullUp;
             break;
         case PinModeOption::PullDown:
-            pinMode(_config.pin, INPUT_PULLDOWN);
+            pinSetupMode = pins::PinMode::InputPullDown;
             break;
         case PinModeOption::Floating:
         default:
-            pinMode(_config.pin, INPUT);
+            pinSetupMode = pins::PinMode::Input;
             break;
+        }
+
+        if (!_pin->setup(_config.pinConfig.pin, pinSetupMode))
+        {
+            MLOG_ERROR("%s: Failed to setup pin %d", toString().c_str(), _config.pinConfig.pin);
+            delete _pin;
+            _pin = nullptr;
+            return;
         }
 
         // Initialize state
@@ -49,14 +78,14 @@ namespace devices
         _state.input = contactStateToPinState(_state.isPressed);
         _lastIsButtonPressed = _state.isPressed;
 
-        MLOG_INFO("%s: Setup on pin %d", toString().c_str(), _config.pin);
+        MLOG_INFO("%s: Setup on %s", toString().c_str(), _pin->toString().c_str());
     }
 
     void Button::loop()
     {
         Device::loop();
 
-        if (_config.pin == -1)
+        if (_pin == nullptr || !_pin->isConfigured())
             return;
 
         // Reset state change flag for next loop
@@ -84,10 +113,8 @@ namespace devices
 
     std::vector<String> Button::getPins() const
     {
-        if (_config.pin >= 0)
-        {
-            return {String(_config.pin)};
-        }
+        if (_pin != nullptr)
+            return {_pin->toString()};
         return {};
     }
 
@@ -133,8 +160,8 @@ namespace devices
 
     void Button::jsonToConfig(const JsonDocument &config)
     {
-        if (config["pin"].is<int>())
-            _config.pin = config["pin"].as<int>();
+        _config.pinConfig = PinFactory::jsonToConfig(config["pin"]);
+
         if (config["name"].is<String>())
             _config.name = config["name"].as<String>();
         if (config["debounceTimeInMs"].is<unsigned long>())
@@ -147,7 +174,10 @@ namespace devices
 
     void Button::configToJson(JsonDocument &doc)
     {
-        doc["pin"] = _config.pin;
+        JsonDocument pinDoc;
+        PinFactory::configToJson(_config.pinConfig, pinDoc);
+
+        doc["pin"] = pinDoc.as<JsonVariant>();
         doc["name"] = _config.name;
         doc["debounceTimeInMs"] = _config.debounceTimeInMs;
         doc["pinMode"] = pinModeToString(_config.pinMode);
@@ -163,10 +193,10 @@ namespace devices
             return isClosed;
         }
 
-        if (_config.pin < 0)
+        if (_pin == nullptr || !_pin->isConfigured())
             return false;
 
-        int pinState = digitalRead(_config.pin);
+        int pinState = _pin->read();
         _state.input = pinState;
 
         // Contact is closed if:

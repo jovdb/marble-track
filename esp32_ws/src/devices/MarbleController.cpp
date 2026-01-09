@@ -51,7 +51,9 @@ namespace devices
         if (liftLimitSwitch)
         {
             auto liftLimitSwitchConfig = liftLimitSwitch->getConfig();
-            liftLimitSwitchConfig.pin = 41;
+            liftLimitSwitchConfig.pinConfig.pinType = PinType::GPIO;
+            liftLimitSwitchConfig.pinConfig.pin = 41;
+            liftLimitSwitchConfig.pinConfig.i2cAddress = 0x20;
             liftLimitSwitchConfig.pinMode = PinModeOption::PullUp;
             liftLimitSwitch->setConfig(liftLimitSwitchConfig);
         }
@@ -60,7 +62,9 @@ namespace devices
         if (liftBallSensor)
         {
             auto liftBallSensorConfig = liftBallSensor->getConfig();
-            liftBallSensorConfig.pin = 40;
+            liftBallSensorConfig.pinConfig.pinType = PinType::GPIO;
+            liftBallSensorConfig.pinConfig.pin = 40;
+            liftBallSensorConfig.pinConfig.i2cAddress = 0x20;
             liftBallSensorConfig.pinMode = PinModeOption::PullUp;
             liftBallSensor->setConfig(liftBallSensorConfig);
         }
@@ -104,7 +108,9 @@ namespace devices
         _liftButton = new devices::Button("lift-button");
         auto liftButtonConfig = _liftButton->getConfig();
         liftButtonConfig.name = "Lift Button";
-        liftButtonConfig.pin = 48;
+        liftButtonConfig.pinConfig.pinType = PinType::GPIO;
+        liftButtonConfig.pinConfig.pin = 48;
+        liftButtonConfig.pinConfig.i2cAddress = 0x20;
         liftButtonConfig.pinMode = PinModeOption::PullUp;
         liftButtonConfig.debounceTimeInMs = 50;
         liftButtonConfig.buttonType = ButtonType::NormalOpen;
@@ -114,7 +120,9 @@ namespace devices
         _manualButton = new devices::Button("manual-btn");
         auto manualButtonConfig = _manualButton->getConfig();
         manualButtonConfig.name = "Manual Mode Button";
-        manualButtonConfig.pin = 12;
+        manualButtonConfig.pinConfig.pinType = PinType::GPIO;
+        manualButtonConfig.pinConfig.pin = 12;
+        manualButtonConfig.pinConfig.i2cAddress = 0x20;
         manualButtonConfig.pinMode = PinModeOption::PullUp;
         manualButtonConfig.debounceTimeInMs = 50;
         manualButtonConfig.buttonType = ButtonType::NormalOpen;
@@ -156,7 +164,9 @@ namespace devices
         {
             auto wheelSensorConfig = wheelSensor->getConfig();
             wheelSensorConfig.name = "Wheel Zero Sensor";
-            wheelSensorConfig.pin = 7;
+            wheelSensorConfig.pinConfig.pinType = PinType::GPIO;
+            wheelSensorConfig.pinConfig.pin = 7;
+            wheelSensorConfig.pinConfig.i2cAddress = 0x20;
             wheelSensorConfig.pinMode = PinModeOption::PullUp;
             wheelSensorConfig.debounceTimeInMs = 50;
             wheelSensorConfig.buttonType = ButtonType::NormalOpen;
@@ -176,7 +186,9 @@ namespace devices
         _wheelNextBtn = new devices::Button("wheel-next-btn");
         auto wheelNextBtnConfig = _wheelNextBtn->getConfig();
         wheelNextBtnConfig.name = "";
-        wheelNextBtnConfig.pin = 16;
+        wheelNextBtnConfig.pinConfig.pinType = PinType::GPIO;
+        wheelNextBtnConfig.pinConfig.pin = 16;
+        wheelNextBtnConfig.pinConfig.i2cAddress = 0x20;
         wheelNextBtnConfig.pinMode = PinModeOption::PullUp;
         wheelNextBtnConfig.debounceTimeInMs = 50;
         wheelNextBtnConfig.buttonType = ButtonType::NormalOpen;

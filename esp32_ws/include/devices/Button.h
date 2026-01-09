@@ -11,6 +11,8 @@
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"
 #include "devices/mixins/SerializableMixin.h"
+#include "pins/IPin.h"
+#include "pins/Pins.h"
 
 namespace devices
 {
@@ -40,7 +42,7 @@ namespace devices
      */
     struct ButtonConfig
     {
-        int pin = -1;                                    // GPIO pin number (-1 = not configured)
+        PinConfig pinConfig;                             // Pin configuration (type, address, pin number)
         String name = "Button";                          // Device name
         unsigned long debounceTimeInMs = 50;             // Debounce time in milliseconds
         PinModeOption pinMode = PinModeOption::Floating; // Pin mode
@@ -75,6 +77,8 @@ namespace devices
     {
     public:
         explicit Button(const String &id);
+
+        ~Button() override;
 
         void setup() override;
         void loop() override;
@@ -116,7 +120,8 @@ namespace devices
         bool _isSimulated = false;
         bool _simulatedIsPressed = false;
 
-        // Can be used for edge detection and simulating events on change
+        // Pin abstraction for button input
+        pins::IPin* _pin;
     };
 
 } // namespace devices

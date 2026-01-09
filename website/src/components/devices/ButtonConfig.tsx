@@ -2,6 +2,7 @@ import { For, createEffect, createSignal } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { useButton } from "../../stores/Button";
 import PinSelect from "../PinSelect";
+import { PinConfig, deserializePinConfig } from "../../interfaces/WebSockets";
 
 interface ButtonConfigProps {
   id: string;
@@ -27,13 +28,6 @@ function normalizeName(value: unknown): string {
     return value;
   }
   return "";
-}
-
-function normalizePin(value: unknown): number {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-  return -1;
 }
 
 function normalizeDebounce(value: unknown): number {
@@ -63,7 +57,7 @@ export default function ButtonConfig(props: ButtonConfigProps) {
   const [device, { setDeviceConfig }] = useButton(props.id);
 
   const [name, setName] = createSignal(normalizeName(device?.config?.name));
-  const [pin, setPin] = createSignal(normalizePin(device?.config?.pin));
+  const [pin, setPin] = createSignal<PinConfig>(deserializePinConfig(device?.config?.pin ?? -1));
   const [pinMode, setPinMode] = createSignal<ButtonPinMode>(
     normalizePinMode(device?.config?.pinMode)
   );
@@ -79,7 +73,9 @@ export default function ButtonConfig(props: ButtonConfigProps) {
     }
 
     setName(normalizeName(config.name));
-    setPin(normalizePin(config.pin));
+    if (config.pin !== undefined) {
+      setPin(deserializePinConfig(config.pin));
+    }
     setPinMode(normalizePinMode(config.pinMode));
     setButtonType(normalizeButtonType(config.buttonType));
     setDebounce(normalizeDebounce(config.debounceTimeInMs));

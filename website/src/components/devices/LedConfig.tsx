@@ -2,6 +2,7 @@ import { For, createEffect, createSignal } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { LED_INITIAL_STATES, LedInitialState, useLed } from "../../stores/Led";
 import PinSelect from "../PinSelect";
+import { PinConfig, deserializePinConfig } from "../../interfaces/WebSockets";
 
 interface LedConfigProps {
   id: string;
@@ -16,7 +17,7 @@ export default function LedConfig(props: LedConfigProps) {
   };
 
   const [name, setName] = createSignal(device?.config?.name ?? "Led");
-  const [pin, setPin] = createSignal(device?.config?.pin ?? -1);
+  const [pin, setPin] = createSignal<PinConfig>(deserializePinConfig(device?.config?.pin ?? -1));
   const [initialState, setInitialState] = createSignal<LedInitialState>(
     normalizeInitialState(device?.config?.initialState)
   );
@@ -30,8 +31,8 @@ export default function LedConfig(props: LedConfigProps) {
     if (typeof config.name === "string") {
       setName(config.name);
     }
-    if (typeof config.pin === "number") {
-      setPin(config.pin);
+    if (config.pin !== undefined) {
+      setPin(deserializePinConfig(config.pin));
     }
     const nextInitialState = normalizeInitialState(config.initialState);
     setInitialState(nextInitialState);

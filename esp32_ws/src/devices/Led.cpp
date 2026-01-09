@@ -216,16 +216,8 @@ namespace devices
     void Led::jsonToConfig(const JsonDocument &config)
     {
 
-        if (config["pin"].is<uint8_t>())
-        {
-            _config.pinConfig.pinType = PinType::GPIO;
-            _config.pinConfig.pin = config["pin"].as<uint8_t>();
-            _config.pinConfig.i2cAddress = 0x20; // Default, not used for GPIO
-        }
-        else if (config["pin"].is<JsonVariant>())
-        {
-            _config.pinConfig = PinFactory::jsonToConfig(config["pin"]);
-        }
+        _config.pinConfig = PinFactory::jsonToConfig(config["pin"]);
+
         if (config["name"].is<String>())
         {
             _config.name = config["name"].as<String>();
@@ -240,6 +232,7 @@ namespace devices
     {
         JsonDocument pinDoc;
         PinFactory::configToJson(_config.pinConfig, pinDoc);
+
         doc["pin"] = pinDoc.as<JsonVariant>();
         doc["name"] = _config.name;
         doc["initialState"] = _config.initialState;

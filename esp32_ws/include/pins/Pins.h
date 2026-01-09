@@ -18,7 +18,7 @@ struct PinConfig
 {
     PinType pinType = PinType::GPIO;
     uint8_t i2cAddress = 0x20;
-    uint8_t pin = 0;
+    int pin = -1;
 };
 
 class PinFactory

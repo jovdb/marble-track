@@ -74,7 +74,7 @@ namespace devices
 
     std::vector<String> Led::getPins() const
     {
-        if (_pin != nullptr)
+        if (_pin != nullptr && _pin->isConfigured())
             return {_pin->toString()};
         return {};
     }

@@ -44,10 +44,10 @@ PinConfig PinFactory::jsonToConfig(const JsonDocument &doc)
     }
 
     // Check if it's a simple number (GPIO pin)
-    if (doc.is<uint8_t>())
+    if (doc.is<int>())
     {
         config.pinType = PinType::GPIO;
-        config.pin = doc.as<uint8_t>();
+        config.pin = doc.as<int>();
         config.i2cAddress = 0x20; // Default, not used for GPIO
     }
     // Otherwise, treat it as an object with pin configuration
@@ -67,7 +67,7 @@ PinConfig PinFactory::jsonToConfig(const JsonDocument &doc)
                 config.pinType = PinType::GPIO;
         }
 
-        if (doc["pin"].is<uint8_t>())
+        if (doc["pin"].is<int>())
         {
             config.pin = doc["pin"];
         }

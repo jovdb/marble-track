@@ -113,7 +113,7 @@ namespace devices
 
     std::vector<String> Button::getPins() const
     {
-        if (_pin != nullptr)
+        if (_pin != nullptr && _pin->isConfigured())
             return {_pin->toString()};
         return {};
     }

@@ -11,9 +11,11 @@ interface ILedState extends IDeviceState {
 export const LED_INITIAL_STATES = ["OFF", "ON", "BLINKING"] as const;
 export type LedInitialState = (typeof LED_INITIAL_STATES)[number];
 
+import { PinConfig } from "../interfaces/WebSockets";
+
 interface ILedConfig extends IDeviceConfig {
   name: string;
-  pin: number;
+  pin: PinConfig;
   initialState?: LedInitialState;
   [key: string]: unknown;
 }

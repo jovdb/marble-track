@@ -23,7 +23,7 @@ Device *DeviceManager::createDevice(const String &deviceId, const String &device
     String upperType = deviceType;
     upperType.toUpperCase();
 
-    MLOG_DEBUG("Creating device of type: '%s' with ID: '%s'", upperType.c_str(), deviceId.c_str());
+    // MLOG_DEBUG("Creating device of type: '%s' with ID: '%s'", upperType.c_str(), deviceId.c_str());
 
     if (upperType == "LED")
     {
@@ -188,6 +188,7 @@ void DeviceManager::loadDevicesFromJsonFile()
 
     // Log result
     MLOG_INFO("Loaded %d root devices from %s", roots, CONFIG_FILE);
+    MLOG_DEBUG("-----------------------");
 }
 
 /**
@@ -204,6 +205,7 @@ void DeviceManager::loadDevicesFromJsonFile()
 void DeviceManager::saveDevicesToJsonFile()
 {
     // First, read the existing configuration to preserve other properties
+    // like network settings
     JsonDocument doc;
     bool fileExists = LittleFS.exists(CONFIG_FILE);
 
@@ -243,11 +245,11 @@ void DeviceManager::saveDevicesToJsonFile()
 
     JsonObject rootObj = doc.as<JsonObject>();
 
-    // Replace devices array with current devices snapshot
+    // Replace only devices array with current devices snapshot
     rootObj.remove("devices");
-    JsonArray devicesArray = rootObj["devices"].to<JsonArray>();
 
-    // Populate devices array using shared helper
+    // Create a new array of the current configured devices
+    JsonArray devicesArray = rootObj["devices"].to<JsonArray>();
     addDevicesToJsonArray(devicesArray);
 
     // Save back to file
@@ -513,6 +515,7 @@ void DeviceManager::setup()
         }
     }
     MLOG_DEBUG("DeviceManager setup ended");
+    MLOG_DEBUG("-----------------------");
 }
 
 void DeviceManager::loop()

@@ -336,7 +336,7 @@ namespace pins
         char addrStr[8];
         snprintf(addrStr, sizeof(addrStr), "0x%02X", _i2cAddress);
 
-        return getExpanderTypeName() + ":" + String(addrStr) + ":" + String(_pinNumber) + "(" + modeStr + ")";
+        return getExpanderTypeName() + ":" + String(addrStr) + ":" + String(_pinNumber) + " (" + modeStr + ")";
     }
 
 } // namespace pins

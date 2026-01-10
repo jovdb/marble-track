@@ -78,7 +78,7 @@ void SerialConsole::loop()
 
             if (input.length() == 0)
             {
-                Serial.println("💡 Commands: 'devices', 'network', 'memory', 'config', 'version', 'logging', 'restart'");
+                Serial.println("💡 Commands: 'devices', 'network', 'memory', 'config', 'version', 'logging', 'restart', 'test-pin'");
                 Serial.println();
                 continue;
             }
@@ -99,6 +99,15 @@ void SerialConsole::loop()
 
         m_commandBuffer += incoming;
         Serial.print(incoming);
+    }
+
+    // Handle pin blinking
+    if (m_blinkingPin != -1) {
+        unsigned long now = millis();
+        if (now - m_lastToggleTime >= 125) {  // 4Hz = 250ms period, toggle every 125ms
+            digitalWrite(m_blinkingPin, !digitalRead(m_blinkingPin));
+            m_lastToggleTime = now;
+        }
     }
 }
 
@@ -252,6 +261,12 @@ void SerialConsole::handleCommand(const String &input)
         return;
     }
 
+    if (input.equalsIgnoreCase("test-pin"))
+    {
+        startTestPinFlow();
+        return;
+    }
+
     Serial.printf("❓ Unknown command: '%s'\n", input.c_str());
     Serial.println();
 }
@@ -265,6 +280,10 @@ void SerialConsole::handleInteractiveInput(char incoming)
         if (m_session.state == State::DeletingDevice)
         {
             cancelDeviceDeletion();
+        }
+        else if (m_session.state == State::TestingPin)
+        {
+            cancelTestPinFlow();
         }
         else
         {
@@ -297,6 +316,9 @@ void SerialConsole::handleInteractiveInput(char incoming)
         break;
     case State::LoggingMenu:
         handleLoggingMenuInput(incoming);
+        break;
+    case State::TestingPin:
+        handleTestPinInput(incoming);
         break;
     case State::Idle:
     default:
@@ -843,6 +865,125 @@ void SerialConsole::cancelLoggingMenu()
 {
     Serial.println();
     Serial.println("❎ Logging menu closed.");
+    Serial.println();
+    m_session.reset();
+}
+
+void SerialConsole::startTestPinFlow()
+{
+    Serial.println();
+    Serial.println("🧪 Starting pin test mode...");
+
+    // Remove all devices to prevent interference
+    std::vector<Device*> allDevices = m_deviceManager.getAllDevices();
+    if (!allDevices.empty()) {
+        Serial.printf("Removing %d devices...\n", static_cast<int>(allDevices.size()));
+        for (Device* device : allDevices) {
+            if (device) {
+                m_deviceManager.removeDevice(device->getId());
+            }
+        }
+        Serial.println("✅ All devices removed.");
+    } else {
+        Serial.println("No devices to remove.");
+    }
+
+    Serial.println("Enter pin number to test (Esc to cancel).");
+    Serial.print("Pin: ");
+    m_session.state = Session::State::TestingPin;
+    m_session.stageBuffer = "";
+}
+
+void SerialConsole::cleanupTestPin()
+{
+    if (m_blinkingPin != -1) {
+        digitalWrite(m_blinkingPin, LOW);
+        pinMode(m_blinkingPin, INPUT);
+        m_blinkingPin = -1;
+    }
+}
+
+void SerialConsole::stopTestPin()
+{
+    cleanupTestPin();
+
+    // Reload config and restart DeviceManager
+    Serial.println("🔄 Reloading configuration and restarting devices...");
+    m_deviceManager.loadDevicesFromJsonFile();
+    m_deviceManager.setup();
+    Serial.println("✅ Configuration reloaded and devices restarted.");
+
+    Serial.println();
+}
+
+void SerialConsole::handleTestPinInput(char incoming)
+{
+    // If test is running, any key press stops it after a short delay
+    if (m_blinkingPin != -1) {
+        Serial.println();
+        Serial.println("🛑 Stopping test...");
+        
+        // Continue flashing for a bit longer to show the stop sequence
+        delay(500);
+                Serial.printf("Stopped blink test on pin %d.\n", m_blinkingPin);        stopTestPin();
+        m_session.reset();
+        return;
+    }
+
+    if (isLineFeed(incoming))
+    {
+        Serial.println();
+
+        if (m_session.stageBuffer.isEmpty())
+        {
+            Serial.print("Pin: ");
+            return;
+        }
+
+        int pin = m_session.stageBuffer.toInt();
+        m_session.stageBuffer = "";
+
+        if (pin < 0 || pin > 48) {  // ESP32 pins 0-39
+            Serial.println("❌ Invalid pin number. Try again.");
+            Serial.print("Pin: ");
+            return;
+        }
+
+        // Stop any existing test
+        cleanupTestPin();
+
+        // Start new test
+        m_blinkingPin = pin;
+        pinMode(pin, OUTPUT);
+        digitalWrite(pin, LOW);
+        m_lastToggleTime = millis();
+
+        Serial.printf("✅ Starting blink test on pin %d at 4Hz.\n", pin);
+        Serial.println("Press any key to stop test...");
+        Serial.println();
+
+        m_session.reset();
+        m_session.state = Session::State::TestingPin;
+        return;
+    }
+
+    if (isBackspace(incoming))
+    {
+        handleBackspace(m_session.stageBuffer);
+        return;
+    }
+
+    if (isDigit(incoming))
+    {
+        m_session.stageBuffer += incoming;
+        Serial.print(incoming);
+    }
+}
+
+void SerialConsole::cancelTestPinFlow()
+{
+    Serial.println();
+    Serial.println("❎ Pin test cancelled.");
     Serial.println();
     m_session.reset();
 }

@@ -81,7 +81,7 @@ namespace devices
 
     bool Led::set(bool value)
     {
-        if (!_pin->isConfigured())
+        if (_pin == nullptr || !_pin->isConfigured())
         {
             MLOG_WARN("%s: Pin not configured", toString().c_str());
             return false;
@@ -107,7 +107,7 @@ namespace devices
 
     bool Led::blink(unsigned long onTime, unsigned long offTime, unsigned long delay)
     {
-        if (!_pin->isConfigured())
+        if (_pin == nullptr || !_pin->isConfigured())
         {
             MLOG_WARN("%s: Pin not configured", toString().c_str());
             return false;
@@ -142,7 +142,7 @@ namespace devices
         // -1: UnSet, 0: OFF: 1: ON
         static int _isPrevBlinkingOn = -1;
 
-        if (!_pin->isConfigured() || _state.mode != "BLINKING")
+        if (_pin == nullptr || !_pin->isConfigured() || _state.mode != "BLINKING")
         {
             _isPrevBlinkingOn = -1;
             return;

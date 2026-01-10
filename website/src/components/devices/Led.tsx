@@ -4,6 +4,7 @@ import styles from "./Device.module.css";
 import LedConfig from "./LedConfig";
 import { getDeviceIcon } from "../icons/Icons";
 import { useLed } from "../../stores/Led";
+import { LedState } from "./LedState";
 
 export function Led(props: { id: string }) {
   const ledStore = useLed(props.id);
@@ -24,6 +25,7 @@ export function Led(props: { id: string }) {
       id={props.id}
       configComponent={(onClose) => <LedConfig id={props.id} onClose={onClose} />}
       icon={deviceType ? getDeviceIcon(deviceType) : null}
+      stateComponent={() => <LedState id={props.id} />}
     >
       <div class={styles.device__controls}>
         <button

@@ -265,6 +265,13 @@ namespace pins
             return -1;
         }
 
+        // Check if the I2C device is still present
+        if (!isDevicePresent())
+        {
+            MLOG_WARN("I2cExpanderPin: Device not found at address 0x%02X, returning LOW", _i2cAddress);
+            return LOW;
+        }
+
         uint16_t portValue = readPort();
         return (portValue & (1 << _pinNumber)) ? HIGH : LOW;
     }
@@ -274,6 +281,13 @@ namespace pins
         if (!_isSetup || _pinNumber < 0)
         {
             MLOG_WARN("I2cExpanderPin: Cannot write to unconfigured pin");
+            return false;
+        }
+
+        // Check if the I2C device is still present
+        if (!isDevicePresent())
+        {
+            MLOG_WARN("I2cExpanderPin: Device not found at address 0x%02X, write ignored", _i2cAddress);
             return false;
         }
 

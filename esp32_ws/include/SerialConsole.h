@@ -37,7 +37,8 @@ private:
             EnteringPassword,
             Confirming,
             DeletingDevice,
-            LoggingMenu
+            LoggingMenu,
+            TestingPin
         };
 
         State state = State::Idle;
@@ -46,6 +47,7 @@ private:
         String stageBuffer;
         String selectedSsid;
         String password;
+        int pinNumber = -1;
 
         void reset()
         {
@@ -55,11 +57,14 @@ private:
             stageBuffer = "";
             selectedSsid = "";
             password = "";
+            pinNumber = -1;
         }
     };
 
     Session m_session;
     String m_commandBuffer;
+    int m_blinkingPin = -1;
+    unsigned long m_lastToggleTime = 0;
 
     void logNetworkInfo();
     void handleInteractiveInput(char incoming);
@@ -70,6 +75,7 @@ private:
     void handleConfirmationInput(char incoming);
     void handleDeviceDeletionInput(char incoming);
     void handleLoggingMenuInput(char incoming);
+    void handleTestPinInput(char incoming);
 
     void startSetNetworkFlow();
     void startLoggingMenu();
@@ -81,6 +87,10 @@ private:
     void saveAndApplyNetworkSettings();
     void startDeleteDeviceFlow();
     void cancelDeviceDeletion();
+    void startTestPinFlow();
+    void cleanupTestPin();
+    void stopTestPin();
+    void cancelTestPinFlow();
 
     static bool isBackspace(char incoming);
     static bool isLineFeed(char incoming);

@@ -40,6 +40,7 @@ export function Button(props: { id: string }) {
       id={props.id}
       configComponent={(onClose) => <ButtonConfig id={props.id} onClose={onClose} />}
       icon={<ButtonIcon />}
+      stateComponent={() => null}
     >
       <div class={deviceStyles.device__controls}>
         <button

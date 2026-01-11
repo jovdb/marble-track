@@ -9,7 +9,7 @@
 namespace devices
 {
 
-    I2c::I2c(const String &id) : Device(id, "I2C")
+    I2c::I2c(const String &id) : Device(id, "i2c")
     {
         // Set default config
         setConfig(I2cConfig());

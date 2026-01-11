@@ -12,7 +12,7 @@ extern DeviceManager deviceManager;
 namespace devices
 {
 
-    MarbleController::MarbleController(const String &id) : Device(id, "MarbleController")
+    MarbleController::MarbleController(const String &id) : Device(id, "marblecontroller")
     {
         _buzzer = new devices::Buzzer("buzzer");
         auto buzzerConfig = _buzzer->getConfig();

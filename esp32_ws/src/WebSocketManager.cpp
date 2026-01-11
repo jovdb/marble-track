@@ -52,7 +52,7 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
     if (!hasClients())
         return;
 
-    JsonDocument response;
+    StaticJsonDocument<8192> response; // Allocate 8KB for device list
     response["type"] = "devices-list";
 
     if (!deviceManager)
@@ -307,18 +307,18 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
                 std::vector<Device *> allDevices = deviceManager->getAllDevices();
 
                 // Send config for all devices
-                for (Device *device : allDevices)
+                for (Device *dev : allDevices)
                 {
                     JsonDocument configDoc;
-                    configDoc["deviceId"] = device->getId();
+                    configDoc["deviceId"] = dev->getId();
                     handleDeviceReadConfig(configDoc);
                 }
 
                 // Send state for all devices
-                for (Device *device : allDevices)
+                for (Device *dev : allDevices)
                 {
                     JsonDocument stateDoc;
-                    stateDoc["deviceId"] = device->getId();
+                    stateDoc["deviceId"] = dev->getId();
                     handleDeviceGetState(stateDoc);
                 }
 
@@ -354,7 +354,7 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
     Device *device = deviceManager->getDeviceById(deviceId);
     if (device)
     {
-        JsonDocument response;
+        StaticJsonDocument<2048> response; // Allocate 2KB for response
         response["type"] = "device-config";
         response["triggerBy"] = "get";
         response["deviceId"] = deviceId;
@@ -365,7 +365,7 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
             ISerializable *serializable = mixins::SerializableRegistry::get(deviceId);
             if (serializable)
             {
-                JsonDocument configDoc;
+                StaticJsonDocument<1536> configDoc; // Allocate 1.5KB for config
                 serializable->configToJson(configDoc);
                 response["config"] = configDoc;
             }
@@ -442,7 +442,7 @@ void WebSocketManager::handleGetDevicesConfig(JsonDocument &doc)
     if (!hasClients())
         return;
 
-    JsonDocument response;
+    StaticJsonDocument<8192> response; // Allocate 8KB for full config
     response["type"] = "devices-config";
     if (!deviceManager)
     {
@@ -451,7 +451,7 @@ void WebSocketManager::handleGetDevicesConfig(JsonDocument &doc)
     else
     {
         // Build a config snapshot that mirrors saveDevicesToJsonFile()
-        JsonDocument configDoc;
+        StaticJsonDocument<8192> configDoc; // Allocate 8KB for config
         JsonArray devicesArray = configDoc["devices"].to<JsonArray>();
         deviceManager->addDevicesToJsonArray(devicesArray);
         response["config"] = configDoc;

@@ -35,7 +35,8 @@ export default function PinSelect(props: PinSelectProps) {
 
         // Log expander pins when available
         for (let pin = 0; pin < pinCount; pin++) {
-          const pinString = `${expanderType}:0x${i2cAddress.toString(16).padStart(2, "0").toUpperCase()}:${pin}`;
+          const deviceName = (device.config?.name as string) || device.id;
+          const pinString = `${deviceName}:${pin}`;
           options.push({
             value: {
               pinType: expanderType as PinConfig["pinType"],

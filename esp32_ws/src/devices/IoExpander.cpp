@@ -6,6 +6,11 @@
 #include "devices/IoExpander.h"
 #include "Logging.h"
 #include <ArduinoJson.h>
+#include "DeviceManager.h"
+#include "devices/I2c.h"
+
+// External reference to device manager
+extern DeviceManager deviceManager;
 
 namespace devices
 {
@@ -25,11 +30,38 @@ namespace devices
         // Set the device name
         setName(_config.name);
 
+        // Get the I2C device
+        devices::I2c *i2cDevice = nullptr;
+        if (!_config.i2cDeviceId.isEmpty())
+        {
+            i2cDevice = deviceManager.getDeviceByIdAs<devices::I2c>(_config.i2cDeviceId);
+        }
+
+        if (!i2cDevice)
+        {
+            MLOG_ERROR("%s: I2C device '%s' not found", toString().c_str(), _config.i2cDeviceId.c_str());
+            _isPresent = false;
+            return;
+        }
+
+        // Get SDA and SCL pins from the I2C device
+        auto i2cPins = i2cDevice->getPins();
+        if (i2cPins.size() < 2)
+        {
+            MLOG_ERROR("%s: I2C device '%s' does not have SDA/SCL pins configured", 
+                      toString().c_str(), _config.i2cDeviceId.c_str());
+            _isPresent = false;
+            return;
+        }
+
+        int sdaPin = i2cPins[0].toInt();
+        int sclPin = i2cPins[1].toInt();
+
         // End any previous I2C setup
         Wire.end();
 
-        // Initialize I2C with configured pins
-        Wire.begin(_config.sdaPin, _config.sclPin);
+        // Initialize I2C with pins from the I2C device
+        Wire.begin(sdaPin, sclPin);
 
         // Check if device is present
         Wire.beginTransmission(_config.i2cAddress);
@@ -38,20 +70,22 @@ namespace devices
 
         if (_isPresent)
         {
-            MLOG_INFO("%s: Found %s at address 0x%02X (SDA=%d, SCL=%d) with %d pins",
+            MLOG_INFO("%s: Found %s at address 0x%02X on I2C bus '%s' (SDA=%d, SCL=%d) with %d pins",
                       toString().c_str(),
                       getExpanderTypeString().c_str(),
                       _config.i2cAddress,
-                      _config.sdaPin,
-                      _config.sclPin,
+                      _config.i2cDeviceId.c_str(),
+                      sdaPin,
+                      sclPin,
                       getPinCount());
         }
         else
         {
-            MLOG_WARN("%s: %s not found at address 0x%02X (I2C error: %d)",
+            MLOG_WARN("%s: %s not found at address 0x%02X on I2C bus '%s' (I2C error: %d)",
                       toString().c_str(),
                       getExpanderTypeString().c_str(),
                       _config.i2cAddress,
+                      _config.i2cDeviceId.c_str(),
                       error);
         }
     }
@@ -64,11 +98,9 @@ namespace devices
 
     std::vector<String> IoExpander::getPins() const
     {
-        // Return SDA and SCL pins as used GPIO pins
-        std::vector<String> pins;
-        pins.push_back(String(_config.sdaPin));
-        pins.push_back(String(_config.sclPin));
-        return pins;
+        // IO Expander doesn't use GPIO pins directly - it uses an I2C bus
+        // The I2C device manages the SDA/SCL pins
+        return std::vector<String>();
     }
 
     bool IoExpander::isDevicePresent() const
@@ -130,13 +162,9 @@ namespace devices
         {
             _config.i2cAddress = config["i2cAddress"].as<int>();
         }
-        if (config["sdaPin"].is<int>())
+        if (config["i2cDeviceId"].is<String>())
         {
-            _config.sdaPin = config["sdaPin"].as<int>();
-        }
-        if (config["sclPin"].is<int>())
-        {
-            _config.sclPin = config["sclPin"].as<int>();
+            _config.i2cDeviceId = config["i2cDeviceId"].as<String>();
         }
     }
 
@@ -145,8 +173,7 @@ namespace devices
         doc["name"] = _config.name;
         doc["expanderType"] = getExpanderTypeString();
         doc["i2cAddress"] = _config.i2cAddress;
-        doc["sdaPin"] = _config.sdaPin;
-        doc["sclPin"] = _config.sclPin;
+        doc["i2cDeviceId"] = _config.i2cDeviceId;
     }
 
 } // namespace devices

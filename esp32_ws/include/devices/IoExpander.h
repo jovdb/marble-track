@@ -32,8 +32,7 @@ namespace devices
         String name = "IO Expander";          // Device name
         IoExpanderType expanderType = IoExpanderType::PCF8574;
         uint8_t i2cAddress = 0x20;            // Default I2C address
-        int sdaPin = 21;                      // I2C SDA pin
-        int sclPin = 22;                      // I2C SCL pin
+        String i2cDeviceId = "";              // ID of the I2C bus device to use
     };
 
     /**

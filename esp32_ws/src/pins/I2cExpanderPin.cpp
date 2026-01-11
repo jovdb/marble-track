@@ -271,7 +271,6 @@ namespace pins
 
     bool I2cExpanderPin::write(uint8_t value)
     {
-        MLOG_DEBUG("I2cExpanderPin: Writing %d to %s", value, toString().c_str());
         if (!_isSetup || _pinNumber < 0)
         {
             MLOG_WARN("I2cExpanderPin: Cannot write to unconfigured pin");

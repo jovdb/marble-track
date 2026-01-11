@@ -15,9 +15,7 @@ export default function ServoConfig(props: ServoConfigProps) {
   const actions = servoStore[1];
 
   const [name, setName] = createSignal(device()?.config?.name ?? device()?.id ?? "Servo");
-  const [pin, setPin] = createSignal<PinConfig>(
-    deserializePinConfig(device()?.config?.pin ?? -1)
-  );
+  const [pin, setPin] = createSignal<PinConfig>(deserializePinConfig(device()?.config?.pin ?? -1));
   const [mcpwmChannel, setMcpwmChannel] = createSignal<number>(
     device()?.config?.mcpwmChannel ?? -1
   );

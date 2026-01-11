@@ -16,14 +16,14 @@ enum class PinType
 
 struct PinConfig
 {
-    PinType pinType = PinType::GPIO;
-    uint8_t i2cAddress = 0x20;
+    String expanderId = "";
     int pin = -1;
 };
 
 class PinFactory
 {
 public:
+    static void setup();
     static pins::IPin* createPin(const PinConfig& config);
     static PinConfig jsonToConfig(const JsonDocument& doc);
     static void configToJson(const PinConfig& config, JsonDocument& doc);

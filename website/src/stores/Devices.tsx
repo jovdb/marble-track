@@ -182,8 +182,7 @@ export function createDevicesStore({
             produce((draft) => {
               const draftDevice = draft.devices[message.deviceId];
               if (draftDevice) {
-                const { id, type, ...rest } = message.state;
-                draftDevice.state = rest;
+                draftDevice.state = message.state;
                 draftDevice.stateErrorMessage = undefined;
               }
             })

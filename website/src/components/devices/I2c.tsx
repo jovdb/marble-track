@@ -17,6 +17,7 @@ export function I2c(props: { id: string }) {
       id={props.id}
       configComponent={(onClose) => <I2cConfig id={props.id} onClose={onClose} />}
       icon={deviceType ? getDeviceIcon(deviceType) : null}
+      stateComponent={() => null}
     >
       <div style={{ padding: "0.5rem", "font-size": "0.9rem" }}>
         <div>

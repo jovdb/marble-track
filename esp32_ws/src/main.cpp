@@ -2,6 +2,7 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
+#include "pins/Pins.h"
 #include "Config.h"
 #include "Logging.h"
 #include "Network.h"
@@ -134,6 +135,9 @@ void setup()
 
   // Setup  Devices with callback to enable state change notifications during initialization
   deviceManager.setup();
+
+  // Setup pin factory to resolve expander addresses
+  PinFactory::setup();
 
   // Set callback for device changes
   deviceManager.setOnDevicesChanged([]()

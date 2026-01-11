@@ -18,30 +18,19 @@ export type EncryptionType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 export type PinType = "GPIO" | "PCF8574" | "PCF8575" | "MCP23017";
 
 export interface PinConfig {
-  pinType: PinType;
   pin: number;
-  i2cAddress: number;
+  expanderId: string;
 }
 
 // Deserialize pin configuration from device config
-export function deserializePinConfig(pin: number | Record<string, any>): PinConfig {
-  if (typeof pin === "number") {
-    return {
-      pinType: "GPIO",
-      pin: pin,
-      i2cAddress: 0x20, // Default, not used for GPIO
-    };
-  }
-
-  // Handle object format
-  const pinType = (pin.pinType as PinType) || "GPIO";
-  const pinNum = typeof pin.pin === "number" ? pin.pin : 0;
-  const i2cAddress = typeof pin.i2cAddress === "number" ? pin.i2cAddress : 0x20;
+export function deserializePinConfig(pin: Record<string, any>): PinConfig {
+  // Only support object format
+  const pinNum = typeof pin.pin === "number" ? pin.pin : -1;
+  const expanderId = typeof pin.expanderId === "string" ? pin.expanderId : "";
 
   return {
-    pinType,
     pin: pinNum,
-    i2cAddress,
+    expanderId,
   };
 }
 

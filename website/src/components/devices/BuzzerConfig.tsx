@@ -12,9 +12,7 @@ interface BuzzerConfigProps {
 export default function BuzzerConfig(props: BuzzerConfigProps) {
   const [device, { setDeviceConfig }] = useBuzzer(props.id);
   const [name, setName] = createSignal(device?.config?.name ?? "Buzzer");
-  const [pin, setPin] = createSignal<PinConfig>(
-    deserializePinConfig(device?.config?.pin ?? -1)
-  );
+  const [pin, setPin] = createSignal<PinConfig>(deserializePinConfig(device?.config?.pin ?? -1));
 
   createEffect(() => {
     const config = device?.config;

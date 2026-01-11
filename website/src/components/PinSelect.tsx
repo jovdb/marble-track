@@ -27,7 +27,7 @@ export default function PinSelect(props: PinSelectProps) {
       if (device.type === "ioexpander" && device.config) {
         const config = device.config as any;
         const expanderType = config.expanderType || "PCF8574";
-        const i2cAddress = config.i2cAddress || 0x20;
+        const i2cDeviceId = config.i2cDeviceId || "";
         let pinCount = 8;
         if (expanderType === "PCF8575" || expanderType === "MCP23017") {
           pinCount = 16;
@@ -39,9 +39,8 @@ export default function PinSelect(props: PinSelectProps) {
           const pinString = `${deviceName}:${pin}`;
           options.push({
             value: {
-              pinType: expanderType as PinConfig["pinType"],
               pin: pin,
-              i2cAddress: i2cAddress,
+              expanderId: device.id, // Use the expander device ID
             },
             label: pinString,
           });
@@ -52,7 +51,7 @@ export default function PinSelect(props: PinSelectProps) {
   });
 
   const getSelectedValue = () => {
-    if (props.value.pinType === "GPIO") {
+    if (props.value.expanderId === "") {
       if (props.value.pin === -1) {
         return "-1";
       }
@@ -65,13 +64,13 @@ export default function PinSelect(props: PinSelectProps) {
     const target = event.currentTarget as HTMLSelectElement;
     const selectedValue = target.value;
     if (selectedValue === "-1") {
-      props.onChange({ pinType: "GPIO", pin: -1, i2cAddress: 0x20 });
+      props.onChange({ pin: -1, expanderId: "" });
       return;
     }
     // Check if it's a GPIO pin
     const pinNum = parseInt(selectedValue);
     if (!isNaN(pinNum) && ESP32_AVAILABLE_PINS.includes(pinNum)) {
-      props.onChange({ pinType: "GPIO", pin: pinNum, i2cAddress: 0x20 });
+      props.onChange({ pin: pinNum, expanderId: "" });
       return;
     }
     // Otherwise it's an I2C pin
@@ -79,7 +78,7 @@ export default function PinSelect(props: PinSelectProps) {
       const parsed = JSON.parse(selectedValue) as PinConfig;
       props.onChange(parsed);
     } catch {
-      props.onChange({ pinType: "GPIO", pin: -1, i2cAddress: 0x20 });
+      props.onChange({ pin: -1, expanderId: "" });
     }
   };
 

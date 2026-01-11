@@ -13,6 +13,7 @@ import {
 const COMPOSITION_DEVICE_TYPES = [
   "Button",
   "Buzzer",
+  "I2c",
   "IoExpander",
   "Led",
   "Lift",

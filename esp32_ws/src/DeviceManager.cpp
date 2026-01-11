@@ -14,6 +14,7 @@
 #include "devices/Lift.h"
 #include "devices/MarbleController.h"
 #include "devices/IoExpander.h"
+#include "devices/I2c.h"
 #include "devices/mixins/SerializableMixin.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
@@ -60,6 +61,10 @@ Device *DeviceManager::createDevice(const String &deviceId, const String &device
     else if (upperType == "IOEXPANDER")
     {
         return new devices::IoExpander(deviceId);
+    }
+    else if (upperType == "I2C")
+    {
+        return new devices::I2c(deviceId);
     }
 
     MLOG_WARN("Unknown device type: %s", upperType.c_str());

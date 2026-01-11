@@ -4,6 +4,7 @@ export type DeviceType =
   | "buzzer"
   | "gate"
   | "ioexpander"
+  | "i2c"
   | "led"
   | "lift"
   | "marblecontroller"

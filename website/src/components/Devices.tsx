@@ -6,6 +6,7 @@ import { logger } from "../stores/logger";
 import { Button } from "./devices/Button";
 import { Buzzer } from "./devices/Buzzer";
 import { Gate } from "./devices/Gate";
+import { I2c } from "./devices/I2c";
 import { IoExpander } from "./devices/IoExpander";
 import { Servo } from "./devices/Servo";
 import { Stepper } from "./devices/Stepper";
@@ -63,6 +64,8 @@ export function renderDeviceComponent(device: {
       return <Button id={device.id} />;
     case "buzzer":
       return <Buzzer id={device.id} />;
+    case "i2c":
+      return <I2c id={device.id} />;
     case "stepper":
       return <Stepper id={device.id} />;
     case "gate":

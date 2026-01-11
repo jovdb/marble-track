@@ -21,8 +21,8 @@ namespace devices
     struct I2cConfig
     {
         String name = "I2C";
-        int sdaPin = 21;
-        int sclPin = 22;
+        int sdaPin = -1;
+        int sclPin = -1;
     };
 
     /**

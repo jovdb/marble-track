@@ -71,6 +71,7 @@ export default function I2cConfig(props: I2cConfigProps) {
               onChange={setSdaPin}
               style={{ "margin-left": "0.5rem" }}
               excludeDeviceId={props.id}
+              showExpanderPins={false}
             />
           </DeviceConfigItem>
         </DeviceConfigRow>
@@ -81,6 +82,7 @@ export default function I2cConfig(props: I2cConfigProps) {
               onChange={setSclPin}
               style={{ "margin-left": "0.5rem" }}
               excludeDeviceId={props.id}
+              showExpanderPins={false}
             />
           </DeviceConfigItem>
         </DeviceConfigRow>

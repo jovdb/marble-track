@@ -3,6 +3,7 @@ import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } fr
 import { useDevice } from "../../stores/Devices";
 import PinSelect from "../PinSelect";
 import { useWebSocket2 } from "../../hooks/useWebSocket";
+import { PinConfig, deserializePinConfig } from "../../interfaces/WebSockets";
 
 const EXPANDER_TYPES = ["PCF8574", "PCF8575", "MCP23017"] as const;
 type ExpanderType = (typeof EXPANDER_TYPES)[number];
@@ -23,8 +24,12 @@ export default function IoExpanderConfig(props: IoExpanderConfigProps) {
   const [i2cAddress, setI2cAddress] = createSignal<number>(
     (device?.config?.i2cAddress as number) ?? 0x20
   );
-  const [sdaPin, setSdaPin] = createSignal<number>((device?.config?.sdaPin as number) ?? 21);
-  const [sclPin, setSclPin] = createSignal<number>((device?.config?.sclPin as number) ?? 22);
+  const [sdaPin, setSdaPin] = createSignal<PinConfig>(
+    deserializePinConfig((device?.config?.sdaPin as number | Record<string, any>) ?? 21)
+  );
+  const [sclPin, setSclPin] = createSignal<PinConfig>(
+    deserializePinConfig((device?.config?.sclPin as number | Record<string, any>) ?? 22)
+  );
 
   createEffect(() => {
     const config = device?.config;
@@ -44,11 +49,11 @@ export default function IoExpanderConfig(props: IoExpanderConfigProps) {
     if (typeof config.i2cAddress === "number") {
       setI2cAddress(config.i2cAddress);
     }
-    if (typeof config.sdaPin === "number") {
-      setSdaPin(config.sdaPin);
+    if (config.sdaPin !== undefined) {
+      setSdaPin(deserializePinConfig(config.sdaPin as number | Record<string, any>));
     }
-    if (typeof config.sclPin === "number") {
-      setSclPin(config.sclPin);
+    if (config.sclPin !== undefined) {
+      setSclPin(deserializePinConfig(config.sclPin as number | Record<string, any>));
     }
   });
 
@@ -60,8 +65,8 @@ export default function IoExpanderConfig(props: IoExpanderConfigProps) {
         name: name(),
         expanderType: expanderType(),
         i2cAddress: i2cAddress(),
-        sdaPin: sdaPin(),
-        sclPin: sclPin(),
+        sdaPin: sdaPin().pin,
+        sclPin: sclPin().pin,
       },
     });
   };
@@ -112,6 +117,7 @@ export default function IoExpanderConfig(props: IoExpanderConfigProps) {
               onChange={setSdaPin}
               style={{ "margin-left": "0.5rem" }}
               excludeDeviceId={props.id}
+              showExpanderPins={false}
             />
           </DeviceConfigItem>
         </DeviceConfigRow>
@@ -122,6 +128,7 @@ export default function IoExpanderConfig(props: IoExpanderConfigProps) {
               onChange={setSclPin}
               style={{ "margin-left": "0.5rem" }}
               excludeDeviceId={props.id}
+              showExpanderPins={false}
             />
           </DeviceConfigItem>
         </DeviceConfigRow>

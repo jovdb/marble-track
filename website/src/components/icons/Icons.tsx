@@ -164,8 +164,12 @@ export const I2cIcon = (props: IconProps) => (
     <path d="M8 8v8" />
     <path d="M16 8v8" />
     {/* SDA/SCL labels */}
-    <text x="6" y="6" font-size="4" fill="currentColor">SDA</text>
-    <text x="14" y="6" font-size="4" fill="currentColor">SCL</text>
+    <text x="6" y="6" font-size="4" fill="currentColor">
+      SDA
+    </text>
+    <text x="14" y="6" font-size="4" fill="currentColor">
+      SCL
+    </text>
   </svg>
 );
 

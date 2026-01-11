@@ -72,6 +72,7 @@ namespace devices
 
     private:
         pins::IPin* _pin;  // Pin abstraction for LED output
+        int _isPrevBlinkingOn; // -1: UnSet, 0: OFF: 1: ON
     };
 
 } // namespace devices

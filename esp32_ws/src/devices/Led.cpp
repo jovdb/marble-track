@@ -12,7 +12,7 @@ namespace devices
     static bool _isPrevBlinkingOn = false;
 
     Led::Led(const String &id)
-        : Device(id, "led"), _pin(nullptr)
+        : Device(id, "led"), _pin(nullptr), _isPrevBlinkingOn(-1)
     {
     }
 
@@ -138,9 +138,6 @@ namespace devices
     void Led::loop()
     {
         Device::loop();
-
-        // -1: UnSet, 0: OFF: 1: ON
-        static int _isPrevBlinkingOn = -1;
 
         if (_pin == nullptr || !_pin->isConfigured() || _state.mode != "BLINKING")
         {

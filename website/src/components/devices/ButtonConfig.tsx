@@ -112,6 +112,7 @@ export default function ButtonConfig(props: ButtonConfigProps) {
               onChange={setPin}
               style={{ "margin-left": "0.5rem" }}
               excludeDeviceId={props.id}
+              showExpanderPins={true}
             />
           </DeviceConfigItem>
         </DeviceConfigRow>

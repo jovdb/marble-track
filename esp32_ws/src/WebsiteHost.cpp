@@ -68,12 +68,24 @@ void WebsiteHost::setupRoutes()
             request->send(200, "text/html", html);
         } });
 
-       // LittleFS file browser
+    // LittleFS file browser
     server->on("/littlefs", HTTP_GET, [this](AsyncWebServerRequest *request)
                {
-        String html = "<!DOCTYPE html><html><head><title>LittleFS Files</title><style>table { border-collapse: collapse; } th, td { border: 1px solid black; padding: 5px; } .size-col { text-align: right; }</style></head><body>";
+        String html = "<!DOCTYPE html><html><head><title>LittleFS Files</title><style>";
+        html += "table { border-collapse: collapse; } th, td { border: 1px solid black; padding: 5px; } .size-col { text-align: right; }";
+        html += ".upload-form { display: inline-block; margin: 0; } .upload-btn { padding: 2px 8px; font-size: 12px; }";
+        html += "</style></head><body>";
         html += "<h1>LittleFS File System</h1>";
-        html += "<table><tr><th>Name</th><th class='size-col'>Size</th><th>Modified</th></tr>";
+        html += "<table><tr><th>Name</th><th class='size-col'>Size</th><th>Modified</th><th>Actions</th></tr>";
+        
+        // Add root directory upload row
+        html += "<tr><td><strong>/ (root)</strong></td><td class='size-col'>-</td><td>-</td><td>";
+        html += "<form class='upload-form' action='/littlefs/upload' method='post' enctype='multipart/form-data'>";
+        html += "<input type='hidden' name='path' value='/'>";
+        html += "<input type='file' name='file' required>";
+        html += "<input type='submit' value='Upload' class='upload-btn'>";
+        html += "</form></td></tr>";
+        
         auto getDate = [](time_t t) -> String {
             struct tm *tm = localtime(&t);
             char buf[40];
@@ -104,6 +116,19 @@ void WebsiteHost::setupRoutes()
                 } else {
                     html += getDate(file.getLastWrite());
                 }
+                html += "</td><td>";
+                if (file.isDirectory()) {
+                    html += "<form class='upload-form' action='/littlefs/upload' method='post' enctype='multipart/form-data'>";
+                    html += "<input type='hidden' name='path' value='" + filePath + "'>";
+                    html += "<input type='file' name='file' required>";
+                    html += "<input type='submit' value='Upload' class='upload-btn'>";
+                    html += "</form>";
+                } else {
+                    html += "<form style='display: inline;' action='/littlefs/delete' method='post'>";
+                    html += "<input type='hidden' name='path' value='" + filePath + "'>";
+                    html += "<input type='submit' value='Delete' class='delete-btn' onclick='return confirm(\"Are you sure you want to delete " + String(file.name()) + "?\")'>";
+                    html += "</form>";
+                }
                 html += "</td></tr>";
                 if (file.isDirectory()) {
                     listFiles(filePath, indent + 1);
@@ -114,6 +139,99 @@ void WebsiteHost::setupRoutes()
         listFiles("/", 0);
         html += "</table></body></html>";
         request->send(200, "text/html", html); });
+
+    // Handle file uploads to LittleFS
+    server->on("/littlefs/upload", HTTP_POST, [this](AsyncWebServerRequest *request)
+               { 
+        String html = "<!DOCTYPE html><html><head><title>Upload Complete</title>";
+        html += "<script>setTimeout(function(){window.location.href='/littlefs';}, 1000);</script>";
+        html += "</head><body><h1>Upload Complete</h1><p>File uploaded successfully.</p>";
+        html += "<p>Redirecting to file browser in 1 seconds...</p>";
+        html += "<a href='/littlefs'>Back to File Browser</a></body></html>";
+        request->send(200, "text/html", html); }, [this](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
+               {
+        static File uploadFile;
+        static String uploadPath;
+        
+        if (!index) {
+            // Start of upload
+            if (request->hasParam("path", true)) {
+                uploadPath = request->getParam("path", true)->value();
+            } else {
+                uploadPath = "/";
+            }
+            
+            // Ensure uploadPath ends with /
+            if (!uploadPath.endsWith("/")) {
+                uploadPath += "/";
+            }
+            
+            String fullPath = uploadPath + filename;
+            MLOG_INFO("Starting upload to: %s", fullPath.c_str());
+            
+            // Remove existing file if it exists
+            if (LittleFS.exists(fullPath)) {
+                LittleFS.remove(fullPath);
+                MLOG_INFO("Removed existing file: %s", fullPath.c_str());
+            }
+            
+            uploadFile = LittleFS.open(fullPath, FILE_WRITE);
+            if (!uploadFile) {
+                MLOG_ERROR("Failed to open file for writing: %s", fullPath.c_str());
+                return;
+            }
+        }
+        
+        if (len) {
+            // Write data
+            if (uploadFile.write(data, len) != len) {
+                MLOG_ERROR("Failed to write data to file");
+                uploadFile.close();
+                return;
+            }
+        }
+        
+        if (final) {
+            // End of upload
+            uploadFile.close();
+            MLOG_INFO("Upload completed: %s", (uploadPath + filename).c_str());
+        } });
+
+    // Handle file deletion from LittleFS
+    server->on("/littlefs/delete", HTTP_POST, [this](AsyncWebServerRequest *request)
+               {
+        if (request->hasParam("path", true)) {
+            String filePath = request->getParam("path", true)->value();
+            
+            if (LittleFS.exists(filePath)) {
+                if (LittleFS.remove(filePath)) {
+                    MLOG_INFO("File deleted: %s", filePath.c_str());
+                    String html = "<!DOCTYPE html><html><head><title>File Deleted</title>";
+                    html += "<script>setTimeout(function(){window.location.href='/littlefs';}, 1000);</script>";
+                    html += "</head><body><h1>File Deleted</h1><p>File '" + filePath + "' has been deleted successfully.</p>";
+                    html += "<p>Redirecting to file browser in 1 seconds...</p>";
+                    html += "<a href='/littlefs'>Back to File Browser</a></body></html>";
+                    request->send(200, "text/html", html);
+                } else {
+                    MLOG_ERROR("Failed to delete file: %s", filePath.c_str());
+                    String html = "<!DOCTYPE html><html><head><title>Delete Failed</title></head><body>";
+                    html += "<h1>Delete Failed</h1><p>Failed to delete file '" + filePath + "'.</p>";
+                    html += "<a href='/littlefs'>Back to File Browser</a></body></html>";
+                    request->send(500, "text/html", html);
+                }
+            } else {
+                MLOG_WARN("File not found for deletion: %s", filePath.c_str());
+                String html = "<!DOCTYPE html><html><head><title>File Not Found</title></head><body>";
+                html += "<h1>File Not Found</h1><p>File '" + filePath + "' does not exist.</p>";
+                html += "<a href='/littlefs'>Back to File Browser</a></body></html>";
+                request->send(404, "text/html", html);
+            }
+        } else {
+            String html = "<!DOCTYPE html><html><head><title>Bad Request</title></head><body>";
+            html += "<h1>Bad Request</h1><p>No file path specified.</p>";
+            html += "<a href='/littlefs'>Back to File Browser</a></body></html>";
+            request->send(400, "text/html", html);
+        } });
 
     // Test WebSocket connectivity endpoint
     server->on("/test-ws", HTTP_GET, [this](AsyncWebServerRequest *request)

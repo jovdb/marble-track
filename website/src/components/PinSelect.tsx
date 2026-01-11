@@ -11,6 +11,7 @@ interface PinSelectProps {
   class?: string;
   title?: string;
   excludeDeviceId?: string;
+  showExpanderPins?: boolean;
 }
 
 export default function PinSelect(props: PinSelectProps) {
@@ -19,6 +20,8 @@ export default function PinSelect(props: PinSelectProps) {
   const getPinUsage = (pin: number) => usedPins().get(pin);
 
   const expanderPinOptions = createMemo(() => {
+    if (!props.showExpanderPins) return [];
+
     const options: { value: PinConfig; label: string }[] = [];
     Object.values(devicesStore.devices).forEach((device) => {
       if (device.type === "ioexpander" && device.config) {

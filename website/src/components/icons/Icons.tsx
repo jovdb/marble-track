@@ -144,6 +144,31 @@ export const IoExpanderIcon = (props: IconProps) => (
   </svg>
 );
 
+export const I2cIcon = (props: IconProps) => (
+  <svg
+    width={props.width || 24}
+    height={props.height || 24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class={props.class}
+    style={props.style}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+    {/* I2C bus lines */}
+    <path d="M4 12h16" />
+    <path d="M8 8v8" />
+    <path d="M16 8v8" />
+    {/* SDA/SCL labels */}
+    <text x="6" y="6" font-size="4" fill="currentColor">SDA</text>
+    <text x="14" y="6" font-size="4" fill="currentColor">SCL</text>
+  </svg>
+);
+
 export const ClipboardIcon = (props: IconProps) => (
   <img
     src={devicesIcon}
@@ -382,6 +407,8 @@ export const getDeviceIcon = (type: string, props?: IconProps) => {
       return <ButtonIcon {...props} />;
     case "BUZZER":
       return <BuzzerIcon {...props} />;
+    case "I2C":
+      return <I2cIcon {...props} />;
     case "SERVO":
       return <ServoIcon {...props} />;
     case "STEPPER":

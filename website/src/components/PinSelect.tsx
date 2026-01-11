@@ -97,7 +97,7 @@ export default function PinSelect(props: PinSelectProps) {
           const deviceId = getPinUsage(pinNum);
           return (
             <option value={pinNum}>
-              GPIO:{pinNum}
+              {pinNum}
               {deviceId ? ` (used by '${deviceId}')` : ""}
             </option>
           );

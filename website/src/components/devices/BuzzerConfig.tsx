@@ -2,6 +2,7 @@ import { createEffect, createSignal } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { useBuzzer } from "../../stores/Buzzer";
 import PinSelect from "../PinSelect";
+import { PinConfig, deserializePinConfig } from "../../interfaces/WebSockets";
 
 interface BuzzerConfigProps {
   id: string;
@@ -11,7 +12,9 @@ interface BuzzerConfigProps {
 export default function BuzzerConfig(props: BuzzerConfigProps) {
   const [device, { setDeviceConfig }] = useBuzzer(props.id);
   const [name, setName] = createSignal(device?.config?.name ?? "Buzzer");
-  const [pin, setPin] = createSignal(device?.config?.pin ?? -1);
+  const [pin, setPin] = createSignal<PinConfig>(
+    deserializePinConfig(device?.config?.pin ?? -1)
+  );
 
   createEffect(() => {
     const config = device?.config;
@@ -23,8 +26,8 @@ export default function BuzzerConfig(props: BuzzerConfigProps) {
       setName(config.name);
     }
 
-    if (typeof config.pin === "number") {
-      setPin(config.pin);
+    if (typeof config.pin === "number" || typeof config.pin === "object") {
+      setPin(deserializePinConfig(config.pin));
     }
   });
 
@@ -34,7 +37,7 @@ export default function BuzzerConfig(props: BuzzerConfigProps) {
       onSave={() =>
         setDeviceConfig({
           name: name(),
-          pin: pin(),
+          pin: pin().pin,
         })
       }
       onClose={props.onClose}

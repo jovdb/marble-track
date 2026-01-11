@@ -2,6 +2,7 @@ import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { IStepperConfig, StepperType, STEPPER_TYPES, useStepper } from "../../stores/Stepper";
 import PinSelect from "../PinSelect";
+import { PinConfig, deserializePinConfig } from "../../interfaces/WebSockets";
 
 const STEPPER_TYPE_OPTIONS: { value: StepperType; label: string }[] = [
   { value: "DRIVER", label: "Driver (2-pin)" },
@@ -17,14 +18,14 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
 
   const [name, setName] = createSignal("Stepper");
   const [stepperType, setStepperType] = createSignal<StepperType>("DRIVER");
-  const [stepPin, setStepPin] = createSignal(-1);
-  const [dirPin, setDirPin] = createSignal(-1);
-  const [enablePin, setEnablePin] = createSignal(-1);
+  const [stepPin, setStepPin] = createSignal<PinConfig>(deserializePinConfig(-1));
+  const [dirPin, setDirPin] = createSignal<PinConfig>(deserializePinConfig(-1));
+  const [enablePin, setEnablePin] = createSignal<PinConfig>(deserializePinConfig(-1));
   const [invertEnable, setInvertEnable] = createSignal(false);
-  const [pin1, setPin1] = createSignal(-1);
-  const [pin2, setPin2] = createSignal(-1);
-  const [pin3, setPin3] = createSignal(-1);
-  const [pin4, setPin4] = createSignal(-1);
+  const [pin1, setPin1] = createSignal<PinConfig>(deserializePinConfig(-1));
+  const [pin2, setPin2] = createSignal<PinConfig>(deserializePinConfig(-1));
+  const [pin3, setPin3] = createSignal<PinConfig>(deserializePinConfig(-1));
+  const [pin4, setPin4] = createSignal<PinConfig>(deserializePinConfig(-1));
   const [maxSpeed, setMaxSpeed] = createSignal(1000);
   const [maxAcceleration, setMaxAcceleration] = createSignal(300);
   const [defaultSpeed, setDefaultSpeed] = createSignal(500);
@@ -47,30 +48,30 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
     }
 
     if (cfg.stepperType === "DRIVER") {
-      if (typeof cfg.stepPin === "number") {
-        setStepPin(cfg.stepPin);
+      if (typeof cfg.stepPin === "number" || typeof cfg.stepPin === "object") {
+        setStepPin(deserializePinConfig(cfg.stepPin));
       }
-      if (typeof cfg.dirPin === "number") {
-        setDirPin(cfg.dirPin);
+      if (typeof cfg.dirPin === "number" || typeof cfg.dirPin === "object") {
+        setDirPin(deserializePinConfig(cfg.dirPin));
       }
-      if (typeof cfg.enablePin === "number") {
-        setEnablePin(cfg.enablePin);
+      if (typeof cfg.enablePin === "number" || typeof cfg.enablePin === "object") {
+        setEnablePin(deserializePinConfig(cfg.enablePin));
       }
     } else {
-      if (typeof cfg.pin1 === "number") {
-        setPin1(cfg.pin1);
+      if (typeof cfg.pin1 === "number" || typeof cfg.pin1 === "object") {
+        setPin1(deserializePinConfig(cfg.pin1));
       }
-      if (typeof cfg.pin2 === "number") {
-        setPin2(cfg.pin2);
+      if (typeof cfg.pin2 === "number" || typeof cfg.pin2 === "object") {
+        setPin2(deserializePinConfig(cfg.pin2));
       }
-      if (typeof cfg.pin3 === "number") {
-        setPin3(cfg.pin3);
+      if (typeof cfg.pin3 === "number" || typeof cfg.pin3 === "object") {
+        setPin3(deserializePinConfig(cfg.pin3));
       }
-      if (typeof cfg.pin4 === "number") {
-        setPin4(cfg.pin4);
+      if (typeof cfg.pin4 === "number" || typeof cfg.pin4 === "object") {
+        setPin4(deserializePinConfig(cfg.pin4));
       }
-      if (typeof cfg.enablePin === "number") {
-        setEnablePin(cfg.enablePin);
+      if (typeof cfg.enablePin === "number" || typeof cfg.enablePin === "object") {
+        setEnablePin(deserializePinConfig(cfg.enablePin));
       }
     }
 
@@ -114,18 +115,18 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
     };
 
     if (isFourPin()) {
-      payload.pin1 = Number(pin1());
-      payload.pin2 = Number(pin2());
-      payload.pin3 = Number(pin3());
-      payload.pin4 = Number(pin4());
-      if (enablePin() >= 0) {
-        payload.enablePin = Number(enablePin());
+      payload.pin1 = pin1().pin;
+      payload.pin2 = pin2().pin;
+      payload.pin3 = pin3().pin;
+      payload.pin4 = pin4().pin;
+      if (enablePin().pin >= 0) {
+        payload.enablePin = enablePin().pin;
       }
     } else {
-      payload.stepPin = Number(stepPin());
-      payload.dirPin = Number(dirPin());
-      if (enablePin() >= 0) {
-        payload.enablePin = Number(enablePin());
+      payload.stepPin = stepPin().pin;
+      payload.dirPin = dirPin().pin;
+      if (enablePin().pin >= 0) {
+        payload.enablePin = enablePin().pin;
       }
     }
 

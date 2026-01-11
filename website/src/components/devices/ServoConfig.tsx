@@ -2,6 +2,7 @@ import { createEffect, createSignal } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { useServo } from "../../stores/Servo";
 import PinSelect from "../PinSelect";
+import { PinConfig, deserializePinConfig } from "../../interfaces/WebSockets";
 
 interface ServoConfigProps {
   id: string;
@@ -14,7 +15,9 @@ export default function ServoConfig(props: ServoConfigProps) {
   const actions = servoStore[1];
 
   const [name, setName] = createSignal(device()?.config?.name ?? device()?.id ?? "Servo");
-  const [pin, setPin] = createSignal<number>(device()?.config?.pin ?? -1);
+  const [pin, setPin] = createSignal<PinConfig>(
+    deserializePinConfig(device()?.config?.pin ?? -1)
+  );
   const [mcpwmChannel, setMcpwmChannel] = createSignal<number>(
     device()?.config?.mcpwmChannel ?? -1
   );
@@ -42,8 +45,8 @@ export default function ServoConfig(props: ServoConfigProps) {
       setName(config.name);
     }
 
-    if (typeof config.pin === "number") {
-      setPin(config.pin);
+    if (typeof config.pin === "number" || typeof config.pin === "object") {
+      setPin(deserializePinConfig(config.pin));
     }
 
     if (typeof config.mcpwmChannel === "number") {
@@ -77,7 +80,7 @@ export default function ServoConfig(props: ServoConfigProps) {
       onSave={() =>
         actions.setDeviceConfig({
           name: name()?.trim() || device()?.id,
-          pin: pin(),
+          pin: pin().pin,
           mcpwmChannel: mcpwmChannel(),
           frequency: frequency(),
           resolutionBits: resolutionBits(),

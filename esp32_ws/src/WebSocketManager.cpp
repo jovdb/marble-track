@@ -87,8 +87,13 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
         }
     }
 
+    if (response.overflowed()) {
+        MLOG_ERROR("devices-list JSON overflowed!");
+    }
+
     String message;
     serializeJson(response, message);
+    MLOG_DEBUG("devices-list serialized: %d bytes", message.length());
 
     notifyClients(message);
 }
@@ -365,8 +370,13 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
             ISerializable *serializable = mixins::SerializableRegistry::get(deviceId);
             if (serializable)
             {
-                StaticJsonDocument<1536> configDoc; // Allocate 1.5KB for config
+                StaticJsonDocument<2048> configDoc; // Increased to 2KB for config
                 serializable->configToJson(configDoc);
+                
+                if (configDoc.overflowed()) {
+                    MLOG_ERROR("Config JSON overflowed for device %s! Needed %d bytes", deviceId.c_str(), configDoc.memoryUsage());
+                }
+                
                 response["config"] = configDoc;
             }
             else
@@ -456,8 +466,14 @@ void WebSocketManager::handleGetDevicesConfig(JsonDocument &doc)
         deviceManager->addDevicesToJsonArray(devicesArray);
         response["config"] = configDoc;
     }
+    
+    if (response.overflowed()) {
+        MLOG_ERROR("devices-config JSON overflowed!");
+    }
+    
     String respStr;
     serializeJson(response, respStr);
+    MLOG_DEBUG("devices-config serialized: %d bytes", respStr.length());
     notifyClients(respStr);
 }
 

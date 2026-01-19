@@ -18,6 +18,14 @@ struct PinConfig
 {
     String expanderId = "";
     int pin = -1;
+
+    String toString() const {
+        if (expanderId.isEmpty()) {
+            return "GPIO:" + String(pin);
+        } else {
+            return expanderId + ":" + String(pin);
+        }
+    }
 };
 
 class PinFactory

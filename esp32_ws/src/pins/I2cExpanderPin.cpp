@@ -69,7 +69,7 @@ namespace pins
     {
         if (pinNumber < 0 || pinNumber > getMaxPinNumber())
         {
-            MLOG_WARN("I2cExpanderPin: Invalid pin number %d for %s (max %d)", 
+            MLOG_WARN("I2cExpander: Invalid pin number %d for %s (max %d)", 
                       pinNumber, getExpanderTypeName().c_str(), getMaxPinNumber());
             return false;
         }
@@ -77,7 +77,7 @@ namespace pins
         // Check if the I2C device is present
         if (!isDevicePresent())
         {
-            MLOG_ERROR("I2cExpanderPin: Device not found at address 0x%02X", _i2cAddress);
+            MLOG_ERROR("I2cExpander: Device not found at address 0x%02X", _i2cAddress);
             return false;
         }
 
@@ -99,7 +99,7 @@ namespace pins
             {
                 if (!configureDirection())
                 {
-                    MLOG_ERROR("I2cExpanderPin: Failed to configure direction for pin %d", _pinNumber);
+                    MLOG_ERROR("I2cExpander: Failed to configure direction for pin %d", _pinNumber);
                     return false;
                 }
             }
@@ -118,7 +118,7 @@ namespace pins
             {
                 if (!configureDirection())
                 {
-                    MLOG_ERROR("I2cExpanderPin: Failed to configure direction for pin %d", _pinNumber);
+                    MLOG_ERROR("I2cExpander: Failed to configure direction for pin %d", _pinNumber);
                     return false;
                 }
                 
@@ -152,7 +152,7 @@ namespace pins
         }
 
         _isSetup = true;
-        MLOG_INFO("I2cExpanderPin: Setup %s", toString().c_str());
+        MLOG_INFO("I2cExpander: Setup %s", toString().c_str());
         return true;
     }
 
@@ -273,13 +273,13 @@ namespace pins
     {
         if (!_isSetup || _pinNumber < 0)
         {
-            MLOG_WARN("I2cExpanderPin: Cannot write to unconfigured pin");
+            MLOG_WARN("I2cExpander: Cannot write to unconfigured pin");
             return false;
         }
 
         if (_mode != PinMode::Output)
         {
-            MLOG_WARN("I2cExpanderPin: Writing to non-output pin %d", _pinNumber);
+            MLOG_WARN("I2cExpander: Writing to non-output pin %d", _pinNumber);
         }
 
         uint8_t cacheIdx = getCacheIndex();

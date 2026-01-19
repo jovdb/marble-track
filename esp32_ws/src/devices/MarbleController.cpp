@@ -25,7 +25,8 @@ namespace devices
         auto liftConfig = _lift->getConfig();
         liftConfig.name = "Lift";
         liftConfig.minSteps = 0;
-        liftConfig.maxSteps = 2242;
+        liftConfig.maxSteps = 1500;
+        liftConfig.downFactor = 1.015;
         _lift->setConfig(liftConfig);
         addChild(_lift);
 
@@ -34,11 +35,11 @@ namespace devices
         if (liftStepper)
         {
             auto liftStepperConfig = liftStepper->getConfig();
-            liftStepperConfig.name = "lift-stepper";
+            liftStepperConfig.name = "Lift Stepper";
             liftStepperConfig.stepperType = "DRIVER";
-            liftStepperConfig.maxSpeed = 4000;
-            liftStepperConfig.maxAcceleration = 1000;
-            liftStepperConfig.defaultSpeed = 400;
+            liftStepperConfig.maxSpeed = 400;
+            liftStepperConfig.maxAcceleration = 100;
+            liftStepperConfig.defaultSpeed = 150;
             liftStepperConfig.defaultAcceleration = 50;
             liftStepperConfig.stepPin = 1;
             liftStepperConfig.dirPin = 2;
@@ -51,8 +52,8 @@ namespace devices
         if (liftLimitSwitch)
         {
             auto liftLimitSwitchConfig = liftLimitSwitch->getConfig();
-            liftLimitSwitchConfig.pinConfig.pin = 41;
-            liftLimitSwitchConfig.pinConfig.expanderId = "i2c-1";
+            liftLimitSwitchConfig.pinConfig.pin = -1;
+            liftLimitSwitchConfig.pinConfig.expanderId = "";
             liftLimitSwitchConfig.pinMode = PinModeOption::PullUp;
             liftLimitSwitch->setConfig(liftLimitSwitchConfig);
         }
@@ -61,8 +62,8 @@ namespace devices
         if (liftBallSensor)
         {
             auto liftBallSensorConfig = liftBallSensor->getConfig();
-            liftBallSensorConfig.pinConfig.pin = 40;
-            liftBallSensorConfig.pinConfig.expanderId = "i2c-1";
+            liftBallSensorConfig.pinConfig.pin = -1;
+            liftBallSensorConfig.pinConfig.expanderId = "";
             liftBallSensorConfig.pinMode = PinModeOption::PullUp;
             liftBallSensor->setConfig(liftBallSensorConfig);
         }
@@ -72,12 +73,12 @@ namespace devices
         {
             auto liftLoaderConfig = liftLoader->getConfig();
             liftLoaderConfig.pin = 39;
-            liftLoaderConfig.mcpwmChannel = -1;
+            liftLoaderConfig.mcpwmChannel = 0;
             liftLoaderConfig.frequency = 50;
             liftLoaderConfig.resolutionBits = 10;
             liftLoaderConfig.minDutyCycle = 9.5f;
             liftLoaderConfig.maxDutyCycle = 5.5f;
-            liftLoaderConfig.defaultDurationInMs = 400;
+            liftLoaderConfig.defaultDurationInMs = 200;
             liftLoader->setConfig(liftLoaderConfig);
         }
 
@@ -86,19 +87,20 @@ namespace devices
         {
             auto liftUnloaderConfig = liftUnloader->getConfig();
             liftUnloaderConfig.pin = 38;
-            liftUnloaderConfig.mcpwmChannel = -1;
+            liftUnloaderConfig.mcpwmChannel = 1;
             liftUnloaderConfig.frequency = 50;
             liftUnloaderConfig.resolutionBits = 10;
-            liftUnloaderConfig.minDutyCycle = 12.5f;
-            liftUnloaderConfig.maxDutyCycle = 3.0f;
-            liftUnloaderConfig.defaultDurationInMs = 700;
+            liftUnloaderConfig.minDutyCycle = 12.2f;
+            liftUnloaderConfig.maxDutyCycle = 4.0f;
+            liftUnloaderConfig.defaultDurationInMs = 1200;
             liftUnloader->setConfig(liftUnloaderConfig);
         }
 
         _liftLed = new devices::Led("lift-led");
         auto liftLedConfig = _liftLed->getConfig();
         liftLedConfig.name = "Lift Led";
-        liftLedConfig.pinConfig.pin = 45;
+        liftLedConfig.pinConfig.pin = 0;
+        liftLedConfig.pinConfig.expanderId = "ex";
         liftLedConfig.initialState = "OFF";
         _liftLed->setConfig(liftLedConfig);
         addChild(_liftLed);
@@ -106,9 +108,8 @@ namespace devices
         _liftButton = new devices::Button("lift-button");
         auto liftButtonConfig = _liftButton->getConfig();
         liftButtonConfig.name = "Lift Button";
-        liftButtonConfig.pinConfig.pin = 48;
-
-        liftButtonConfig.pinConfig.expanderId = "i2c-1";
+        liftButtonConfig.pinConfig.pin = -1;
+        liftButtonConfig.pinConfig.expanderId = "";
         liftButtonConfig.pinMode = PinModeOption::PullUp;
         liftButtonConfig.debounceTimeInMs = 50;
         liftButtonConfig.buttonType = ButtonType::NormalOpen;
@@ -118,8 +119,8 @@ namespace devices
         _manualButton = new devices::Button("manual-btn");
         auto manualButtonConfig = _manualButton->getConfig();
         manualButtonConfig.name = "Manual Mode Button";
-        manualButtonConfig.pinConfig.pin = 12;
-        manualButtonConfig.pinConfig.expanderId = "i2c-1";
+        manualButtonConfig.pinConfig.pin = -1;
+        manualButtonConfig.pinConfig.expanderId = "";
         manualButtonConfig.pinMode = PinModeOption::PullUp;
         manualButtonConfig.debounceTimeInMs = 50;
         manualButtonConfig.buttonType = ButtonType::NormalOpen;
@@ -134,6 +135,7 @@ namespace devices
         wheelConfig.stepsPerRevolution = 138259;
         wheelConfig.maxStepsPerRevolution = 150000;
         wheelConfig.zeroPointDegree = 180;
+        wheelConfig.direction = 1;
         wheelConfig.breakPoints = {82.0f, 160.0f, 285.0f, 317.0f};
         _wheel->setConfig(wheelConfig);
         addChild(_wheel);
@@ -161,8 +163,8 @@ namespace devices
         {
             auto wheelSensorConfig = wheelSensor->getConfig();
             wheelSensorConfig.name = "Wheel Zero Sensor";
-            wheelSensorConfig.pinConfig.pin = 7;
-            wheelSensorConfig.pinConfig.expanderId = "i2c-1";
+            wheelSensorConfig.pinConfig.pin = -1;
+            wheelSensorConfig.pinConfig.expanderId = "";
             wheelSensorConfig.pinMode = PinModeOption::PullUp;
             wheelSensorConfig.debounceTimeInMs = 50;
             wheelSensorConfig.buttonType = ButtonType::NormalOpen;
@@ -173,7 +175,8 @@ namespace devices
         _wheelBtnLed = new devices::Led("wheel-btn-led");
         auto wheelBtnLedConfig = _wheelBtnLed->getConfig();
         wheelBtnLedConfig.name = "";
-        wheelBtnLedConfig.pinConfig.pin = 15;
+        wheelBtnLedConfig.pinConfig.pin = 1;
+        wheelBtnLedConfig.pinConfig.expanderId = "ex";
         wheelBtnLedConfig.initialState = "OFF";
         _wheelBtnLed->setConfig(wheelBtnLedConfig);
         addChild(_wheelBtnLed);
@@ -182,8 +185,8 @@ namespace devices
         _wheelNextBtn = new devices::Button("wheel-next-btn");
         auto wheelNextBtnConfig = _wheelNextBtn->getConfig();
         wheelNextBtnConfig.name = "";
-        wheelNextBtnConfig.pinConfig.pin = 16;
-        wheelNextBtnConfig.pinConfig.expanderId = "i2c-1";
+        wheelNextBtnConfig.pinConfig.pin = -1;
+        wheelNextBtnConfig.pinConfig.expanderId = "";
         wheelNextBtnConfig.pinMode = PinModeOption::PullUp;
         wheelNextBtnConfig.debounceTimeInMs = 50;
         wheelNextBtnConfig.buttonType = ButtonType::NormalOpen;

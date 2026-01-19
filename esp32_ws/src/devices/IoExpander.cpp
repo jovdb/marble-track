@@ -57,11 +57,7 @@ namespace devices
         int sdaPin = i2cPins[0].toInt();
         int sclPin = i2cPins[1].toInt();
 
-        // End any previous I2C setup
-        Wire.end();
-
-        // Initialize I2C with pins from the I2C device
-        Wire.begin(sdaPin, sclPin);
+        // I2C bus is already initialized by the I2C device - no need to reinitialize
 
         // Check if device is present
         Wire.beginTransmission(_config.i2cAddress);

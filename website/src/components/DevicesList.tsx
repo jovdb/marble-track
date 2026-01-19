@@ -1,11 +1,18 @@
 import { createEffect, For, createSignal, onMount, onCleanup } from "solid-js";
-import { getDeviceIcon, TrashIcon, ChevronRightIcon, ChevronDownIcon } from "./icons/Icons";
+import {
+  getDeviceIcon,
+  TrashIcon,
+  ChevronRightIcon,
+  ChevronDownIcon,
+  GripIcon,
+} from "./icons/Icons";
 import styles from "./DevicesList.module.css";
 import { useDevices, type IDevice } from "../stores/Devices";
 import { useWebSocket2 } from "../hooks/useWebSocket";
 import {
   IWsSendAddDeviceMessage,
   IWsSendRemoveDeviceMessage,
+  IWsSendReorderDevicesMessage,
   DeviceType,
 } from "../interfaces/WebSockets";
 
@@ -34,6 +41,11 @@ export function DevicesList() {
 
   // Track collapsed state for devices with children
   const [collapsedDevices, setCollapsedDevices] = createSignal<Set<string>>(new Set());
+
+  // Drag and drop state
+  const [draggedDeviceId, setDraggedDeviceId] = createSignal<string | null>(null);
+  const [dragOverDeviceId, setDragOverDeviceId] = createSignal<string | null>(null);
+  const [dragDirection, setDragDirection] = createSignal<"up" | "down" | null>(null);
 
   // Initialize collapsed devices - start all devices with children collapsed
   createEffect(() => {
@@ -103,6 +115,94 @@ export function DevicesList() {
     if (!socketActions.sendMessage(message)) {
       alert("Failed to send remove device message");
     }
+  };
+
+  // Drag and drop handlers for reordering
+  const handleDragStart = (e: DragEvent, deviceId: string) => {
+    if (!e.dataTransfer) return;
+    setDraggedDeviceId(deviceId);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", deviceId);
+    // Add a slight delay to allow the drag image to be set
+    setTimeout(() => {
+      const target = e.target as HTMLElement;
+      target.closest("tr")?.classList.add(styles["devices-list__table-row--dragging"]);
+    }, 0);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedDeviceId(null);
+    setDragOverDeviceId(null);
+    setDragDirection(null);
+    // Remove dragging class from all rows
+    document.querySelectorAll(`.${styles["devices-list__table-row--dragging"]}`).forEach((el) => {
+      el.classList.remove(styles["devices-list__table-row--dragging"]);
+    });
+  };
+
+  const handleDragOver = (e: DragEvent, deviceId: string) => {
+    e.preventDefault();
+    if (!e.dataTransfer) return;
+    e.dataTransfer.dropEffect = "move";
+
+    const sourceDeviceId = draggedDeviceId();
+    if (sourceDeviceId !== deviceId) {
+      setDragOverDeviceId(deviceId);
+
+      // Determine drag direction
+      const currentDevices = topLevelDevices();
+      const sourceIndex = currentDevices.findIndex((d) => d.id === sourceDeviceId);
+      const targetIndex = currentDevices.findIndex((d) => d.id === deviceId);
+
+      if (sourceIndex !== -1 && targetIndex !== -1) {
+        setDragDirection(sourceIndex < targetIndex ? "down" : "up");
+      }
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverDeviceId(null);
+  };
+
+  const handleDrop = (e: DragEvent, targetDeviceId: string) => {
+    e.preventDefault();
+    const sourceDeviceId = draggedDeviceId();
+
+    if (!sourceDeviceId || sourceDeviceId === targetDeviceId) {
+      setDraggedDeviceId(null);
+      setDragOverDeviceId(null);
+      return;
+    }
+
+    // Get current top-level devices and reorder
+    const currentDevices = topLevelDevices();
+    const sourceIndex = currentDevices.findIndex((d) => d.id === sourceDeviceId);
+    const targetIndex = currentDevices.findIndex((d) => d.id === targetDeviceId);
+
+    if (sourceIndex === -1 || targetIndex === -1) {
+      setDraggedDeviceId(null);
+      setDragOverDeviceId(null);
+      return;
+    }
+
+    // Create new order
+    const newOrder = [...currentDevices];
+    const [removed] = newOrder.splice(sourceIndex, 1);
+    newOrder.splice(targetIndex, 0, removed);
+
+    // Send reorder message to backend
+    const message: IWsSendReorderDevicesMessage = {
+      type: "reorder-devices",
+      deviceIds: newOrder.map((d) => d.id),
+    };
+
+    if (!socketActions.sendMessage(message)) {
+      alert("Failed to send reorder message");
+    }
+
+    setDraggedDeviceId(null);
+    setDragOverDeviceId(null);
+    setDragDirection(null);
   };
   /*
   onMount(() => {
@@ -196,6 +296,16 @@ export function DevicesList() {
     const depth = props.depth ?? 0;
     const hasChildren = props.device.children && props.device.children.length > 0;
     const isCollapsed = () => collapsedDevices().has(props.device.id);
+    const isTopLevel = depth === 0;
+    const isDragging = () => draggedDeviceId() === props.device.id;
+    const isDragOver = () => dragOverDeviceId() === props.device.id && !isDragging();
+    const dragDirectionClass = () => {
+      if (!isDragOver()) return "";
+      const direction = dragDirection();
+      return direction === "up"
+        ? styles["devices-list__table-row--drag-over-up"]
+        : styles["devices-list__table-row--drag-over-down"];
+    };
 
     const indentStyle = {
       "padding-left": `${depth * 24}px`,
@@ -215,11 +325,19 @@ export function DevicesList() {
     return (
       <>
         <tr
-          class={styles["devices-list__table-row"]}
+          class={`${styles["devices-list__table-row"]} ${dragDirectionClass()}`}
           style={{ cursor: "pointer" }}
+          draggable={isTopLevel}
+          onDragStart={(e) => isTopLevel && handleDragStart(e, props.device.id)}
+          onDragEnd={handleDragEnd}
+          onDragOver={(e) => isTopLevel && handleDragOver(e, props.device.id)}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => isTopLevel && handleDrop(e, props.device.id)}
           onClick={(e) => {
-            // Don't scroll if clicking on buttons
+            // Don't scroll if clicking on buttons or drag handle
             if ((e.target as HTMLElement).closest("button")) return;
+            if ((e.target as HTMLElement).closest(`.${styles["devices-list__drag-handle"]}`))
+              return;
 
             const deviceElement = document.getElementById(`device-${props.device.id}`);
             if (deviceElement) {
@@ -235,6 +353,15 @@ export function DevicesList() {
         >
           <td class={styles["devices-list__table-td"]}>
             <div class={styles["devices-list__device-cell"]} style={indentStyle}>
+              {isTopLevel && (
+                <span
+                  class={styles["devices-list__drag-handle"]}
+                  title="Drag to reorder"
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                  <GripIcon />
+                </span>
+              )}
               {hasChildren && (
                 <button
                   class={styles["devices-list__collapse-button"]}

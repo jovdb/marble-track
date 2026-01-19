@@ -60,6 +60,7 @@ public:
     // Device management handlers
     void handleAddDevice(JsonDocument &doc);
     void handleRemoveDevice(JsonDocument &doc);
+    void handleReorderDevices(JsonDocument &doc);
 
     // Network config handlers
     void handleGetNetworkConfig(JsonDocument &doc);

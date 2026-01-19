@@ -52,6 +52,7 @@ public:
 
     bool addDevice(Device *device);
     bool removeDevice(const String &deviceId);
+    bool reorderDevices(const std::vector<String> &deviceIds);
     bool addDevice(const String &deviceType, const String &deviceId, JsonVariant config = JsonVariant());
 
     /**

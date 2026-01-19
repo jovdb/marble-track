@@ -45,57 +45,38 @@ export function createDevicesStore({
           setStore(
             produce((draft) => {
               const { devices } = message;
+              const oldDevices = draft.devices;
 
-              // Helper function to recursively collect all device IDs from nested structure
-              const collectAllDeviceIds = (deviceList: DeviceInfo[]): string[] => {
-                const ids: string[] = [];
-                const processDevice = (device: DeviceInfo) => {
-                  ids.push(device.id);
-                  device.children?.forEach(processDevice);
-                };
-                deviceList.forEach(processDevice);
-                return ids;
-              };
+              // Build a new devices object in the order provided by the message
+              // This ensures reordering is reflected in the UI
+              const newDevices: IDevices = {};
 
-              const allDeviceIds = collectAllDeviceIds(devices);
-
-              // Remove unknown devices
-              Object.keys(draft.devices).forEach((key) => {
-                if (!allDeviceIds.includes(key)) {
-                  delete draft.devices[key];
-                }
-              });
-
-              // Helper function to recursively add/update devices
+              // Helper function to recursively add devices in order
               const addDeviceRecursively = (device: DeviceInfo) => {
-                const deviceDraft = draft.devices[device.id];
-                if (deviceDraft) {
-                  // Update device
-                  deviceDraft.type = device.type;
-                  deviceDraft.pins = device.pins;
-                  deviceDraft.features = device.features;
-                  deviceDraft.children =
-                    device.children?.map((child) => ({ id: child.id, type: child.type })) || [];
-                } else {
-                  // Add device
-                  draft.devices[device.id] = {
-                    id: device.id,
-                    type: device.type,
-                    pins: device.pins,
-                    features: device.features,
-                    state: undefined,
-                    config: undefined,
-                    children:
-                      device.children?.map((child) => ({ id: child.id, type: child.type })) || [],
-                  };
-                }
+                const existingDevice = oldDevices[device.id];
+                newDevices[device.id] = {
+                  id: device.id,
+                  type: device.type,
+                  pins: device.pins,
+                  features: device.features,
+                  // Preserve existing state and config if available
+                  state: existingDevice?.state,
+                  stateErrorMessage: existingDevice?.stateErrorMessage,
+                  config: existingDevice?.config,
+                  configErrorMessage: existingDevice?.configErrorMessage,
+                  children:
+                    device.children?.map((child) => ({ id: child.id, type: child.type })) || [],
+                };
 
                 // Recursively process children
                 device.children?.forEach(addDeviceRecursively);
               };
 
-              // Add/update all devices recursively
+              // Add/update all devices recursively in order
               devices.forEach(addDeviceRecursively);
+
+              // Replace the devices object entirely to preserve order
+              draft.devices = newDevices;
             })
           );
         }
@@ -117,6 +98,16 @@ export function createDevicesStore({
           alert(`Failed to remove device: ${message.error}`);
         } else if ("success" in message) {
           console.log("Device removed successfully:", message.deviceId);
+          // Device list will be refreshed automatically via devices-list message
+        }
+        break;
+      }
+      case "reorder-devices": {
+        if ("error" in message) {
+          console.error("Failed to reorder devices:", message.error);
+          alert(`Failed to reorder devices: ${message.error}`);
+        } else if ("success" in message) {
+          console.log("Devices reordered successfully");
           // Device list will be refreshed automatically via devices-list message
         }
         break;

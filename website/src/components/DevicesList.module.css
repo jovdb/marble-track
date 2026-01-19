@@ -157,6 +157,43 @@
 .devices-list__device-cell {
   display: flex;
   align-items: center;
+  gap: var(--spacing-1);
+}
+
+.devices-list__drag-handle {
+  cursor: grab;
+  color: var(--color-text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-1);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.devices-list__drag-handle:hover {
+  color: var(--color-text-secondary);
+  background-color: var(--color-gray-100);
+}
+
+.devices-list__drag-handle:active {
+  cursor: grabbing;
+}
+
+.devices-list__table-row--dragging {
+  opacity: 0.5;
+  background-color: var(--color-surface);
+}
+
+.devices-list__table-row--drag-over-up {
+  background-color: var(--color-primary-50);
+  box-shadow: inset 0 2px 0 var(--color-primary-500);
+}
+
+.devices-list__table-row--drag-over-down {
+  background-color: var(--color-primary-50);
+  box-shadow: inset 0 -2px 0 var(--color-primary-500);
 }
 
 .devices-list__type-badge {

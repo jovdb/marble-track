@@ -617,6 +617,68 @@ bool DeviceManager::removeDevice(const String &deviceId)
     return false;
 }
 
+bool DeviceManager::reorderDevices(const std::vector<String> &deviceIds)
+{
+    // Validate that all device IDs exist and count matches
+    if ((int)deviceIds.size() != devicesCount)
+    {
+        MLOG_WARN("Reorder failed: device count mismatch (expected %d, got %d)", devicesCount, (int)deviceIds.size());
+        return false;
+    }
+
+    // Create a temporary array to hold the reordered devices
+    Device *reordered[MAX_DEVICES];
+    for (int i = 0; i < MAX_DEVICES; i++)
+    {
+        reordered[i] = nullptr;
+    }
+
+    // Map each device ID to its position in the new order
+    for (int i = 0; i < (int)deviceIds.size(); i++)
+    {
+        const String &id = deviceIds[i];
+        bool found = false;
+
+        for (int j = 0; j < devicesCount; j++)
+        {
+            if (devices[j] != nullptr && devices[j]->getId() == id)
+            {
+                reordered[i] = devices[j];
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            MLOG_WARN("Reorder failed: device '%s' not found", id.c_str());
+            return false;
+        }
+    }
+
+    // Check for duplicates (a device appearing twice in the new order)
+    for (int i = 0; i < (int)deviceIds.size(); i++)
+    {
+        for (int j = i + 1; j < (int)deviceIds.size(); j++)
+        {
+            if (reordered[i] == reordered[j])
+            {
+                MLOG_WARN("Reorder failed: duplicate device ID");
+                return false;
+            }
+        }
+    }
+
+    // Copy the reordered array back to devices
+    for (int i = 0; i < devicesCount; i++)
+    {
+        devices[i] = reordered[i];
+    }
+
+    MLOG_INFO("Devices reordered successfully");
+    return true;
+}
+
 std::vector<Device *> DeviceManager::getAllDevices()
 {
     std::vector<Device *> allDevices;

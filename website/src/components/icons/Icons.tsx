@@ -339,6 +339,25 @@ export const TrashIcon = (props: IconProps) => (
   </svg>
 );
 
+export const GripIcon = (props: IconProps) => (
+  <svg
+    width={props.width || 16}
+    height={props.height || 16}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    class={props.class}
+    style={props.style}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <circle cx="9" cy="5" r="1.5" />
+    <circle cx="15" cy="5" r="1.5" />
+    <circle cx="9" cy="12" r="1.5" />
+    <circle cx="15" cy="12" r="1.5" />
+    <circle cx="9" cy="19" r="1.5" />
+    <circle cx="15" cy="19" r="1.5" />
+  </svg>
+);
+
 export function ConnectedIcon(props: IconProps) {
   return (
     <svg

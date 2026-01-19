@@ -66,6 +66,9 @@ public:
     void handleSetNetworkConfig(JsonDocument &doc);
     void handleGetNetworks(JsonDocument &doc);
     void handleGetNetworkStatus(JsonDocument &doc);
+
+    // I2C handlers
+    void handleGetExpanderAddresses(JsonDocument &doc);
 };
 
 #endif

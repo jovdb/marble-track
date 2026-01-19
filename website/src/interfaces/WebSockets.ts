@@ -23,8 +23,16 @@ export interface PinConfig {
 }
 
 // Deserialize pin configuration from device config
-export function deserializePinConfig(pin: Record<string, any>): PinConfig {
-  // Only support object format
+export function deserializePinConfig(pin: number | Record<string, any>): PinConfig {
+  // Handle plain number format (legacy or simple GPIO pins)
+  if (typeof pin === "number") {
+    return {
+      pin: pin,
+      expanderId: "",
+    };
+  }
+
+  // Handle object format
   const pinNum = typeof pin.pin === "number" ? pin.pin : -1;
   const expanderId = typeof pin.expanderId === "string" ? pin.expanderId : "";
 
@@ -192,6 +200,12 @@ export type IWsReceiveStepsPerRevolutionMessage = IWsMessageBase<"steps-per-revo
   steps: number;
 };
 
+export type IWsReceiveExpanderAddressesMessage =
+  | (IWsMessageBase<"expander-addresses"> & _IWsErrorResponse)
+  | (IWsMessageBase<"expander-addresses"> & {
+      addresses: number[];
+    });
+
 // Individual message type (non-batch)
 export type IWsReceiveSingleMessage =
   | IWsReceiveDevicesListMessage
@@ -208,6 +222,7 @@ export type IWsReceiveSingleMessage =
   | IWsReceiveGetNetworkStatusMessage
   | IWsReceiveDevicesConfigMessage
   | IWsReceiveStepsPerRevolutionMessage
+  | IWsReceiveExpanderAddressesMessage
   | IWsReceivePongMessage;
 
 // Message is always an array of messages (batch)
@@ -264,6 +279,10 @@ export type IWsSendSetNetworkConfigMessage = IWsMessageBase<"set-network-config"
 
 export type IWsSendGetNetworkStatusMessage = IWsMessageBase<"network-status">;
 
+export type IWsSendGetExpanderAddressesMessage = IWsMessageBase<"expander-addresses"> & {
+  i2cDeviceId: string;
+};
+
 export type IWsSendMessage =
   | IWsSendRestartMessage
   | IWsSendGetDevicesMessage
@@ -279,4 +298,5 @@ export type IWsSendMessage =
   | IWsSendSetNetworkConfigMessage
   | IWsSendGetNetworksMessage
   | IWsSendGetNetworkStatusMessage
+  | IWsSendGetExpanderAddressesMessage
   | IWsSendPingMessage;

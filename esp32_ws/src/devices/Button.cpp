@@ -40,7 +40,7 @@ namespace devices
 
         if (_config.pinConfig.pin == -1)
         {
-            MLOG_WARN("%s: Pin not configured (pin = -1)", toString().c_str());
+            MLOG_WARN("%s: Pin not configured %s", toString().c_str(), _config.pinConfig.toString().c_str());
             return;
         }
 
@@ -66,7 +66,7 @@ namespace devices
 
         if (!_pin->setup(_config.pinConfig.pin, pinSetupMode))
         {
-            MLOG_ERROR("%s: Failed to setup pin %d", toString().c_str(), _config.pinConfig.pin);
+            MLOG_ERROR("%s: Failed to setup pin %s", toString().c_str(), _config.pinConfig.toString().c_str());
             delete _pin;
             _pin = nullptr;
             return;

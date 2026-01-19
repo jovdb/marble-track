@@ -39,7 +39,7 @@ namespace devices
 
         if (!i2cDevice)
         {
-            MLOG_ERROR("%s: I2C device '%s' not found", toString().c_str(), _config.i2cDeviceId.c_str());
+            MLOG_ERROR("%s: Required I2C device '%s' not found", toString().c_str(), _config.i2cDeviceId.c_str());
             _isPresent = false;
             return;
         }

@@ -39,9 +39,9 @@ namespace devices
             _pin = nullptr;
         }
 
-        if (_config.pinConfig.pin == -1)
+        if (_config.pinConfig.pin < 0)
         {
-            MLOG_WARN("%s: Pin not configured (pin = -1)", toString().c_str());
+            MLOG_WARN("%s: Setup: Pin not configured", toString().c_str());
             return;
         }
 
@@ -50,7 +50,7 @@ namespace devices
 
         if (!_pin->setup(_config.pinConfig.pin, pins::PinMode::Output))
         {
-            MLOG_ERROR("%s: Failed to setup pin %d", toString().c_str(), _config.pinConfig.pin);
+            MLOG_ERROR("%s: Failed to setup pin %s", toString().c_str(), _config.pinConfig.toString().c_str());
             delete _pin;
             _pin = nullptr;
             return;
@@ -58,6 +58,7 @@ namespace devices
         MLOG_INFO("%s: Setup on %s", toString().c_str(), _pin->toString().c_str());
 
         // Apply initial state
+        // Delay until first loop so all devices are setup?
         if (_config.initialState == "ON")
         {
             set(true);
@@ -83,7 +84,7 @@ namespace devices
     {
         if (_pin == nullptr || !_pin->isConfigured())
         {
-            MLOG_WARN("%s: Pin not configured", toString().c_str());
+            //           MLOG_WARN("%s: Set: Pin not configured", toString().c_str());
             return false;
         }
 
@@ -109,7 +110,7 @@ namespace devices
     {
         if (_pin == nullptr || !_pin->isConfigured())
         {
-            MLOG_WARN("%s: Pin not configured", toString().c_str());
+            // MLOG_WARN("%s: Blink: Pin not configured", toString().c_str());
             return false;
         }
 

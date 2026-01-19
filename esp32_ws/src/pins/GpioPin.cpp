@@ -8,8 +8,8 @@
 
 namespace pins
 {
-GpioPin::GpioPin()
-    : _pinNumber(-1), _isSetup(false), _mode(PinMode::Input)
+    GpioPin::GpioPin()
+        : _pinNumber(-1), _isSetup(false), _mode(PinMode::Input)
     {
     }
 
@@ -17,7 +17,8 @@ GpioPin::GpioPin()
     {
         if (pinNumber < 0)
         {
-            MLOG_WARN("GpioPin: Cannot setup unconfigured pin (pin = -1)");
+            _isSetup = false;
+            MLOG_WARN("GpioPin: Cannot setup unconfigured pin");
             return false;
         }
 

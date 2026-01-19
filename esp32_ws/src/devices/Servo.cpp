@@ -38,9 +38,9 @@ namespace devices
         // Determine if auto-assignment was requested
         _wasAutoAssigned = (_config.mcpwmChannel == -1);
 
-        if (_config.pin == -1)
+        if (_config.pin < 0)
         {
-            MLOG_WARN("%s: Pin not configured (pin = -1)", toString().c_str());
+            MLOG_WARN("%s: Pin not configured", toString().c_str());
             return;
         }
 

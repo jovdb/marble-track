@@ -302,6 +302,11 @@ void WebSocketManager::parseMessage(String message)
         handleRemoveDevice(doc);
         return;
     }
+    if (type == "reorder-devices")
+    {
+        handleReorderDevices(doc);
+        return;
+    }
     if (type == "network-config")
     {
         handleGetNetworkConfig(doc);
@@ -1028,6 +1033,77 @@ void WebSocketManager::handleRemoveDevice(JsonDocument &doc)
     deviceManager->notifyDevicesChanged();
 
     MLOG_INFO("Removed device: %s", deviceId.c_str());
+}
+
+void WebSocketManager::handleReorderDevices(JsonDocument &doc)
+{
+    if (!hasClients())
+        return;
+
+    JsonDocument response;
+    response["type"] = "reorder-devices";
+
+    if (!doc["deviceIds"].is<JsonArray>())
+    {
+        response["error"] = "Missing or invalid deviceIds array";
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
+        return;
+    }
+
+    if (!deviceManager)
+    {
+        response["error"] = "DeviceManager not available";
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
+        return;
+    }
+
+    // Extract device IDs from JSON array
+    JsonArray deviceIdsArray = doc["deviceIds"].as<JsonArray>();
+    std::vector<String> deviceIds;
+    for (JsonVariant id : deviceIdsArray)
+    {
+        if (id.is<const char*>())
+        {
+            deviceIds.push_back(id.as<String>());
+        }
+    }
+
+    if (deviceIds.empty())
+    {
+        response["error"] = "No valid device IDs provided";
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
+        return;
+    }
+
+    // Reorder devices
+    if (!deviceManager->reorderDevices(deviceIds))
+    {
+        response["error"] = "Failed to reorder devices";
+        String respStr;
+        serializeJson(response, respStr);
+        notifyClients(respStr);
+        return;
+    }
+
+    // Save the new order to file
+    deviceManager->saveDevicesToJsonFile();
+
+    response["success"] = true;
+    String respStr;
+    serializeJson(response, respStr);
+    notifyClients(respStr);
+
+    // Broadcast updated device list to all clients
+    JsonDocument emptyDoc;
+    handleGetDevices(emptyDoc);
+
+    MLOG_INFO("Reordered devices");
 }
 
 void WebSocketManager::handleGetNetworkConfig(JsonDocument &doc)

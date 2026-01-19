@@ -170,6 +170,10 @@ export type IWsReceiveRemoveDeviceMessage =
   | (IWsMessageBase<"remove-device"> & _IWsErrorResponse & { deviceId?: string })
   | (IWsMessageBase<"remove-device"> & _IWsSuccessResponse & { deviceId: string });
 
+export type IWsReceiveReorderDevicesMessage =
+  | (IWsMessageBase<"reorder-devices"> & _IWsErrorResponse)
+  | (IWsMessageBase<"reorder-devices"> & _IWsSuccessResponse);
+
 export type IWsReceiveGetNetworkConfigMessage =
   | (IWsMessageBase<"network-config"> & _IWsErrorResponse)
   | (IWsMessageBase<"network-config"> & { ssid: string }); // Note: password omitted for security
@@ -216,6 +220,7 @@ export type IWsReceiveSingleMessage =
   | IWsReceiveDeviceErrorMessage
   | IWsReceiveAddDeviceMessage
   | IWsReceiveRemoveDeviceMessage
+  | IWsReceiveReorderDevicesMessage
   | IWsReceiveGetNetworkConfigMessage
   | IWsReceiveSetNetworkConfigMessage
   | IWsReceiveGetNetworksMessage
@@ -268,6 +273,10 @@ export type IWsSendRemoveDeviceMessage = IWsMessageBase<"remove-device"> & {
   deviceId: string;
 };
 
+export type IWsSendReorderDevicesMessage = IWsMessageBase<"reorder-devices"> & {
+  deviceIds: string[];
+};
+
 export type IWsSendGetNetworkConfigMessage = IWsMessageBase<"network-config">;
 
 export type IWsSendGetNetworksMessage = IWsMessageBase<"networks">;
@@ -294,6 +303,7 @@ export type IWsSendMessage =
   | IWsSendDeviceSaveConfigMessage
   | IWsSendAddDeviceMessage
   | IWsSendRemoveDeviceMessage
+  | IWsSendReorderDevicesMessage
   | IWsSendGetNetworkConfigMessage
   | IWsSendSetNetworkConfigMessage
   | IWsSendGetNetworksMessage

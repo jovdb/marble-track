@@ -5,21 +5,36 @@
   },
   "devices": [
     {
+      "id": "i2c-1",
+      "type": "i2c",
+      "children": [],
+      "config": {
+        "name": "I2C",
+        "sdaPin": 20,
+        "sclPin": 19
+      }
+    },
+    {
       "id": "ex",
       "type": "ioexpander",
       "children": [],
-      "config": {}
+      "config": {
+        "name": "IO Expander2",
+        "expanderType": "PCF8574",
+        "i2cAddress": 32,
+        "i2cDeviceId": "i2c-1"
+      }
     },
     {
       "id": "controller",
-      "type": "MarbleController",
+      "type": "marblecontroller",
       "children": [
         {
           "id": "buzzer",
           "type": "buzzer",
           "children": [],
           "config": {
-            "pin": {"pin": 14},
+            "pin": 14,
             "name": "Buzzer"
           }
         },
@@ -38,13 +53,13 @@
                 "maxAcceleration": 100,
                 "defaultSpeed": 150,
                 "defaultAcceleration": 50,
-                "stepPin": {"pin": 1},
-                "dirPin": {"pin": 2},
-                "pin1": {"pin": -1},
-                "pin2": {"pin": -1},
-                "pin3": {"pin": -1},
-                "pin4": {"pin": -1},
-                "enablePin": {"pin": 42},
+                "stepPin": 1,
+                "dirPin": 2,
+                "pin1": -1,
+                "pin2": -1,
+                "pin3": -1,
+                "pin4": -1,
+                "enablePin": 42,
                 "invertEnable": true
               }
             },
@@ -53,7 +68,10 @@
               "type": "button",
               "children": [],
               "config": {
-                "pin": {"pin": 41, "expanderId": "i2c-1"},
+                "pin": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
                 "name": "Lift Limit Switch",
                 "debounceTimeInMs": 50,
                 "pinMode": "PullUp",
@@ -65,7 +83,10 @@
               "type": "button",
               "children": [],
               "config": {
-                "pin": {"pin": 40, "expanderId": "i2c-1"},
+                "pin": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
                 "name": "Lift Ball Sensor",
                 "debounceTimeInMs": 100,
                 "pinMode": "PullUp",
@@ -77,7 +98,7 @@
               "type": "servo",
               "children": [],
               "config": {
-                "pin": {"pin": 39},
+                "pin": 39,
                 "name": "Lift Loader",
                 "mcpwmChannel": 0,
                 "frequency": 50,
@@ -92,7 +113,7 @@
               "type": "servo",
               "children": [],
               "config": {
-                "pin": {"pin": 38},
+                "pin": 38,
                 "name": "Lift Unloader",
                 "mcpwmChannel": 1,
                 "frequency": 50,
@@ -115,7 +136,10 @@
           "type": "led",
           "children": [],
           "config": {
-            "pin": {"pin": 45},
+            "pin": {
+              "pin": 0,
+              "expanderId": "ex"
+            },
             "name": "Lift Led",
             "initialState": "OFF"
           }
@@ -125,14 +149,128 @@
           "type": "button",
           "children": [],
           "config": {
-            "pin": {"pin": 48, "expanderId": "i2c-1"},
+            "pin": {
+              "pin": -1,
+              "expanderId": ""
+            },
             "name": "Lift Button",
+            "debounceTimeInMs": 50,
+            "pinMode": "PullUp",
+            "buttonType": "NormalOpen"
+          }
+        },
+        {
+          "id": "manual-btn",
+          "type": "button",
+          "children": [],
+          "config": {
+            "pin": {
+              "pin": -1,
+              "expanderId": ""
+            },
+            "name": "Manual Mode Button",
+            "debounceTimeInMs": 50,
+            "pinMode": "PullUp",
+            "buttonType": "NormalOpen"
+          }
+        },
+        {
+          "id": "wheel",
+          "type": "wheel",
+          "children": [
+            {
+              "id": "wheel-stepper",
+              "type": "stepper",
+              "children": [],
+              "config": {
+                "name": "wheel Stepper",
+                "stepperType": "DRIVER",
+                "maxSpeed": 3000,
+                "maxAcceleration": 3000,
+                "defaultSpeed": 1000,
+                "defaultAcceleration": 200,
+                "stepPin": 4,
+                "dirPin": 5,
+                "pin1": -1,
+                "pin2": -1,
+                "pin3": -1,
+                "pin4": -1,
+                "enablePin": 6,
+                "invertEnable": true
+              }
+            },
+            {
+              "id": "wheel-zero-sensor",
+              "type": "button",
+              "children": [],
+              "config": {
+                "pin": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "name": "Wheel Zero Sensor",
+                "debounceTimeInMs": 50,
+                "pinMode": "PullUp",
+                "buttonType": "NormalOpen"
+              }
+            }
+          ],
+          "config": {
+            "name": "Wheel",
+            "stepsPerRevolution": 138259,
+            "maxStepsPerRevolution": 150000,
+            "zeroPointDegree": 180,
+            "direction": 1,
+            "breakPoints": [
+              82,
+              160,
+              285,
+              317
+            ]
+          }
+        },
+        {
+          "id": "wheel-btn-led",
+          "type": "led",
+          "children": [],
+          "config": {
+            "pin": {
+              "pin": 1,
+              "expanderId": "ex"
+            },
+            "name": "",
+            "initialState": "OFF"
+          }
+        },
+        {
+          "id": "wheel-next-btn",
+          "type": "button",
+          "children": [],
+          "config": {
+            "pin": {
+              "pin": -1,
+              "expanderId": ""
+            },
+            "name": "",
             "debounceTimeInMs": 50,
             "pinMode": "PullUp",
             "buttonType": "NormalOpen"
           }
         }
       ]
+    },
+    {
+      "id": "led-3",
+      "type": "led",
+      "children": [],
+      "config": {
+        "pin": {
+          "pin": 3,
+          "expanderId": "ex"
+        },
+        "name": "Led",
+        "initialState": "OFF"
+      }
     }
   ]
 }

@@ -40,12 +40,11 @@ namespace devices
 
         if (_config.pinConfig.pin == -1)
         {
-            MLOG_WARN("%s: Pin not configured %s", toString().c_str(), _config.pinConfig.toString().c_str());
+            MLOG_WARN("%s: Pin not configured", toString().c_str());
             return;
         }
 
         // Create the pin using the factory
-        _config.pinConfig.pin = _config.pinConfig.pin;
         _pin = PinFactory::createPin(_config.pinConfig);
         if (_pin == nullptr)
         {
@@ -71,9 +70,9 @@ namespace devices
 
         if (!_pin->setup(_config.pinConfig.pin, pinSetupMode))
         {
-            MLOG_ERROR("%s: Failed to setup pin %s", toString().c_str(), _config.pinConfig.toString().c_str());
-            delete _pin;
-            _pin = nullptr;
+            MLOG_ERROR("%s: Failed to setup pin %d", toString().c_str(), _config.pinConfig.pin);
+            //  delete _pin;
+            //    _pin = nullptr;
             return;
         }
 
@@ -118,8 +117,12 @@ namespace devices
 
     std::vector<String> Button::getPins() const
     {
-        if (_pin != nullptr && _pin->isConfigured())
-            return {_pin->toString()};
+        if (_pin != nullptr)
+        {
+            String pinStr = _pin->toString();
+            if (!pinStr.isEmpty())
+                return {pinStr};
+        }
         return {};
     }
 

@@ -14,9 +14,6 @@ export type DeviceType =
 export type NetworkMode = "ap" | "sta" | "apsta";
 export type EncryptionType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
-// Pin types
-export type PinType = "GPIO" | "PCF8574" | "PCF8575" | "MCP23017";
-
 export interface PinConfig {
   pin: number;
   expanderId: string;

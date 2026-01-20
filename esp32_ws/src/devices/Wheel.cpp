@@ -199,18 +199,6 @@ namespace devices
         }
     }
 
-    std::vector<String> Wheel::getPins() const
-    {
-        // Collect pins from all children
-        std::vector<String> allPins;
-        for (auto child : getChildren())
-        {
-            auto childPins = child->getPins();
-            allPins.insert(allPins.end(), childPins.begin(), childPins.end());
-        }
-        return allPins;
-    }
-
     bool Wheel::move(long steps)
     {
         // Set state to MOVING regardless of current state

@@ -81,7 +81,6 @@ namespace devices
 
         void setup() override;
         void loop() override;
-        std::vector<String> getPins() const override;
 
         /**
          * @brief Move the wheel by a specified number of steps
@@ -136,7 +135,7 @@ namespace devices
         void configToJson(JsonDocument &doc) override;
 
     protected:
-        Stepper *_stepper;    // Stepper motor child device
+        Stepper *_stepper;   // Stepper motor child device
         Button *_zeroSensor; // Zero sensor child device
 
     private:
@@ -152,7 +151,6 @@ namespace devices
          * @param steps Number of steps measured
          */
         void notifyStepsPerRevolution(long steps);
-
     };
 
 } // namespace devices

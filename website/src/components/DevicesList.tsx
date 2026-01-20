@@ -352,6 +352,14 @@ export function DevicesList() {
           }}
         >
           <td class={styles["devices-list__table-td"]}>
+            <input
+              type="checkbox"
+              class={styles["devices-list__checkbox"]}
+              aria-label={`Select device ${props.device.id}`}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </td>
+          <td class={styles["devices-list__table-td"]}>
             <div class={styles["devices-list__device-cell"]} style={indentStyle}>
               {isTopLevel && (
                 <span
@@ -453,6 +461,7 @@ export function DevicesList() {
               <table class={styles["devices-list__table"]}>
                 <thead class={styles["devices-list__table-header"]}>
                   <tr>
+                    <th class={styles["devices-list__table-th"]}></th>
                     <th class={styles["devices-list__table-th"]}></th>
                     <th class={styles["devices-list__table-th"]}>Type</th>
                     <th class={styles["devices-list__table-th"]}>ID</th>

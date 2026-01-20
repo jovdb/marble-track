@@ -154,6 +154,13 @@
   border-bottom: none;
 }
 
+.devices-list__checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--color-primary-600);
+}
+
 .devices-list__device-cell {
   display: flex;
   align-items: center;

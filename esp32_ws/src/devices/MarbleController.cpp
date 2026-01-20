@@ -105,7 +105,7 @@ namespace devices
         _liftLed->setConfig(liftLedConfig);
         addChild(_liftLed);
 
-        _liftButton = new devices::Button("lift-button");
+        _liftButton = new devices::Button("lift-btn");
         auto liftButtonConfig = _liftButton->getConfig();
         liftButtonConfig.name = "Lift Button";
         liftButtonConfig.pinConfig.pin = -1;
@@ -172,7 +172,7 @@ namespace devices
         }
 
         // Add wheel button LED
-        _wheelBtnLed = new devices::Led("wheel-btn-led");
+        _wheelBtnLed = new devices::Led("wheel-led");
         auto wheelBtnLedConfig = _wheelBtnLed->getConfig();
         wheelBtnLedConfig.name = "";
         wheelBtnLedConfig.pinConfig.pin = 1;
@@ -182,7 +182,7 @@ namespace devices
         addChild(_wheelBtnLed);
 
         // Add wheel next button
-        _wheelNextBtn = new devices::Button("wheel-next-btn");
+        _wheelNextBtn = new devices::Button("wheel-btn");
         auto wheelNextBtnConfig = _wheelNextBtn->getConfig();
         wheelNextBtnConfig.name = "";
         wheelNextBtnConfig.pinConfig.pin = -1;

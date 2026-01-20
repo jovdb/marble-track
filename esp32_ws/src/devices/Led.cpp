@@ -47,12 +47,17 @@ namespace devices
 
         // Create the pin using the factory
         _pin = PinFactory::createPin(_config.pinConfig);
+        if (_pin == nullptr)
+        {
+            MLOG_ERROR("%s: Failed to create pin %s", toString().c_str(), _config.pinConfig.toString().c_str());
+            return;
+        }
 
         if (!_pin->setup(_config.pinConfig.pin, pins::PinMode::Output))
         {
             MLOG_ERROR("%s: Failed to setup pin %s", toString().c_str(), _config.pinConfig.toString().c_str());
-            delete _pin;
-            _pin = nullptr;
+            // delete _pin;
+            //    _pin = nullptr;
             return;
         }
         MLOG_INFO("%s: Setup on %s", toString().c_str(), _pin->toString().c_str());
@@ -75,8 +80,13 @@ namespace devices
 
     std::vector<String> Led::getPins() const
     {
-        if (_pin != nullptr && _pin->isConfigured())
-            return {_pin->toString()};
+        if (_pin != nullptr)
+        {
+            String pinStr = _pin->toString();
+            if (!pinStr.isEmpty())
+                return {pinStr};
+            MLOG_DEBUG("Led::getPins: Pin string is empty");
+        }
         return {};
     }
 

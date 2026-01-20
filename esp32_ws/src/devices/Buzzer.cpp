@@ -74,7 +74,7 @@ namespace devices
 
     std::vector<String> Buzzer::getPins() const
     {
-        if (_config.pin == -1)
+        if (_config.pin < 0)
         {
             return {};
         }

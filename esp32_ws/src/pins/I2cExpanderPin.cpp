@@ -64,10 +64,13 @@ namespace pins
     {
         if (pinNumber < 0 || pinNumber > getMaxPinNumber())
         {
-            MLOG_WARN("I2cExpander: Invalid pin number %d for %s (max %d)", 
+            MLOG_WARN("I2cExpander: Invalid pin number %d for %s (max %d)",
                       pinNumber, getExpanderTypeName().c_str(), getMaxPinNumber());
             return false;
         }
+
+        _pinNumber = pinNumber;
+        _mode = mode;
 
         // Check if the I2C device is present
         if (!isDevicePresent())
@@ -75,9 +78,6 @@ namespace pins
             MLOG_ERROR("I2cExpander: Device not found at address 0x%02X", _i2cAddress);
             return false;
         }
-
-        _pinNumber = pinNumber;
-        _mode = mode;
 
         // Configure the pin direction
         uint8_t cacheIdx = getCacheIndex();
@@ -98,7 +98,7 @@ namespace pins
                     return false;
                 }
             }
-            
+
             // Initialize output to LOW
             _portStates[cacheIdx] &= ~pinMask;
             writePort(_portStates[cacheIdx]);
@@ -116,7 +116,7 @@ namespace pins
                     MLOG_ERROR("I2cExpander: Failed to configure direction for pin %d", _pinNumber);
                     return false;
                 }
-                
+
                 // Configure pull-ups if requested
                 if (mode == PinMode::InputPullUp)
                 {
@@ -308,9 +308,10 @@ namespace pins
     {
         if (_pinNumber < 0)
         {
-            return getExpanderTypeName() + ":unconfigured";
+            return "";
         }
 
+        /*
         String modeStr;
         switch (_mode)
         {
@@ -327,11 +328,12 @@ namespace pins
             modeStr = "OUTPUT";
             break;
         }
+        */
 
         char addrStr[8];
         snprintf(addrStr, sizeof(addrStr), "0x%02X", _i2cAddress);
 
-        return getExpanderTypeName() + ":" + String(addrStr) + ":" + String(_pinNumber) + " (" + modeStr + ")";
+        return "I²C:" + String(addrStr) + ":" + String(_pinNumber);
     }
 
 } // namespace pins

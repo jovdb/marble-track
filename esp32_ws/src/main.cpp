@@ -82,6 +82,8 @@ void setup()
   // First mount so config file can be loaded
   littleFSManager.setup();
 
+  // Load logging settings from configuration
+  deviceManager.loadLoggingSettings();
 
   // Load network settings from configuration
   NetworkSettings networkSettings = deviceManager.loadNetworkSettings();

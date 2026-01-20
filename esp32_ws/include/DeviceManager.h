@@ -27,6 +27,8 @@ private:
 public:
     NetworkSettings loadNetworkSettings();
     bool saveNetworkSettings(const NetworkSettings& settings);
+    bool loadLoggingSettings();
+    bool saveLoggingSettings();
 
     Device *getDeviceByType(const String &deviceType) const;
 

@@ -832,12 +832,20 @@ void SerialConsole::handleLoggingMenuInput(char incoming)
         case 'A':
             LogConfig::setAll(true);
             Serial.println("✅ All logging types enabled");
+            if (!m_deviceManager.saveLoggingSettings())
+            {
+                Serial.println("⚠️  Failed to save logging settings to /config.json.");
+            }
             showLoggingMenu();
             return;
         case 'n':
         case 'N':
             LogConfig::setAll(false);
             Serial.println("❌ All logging types disabled");
+            if (!m_deviceManager.saveLoggingSettings())
+            {
+                Serial.println("⚠️  Failed to save logging settings to /config.json.");
+            }
             showLoggingMenu();
             return;
         default:
@@ -856,6 +864,10 @@ void SerialConsole::handleLoggingMenuInput(char incoming)
         {
             LogConfig::enable(type);
             Serial.printf("✅ %s logging enabled\n", typeName.c_str());
+        }
+        if (!m_deviceManager.saveLoggingSettings())
+        {
+            Serial.println("⚠️  Failed to save logging settings to /config.json.");
         }
         showLoggingMenu();
     }

@@ -10,17 +10,12 @@ namespace pins
 {
     // Static member initialization - support up to 16 different expanders
     uint16_t I2cExpanderPin::_portStates[16] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-                                                 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+                                                0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     uint16_t I2cExpanderPin::_portDirections[16] = {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
-                                                     0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF};
+                                                    0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF};
 
-    I2cExpanderPin::I2cExpanderPin(I2cExpanderType type, uint8_t i2cAddress, TwoWire* wireInstance)
-        : _expanderType(type)
-        , _i2cAddress(i2cAddress)
-        , _wire(wireInstance)
-        , _pinNumber(-1)
-        , _isSetup(false)
-        , _mode(PinMode::Input)
+    I2cExpanderPin::I2cExpanderPin(I2cExpanderType type, uint8_t i2cAddress, TwoWire *wireInstance)
+        : _expanderType(type), _i2cAddress(i2cAddress), _wire(wireInstance), _pinNumber(-1), _isSetup(false), _mode(PinMode::Input)
     {
     }
 
@@ -35,7 +30,7 @@ namespace pins
         switch (_expanderType)
         {
         case I2cExpanderType::PCF8574:
-            return 7;  // 8-bit expander (pins 0-7)
+            return 7; // 8-bit expander (pins 0-7)
         case I2cExpanderType::PCF8575:
         case I2cExpanderType::MCP23017:
             return 15; // 16-bit expanders (pins 0-15)
@@ -92,7 +87,7 @@ namespace pins
         {
             // Set pin as output (0 = output for MCP23017, for PCF we just track it)
             _portDirections[cacheIdx] &= ~pinMask;
-            
+
             // For PCF8574/8575, outputs are controlled by writing to the port
             // For MCP23017, we need to configure the IODIR register
             if (_expanderType == I2cExpanderType::MCP23017)
@@ -112,7 +107,7 @@ namespace pins
         {
             // Set pin as input (1 = input)
             _portDirections[cacheIdx] |= pinMask;
-            
+
             // For MCP23017, configure IODIR and optionally pull-ups
             if (_expanderType == I2cExpanderType::MCP23017)
             {
@@ -126,17 +121,17 @@ namespace pins
                 if (mode == PinMode::InputPullUp)
                 {
                     // Set GPPU register for pull-up
-                    uint8_t gppuReg = (_pinNumber < 8) ? 0x0C : 0x0D;  // GPPUA or GPPUB
+                    uint8_t gppuReg = (_pinNumber < 8) ? 0x0C : 0x0D; // GPPUA or GPPUB
                     uint8_t bitPos = _pinNumber % 8;
-                    
+
                     _wire->beginTransmission(_i2cAddress);
                     _wire->write(gppuReg);
                     _wire->endTransmission();
-                    
+
                     _wire->requestFrom(_i2cAddress, (uint8_t)1);
                     uint8_t gppu = _wire->read();
                     gppu |= (1 << bitPos);
-                    
+
                     _wire->beginTransmission(_i2cAddress);
                     _wire->write(gppuReg);
                     _wire->write(gppu);
@@ -160,11 +155,11 @@ namespace pins
     {
         if (_expanderType != I2cExpanderType::MCP23017)
         {
-            return true;  // Only MCP23017 needs direction configuration
+            return true; // Only MCP23017 needs direction configuration
         }
 
         uint8_t cacheIdx = getCacheIndex();
-        
+
         // MCP23017 has separate IODIR registers for port A (pins 0-7) and port B (pins 8-15)
         // IODIRA = 0x00, IODIRB = 0x01
         uint8_t iodirA = _portDirections[cacheIdx] & 0xFF;
@@ -172,7 +167,7 @@ namespace pins
 
         // Write IODIRA
         _wire->beginTransmission(_i2cAddress);
-        _wire->write(0x00);  // IODIRA register
+        _wire->write(0x00); // IODIRA register
         _wire->write(iodirA);
         if (_wire->endTransmission() != 0)
         {
@@ -181,7 +176,7 @@ namespace pins
 
         // Write IODIRB
         _wire->beginTransmission(_i2cAddress);
-        _wire->write(0x01);  // IODIRB register
+        _wire->write(0x01); // IODIRB register
         _wire->write(iodirB);
         return (_wire->endTransmission() == 0);
     }
@@ -212,12 +207,12 @@ namespace pins
         case I2cExpanderType::MCP23017:
             // Read GPIO registers (GPIOA = 0x12, GPIOB = 0x13)
             _wire->beginTransmission(_i2cAddress);
-            _wire->write(0x12);  // GPIOA register
+            _wire->write(0x12); // GPIOA register
             _wire->endTransmission();
             _wire->requestFrom(_i2cAddress, (uint8_t)2);
             if (_wire->available() >= 2)
             {
-                portValue = _wire->read();       // GPIOA
+                portValue = _wire->read();         // GPIOA
                 portValue |= (_wire->read() << 8); // GPIOB
             }
             break;
@@ -248,7 +243,7 @@ namespace pins
         case I2cExpanderType::MCP23017:
             // Write to OLAT registers (OLATA = 0x14, OLATB = 0x15)
             _wire->beginTransmission(_i2cAddress);
-            _wire->write(0x14);  // OLATA register
+            _wire->write(0x14); // OLATA register
             _wire->write((uint8_t)(state & 0xFF));
             _wire->write((uint8_t)((state >> 8) & 0xFF));
             result = _wire->endTransmission();

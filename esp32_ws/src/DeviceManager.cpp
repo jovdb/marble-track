@@ -365,6 +365,50 @@ NetworkSettings DeviceManager::loadNetworkSettings()
     return settings;
 }
 
+bool DeviceManager::loadLoggingSettings()
+{
+    if (!LittleFS.exists(CONFIG_FILE))
+    {
+        MLOG_INFO("Configuration file not found, using default logging settings");
+        return false;
+    }
+
+    File file = LittleFS.open(CONFIG_FILE, FILE_READ);
+    if (!file)
+    {
+        MLOG_ERROR("Failed to open configuration file for reading logging settings");
+        return false;
+    }
+
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, file);
+    file.close();
+
+    if (err || !doc.is<JsonObject>())
+    {
+        MLOG_ERROR("Failed to parse configuration JSON file for logging settings");
+        return false;
+    }
+
+    JsonObject rootObj = doc.as<JsonObject>();
+    if (!rootObj["logging"].is<JsonObject>())
+    {
+        MLOG_INFO("No logging settings found in config file");
+        return false;
+    }
+
+    JsonObject loggingObj = rootObj["logging"].as<JsonObject>();
+    if (loggingObj["enabledTypes"].is<int>())
+    {
+        LogConfig::enabledTypes = static_cast<uint8_t>(loggingObj["enabledTypes"].as<int>());
+        MLOG_INFO("Loaded logging settings from config (enabledTypes=0x%02X)", LogConfig::enabledTypes);
+        return true;
+    }
+
+    MLOG_INFO("Logging settings present but no enabledTypes value found");
+    return false;
+}
+
 bool DeviceManager::saveNetworkSettings(const NetworkSettings &settings)
 {
     JsonDocument doc;
@@ -422,6 +466,61 @@ bool DeviceManager::saveNetworkSettings(const NetworkSettings &settings)
         MLOG_ERROR("Failed to open configuration file for writing network settings");
         return false;
     }
+}
+
+bool DeviceManager::saveLoggingSettings()
+{
+    JsonDocument doc;
+    bool fileExists = LittleFS.exists(CONFIG_FILE);
+
+    if (fileExists)
+    {
+        File file = LittleFS.open(CONFIG_FILE, FILE_READ);
+        if (file)
+        {
+            DeserializationError err = deserializeJson(doc, file);
+            file.close();
+
+            if (err)
+            {
+                MLOG_ERROR("Failed to parse existing configuration file, creating new one");
+                doc.clear();
+                doc.to<JsonObject>();
+            }
+        }
+        else
+        {
+            MLOG_ERROR("Failed to read existing configuration file, creating new one");
+            doc.clear();
+            doc.to<JsonObject>();
+        }
+    }
+    else
+    {
+        doc.to<JsonObject>();
+    }
+
+    if (!doc.is<JsonObject>())
+    {
+        doc.clear();
+        doc.to<JsonObject>();
+    }
+
+    JsonObject rootObj = doc.as<JsonObject>();
+    JsonObject loggingObj = rootObj["logging"].to<JsonObject>();
+    loggingObj["enabledTypes"] = LogConfig::enabledTypes;
+
+    File file = LittleFS.open(CONFIG_FILE, FILE_WRITE);
+    if (file)
+    {
+        serializeJson(doc, file);
+        file.close();
+        MLOG_INFO("Saved logging settings to config (enabledTypes=0x%02X)", LogConfig::enabledTypes);
+        return true;
+    }
+
+    MLOG_ERROR("Failed to open configuration file for writing logging settings");
+    return false;
 }
 
 DeviceManager::DeviceManager(NotifyClients callback) : devicesCount(0), notifyClients(callback), hasClients(nullptr)

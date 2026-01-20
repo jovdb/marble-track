@@ -28,11 +28,11 @@ namespace devices
         if (config.sdaPin >= 0 && config.sclPin >= 0)
         {
             Wire.begin(config.sdaPin, config.sclPin);
-            MLOG_INFO("I2C bus initialized on SDA=%d, SCL=%d", config.sdaPin, config.sclPin);
+            MLOG_INFO("%s: I2C bus initialized on SDA=%d, SCL=%d", toString().c_str(), config.sdaPin, config.sclPin);
         }
         else
         {
-            MLOG_WARN("I2C bus not initialized: invalid pins SDA=%d, SCL=%d", config.sdaPin, config.sclPin);
+            MLOG_WARN("%s: I2C bus not initialized: invalid pins SDA=%d, SCL=%d", toString().c_str(), config.sdaPin, config.sclPin);
         }
     }
 

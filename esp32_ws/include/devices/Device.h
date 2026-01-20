@@ -37,6 +37,9 @@ public:
     virtual void setup();
     virtual void loop();
 
+    // Check if setup has been called
+    bool isSetup() const { return _isInitialized; }
+
     // Identity
     String getId() const { return _id; }
     String getType() const { return _type; }

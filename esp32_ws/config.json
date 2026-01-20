@@ -145,7 +145,7 @@
           }
         },
         {
-          "id": "lift-button",
+          "id": "lift-btn",
           "type": "button",
           "children": [],
           "config": {
@@ -230,7 +230,7 @@
           }
         },
         {
-          "id": "wheel-btn-led",
+          "id": "wheel-led",
           "type": "led",
           "children": [],
           "config": {
@@ -243,7 +243,7 @@
           }
         },
         {
-          "id": "wheel-next-btn",
+          "id": "wheel-btn",
           "type": "button",
           "children": [],
           "config": {

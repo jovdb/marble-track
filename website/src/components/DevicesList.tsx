@@ -42,19 +42,30 @@ export function DevicesList() {
   // Track collapsed state for devices with children
   const [collapsedDevices, setCollapsedDevices] = createSignal<Set<string>>(new Set());
 
-  // Drag and drop state
+  // Track selected devices
+  const [selectedDevices, setSelectedDevices] = createSignal<Set<string>>(new Set());
   const [draggedDeviceId, setDraggedDeviceId] = createSignal<string | null>(null);
   const [dragOverDeviceId, setDragOverDeviceId] = createSignal<string | null>(null);
   const [dragDirection, setDragDirection] = createSignal<"up" | "down" | null>(null);
 
-  // Initialize collapsed devices - start all devices with children collapsed
+  // Initialize collapsed devices - expand root devices one level
   createEffect(() => {
     const devices = Object.values(devicesState.devices);
-    const devicesWithChildren = devices
-      .filter((device) => device.children && device.children.length > 0)
-      .map((device) => device.id);
+    const rootDevices = devices.filter((device) => {
+      return !devices.some((other) => other.children?.some((child) => child.id === device.id));
+    });
 
-    setCollapsedDevices(new Set(devicesWithChildren));
+    const nextCollapsed = new Set<string>();
+    rootDevices.forEach((root) => {
+      root.children?.forEach((child) => {
+        const childDevice = devicesState.devices[child.id];
+        if (childDevice && childDevice.children && childDevice.children.length > 0) {
+          nextCollapsed.add(childDevice.id);
+        }
+      });
+    });
+
+    setCollapsedDevices(nextCollapsed);
   });
 
   const toggleCollapse = (deviceId: string) => {
@@ -325,7 +336,9 @@ export function DevicesList() {
     return (
       <>
         <tr
-          class={`${styles["devices-list__table-row"]} ${dragDirectionClass()}`}
+          class={`${styles["devices-list__table-row"]} ${dragDirectionClass()} ${
+            selectedDevices().has(props.device.id) ? styles["devices-list__table-row--selected"] : ""
+          }`}
           style={{ cursor: "pointer" }}
           draggable={isTopLevel}
           onDragStart={(e) => isTopLevel && handleDragStart(e, props.device.id)}
@@ -349,14 +362,36 @@ export function DevicesList() {
                 deviceElement.style.boxShadow = "";
               }, 1000);
             }
+
+            // Toggle selection for this device (single selection)
+            setSelectedDevices((prev) => {
+              if (prev.has(props.device.id)) {
+                return new Set(); // Deselect if already selected
+              } else {
+                return new Set([props.device.id]); // Select only this device
+              }
+            });
           }}
         >
           <td class={styles["devices-list__table-td"]}>
             <input
               type="checkbox"
               class={styles["devices-list__checkbox"]}
+              checked={selectedDevices().has(props.device.id)}
               aria-label={`Select device ${props.device.id}`}
               onClick={(e) => e.stopPropagation()}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setSelectedDevices((prev) => {
+                  const next = new Set(prev);
+                  if (checked) {
+                    next.add(props.device.id);
+                  } else {
+                    next.delete(props.device.id);
+                  }
+                  return next;
+                });
+              }}
             />
           </td>
           <td class={styles["devices-list__table-td"]}>

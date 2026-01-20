@@ -44,12 +44,21 @@ namespace devices
             return;
         }
 
+        // Check if I2C device has been set up
+        // Otherwise address device is not found
+        if (!i2cDevice->isSetup())
+        {
+            MLOG_ERROR("%s: I2C device '%s' is not set up, make sure it is configured before this device", toString().c_str(), _config.i2cDeviceId.c_str());
+            _isPresent = false;
+            return;
+        }
+
         // Get SDA and SCL pins from the I2C device
         auto i2cPins = i2cDevice->getPins();
         if (i2cPins.size() < 2)
         {
-            MLOG_ERROR("%s: I2C device '%s' does not have SDA/SCL pins configured", 
-                      toString().c_str(), _config.i2cDeviceId.c_str());
+            MLOG_ERROR("%s: I2C device '%s' does not have SDA/SCL pins configured",
+                       toString().c_str(), _config.i2cDeviceId.c_str());
             _isPresent = false;
             return;
         }

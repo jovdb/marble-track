@@ -14,8 +14,8 @@ namespace pins
     uint16_t I2cExpanderPin::_portDirections[16] = {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
                                                     0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF};
 
-    I2cExpanderPin::I2cExpanderPin(I2cExpanderType type, uint8_t i2cAddress, TwoWire *wireInstance)
-        : _expanderType(type), _i2cAddress(i2cAddress), _wire(wireInstance), _pinNumber(-1), _isSetup(false), _mode(PinMode::Input)
+    I2cExpanderPin::I2cExpanderPin(I2cExpanderType type, uint8_t i2cAddress, TwoWire *wireInstance, const String &expanderId)
+        : _expanderType(type), _i2cAddress(i2cAddress), _wire(wireInstance), _expanderId(expanderId), _pinNumber(-1), _isSetup(false), _mode(PinMode::Input)
     {
     }
 
@@ -309,6 +309,12 @@ namespace pins
         if (_pinNumber < 0)
         {
             return "";
+        }
+
+        MLOG_INFO("I2cExpander: toString called, expanderId='%s'", _expanderId.c_str());
+        if (!_expanderId.isEmpty())
+        {
+            return _expanderId + ":" + String(_pinNumber);
         }
 
         /*

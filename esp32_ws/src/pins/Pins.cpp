@@ -76,7 +76,7 @@ pins::IPin *PinFactory::createPin(const PinConfig &config)
         return nullptr;
     }
     
-    return new pins::I2cExpanderPin(pinExpanderType, i2cAddress);
+    return new pins::I2cExpanderPin(pinExpanderType, i2cAddress, &Wire, config.expanderId);
 }
 
 // Parse pin config from JSON - requires object format

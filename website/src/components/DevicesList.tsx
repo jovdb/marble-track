@@ -367,7 +367,7 @@ export function DevicesList() {
             }
 
             // Toggle selection for this device (single selection)
-            selectedDevicesActions.setSelectedDevices((prev) => {
+            selectedDevicesActions.setSelectedDevices((prev: Set<string>) => {
               if (prev.has(props.device.id)) {
                 return new Set(); // Deselect if already selected
               } else {
@@ -385,7 +385,7 @@ export function DevicesList() {
               onClick={(e) => e.stopPropagation()}
               onChange={(e) => {
                 const checked = e.target.checked;
-                selectedDevicesActions.setSelectedDevices((prev) => {
+                selectedDevicesActions.setSelectedDevices((prev: Set<string>) => {
                   const next = new Set(prev);
                   if (checked) {
                     next.add(props.device.id);

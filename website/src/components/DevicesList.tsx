@@ -9,6 +9,7 @@ import {
 import styles from "./DevicesList.module.css";
 import { useDevices, type IDevice } from "../stores/Devices";
 import { useWebSocket2 } from "../hooks/useWebSocket";
+import { useSelectedDevices } from "../stores/SelectedDevices";
 import {
   IWsSendAddDeviceMessage,
   IWsSendRemoveDeviceMessage,
@@ -43,7 +44,7 @@ export function DevicesList() {
   const [collapsedDevices, setCollapsedDevices] = createSignal<Set<string>>(new Set());
 
   // Track selected devices
-  const [selectedDevices, setSelectedDevices] = createSignal<Set<string>>(new Set());
+  const [selectedDevicesState, selectedDevicesActions] = useSelectedDevices();
   const [draggedDeviceId, setDraggedDeviceId] = createSignal<string | null>(null);
   const [dragOverDeviceId, setDragOverDeviceId] = createSignal<string | null>(null);
   const [dragDirection, setDragDirection] = createSignal<"up" | "down" | null>(null);
@@ -337,7 +338,9 @@ export function DevicesList() {
       <>
         <tr
           class={`${styles["devices-list__table-row"]} ${dragDirectionClass()} ${
-            selectedDevices().has(props.device.id) ? styles["devices-list__table-row--selected"] : ""
+            selectedDevicesState.selectedDevices().has(props.device.id)
+              ? styles["devices-list__table-row--selected"]
+              : ""
           }`}
           style={{ cursor: "pointer" }}
           draggable={isTopLevel}
@@ -364,7 +367,7 @@ export function DevicesList() {
             }
 
             // Toggle selection for this device (single selection)
-            setSelectedDevices((prev) => {
+            selectedDevicesActions.setSelectedDevices((prev) => {
               if (prev.has(props.device.id)) {
                 return new Set(); // Deselect if already selected
               } else {
@@ -377,12 +380,12 @@ export function DevicesList() {
             <input
               type="checkbox"
               class={styles["devices-list__checkbox"]}
-              checked={selectedDevices().has(props.device.id)}
+              checked={selectedDevicesState.selectedDevices().has(props.device.id)}
               aria-label={`Select device ${props.device.id}`}
               onClick={(e) => e.stopPropagation()}
               onChange={(e) => {
                 const checked = e.target.checked;
-                setSelectedDevices((prev) => {
+                selectedDevicesActions.setSelectedDevices((prev) => {
                   const next = new Set(prev);
                   if (checked) {
                     next.add(props.device.id);

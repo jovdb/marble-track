@@ -23,7 +23,7 @@ export function Device(props: DeviceProps) {
   const hasConfigFeature = createMemo(() => device()?.features?.includes("config") ?? false);
   const canShowConfigButton = createMemo(() => hasConfigFeature() && hasConfigComponent());
 
-  const [isCollapsed, setIsCollapsed] = createSignal(true);
+  const [isCollapsed, setIsCollapsed] = createSignal(false);
   const [showChildren, setShowChildren] = createSignal(
     !hasConfigComponent() && !!device()?.children?.length
   );

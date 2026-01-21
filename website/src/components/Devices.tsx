@@ -14,21 +14,27 @@ import { Wheel } from "./devices/Wheel";
 import { Lift } from "./devices/Lift";
 import { MarbleController } from "./devices/MarbleController";
 import { Device } from "./devices/Device";
+import { useSelectedDevices } from "../stores/SelectedDevices";
 
 import styles from "./Devices.module.css";
 
 export function Devices() {
   const [webSocket] = useWebSocket2();
   const [devicesState, { loadDevices }] = useDevices();
+  const [selectedDevicesState] = useSelectedDevices();
 
-  // Compute top-level devices (exclude devices that are children of other devices)
-  const topLevelDevices = createMemo(() =>
-    Object.values(devicesState.devices).filter((device) => {
-      return !Object.values(devicesState.devices).some((other) =>
-        other.children?.some((child) => child.id === device.id)
-      );
-    })
-  );
+  const selectedDevices = createMemo(() => {
+    const selectedIds = selectedDevicesState.selectedDevices();
+    if (selectedIds.size === 0) {
+      return [];
+    }
+
+    return Array.from(selectedIds)
+      .map((id) => devicesState.devices[id])
+      .filter((device) => device !== undefined);
+  });
+
+  const hasAnyDevices = createMemo(() => Object.values(devicesState.devices).length > 0);
 
   onMount(() => {
     // Request devices on mount
@@ -39,14 +45,16 @@ export function Devices() {
 
   return (
     <div class={styles["app__devices-grid"]}>
-      {topLevelDevices().length === 0 ? (
+      {selectedDevices().length === 0 ? (
         <div class={styles["app__no-devices"]}>
-          {webSocket.isConnected
-            ? "No devices available for control"
-            : "Connect to see available devices"}
+          {hasAnyDevices()
+            ? "Select devices in Available Devices to show controls"
+            : webSocket.isConnected
+              ? "No devices available for control"
+              : "Connect to see available devices"}
         </div>
       ) : (
-        <For each={topLevelDevices()}>{(device) => <div>{renderDeviceComponent(device)}</div>}</For>
+        <For each={selectedDevices()}>{(device) => <div>{renderDeviceComponent(device)}</div>}</For>
       )}
     </div>
   );

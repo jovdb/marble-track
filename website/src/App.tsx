@@ -60,6 +60,7 @@ const App: Component = () => {
           <section class={styles.app__section}>
             <CollapsibleSection
               title="Device Controls"
+              defaultCollapsed={false}
               icon={
                 <svg
                   width="20"

@@ -188,6 +188,10 @@ void WebSocketManager::serializeDeviceToJson(Device *device, JsonObject deviceOb
     deviceObj["id"] = device->getId();
     deviceObj["type"] = device->getType();
 
+    // Ensure devices-list stays lean; config/state are delivered via device-config/device-state
+    deviceObj.remove("config");
+    deviceObj.remove("state");
+
     // Add pins array
     std::vector<String> pins = device->getPins();
     JsonArray pinsArr = deviceObj["pins"].to<JsonArray>();

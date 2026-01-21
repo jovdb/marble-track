@@ -15,7 +15,7 @@ interface PinSelectProps {
 }
 
 export default function PinSelect(props: PinSelectProps) {
-  const [devicesStore] = useDevices();
+  const [devicesStore, { getDeviceConfig }] = useDevices();
   const usedPins = createMemo(() => getUsedPins(devicesStore.devices, props.excludeDeviceId));
   const getPinUsage = (pin: number) => usedPins().get(pin);
 
@@ -24,25 +24,28 @@ export default function PinSelect(props: PinSelectProps) {
 
     const options: { value: PinConfig; label: string }[] = [];
     Object.values(devicesStore.devices).forEach((device) => {
-      if (device.type === "ioexpander" && device.config) {
-        const config = device.config as any;
-        const expanderType = config.expanderType || "PCF8574";
-        let pinCount = 8;
-        if (expanderType === "PCF8575" || expanderType === "MCP23017") {
-          pinCount = 16;
-        }
+      if (device.type === "ioexpander") {
+        getDeviceConfig(device.id);
+        if (device.config) {
+          const config = device.config as any;
+          const expanderType = config.expanderType || "PCF8574";
+          let pinCount = 8;
+          if (expanderType === "PCF8575" || expanderType === "MCP23017") {
+            pinCount = 16;
+          }
 
-        // Log expander pins when available
-        for (let pin = 0; pin < pinCount; pin++) {
-          const deviceName = (device.config?.name as string) || device.id;
-          const pinString = `${deviceName}:${pin}`;
-          options.push({
-            value: {
-              pin: pin,
-              expanderId: device.id, // Use the expander device ID
-            },
-            label: pinString,
-          });
+          // Log expander pins when available
+          for (let pin = 0; pin < pinCount; pin++) {
+            const deviceName = (device.config?.name as string) || device.id;
+            const pinString = `${deviceName}:${pin}`;
+            options.push({
+              value: {
+                pin: pin,
+                expanderId: device.id, // Use the expander device ID
+              },
+              label: pinString,
+            });
+          }
         }
       }
     });

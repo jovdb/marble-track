@@ -27,7 +27,6 @@ export default function PinSelect(props: PinSelectProps) {
       if (device.type === "ioexpander" && device.config) {
         const config = device.config as any;
         const expanderType = config.expanderType || "PCF8574";
-        const i2cDeviceId = config.i2cDeviceId || "";
         let pinCount = 8;
         if (expanderType === "PCF8575" || expanderType === "MCP23017") {
           pinCount = 16;

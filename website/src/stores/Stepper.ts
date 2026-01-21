@@ -1,4 +1,5 @@
 import { IDeviceConfig, IDeviceState } from "./Device";
+import { PinConfig } from "../interfaces/WebSockets";
 import { useDevice } from "./Devices";
 
 const deviceType = "stepper";
@@ -22,15 +23,15 @@ export interface IStepperConfig extends IDeviceConfig {
   defaultSpeed?: number;
   defaultAcceleration?: number;
   // For DRIVER type
-  stepPin?: number;
-  dirPin?: number;
+  stepPin?: PinConfig | number;
+  dirPin?: PinConfig | number;
   // For 4-wire types
-  pin1?: number;
-  pin2?: number;
-  pin3?: number;
-  pin4?: number;
+  pin1?: PinConfig | number;
+  pin2?: PinConfig | number;
+  pin3?: PinConfig | number;
+  pin4?: PinConfig | number;
   // Common
-  enablePin?: number;
+  enablePin?: PinConfig | number;
   invertEnable?: boolean;
   [key: string]: unknown;
 }

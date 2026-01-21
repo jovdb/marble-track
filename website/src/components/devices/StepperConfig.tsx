@@ -115,18 +115,18 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
     };
 
     if (isFourPin()) {
-      payload.pin1 = pin1().pin;
-      payload.pin2 = pin2().pin;
-      payload.pin3 = pin3().pin;
-      payload.pin4 = pin4().pin;
+      payload.pin1 = pin1();
+      payload.pin2 = pin2();
+      payload.pin3 = pin3();
+      payload.pin4 = pin4();
       if (enablePin().pin >= 0) {
-        payload.enablePin = enablePin().pin;
+        payload.enablePin = enablePin();
       }
     } else {
-      payload.stepPin = stepPin().pin;
-      payload.dirPin = dirPin().pin;
+      payload.stepPin = stepPin();
+      payload.dirPin = dirPin();
       if (enablePin().pin >= 0) {
-        payload.enablePin = enablePin().pin;
+        payload.enablePin = enablePin();
       }
     }
 
@@ -160,17 +160,32 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
         <Show when={!isFourPin()}>
           <DeviceConfigRow>
             <DeviceConfigItem name="Step pin">
-              <PinSelect value={stepPin()} onChange={setStepPin} excludeDeviceId={props.id} />
+              <PinSelect
+                value={stepPin()}
+                onChange={setStepPin}
+                excludeDeviceId={props.id}
+                showExpanderPins={true}
+              />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>
             <DeviceConfigItem name="Direction pin">
-              <PinSelect value={dirPin()} onChange={setDirPin} excludeDeviceId={props.id} />
+              <PinSelect
+                value={dirPin()}
+                onChange={setDirPin}
+                excludeDeviceId={props.id}
+                showExpanderPins={true}
+              />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>
             <DeviceConfigItem name="Enable pin">
-              <PinSelect value={enablePin()} onChange={setEnablePin} excludeDeviceId={props.id} />
+              <PinSelect
+                value={enablePin()}
+                onChange={setEnablePin}
+                excludeDeviceId={props.id}
+                showExpanderPins={true}
+              />
               <span
                 style={{ "margin-left": "0.5rem", "font-size": "0.8rem", color: "#666" }}
               ></span>
@@ -189,27 +204,52 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
         <Show when={isFourPin()}>
           <DeviceConfigRow>
             <DeviceConfigItem name="Pin 1">
-              <PinSelect value={pin1()} onChange={setPin1} excludeDeviceId={props.id} />
+              <PinSelect
+                value={pin1()}
+                onChange={setPin1}
+                excludeDeviceId={props.id}
+                showExpanderPins={true}
+              />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>
             <DeviceConfigItem name="Pin 2">
-              <PinSelect value={pin2()} onChange={setPin2} excludeDeviceId={props.id} />
+              <PinSelect
+                value={pin2()}
+                onChange={setPin2}
+                excludeDeviceId={props.id}
+                showExpanderPins={true}
+              />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>
             <DeviceConfigItem name="Pin 3">
-              <PinSelect value={pin3()} onChange={setPin3} excludeDeviceId={props.id} />
+              <PinSelect
+                value={pin3()}
+                onChange={setPin3}
+                excludeDeviceId={props.id}
+                showExpanderPins={true}
+              />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>
             <DeviceConfigItem name="Pin 4">
-              <PinSelect value={pin4()} onChange={setPin4} excludeDeviceId={props.id} />
+              <PinSelect
+                value={pin4()}
+                onChange={setPin4}
+                excludeDeviceId={props.id}
+                showExpanderPins={true}
+              />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>
             <DeviceConfigItem name="Enable pin">
-              <PinSelect value={enablePin()} onChange={setEnablePin} excludeDeviceId={props.id} />
+              <PinSelect
+                value={enablePin()}
+                onChange={setEnablePin}
+                excludeDeviceId={props.id}
+                showExpanderPins={true}
+              />
             </DeviceConfigItem>
           </DeviceConfigRow>
           <DeviceConfigRow>

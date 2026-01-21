@@ -41,9 +41,12 @@ namespace devices
             liftStepperConfig.maxAcceleration = 100;
             liftStepperConfig.defaultSpeed = 150;
             liftStepperConfig.defaultAcceleration = 50;
-            liftStepperConfig.stepPin = 1;
-            liftStepperConfig.dirPin = 2;
-            liftStepperConfig.enablePin = 42;
+            liftStepperConfig.stepPin.pin = 1;
+            liftStepperConfig.stepPin.expanderId = "";
+            liftStepperConfig.dirPin.pin = 2;
+            liftStepperConfig.dirPin.expanderId = "";
+            liftStepperConfig.enablePin.pin = 42;
+            liftStepperConfig.enablePin.expanderId = "";
             liftStepperConfig.invertEnable = true;
             liftStepper->setConfig(liftStepperConfig);
         }
@@ -151,9 +154,12 @@ namespace devices
             wheelStepperConfig.maxAcceleration = 3000;
             wheelStepperConfig.defaultSpeed = 1000;
             wheelStepperConfig.defaultAcceleration = 200;
-            wheelStepperConfig.stepPin = 4;
-            wheelStepperConfig.dirPin = 5;
-            wheelStepperConfig.enablePin = 6;
+            wheelStepperConfig.stepPin.pin = 4;
+            wheelStepperConfig.stepPin.expanderId = "";
+            wheelStepperConfig.dirPin.pin = 5;
+            wheelStepperConfig.dirPin.expanderId = "";
+            wheelStepperConfig.enablePin.pin = 6;
+            wheelStepperConfig.enablePin.expanderId = "";
             wheelStepperConfig.invertEnable = true;
             wheelStepper->setConfig(wheelStepperConfig);
         }

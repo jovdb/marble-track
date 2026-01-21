@@ -9,10 +9,9 @@ export type ISelectedDevicesActions = {
   clearSelectedDevices: () => void;
 };
 
-const SelectedDevicesContext = createContext<[ISelectedDevicesStore, ISelectedDevicesActions]>([
-  { selectedDevices: () => new Set() },
-  { setSelectedDevices: () => undefined, clearSelectedDevices: () => undefined },
-]);
+const SelectedDevicesContext = createContext<
+  [ISelectedDevicesStore, ISelectedDevicesActions] | undefined
+>(undefined);
 
 export function SelectedDevicesProvider(props: { children: JSX.Element }) {
   const [selectedDevices, setSelectedDevices] = createSignal<Set<string>>(new Set());
@@ -34,5 +33,9 @@ export function SelectedDevicesProvider(props: { children: JSX.Element }) {
 }
 
 export function useSelectedDevices() {
-  return useContext(SelectedDevicesContext);
+  const context = useContext(SelectedDevicesContext);
+  if (!context) {
+    throw new Error("useSelectedDevices must be used within SelectedDevicesProvider");
+  }
+  return context;
 }

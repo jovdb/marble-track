@@ -9,6 +9,78 @@
 
 namespace devices
 {
+    namespace
+    {
+        PinConfig parsePinConfig(const JsonVariantConst &value)
+        {
+            PinConfig config;
+            if (value.is<int>())
+            {
+                config.pin = value.as<int>();
+                config.expanderId = "";
+                return config;
+            }
+
+            if (!value.isNull())
+            {
+                JsonDocument pinDoc;
+                pinDoc.set(value);
+                return PinFactory::jsonToConfig(pinDoc);
+            }
+
+            config.pin = -1;
+            config.expanderId = "";
+            return config;
+        }
+
+        class PinAccelStepper : public AccelStepper
+        {
+        public:
+            PinAccelStepper(uint8_t interface,
+                            pins::IPin *pin1,
+                            pins::IPin *pin2,
+                            pins::IPin *pin3,
+                            pins::IPin *pin4)
+                : AccelStepper(interface, 0, 0, 0, 0, false),
+                  _pin1(pin1),
+                  _pin2(pin2),
+                  _pin3(pin3),
+                  _pin4(pin4)
+            {
+            }
+
+        protected:
+            void setOutputPins(uint8_t mask) override
+            {
+                if (_pin1)
+                    _pin1->write((mask & 0x1) ? HIGH : LOW);
+                if (_pin2)
+                    _pin2->write((mask & 0x2) ? HIGH : LOW);
+                if (_pin3)
+                    _pin3->write((mask & 0x4) ? HIGH : LOW);
+                if (_pin4)
+                    _pin4->write((mask & 0x8) ? HIGH : LOW);
+            }
+
+            void step1(long step) override
+            {
+                (void)step;
+                if (!_pin1 || !_pin2)
+                    return;
+
+                _pin2->write(_direction == DIRECTION_CW ? HIGH : LOW);
+                _pin1->write(HIGH);
+                delayMicroseconds(1);
+                _pin1->write(LOW);
+            }
+
+        private:
+            pins::IPin *_pin1 = nullptr;
+            pins::IPin *_pin2 = nullptr;
+            pins::IPin *_pin3 = nullptr;
+            pins::IPin *_pin4 = nullptr;
+        };
+    }
 
     Stepper::Stepper(const String &id)
         : Device(id, "stepper")
@@ -19,6 +91,7 @@ namespace devices
     Stepper::~Stepper()
     {
         cleanupAccelStepper();
+        cleanupPins();
         if (_stateMutex != nullptr)
         {
             vSemaphoreDelete(_stateMutex);
@@ -37,6 +110,78 @@ namespace devices
             return;
         }
 
+        cleanupPins();
+
+        auto configureOutputPin = [&](const PinConfig &config, pins::IPin *&pin, const char *label, bool required) -> bool {
+            if (config.pin < 0)
+            {
+                if (required)
+                {
+                    MLOG_WARN("%s: %s not configured", toString().c_str(), label);
+                    return false;
+                }
+                return true;
+            }
+
+            pin = PinFactory::createPin(config);
+            if (!pin)
+            {
+                MLOG_ERROR("%s: Failed to create %s %s", toString().c_str(), label, config.toString().c_str());
+                return false;
+            }
+
+            if (!pin->setup(config.pin, pins::PinMode::Output))
+            {
+                MLOG_ERROR("%s: Failed to setup %s %s", toString().c_str(), label, config.toString().c_str());
+                return false;
+            }
+
+            return true;
+        };
+
+        if (_config.stepperType == "DRIVER")
+        {
+            if (!configureOutputPin(_config.stepPin, _stepPin, "step pin", true))
+            {
+                cleanupPins();
+                return;
+            }
+            if (!configureOutputPin(_config.dirPin, _dirPin, "direction pin", true))
+            {
+                cleanupPins();
+                return;
+            }
+        }
+        else if (_config.stepperType == "HALF4WIRE" || _config.stepperType == "FULL4WIRE")
+        {
+            if (!configureOutputPin(_config.pin1, _pin1, "pin1", true))
+            {
+                cleanupPins();
+                return;
+            }
+            if (!configureOutputPin(_config.pin2, _pin2, "pin2", true))
+            {
+                cleanupPins();
+                return;
+            }
+            if (!configureOutputPin(_config.pin3, _pin3, "pin3", true))
+            {
+                cleanupPins();
+                return;
+            }
+            if (!configureOutputPin(_config.pin4, _pin4, "pin4", true))
+            {
+                cleanupPins();
+                return;
+            }
+        }
+
+        if (!configureOutputPin(_config.enablePin, _enablePin, "enable pin", false))
+        {
+            cleanupPins();
+            return;
+        }
+
         initializeAccelStepper();
 
         if (_driver)
@@ -45,9 +190,8 @@ namespace devices
             _driver->setAcceleration(_config.maxAcceleration);
             _driver->setCurrentPosition(0);
 
-            if (_config.enablePin >= 0)
+            if (_enablePin && _enablePin->isConfigured())
             {
-                pinMode(_config.enablePin, OUTPUT);
                 disableStepper();
             }
 
@@ -86,24 +230,24 @@ namespace devices
         std::vector<String> pins;
         if (_config.stepperType == "DRIVER")
         {
-            if (_config.stepPin >= 0)
-                pins.push_back(String(_config.stepPin));
-            if (_config.dirPin >= 0)
-                pins.push_back(String(_config.dirPin));
+            if (_stepPin && _stepPin->isConfigured())
+                pins.push_back(_stepPin->toString());
+            if (_dirPin && _dirPin->isConfigured())
+                pins.push_back(_dirPin->toString());
         }
         else if (_config.stepperType == "HALF4WIRE" || _config.stepperType == "FULL4WIRE")
         {
-            if (_config.pin1 >= 0)
-                pins.push_back(String(_config.pin1));
-            if (_config.pin2 >= 0)
-                pins.push_back(String(_config.pin2));
-            if (_config.pin3 >= 0)
-                pins.push_back(String(_config.pin3));
-            if (_config.pin4 >= 0)
-                pins.push_back(String(_config.pin4));
+            if (_pin1 && _pin1->isConfigured())
+                pins.push_back(_pin1->toString());
+            if (_pin2 && _pin2->isConfigured())
+                pins.push_back(_pin2->toString());
+            if (_pin3 && _pin3->isConfigured())
+                pins.push_back(_pin3->toString());
+            if (_pin4 && _pin4->isConfigured())
+                pins.push_back(_pin4->toString());
         }
-        if (_config.enablePin >= 0)
-            pins.push_back(String(_config.enablePin));
+        if (_enablePin && _enablePin->isConfigured())
+            pins.push_back(_enablePin->toString());
         return pins;
     }
 
@@ -242,20 +386,20 @@ namespace devices
             _config.defaultSpeed = config["defaultSpeed"].as<float>();
         if (config["defaultAcceleration"].is<float>())
             _config.defaultAcceleration = config["defaultAcceleration"].as<float>();
-        if (config["stepPin"].is<int>())
-            _config.stepPin = config["stepPin"].as<int>();
-        if (config["dirPin"].is<int>())
-            _config.dirPin = config["dirPin"].as<int>();
-        if (config["pin1"].is<int>())
-            _config.pin1 = config["pin1"].as<int>();
-        if (config["pin2"].is<int>())
-            _config.pin2 = config["pin2"].as<int>();
-        if (config["pin3"].is<int>())
-            _config.pin3 = config["pin3"].as<int>();
-        if (config["pin4"].is<int>())
-            _config.pin4 = config["pin4"].as<int>();
-        if (config["enablePin"].is<int>())
-            _config.enablePin = config["enablePin"].as<int>();
+        if (!config["stepPin"].isNull())
+            _config.stepPin = parsePinConfig(config["stepPin"]);
+        if (!config["dirPin"].isNull())
+            _config.dirPin = parsePinConfig(config["dirPin"]);
+        if (!config["pin1"].isNull())
+            _config.pin1 = parsePinConfig(config["pin1"]);
+        if (!config["pin2"].isNull())
+            _config.pin2 = parsePinConfig(config["pin2"]);
+        if (!config["pin3"].isNull())
+            _config.pin3 = parsePinConfig(config["pin3"]);
+        if (!config["pin4"].isNull())
+            _config.pin4 = parsePinConfig(config["pin4"]);
+        if (!config["enablePin"].isNull())
+            _config.enablePin = parsePinConfig(config["enablePin"]);
         if (config["invertEnable"].is<bool>())
             _config.invertEnable = config["invertEnable"].as<bool>();
     }
@@ -268,13 +412,41 @@ namespace devices
         doc["maxAcceleration"] = _config.maxAcceleration;
         doc["defaultSpeed"] = _config.defaultSpeed;
         doc["defaultAcceleration"] = _config.defaultAcceleration;
-        doc["stepPin"] = _config.stepPin;
-        doc["dirPin"] = _config.dirPin;
-        doc["pin1"] = _config.pin1;
-        doc["pin2"] = _config.pin2;
-        doc["pin3"] = _config.pin3;
-        doc["pin4"] = _config.pin4;
-        doc["enablePin"] = _config.enablePin;
+        {
+            JsonDocument pinDoc;
+            PinFactory::configToJson(_config.stepPin, pinDoc);
+            doc["stepPin"] = pinDoc.as<JsonVariant>();
+        }
+        {
+            JsonDocument pinDoc;
+            PinFactory::configToJson(_config.dirPin, pinDoc);
+            doc["dirPin"] = pinDoc.as<JsonVariant>();
+        }
+        {
+            JsonDocument pinDoc;
+            PinFactory::configToJson(_config.pin1, pinDoc);
+            doc["pin1"] = pinDoc.as<JsonVariant>();
+        }
+        {
+            JsonDocument pinDoc;
+            PinFactory::configToJson(_config.pin2, pinDoc);
+            doc["pin2"] = pinDoc.as<JsonVariant>();
+        }
+        {
+            JsonDocument pinDoc;
+            PinFactory::configToJson(_config.pin3, pinDoc);
+            doc["pin3"] = pinDoc.as<JsonVariant>();
+        }
+        {
+            JsonDocument pinDoc;
+            PinFactory::configToJson(_config.pin4, pinDoc);
+            doc["pin4"] = pinDoc.as<JsonVariant>();
+        }
+        {
+            JsonDocument pinDoc;
+            PinFactory::configToJson(_config.enablePin, pinDoc);
+            doc["enablePin"] = pinDoc.as<JsonVariant>();
+        }
         doc["invertEnable"] = _config.invertEnable;
     }
 
@@ -385,15 +557,33 @@ namespace devices
 
         if (_config.stepperType == "DRIVER")
         {
-            _driver = new AccelStepper(AccelStepper::DRIVER, _config.stepPin, _config.dirPin);
+            if (!_stepPin || !_dirPin)
+            {
+                MLOG_ERROR("%s: Stepper DRIVER pins not configured", toString().c_str());
+                _driver = nullptr;
+                return;
+            }
+            _driver = new PinAccelStepper(AccelStepper::DRIVER, _stepPin, _dirPin, nullptr, nullptr);
         }
         else if (_config.stepperType == "HALF4WIRE")
         {
-            _driver = new AccelStepper(AccelStepper::HALF4WIRE, _config.pin1, _config.pin3, _config.pin2, _config.pin4);
+            if (!_pin1 || !_pin2 || !_pin3 || !_pin4)
+            {
+                MLOG_ERROR("%s: Stepper HALF4WIRE pins not configured", toString().c_str());
+                _driver = nullptr;
+                return;
+            }
+            _driver = new PinAccelStepper(AccelStepper::HALF4WIRE, _pin1, _pin3, _pin2, _pin4);
         }
         else if (_config.stepperType == "FULL4WIRE")
         {
-            _driver = new AccelStepper(AccelStepper::FULL4WIRE, _config.pin1, _config.pin3, _config.pin2, _config.pin4);
+            if (!_pin1 || !_pin2 || !_pin3 || !_pin4)
+            {
+                MLOG_ERROR("%s: Stepper FULL4WIRE pins not configured", toString().c_str());
+                _driver = nullptr;
+                return;
+            }
+            _driver = new PinAccelStepper(AccelStepper::FULL4WIRE, _pin1, _pin3, _pin2, _pin4);
         }
         else
         {
@@ -411,20 +601,55 @@ namespace devices
         }
     }
 
+    void Stepper::cleanupPins()
+    {
+        if (_stepPin)
+        {
+            delete _stepPin;
+            _stepPin = nullptr;
+        }
+        if (_dirPin)
+        {
+            delete _dirPin;
+            _dirPin = nullptr;
+        }
+        if (_pin1)
+        {
+            delete _pin1;
+            _pin1 = nullptr;
+        }
+        if (_pin2)
+        {
+            delete _pin2;
+            _pin2 = nullptr;
+        }
+        if (_pin3)
+        {
+            delete _pin3;
+            _pin3 = nullptr;
+        }
+        if (_pin4)
+        {
+            delete _pin4;
+            _pin4 = nullptr;
+        }
+        if (_enablePin)
+        {
+            delete _enablePin;
+            _enablePin = nullptr;
+        }
+    }
+
     void Stepper::enableStepper()
     {
-        if (_config.enablePin >= 0)
-        {
-            digitalWrite(_config.enablePin, _config.invertEnable ? LOW : HIGH);
-        }
+        if (_enablePin && _enablePin->isConfigured())
+            _enablePin->write(_config.invertEnable ? LOW : HIGH);
     }
 
     void Stepper::disableStepper()
     {
-        if (_config.enablePin >= 0)
-        {
-            digitalWrite(_config.enablePin, _config.invertEnable ? HIGH : LOW);
-        }
+        if (_enablePin && _enablePin->isConfigured())
+            _enablePin->write(_config.invertEnable ? HIGH : LOW);
     }
 
     void Stepper::prepareForMove(float &speed, float &acceleration)

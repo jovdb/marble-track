@@ -12,6 +12,8 @@
 #include "devices/mixins/ControllableMixin.h"
 #include "devices/mixins/SerializableMixin.h"
 #include "devices/mixins/RtosMixin.h"
+#include "pins/IPin.h"
+#include "pins/Pins.h"
 #include <AccelStepper.h>
 #include <freertos/semphr.h>
 
@@ -30,13 +32,13 @@ namespace devices
         float maxAcceleration = 500.0f; // Acceleration in steps per second per second
         float defaultSpeed = 500.0f; // Default speed
         float defaultAcceleration = 250.0f; // Default acceleration
-        int stepPin = -1;            // Step pin for DRIVER
-        int dirPin = -1;             // Direction pin for DRIVER
-        int pin1 = -1;               // Pin 1 for 4-wire
-        int pin2 = -1;               // Pin 2 for 4-wire
-        int pin3 = -1;               // Pin 3 for 4-wire
-        int pin4 = -1;               // Pin 4 for 4-wire
-        int enablePin = -1;          // Enable pin
+        PinConfig stepPin;           // Step pin for DRIVER
+        PinConfig dirPin;            // Direction pin for DRIVER
+        PinConfig pin1;              // Pin 1 for 4-wire
+        PinConfig pin2;              // Pin 2 for 4-wire
+        PinConfig pin3;              // Pin 3 for 4-wire
+        PinConfig pin4;              // Pin 4 for 4-wire
+        PinConfig enablePin;         // Enable pin
         bool invertEnable = false;   // Invert enable logic
     };
 
@@ -133,8 +135,17 @@ namespace devices
         AccelStepper *_driver = nullptr;
         SemaphoreHandle_t _stateMutex;
 
+        pins::IPin *_stepPin = nullptr;
+        pins::IPin *_dirPin = nullptr;
+        pins::IPin *_pin1 = nullptr;
+        pins::IPin *_pin2 = nullptr;
+        pins::IPin *_pin3 = nullptr;
+        pins::IPin *_pin4 = nullptr;
+        pins::IPin *_enablePin = nullptr;
+
         void initializeAccelStepper();
         void cleanupAccelStepper();
+        void cleanupPins();
         void enableStepper();
         void disableStepper();
         void prepareForMove(float &speed, float &acceleration);

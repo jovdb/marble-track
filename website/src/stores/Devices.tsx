@@ -247,11 +247,21 @@ export function useDevices() {
   const [, { sendMessage }] = useWebSocket2();
   const loadDevices = () => sendMessage({ type: "devices-list" });
 
+  const getDeviceConfig = (deviceId: string) =>
+    sendMessage({ type: "device-read-config", deviceId });
+  const setDeviceConfig = (deviceId: string, config: TConfig) =>
+    sendMessage({ type: "device-save-config", deviceId, config });
+  const getDeviceState = (deviceId: string) => sendMessage({ type: "device-state", deviceId });
+
   return [
     /** Don't destructure! */
     store,
     {
       loadDevices,
+      getDeviceConfig,
+      setDeviceConfig,
+      getDeviceState,
+      sendMessage,
     },
   ] as const;
 }
@@ -260,21 +270,22 @@ export function useDevice<TState extends IDeviceState, TConfig extends IDeviceCo
   deviceId: string
 ) {
   const store = useContext(DevicesContext);
-  const [, { sendMessage }] = useWebSocket2();
 
-  const getDeviceConfig = () => sendMessage({ type: "device-read-config", deviceId });
-  const setDeviceConfig = (config: TConfig) =>
-    sendMessage({ type: "device-save-config", deviceId, config });
-  const getDeviceState = () => sendMessage({ type: "device-state", deviceId });
+  const [, { getDeviceConfig, setDeviceConfig, getDeviceState, sendMessage }] = useDevices();
 
   // tracking only needed once
   onMount(() => {
-    getDeviceConfig();
-    getDeviceState();
+    getDeviceConfig(deviceId);
+    getDeviceState(deviceId);
   });
 
   return [
     store.devices[deviceId] as IDevice<TState, TConfig> | undefined,
-    { getDeviceConfig, getDeviceState, setDeviceConfig, sendMessage },
+    {
+      getDeviceConfig: () => getDeviceConfig(deviceId),
+      getDeviceState: () => getDeviceState(deviceId),
+      setDeviceConfig: (config: TConfig) => setDeviceConfig(deviceId, config),
+      sendMessage,
+    },
   ] as const;
 }

@@ -57,8 +57,9 @@ namespace pins
          * @param wireInstance Pointer to Wire instance (default &Wire)
          */
         explicit I2cExpanderPin(I2cExpanderType type = I2cExpanderType::PCF8574, 
-                                uint8_t i2cAddress = 0x20,
-                                TwoWire* wireInstance = &Wire);
+                    uint8_t i2cAddress = 0x20,
+                    TwoWire* wireInstance = &Wire,
+                    const String &expanderId = "");
 
         // IPin interface implementation
         bool setup(int pinNumber, PinMode mode) override;
@@ -90,6 +91,7 @@ namespace pins
         I2cExpanderType _expanderType;
         uint8_t _i2cAddress;
         TwoWire* _wire;
+        String _expanderId;
         int _pinNumber;
         bool _isSetup;
         PinMode _mode;

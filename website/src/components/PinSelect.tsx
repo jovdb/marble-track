@@ -17,7 +17,7 @@ interface PinSelectProps {
 export default function PinSelect(props: PinSelectProps) {
   const [devicesStore, { getDeviceConfig }] = useDevices();
   const usedPins = createMemo(() => getUsedPins(devicesStore.devices, props.excludeDeviceId));
-  const getPinUsage = (pin: number) => usedPins().get(pin);
+  const getPinUsage = (pinKey: string) => usedPins().get(pinKey);
 
   const expanderPinOptions = createMemo(() => {
     if (!props.showExpanderPins) return [];
@@ -38,12 +38,13 @@ export default function PinSelect(props: PinSelectProps) {
           for (let pin = 0; pin < pinCount; pin++) {
             const deviceName = (device.config?.name as string) || device.id;
             const pinString = `${deviceName}:${pin}`;
+            const usedBy = getPinUsage(`${device.id}:${pin}`);
             options.push({
               value: {
                 pin: pin,
                 expanderId: device.id, // Use the expander device ID
               },
-              label: pinString,
+              label: usedBy ? `${pinString} (used by '${usedBy}')` : pinString,
             });
           }
         }
@@ -96,7 +97,7 @@ export default function PinSelect(props: PinSelectProps) {
       <option value={-1}>Disabled</option>
       <For each={ESP32_AVAILABLE_PINS}>
         {(pinNum) => {
-          const deviceId = getPinUsage(pinNum);
+          const deviceId = getPinUsage(String(pinNum));
           return (
             <option value={pinNum}>
               {pinNum}

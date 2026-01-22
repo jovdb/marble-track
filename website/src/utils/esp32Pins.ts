@@ -31,8 +31,8 @@ export function isPinReserved(pin: number): boolean {
 export function getUsedPins(
   devices: Record<string, any>,
   excludeDeviceId?: string
-): Map<number, string> {
-  const usedPins = new Map<number, string>();
+): Map<string, string> {
+  const usedPins = new Map<string, string>();
 
   Object.entries(devices).forEach(([deviceId, device]) => {
     if (excludeDeviceId && deviceId === excludeDeviceId) {
@@ -40,8 +40,8 @@ export function getUsedPins(
     }
 
     if (device.pins && Array.isArray(device.pins)) {
-      device.pins.forEach((pin: number) => {
-        usedPins.set(pin, deviceId);
+      device.pins.forEach((pin: string | number) => {
+        usedPins.set(String(pin), deviceId);
       });
     }
   });

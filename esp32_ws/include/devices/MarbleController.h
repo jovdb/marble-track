@@ -40,14 +40,14 @@ namespace devices
         void loopManualWheel();
         void loopAutoLift();
         void loopAutoWheel();
+        Button *_manualButton;
         Buzzer *_buzzer;
         Lift *_lift;
         Wheel *_wheel;
         Led *_liftLed;
-        Button *_liftButton;
-        Button *_manualButton;
-        Led *_wheelBtnLed;
-        Button *_wheelNextBtn;
+        Button *_liftBtn;
+        Led *_wheelLed;
+        Button *_wheelBtn;
 
         // Button timing for unload duration control
         unsigned long _liftButtonPressStartTime = 0;

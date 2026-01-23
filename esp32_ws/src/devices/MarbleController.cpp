@@ -198,6 +198,26 @@ namespace devices
         wheelNextBtnConfig.buttonType = ButtonType::NormalOpen;
         _wheelBtn->setConfig(wheelNextBtnConfig);
         addChild(_wheelBtn);
+
+        _spiralLed = new devices::Led("spiral-led");
+        auto spiralLedConfig = _spiralLed->getConfig();
+        spiralLedConfig.name = "Spiral Led";
+        spiralLedConfig.pinConfig.pin = -1;
+        spiralLedConfig.pinConfig.expanderId = "";
+        spiralLedConfig.initialState = "OFF";
+        _spiralLed->setConfig(spiralLedConfig);
+        addChild(_spiralLed);
+
+        _spiralBtn = new devices::Button("spiral-btn");
+        auto spiralButtonConfig = _spiralBtn->getConfig();
+        spiralButtonConfig.name = "Spiral Button";
+        spiralButtonConfig.pinConfig.pin = -1;
+        spiralButtonConfig.pinConfig.expanderId = "";
+        spiralButtonConfig.pinMode = PinModeOption::PullUp;
+        spiralButtonConfig.debounceTimeInMs = 50;
+        spiralButtonConfig.buttonType = ButtonType::NormalOpen;
+        _spiralBtn->setConfig(spiralButtonConfig);
+        addChild(_spiralBtn);
     }
 
     void MarbleController::setup()
@@ -222,11 +242,13 @@ namespace devices
         {
             loopAutoLift();
             loopAutoWheel();
+            loopAutoSpiral();
         }
         else
         {
             loopManualLift();
             loopManualWheel();
+            loopManualSpiral();
         }
     }
 
@@ -546,6 +568,30 @@ namespace devices
             // Button released while moving - stop the wheel
             MLOG_INFO("%s: Stopping manual wheel movement", toString().c_str());
             _wheel->stop();
+        }
+    }
+
+    void MarbleController::loopAutoSpiral()
+    {
+    }
+
+    void MarbleController::loopManualSpiral()
+    {
+        auto spiralButtonState = _spiralBtn->getState();
+
+        if (spiralButtonState.isPressed && spiralButtonState.isPressedChanged)
+        {
+            playClickSound();
+
+            auto spiralLedState = _spiralLed->getState();
+            if (spiralLedState.mode == "BLINKING")
+            {
+                _spiralLed->set(false);
+            }
+            else
+            {
+                _spiralLed->blink(500, 500);
+            }
         }
     }
 

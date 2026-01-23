@@ -38,8 +38,10 @@ namespace devices
     private:
         void loopManualLift();
         void loopManualWheel();
+        void loopManualSpiral();
         void loopAutoLift();
         void loopAutoWheel();
+        void loopAutoSpiral();
         Button *_manualButton;
         Buzzer *_buzzer;
         Lift *_lift;
@@ -48,6 +50,8 @@ namespace devices
         Button *_liftBtn;
         Led *_wheelLed;
         Button *_wheelBtn;
+        Led *_spiralLed;
+        Button *_spiralBtn;
 
         // Button timing for unload duration control
         unsigned long _liftButtonPressStartTime = 0;

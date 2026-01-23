@@ -311,7 +311,6 @@ namespace pins
             return "";
         }
 
-        MLOG_INFO("I2cExpander: toString called, expanderId='%s'", _expanderId.c_str());
         if (!_expanderId.isEmpty())
         {
             return _expanderId + ":" + String(_pinNumber);

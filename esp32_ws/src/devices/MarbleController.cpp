@@ -108,16 +108,16 @@ namespace devices
         _liftLed->setConfig(liftLedConfig);
         addChild(_liftLed);
 
-        _liftButton = new devices::Button("lift-btn");
-        auto liftButtonConfig = _liftButton->getConfig();
+        _liftBtn = new devices::Button("lift-btn");
+        auto liftButtonConfig = _liftBtn->getConfig();
         liftButtonConfig.name = "Lift Button";
         liftButtonConfig.pinConfig.pin = -1;
         liftButtonConfig.pinConfig.expanderId = "";
         liftButtonConfig.pinMode = PinModeOption::PullUp;
         liftButtonConfig.debounceTimeInMs = 50;
         liftButtonConfig.buttonType = ButtonType::NormalOpen;
-        _liftButton->setConfig(liftButtonConfig);
-        addChild(_liftButton);
+        _liftBtn->setConfig(liftButtonConfig);
+        addChild(_liftBtn);
 
         _manualButton = new devices::Button("manual-btn");
         auto manualButtonConfig = _manualButton->getConfig();
@@ -178,26 +178,26 @@ namespace devices
         }
 
         // Add wheel button LED
-        _wheelBtnLed = new devices::Led("wheel-led");
-        auto wheelBtnLedConfig = _wheelBtnLed->getConfig();
+        _wheelLed = new devices::Led("wheel-led");
+        auto wheelBtnLedConfig = _wheelLed->getConfig();
         wheelBtnLedConfig.name = "";
         wheelBtnLedConfig.pinConfig.pin = 1;
         wheelBtnLedConfig.pinConfig.expanderId = "ex";
         wheelBtnLedConfig.initialState = "OFF";
-        _wheelBtnLed->setConfig(wheelBtnLedConfig);
-        addChild(_wheelBtnLed);
+        _wheelLed->setConfig(wheelBtnLedConfig);
+        addChild(_wheelLed);
 
         // Add wheel next button
-        _wheelNextBtn = new devices::Button("wheel-btn");
-        auto wheelNextBtnConfig = _wheelNextBtn->getConfig();
+        _wheelBtn = new devices::Button("wheel-btn");
+        auto wheelNextBtnConfig = _wheelBtn->getConfig();
         wheelNextBtnConfig.name = "";
         wheelNextBtnConfig.pinConfig.pin = -1;
         wheelNextBtnConfig.pinConfig.expanderId = "";
         wheelNextBtnConfig.pinMode = PinModeOption::PullUp;
         wheelNextBtnConfig.debounceTimeInMs = 50;
         wheelNextBtnConfig.buttonType = ButtonType::NormalOpen;
-        _wheelNextBtn->setConfig(wheelNextBtnConfig);
-        addChild(_wheelNextBtn);
+        _wheelBtn->setConfig(wheelNextBtnConfig);
+        addChild(_wheelBtn);
     }
 
     void MarbleController::setup()
@@ -283,7 +283,7 @@ namespace devices
         case devices::LiftStateEnum::UNKNOWN:
         {
             // Init will start at press
-            auto liftButtonState = _liftButton->getState();
+            auto liftButtonState = _liftBtn->getState();
             if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
                 playClickSound();
@@ -313,7 +313,7 @@ namespace devices
 
         case devices::LiftStateEnum::LIFT_DOWN:
         {
-            auto liftButtonState = _liftButton->getState();
+            auto liftButtonState = _liftBtn->getState();
             if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
                 playClickSound();
@@ -332,7 +332,7 @@ namespace devices
 
         case devices::LiftStateEnum::LIFT_UP:
         {
-            auto liftButtonState = _liftButton->getState();
+            auto liftButtonState = _liftBtn->getState();
             if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
                 if (liftState.isLoaded)
@@ -499,20 +499,20 @@ namespace devices
     {
         // Manual wheel control logic
         auto wheelState = _wheel->getState();
-        auto wheelButtonState = _wheelNextBtn->getState();
+        auto wheelButtonState = _wheelBtn->getState();
 
         // Control wheel LED based on error state and movement
         if (wheelState.state == devices::WheelStateEnum::ERROR)
         {
-            _wheelBtnLed->set(false); // LED off when in error
+            _wheelLed->set(false); // LED off when in error
         }
         else if (wheelState.state == devices::WheelStateEnum::MOVING)
         {
-            _wheelBtnLed->blink(480, 320, 160); // LED blinks when moving
+            _wheelLed->blink(480, 320, 160); // LED blinks when moving
         }
         else
         {
-            _wheelBtnLed->set(true); // LED on when idle and not in error
+            _wheelLed->set(true); // LED on when idle and not in error
         }
 
         // Control wheel movement based on button state

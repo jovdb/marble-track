@@ -82,7 +82,7 @@ namespace devices
         _state.input = contactStateToPinState(_state.isPressed);
         _lastIsButtonPressed = _state.isPressed;
 
-        MLOG_INFO("%s: Setup on %s", toString().c_str(), _pin->toString().c_str());
+        MLOG_INFO("%s: Setup on %s with pinMode %s", toString().c_str(), _pin->toString().c_str(), pinModeToString(_config.pinMode).c_str());
     }
 
     void Button::loop()

@@ -147,7 +147,8 @@ namespace pins
         }
 
         _isSetup = true;
-        MLOG_INFO("I2cExpander: Setup %s", toString().c_str());
+        // String modeStr = (_mode == PinMode::Output) ? "OUTPUT" : "INPUT";
+        // MLOG_INFO("I2cExpander: Setup %s as %s", toString().c_str(), modeStr.c_str());
         return true;
     }
 

@@ -1192,7 +1192,7 @@ void WebSocketManager::handleSetNetworkConfig(JsonDocument &doc)
     }
     else
     {
-        response["success"] = true;
+        response["success"] = false;
         response["message"] = "Network settings updated but failed to save to config file";
         response["warning"] = "Settings will not persist after restart";
         MLOG_WARN("Network settings applied but failed to save to config file");

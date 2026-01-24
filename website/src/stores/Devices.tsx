@@ -249,7 +249,7 @@ export function useDevices() {
 
   const getDeviceConfig = (deviceId: string) =>
     sendMessage({ type: "device-read-config", deviceId });
-  const setDeviceConfig = (deviceId: string, config: TConfig) =>
+  const setDeviceConfig = (deviceId: string, config: IDeviceConfig) =>
     sendMessage({ type: "device-save-config", deviceId, config });
   const getDeviceState = (deviceId: string) => sendMessage({ type: "device-state", deviceId });
 

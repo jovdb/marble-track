@@ -42,6 +42,7 @@ namespace devices
         void loopAutoLift();
         void loopAutoWheel();
         void loopAutoSpiral();
+        void blinkError(Led *ledDevice);
         Button *_manualButton;
         Buzzer *_buzzer;
         Lift *_lift;

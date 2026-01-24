@@ -262,7 +262,7 @@ namespace devices
         {
         case devices::LiftStateEnum::ERROR:
         {
-            _liftLed->set(false);
+            blinkError(_liftLed);
             break;
         }
         case devices::LiftStateEnum::INIT:
@@ -321,6 +321,7 @@ namespace devices
             if (liftState.onErrorChange)
             {
                 playErrorSound();
+                blinkError(_liftLed);
             }
             break;
 
@@ -407,13 +408,11 @@ namespace devices
             break;
 
         case devices::LiftStateEnum::ERROR:
-            // Handle error state - maybe blink LED faster
-            _liftLed->set(false);
-
             // Play sound for new errors
             if (liftState.onErrorChange)
             {
                 playErrorSound();
+                blinkError(_liftLed);
             }
             break;
 
@@ -488,9 +487,12 @@ namespace devices
             _wheel->init();
             break;
 
+        case devices::WheelStateEnum::ERROR:
+            blinkError(_wheelLed);
+            break;
+
         case devices::WheelStateEnum::CALIBRATING:
         case devices::WheelStateEnum::INIT:
-        case devices::WheelStateEnum::ERROR:
         case devices::WheelStateEnum::MOVING:
             // Busy states - do nothing
             break;
@@ -590,9 +592,19 @@ namespace devices
             }
             else
             {
-                _spiralLed->blink(500, 500);
+                _spiralLed->blink(20, 940);
             }
         }
+    }
+
+    void MarbleController::blinkError(Led *ledDevice)
+    {
+        if (ledDevice == nullptr)
+        {
+            return;
+        }
+
+        ledDevice->blink(20, 940);
     }
 
     void MarbleController::playStartupSound()

@@ -164,13 +164,8 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
         }
     }
 
-    if (response.overflowed()) {
-        MLOG_ERROR("devices-list JSON overflowed!");
-    }
-
     String message;
     serializeJson(response, message);
-    MLOG_DEBUG("devices-list serialized: %d bytes", message.length());
 
     notifyClients(message);
 }

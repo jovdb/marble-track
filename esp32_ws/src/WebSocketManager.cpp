@@ -10,7 +10,6 @@
 #include "DeviceManager.h"
 #include "Network.h"
 #include "NetworkSettings.h"
-#include "TimeManager.h"
 
 // Static instance for callback access (simplified to single instance)
 static WebSocketManager *instance = nullptr;

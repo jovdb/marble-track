@@ -955,7 +955,7 @@ void SerialConsole::handleTestPinInput(char incoming)
         int pin = m_session.stageBuffer.toInt();
         m_session.stageBuffer = "";
 
-        if (pin < 0 || pin > 48) {  // ESP32 pins 0-39
+        if (pin < 0 || pin > 48) {  // ESP32 pins 0-48
             Serial.println("❌ Invalid pin number. Try again.");
             Serial.print("Pin: ");
             return;

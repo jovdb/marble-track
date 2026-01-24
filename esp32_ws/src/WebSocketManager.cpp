@@ -444,7 +444,7 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
     Device *device = deviceManager->getDeviceById(deviceId);
     if (device)
     {
-        StaticJsonDocument<2048> response; // Allocate 2KB for response
+        DynamicJsonDocument response(8192);
         response["type"] = "device-config";
         response["triggerBy"] = "get";
         response["deviceId"] = deviceId;
@@ -455,7 +455,7 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
             ISerializable *serializable = mixins::SerializableRegistry::get(deviceId);
             if (serializable)
             {
-                StaticJsonDocument<2048> configDoc; // Increased to 2KB for config
+                DynamicJsonDocument configDoc(8192);
                 serializable->configToJson(configDoc);
                 
                 if (configDoc.overflowed()) {

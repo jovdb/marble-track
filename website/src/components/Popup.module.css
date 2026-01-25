@@ -10,7 +10,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: var(--z-modal);
 }
 
 .popup__content {
@@ -23,6 +23,7 @@
   max-height: 90vh;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
 }
 
 .popup__header {

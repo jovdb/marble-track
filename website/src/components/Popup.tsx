@@ -52,6 +52,19 @@ const Popup: Component<PopupProps> = (props) => {
     });
   });
 
+  createEffect(() => {
+    if (!props.isOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    onCleanup(() => {
+      document.body.style.overflow = previousOverflow;
+    });
+  });
+
   return (
     <Portal mount={document.body}>
       <Show when={props.isOpen}>

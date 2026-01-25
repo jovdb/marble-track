@@ -1,0 +1,25 @@
+.stepper__status-indicator {
+  --stepper-indicator-off: var(--color-gray-400);
+  --stepper-indicator-moving: var(--color-warning-500);
+  --stepper-indicator-glow: rgba(234, 179, 8, 0.45);
+
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  background-color: var(--stepper-indicator-off);
+  box-shadow: none;
+  transition:
+    background-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.stepper__status-indicator--moving {
+  background-color: var(--stepper-indicator-moving);
+  box-shadow: 0 0 8px var(--stepper-indicator-glow);
+}
+
+.stepper__status-indicator--off {
+  background-color: var(--stepper-indicator-off);
+  box-shadow: none;
+}

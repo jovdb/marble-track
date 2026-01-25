@@ -1,4 +1,5 @@
 import { createMemo, createSignal } from "solid-js";
+import { debounce } from "@solid-primitives/scheduled";
 import { Device } from "./Device";
 import deviceStyles from "./Device.module.css";
 import { getDeviceIcon } from "../icons/Icons";
@@ -19,7 +20,9 @@ export function Hv20tAudio(props: { id: string; isPopup?: boolean; onClose?: () 
 
   const handlePlay = () => actions.play(Math.trunc(songIndex()));
   const handleStop = () => actions.stop();
-  const handleSetVolume = () => actions.setVolume(Math.trunc(volume()));
+  const debouncedSetVolume = debounce((value: number) => {
+    actions.setVolume(Math.trunc(value));
+  }, 200);
 
   return (
     <Device
@@ -70,13 +73,12 @@ export function Hv20tAudio(props: { id: string; isPopup?: boolean; onClose?: () 
           min="0"
           max="100"
           value={volume()}
-          onInput={(event) => setVolume(Number(event.currentTarget.value))}
+          onInput={(event) => {
+            const nextValue = Number(event.currentTarget.value);
+            setVolume(nextValue);
+            debouncedSetVolume(nextValue);
+          }}
         />
-        <div class={deviceStyles.device__controls}>
-          <button class={deviceStyles.device__button} onClick={handleSetVolume}>
-            Set volume
-          </button>
-        </div>
       </div>
     </Device>
   );

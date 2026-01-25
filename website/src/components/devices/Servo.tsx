@@ -58,6 +58,7 @@ export function Servo(props: { id: string; isPopup?: boolean; onClose?: () => vo
       icon={<ServoIcon />}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}
+      stateComponent={() => null}
     >
       <div class={deviceStyles.device__status}>
         <div

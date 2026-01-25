@@ -58,12 +58,8 @@
 .device-config__cell {
   padding: var(--spacing-1) var(--spacing-0);
   font-size: var(--font-size-sm);
-  border-bottom: 1px solid var(--color-border);
 }
 
-.device-config__row:last-child .device-config__cell {
-  border-bottom: none;
-}
 
 .device-config__cell--label {
   width: 35%;

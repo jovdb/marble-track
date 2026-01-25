@@ -13,6 +13,7 @@ import { Stepper } from "./devices/Stepper";
 import { Wheel } from "./devices/Wheel";
 import { Lift } from "./devices/Lift";
 import { MarbleController } from "./devices/MarbleController";
+import { Hv20tAudio } from "./devices/Hv20tAudio";
 import { Device } from "./devices/Device";
 import { useSelectedDevices } from "../stores/SelectedDevices";
 
@@ -77,6 +78,8 @@ export function renderDeviceComponent(
       return <Buzzer id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "i2c":
       return <I2c id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
+    case "hv20t":
+      return <Hv20tAudio id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "stepper":
       return <Stepper id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "gate":

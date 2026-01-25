@@ -25,6 +25,7 @@ const COMPOSITION_DEVICE_TYPES = [
   "Buzzer",
   "I2c",
   "IoExpander",
+  "Hv20t",
   "Led",
   "Lift",
   "MarbleController",

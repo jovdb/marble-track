@@ -3,6 +3,7 @@ export type DeviceType =
   | "button"
   | "buzzer"
   | "gate"
+  | "hv20t"
   | "ioexpander"
   | "i2c"
   | "led"

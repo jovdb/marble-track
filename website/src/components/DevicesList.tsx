@@ -515,7 +515,7 @@ export function DevicesList() {
         </div>
       </div>
 
-      <Popup isOpen={!!activeDeviceId()}>
+      <Popup isOpen={!!activeDeviceId()} onClose={() => setActiveDeviceId(null)}>
         <Show when={activeDevice()}>
           <div>
             {activeDevice()

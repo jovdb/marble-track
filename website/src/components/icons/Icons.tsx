@@ -430,6 +430,8 @@ export const getDeviceIcon = (type: string, props?: IconProps) => {
       return <ButtonIcon {...props} />;
     case "BUZZER":
       return <BuzzerIcon {...props} />;
+    case "HV20T":
+      return <BuzzerIcon {...props} />;
     case "I2C":
       return <I2cIcon {...props} />;
     case "SERVO":

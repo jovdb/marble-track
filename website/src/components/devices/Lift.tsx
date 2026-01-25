@@ -6,7 +6,7 @@ import { LiftConfig } from "./LiftConfig";
 import { useLift } from "../../stores/Lift";
 import { useStepper } from "../../stores/Stepper";
 
-export function Lift(props: { id: string }) {
+export function Lift(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const liftStore = useLift(props.id);
   const device = () => liftStore[0];
   const actions = liftStore[1];
@@ -190,6 +190,8 @@ export function Lift(props: { id: string }) {
       configComponent={(onClose) => (
         <LiftConfig device={device()} actions={actions} onClose={onClose} />
       )}
+      isCollapsible={!props.isPopup}
+      onClose={props.onClose}
     >
       <svg viewBox="0 0 100 200" width="100" height="200" style="margin: 5 auto; display: block;">
         <line x1={50} y1={0} x2={50} y2={200} stroke="black" stroke-width={2}></line>

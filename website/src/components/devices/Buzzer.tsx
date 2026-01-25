@@ -5,7 +5,7 @@ import { useBuzzer } from "../../stores/Buzzer";
 import { Device } from "./Device";
 import BuzzerConfig from "./BuzzerConfig";
 
-export function Buzzer(props: { id: string }) {
+export function Buzzer(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const buzzerStore = useBuzzer(props.id);
   const device = () => buzzerStore[0];
   const actions = buzzerStore[1];
@@ -285,6 +285,8 @@ export function Buzzer(props: { id: string }) {
       id={props.id}
       configComponent={(onClose) => <BuzzerConfig id={props.id} onClose={onClose} />}
       icon={<BuzzerIcon />}
+      isCollapsible={!props.isPopup}
+      onClose={props.onClose}
     >
       <div class={deviceStyles["device__input-group"]}>
         <label class={deviceStyles.device__label} for={`freq-${props.id}`}>

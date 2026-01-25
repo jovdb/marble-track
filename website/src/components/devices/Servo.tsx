@@ -7,7 +7,7 @@ import { useServo } from "../../stores/Servo";
 import { ServoIcon } from "../icons/Icons";
 import ServoConfig from "./ServoConfig";
 
-export function Servo(props: { id: string }) {
+export function Servo(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const servoStore = useServo(props.id);
   const device = () => servoStore[0];
   const actions = servoStore[1];
@@ -56,6 +56,8 @@ export function Servo(props: { id: string }) {
       id={props.id}
       configComponent={(onClose) => <ServoConfig id={props.id} onClose={onClose} />}
       icon={<ServoIcon />}
+      isCollapsible={!props.isPopup}
+      onClose={props.onClose}
     >
       <div class={deviceStyles.device__status}>
         <div

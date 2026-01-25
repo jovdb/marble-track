@@ -11,7 +11,7 @@ interface IGateState extends IDeviceState {
   [key: string]: unknown;
 }
 
-export function Gate(props: { id: string }) {
+export function Gate(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device, { sendMessage }] = useDevice<IGateState, IDeviceConfig>(props.id);
   const closedAngle = 0;
   const openedAngle = -110;
@@ -49,7 +49,7 @@ export function Gate(props: { id: string }) {
   });
 
   return (
-    <Device id={props.id}>
+    <Device id={props.id} isCollapsible={!props.isPopup} onClose={props.onClose}>
       <div>
         <svg viewBox="18 18 80 70">
           <g style="transform-origin: 50px 50px;" transform={`rotate(-3)`}>

@@ -5,7 +5,7 @@ import { useButton } from "../../stores/Button";
 import ButtonConfig from "./ButtonConfig";
 import { ButtonIcon } from "../icons/Icons";
 
-export function Button(props: { id: string }) {
+export function Button(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const buttonStore = useButton(props.id);
   const device = () => buttonStore[0];
   const actions = buttonStore[1];
@@ -41,6 +41,8 @@ export function Button(props: { id: string }) {
       configComponent={(onClose) => <ButtonConfig id={props.id} onClose={onClose} />}
       icon={<ButtonIcon />}
       stateComponent={() => null}
+      isCollapsible={!props.isPopup}
+      onClose={props.onClose}
     >
       <div class={deviceStyles.device__controls}>
         <button

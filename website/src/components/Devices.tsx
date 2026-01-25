@@ -60,38 +60,49 @@ export function Devices() {
   );
 }
 
-export function renderDeviceComponent(device: {
-  id: string;
-  type: string;
-  children?: Array<{ id: string; type: string }>;
-}) {
+export function renderDeviceComponent(
+  device: {
+    id: string;
+    type: string;
+    children?: Array<{ id: string; type: string }>;
+  },
+  options?: { isPopup?: boolean; onClose?: () => void }
+) {
   switch (device.type.toLowerCase()) {
     case "led":
-      return <Led id={device.id} />;
+      return <Led id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "button":
-      return <Button id={device.id} />;
+      return <Button id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "buzzer":
-      return <Buzzer id={device.id} />;
+      return <Buzzer id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "i2c":
-      return <I2c id={device.id} />;
+      return <I2c id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "stepper":
-      return <Stepper id={device.id} />;
+      return <Stepper id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "gate":
-      return <Gate id={device.id} />;
+      return <Gate id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "ioexpander":
-      return <IoExpander id={device.id} />;
+      return <IoExpander id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "wheel":
-      return <Wheel id={device.id} />;
+      return <Wheel id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "servo":
-      return <Servo id={device.id} />;
+      return <Servo id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "lift":
-      return <Lift id={device.id} />;
+      return <Lift id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "marblecontroller":
-      return <MarbleController id={device.id} />;
+      return (
+        <MarbleController id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />
+      );
     default:
       // For unknown device types with children, render them in a parent device block
       if (device.children && device.children.length > 0) {
-        return <Device id={device.id} />;
+        return (
+          <Device
+            id={device.id}
+            isCollapsible={!options?.isPopup}
+            onClose={options?.onClose}
+          />
+        );
       }
       logger.error(`Unknown device type: ${device.type}`);
       return null;

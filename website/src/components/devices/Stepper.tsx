@@ -5,7 +5,7 @@ import { useStepper } from "../../stores/Stepper";
 import StepperConfig from "./StepperConfig";
 import { StepperIcon } from "../icons/Icons";
 
-export function Stepper(props: { id: string }) {
+export function Stepper(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const stepperStore = useStepper(props.id);
   const device = () => stepperStore[0];
   const actions = stepperStore[1];
@@ -56,6 +56,8 @@ export function Stepper(props: { id: string }) {
       id={props.id}
       configComponent={(onClose) => <StepperConfig id={props.id} onClose={onClose} />}
       icon={<StepperIcon />}
+      isCollapsible={!props.isPopup}
+      onClose={props.onClose}
     >
       <div class={styles.device__status}>
         <span class={styles["device__status-text"]}>Status: {isMoving() ? "Moving" : "Idle"}</span>

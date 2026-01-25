@@ -3,7 +3,7 @@ import { getDeviceIcon } from "../icons/Icons";
 import { useDevice, useDevices } from "../../stores/Devices";
 import IoExpanderConfig from "./IoExpanderConfig";
 
-export function IoExpander(props: { id: string }) {
+export function IoExpander(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device] = useDevice(props.id);
   const [devicesStore] = useDevices();
 
@@ -34,6 +34,8 @@ export function IoExpander(props: { id: string }) {
       configComponent={(onClose) => <IoExpanderConfig id={props.id} onClose={onClose} />}
       icon={deviceType ? getDeviceIcon(deviceType) : null}
       stateComponent={() => null}
+      isCollapsible={!props.isPopup}
+      onClose={props.onClose}
     >
       <div style={{ padding: "0.5rem", "font-size": "0.9rem" }}>
         <div>

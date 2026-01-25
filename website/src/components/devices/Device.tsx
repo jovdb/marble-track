@@ -13,6 +13,8 @@ interface DeviceProps {
   children?: JSX.Element | JSX.Element[];
   configComponent?: (onClose: () => void) => JSX.Element;
   stateComponent?: (state: unknown) => JSX.Element;
+  isCollapsible?: boolean;
+  onClose?: () => void;
 }
 
 export function Device(props: DeviceProps) {
@@ -22,6 +24,7 @@ export function Device(props: DeviceProps) {
   const hasConfigComponent = createMemo(() => Boolean(props.configComponent));
   const hasConfigFeature = createMemo(() => device()?.features?.includes("config") ?? false);
   const canShowConfigButton = createMemo(() => hasConfigFeature() && hasConfigComponent());
+  const canCollapse = createMemo(() => props.isCollapsible !== false);
 
   const [isCollapsed, setIsCollapsed] = createSignal(false);
   const [showChildren, setShowChildren] = createSignal(
@@ -48,34 +51,40 @@ export function Device(props: DeviceProps) {
       <div
         class={styles.device__header}
         onClick={() => {
+          if (!canCollapse())
+          {
+            return;
+          }
           setIsCollapsed(!isCollapsed());
         }}
       >
         <div class={styles["device__header-left"]}>
-          <button
-            class={styles["device__collapse-button"]}
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsCollapsed(!isCollapsed());
-            }}
-            aria-expanded={!isCollapsed()}
-            aria-label={isCollapsed() ? "Expand device" : "Collapse device"}
-            title={isCollapsed() ? "Expand device" : "Collapse device"}
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              class={
-                isCollapsed() ? styles["device__chevron--collapsed"] : styles["device__chevron"]
-              }
+          <Show when={canCollapse()}>
+            <button
+              class={styles["device__collapse-button"]}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsCollapsed(!isCollapsed());
+              }}
+              aria-expanded={!isCollapsed()}
+              aria-label={isCollapsed() ? "Expand device" : "Collapse device"}
+              title={isCollapsed() ? "Expand device" : "Collapse device"}
             >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </button>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                class={
+                  isCollapsed() ? styles["device__chevron--collapsed"] : styles["device__chevron"]
+                }
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+          </Show>
           <Show when={props.icon}>
             <div class={styles.device__icon} aria-hidden="true">
               {props.icon}
@@ -101,7 +110,7 @@ export function Device(props: DeviceProps) {
                 title={showConfig() ? "Hide configuration" : "Show configuration"}
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (isCollapsed()) setIsCollapsed(false);
+                  if (isCollapsed() && canCollapse()) setIsCollapsed(false);
                   setShowConfig((v) => !v);
                   setShowChildren(false);
                   setShowMessages(false);
@@ -134,7 +143,7 @@ export function Device(props: DeviceProps) {
                 title={showChildren() ? "Hide children" : "Show children"}
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (isCollapsed()) setIsCollapsed(false);
+                  if (isCollapsed() && canCollapse()) setIsCollapsed(false);
                   setShowChildren((v) => !v);
                   setShowConfig(false);
                   setShowMessages(false);
@@ -174,7 +183,7 @@ export function Device(props: DeviceProps) {
               title={showMessagesPanel() ? "Hide messages" : "Show messages"}
               onClick={(e) => {
                 e.stopPropagation();
-                if (isCollapsed()) setIsCollapsed(false);
+                if (isCollapsed() && canCollapse()) setIsCollapsed(false);
                 setShowMessages((v) => !v);
                 setShowChildren(false);
                 setShowConfig(false);
@@ -182,6 +191,20 @@ export function Device(props: DeviceProps) {
             >
               <BroadcastIcon />
             </button>
+            <Show when={props.onClose}>
+              <button
+                class={styles["device__header-button"]}
+                type="button"
+                aria-label="Close device"
+                title="Close"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  props.onClose?.();
+                }}
+              >
+                ×
+              </button>
+            </Show>
           </div>
         </div>
       </div>

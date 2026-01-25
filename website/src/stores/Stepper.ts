@@ -33,6 +33,7 @@ export interface IStepperConfig extends IDeviceConfig {
   // Common
   enablePin?: PinConfig | number;
   invertEnable?: boolean;
+  invertDirection?: boolean;
   [key: string]: unknown;
 }
 

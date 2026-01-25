@@ -22,6 +22,7 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
   const [dirPin, setDirPin] = createSignal<PinConfig>(deserializePinConfig(-1));
   const [enablePin, setEnablePin] = createSignal<PinConfig>(deserializePinConfig(-1));
   const [invertEnable, setInvertEnable] = createSignal(false);
+  const [invertDirection, setInvertDirection] = createSignal(false);
   const [pin1, setPin1] = createSignal<PinConfig>(deserializePinConfig(-1));
   const [pin2, setPin2] = createSignal<PinConfig>(deserializePinConfig(-1));
   const [pin3, setPin3] = createSignal<PinConfig>(deserializePinConfig(-1));
@@ -79,6 +80,10 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
       setInvertEnable(cfg.invertEnable);
     }
 
+    if (typeof cfg.invertDirection === "boolean") {
+      setInvertDirection(cfg.invertDirection);
+    }
+
     if (typeof cfg.maxSpeed === "number") {
       setMaxSpeed(cfg.maxSpeed);
     }
@@ -112,6 +117,7 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
       defaultSpeed: Number(defaultSpeed()),
       defaultAcceleration: Number(defaultAcceleration()),
       invertEnable: invertEnable(),
+      invertDirection: invertDirection(),
     };
 
     if (isFourPin()) {
@@ -175,6 +181,15 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
                 onChange={setDirPin}
                 excludeDeviceId={props.id}
                 showExpanderPins={true}
+              />
+            </DeviceConfigItem>
+          </DeviceConfigRow>
+          <DeviceConfigRow>
+            <DeviceConfigItem name="Invert direction">
+              <input
+                type="checkbox"
+                checked={invertDirection()}
+                onChange={(event) => setInvertDirection(event.currentTarget.checked)}
               />
             </DeviceConfigItem>
           </DeviceConfigRow>

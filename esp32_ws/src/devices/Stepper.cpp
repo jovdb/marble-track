@@ -40,12 +40,14 @@ namespace devices
                             pins::IPin *pin1,
                             pins::IPin *pin2,
                             pins::IPin *pin3,
-                            pins::IPin *pin4)
+                                                        pins::IPin *pin4,
+                                                        bool invertDirection)
                 : AccelStepper(interface, 0, 0, 0, 0, false),
                   _pin1(pin1),
                   _pin2(pin2),
                   _pin3(pin3),
-                  _pin4(pin4)
+                                    _pin4(pin4),
+                                    _invertDirection(invertDirection)
             {
             }
 
@@ -68,7 +70,12 @@ namespace devices
                 if (!_pin1 || !_pin2)
                     return;
 
-                _pin2->write(_direction == DIRECTION_CW ? HIGH : LOW);
+                bool isCw = _direction == DIRECTION_CW;
+                if (_invertDirection)
+                {
+                    isCw = !isCw;
+                }
+                _pin2->write(isCw ? HIGH : LOW);
                 _pin1->write(HIGH);
                 delayMicroseconds(1);
                 _pin1->write(LOW);
@@ -79,6 +86,7 @@ namespace devices
             pins::IPin *_pin2 = nullptr;
             pins::IPin *_pin3 = nullptr;
             pins::IPin *_pin4 = nullptr;
+            bool _invertDirection = false;
         };
     }
 
@@ -402,6 +410,8 @@ namespace devices
             _config.enablePin = parsePinConfig(config["enablePin"]);
         if (config["invertEnable"].is<bool>())
             _config.invertEnable = config["invertEnable"].as<bool>();
+        if (config["invertDirection"].is<bool>())
+            _config.invertDirection = config["invertDirection"].as<bool>();
     }
 
     void Stepper::configToJson(JsonDocument &doc)
@@ -448,6 +458,7 @@ namespace devices
             doc["enablePin"] = pinDoc.as<JsonVariant>();
         }
         doc["invertEnable"] = _config.invertEnable;
+        doc["invertDirection"] = _config.invertDirection;
     }
 
     void Stepper::task()
@@ -563,7 +574,7 @@ namespace devices
                 _driver = nullptr;
                 return;
             }
-            _driver = new PinAccelStepper(AccelStepper::DRIVER, _stepPin, _dirPin, nullptr, nullptr);
+            _driver = new PinAccelStepper(AccelStepper::DRIVER, _stepPin, _dirPin, nullptr, nullptr, _config.invertDirection);
         }
         else if (_config.stepperType == "HALF4WIRE")
         {
@@ -573,7 +584,7 @@ namespace devices
                 _driver = nullptr;
                 return;
             }
-            _driver = new PinAccelStepper(AccelStepper::HALF4WIRE, _pin1, _pin3, _pin2, _pin4);
+            _driver = new PinAccelStepper(AccelStepper::HALF4WIRE, _pin1, _pin3, _pin2, _pin4, false);
         }
         else if (_config.stepperType == "FULL4WIRE")
         {
@@ -583,7 +594,7 @@ namespace devices
                 _driver = nullptr;
                 return;
             }
-            _driver = new PinAccelStepper(AccelStepper::FULL4WIRE, _pin1, _pin3, _pin2, _pin4);
+            _driver = new PinAccelStepper(AccelStepper::FULL4WIRE, _pin1, _pin3, _pin2, _pin4, false);
         }
         else
         {

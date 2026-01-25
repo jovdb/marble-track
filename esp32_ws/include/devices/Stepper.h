@@ -40,6 +40,7 @@ namespace devices
         PinConfig pin4;              // Pin 4 for 4-wire
         PinConfig enablePin;         // Enable pin
         bool invertEnable = false;   // Invert enable logic
+        bool invertDirection = false; // Invert direction pin for DRIVER
     };
 
     /**

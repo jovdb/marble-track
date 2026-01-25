@@ -40,19 +40,20 @@ export function Hv20tAudio(props: { id: string; isPopup?: boolean; onClose?: () 
       </div>
 
       <div class={deviceStyles["device__input-group"]}>
-        <label class={deviceStyles.device__label} for={`song-index-${props.id}`}>
-          Song index
-        </label>
-        <input
-          id={`song-index-${props.id}`}
-          class={deviceStyles.device__input}
-          type="number"
-          min="0"
-          max="255"
-          value={songIndex()}
-          onInput={(event) => setSongIndex(Number(event.currentTarget.value))}
-        />
         <div class={deviceStyles.device__controls}>
+          <label class={deviceStyles.device__label} for={`song-index-${props.id}`}>
+            Song index
+          </label>
+          <input
+            id={`song-index-${props.id}`}
+            class={deviceStyles.device__input}
+            type="number"
+            min="0"
+            max="255"
+            value={songIndex()}
+            onInput={(event) => setSongIndex(Number(event.currentTarget.value))}
+            style={{ width: "6rem" }}
+          />
           <button class={deviceStyles.device__button} onClick={handlePlay}>
             Play
           </button>

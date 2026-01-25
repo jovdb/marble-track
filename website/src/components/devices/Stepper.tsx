@@ -1,6 +1,7 @@
 import { createEffect, createMemo, createSignal } from "solid-js";
 import { Device } from "./Device";
 import styles from "./Device.module.css";
+import stepperStyles from "./Stepper.module.css";
 import { useStepper } from "../../stores/Stepper";
 import StepperConfig from "./StepperConfig";
 import { StepperIcon } from "../icons/Icons";
@@ -58,9 +59,16 @@ export function Stepper(props: { id: string; isPopup?: boolean; onClose?: () => 
       icon={<StepperIcon />}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}
+      stateComponent={() => null} 
     >
       <div class={styles.device__status}>
-        <span class={styles["device__status-text"]}>Status: {isMoving() ? "Moving" : "Idle"}</span>
+        <div
+          classList={{
+            [stepperStyles["stepper__status-indicator"]]: true,
+            [stepperStyles["stepper__status-indicator--moving"]]: isMoving(),
+            [stepperStyles["stepper__status-indicator--off"]]: !isMoving(),
+          }}
+        ></div>
         <span class={styles["device__status-text"]}>Position: {currentPosition()}</span>
         <span class={styles["device__status-text"]}>Target: {targetPosition()}</span>
       </div>

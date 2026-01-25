@@ -355,17 +355,6 @@ export function DevicesList() {
             if ((e.target as HTMLElement).closest(`.${styles["devices-list__drag-handle"]}`))
               return;
 
-            const deviceElement = document.getElementById(`device-${props.device.id}`);
-            if (deviceElement) {
-              deviceElement.scrollIntoView({ behavior: "smooth", block: "center" });
-              // Add a brief highlight effect
-              deviceElement.style.transition = "box-shadow 0.3s";
-              deviceElement.style.boxShadow = "0 0 0 3px var(--color-primary-500)";
-              setTimeout(() => {
-                deviceElement.style.boxShadow = "";
-              }, 1000);
-            }
-
             // Toggle selection for this device (single selection)
             selectedDevicesActions.setSelectedDevices((prev: Set<string>) => {
               if (prev.has(props.device.id)) {

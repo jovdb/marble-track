@@ -146,6 +146,11 @@
   transition: background-color var(--transition-fast);
 }
 
+.devices-list__table-row:nth-child(even),
+.devices-list__table-row:nth-child(odd) {
+  background-color: transparent;
+}
+
 .devices-list__table-row:hover {
   background-color: var(--color-surface);
 }

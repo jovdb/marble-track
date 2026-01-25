@@ -14,6 +14,7 @@
 #include "pins/IPin.h"
 #include "pins/Pins.h"
 #include <HardwareSerial.h>
+#include <deque>
 
 namespace devices
 {
@@ -34,6 +35,13 @@ namespace devices
         int lastSongIndex = -1;
     };
 
+    enum class Hv20tPlayMode
+    {
+        SkipIfPlaying,
+        StopThenPlay,
+        QueueIfPlaying
+    };
+
     class Hv20tAudio : public Device,
                        public ConfigMixin<Hv20tAudio, Hv20tAudioConfig>,
                        public StateMixin<Hv20tAudio, Hv20tAudioState>,
@@ -49,6 +57,7 @@ namespace devices
         std::vector<String> getPins() const override;
 
         bool play(int songIndex);
+        bool play(int songIndex, Hv20tPlayMode mode);
         bool stop();
         bool setVolume(uint8_t percent);
 
@@ -61,12 +70,14 @@ namespace devices
         bool initializeSerial();
         bool initializeBusyPin();
         void cleanupPins();
+        bool sendPlayCommand(int songIndex);
         bool sendCommand(uint8_t command, uint8_t param = 0);
 
         HardwareSerial _serial;
         bool _serialReady = false;
         pins::IPin *_busyPin = nullptr;
         uint8_t _volumeSteps = 0;
+        std::deque<int> _playQueue;
     };
 
 } // namespace devices

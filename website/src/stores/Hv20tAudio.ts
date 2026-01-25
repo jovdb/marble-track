@@ -20,18 +20,20 @@ export interface IHv20tAudioConfig extends IDeviceConfig {
   [key: string]: unknown;
 }
 
+export type Hv20tPlayMode = "skip" | "stop" | "queue";
+
 export function useHv20tAudio(deviceId: string) {
   const [device, { sendMessage, ...actions }] = useDevice<IHv20tAudioState, IHv20tAudioConfig>(
     deviceId
   );
 
-  const play = (songIndex: number) =>
+  const play = (songIndex: number, mode: Hv20tPlayMode = "stop") =>
     sendMessage({
       type: "device-fn",
       deviceId,
       deviceType,
       fn: "play",
-      args: { songIndex },
+      args: { songIndex, mode },
     });
 
   const stop = () =>

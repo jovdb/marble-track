@@ -9,7 +9,7 @@ import { IWheelState, useWheel } from "../../stores/Wheel";
 import { useWheelAnimation } from "../../hooks/useWheelAnimation";
 import { getDeviceIcon } from "../icons/Icons";
 
-export function Wheel(props: { id: string }) {
+export function Wheel(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const wheelStore = useWheel(props.id);
   const device = () => wheelStore[0];
   const actions = wheelStore[1];
@@ -60,6 +60,8 @@ export function Wheel(props: { id: string }) {
         <WheelConfig device={device()} actions={actions} onClose={onClose} />
       )}
       icon={deviceType ? getDeviceIcon(deviceType) : null}
+      isCollapsible={!props.isPopup}
+      onClose={props.onClose}
     >
       <div style={{ "max-width": "300px", margin: "0 auto" }}>
         <WheelGraphic

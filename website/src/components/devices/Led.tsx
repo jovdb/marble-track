@@ -6,7 +6,7 @@ import { getDeviceIcon } from "../icons/Icons";
 import { useLed } from "../../stores/Led";
 import { LedState } from "./LedState";
 
-export function Led(props: { id: string }) {
+export function Led(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const ledStore = useLed(props.id);
   const device = () => ledStore[0];
   const actions = ledStore[1];
@@ -26,6 +26,8 @@ export function Led(props: { id: string }) {
       configComponent={(onClose) => <LedConfig id={props.id} onClose={onClose} />}
       icon={deviceType ? getDeviceIcon(deviceType) : null}
       stateComponent={() => <LedState id={props.id} />}
+      isCollapsible={!props.isPopup}
+      onClose={props.onClose}
     >
       <div class={styles.device__controls}>
         <button

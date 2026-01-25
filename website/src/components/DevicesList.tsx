@@ -1,4 +1,4 @@
-import { createEffect, For, createSignal, onMount, onCleanup } from "solid-js";
+import { createEffect, For, createMemo, createSignal, onMount, onCleanup, Show } from "solid-js";
 import {
   getDeviceIcon,
   TrashIcon,
@@ -10,6 +10,8 @@ import styles from "./DevicesList.module.css";
 import { useDevices, type IDevice } from "../stores/Devices";
 import { useWebSocket2 } from "../hooks/useWebSocket";
 import { useSelectedDevices } from "../stores/SelectedDevices";
+import { renderDeviceComponent } from "./Devices";
+import { Popup } from "./Popup";
 import {
   IWsSendAddDeviceMessage,
   IWsSendRemoveDeviceMessage,
@@ -48,6 +50,7 @@ export function DevicesList() {
   const [draggedDeviceId, setDraggedDeviceId] = createSignal<string | null>(null);
   const [dragOverDeviceId, setDragOverDeviceId] = createSignal<string | null>(null);
   const [dragDirection, setDragDirection] = createSignal<"up" | "down" | null>(null);
+  const [activeDeviceId, setActiveDeviceId] = createSignal<string | null>(null);
 
   // Initialize collapsed devices - expand root devices one level
   createEffect(() => {
@@ -80,6 +83,11 @@ export function DevicesList() {
       return next;
     });
   };
+
+  const activeDevice = createMemo(() => {
+    const id = activeDeviceId();
+    return id ? devicesState.devices[id] : undefined;
+  });
 
   // Download devices config handler
   const handleDownloadConfig = () => {
@@ -363,6 +371,8 @@ export function DevicesList() {
                 return new Set([props.device.id]); // Select only this device
               }
             });
+
+            setActiveDeviceId(props.device.id);
           }}
         >
           <td class={styles["devices-list__table-td"]}>
@@ -504,6 +514,19 @@ export function DevicesList() {
           )}
         </div>
       </div>
+
+      <Popup isOpen={!!activeDeviceId()}>
+        <Show when={activeDevice()}>
+          <div>
+            {activeDevice()
+              ? renderDeviceComponent(activeDevice()!, {
+                  isPopup: true,
+                  onClose: () => setActiveDeviceId(null),
+                })
+              : null}
+          </div>
+        </Show>
+      </Popup>
 
       {/* Add Device Button */}
       <div class={styles["device-list__actions"]}>

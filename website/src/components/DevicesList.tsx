@@ -396,7 +396,16 @@ export function DevicesList() {
               }}
             />
           </td>
-          <td class={styles["devices-list__table-td"]}>
+          <td
+            class={styles["devices-list__table-td"]}
+            onClick={(e) => {
+              if (!hasChildren) {
+                return;
+              }
+              e.stopPropagation();
+              toggleCollapse(props.device.id);
+            }}
+          >
             <div class={styles["devices-list__device-cell"]} style={indentStyle}>
               {isTopLevel && (
                 <span

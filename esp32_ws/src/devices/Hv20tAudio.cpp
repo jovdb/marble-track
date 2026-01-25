@@ -6,6 +6,7 @@
 #include "devices/Hv20tAudio.h"
 #include "Logging.h"
 #include <ArduinoJson.h>
+#include <deque>
 
 namespace devices
 {
@@ -102,6 +103,13 @@ namespace devices
                 }
             }
         }
+
+        if (!_state.isBusy && !_playQueue.empty())
+        {
+            const int nextSong = _playQueue.front();
+            _playQueue.pop_front();
+            sendPlayCommand(nextSong);
+        }
     }
 
     std::vector<String> Hv20tAudio::getPins() const
@@ -118,25 +126,40 @@ namespace devices
 
     bool Hv20tAudio::play(int songIndex)
     {
+        return play(songIndex, Hv20tPlayMode::StopThenPlay);
+    }
+
+    bool Hv20tAudio::play(int songIndex, Hv20tPlayMode mode)
+    {
         if (!_serialReady)
         {
             MLOG_WARN("%s: Cannot play - UART not ready", toString().c_str());
             return false;
         }
 
-        if (songIndex < 0)
+        const bool canDetectBusy = _busyPin && _busyPin->isConfigured();
+        const bool isBusy = canDetectBusy ? _state.isBusy : false;
+
+        if (isBusy)
         {
-            return sendCommand(CMD_PLAY, 0);
+            if (mode == Hv20tPlayMode::SkipIfPlaying)
+            {
+                return false;
+            }
+            if (mode == Hv20tPlayMode::QueueIfPlaying)
+            {
+                if (_playQueue.size() < 10)
+                {
+                    _playQueue.push_back(songIndex);
+                    return true;
+                }
+                return false;
+            }
+
+            stop();
         }
 
-        if (songIndex > 255)
-        {
-            songIndex = 255;
-        }
-
-        _state.lastSongIndex = songIndex;
-        notifyStateChanged();
-        return sendCommand(CMD_PLAY_INDEX, static_cast<uint8_t>(songIndex));
+        return sendPlayCommand(songIndex);
     }
 
     bool Hv20tAudio::stop()
@@ -196,11 +219,28 @@ namespace devices
         if (action == "play")
         {
             int index = -1;
+            Hv20tPlayMode mode = Hv20tPlayMode::StopThenPlay;
             if (args && (*args)["songIndex"].is<int>())
             {
                 index = (*args)["songIndex"].as<int>();
             }
-            return play(index);
+            if (args && (*args)["mode"].is<String>())
+            {
+                const String modeStr = (*args)["mode"].as<String>();
+                if (modeStr.equalsIgnoreCase("skip"))
+                {
+                    mode = Hv20tPlayMode::SkipIfPlaying;
+                }
+                else if (modeStr.equalsIgnoreCase("queue"))
+                {
+                    mode = Hv20tPlayMode::QueueIfPlaying;
+                }
+                else if (modeStr.equalsIgnoreCase("stop"))
+                {
+                    mode = Hv20tPlayMode::StopThenPlay;
+                }
+            }
+            return play(index, mode);
         }
         if (action == "stop")
         {
@@ -302,6 +342,23 @@ namespace devices
             delete _busyPin;
             _busyPin = nullptr;
         }
+    }
+
+    bool Hv20tAudio::sendPlayCommand(int songIndex)
+    {
+        if (songIndex < 0)
+        {
+            return sendCommand(CMD_PLAY, 0);
+        }
+
+        if (songIndex > 255)
+        {
+            songIndex = 255;
+        }
+
+        _state.lastSongIndex = songIndex;
+        notifyStateChanged();
+        return sendCommand(CMD_PLAY_INDEX, static_cast<uint8_t>(songIndex));
     }
 
     bool Hv20tAudio::sendCommand(uint8_t command, uint8_t param)

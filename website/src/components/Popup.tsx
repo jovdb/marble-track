@@ -68,8 +68,20 @@ const Popup: Component<PopupProps> = (props) => {
   return (
     <Portal mount={document.body}>
       <Show when={props.isOpen}>
-        <div class={styles.popup}>
-          <div class={styles.popup__content}>{props.children}</div>
+        <div
+          class={styles.popup}
+          onClick={() => {
+            props.onClose?.();
+          }}
+        >
+          <div
+            class={styles.popup__content}
+            onClick={(event) => {
+              event.stopPropagation();
+            }}
+          >
+            {props.children}
+          </div>
         </div>
       </Show>
     </Portal>

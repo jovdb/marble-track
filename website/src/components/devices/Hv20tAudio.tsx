@@ -52,6 +52,12 @@ export function Hv20tAudio(props: { id: string; isPopup?: boolean; onClose?: () 
             max="255"
             value={songIndex()}
             onInput={(event) => setSongIndex(Number(event.currentTarget.value))}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                handlePlay();
+              }
+            }}
             style={{ width: "6rem" }}
           />
           <button class={deviceStyles.device__button} onClick={handlePlay}>

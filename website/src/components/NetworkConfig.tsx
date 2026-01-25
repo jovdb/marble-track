@@ -148,7 +148,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
   });
 
   return (
-    <Popup isOpen={props.isOpen}>
+    <Popup isOpen={props.isOpen} onClose={props.onClose}>
       <PopupHeader title="Network Configuration">
         <button
           onClick={props.onClose}

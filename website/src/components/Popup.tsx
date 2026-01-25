@@ -1,4 +1,4 @@
-import { type Component, type JSX } from "solid-js";
+import { type Component, type JSX, createEffect, onCleanup } from "solid-js";
 import { Portal } from "solid-js/web";
 import { Show } from "solid-js";
 import styles from "./Popup.module.css";
@@ -6,6 +6,7 @@ import styles from "./Popup.module.css";
 interface PopupProps {
   isOpen: boolean;
   children: JSX.Element;
+  onClose?: () => void;
 }
 
 /**
@@ -34,6 +35,23 @@ interface PopupProps {
  * ```
  */
 const Popup: Component<PopupProps> = (props) => {
+  createEffect(() => {
+    if (!props.isOpen || !props.onClose) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        props.onClose?.();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    onCleanup(() => {
+      window.removeEventListener("keydown", handleKeyDown);
+    });
+  });
+
   return (
     <Portal mount={document.body}>
       <Show when={props.isOpen}>

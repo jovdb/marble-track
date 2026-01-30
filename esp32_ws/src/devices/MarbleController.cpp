@@ -225,8 +225,7 @@ namespace devices
         Device::setup();
 
         // Set auto mode based on manual button state during setup
-        // isAutoMode = !_manualButton->getState().isPressed;
-        isAutoMode = false;
+        isAutoMode = !_manualButton->getState().isPressed;
 
         // Log the operating mode
         MLOG_INFO("%s initialized in %s mode", toString().c_str(), isAutoMode ? "AUTO" : "MANUAL");
@@ -493,6 +492,10 @@ namespace devices
 
         case devices::WheelStateEnum::CALIBRATING:
         case devices::WheelStateEnum::INIT:
+        {
+            _wheelLed->blink(240, 240); // LED blinks during init
+            break;
+        }
         case devices::WheelStateEnum::MOVING:
             // Busy states - do nothing
             break;
@@ -526,17 +529,27 @@ namespace devices
         auto wheelButtonState = _wheelBtn->getState();
 
         // Control wheel LED based on error state and movement
-        if (wheelState.state == devices::WheelStateEnum::ERROR)
+        switch (wheelState.state)
         {
-            _wheelLed->set(false); // LED off when in error
-        }
-        else if (wheelState.state == devices::WheelStateEnum::MOVING)
-        {
+        case devices::WheelStateEnum::UNKNOWN:
+            _wheelLed->set(true); // clickable init will start
+            break;
+        case devices::WheelStateEnum::ERROR:
+            blinkError(_wheelLed);
+            break;
+        case devices::WheelStateEnum::CALIBRATING:
+        case devices::WheelStateEnum::INIT:
+            _wheelLed->blink(240, 240); // LED blinks during init
+            break;
+        case devices::WheelStateEnum::MOVING:
             _wheelLed->blink(480, 320, 160); // LED blinks when moving
-        }
-        else
-        {
-            _wheelLed->set(true); // LED on when idle and not in error
+            break;
+        case devices::WheelStateEnum::IDLE:
+            _wheelLed->set(true); // LED on when idle
+            break;
+        default:
+            MLOG_ERROR("%s: Unknown wheel state: %d", toString().c_str(), static_cast<int>(wheelState.state));
+            _wheelLed->set(false); // LED off for any other state
         }
 
         // Control wheel movement based on button state
@@ -547,9 +560,10 @@ namespace devices
             // Don't allow button usage when wheel is in error or init states
             if (wheelState.state == devices::WheelStateEnum::IDLE || wheelState.state == devices::WheelStateEnum::UNKNOWN || wheelState.state == devices::WheelStateEnum::MOVING)
             {
+                MLOG_INFO("%s: Starting manual wheel movement as long button is pressed", toString().c_str());
+
                 playClickSound();
 
-                MLOG_INFO("%s: Starting manual wheel movement as long button is pressed", toString().c_str());
                 // Reset current position to prevent overflow;
                 // if (wheelState.state != devices::WheelStateEnum::MOVING)
                 // {
@@ -565,10 +579,11 @@ namespace devices
         }
         else if (!wheelButtonState.isPressed && wheelButtonState.isPressedChanged && wheelState.state == devices::WheelStateEnum::MOVING)
         {
-            // playClickSound();
-
             // Button released while moving - stop the wheel
             MLOG_INFO("%s: Stopping manual wheel movement", toString().c_str());
+
+            playClickOffSound();
+
             _wheel->stop();
         }
     }
@@ -623,6 +638,12 @@ namespace devices
     {
         // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
         _buzzer->tone(640, 50);
+    }
+
+    void MarbleController::playClickOffSound()
+    {
+        // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
+        _buzzer->tone(320, 50);
     }
 
 } // namespace devices

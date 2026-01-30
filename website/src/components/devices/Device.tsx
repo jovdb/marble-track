@@ -51,8 +51,7 @@ export function Device(props: DeviceProps) {
       <div
         class={styles.device__header}
         onClick={() => {
-          if (!canCollapse())
-          {
+          if (!canCollapse()) {
             return;
           }
           setIsCollapsed(!isCollapsed());

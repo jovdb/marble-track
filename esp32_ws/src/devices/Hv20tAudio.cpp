@@ -240,6 +240,7 @@ namespace devices
                     mode = Hv20tPlayMode::StopThenPlay;
                 }
             }
+            MLOG_INFO("%s: Play action started with index %d", toString().c_str(), index);
             return play(index, mode);
         }
         if (action == "stop")
@@ -298,6 +299,13 @@ namespace devices
     {
         if (_config.rxPin.pin < 0 || _config.txPin.pin < 0)
         {
+            MLOG_WARN("%s: UART RX/TX pins not configured", toString().c_str());
+            return false;
+        }
+
+        if (_config.rxPin.pin == _config.txPin.pin)
+        {
+            MLOG_ERROR("%s: UART RX/TX pins must be different (%d)", toString().c_str(), _config.rxPin.pin);
             return false;
         }
 
@@ -309,6 +317,7 @@ namespace devices
 
         _serial.begin(9600, SERIAL_8N1, _config.rxPin.pin, _config.txPin.pin);
         _serialReady = true;
+        MLOG_INFO("%s: UART configured (RX %d, TX %d)", toString().c_str(), _config.rxPin.pin, _config.txPin.pin);
         return true;
     }
 
@@ -365,6 +374,7 @@ namespace devices
     {
         if (!_serialReady)
         {
+            MLOG_WARN("%s: UART not ready", toString().c_str());
             return false;
         }
 

@@ -100,11 +100,7 @@ export function renderDeviceComponent(
       // For unknown device types with children, render them in a parent device block
       if (device.children && device.children.length > 0) {
         return (
-          <Device
-            id={device.id}
-            isCollapsible={!options?.isPopup}
-            onClose={options?.onClose}
-          />
+          <Device id={device.id} isCollapsible={!options?.isPopup} onClose={options?.onClose} />
         );
       }
       logger.error(`Unknown device type: ${device.type}`);

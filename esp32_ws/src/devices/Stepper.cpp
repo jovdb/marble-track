@@ -494,7 +494,7 @@ namespace devices
                     _state.targetPosition = _driver->targetPosition();
                     xSemaphoreGive(_stateMutex);
 
-                    MLOG_INFO("%s: Started moving %ld steps at %.1f steps/sec, accel %.1f steps/sec²", toString().c_str(), cmd.steps, actualSpeed, actualAcceleration);
+                    MLOG_INFO("%s: Started moving %ld steps at %f steps/s, accel %f steps/s²", toString().c_str(), cmd.steps, actualSpeed, actualAcceleration);
                     notifyStateChanged();
                 }
                 else if (cmd.type == "moveTo")
@@ -513,7 +513,7 @@ namespace devices
                     _state.targetPosition = cmd.position;
                     xSemaphoreGive(_stateMutex);
 
-                    MLOG_INFO("%s: Started moving to position %ld at %.1f steps/sec, accel %.1f steps/sec²", toString().c_str(), cmd.position, actualSpeed, actualAcceleration);
+                    MLOG_INFO("%s: Started moving to position %ld at %f steps/s, accel %f steps/s²", toString().c_str(), cmd.position, actualSpeed, actualAcceleration);
                     notifyStateChanged();
                 }
                 else if (cmd.type == "stop")

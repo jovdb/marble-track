@@ -29,6 +29,7 @@ namespace devices
          * @brief Play a click sound using the buzzer
          */
         void playClickSound();
+        void playClickOffSound();
 
         /**
          * @brief Play a startup sound using the buzzer

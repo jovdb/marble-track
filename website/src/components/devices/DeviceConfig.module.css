@@ -60,7 +60,6 @@
   font-size: var(--font-size-sm);
 }
 
-
 .device-config__cell--label {
   width: 35%;
   font-weight: var(--font-weight-medium);

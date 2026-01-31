@@ -151,11 +151,11 @@ namespace devices
                 long currentPosition = _stepper->getState().currentPosition;
                 _state.lastZeroPosition = currentPosition;
                 _stepper->stop();
-                
+
                 // Move to first breakpoint if configured
                 if (!_config.breakPoints.empty() && _config.stepsPerRevolution > 0)
                 {
-                    MLOG_INFO("%s: Zero point found at position %ld, moving to first breakpoint", toString().c_str(), currentPosition);
+                    MLOG_INFO("%s: Init: Zero point reached at %ld, moving to first breakpoint...", toString().c_str(), currentPosition);
                     _state.currentBreakpointIndex = -1;
                     _state.targetBreakpointIndex = 0;
                     _state.state = WheelStateEnum::MOVING;
@@ -164,20 +164,18 @@ namespace devices
                 }
                 else
                 {
-                    MLOG_INFO("%s: Zero point found at position %ld, no breakpoints configured", toString().c_str(), currentPosition);
+                    MLOG_INFO("%s: Init: Zero point reached at %ld, no breakpoints configured", toString().c_str(), currentPosition);
                     _state.state = WheelStateEnum::IDLE;
                 }
-                notifyStateChanged();
             }
-            else if (!_stepper->getState().isMoving)
+            else if ((millis() - _initStartTime > 300) && !_stepper->getState().isMoving)
             {
                 // Movement completed without finding zero - error
-                MLOG_ERROR("%s: Init failed - zero sensor not found", toString().c_str());
+                MLOG_ERROR("%s: Init: Zero sensor not found!", toString().c_str());
                 _state.state = WheelStateEnum::ERROR;
-                notifyStateChanged();
             }
             _state.zeroSensorWasPressed = zeroPressed;
-
+            notifyStateChanged();
             break;
         }
         case WheelStateEnum::CALIBRATING:
@@ -200,14 +198,14 @@ namespace devices
                     long steps = currentPosition - _state.lastZeroPosition;
                     _state.stepsInLastRevolution = steps;
                     _config.stepsPerRevolution = steps;
-                    
+
                     // Stop the stepper
                     _stepper->stop();
-                    
+
                     // Set state to IDLE
                     _state.state = WheelStateEnum::IDLE;
                     notifyStateChanged();
-                    
+
                     MLOG_INFO("%s: Calibration complete, steps per revolution: %ld", toString().c_str(), steps);
                 }
             }
@@ -222,9 +220,12 @@ namespace devices
 
     bool Wheel::move(long steps)
     {
-        // Set state to MOVING regardless of current state
-        _state.state = WheelStateEnum::MOVING;
-        notifyStateChanged();
+        if (_state.state != WheelStateEnum::CALIBRATING && _state.state != WheelStateEnum::INIT)
+        {
+            MLOG_INFO("%s: Moving %ld steps", toString().c_str(), steps);
+            _state.state = WheelStateEnum::MOVING;
+            notifyStateChanged();
+        }
 
         // Call stepper's move method
         return _stepper->move(steps);
@@ -249,9 +250,10 @@ namespace devices
     {
         MLOG_INFO("%s: Init started", toString().c_str());
         _state.state = WheelStateEnum::INIT;
-        notifyStateChanged();
         _state.currentBreakpointIndex = -1;
         _state.targetBreakpointIndex = -1;
+        _initStartTime = millis();
+        notifyStateChanged();
 
         return move(_config.maxStepsPerRevolution * _config.direction);
     }
@@ -260,13 +262,13 @@ namespace devices
     {
         if (_config.stepsPerRevolution <= 0)
         {
-            MLOG_WARN("%s: Cannot move to angle - steps per revolution not calibrated", toString().c_str());
+            MLOG_WARN("%s: Cannot move to $d° - steps per revolution not calibrated", toString().c_str(), angle);
             return false;
         }
 
         if (_state.lastZeroPosition == 0)
         {
-            MLOG_WARN("%s: Cannot move to angle - zero point not set", toString().c_str());
+            MLOG_WARN("%s: Cannot move to %d° - zero point not set", toString().c_str(), angle);
             return false;
         }
 
@@ -281,8 +283,8 @@ namespace devices
         long currentPosition = _stepper->getState().currentPosition;
         long stepsToMove = targetPosition - currentPosition;
 
-        MLOG_INFO("%s: Moving to absolute angle %.1f° (target pos: %ld, current pos: %ld, steps: %ld)",
-                  toString().c_str(), angle, targetPosition, currentPosition, stepsToMove);
+        MLOG_INFO("%s: Moving to %.1f° (%ld -> %ld = %ld steps)",
+                  toString().c_str(), angle, currentPosition, targetPosition, stepsToMove);
 
         return move(stepsToMove);
     }

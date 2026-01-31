@@ -228,7 +228,7 @@ namespace devices
         isAutoMode = !_manualButton->getState().isPressed;
 
         // Log the operating mode
-        MLOG_INFO("%s initialized in %s mode", toString().c_str(), isAutoMode ? "AUTO" : "MANUAL");
+        MLOG_INFO("%s Initialized in %s mode", toString().c_str(), isAutoMode ? "AUTO" : "MANUAL");
 
         playStartupSound();
     }
@@ -479,11 +479,12 @@ namespace devices
         // Auto wheel control logic - similar to AutoMode.cpp
         auto wheelState = _wheel->getState();
 
+        // Wheel led
         switch (wheelState.state)
         {
         case devices::WheelStateEnum::UNKNOWN:
-            // Initialize wheel
-            _wheel->init();
+        case devices::WheelStateEnum::IDLE:
+            _wheelLed->set(true);
             break;
 
         case devices::WheelStateEnum::ERROR:
@@ -497,7 +498,25 @@ namespace devices
             break;
         }
         case devices::WheelStateEnum::MOVING:
-            // Busy states - do nothing
+            _wheelLed->set(true);
+            break;
+
+        default:
+            MLOG_WARN("%s: Unknown wheel state for led", toString().c_str());
+            break;
+        }
+
+        // Trigger wheel logic
+        switch (wheelState.state)
+        {
+        case devices::WheelStateEnum::UNKNOWN:
+            _wheel->init();
+            break;
+
+        case devices::WheelStateEnum::ERROR:
+        case devices::WheelStateEnum::CALIBRATING:
+        case devices::WheelStateEnum::INIT:
+        case devices::WheelStateEnum::MOVING:
             break;
 
         case devices::WheelStateEnum::IDLE:
@@ -505,8 +524,8 @@ namespace devices
             if (_wheelIdleStartTime == 0)
             {
                 _wheelIdleStartTime = millis();
-                _randomWheelDelayMs = random(100, 20000);
-                MLOG_INFO("%s: Next wheel trigger in %d ms", toString().c_str(), _randomWheelDelayMs);
+                _randomWheelDelayMs = 3000 + random(100, 20000);
+                MLOG_INFO("%s: Next wheel trigger in %1.d ms", toString().c_str(), _randomWheelDelayMs / 100);
             }
             else if (millis() >= _wheelIdleStartTime + _randomWheelDelayMs)
             {

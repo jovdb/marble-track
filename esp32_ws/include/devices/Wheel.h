@@ -152,6 +152,8 @@ namespace devices
          * @param steps Number of steps measured
          */
         void notifyStepsPerRevolution(long steps);
+
+        unsigned long _initStartTime = 0; // Start time for init operation
     };
 
 } // namespace devices

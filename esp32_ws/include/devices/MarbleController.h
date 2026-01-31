@@ -58,15 +58,16 @@ namespace devices
         // Button timing for unload duration control
         unsigned long _liftButtonPressStartTime = 0;
         bool _isBallStillLoaded = false;
-        
+
         // Auto lift timing control
         unsigned long _autoLiftDelayStart = 0;
         unsigned long _autoLiftDelayMs = 1000; // 1 second delay between auto operations
-        
-        // Auto wheel timing control
+
+        // 0 = not idle, >0 = idle start time
         unsigned long _wheelIdleStartTime = 0;
+        // Random delay before next wheel trigger
         unsigned long _randomWheelDelayMs = 0;
-        
+
         bool isAutoMode = false;
     };
 

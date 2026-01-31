@@ -398,6 +398,7 @@ namespace devices
 
         const uint8_t checksum = static_cast<uint8_t>(HV20T_START_BYTE + command + param);
         uint8_t buffer[4] = {HV20T_START_BYTE, command, param, checksum};
+        MLOG_DEBUG("%s: UART TX [%02X %02X %02X %02X]", toString().c_str(), buffer[0], buffer[1], buffer[2], buffer[3]);
         const size_t written = _serial.write(buffer, sizeof(buffer));
         _serial.flush();
         return written == sizeof(buffer);

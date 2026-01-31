@@ -222,7 +222,7 @@ void Network::loop()
             // WiFi connected successfully
             _isConnecting = false;
             _currentMode = NetworkMode::WIFI_CLIENT;
-            MLOG_INFO("WiFi connected: OK, http://%s", WiFi.localIP().toString().c_str());
+            MLOG_INFO("Connected to WiFi: http://%s", WiFi.localIP().toString().c_str());
             
             // Start mDNS
             setupMDNS();

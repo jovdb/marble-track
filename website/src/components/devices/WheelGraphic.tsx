@@ -22,8 +22,15 @@ export function WheelGraphic(props: WheelGraphicProps) {
   const outerRadius = createMemo(() => radius() * 1.1);
   const textRadius = createMemo(() => radius() * 0.8);
 
+  const shrink = size() * 0.1;
+
   return (
-    <svg class={styles["wheel-graphic__svg"]} viewBox={`0 0 ${size()} ${size()}`}>
+    <svg
+      class={styles["wheel-graphic__svg"]}
+      viewBox={`${shrink} ${shrink} ${size() - shrink * 2} ${size() - shrink * 2}`}
+      width={size()}
+      height={size()}
+    >
       {/* Rotates */}
       <g
         transform={`rotate(${-(props.angle ?? 0)})`}

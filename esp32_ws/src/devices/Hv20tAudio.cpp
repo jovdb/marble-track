@@ -15,6 +15,7 @@ namespace devices
         constexpr uint8_t HV20T_START_BYTE = 0xAA;
         constexpr uint8_t CMD_PLAY = 0x02;
         constexpr uint8_t CMD_STOP = 0x04;
+        constexpr uint8_t CMD_SET_VOLUME = 0x13;
         constexpr uint8_t CMD_VOLUME_UP = 0x14;
         constexpr uint8_t CMD_VOLUME_DOWN = 0x15;
         constexpr uint8_t CMD_PLAY_INDEX = 0x07; // Assumed play-by-index command
@@ -213,23 +214,9 @@ namespace devices
 
         const uint8_t clamped = clampPercent(percent);
         const uint8_t targetSteps = static_cast<uint8_t>((clamped * VOLUME_STEPS + 50) / 100);
-        const int diff = static_cast<int>(targetSteps) - static_cast<int>(_volumeSteps);
-
-        if (diff > 0)
+        if (!sendCommand(CMD_SET_VOLUME, targetSteps))
         {
-            for (int i = 0; i < diff; i++)
-            {
-                sendCommand(CMD_VOLUME_UP, 0);
-                delay(5);
-            }
-        }
-        else if (diff < 0)
-        {
-            for (int i = 0; i < -diff; i++)
-            {
-                sendCommand(CMD_VOLUME_DOWN, 0);
-                delay(5);
-            }
+            return false;
         }
 
         _volumeSteps = targetSteps;

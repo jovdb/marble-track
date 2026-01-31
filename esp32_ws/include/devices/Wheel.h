@@ -154,6 +154,8 @@ namespace devices
         void notifyStepsPerRevolution(long steps);
 
         unsigned long _initStartTime = 0; // Start time for init operation
+        bool _waitingForMoveStart = false;
+        bool _moveHasStarted = false;
     };
 
 } // namespace devices

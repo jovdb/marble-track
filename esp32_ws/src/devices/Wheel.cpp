@@ -99,11 +99,28 @@ namespace devices
         }
         case WheelStateEnum::MOVING:
         {
-            // Check if movement completed
-            if (!_stepper->getState().isMoving)
+            auto stepperState = _stepper->getState();
+
+            if (_waitingForMoveStart && (stepperState.isMoving || stepperState.moveJustStarted))
+            {
+                _waitingForMoveStart = false;
+                _moveHasStarted = true;
+            }
+
+            // Check if movement completed (only after movement has actually started)
+            if (!_waitingForMoveStart && _moveHasStarted && !stepperState.isMoving)
             {
                 MLOG_INFO("%s: Movement to target completed", toString().c_str());
+
+                if (_state.targetBreakpointIndex >= 0)
+                {
+                    _state.currentBreakpointIndex = _state.targetBreakpointIndex;
+                    _state.targetBreakpointIndex = -1;
+                    _state.breakpointChanged = true;
+                }
+
                 _state.state = WheelStateEnum::IDLE;
+                _moveHasStarted = false;
                 notifyStateChanged();
             }
 
@@ -128,16 +145,6 @@ namespace devices
                 }
             }
             _state.zeroSensorWasPressed = zeroPressed;
-
-            // Check if target breakpoint reached
-            if (_state.targetBreakpointIndex >= 0)
-            {
-                _state.currentBreakpointIndex = _state.targetBreakpointIndex;
-                _state.targetBreakpointIndex = -1;
-                _state.breakpointChanged = true;
-                _state.state = WheelStateEnum::IDLE;
-                notifyStateChanged();
-            }
 
             break;
         }
@@ -190,7 +197,7 @@ namespace devices
                 {
                     // First zero trigger - record position
                     _state.lastZeroPosition = currentPosition;
-                    MLOG_INFO("%s: Calibration: first zero at position %ld", toString().c_str(), _state.lastZeroPosition);
+                    MLOG_INFO("%s: Calibration: first zero at position %ld, starting counting steps...", toString().c_str(), _state.lastZeroPosition);
                 }
                 else
                 {
@@ -224,6 +231,8 @@ namespace devices
         {
             MLOG_INFO("%s: Moving %ld steps", toString().c_str(), steps);
             _state.state = WheelStateEnum::MOVING;
+            _waitingForMoveStart = true;
+            _moveHasStarted = false;
             notifyStateChanged();
         }
 

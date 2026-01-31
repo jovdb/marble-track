@@ -100,8 +100,6 @@ namespace devices
         case WheelStateEnum::MOVING:
         {
             // Check if movement completed
-            // This would need stepper state integration
-            // For now, assume movement is complete after some time
             if (!_stepper->getState().isMoving)
             {
                 MLOG_INFO("%s: Movement to target completed", toString().c_str());
@@ -109,23 +107,27 @@ namespace devices
                 notifyStateChanged();
             }
 
-            // Check zero sensor
-            // Handle zero sensor trigger
-            long currentPosition = 0; // Would get from stepper
-            _state.stepsInLastRevolution = currentPosition - _state.lastZeroPosition;
-            _state.lastZeroPosition = currentPosition;
-
-            // Check revolution consistency
-            if (_config.stepsPerRevolution > 0 && _state.stepsInLastRevolution > 0)
+            // Check zero sensor for position tracking
+            bool zeroPressed = _zeroSensor->getState().isPressed;
+            if (zeroPressed && !_state.zeroSensorWasPressed)
             {
-                float percentDiff = abs(_state.stepsInLastRevolution - _config.stepsPerRevolution) /
-                                    (float)_config.stepsPerRevolution * 100.0f;
-                if (percentDiff > 0.1f)
+                // Zero sensor triggered - update position tracking
+                long currentPosition = _stepper->getState().currentPosition;
+                _state.stepsInLastRevolution = currentPosition - _state.lastZeroPosition;
+                _state.lastZeroPosition = currentPosition;
+
+                // Check revolution consistency
+                if (_config.stepsPerRevolution > 0 && _state.stepsInLastRevolution > 0)
                 {
-                    MLOG_ERROR("%s: Steps per revolution mismatch - measured: %ld, configured: %ld (%.2f%% difference)",
-                               toString().c_str(), _state.stepsInLastRevolution, _config.stepsPerRevolution, percentDiff);
+                    float percentDiff = abs(_state.stepsInLastRevolution - _config.stepsPerRevolution) / (float)_config.stepsPerRevolution * 100.0f;
+                    if (percentDiff > 0.1f)
+                    {
+                        MLOG_ERROR("%s: Steps per revolution mismatch - measured: %ld, configured: %ld (%.2f%% difference)",
+                                   toString().c_str(), _state.stepsInLastRevolution, _config.stepsPerRevolution, percentDiff);
+                    }
                 }
             }
+            _state.zeroSensorWasPressed = zeroPressed;
 
             // Check if target breakpoint reached
             if (_state.targetBreakpointIndex >= 0)
@@ -141,56 +143,75 @@ namespace devices
         }
         case WheelStateEnum::INIT:
         {
-
-            long currentPosition = 0; // Would get from stepper
-            _state.lastZeroPosition = currentPosition;
-
-            // Move to first breakpoint
-            if (!_config.breakPoints.empty() && _config.stepsPerRevolution > 0)
+            // Check for zero sensor trigger
+            bool zeroPressed = _zeroSensor->getState().isPressed;
+            if (zeroPressed && !_state.zeroSensorWasPressed)
             {
-                MLOG_INFO("%s: Zero point found, moving to first breakpoint", toString().c_str());
-                _state.currentBreakpointIndex = -1;
-                _state.targetBreakpointIndex = 0;
-                _state.state = WheelStateEnum::MOVING;
-                _state.targetAngle = _config.breakPoints[0];
-                moveToAngle(_config.breakPoints[0]);
+                // Zero sensor triggered - stop and set position
+                long currentPosition = _stepper->getState().currentPosition;
+                _state.lastZeroPosition = currentPosition;
+                _stepper->stop();
+                
+                // Move to first breakpoint if configured
+                if (!_config.breakPoints.empty() && _config.stepsPerRevolution > 0)
+                {
+                    MLOG_INFO("%s: Zero point found at position %ld, moving to first breakpoint", toString().c_str(), currentPosition);
+                    _state.currentBreakpointIndex = -1;
+                    _state.targetBreakpointIndex = 0;
+                    _state.state = WheelStateEnum::MOVING;
+                    _state.targetAngle = _config.breakPoints[0];
+                    moveToAngle(_config.breakPoints[0]);
+                }
+                else
+                {
+                    MLOG_INFO("%s: Zero point found at position %ld, no breakpoints configured", toString().c_str(), currentPosition);
+                    _state.state = WheelStateEnum::IDLE;
+                }
                 notifyStateChanged();
             }
-            else
+            else if (!_stepper->getState().isMoving)
             {
-                MLOG_INFO("%s: Zero point found, no breakpoints yet", toString().c_str());
-                _state.state = WheelStateEnum::MOVING;
-                // Stop movement
-                stop();
+                // Movement completed without finding zero - error
+                MLOG_ERROR("%s: Init failed - zero sensor not found", toString().c_str());
+                _state.state = WheelStateEnum::ERROR;
                 notifyStateChanged();
             }
-
-            // Check if init failed (no zero found)
-            // This would need timeout logic
+            _state.zeroSensorWasPressed = zeroPressed;
 
             break;
         }
         case WheelStateEnum::CALIBRATING:
         {
-
-            if (_state.lastZeroPosition == 0)
+            // Check for zero sensor trigger
+            bool zeroPressed = _zeroSensor->getState().isPressed;
+            if (zeroPressed && !_state.zeroSensorWasPressed)
             {
-                MLOG_INFO("%s: Calibration: zero found, counting steps per revolution", toString().c_str());
-                long currentPosition = 0; // Would get from stepper
-                _state.lastZeroPosition = currentPosition;
+                // Rising edge of zero sensor
+                long currentPosition = _stepper->getState().currentPosition;
+                if (_state.lastZeroPosition == 0)
+                {
+                    // First zero trigger - record position
+                    _state.lastZeroPosition = currentPosition;
+                    MLOG_INFO("%s: Calibration: first zero at position %ld", toString().c_str(), _state.lastZeroPosition);
+                }
+                else
+                {
+                    // Second zero trigger - calculate steps per revolution
+                    long steps = currentPosition - _state.lastZeroPosition;
+                    _state.stepsInLastRevolution = steps;
+                    _config.stepsPerRevolution = steps;
+                    
+                    // Stop the stepper
+                    _stepper->stop();
+                    
+                    // Set state to IDLE
+                    _state.state = WheelStateEnum::IDLE;
+                    notifyStateChanged();
+                    
+                    MLOG_INFO("%s: Calibration complete, steps per revolution: %ld", toString().c_str(), steps);
+                }
             }
-            else
-            {
-                long currentPos = 0; // Would get from stepper
-                _state.stepsInLastRevolution = currentPos - _state.lastZeroPosition;
-                MLOG_INFO("%s: Calibration complete, steps per revolution: %d", toString().c_str(), _state.stepsInLastRevolution);
-                _state.lastZeroPosition = currentPos;
-
-                notifyStepsPerRevolution(_state.stepsInLastRevolution);
-
-                _state.state = WheelStateEnum::MOVING;
-                notifyStateChanged();
-            }
+            _state.zeroSensorWasPressed = zeroPressed;
 
             break;
         }
@@ -214,11 +235,13 @@ namespace devices
         MLOG_INFO("%s: Calibration started", toString().c_str());
         _state.state = WheelStateEnum::CALIBRATING;
         _state.lastZeroPosition = 0;
+        _state.stepsInLastRevolution = 0;
         _state.currentBreakpointIndex = -1;
         _state.targetBreakpointIndex = -1;
+        _state.zeroSensorWasPressed = _zeroSensor->getState().isPressed; // Initialize to current state
         notifyStateChanged();
 
-        // Move large number of steps
+        // Move large number of steps to complete at least one revolution
         return move(_config.maxStepsPerRevolution * 2 * _config.direction);
     }
 
@@ -255,7 +278,7 @@ namespace devices
 
         // Calculate target position
         long targetPosition = _state.lastZeroPosition + (angle / 360.0) * _config.stepsPerRevolution;
-        long currentPosition = 0; // Would get from stepper
+        long currentPosition = _stepper->getState().currentPosition;
         long stepsToMove = targetPosition - currentPosition;
 
         MLOG_INFO("%s: Moving to absolute angle %.1f° (target pos: %ld, current pos: %ld, steps: %ld)",
@@ -309,6 +332,7 @@ namespace devices
         doc["targetAngle"] = _state.targetAngle;
         doc["onError"] = _state.onError;
         doc["breakpointChanged"] = _state.breakpointChanged;
+        doc["stepsInLastRevolution"] = _state.stepsInLastRevolution;
     }
 
     bool Wheel::control(const String &action, JsonObject *args)

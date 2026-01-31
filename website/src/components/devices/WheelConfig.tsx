@@ -114,6 +114,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
         <DeviceConfigRow>
           <DeviceConfigItem name="Max Steps per Revolution:">
             <input
+              title="Used for calibration to known when to stop searching for zero switch."
               type="number"
               value={maxStepsPerRevolution()}
               onInput={(e) => setMaxStepsPerRevolution(parseInt(e.currentTarget.value) || 10000)}

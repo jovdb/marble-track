@@ -135,8 +135,8 @@ namespace devices
 
         auto wheelConfig = _wheel->getConfig();
         wheelConfig.name = "Wheel";
-        wheelConfig.stepsPerRevolution = 138259;
-        wheelConfig.maxStepsPerRevolution = 150000;
+        wheelConfig.stepsPerRevolution = 6752;
+        wheelConfig.maxStepsPerRevolution = 6800;
         wheelConfig.zeroPointDegree = 180;
         wheelConfig.direction = 1;
         wheelConfig.breakPoints = {82.0f, 160.0f, 285.0f, 317.0f};

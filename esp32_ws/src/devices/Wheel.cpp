@@ -214,7 +214,7 @@ namespace devices
                 {
                     // First zero trigger - record position
                     _state.lastZeroPosition = currentPosition;
-                    MLOG_INFO("%s: Calibration: first zero at position %ld, starting counting steps...", toString().c_str(), _state.lastZeroPosition);
+                    MLOG_INFO("%s: Calibration: first zero at position %ld, start counting steps...", toString().c_str(), _state.lastZeroPosition);
                 }
                 else
                 {
@@ -230,11 +230,27 @@ namespace devices
                     _state.state = WheelStateEnum::IDLE;
                     notifyStateChanged();
 
+                    notifyStepsPerRevolution(steps);
+
                     MLOG_INFO("%s: Calibration complete, steps per revolution: %ld", toString().c_str(), steps);
                 }
             }
             _state.zeroSensorWasPressed = zeroPressed;
 
+            if (!_stepper->getState().isMoving)
+            {
+                // Movement completed without finding zero - error
+                if (_state.lastZeroPosition == 0)
+                {
+                    MLOG_ERROR("%s: Calibration: No zero sensor not found!", toString().c_str());
+                }
+                else
+                {
+                    MLOG_ERROR("%s: Calibration: Second zero sensor trigger not detected!", toString().c_str());
+                }
+                _state.state = WheelStateEnum::ERROR;
+                notifyStateChanged();
+            }
             break;
         }
         default:
@@ -461,8 +477,21 @@ namespace devices
 
     void Wheel::notifyStepsPerRevolution(long steps)
     {
-        // This would notify via WebSocket if needed
-        MLOG_INFO("%s: Measured steps per revolution: %ld", toString().c_str(), steps);
+        NotifyClients callback = ControllableMixinBase::getNotifyClients();
+        if (!callback)
+        {
+            MLOG_INFO("%s: Measured steps per revolution: %ld", toString().c_str(), steps);
+            return;
+        }
+
+        JsonDocument doc;
+        doc["type"] = "steps-per-revolution";
+        doc["deviceId"] = getId();
+        doc["steps"] = steps;
+
+        String message;
+        serializeJson(doc, message);
+        callback(message);
     }
 
 } // namespace devices

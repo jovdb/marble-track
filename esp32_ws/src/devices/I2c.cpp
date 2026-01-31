@@ -24,6 +24,8 @@ namespace devices
     {
         Device::setup();
 
+        Wire.end(); // Ensure any previous instance is closed
+
         const auto &config = getConfig();
         if (config.sdaPin >= 0 && config.sclPin >= 0)
         {

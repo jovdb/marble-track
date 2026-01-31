@@ -60,6 +60,7 @@ namespace devices
         float targetAngle = -1.0f;                      // Target angle for current movement
         bool onError = false;                           // Error flag
         bool breakpointChanged = false;                 // Flag for breakpoint index change
+        bool zeroSensorWasPressed = false;              // Previous zero sensor state for edge detection
     };
 
     /**

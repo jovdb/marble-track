@@ -88,18 +88,26 @@ export function DeviceConfigRow(props: { children: JSX.Element | JSX.Element[] }
   return <tr class={styles["device-config__row"]}>{props.children}</tr>;
 }
 
-export function DeviceConfigItem(props: { name: string; children: JSX.Element | JSX.Element[] }) {
+export function DeviceConfigItem(props: { name?: string; children: JSX.Element | JSX.Element[] }) {
   return (
     <>
-      <th
-        scope="row"
-        class={`${styles["device-config__cell"]} ${styles["device-config__cell--label"]}`}
-      >
-        {props.name}
-      </th>
-      <td class={`${styles["device-config__cell"]} ${styles["device-config__cell--value"]}`}>
-        <div class={styles["device-config__value"]}>{props.children}</div>
-      </td>
+      {props.name ? (
+        <>
+          <th
+            scope="row"
+            class={`${styles["device-config__cell"]} ${styles["device-config__cell--label"]}`}
+          >
+            {props.name}
+          </th>
+          <td class={`${styles["device-config__cell"]} ${styles["device-config__cell--value"]}`}>
+            <div class={styles["device-config__value"]}>{props.children}</div>
+          </td>
+        </>
+      ) : (
+        <td class={`${styles["device-config__cell"]}`} colspan="2">
+          {props.children}
+        </td>
+      )}
     </>
   );
 }

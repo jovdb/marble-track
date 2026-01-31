@@ -68,6 +68,7 @@ public:
     void getDevices(Device **deviceList, int &count, int maxResults);
 
     void setup();
+    void teardown();
     void loop();
 
     int getDeviceCount() const { return devicesCount; }

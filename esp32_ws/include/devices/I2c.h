@@ -37,6 +37,7 @@ namespace devices
         ~I2c() override;
 
         void setup() override;
+        void teardown() override;
         std::vector<String> getPins() const override;
 
         // SerializableMixin implementation

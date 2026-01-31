@@ -93,6 +93,7 @@ namespace devices
         ~Lift();
 
         void setup() override;
+        void teardown() override;
         void loop() override;
 
         /**

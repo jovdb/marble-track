@@ -95,6 +95,12 @@ namespace devices
         }
     }
 
+    void IoExpander::teardown()
+    {
+        Device::teardown();
+        _isPresent = false;
+    }
+
     void IoExpander::loop()
     {
         Device::loop();

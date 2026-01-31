@@ -81,6 +81,7 @@ namespace devices
         ~Wheel();
 
         void setup() override;
+        void teardown() override;
         void loop() override;
 
         /**

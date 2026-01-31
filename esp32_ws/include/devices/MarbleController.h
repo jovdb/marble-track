@@ -18,6 +18,7 @@ namespace devices
     public:
         MarbleController(const String &id);
         void setup() override;
+        void teardown() override;
         void loop() override;
 
         /**

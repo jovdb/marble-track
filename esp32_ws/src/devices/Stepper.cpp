@@ -228,6 +228,39 @@ namespace devices
         }
     }
 
+    void Stepper::teardown()
+    {
+        Device::teardown();
+
+        stopTask();
+
+        if (_config.stepPin.expanderId.isEmpty() && _config.stepPin.pin >= 0)
+            pinMode(_config.stepPin.pin, INPUT);
+        if (_config.dirPin.expanderId.isEmpty() && _config.dirPin.pin >= 0)
+            pinMode(_config.dirPin.pin, INPUT);
+        if (_config.pin1.expanderId.isEmpty() && _config.pin1.pin >= 0)
+            pinMode(_config.pin1.pin, INPUT);
+        if (_config.pin2.expanderId.isEmpty() && _config.pin2.pin >= 0)
+            pinMode(_config.pin2.pin, INPUT);
+        if (_config.pin3.expanderId.isEmpty() && _config.pin3.pin >= 0)
+            pinMode(_config.pin3.pin, INPUT);
+        if (_config.pin4.expanderId.isEmpty() && _config.pin4.pin >= 0)
+            pinMode(_config.pin4.pin, INPUT);
+        if (_config.enablePin.expanderId.isEmpty() && _config.enablePin.pin >= 0)
+            pinMode(_config.enablePin.pin, INPUT);
+
+        cleanupAccelStepper();
+        cleanupPins();
+
+        if (_stateMutex && xSemaphoreTake(_stateMutex, pdMS_TO_TICKS(50)) == pdTRUE)
+        {
+            _state.isMoving = false;
+            _state.moveJustStarted = false;
+            _state.moveCommand.pending = false;
+            xSemaphoreGive(_stateMutex);
+        }
+    }
+
     void Stepper::loop()
     {
         Device::loop();

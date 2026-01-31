@@ -38,6 +38,23 @@ namespace devices
         }
     }
 
+    void I2c::teardown()
+    {
+        Device::teardown();
+
+        Wire.end();
+
+        const auto &config = getConfig();
+        if (config.sdaPin >= 0)
+        {
+            pinMode(config.sdaPin, INPUT);
+        }
+        if (config.sclPin >= 0)
+        {
+            pinMode(config.sclPin, INPUT);
+        }
+    }
+
     std::vector<String> I2c::getPins() const
     {
         const auto &config = getConfig();

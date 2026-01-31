@@ -63,6 +63,28 @@ namespace devices
         }
     }
 
+    void Servo::teardown()
+    {
+        Device::teardown();
+
+        stopTask();
+
+        _isAnimating = false;
+
+        if (_mcpwmChannelIndex >= 0)
+        {
+            McPwmChannels::release(_mcpwmChannelIndex);
+            _mcpwmChannelIndex = -1;
+        }
+
+        if (_config.pin >= 0)
+        {
+            pinMode(_config.pin, INPUT);
+        }
+
+        _isSetup = false;
+    }
+
     void Servo::loop()
     {
         Device::loop();

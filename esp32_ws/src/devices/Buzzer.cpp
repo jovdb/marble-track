@@ -67,6 +67,29 @@ namespace devices
         }
     }
 
+    void Buzzer::teardown()
+    {
+        Device::teardown();
+
+        stopTask();
+
+        if (_config.pin >= 0)
+        {
+            ledcWriteTone(_ledcChannel, 0);
+            ledcDetachPin(_config.pin);
+            pinMode(_config.pin, INPUT);
+        }
+
+        if (_stateMutex && xSemaphoreTake(_stateMutex, pdMS_TO_TICKS(50)) == pdTRUE)
+        {
+            _state.mode = "IDLE";
+            _state.stopRequested = true;
+            _state.toneCommand.pending = false;
+            _state.tuneCommand.pending = false;
+            xSemaphoreGive(_stateMutex);
+        }
+    }
+
     void Buzzer::loop()
     {
         Device::loop();

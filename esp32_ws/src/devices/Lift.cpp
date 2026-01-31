@@ -116,6 +116,24 @@ namespace devices
         MLOG_DEBUG("%s: Setup complete", toString().c_str());
     }
 
+    void Lift::teardown()
+    {
+        Device::teardown();
+
+        _state.state = LiftStateEnum::UNKNOWN;
+        _state.errorCode = LiftErrorCode::NONE;
+        _state.errorMessage = "";
+        _state.onErrorChange = false;
+        _state.ballWaitingSince = 0;
+        _state.isLoaded = false;
+        _state.initStep = 0;
+
+        _loadStartTime = 0;
+        _unloadStartTime = 0;
+        _unloadEndTime = 0;
+        _stepperStartTime = 0;
+    }
+
     void Lift::loop()
     {
         Device::loop();

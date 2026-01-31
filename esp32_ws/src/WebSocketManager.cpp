@@ -14,6 +14,11 @@
 // Static instance for callback access (simplified to single instance)
 static WebSocketManager *instance = nullptr;
 
+namespace
+{
+    constexpr size_t kMaxQueuedBatchMessages = 64;
+}
+
 String createJsonResponse(bool success, const String &message, const String &data, const String &requestId, const String &type = "", const String &deviceId = "")
 {
     JsonDocument response;
@@ -713,10 +718,22 @@ void WebSocketManager::notifyClients(String state)
     if (batchingActive)
     {
         // Queue message for batch sending
+        if (messageQueue.size() >= kMaxQueuedBatchMessages)
+        {
+            MLOG_WARN("WebSocket batch queue full (%u). Dropping message.", static_cast<unsigned>(kMaxQueuedBatchMessages));
+            return;
+        }
+
         messageQueue.push_back(state);
     }
     else
     {
+        if (!ws.availableForWriteAll())
+        {
+            MLOG_WARN("WebSocket send buffer full. Dropping message.");
+            return;
+        }
+
         // Send immediately as array
         String arrayMessage = "[" + state + "]";
         MLOG_WS_SEND("%s", arrayMessage.c_str());
@@ -736,6 +753,13 @@ void WebSocketManager::endBatch()
 
     if (!hasClients() || messageQueue.empty())
     {
+        messageQueue.clear();
+        return;
+    }
+
+    if (!ws.availableForWriteAll())
+    {
+        MLOG_WARN("WebSocket send buffer full. Dropping %u batched messages.", static_cast<unsigned>(messageQueue.size()));
         messageQueue.clear();
         return;
     }

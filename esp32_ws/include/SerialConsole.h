@@ -8,17 +8,19 @@
 
 class DeviceManager;
 class Network;
+class WebSocketManager;
 
 class SerialConsole
 {
 public:
-    SerialConsole(DeviceManager &deviceManager, Network *&networkRef);
+    SerialConsole(DeviceManager &deviceManager, Network *&networkRef, WebSocketManager *wsManager);
 
     void loop();
 
 private:
     DeviceManager &m_deviceManager;
     Network *&m_network;
+    WebSocketManager *m_wsManager;
 
     struct NetworkOption
     {

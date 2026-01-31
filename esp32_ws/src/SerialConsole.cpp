@@ -7,11 +7,12 @@
 
 #include "DeviceManager.h"
 #include "Network.h"
+#include "WebSocketManager.h"
 #include "Logging.h"
 #include "devices/Device.h"
 
-SerialConsole::SerialConsole(DeviceManager &deviceManager, Network *&networkRef)
-    : m_deviceManager(deviceManager), m_network(networkRef)
+SerialConsole::SerialConsole(DeviceManager &deviceManager, Network *&networkRef, WebSocketManager *wsManager)
+    : m_deviceManager(deviceManager), m_network(networkRef), m_wsManager(wsManager)
 {
 }
 
@@ -102,9 +103,11 @@ void SerialConsole::loop()
     }
 
     // Handle pin blinking
-    if (m_blinkingPin != -1) {
+    if (m_blinkingPin != -1)
+    {
         unsigned long now = millis();
-        if (now - m_lastToggleTime >= 125) {  // 4Hz = 250ms period, toggle every 125ms
+        if (now - m_lastToggleTime >= 125)
+        { // 4Hz = 250ms period, toggle every 125ms
             digitalWrite(m_blinkingPin, !digitalRead(m_blinkingPin));
             m_lastToggleTime = now;
         }
@@ -123,7 +126,7 @@ void SerialConsole::handleCommand(const String &input)
 
     if (input.equalsIgnoreCase("devices"))
     {
-        std::vector<Device*> allDevices = m_deviceManager.getAllDevices();
+        std::vector<Device *> allDevices = m_deviceManager.getAllDevices();
 
         Serial.printf("⚙️  Devices: %d total\n",
                       static_cast<int>(allDevices.size()));
@@ -499,15 +502,22 @@ void SerialConsole::logNetworkInfo()
         Serial.printf("  ✅ WiFi: %s\n", WiFi.SSID().c_str());
         Serial.printf("  🏠 IP  : http://%s\n", WiFi.localIP().toString().c_str());
         String hostname = m_network->getHostname();
+
+        uint wsCount = 0;
+        if (m_wsManager)
+        {
+            wsCount = static_cast<unsigned long>(m_wsManager->getClientCount());
+        }
+
         if (m_network != nullptr)
         {
             Serial.printf("  🌍 URL : http://%s.local\n", hostname.c_str());
-            Serial.printf("  🔗 WS  : ws://%s.local/ws\n", hostname.c_str());
+            Serial.printf("  🔗 WS  : ws://%s.local/ws (%lu client(s) connected)\n", hostname.c_str(), wsCount);
         }
         else
         {
             Serial.println("  🌍 URL : http://marble-track.local");
-            Serial.printf("  🔗 WS  : ws://marble-track.local/ws\n", hostname.c_str());
+            Serial.printf("  🔗 WS  : ws://marble-track.local/ws (%lu client(s) connected)\n", hostname.c_str(), wsCount);
         }
     }
     else
@@ -800,57 +810,57 @@ void SerialConsole::handleLoggingMenuInput(char incoming)
 
     switch (incoming)
     {
-        case '1':
-            type = LOG_DEBUG;
-            typeName = "DEBUG";
-            break;
-        case '2':
-            type = LOG_INFO;
-            typeName = "INFO";
-            break;
-        case '3':
-            type = LOG_WARN;
-            typeName = "WARN";
-            break;
-        case '4':
-            type = LOG_ERROR;
-            typeName = "ERROR";
-            break;
-        case '5':
-            type = LOG_WS_RECEIVE;
-            typeName = "WS_RECEIVE";
-            break;
-        case '6':
-            type = LOG_WS_SEND;
-            typeName = "WS_SEND";
-            break;
-        case '7':
-            type = LOG_PLOT;
-            typeName = "PLOT";
-            break;
-        case 'a':
-        case 'A':
-            LogConfig::setAll(true);
-            Serial.println("✅ All logging types enabled");
-            if (!m_deviceManager.saveLoggingSettings())
-            {
-                Serial.println("⚠️  Failed to save logging settings to /config.json.");
-            }
-            showLoggingMenu();
-            return;
-        case 'n':
-        case 'N':
-            LogConfig::setAll(false);
-            Serial.println("❌ All logging types disabled");
-            if (!m_deviceManager.saveLoggingSettings())
-            {
-                Serial.println("⚠️  Failed to save logging settings to /config.json.");
-            }
-            showLoggingMenu();
-            return;
-        default:
-            validInput = false;
-            break;
+    case '1':
+        type = LOG_DEBUG;
+        typeName = "DEBUG";
+        break;
+    case '2':
+        type = LOG_INFO;
+        typeName = "INFO";
+        break;
+    case '3':
+        type = LOG_WARN;
+        typeName = "WARN";
+        break;
+    case '4':
+        type = LOG_ERROR;
+        typeName = "ERROR";
+        break;
+    case '5':
+        type = LOG_WS_RECEIVE;
+        typeName = "WS_RECEIVE";
+        break;
+    case '6':
+        type = LOG_WS_SEND;
+        typeName = "WS_SEND";
+        break;
+    case '7':
+        type = LOG_PLOT;
+        typeName = "PLOT";
+        break;
+    case 'a':
+    case 'A':
+        LogConfig::setAll(true);
+        Serial.println("✅ All logging types enabled");
+        if (!m_deviceManager.saveLoggingSettings())
+        {
+            Serial.println("⚠️  Failed to save logging settings to /config.json.");
+        }
+        showLoggingMenu();
+        return;
+    case 'n':
+    case 'N':
+        LogConfig::setAll(false);
+        Serial.println("❌ All logging types disabled");
+        if (!m_deviceManager.saveLoggingSettings())
+        {
+            Serial.println("⚠️  Failed to save logging settings to /config.json.");
+        }
+        showLoggingMenu();
+        return;
+    default:
+        validInput = false;
+        break;
     }
 
     if (validInput)
@@ -887,16 +897,21 @@ void SerialConsole::startTestPinFlow()
     Serial.println("🧪 Starting pin test mode...");
 
     // Remove all devices to prevent interference
-    std::vector<Device*> allDevices = m_deviceManager.getAllDevices();
-    if (!allDevices.empty()) {
+    std::vector<Device *> allDevices = m_deviceManager.getAllDevices();
+    if (!allDevices.empty())
+    {
         Serial.printf("Removing %d devices...\n", static_cast<int>(allDevices.size()));
-        for (Device* device : allDevices) {
-            if (device) {
+        for (Device *device : allDevices)
+        {
+            if (device)
+            {
                 m_deviceManager.removeDevice(device->getId());
             }
         }
         Serial.println("✅ All devices removed.");
-    } else {
+    }
+    else
+    {
         Serial.println("No devices to remove.");
     }
 
@@ -908,7 +923,8 @@ void SerialConsole::startTestPinFlow()
 
 void SerialConsole::cleanupTestPin()
 {
-    if (m_blinkingPin != -1) {
+    if (m_blinkingPin != -1)
+    {
         digitalWrite(m_blinkingPin, LOW);
         pinMode(m_blinkingPin, INPUT);
         m_blinkingPin = -1;
@@ -931,13 +947,15 @@ void SerialConsole::stopTestPin()
 void SerialConsole::handleTestPinInput(char incoming)
 {
     // If test is running, any key press stops it after a short delay
-    if (m_blinkingPin != -1) {
+    if (m_blinkingPin != -1)
+    {
         Serial.println();
         Serial.println("🛑 Stopping test...");
-        
+
         // Continue flashing for a bit longer to show the stop sequence
         delay(500);
-                Serial.printf("Stopped blink test on pin %d.\n", m_blinkingPin);        stopTestPin();
+        Serial.printf("Stopped blink test on pin %d.\n", m_blinkingPin);
+        stopTestPin();
         m_session.reset();
         return;
     }
@@ -955,7 +973,8 @@ void SerialConsole::handleTestPinInput(char incoming)
         int pin = m_session.stageBuffer.toInt();
         m_session.stageBuffer = "";
 
-        if (pin < 0 || pin > 48) {  // ESP32 pins 0-48
+        if (pin < 0 || pin > 48)
+        { // ESP32 pins 0-48
             Serial.println("❌ Invalid pin number. Try again.");
             Serial.print("Pin: ");
             return;
@@ -999,4 +1018,3 @@ void SerialConsole::cancelTestPinFlow()
     Serial.println();
     m_session.reset();
 }
-

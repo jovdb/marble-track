@@ -233,6 +233,18 @@ namespace devices
         playStartupSound();
     }
 
+    void MarbleController::teardown()
+    {
+        Device::teardown();
+
+        _liftButtonPressStartTime = 0;
+        _isBallStillLoaded = false;
+        _autoLiftDelayStart = 0;
+        _wheelIdleStartTime = 0;
+        _randomWheelDelayMs = 0;
+        isAutoMode = false;
+    }
+
     void MarbleController::loop()
     {
         Device::loop();

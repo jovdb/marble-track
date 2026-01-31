@@ -65,6 +65,23 @@ namespace devices
         MLOG_DEBUG("%s: Setup complete", toString().c_str());
     }
 
+    void Wheel::teardown()
+    {
+        Device::teardown();
+
+        _state.state = WheelStateEnum::UNKNOWN;
+        _state.lastZeroPosition = 0;
+        _state.stepsInLastRevolution = 0;
+        _state.currentBreakpointIndex = -1;
+        _state.targetBreakpointIndex = -1;
+        _state.targetAngle = -1.0f;
+        _state.onError = false;
+        _state.breakpointChanged = false;
+        _state.zeroSensorWasPressed = false;
+        _waitingForMoveStart = false;
+        _moveHasStarted = false;
+    }
+
     void Wheel::loop()
     {
         Device::loop();

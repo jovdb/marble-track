@@ -56,6 +56,7 @@ namespace devices
         ~Led() override;
 
         void setup() override;
+        void teardown() override;
         void loop() override;
         std::vector<String> getPins() const override;
 

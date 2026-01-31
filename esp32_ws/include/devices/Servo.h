@@ -63,6 +63,7 @@ namespace devices
         ~Servo();
 
         void setup() override;
+        void teardown() override;
         void loop() override;
         std::vector<String> getPins() const override;
 

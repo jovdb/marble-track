@@ -21,6 +21,19 @@ void Device::setup()
     }
 }
 
+void Device::teardown()
+{
+    for (auto it = _children.rbegin(); it != _children.rend(); ++it)
+    {
+        if (*it)
+        {
+            (*it)->teardown();
+        }
+    }
+
+    _isInitialized = false;
+}
+
 void Device::loop()
 {
     if (!_isInitialized)

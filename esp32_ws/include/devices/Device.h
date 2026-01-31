@@ -35,6 +35,7 @@ public:
     // Lifecycle
     // Default setup calls setup on children
     virtual void setup();
+    virtual void teardown();
     virtual void loop();
 
     // Check if setup has been called

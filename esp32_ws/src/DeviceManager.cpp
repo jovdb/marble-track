@@ -627,6 +627,17 @@ void DeviceManager::setup()
     MLOG_DEBUG("-----------------------");
 }
 
+void DeviceManager::teardown()
+{
+    for (int i = devicesCount - 1; i >= 0; i--)
+    {
+        if (devices[i])
+        {
+            devices[i]->teardown();
+        }
+    }
+}
+
 void DeviceManager::loop()
 {
     for (int i = 0; i < devicesCount; i++)

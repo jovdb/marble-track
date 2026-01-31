@@ -86,6 +86,37 @@ namespace devices
         }
     }
 
+    void Hv20tAudio::teardown()
+    {
+        Device::teardown();
+
+        stop();
+
+        if (_serialReady)
+        {
+            _serial.end();
+            _serialReady = false;
+        }
+
+        if (_config.rxPin.expanderId.isEmpty() && _config.rxPin.pin >= 0)
+        {
+            pinMode(_config.rxPin.pin, INPUT);
+        }
+        if (_config.txPin.expanderId.isEmpty() && _config.txPin.pin >= 0)
+        {
+            pinMode(_config.txPin.pin, INPUT);
+        }
+        if (_config.busyPin.expanderId.isEmpty() && _config.busyPin.pin >= 0)
+        {
+            pinMode(_config.busyPin.pin, INPUT);
+        }
+
+        cleanupPins();
+        _playQueue.clear();
+        _state.isBusy = false;
+        _state.lastSongIndex = -1;
+    }
+
     void Hv20tAudio::loop()
     {
         Device::loop();

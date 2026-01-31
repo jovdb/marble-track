@@ -366,6 +366,8 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
             ISerializable *serializable = mixins::SerializableRegistry::get(deviceId);
             if (serializable)
             {
+                deviceManager->teardown();
+
                 JsonObject configObj = doc["config"].as<JsonObject>();
                 JsonDocument configDoc;
                 configDoc.set(configObj);

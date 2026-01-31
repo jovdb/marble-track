@@ -78,6 +78,28 @@ namespace devices
         }
     }
 
+    void Led::teardown()
+    {
+        Device::teardown();
+
+        if (_config.pinConfig.expanderId.isEmpty() && _config.pinConfig.pin >= 0)
+        {
+            pinMode(_config.pinConfig.pin, INPUT);
+        }
+
+        if (_pin != nullptr)
+        {
+            delete _pin;
+            _pin = nullptr;
+        }
+
+        _state.mode = "OFF";
+        _state.blinkOnTime = 500;
+        _state.blinkOffTime = 500;
+        _state.blinkDelay = 0;
+        _isPrevBlinkingOn = -1;
+    }
+
     std::vector<String> Led::getPins() const
     {
         if (_pin != nullptr)

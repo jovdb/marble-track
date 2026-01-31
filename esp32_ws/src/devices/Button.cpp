@@ -85,6 +85,30 @@ namespace devices
         MLOG_INFO("%s: Setup on %s with pinMode %s", toString().c_str(), _pin->toString().c_str(), pinModeToString(_config.pinMode).c_str());
     }
 
+    void Button::teardown()
+    {
+        Device::teardown();
+
+        if (_config.pinConfig.expanderId.isEmpty() && _config.pinConfig.pin >= 0)
+        {
+            pinMode(_config.pinConfig.pin, INPUT);
+        }
+
+        if (_pin != nullptr)
+        {
+            delete _pin;
+            _pin = nullptr;
+        }
+
+        _lastDebounceTime = 0;
+        _lastIsButtonPressed = false;
+        _isSimulated = false;
+        _simulatedIsPressed = false;
+        _state.isPressed = false;
+        _state.isPressedChanged = false;
+        _state.input = 0;
+    }
+
     void Button::loop()
     {
         Device::loop();

@@ -43,6 +43,7 @@ public:
     void beginBatch();
     void endBatch();
     String getStatus() const;
+    uint32_t getClientCount() const;
     bool hasClients() const { return ws.count() > 0; }
     void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
     void setDeviceManager(DeviceManager *deviceManager);

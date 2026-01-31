@@ -712,6 +712,11 @@ String WebSocketManager::getStatus() const
     return "{\"connectedClients\":" + String(ws.count()) + ",\"path\":\"/ws\"}";
 }
 
+uint32_t WebSocketManager::getClientCount() const
+{
+    return ws.count();
+}
+
 void WebSocketManager::notifyClients(String state)
 {
     if (!hasClients())

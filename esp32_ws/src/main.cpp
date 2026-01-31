@@ -91,7 +91,7 @@ void setup()
   network = new Network(networkSettings);
 
   // Now create SerialConsole after network is initialized
-  serialConsole = new SerialConsole(deviceManager, network);
+  serialConsole = new SerialConsole(deviceManager, network, &wsManager);
 
   // Initialize Network (will try WiFi, fall back to AP if needed)
   bool networkInitialized = network->setup();

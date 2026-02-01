@@ -305,7 +305,7 @@ namespace devices
         return move(maxSteps * 2 * _config.direction);
     }
 
-    bool Wheel::init()
+    bool Wheel::init(long maxStepsPerRevolution)
     {
         MLOG_INFO("%s: Init started", toString().c_str());
         _state.state = WheelStateEnum::INIT;
@@ -314,7 +314,8 @@ namespace devices
         _initStartTime = millis();
         notifyStateChanged();
 
-        return move(_config.maxStepsPerRevolution * _config.direction);
+        const long maxSteps = (maxStepsPerRevolution > 0) ? maxStepsPerRevolution : _config.maxStepsPerRevolution;
+        return move(maxSteps * _config.direction);
     }
 
     bool Wheel::moveToAngle(float angle)
@@ -425,7 +426,12 @@ namespace devices
         }
         else if (action == "init")
         {
-            return init();
+            long maxSteps = -1;
+            if (args && (*args)["maxStepsPerRevolution"].is<long>())
+            {
+                maxSteps = (*args)["maxStepsPerRevolution"].as<long>();
+            }
+            return init(maxSteps);
         }
         else if (action == "move-to-angle")
         {

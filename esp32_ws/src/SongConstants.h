@@ -51,7 +51,7 @@ namespace songs
 
     // WHEEL
     //------
-    // Eikpunt van het reuzenwiel niet gevonden.
+    // Reuzenwiel eikpunt niet gevonden, mogelijk slipt het reuzenwiel door, defect aan de zero sensor of hercalibratie nodig....
     const int WHEEL_ZERO_NOT_FOUND = 10;
     // Reuzenwiel calibratie wordt gestart, dit kan even duren...
     const int WHEEL_CALIBRATION_START = 11;
@@ -61,8 +61,6 @@ namespace songs
     const int CALIBRATION_FIRST_ZERO_NOT_FOUND = 13;
     // Reuzenwiel calibratie gefaald. Tweede eikpunt van het reuzenwiel was niet gevonden tijdens calibratie. Mogelijke oorzaken: 'Max steps per revolutions' configuratie te laag of reuzenwiel slipt door.
     const int CALIBRATION_SECOND_ZERO_NOT_FOUND = 14;
-    // Reuzenwiel eikpunt op onverwachte plaats, mogelijke slipt reuzenwiel slipt door of hercalibratie nodig.
-    const int WHEEL_ZERO_UNEXPECTED = 15;
     
 
 }

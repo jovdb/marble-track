@@ -42,7 +42,6 @@ namespace devices
         CalibrationZeroNotFound,
         CalibrationSecondZeroNotFound,
         ZeroNotFound,
-        StepMismatch,
     };
 
     /**

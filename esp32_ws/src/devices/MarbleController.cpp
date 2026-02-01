@@ -556,6 +556,10 @@ namespace devices
             {
                 _audio->play(songs::CALIBRATION_SECOND_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
             }
+            else if (wheelState->errorCode == devices::WheelErrorCode::ZeroNotFound)
+            {
+                _audio->play(songs::WHEEL_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
+            }
         }
 
         // CALIBRATING -> IDLE

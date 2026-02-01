@@ -27,10 +27,15 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
   const [pin2, setPin2] = createSignal<PinConfig>(deserializePinConfig(-1));
   const [pin3, setPin3] = createSignal<PinConfig>(deserializePinConfig(-1));
   const [pin4, setPin4] = createSignal<PinConfig>(deserializePinConfig(-1));
-  const [maxSpeed, setMaxSpeed] = createSignal(1000);
-  const [maxAcceleration, setMaxAcceleration] = createSignal(300);
-  const [defaultSpeed, setDefaultSpeed] = createSignal(500);
-  const [defaultAcceleration, setDefaultAcceleration] = createSignal(150);
+  const [maxSpeed, setMaxSpeed] = createSignal("1000");
+  const [maxAcceleration, setMaxAcceleration] = createSignal("300");
+  const [defaultSpeed, setDefaultSpeed] = createSignal("500");
+  const [defaultAcceleration, setDefaultAcceleration] = createSignal("150");
+
+  const toNumber = (value: string, fallback = 0) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : fallback;
+  };
 
   createEffect(() => {
     const cfg = config();
@@ -85,21 +90,21 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
     }
 
     if (typeof cfg.maxSpeed === "number") {
-      setMaxSpeed(cfg.maxSpeed);
+      setMaxSpeed(String(cfg.maxSpeed));
     }
     const cfgMaxAcceleration =
       typeof cfg.maxAcceleration === "number"
         ? cfg.maxAcceleration
         : (cfg as { acceleration?: number } | undefined)?.acceleration;
     if (typeof cfgMaxAcceleration === "number") {
-      setMaxAcceleration(cfgMaxAcceleration);
+      setMaxAcceleration(String(cfgMaxAcceleration));
     }
 
     if (typeof cfg.defaultSpeed === "number") {
-      setDefaultSpeed(cfg.defaultSpeed);
+      setDefaultSpeed(String(cfg.defaultSpeed));
     }
     if (typeof cfg.defaultAcceleration === "number") {
-      setDefaultAcceleration(cfg.defaultAcceleration);
+      setDefaultAcceleration(String(cfg.defaultAcceleration));
     }
   });
 
@@ -112,10 +117,10 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
     const payload: IStepperConfig = {
       name: name().trim() || device()?.id,
       stepperType: stepperType(),
-      maxSpeed: Number(maxSpeed()),
-      maxAcceleration: Number(maxAcceleration()),
-      defaultSpeed: Number(defaultSpeed()),
-      defaultAcceleration: Number(defaultAcceleration()),
+      maxSpeed: toNumber(maxSpeed(), 0),
+      maxAcceleration: toNumber(maxAcceleration(), 0),
+      defaultSpeed: toNumber(defaultSpeed(), 0),
+      defaultAcceleration: toNumber(defaultAcceleration(), 0),
       invertEnable: invertEnable(),
       invertDirection: invertDirection(),
     };
@@ -284,7 +289,7 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
                 type="number"
                 min={0}
                 value={defaultSpeed()}
-                onInput={(event) => setDefaultSpeed(Number(event.currentTarget.value))}
+                onInput={(event) => setDefaultSpeed(event.currentTarget.value)}
               />
               <span style={{ "margin-left": "0.5rem" }}>steps/s</span>
             </div>
@@ -297,7 +302,7 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
                 type="number"
                 min={0}
                 value={maxSpeed()}
-                onInput={(event) => setMaxSpeed(Number(event.currentTarget.value))}
+                onInput={(event) => setMaxSpeed(event.currentTarget.value)}
               />
               <span style={{ "margin-left": "0.5rem" }}>steps/s</span>
             </div>
@@ -310,7 +315,7 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
                 type="number"
                 min={0}
                 value={defaultAcceleration()}
-                onInput={(event) => setDefaultAcceleration(Number(event.currentTarget.value))}
+                onInput={(event) => setDefaultAcceleration(event.currentTarget.value)}
               />
               <span style={{ "margin-left": "0.5rem" }}>steps/s²</span>
             </div>
@@ -323,7 +328,7 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
                 type="number"
                 min={0}
                 value={maxAcceleration()}
-                onInput={(event) => setMaxAcceleration(Number(event.currentTarget.value))}
+                onInput={(event) => setMaxAcceleration(event.currentTarget.value)}
               />
               <span style={{ "margin-left": "0.5rem" }}>steps/s²</span>
             </div>

@@ -19,19 +19,26 @@ export default function ServoConfig(props: ServoConfigProps) {
   const [mcpwmChannel, setMcpwmChannel] = createSignal<number>(
     device()?.config?.mcpwmChannel ?? -1
   );
-  const [frequency, setFrequency] = createSignal<number>(device()?.config?.frequency ?? 50);
+  const [frequency, setFrequency] = createSignal<string>(
+    String(device()?.config?.frequency ?? 50)
+  );
   const [resolutionBits, setResolutionBits] = createSignal<number>(
     device()?.config?.resolutionBits ?? 10
   );
-  const [minDutyCycle, setMinDutyCycle] = createSignal<number>(
-    device()?.config?.minDutyCycle ?? 2.5
+  const [minDutyCycle, setMinDutyCycle] = createSignal<string>(
+    String(device()?.config?.minDutyCycle ?? 2.5)
   );
-  const [maxDutyCycle, setMaxDutyCycle] = createSignal<number>(
-    device()?.config?.maxDutyCycle ?? 12.5
+  const [maxDutyCycle, setMaxDutyCycle] = createSignal<string>(
+    String(device()?.config?.maxDutyCycle ?? 12.5)
   );
-  const [defaultDurationInMs, setDefaultDurationInMs] = createSignal<number>(
-    device()?.config?.defaultDurationInMs ?? 500
+  const [defaultDurationInMs, setDefaultDurationInMs] = createSignal<string>(
+    String(device()?.config?.defaultDurationInMs ?? 500)
   );
+
+  const toNumber = (value: string, fallback = 0) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : fallback;
+  };
 
   createEffect(() => {
     const config = device()?.config;
@@ -52,7 +59,7 @@ export default function ServoConfig(props: ServoConfigProps) {
     }
 
     if (typeof config.frequency === "number") {
-      setFrequency(config.frequency);
+      setFrequency(String(config.frequency));
     }
 
     if (typeof config.resolutionBits === "number") {
@@ -60,15 +67,15 @@ export default function ServoConfig(props: ServoConfigProps) {
     }
 
     if (typeof config.minDutyCycle === "number") {
-      setMinDutyCycle(config.minDutyCycle);
+      setMinDutyCycle(config.minDutyCycle.toFixed(1));
     }
 
     if (typeof config.maxDutyCycle === "number") {
-      setMaxDutyCycle(config.maxDutyCycle);
+      setMaxDutyCycle(config.maxDutyCycle.toFixed(1));
     }
 
     if (typeof config.defaultDurationInMs === "number") {
-      setDefaultDurationInMs(config.defaultDurationInMs);
+      setDefaultDurationInMs(String(config.defaultDurationInMs));
     }
   });
 
@@ -80,11 +87,11 @@ export default function ServoConfig(props: ServoConfigProps) {
           name: name()?.trim() || device()?.id,
           pin: pin().pin,
           mcpwmChannel: mcpwmChannel(),
-          frequency: frequency(),
+          frequency: toNumber(frequency(), 50),
           resolutionBits: resolutionBits(),
-          minDutyCycle: minDutyCycle(),
-          maxDutyCycle: maxDutyCycle(),
-          defaultDurationInMs: defaultDurationInMs(),
+          minDutyCycle: toNumber(minDutyCycle(), 2.5),
+          maxDutyCycle: toNumber(maxDutyCycle(), 12.5),
+          defaultDurationInMs: toNumber(defaultDurationInMs(), 500),
         })
       }
       onClose={props.onClose}
@@ -136,7 +143,7 @@ export default function ServoConfig(props: ServoConfigProps) {
               value={frequency()}
               min={1}
               max={400}
-              onInput={(event) => setFrequency(Number(event.currentTarget.value))}
+              onInput={(event) => setFrequency(event.currentTarget.value)}
               style={{ width: "5em", "margin-left": "0.5rem" }}
               title="PWM frequency in Hz (typically 50Hz for servos)"
             />
@@ -163,11 +170,11 @@ export default function ServoConfig(props: ServoConfigProps) {
           <DeviceConfigItem name="Min Duty Cycle (0°):">
             <input
               type="number"
-              value={minDutyCycle().toFixed(1)}
+              value={minDutyCycle()}
               min={0}
               max={100}
               step={0.1}
-              onInput={(event) => setMinDutyCycle(Number(event.currentTarget.value))}
+              onInput={(event) => setMinDutyCycle(event.currentTarget.value)}
               style={{ width: "5em", "margin-left": "0.5rem" }}
               title="Duty cycle percentage for 0° position (typically 2.5%)"
             />
@@ -178,11 +185,11 @@ export default function ServoConfig(props: ServoConfigProps) {
           <DeviceConfigItem name="Max Duty Cycle (180°):">
             <input
               type="number"
-              value={maxDutyCycle().toFixed(1)}
+              value={maxDutyCycle()}
               min={0}
               max={100}
               step={0.1}
-              onInput={(event) => setMaxDutyCycle(Number(event.currentTarget.value))}
+              onInput={(event) => setMaxDutyCycle(event.currentTarget.value)}
               style={{ width: "5em", "margin-left": "0.5rem" }}
               title="Duty cycle percentage for 180° position (typically 12.5%)"
             />
@@ -196,7 +203,7 @@ export default function ServoConfig(props: ServoConfigProps) {
               value={defaultDurationInMs()}
               min={0}
               step={10}
-              onInput={(event) => setDefaultDurationInMs(Number(event.currentTarget.value))}
+              onInput={(event) => setDefaultDurationInMs(event.currentTarget.value)}
               style={{ width: "6em", "margin-left": "0.5rem" }}
               title="Default animation duration in milliseconds"
             />

@@ -105,12 +105,17 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
               class={styles.device__button}
               onClick={(e) => {
                 e.preventDefault(); // prevent post
-                actions.calibrate();
+                
+                if (device()?.state?.state === "CALIBRATING") {
+                  wheelActions.stop();
+                  console.log("Stopping calibration");
+                } else {
+                  actions.calibrate();
+                }
               }}
               style={{ "flex-shrink": "0" }}
-              disabled={device()?.state?.state === "CALIBRATING"}
             >
-              {device()?.state?.state === "CALIBRATING" ? "Calibrating..." : "Calibrate"}
+              {device()?.state?.state === "CALIBRATING" ? "Stop" : "Calibrate"}
             </button>
           </DeviceConfigItem>
         </DeviceConfigRow>
@@ -172,30 +177,42 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
               class={styles.device__button}
               onClick={(e) => {
                 e.preventDefault(); // prevent post
-                wheelActions.init();
+                
+                if (device()?.state?.state === "INIT") {
+                  wheelActions.stop();
+                  console.log("Stopping init");
+                } else {
+                  wheelActions.init();
+                }
               }}
               style={{ "flex-shrink": "0" }}
               disabled={device()?.state?.state === "RESET"}
             >
-              Init
+              {device()?.state?.state === "INIT" ? "Stop" : "Init"}
             </button>
             <button
               class={styles.device__button}
               onClick={(e) => {
                 e.preventDefault(); // prevent post
-                const targetAngle = angle();
-
-                wheelActions.moveToAngle(targetAngle);
-                console.log(`Moving to angle ${targetAngle}°`);
+                
+                if (device()?.state?.state === "MOVING") {
+                  wheelActions.stop();
+                  console.log("Stopping wheel");
+                } else {
+                  const targetAngle = angle();
+                  wheelActions.moveToAngle(targetAngle);
+                  console.log(`Moving to angle ${targetAngle}°`);
+                }
               }}
               style={{ "flex-shrink": "0" }}
               disabled={
-                !stepsPerRevolution() ||
+                device()?.state?.state !== "MOVING" &&
+                (!stepsPerRevolution() ||
                 stepsPerRevolution() <= 0 ||
-                device()?.state?.lastZeroPosition === 0
+                device()?.state?.lastZeroPosition === 0)
               }
             >
-              Move to
+              {device()?.state?.state === "MOVING" ? "Stop" : "Move to"}
             </button>
           </DeviceConfigItem>
         </DeviceConfigRow>

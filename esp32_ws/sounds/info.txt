@@ -1,0 +1,35 @@
+https://luvvoice.com/
+Dutch/Belgium  Dena
+
+Theme idea's
+
+- Default
+- Circus
+- Space
+- Animals
+- 8-bit games
+- Farts
+
+
+GENERAL
+- 00001: Automatische modus actief
+- 00002: Manuele modus actief
+- 00003: Ik ben al 5 minuten niet gebruikt!
+Vergeet mij niet uit te schakelen
+
+WHEEL:
+- 00010: Eikpunt van het reuzenwiel niet gevonden. 
+- 00011: Reuzenwiel calibratie wordt gestart, dit kan even duren...
+- 00012: Calibratie reuzenwiel succesvol beëindigd...
+- 00013: Eikpunt van het reuzenwiel op onverwachte plaatst, wiel was geblokkeerd of hercalibratie nodig.
+- 00014: Initializatie reuzenwiel mislukt
+
+LIFT
+- Fout: Gelijkvloer van de lift niet gevonden.
+Controleer of er geen knikker tussen zit en herstart.
+- Waarschuwing: Geen knikker gevonden aan de lift inde laatste 5 minuten.
+Controlleer of knikker sensor nog werkt.
+
+
+NIKKER SPLITTER:
+- Fout: eikpunt van de knikker splitter niet gevonden.

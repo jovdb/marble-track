@@ -3,9 +3,11 @@
 #include "DeviceManager.h"
 #include "devices/Button.h"
 #include "devices/Buzzer.h"
+#include "devices/Hv20tAudio.h"
 #include "devices/Wheel.h"
 #include "devices/Led.h"
 #include "devices/Stepper.h"
+#include "SongConstants.h"
 
 extern DeviceManager deviceManager;
 
@@ -20,6 +22,17 @@ namespace devices
         buzzerConfig.pin = 14;
         _buzzer->setConfig(buzzerConfig);
         addChild(_buzzer);
+
+        _audio = new devices::Hv20tAudio("hv20t");
+        auto audioConfig = _audio->getConfig();
+        audioConfig.name = "Audio";
+        audioConfig.rxPin.pin = 47;
+        audioConfig.rxPin.expanderId = "";
+        audioConfig.txPin.pin = 48;
+        audioConfig.txPin.expanderId = "";
+        audioConfig.defaultVolumePercent = 50;
+        _audio->setConfig(audioConfig);
+        addChild(_audio);
 
         _lift = new devices::Lift("lift");
         auto liftConfig = _lift->getConfig();
@@ -230,6 +243,15 @@ namespace devices
         // Log the operating mode
         MLOG_INFO("%s Initialized in %s mode", toString().c_str(), isAutoMode ? "AUTO" : "MANUAL");
 
+        if (isAutoMode)
+        {
+            _audio->play(songs::AUTO_MODE);
+        }
+        else
+        {
+            _audio->play(songs::MAN_MODE);
+        }
+
         playStartupSound();
     }
 
@@ -319,7 +341,8 @@ namespace devices
             auto liftButtonState = _liftBtn->getState();
             if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
-                playClickSound();
+                // playClickSound();
+                _audio->play(songs::getButtonClickSound());
                 _lift->init();
             }
             break;
@@ -593,7 +616,8 @@ namespace devices
             {
                 MLOG_INFO("%s: Starting manual wheel movement as long button is pressed", toString().c_str());
 
-                playClickSound();
+                // playClickSound();
+                _audio->play(songs::getButtonDownSound());
 
                 // Reset current position to prevent overflow;
                 // if (wheelState.state != devices::WheelStateEnum::MOVING)
@@ -613,7 +637,8 @@ namespace devices
             // Button released while moving - stop the wheel
             MLOG_INFO("%s: Stopping manual wheel movement", toString().c_str());
 
-            playClickOffSound();
+            // playClickOffSound();
+            _audio->play(songs::getButtonUpSound());
 
             _wheel->stop();
         }

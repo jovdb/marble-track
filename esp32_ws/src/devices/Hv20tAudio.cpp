@@ -47,8 +47,8 @@ namespace devices
 
     Hv20tAudio::Hv20tAudio(const String &id)
         : Device(id, "hv20t"),
-            _serial(2),
-            _player(&_serial)
+          _serial(2),
+          _player(&_serial)
     {
     }
 
@@ -146,8 +146,7 @@ namespace devices
                 songIndex = 65535;
             _state.lastSongIndex = songIndex;
             notifyStateChanged();
-            _player.playSpecified(static_cast<uint16_t>(songIndex));
-            return true;
+            _player.playSpecified(static_cast<uint16_t>(songIndex + 1));
         }
 
         _player.play();

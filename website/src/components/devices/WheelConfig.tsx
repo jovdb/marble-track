@@ -110,7 +110,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                   wheelActions.stop();
                   console.log("Stopping calibration");
                 } else {
-                  actions.calibrate();
+                  wheelActions.calibrate(maxStepsPerRevolution());
                 }
               }}
               style={{ "flex-shrink": "0" }}

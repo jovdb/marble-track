@@ -26,12 +26,18 @@ export interface IWheelConfig extends IDeviceConfig {
 export function useWheel(deviceId: string) {
   const [device, { sendMessage, ...actions }] = useDevice<IWheelState, IWheelConfig>(deviceId);
 
-  const calibrate = () =>
+  const calibrate = (maxStepsPerRevolution?: number) =>
     sendMessage({
       type: "device-fn",
       deviceId,
       deviceType,
       fn: "calibrate",
+      args:
+        maxStepsPerRevolution !== undefined
+          ? {
+              maxStepsPerRevolution,
+            }
+          : undefined,
     });
 
   const init = () =>

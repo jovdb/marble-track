@@ -159,8 +159,10 @@ namespace devices
                     float percentDiff = abs(_state.stepsInLastRevolution - _config.stepsPerRevolution) / (float)_config.stepsPerRevolution * 100.0f;
                     if (percentDiff > 0.1f)
                     {
-                        MLOG_ERROR("%s: Steps per revolution mismatch - measured: %ld, configured: %ld (%.2f%% difference)",
-                                   toString().c_str(), _state.stepsInLastRevolution, _config.stepsPerRevolution, percentDiff);
+                        char errorMessage[128];
+                        sprintf(errorMessage, "Steps per revolution mismatch - measured: %ld, configured: %ld (%.2f%% difference)", _state.stepsInLastRevolution, _config.stepsPerRevolution, percentDiff);
+                        setErrorState(WheelErrorCode::UnexpectedZeroTrigger, errorMessage);
+                        notifyStateChanged();
                     }
                 }
             }
@@ -367,22 +369,24 @@ namespace devices
 
         // Calculate target angle
         float targetAngle = _config.breakPoints[nextIndex];
-        
+
         // For more reliable positioning, calculate based on current breakpoint angle
         // instead of relying on potentially drifted stepper position
-        float currentAngle = (_state.currentBreakpointIndex >= 0 && _state.currentBreakpointIndex < (int)_config.breakPoints.size()) 
-            ? _config.breakPoints[_state.currentBreakpointIndex] 
-            : 0.0f;
-        
+        float currentAngle = (_state.currentBreakpointIndex >= 0 && _state.currentBreakpointIndex < (int)_config.breakPoints.size())
+                                 ? _config.breakPoints[_state.currentBreakpointIndex]
+                                 : 0.0f;
+
         // Calculate the shortest angular distance
         float angleDiff = targetAngle - currentAngle;
         // Normalize to -180 to 180 range
-        while (angleDiff > 180) angleDiff -= 360;
-        while (angleDiff <= -180) angleDiff += 360;
-        
+        while (angleDiff > 180)
+            angleDiff -= 360;
+        while (angleDiff <= -180)
+            angleDiff += 360;
+
         // Convert angle difference to steps
         long stepsToMove = (angleDiff / 360.0f) * _config.stepsPerRevolution;
-        
+
         _state.targetAngle = targetAngle;
 
         MLOG_INFO("%s: Moving to next breakpoint index %d, angle %.1f° (from %.1f°, diff %.1f° = %ld steps)",

@@ -159,7 +159,7 @@ namespace devices
         {
             if (mode == Hv20tPlayMode::StopThenPlay)
             {
-                MLOG_INFO("%s: Stopping current song, start song %i", toString().c_str(), songIndex);
+                MLOG_INFO("%s: Replace current song with song %i", toString().c_str(), songIndex);
                 stop();
             }
             if (mode == Hv20tPlayMode::SkipIfPlaying)
@@ -194,13 +194,15 @@ namespace devices
         {
             if (songIndex > 65535)
                 songIndex = 65535;
-            MLOG_DEBUG("%s: Playing song %i", toString().c_str(), songIndex);
+            MLOG_INFO("%s: Playing song %i", toString().c_str(), songIndex);
             _state.lastSongIndex = songIndex;
             notifyStateChanged();
             _playbackInitiated = true;
-            _player.playSpecified(static_cast<uint16_t>(songIndex + 1));
+            _player.playSpecified(static_cast<uint16_t>(songIndex));
             return true;
         }
+
+        return false;
     }
 
     bool Hv20tAudio::stop()
@@ -239,6 +241,30 @@ namespace devices
         _state.volumePercent = clamped;
         notifyStateChanged();
         return true;
+    }
+
+    bool Hv20tAudio::removeFromQueue(int songIndex)
+    {
+        std::queue<int> tempQueue;
+        bool removed = false;
+
+        while (!_songQueue.empty())
+        {
+            int song = _songQueue.front();
+            _songQueue.pop();
+            if (!removed && song == songIndex)
+            {
+                removed = true;
+                MLOG_INFO("%s: Removed song %i from queue", toString().c_str(), songIndex);
+            }
+            else
+            {
+                tempQueue.push(song);
+            }
+        }
+
+        _songQueue = std::move(tempQueue);
+        return removed;
     }
 
     void Hv20tAudio::addStateToJson(JsonDocument &doc)

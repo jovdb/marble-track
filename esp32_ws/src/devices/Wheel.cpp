@@ -366,12 +366,28 @@ namespace devices
         _state.targetBreakpointIndex = nextIndex;
 
         // Calculate target angle
-        float targetAngleRaw = _config.breakPoints[nextIndex];
-        _state.targetAngle = targetAngleRaw; // Simplified
+        float targetAngle = _config.breakPoints[nextIndex];
+        
+        // For more reliable positioning, calculate based on current breakpoint angle
+        // instead of relying on potentially drifted stepper position
+        float currentAngle = (_state.currentBreakpointIndex >= 0 && _state.currentBreakpointIndex < (int)_config.breakPoints.size()) 
+            ? _config.breakPoints[_state.currentBreakpointIndex] 
+            : 0.0f;
+        
+        // Calculate the shortest angular distance
+        float angleDiff = targetAngle - currentAngle;
+        // Normalize to -180 to 180 range
+        while (angleDiff > 180) angleDiff -= 360;
+        while (angleDiff <= -180) angleDiff += 360;
+        
+        // Convert angle difference to steps
+        long stepsToMove = (angleDiff / 360.0f) * _config.stepsPerRevolution;
+        
+        _state.targetAngle = targetAngle;
 
-        MLOG_INFO("%s: Moving to next breakpoint index %d, angle %.1f°",
-                  toString().c_str(), nextIndex, targetAngleRaw);
-        return moveToAngle(_state.targetAngle);
+        MLOG_INFO("%s: Moving to next breakpoint index %d, angle %.1f° (from %.1f°, diff %.1f° = %ld steps)",
+                  toString().c_str(), nextIndex, targetAngle, currentAngle, angleDiff, stepsToMove);
+        return move(stepsToMove);
     }
 
     bool Wheel::stop()

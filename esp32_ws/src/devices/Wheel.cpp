@@ -78,6 +78,7 @@ namespace devices
         _state.currentBreakpointIndex = -1;
         _state.targetBreakpointIndex = -1;
         _state.targetAngle = -1.0f;
+        _state.currentAngle = -1.0f;
         _state.onError = false;
         _state.breakpointChanged = false;
         _state.zeroSensorWasPressed = false;
@@ -140,6 +141,7 @@ namespace devices
                 }
 
                 _state.state = WheelStateEnum::IDLE;
+                updateCurrentAngle();
                 _moveHasStarted = false;
                 notifyStateChanged();
             }
@@ -153,6 +155,9 @@ namespace devices
                 _state.stepsInLastRevolution = currentPosition - _state.lastZeroPosition;
                 _state.lastZeroPosition = currentPosition;
 
+                // Update current angle after zero position change
+                updateCurrentAngle();
+
                 // Check revolution consistency
                 if (_config.stepsPerRevolution > 0 && _state.stepsInLastRevolution > 0)
                 {
@@ -162,6 +167,8 @@ namespace devices
                         char errorMessage[128];
                         sprintf(errorMessage, "Steps per revolution mismatch - measured: %ld, configured: %ld (%.2f%% difference)", _state.stepsInLastRevolution, _config.stepsPerRevolution, percentDiff);
                         setErrorState(WheelErrorCode::UnexpectedZeroTrigger, errorMessage);
+
+                        updateCurrentAngle();
                         notifyStateChanged();
                     }
                 }
@@ -174,6 +181,7 @@ namespace devices
                 {
                     setErrorState(WheelErrorCode::ZeroNotFound,
                                   "Zero sensor not triggered within maxStepsPerRevolution");
+                    updateCurrentAngle();
                     notifyStateChanged();
                     break;
                 }
@@ -193,6 +201,9 @@ namespace devices
                 _state.lastZeroPosition = currentPosition;
                 _stepper->stop();
 
+                // Update current angle after zero position is set
+                updateCurrentAngle();
+
                 // Move to first breakpoint if configured
                 if (!_config.breakPoints.empty() && _config.stepsPerRevolution > 0)
                 {
@@ -202,12 +213,14 @@ namespace devices
                     _state.state = WheelStateEnum::MOVING;
                     _state.targetAngle = _config.breakPoints[0];
                     moveToAngle(_config.breakPoints[0]);
+                    updateCurrentAngle();
                     notifyStateChanged();
                 }
                 else
                 {
                     MLOG_INFO("%s: Init: Zero point reached at %ld, no breakpoints configured", toString().c_str(), currentPosition);
                     _state.state = WheelStateEnum::IDLE;
+                    updateCurrentAngle();
                     notifyStateChanged();
                 }
             }
@@ -215,6 +228,7 @@ namespace devices
             {
                 // Movement completed without finding zero - error
                 setErrorState(WheelErrorCode::CalibrationZeroNotFound, "Init: Zero sensor not found!");
+                updateCurrentAngle();
                 notifyStateChanged();
             }
             _state.zeroSensorWasPressed = zeroPressed;
@@ -242,6 +256,9 @@ namespace devices
                     _state.stepsInLastRevolution = steps;
                     _config.stepsPerRevolution = steps;
 
+                    // Update current angle after calibration
+                    updateCurrentAngle();
+
                     // Stop the stepper
                     _stepper->stop();
 
@@ -267,6 +284,7 @@ namespace devices
                 {
                     setErrorState(WheelErrorCode::CalibrationSecondZeroNotFound, "Calibration: Second zero sensor trigger not detected!");
                 }
+                updateCurrentAngle();
                 notifyStateChanged();
             }
             break;
@@ -274,6 +292,12 @@ namespace devices
         default:
             break;
         }
+
+        // Update current angle when position may have changed
+        // if (_state.state == WheelStateEnum::MOVING || _state.state == WheelStateEnum::IDLE)
+        // {
+        //     updateCurrentAngle();
+        // }
     }
 
     bool Wheel::move(long steps)
@@ -284,6 +308,7 @@ namespace devices
             _state.state = WheelStateEnum::MOVING;
             _waitingForMoveStart = true;
             _moveHasStarted = false;
+            updateCurrentAngle();
             notifyStateChanged();
         }
 
@@ -300,6 +325,7 @@ namespace devices
         _state.currentBreakpointIndex = -1;
         _state.targetBreakpointIndex = -1;
         _state.zeroSensorWasPressed = _zeroSensor->getState().isPressed; // Initialize to current state
+        updateCurrentAngle();
         notifyStateChanged();
 
         const long maxSteps = (maxStepsPerRevolution > 0) ? maxStepsPerRevolution : _config.maxStepsPerRevolution;
@@ -314,6 +340,7 @@ namespace devices
         _state.currentBreakpointIndex = -1;
         _state.targetBreakpointIndex = -1;
         _initStartTime = millis();
+        updateCurrentAngle();
         notifyStateChanged();
 
         const long maxSteps = (maxStepsPerRevolution > 0) ? maxStepsPerRevolution : _config.maxStepsPerRevolution;
@@ -403,6 +430,7 @@ namespace devices
             //  _state.targetAngle = -1.0f;
             //  _waitingForMoveStart = false;
             //  _moveHasStarted = true;
+            updateCurrentAngle();
             notifyStateChanged();
         }
 
@@ -424,6 +452,7 @@ namespace devices
         doc["currentBreakpointIndex"] = _state.currentBreakpointIndex;
         doc["targetBreakpointIndex"] = _state.targetBreakpointIndex;
         doc["targetAngle"] = _state.targetAngle;
+        doc["currentAngle"] = _state.currentAngle;
         doc["onError"] = _state.onError;
         doc["breakpointChanged"] = _state.breakpointChanged;
         doc["stepsInLastRevolution"] = _state.stepsInLastRevolution;
@@ -585,6 +614,26 @@ namespace devices
         String message;
         serializeJson(doc, message);
         callback(message);
+    }
+
+    void Wheel::updateCurrentAngle()
+    {
+        if (_state.lastZeroPosition != 0 && _config.stepsPerRevolution > 0)
+        {
+            long currentPosition = _stepper->getState().currentPosition;
+            long stepsFromZero = currentPosition - _state.lastZeroPosition;
+            float angle = (stepsFromZero * 360.0f) / _config.stepsPerRevolution;
+            // Normalize angle to 0-360 range
+            while (angle < 0)
+                angle += 360;
+            while (angle >= 360)
+                angle -= 360;
+            _state.currentAngle = angle;
+        }
+        else
+        {
+            _state.currentAngle = -1.0f;
+        }
     }
 
 } // namespace devices

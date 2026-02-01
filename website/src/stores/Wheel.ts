@@ -6,7 +6,7 @@ export interface IWheelState extends IDeviceState {
   state: "UNKNOWN" | "CALIBRATING" | "IDLE" | "INIT" | "MOVING" | "ERROR";
   lastZeroPosition: number;
   stepsInLastRevolution: number;
-  angle?: number | undefined;
+  currentAngle: number;
   targetAngle?: number;
   speedRpm?: number;
   acceleration?: number;

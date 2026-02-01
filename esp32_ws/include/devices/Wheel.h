@@ -73,6 +73,7 @@ namespace devices
         int currentBreakpointIndex = -1;                 // Current breakpoint index
         int targetBreakpointIndex = -1;                  // Target breakpoint index
         float targetAngle = -1.0f;                       // Target angle for current movement
+        float currentAngle = -1.0f;                       // Current angle of the wheel
         bool onError = false;                            // Error flag
         bool breakpointChanged = false;                  // Flag for breakpoint index change
         bool zeroSensorWasPressed = false;               // Previous zero sensor state for edge detection
@@ -168,6 +169,11 @@ namespace devices
          * @param steps Number of steps measured
          */
         void notifyStepsPerRevolution(long steps);
+
+        /**
+         * @brief Update the current angle based on stepper position
+         */
+        void updateCurrentAngle();
 
         void setErrorState(WheelErrorCode errorCode, const String &errorMessage);
 

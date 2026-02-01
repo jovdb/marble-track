@@ -26,7 +26,7 @@ export function useWheelAnimation(deviceState: () => IWheelState | undefined) {
   let completedMovementKey: string | null = null;
 
   createEffect(() => {
-    const angle = deviceState()?.angle;
+    const angle = deviceState()?.currentAngle;
     if (angle !== undefined && angle !== null) setUiAngle(angle);
   });
 
@@ -72,7 +72,7 @@ export function useWheelAnimation(deviceState: () => IWheelState | undefined) {
       return;
     }
 
-    const startingAngle = state.angle ?? untrack(() => uiAngle()) ?? targetAngle;
+    const startingAngle = state.currentAngle ?? untrack(() => uiAngle()) ?? targetAngle;
 
     const plan = createAnimationPlan(startingAngle, targetAngle, speedRpm, accelerationRpm);
 

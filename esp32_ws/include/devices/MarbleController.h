@@ -46,6 +46,7 @@ namespace devices
         void loopAutoWheel();
         void loopAutoSpiral();
         void blinkError(Led *ledDevice);
+        void onWheelStateChange(void *statePtr);
         Button *_manualButton;
         Buzzer *_buzzer;
         Hv20tAudio *_audio;

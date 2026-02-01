@@ -156,6 +156,9 @@ namespace devices
         _wheel->setConfig(wheelConfig);
         addChild(_wheel);
 
+        // Subscribe to wheel state changes
+        _wheel->onStateChange([this](void *statePtr) { this->onWheelStateChange(statePtr); });
+
         // Get wheel's child devices and configure them
         auto wheelStepper = _wheel->getChildByIdAs<devices::Stepper>("wheel-stepper");
         if (wheelStepper)
@@ -700,6 +703,31 @@ namespace devices
     {
         // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
         _buzzer->tone(320, 50);
+    }
+
+    void MarbleController::onWheelStateChange(void *statePtr)
+    {
+        static devices::WheelStateEnum previousWheelState = devices::WheelStateEnum::UNKNOWN;
+
+        auto *wheelState = static_cast<devices::WheelState*>(statePtr);
+        if (!wheelState)
+        {
+            return;
+        }
+
+        if (wheelState->state == devices::WheelStateEnum::CALIBRATING &&
+            previousWheelState != devices::WheelStateEnum::CALIBRATING)
+        {
+            _audio->play(songs::WHEEL_CALIBRATION_START);
+        }
+
+        if (wheelState->state == devices::WheelStateEnum::ERROR &&
+            previousWheelState != devices::WheelStateEnum::ERROR)
+        {
+            _audio->play(songs::WHEEL_ZERO_NOT_FOUND);
+        }
+
+        previousWheelState = wheelState->state;
     }
 
 } // namespace devices

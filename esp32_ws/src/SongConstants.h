@@ -50,10 +50,10 @@ namespace songs
 
     // WHEEL
     //------
-    // Eikpunt van het reuzenwiel niet gevonden.
-    const int WHEEL_ZERO_NOT_FOUND = 10;
     // Reuzenwiel calibratie wordt gestart, dit kan even duren...
-    const int WHEEL_CALIBRATION_START = 11;
+    const int WHEEL_CALIBRATION_START = 10;
+    // Eikpunt van het reuzenwiel niet gevonden.
+    const int WHEEL_ZERO_NOT_FOUND = 11;
     // Calibratie reuzenwiel succesvol beëindigd...
     const int WHEEL_CALIBRATION_DONE = 12;
     // Eikpunt van het reuzenwiel op onverwachte plaatst, wiel was geblokkeerd of hercalibratie nodig.

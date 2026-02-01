@@ -17,223 +17,43 @@ namespace devices
     MarbleController::MarbleController(const String &id) : Device(id, "marblecontroller")
     {
         _buzzer = new devices::Buzzer("buzzer");
-        auto buzzerConfig = _buzzer->getConfig();
-        buzzerConfig.name = "Buzzer";
-        buzzerConfig.pin = 14;
-        _buzzer->setConfig(buzzerConfig);
         addChild(_buzzer);
 
         _audio = new devices::Hv20tAudio("hv20t");
-        auto audioConfig = _audio->getConfig();
-        audioConfig.name = "Audio";
-        audioConfig.rxPin.pin = 47;
-        audioConfig.rxPin.expanderId = "";
-        audioConfig.txPin.pin = 48;
-        audioConfig.txPin.expanderId = "";
-        audioConfig.defaultVolumePercent = 50;
-        _audio->setConfig(audioConfig);
         addChild(_audio);
 
         _lift = new devices::Lift("lift");
-        auto liftConfig = _lift->getConfig();
-        liftConfig.name = "Lift";
-        liftConfig.minSteps = 0;
-        liftConfig.maxSteps = 1500;
-        liftConfig.downFactor = 1.015;
-        _lift->setConfig(liftConfig);
         addChild(_lift);
 
-        // Configure lift's child device pins
-        auto liftStepper = _lift->getChildByIdAs<devices::Stepper>("lift-stepper");
-        if (liftStepper)
-        {
-            auto liftStepperConfig = liftStepper->getConfig();
-            liftStepperConfig.name = "Lift Stepper";
-            liftStepperConfig.stepperType = "DRIVER";
-            liftStepperConfig.maxSpeed = 400;
-            liftStepperConfig.maxAcceleration = 100;
-            liftStepperConfig.defaultSpeed = 150;
-            liftStepperConfig.defaultAcceleration = 50;
-            liftStepperConfig.stepPin.pin = 1;
-            liftStepperConfig.stepPin.expanderId = "";
-            liftStepperConfig.dirPin.pin = 2;
-            liftStepperConfig.dirPin.expanderId = "";
-            liftStepperConfig.enablePin.pin = 42;
-            liftStepperConfig.enablePin.expanderId = "";
-            liftStepperConfig.invertEnable = true;
-            liftStepper->setConfig(liftStepperConfig);
-        }
-
-        auto liftLimitSwitch = _lift->getChildByIdAs<devices::Button>("lift-limit");
-        if (liftLimitSwitch)
-        {
-            auto liftLimitSwitchConfig = liftLimitSwitch->getConfig();
-            liftLimitSwitchConfig.pinConfig.pin = -1;
-            liftLimitSwitchConfig.pinConfig.expanderId = "";
-            liftLimitSwitchConfig.pinMode = PinModeOption::PullUp;
-            liftLimitSwitch->setConfig(liftLimitSwitchConfig);
-        }
-
-        auto liftBallSensor = _lift->getChildByIdAs<devices::Button>("lift-ball-sensor");
-        if (liftBallSensor)
-        {
-            auto liftBallSensorConfig = liftBallSensor->getConfig();
-            liftBallSensorConfig.pinConfig.pin = -1;
-            liftBallSensorConfig.pinConfig.expanderId = "";
-            liftBallSensorConfig.pinMode = PinModeOption::PullUp;
-            liftBallSensor->setConfig(liftBallSensorConfig);
-        }
-
-        auto liftLoader = _lift->getChildByIdAs<devices::Servo>("lift-loader");
-        if (liftLoader)
-        {
-            auto liftLoaderConfig = liftLoader->getConfig();
-            liftLoaderConfig.pin = 39;
-            liftLoaderConfig.mcpwmChannel = 0;
-            liftLoaderConfig.frequency = 50;
-            liftLoaderConfig.resolutionBits = 10;
-            liftLoaderConfig.minDutyCycle = 9.5f;
-            liftLoaderConfig.maxDutyCycle = 5.5f;
-            liftLoaderConfig.defaultDurationInMs = 200;
-            liftLoader->setConfig(liftLoaderConfig);
-        }
-
-        auto liftUnloader = _lift->getChildByIdAs<devices::Servo>("lift-unloader");
-        if (liftUnloader)
-        {
-            auto liftUnloaderConfig = liftUnloader->getConfig();
-            liftUnloaderConfig.pin = 38;
-            liftUnloaderConfig.mcpwmChannel = 1;
-            liftUnloaderConfig.frequency = 50;
-            liftUnloaderConfig.resolutionBits = 10;
-            liftUnloaderConfig.minDutyCycle = 12.2f;
-            liftUnloaderConfig.maxDutyCycle = 4.0f;
-            liftUnloaderConfig.defaultDurationInMs = 1200;
-            liftUnloader->setConfig(liftUnloaderConfig);
-        }
-
         _liftLed = new devices::Led("lift-led");
-        auto liftLedConfig = _liftLed->getConfig();
-        liftLedConfig.name = "Lift Led";
-        liftLedConfig.pinConfig.pin = 0;
-        liftLedConfig.pinConfig.expanderId = "ex";
-        liftLedConfig.initialState = "OFF";
-        _liftLed->setConfig(liftLedConfig);
         addChild(_liftLed);
 
         _liftBtn = new devices::Button("lift-btn");
-        auto liftButtonConfig = _liftBtn->getConfig();
-        liftButtonConfig.name = "Lift Button";
-        liftButtonConfig.pinConfig.pin = -1;
-        liftButtonConfig.pinConfig.expanderId = "";
-        liftButtonConfig.pinMode = PinModeOption::PullUp;
-        liftButtonConfig.debounceTimeInMs = 50;
-        liftButtonConfig.buttonType = ButtonType::NormalOpen;
-        _liftBtn->setConfig(liftButtonConfig);
         addChild(_liftBtn);
 
         _manualButton = new devices::Button("manual-btn");
-        auto manualButtonConfig = _manualButton->getConfig();
-        manualButtonConfig.name = "Manual Mode Button";
-        manualButtonConfig.pinConfig.pin = -1;
-        manualButtonConfig.pinConfig.expanderId = "";
-        manualButtonConfig.pinMode = PinModeOption::PullUp;
-        manualButtonConfig.debounceTimeInMs = 50;
-        manualButtonConfig.buttonType = ButtonType::NormalOpen;
-        _manualButton->setConfig(manualButtonConfig);
         addChild(_manualButton);
 
         // Create wheel with proper config
         _wheel = new devices::Wheel("wheel");
-
-        auto wheelConfig = _wheel->getConfig();
-        wheelConfig.name = "Wheel";
-        wheelConfig.stepsPerRevolution = 6752;
-        wheelConfig.maxStepsPerRevolution = 6800;
-        wheelConfig.zeroPointDegree = 180;
-        wheelConfig.direction = 1;
-        wheelConfig.breakPoints = {82.0f, 160.0f, 285.0f, 317.0f};
-        _wheel->setConfig(wheelConfig);
         addChild(_wheel);
 
         // Subscribe to wheel state changes
         _wheel->onStateChange([this](void *statePtr)
                               { this->onWheelStateChange(statePtr); });
 
-        // Get wheel's child devices and configure them
-        auto wheelStepper = _wheel->getChildByIdAs<devices::Stepper>("wheel-stepper");
-        if (wheelStepper)
-        {
-            auto wheelStepperConfig = wheelStepper->getConfig();
-            wheelStepperConfig.name = "wheel Stepper";
-            wheelStepperConfig.stepperType = "DRIVER";
-            wheelStepperConfig.maxSpeed = 3000;
-            wheelStepperConfig.maxAcceleration = 3000;
-            wheelStepperConfig.defaultSpeed = 1000;
-            wheelStepperConfig.defaultAcceleration = 200;
-            wheelStepperConfig.stepPin.pin = 4;
-            wheelStepperConfig.stepPin.expanderId = "";
-            wheelStepperConfig.dirPin.pin = 5;
-            wheelStepperConfig.dirPin.expanderId = "";
-            wheelStepperConfig.enablePin.pin = 6;
-            wheelStepperConfig.enablePin.expanderId = "";
-            wheelStepperConfig.invertEnable = true;
-            wheelStepper->setConfig(wheelStepperConfig);
-        }
-
-        auto wheelSensor = _wheel->getChildByIdAs<devices::Button>("wheel-zero-sensor");
-        if (wheelSensor)
-        {
-            auto wheelSensorConfig = wheelSensor->getConfig();
-            wheelSensorConfig.name = "Wheel Zero Sensor";
-            wheelSensorConfig.pinConfig.pin = -1;
-            wheelSensorConfig.pinConfig.expanderId = "";
-            wheelSensorConfig.pinMode = PinModeOption::PullUp;
-            wheelSensorConfig.debounceTimeInMs = 50;
-            wheelSensorConfig.buttonType = ButtonType::NormalOpen;
-            wheelSensor->setConfig(wheelSensorConfig);
-        }
-
         // Add wheel button LED
         _wheelLed = new devices::Led("wheel-led");
-        auto wheelBtnLedConfig = _wheelLed->getConfig();
-        wheelBtnLedConfig.name = "";
-        wheelBtnLedConfig.pinConfig.pin = 1;
-        wheelBtnLedConfig.pinConfig.expanderId = "ex";
-        wheelBtnLedConfig.initialState = "OFF";
-        _wheelLed->setConfig(wheelBtnLedConfig);
         addChild(_wheelLed);
 
         // Add wheel next button
         _wheelBtn = new devices::Button("wheel-btn");
-        auto wheelNextBtnConfig = _wheelBtn->getConfig();
-        wheelNextBtnConfig.name = "";
-        wheelNextBtnConfig.pinConfig.pin = -1;
-        wheelNextBtnConfig.pinConfig.expanderId = "";
-        wheelNextBtnConfig.pinMode = PinModeOption::PullUp;
-        wheelNextBtnConfig.debounceTimeInMs = 50;
-        wheelNextBtnConfig.buttonType = ButtonType::NormalOpen;
-        _wheelBtn->setConfig(wheelNextBtnConfig);
         addChild(_wheelBtn);
 
         _spiralLed = new devices::Led("spiral-led");
-        auto spiralLedConfig = _spiralLed->getConfig();
-        spiralLedConfig.name = "Spiral Led";
-        spiralLedConfig.pinConfig.pin = -1;
-        spiralLedConfig.pinConfig.expanderId = "";
-        spiralLedConfig.initialState = "OFF";
-        _spiralLed->setConfig(spiralLedConfig);
         addChild(_spiralLed);
 
         _spiralBtn = new devices::Button("spiral-btn");
-        auto spiralButtonConfig = _spiralBtn->getConfig();
-        spiralButtonConfig.name = "Spiral Button";
-        spiralButtonConfig.pinConfig.pin = -1;
-        spiralButtonConfig.pinConfig.expanderId = "";
-        spiralButtonConfig.pinMode = PinModeOption::PullUp;
-        spiralButtonConfig.debounceTimeInMs = 50;
-        spiralButtonConfig.buttonType = ButtonType::NormalOpen;
-        _spiralBtn->setConfig(spiralButtonConfig);
         addChild(_spiralBtn);
     }
 

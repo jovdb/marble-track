@@ -274,7 +274,18 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
           onClick={(e) => {
             e.preventDefault(); // prevent post
             const currentBreakpoints = breakpoints();
-            setBreakpoints([...currentBreakpoints, toNumber(angle())]);
+            const newBreakpoint = toNumber(angle());
+            // Find the insertion index to maintain increasing order
+            const insertIndex = currentBreakpoints.findIndex(bp => bp >= newBreakpoint);
+            const newBreakpoints = [...currentBreakpoints];
+            if (insertIndex === -1) {
+              // Append if larger than all existing
+              newBreakpoints.push(newBreakpoint);
+            } else {
+              // Insert at the found index
+              newBreakpoints.splice(insertIndex, 0, newBreakpoint);
+            }
+            setBreakpoints(newBreakpoints);
           }}
         >
           + Add Breakpoint

@@ -132,25 +132,35 @@ namespace devices
         const bool isBusy = isPlaying();
         if (isBusy)
         {
-            if (mode == Hv20tPlayMode::SkipIfPlaying || mode == Hv20tPlayMode::QueueIfPlaying)
+            if (mode == Hv20tPlayMode::StopThenPlay)
             {
-                return false;
+                MLOG_INFO("%s: Stopping current song, start song %i", toString().c_str(), songIndex);
+                stop();
+            }
+            if (mode == Hv20tPlayMode::SkipIfPlaying)
+            {
+                MLOG_INFO("%s: Skipping play song %i - already playing", toString().c_str(), songIndex);
+                return true;
             }
 
-            stop();
+            if (mode == Hv20tPlayMode::QueueIfPlaying)
+            {
+                MLOG_INFO("%s: TODO Queuing play song %i", toString().c_str(), songIndex);
+                // TODO: Add to a queue
+                // return true;
+            }
         }
 
         if (songIndex >= 0)
         {
             if (songIndex > 65535)
                 songIndex = 65535;
+            MLOG_DEBUG("%s: Playing song %i", toString().c_str(), songIndex);
             _state.lastSongIndex = songIndex;
             notifyStateChanged();
             _player.playSpecified(static_cast<uint16_t>(songIndex + 1));
+            return true;
         }
-
-        _player.play();
-        return true;
     }
 
     bool Hv20tAudio::stop()

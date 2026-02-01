@@ -27,6 +27,7 @@ namespace songs
     // Ik ben al 5 minuten niet gebruikt!
     // Vergeet mij niet uit te schakelen
     const int IDLE = 3;
+    const int STARTUP_SOUND = 7;
 
     const int BUTTON_CLICK = 4;
     const int BUTTON_DOWN = 5;
@@ -50,16 +51,19 @@ namespace songs
 
     // WHEEL
     //------
-    // Reuzenwiel calibratie wordt gestart, dit kan even duren...
-    const int WHEEL_CALIBRATION_START = 10;
     // Eikpunt van het reuzenwiel niet gevonden.
-    const int WHEEL_ZERO_NOT_FOUND = 11;
+    const int WHEEL_ZERO_NOT_FOUND = 10;
+    // Reuzenwiel calibratie wordt gestart, dit kan even duren...
+    const int WHEEL_CALIBRATION_START = 11;
     // Calibratie reuzenwiel succesvol beëindigd...
     const int WHEEL_CALIBRATION_DONE = 12;
-    // Eikpunt van het reuzenwiel op onverwachte plaatst, wiel was geblokkeerd of hercalibratie nodig.
-    const int WHEEL_ZERO_UNEXPECTED = 13;
-    // Initializatie reuzenwiel mislukt
-    const int WHEEL_INIT_FAILED = 14;
+    // Reuzenwiel calibratie gefaald. Eikpunt van het reuzenwiel was niet gevonden. Mogelijke oorzaken: 'Max steps per revolutions' configuratie te laag, reuzenwiel slipt door of zero sensor defect.
+    const int CALIBRATION_FIRST_ZERO_NOT_FOUND = 13;
+    // Reuzenwiel calibratie gefaald. Tweede eikpunt van het reuzenwiel was niet gevonden tijdens calibratie. Mogelijke oorzaken: 'Max steps per revolutions' configuratie te laag of reuzenwiel slipt door.
+    const int CALIBRATION_SECOND_ZERO_NOT_FOUND = 14;
+    // Reuzenwiel eikpunt op onverwachte plaats, mogelijke slipt reuzenwiel slipt door of hercalibratie nodig.
+    const int WHEEL_ZERO_UNEXPECTED = 15;
+    
 
 }
 

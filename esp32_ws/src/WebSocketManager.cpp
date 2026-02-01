@@ -368,10 +368,9 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
             {
                 deviceManager->teardown();
 
-                // Manually reconstruct config with proper types to preserve arrays
-                DynamicJsonDocument configDoc(2048);
-
-                serializable->jsonToConfig(configDoc);
+                // Apply the incoming config to the device
+                JsonObject configObj = doc["config"];
+                serializable->jsonToConfig(configObj);
 
                 deviceManager->saveDevicesToJsonFile();
 

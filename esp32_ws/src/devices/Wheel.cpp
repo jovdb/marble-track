@@ -8,6 +8,7 @@
 #include "devices/Button.h"
 #include "Logging.h"
 #include <ArduinoJson.h>
+#include <cstdlib>
 
 namespace devices
 {
@@ -161,6 +162,18 @@ namespace devices
                         MLOG_ERROR("%s: Steps per revolution mismatch - measured: %ld, configured: %ld (%.2f%% difference)",
                                    toString().c_str(), _state.stepsInLastRevolution, _config.stepsPerRevolution, percentDiff);
                     }
+                }
+            }
+            else
+            {
+                const long currentPosition = _stepper->getState().currentPosition;
+                const long stepsSinceZero = labs(currentPosition - _state.lastZeroPosition);
+                if (_config.maxStepsPerRevolution > 0 && stepsSinceZero >= _config.maxStepsPerRevolution)
+                {
+                    setErrorState(WheelErrorCode::ZeroNotFound,
+                                  "Zero sensor not triggered within maxStepsPerRevolution");
+                    notifyStateChanged();
+                    break;
                 }
             }
             _state.zeroSensorWasPressed = zeroPressed;

@@ -356,7 +356,7 @@ namespace devices
             break;
         }
         case devices::WheelStateEnum::MOVING:
-            _wheelLed->set(true);
+            _wheelLed->blink(480, 320, 160); // LED blinks when moving
             break;
 
         default:
@@ -382,8 +382,8 @@ namespace devices
             if (_wheelIdleStartTime == 0)
             {
                 _wheelIdleStartTime = millis();
-                _randomWheelDelayMs = 3000 + random(100, 20000);
-                MLOG_INFO("%s: Next wheel trigger in %1.d ms", toString().c_str(), _randomWheelDelayMs / 100);
+                _randomWheelDelayMs = 3000 + random(100, 30000);
+                MLOG_INFO("%s: Next wheel trigger in %.ds", toString().c_str(), _randomWheelDelayMs / 1000);
             }
             else if (millis() >= _wheelIdleStartTime + _randomWheelDelayMs)
             {
@@ -396,6 +396,13 @@ namespace devices
         default:
             MLOG_WARN("%s: Unknown wheel state", toString().c_str());
             break;
+        }
+
+        // Control wheel movement based on button state
+        auto wheelButtonState = _wheelBtn->getState();
+        if (wheelButtonState.isPressed && wheelButtonState.isPressedChanged)
+        {
+            _audio->play(songs::FART);
         }
     }
 

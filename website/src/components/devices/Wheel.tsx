@@ -45,7 +45,7 @@ export function Wheel(props: { id: string; isPopup?: boolean; onClose?: () => vo
       icon={deviceType ? getDeviceIcon(deviceType) : null}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}
-      stateComponent={() => null}
+      // stateComponent={() => null}
     >
       <div style={{ "max-width": "300px", margin: "0 auto" }}>
         <WheelGraphic

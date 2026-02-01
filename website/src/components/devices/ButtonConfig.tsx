@@ -64,7 +64,14 @@ export default function ButtonConfig(props: ButtonConfigProps) {
   const [buttonType, setButtonType] = createSignal<ButtonType>(
     normalizeButtonType(device?.config?.buttonType)
   );
-  const [debounce, setDebounce] = createSignal(normalizeDebounce(device?.config?.debounceTimeInMs));
+  const [debounce, setDebounce] = createSignal(
+    String(normalizeDebounce(device?.config?.debounceTimeInMs))
+  );
+
+  const toNumber = (value: string, fallback = 0) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : fallback;
+  };
 
   createEffect(() => {
     const config = device?.config;
@@ -78,7 +85,7 @@ export default function ButtonConfig(props: ButtonConfigProps) {
     }
     setPinMode(normalizePinMode(config.pinMode));
     setButtonType(normalizeButtonType(config.buttonType));
-    setDebounce(normalizeDebounce(config.debounceTimeInMs));
+    setDebounce(String(normalizeDebounce(config.debounceTimeInMs)));
   });
 
   const handleSave = () => {
@@ -86,7 +93,7 @@ export default function ButtonConfig(props: ButtonConfigProps) {
     setDeviceConfig({
       name: name(),
       pin: pin(),
-      debounceTimeInMs: debounce(),
+      debounceTimeInMs: toNumber(debounce()),
       pinMode: selectedMode,
       buttonType: buttonType(),
     });
@@ -148,7 +155,7 @@ export default function ButtonConfig(props: ButtonConfigProps) {
               type="number"
               value={debounce()}
               min={0}
-              onInput={(event) => setDebounce(Number(event.currentTarget.value))}
+              onInput={(event) => setDebounce(event.currentTarget.value)}
               style={{ "margin-left": "0.5rem", width: "5rem" }}
             />
           </DeviceConfigItem>

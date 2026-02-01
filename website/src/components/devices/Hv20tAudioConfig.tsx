@@ -22,8 +22,13 @@ export default function Hv20tAudioConfig(props: Hv20tAudioConfigProps) {
     deserializePinConfig(device?.config?.busyPin ?? -1)
   );
   const [defaultVolumePercent, setDefaultVolumePercent] = createSignal(
-    device?.config?.defaultVolumePercent ?? 50
+    String(device?.config?.defaultVolumePercent ?? 50)
   );
+
+  const toNumber = (value: string, fallback = 0) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : fallback;
+  };
 
   createEffect(() => {
     const config = device?.config;
@@ -44,7 +49,7 @@ export default function Hv20tAudioConfig(props: Hv20tAudioConfigProps) {
       setBusyPin(deserializePinConfig(config.busyPin));
     }
     if (typeof config.defaultVolumePercent === "number") {
-      setDefaultVolumePercent(config.defaultVolumePercent);
+      setDefaultVolumePercent(String(config.defaultVolumePercent));
     }
   });
 
@@ -57,7 +62,7 @@ export default function Hv20tAudioConfig(props: Hv20tAudioConfigProps) {
           rxPin: rxPin(),
           txPin: txPin(),
           busyPin: busyPin(),
-          defaultVolumePercent: Number(defaultVolumePercent()),
+          defaultVolumePercent: toNumber(defaultVolumePercent(), 50),
         })
       }
       onClose={props.onClose}
@@ -94,7 +99,7 @@ export default function Hv20tAudioConfig(props: Hv20tAudioConfigProps) {
               min="0"
               max="100"
               value={defaultVolumePercent()}
-              onInput={(event) => setDefaultVolumePercent(Number(event.currentTarget.value))}
+              onInput={(event) => setDefaultVolumePercent(event.currentTarget.value)}
             />
           </DeviceConfigItem>
         </DeviceConfigRow>

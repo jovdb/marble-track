@@ -13,11 +13,20 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
   const config = () => device()?.config;
 
   const [deviceName, setDeviceName] = createSignal("");
-  const [stepsPerRevolution, setStepsPerRevolution] = createSignal(0);
-  const [maxStepsPerRevolution, setMaxStepsPerRevolution] = createSignal(10000);
-  const [angle, setAngle] = createSignal(0);
+  const [isNameDirty, setIsNameDirty] = createSignal(false);
+  const [stepsPerRevolution, setStepsPerRevolution] = createSignal("");
+  const [isStepsDirty, setIsStepsDirty] = createSignal(false);
+  const [maxStepsPerRevolution, setMaxStepsPerRevolution] = createSignal("");
+  const [isMaxStepsDirty, setIsMaxStepsDirty] = createSignal(false);
+  const [angle, setAngle] = createSignal("");
   const [breakpoints, setBreakpoints] = createSignal<number[]>([]);
-  const [zeroPointDegree, setZeroPointDegree] = createSignal(0);
+  const [zeroPointDegree, setZeroPointDegree] = createSignal("");
+  const [isZeroPointDirty, setIsZeroPointDirty] = createSignal(false);
+
+  const toNumber = (value: string, fallback = 0) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : fallback;
+  };
 
   const [, { subscribe }] = useWebSocket2();
   const [, wheelActions] = useWheel(device()?.id);
@@ -28,12 +37,12 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
     // Subscribe to WebSocket messages for steps-per-revolution updates
     const unsubscribe = subscribe((message: any) => {
       if (message.type === "steps-per-revolution" && message.deviceId === device()?.id) {
-        const oldValue = stepsPerRevolution();
+        const oldValue = toNumber(stepsPerRevolution());
         const newValue = message.steps;
-        setStepsPerRevolution(newValue);
+        setStepsPerRevolution(String(newValue));
         // Set max steps per revolution with 5% extra of the received value
         const maxValue = Math.round(newValue * 1.05);
-        setMaxStepsPerRevolution(maxValue);
+        setMaxStepsPerRevolution(String(maxValue));
         console.log(`Steps per revolution updated from ${oldValue} to ${newValue}, max set to ${maxValue}`);
       }
     });
@@ -49,10 +58,10 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
       const updatedConfig = {
         ...currentConfig,
         name: deviceName() || currentConfig.name || device()?.id,
-        stepsPerRevolution: stepsPerRevolution(),
-        maxStepsPerRevolution: maxStepsPerRevolution(),
+        stepsPerRevolution: toNumber(stepsPerRevolution()),
+        maxStepsPerRevolution: toNumber(maxStepsPerRevolution()),
         breakPoints: breakpoints(),
-        zeroPointDegree: zeroPointDegree(),
+        zeroPointDegree: toNumber(zeroPointDegree()),
       };
       actions.setDeviceConfig(updatedConfig);
     }
@@ -62,20 +71,20 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
   const currentConfig = createMemo(() => config());
   createMemo(() => {
     const cfg = currentConfig();
-    if (cfg && typeof cfg.name === "string" && !deviceName()) {
+    if (cfg && typeof cfg.name === "string" && !isNameDirty()) {
       setDeviceName(cfg.name);
     }
-    if (cfg && typeof cfg.stepsPerRevolution === "number" && stepsPerRevolution() === 0) {
-      setStepsPerRevolution(cfg.stepsPerRevolution);
+    if (cfg && typeof cfg.stepsPerRevolution === "number" && !isStepsDirty()) {
+      setStepsPerRevolution(String(cfg.stepsPerRevolution));
     }
-    if (cfg && typeof cfg.maxStepsPerRevolution === "number" && maxStepsPerRevolution() === 10000) {
-      setMaxStepsPerRevolution(cfg.maxStepsPerRevolution);
+    if (cfg && typeof cfg.maxStepsPerRevolution === "number" && !isMaxStepsDirty()) {
+      setMaxStepsPerRevolution(String(cfg.maxStepsPerRevolution));
     }
     if (cfg && cfg.breakPoints && breakpoints().length === 0) {
       setBreakpoints([...cfg.breakPoints]);
     }
-    if (cfg && typeof cfg.zeroPointDegree === "number") {
-      setZeroPointDegree(cfg.zeroPointDegree);
+    if (cfg && typeof cfg.zeroPointDegree === "number" && !isZeroPointDirty()) {
+      setZeroPointDegree(String(cfg.zeroPointDegree));
     }
   });
 
@@ -87,7 +96,10 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
             <input
               type="text"
               value={deviceName()}
-              onInput={(e) => setDeviceName(e.currentTarget.value)}
+              onInput={(e) => {
+                setIsNameDirty(true);
+                setDeviceName(e.currentTarget.value);
+              }}
               style={{ width: "100%", padding: "0.5em", "font-size": "1em" }}
             />
           </DeviceConfigItem>
@@ -97,7 +109,10 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
             <input
               type="number"
               value={stepsPerRevolution()}
-              onInput={(e) => setStepsPerRevolution(parseInt(e.currentTarget.value) || 0)}
+              onInput={(e) => {
+                setIsStepsDirty(true);
+                setStepsPerRevolution(e.currentTarget.value);
+              }}
               style={{ flex: "1", padding: "0.5em", "font-size": "1em" }}
               min="0"
             />
@@ -110,7 +125,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                   wheelActions.stop();
                   console.log("Stopping calibration");
                 } else {
-                  wheelActions.calibrate(maxStepsPerRevolution());
+                  wheelActions.calibrate(toNumber(maxStepsPerRevolution()));
                 }
               }}
               style={{ "flex-shrink": "0" }}
@@ -125,7 +140,10 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
               title="Used for calibration to known when to stop searching for zero switch."
               type="number"
               value={maxStepsPerRevolution()}
-              onInput={(e) => setMaxStepsPerRevolution(parseInt(e.currentTarget.value) || 10000)}
+              onInput={(e) => {
+                setIsMaxStepsDirty(true);
+                setMaxStepsPerRevolution(e.currentTarget.value);
+              }}
               style={{ width: "100%", padding: "0.5em", "font-size": "1em" }}
               min="1"
             />
@@ -134,9 +152,9 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
         <DeviceConfigRow>
           <DeviceConfigItem>
             <WheelGraphic
-              angle={angle()}
+              angle={toNumber(angle())}
               breakpoints={breakpoints()}
-              zeroPointDegree={zeroPointDegree()}
+              zeroPointDegree={toNumber(zeroPointDegree())}
               isCalibrated={!!device()?.state?.lastZeroPosition}
               isSearchingZero={
                 device()?.state?.state === "CALIBRATING" && !device()?.state?.lastZeroPosition
@@ -149,7 +167,10 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
             <input
               type="number"
               value={zeroPointDegree()}
-              onInput={(e) => setZeroPointDegree(parseFloat(e.currentTarget.value) || 0)}
+              onInput={(e) => {
+                setIsZeroPointDirty(true);
+                setZeroPointDegree(e.currentTarget.value);
+              }}
               style={{ width: "100%", padding: "0.5em", "font-size": "1em" }}
               min="0"
               max="359.9"
@@ -163,9 +184,14 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
               type="number"
               value={angle()}
               onInput={(e) => {
-                const value = parseFloat(e.currentTarget.value);
-                if (!isNaN(value) && value >= 0 && value <= 359.9) {
-                  setAngle(Math.round(value * 10) / 10); // Round to 1 decimal place
+                const value = e.currentTarget.value;
+                if (value === "") {
+                  setAngle("");
+                  return;
+                }
+                const num = parseFloat(value);
+                if (!isNaN(num) && num >= 0 && num <= 359.9) {
+                  setAngle(String(Math.round(num * 10) / 10));
                 }
               }}
               onKeyPress={(e) => {
@@ -175,8 +201,8 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                   const isMoving = device()?.state?.state === "MOVING";
                   const isDisabled =
                     !isMoving &&
-                    (!stepsPerRevolution() ||
-                    stepsPerRevolution() <= 0 ||
+                    (!toNumber(stepsPerRevolution()) ||
+                    toNumber(stepsPerRevolution()) <= 0 ||
                     device()?.state?.lastZeroPosition === 0);
                   
                   if (!isDisabled) {
@@ -184,7 +210,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                       wheelActions.stop();
                       console.log("Stopping wheel");
                     } else {
-                      const targetAngle = angle();
+                      const targetAngle = toNumber(angle());
                       wheelActions.moveToAngle(targetAngle);
                       console.log(`Moving to angle ${targetAngle}°`);
                     }
@@ -205,7 +231,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                   wheelActions.stop();
                   console.log("Stopping init");
                 } else {
-                  wheelActions.init(maxStepsPerRevolution());
+                  wheelActions.init(toNumber(maxStepsPerRevolution()));
                 }
               }}
               style={{ "flex-shrink": "0" }}
@@ -222,7 +248,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                   wheelActions.stop();
                   console.log("Stopping wheel");
                 } else {
-                  const targetAngle = angle();
+                  const targetAngle = toNumber(angle());
                   wheelActions.moveToAngle(targetAngle);
                   console.log(`Moving to angle ${targetAngle}°`);
                 }
@@ -230,8 +256,8 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
               style={{ "flex-shrink": "0" }}
               disabled={
                 device()?.state?.state !== "MOVING" &&
-                (!stepsPerRevolution() ||
-                stepsPerRevolution() <= 0 ||
+                (!toNumber(stepsPerRevolution()) ||
+                toNumber(stepsPerRevolution()) <= 0 ||
                 device()?.state?.lastZeroPosition === 0)
               }
             >
@@ -248,7 +274,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
           onClick={(e) => {
             e.preventDefault(); // prevent post
             const currentBreakpoints = breakpoints();
-            setBreakpoints([...currentBreakpoints, angle()]);
+            setBreakpoints([...currentBreakpoints, toNumber(angle())]);
           }}
         >
           + Add Breakpoint

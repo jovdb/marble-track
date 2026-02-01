@@ -40,12 +40,18 @@ export function useWheel(deviceId: string) {
           : undefined,
     });
 
-  const init = () =>
+  const init = (maxStepsPerRevolution?: number) =>
     sendMessage({
       type: "device-fn",
       deviceId,
       deviceType,
       fn: "init",
+      args:
+        maxStepsPerRevolution !== undefined
+          ? {
+              maxStepsPerRevolution,
+            }
+          : undefined,
     });
 
   const nextBreakpoint = () =>

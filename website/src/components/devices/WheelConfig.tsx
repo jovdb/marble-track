@@ -182,7 +182,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                   wheelActions.stop();
                   console.log("Stopping init");
                 } else {
-                  wheelActions.init();
+                  wheelActions.init(maxStepsPerRevolution());
                 }
               }}
               style={{ "flex-shrink": "0" }}

@@ -70,6 +70,8 @@ namespace devices
         Device::teardown();
 
         _state.state = WheelStateEnum::UNKNOWN;
+        _state.errorCode = WheelErrorCode::None;
+        _state.errorMessage = "";
         _state.lastZeroPosition = 0;
         _state.stepsInLastRevolution = 0;
         _state.currentBreakpointIndex = -1;
@@ -195,8 +197,7 @@ namespace devices
             else if ((millis() - _initStartTime > 300) && !_stepper->getState().isMoving)
             {
                 // Movement completed without finding zero - error
-                MLOG_ERROR("%s: Init: Zero sensor not found!", toString().c_str());
-                _state.state = WheelStateEnum::ERROR;
+                setErrorState(WheelErrorCode::CalibrationZeroNotFound, "Init: Zero sensor not found!");
             }
             _state.zeroSensorWasPressed = zeroPressed;
             notifyStateChanged();
@@ -242,13 +243,12 @@ namespace devices
                 // Movement completed without finding zero - error
                 if (_state.lastZeroPosition == 0)
                 {
-                    MLOG_ERROR("%s: Calibration: No zero sensor not found!", toString().c_str());
+                    setErrorState(WheelErrorCode::CalibrationZeroNotFound, "Calibration: No zero sensor not found!");
                 }
                 else
                 {
-                    MLOG_ERROR("%s: Calibration: Second zero sensor trigger not detected!", toString().c_str());
+                    setErrorState(WheelErrorCode::CalibrationSecondZeroNotFound, "Calibration: Second zero sensor trigger not detected!");
                 }
-                _state.state = WheelStateEnum::ERROR;
                 notifyStateChanged();
             }
             break;
@@ -370,6 +370,8 @@ namespace devices
     void Wheel::addStateToJson(JsonDocument &doc)
     {
         doc["state"] = stateToString(_state.state);
+        doc["errorCode"] = static_cast<int>(_state.errorCode);
+        doc["errorMessage"] = _state.errorMessage;
         doc["lastZeroPosition"] = _state.lastZeroPosition;
         doc["currentBreakpointIndex"] = _state.currentBreakpointIndex;
         doc["targetBreakpointIndex"] = _state.targetBreakpointIndex;
@@ -473,6 +475,15 @@ namespace devices
         default:
             return "UNKNOWN";
         }
+    }
+
+    void Wheel::setErrorState(WheelErrorCode errorCode, const String &errorMessage)
+    {
+        _state.state = WheelStateEnum::ERROR;
+        _state.onError = true;
+        _state.errorCode = errorCode;
+        _state.errorMessage = errorMessage;
+        MLOG_ERROR("%s: %s", toString().c_str(), errorMessage.c_str());
     }
 
     void Wheel::notifyStepsPerRevolution(long steps)

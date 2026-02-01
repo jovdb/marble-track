@@ -540,7 +540,20 @@ namespace devices
         if (previousWheelState != devices::WheelStateEnum::CALIBRATING &&
             wheelState->state == devices::WheelStateEnum::CALIBRATING)
         {
+            _audio->removeFromQueue(songs::WHEEL_CALIBRATION_START);
+            _audio->removeFromQueue(songs::WHEEL_CALIBRATION_END);
             _audio->play(songs::WHEEL_CALIBRATION_START, devices::Hv20tPlayMode::QueueIfPlaying);
+        }
+
+        // ERROR -> *
+        if (previousWheelState == devices::WheelStateEnum::ERROR &&
+            wheelState->state != devices::WheelStateEnum::ERROR)
+        {
+            // Don't play error that are not active anymore
+            _audio->removeFromQueue(songs::WHEEL_ZERO_NOT_FOUND);
+            _audio->removeFromQueue(songs::CALIBRATION_FIRST_ZERO_NOT_FOUND);
+            _audio->removeFromQueue(songs::CALIBRATION_SECOND_ZERO_NOT_FOUND);
+            _audio->removeFromQueue(songs::UNEXPECTED_ZERO_TRIGGER);
         }
 
         // * -> ERROR
@@ -560,15 +573,22 @@ namespace devices
             {
                 _audio->play(songs::WHEEL_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
             }
+            else if (wheelState->errorCode == devices::WheelErrorCode::UnexpectedZeroTrigger)
+            {
+                _audio->play(songs::UNEXPECTED_ZERO_TRIGGER, devices::Hv20tPlayMode::QueueIfPlaying);
+            }
+            else
+            {
+                MLOG_ERROR("%s: Unknown Wheel errorCode %d, cannot play audio", toString().c_str(), wheelState->errorCode);
+            }
         }
 
         // CALIBRATING -> IDLE
         if (previousWheelState == devices::WheelStateEnum::CALIBRATING &&
             wheelState->state == devices::WheelStateEnum::IDLE)
         {
-            _audio->play(songs::WHEEL_CALIBRATION_DONE, devices::Hv20tPlayMode::QueueIfPlaying);
+            _audio->play(songs::WHEEL_CALIBRATION_END, devices::Hv20tPlayMode::QueueIfPlaying);
         }
-
         previousWheelState = wheelState->state;
     }
 

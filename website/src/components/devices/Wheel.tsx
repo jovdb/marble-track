@@ -5,7 +5,7 @@ import "./Wheel.module.css";
 
 import { WheelConfig } from "./WheelConfig";
 import { WheelGraphic } from "./WheelGraphic";
-import { IWheelState, useWheel } from "../../stores/Wheel";
+import { useWheel } from "../../stores/Wheel";
 import { useWheelAnimation } from "../../hooks/useWheelAnimation";
 import { getDeviceIcon } from "../icons/Icons";
 
@@ -35,25 +35,6 @@ export function Wheel(props: { id: string; isPopup?: boolean; onClose?: () => vo
   // Get breakpoints from device config
   const breakpoints = () => device()?.config?.breakPoints || [];
   const zeroPointDegree = () => device()?.config?.zeroPointDegree || 0;
-
-  function getStateString(state: IWheelState["state"] | undefined) {
-    switch (state) {
-      case "IDLE":
-        return "Idle";
-      case "CALIBRATING":
-        return "Calibrating...";
-      case "UNKNOWN":
-        return "Unknown";
-      case "INIT":
-        return "Initializing...";
-      case "MOVING":
-        return "Moving...";
-      case undefined:
-        return "";
-      default:
-        return "?";
-    }
-  }
 
   return (
     <Device
@@ -85,7 +66,12 @@ export function Wheel(props: { id: string; isPopup?: boolean; onClose?: () => vo
             {state()?.state === "INIT" && "Initializing..."}
             {state()?.state === "IDLE" && "Idle"}
             {state()?.state === "MOVING" &&
-              `Moving from breakpoint ${(state()?.currentBreakpointIndex ?? 0) + 1} to ${(state()?.targetBreakpointIndex ?? 0) + 1}${state()?.targetAngle >= 0 ? ` (${state()?.targetAngle?.toFixed(1)}°)` : ""}...`}
+              `Moving from breakpoint ${(state()?.currentBreakpointIndex ?? 0) + 1} to ${(state()?.targetBreakpointIndex ?? 0) + 1}${(state()?.targetAngle ?? 0) >= 0 ? ` (${state()?.targetAngle?.toFixed(1)}°)` : ""}...`}
+            {state()?.state === "ERROR" && (
+              <span style={{ color: "red" }}>
+                Error {state()?.errorCode}: {state()?.errorMessage}
+              </span>
+            )}
           </div>
           <div class={styles.device__controls}>
             <button class={styles.device__button} onClick={() => actions.init()}>
@@ -115,8 +101,8 @@ export function Wheel(props: { id: string; isPopup?: boolean; onClose?: () => vo
                 </button>
               );
             })()}
-            <button 
-              class={styles.device__button} 
+            <button
+              class={styles.device__button}
               onClick={() => actions.stop()}
               disabled={state()?.state === "UNKNOWN" || state()?.state === "IDLE"}
             >

@@ -42,6 +42,7 @@ namespace devices
         CalibrationZeroNotFound,
         CalibrationSecondZeroNotFound,
         ZeroNotFound,
+        UnexpectedZeroTrigger,
     };
 
     /**
@@ -64,17 +65,17 @@ namespace devices
      */
     struct WheelState
     {
-        WheelStateEnum state = WheelStateEnum::UNKNOWN; // Current wheel state
+        WheelStateEnum state = WheelStateEnum::UNKNOWN;  // Current wheel state
         WheelErrorCode errorCode = WheelErrorCode::None; // Last error code
         String errorMessage = "";                        // Last error message
-        long lastZeroPosition = 0;                      // Position at last zero sensor trigger
-        long stepsInLastRevolution = 0;                 // Steps measured in last revolution
-        int currentBreakpointIndex = -1;                // Current breakpoint index
-        int targetBreakpointIndex = -1;                 // Target breakpoint index
-        float targetAngle = -1.0f;                      // Target angle for current movement
-        bool onError = false;                           // Error flag
-        bool breakpointChanged = false;                 // Flag for breakpoint index change
-        bool zeroSensorWasPressed = false;              // Previous zero sensor state for edge detection
+        long lastZeroPosition = 0;                       // Position at last zero sensor trigger
+        long stepsInLastRevolution = 0;                  // Steps measured in last revolution
+        int currentBreakpointIndex = -1;                 // Current breakpoint index
+        int targetBreakpointIndex = -1;                  // Target breakpoint index
+        float targetAngle = -1.0f;                       // Target angle for current movement
+        bool onError = false;                            // Error flag
+        bool breakpointChanged = false;                  // Flag for breakpoint index change
+        bool zeroSensorWasPressed = false;               // Previous zero sensor state for edge detection
     };
 
     /**

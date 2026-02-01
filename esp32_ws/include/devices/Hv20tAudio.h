@@ -14,6 +14,7 @@
 #include "pins/Pins.h"
 #include <DYPlayerArduino.h>
 #include <HardwareSerial.h>
+#include <queue>
 
 namespace devices
 {
@@ -69,11 +70,14 @@ namespace devices
     private:
         bool initializePlayer();
         bool isPlaying();
+        void processQueue();
 
         HardwareSerial _serial;
         DY::Player _player;
         bool _playerReady = false;
         uint8_t _volumeSteps = 0;
+        std::queue<int> _songQueue;
+        bool _playbackInitiated = false;
     };
 
 } // namespace devices

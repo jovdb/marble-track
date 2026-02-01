@@ -168,6 +168,29 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                   setAngle(Math.round(value * 10) / 10); // Round to 1 decimal place
                 }
               }}
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  // Trigger move to button if enabled
+                  const isMoving = device()?.state?.state === "MOVING";
+                  const isDisabled =
+                    !isMoving &&
+                    (!stepsPerRevolution() ||
+                    stepsPerRevolution() <= 0 ||
+                    device()?.state?.lastZeroPosition === 0);
+                  
+                  if (!isDisabled) {
+                    if (isMoving) {
+                      wheelActions.stop();
+                      console.log("Stopping wheel");
+                    } else {
+                      const targetAngle = angle();
+                      wheelActions.moveToAngle(targetAngle);
+                      console.log(`Moving to angle ${targetAngle}°`);
+                    }
+                  }
+                }
+              }}
               style={{ flex: "1", padding: "0.5em", "font-size": "1em" }}
               min="0"
               max="359.9"

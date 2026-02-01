@@ -55,6 +55,7 @@ export function Button(props: { id: string; isPopup?: boolean; onClose?: () => v
           onPointerUp={handleRelease}
           onPointerLeave={handleRelease}
           onPointerCancel={handleRelease}
+          onContextMenu={(e) => e.preventDefault()}
         >
           {displayPressed() ? "Pressed" : "Released"}
         </button>

@@ -370,29 +370,7 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
 
                 // Manually reconstruct config with proper types to preserve arrays
                 DynamicJsonDocument configDoc(2048);
-                
-                if (doc["config"]["name"].is<String>())
-                    configDoc["name"] = doc["config"]["name"].as<String>();
-                if (doc["config"]["stepsPerRevolution"].is<long>())
-                    configDoc["stepsPerRevolution"] = doc["config"]["stepsPerRevolution"].as<long>();
-                if (doc["config"]["maxStepsPerRevolution"].is<long>())
-                    configDoc["maxStepsPerRevolution"] = doc["config"]["maxStepsPerRevolution"].as<long>();
-                if (doc["config"]["zeroPointDegree"].is<float>() || doc["config"]["zeroPointDegree"].is<double>())
-                    configDoc["zeroPointDegree"] = doc["config"]["zeroPointDegree"].as<float>();
-                if (doc["config"]["direction"].is<int>())
-                    configDoc["direction"] = doc["config"]["direction"].as<int>();
-                
-                // Explicitly handle breakPoints as array
-                if (doc["config"]["breakPoints"].is<JsonArray>())
-                {
-                    JsonArray srcArray = doc["config"]["breakPoints"].as<JsonArray>();
-                    JsonArray destArray = configDoc["breakPoints"].to<JsonArray>();
-                    for (JsonVariant item : srcArray)
-                    {
-                        destArray.add(item);
-                    }
-                }
-                
+
                 serializable->jsonToConfig(configDoc);
 
                 deviceManager->saveDevicesToJsonFile();
@@ -490,11 +468,12 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
             {
                 DynamicJsonDocument configDoc(8192);
                 serializable->configToJson(configDoc);
-                
-                if (configDoc.overflowed()) {
+
+                if (configDoc.overflowed())
+                {
                     MLOG_ERROR("Config JSON overflowed for device %s! Needed %d bytes", deviceId.c_str(), configDoc.memoryUsage());
                 }
-                
+
                 response["config"] = configDoc;
             }
             else
@@ -584,11 +563,12 @@ void WebSocketManager::handleGetDevicesConfig(JsonDocument &doc)
         deviceManager->addDevicesToJsonArray(devicesArray);
         response["config"] = configDoc;
     }
-    
-    if (response.overflowed()) {
+
+    if (response.overflowed())
+    {
         MLOG_ERROR("devices-config JSON overflowed!");
     }
-    
+
     String respStr;
     serializeJson(response, respStr);
     MLOG_DEBUG("devices-config serialized: %d bytes", respStr.length());
@@ -1121,7 +1101,7 @@ void WebSocketManager::handleReorderDevices(JsonDocument &doc)
     std::vector<String> deviceIds;
     for (JsonVariant id : deviceIdsArray)
     {
-        if (id.is<const char*>())
+        if (id.is<const char *>())
         {
             deviceIds.push_back(id.as<String>());
         }

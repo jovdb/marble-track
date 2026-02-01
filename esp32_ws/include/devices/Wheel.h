@@ -110,7 +110,7 @@ namespace devices
          * @brief Calibrate the wheel by measuring steps per revolution
          * @return true if calibration started, false otherwise
          */
-        bool calibrate();
+        bool calibrate(long maxStepsPerRevolution = -1);
 
         /**
          * @brief Initialize the wheel to find zero position

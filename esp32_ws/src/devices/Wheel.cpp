@@ -289,7 +289,7 @@ namespace devices
         return _stepper->move(steps);
     }
 
-    bool Wheel::calibrate()
+    bool Wheel::calibrate(long maxStepsPerRevolution)
     {
         MLOG_INFO("%s: Calibration started", toString().c_str());
         _state.state = WheelStateEnum::CALIBRATING;
@@ -300,8 +300,9 @@ namespace devices
         _state.zeroSensorWasPressed = _zeroSensor->getState().isPressed; // Initialize to current state
         notifyStateChanged();
 
+        const long maxSteps = (maxStepsPerRevolution > 0) ? maxStepsPerRevolution : _config.maxStepsPerRevolution;
         // Move large number of steps to complete at least one revolution
-        return move(_config.maxStepsPerRevolution * 2 * _config.direction);
+        return move(maxSteps * 2 * _config.direction);
     }
 
     bool Wheel::init()
@@ -415,7 +416,12 @@ namespace devices
         }
         else if (action == "calibrate")
         {
-            return calibrate();
+            long maxSteps = -1;
+            if (args && (*args)["maxStepsPerRevolution"].is<long>())
+            {
+                maxSteps = (*args)["maxStepsPerRevolution"].as<long>();
+            }
+            return calibrate(maxSteps);
         }
         else if (action == "init")
         {

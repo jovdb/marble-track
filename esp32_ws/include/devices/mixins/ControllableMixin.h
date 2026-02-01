@@ -96,7 +96,7 @@ private:
     }
 
     /**
-     * @brief Handle state change by sending WebSocket message
+     * @brief When state changes, automatically notify clients via WebSocket
      */
     void handleStateChange()
     {

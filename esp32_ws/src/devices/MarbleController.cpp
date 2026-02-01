@@ -345,7 +345,7 @@ namespace devices
             if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
                 // playClickSound();
-                _audio->play(songs::getButtonClickSound());
+                _audio->play(songs::getButtonClickSound(), devices::Hv20tPlayMode::SkipIfPlaying);
                 _lift->init();
             }
             break;
@@ -620,7 +620,7 @@ namespace devices
                 MLOG_INFO("%s: Starting manual wheel movement as long button is pressed", toString().c_str());
 
                 // playClickSound();
-                _audio->play(songs::getButtonDownSound());
+                _audio->play(songs::getButtonDownSound(), devices::Hv20tPlayMode::SkipIfPlaying);
 
                 // Reset current position to prevent overflow;
                 // if (wheelState.state != devices::WheelStateEnum::MOVING)
@@ -641,7 +641,7 @@ namespace devices
             MLOG_INFO("%s: Stopping manual wheel movement", toString().c_str());
 
             // playClickOffSound();
-            _audio->play(songs::getButtonUpSound());
+            _audio->play(songs::getButtonUpSound(), devices::Hv20tPlayMode::SkipIfPlaying);
 
             _wheel->stop();
         }
@@ -720,7 +720,7 @@ namespace devices
         if (previousWheelState != devices::WheelStateEnum::CALIBRATING &&
             wheelState->state == devices::WheelStateEnum::CALIBRATING)
         {
-            _audio->play(songs::WHEEL_CALIBRATION_START);
+            _audio->play(songs::WHEEL_CALIBRATION_START, devices::Hv20tPlayMode::QueueIfPlaying);
         }
 
         // * -> ERROR
@@ -730,11 +730,11 @@ namespace devices
 
             if (wheelState->errorCode == devices::WheelErrorCode::CalibrationZeroNotFound)
             {
-                _audio->play(songs::CALIBRATION_FIRST_ZERO_NOT_FOUND);
+                _audio->play(songs::CALIBRATION_FIRST_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
             }
             else if (wheelState->errorCode == devices::WheelErrorCode::CalibrationSecondZeroNotFound)
             {
-                _audio->play(songs::CALIBRATION_SECOND_ZERO_NOT_FOUND);
+                _audio->play(songs::CALIBRATION_SECOND_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
             }
         }
 
@@ -742,7 +742,7 @@ namespace devices
         if (previousWheelState == devices::WheelStateEnum::CALIBRATING &&
             wheelState->state == devices::WheelStateEnum::IDLE)
         {
-            _audio->play(songs::WHEEL_CALIBRATION_DONE);
+            _audio->play(songs::WHEEL_CALIBRATION_DONE, devices::Hv20tPlayMode::QueueIfPlaying);
         }
 
         previousWheelState = wheelState->state;

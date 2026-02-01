@@ -92,6 +92,13 @@ namespace devices
         _playerReady = false;
         _state.isBusy = false;
         _state.lastSongIndex = -1;
+        _playbackInitiated = false;
+        
+        // Clear any queued songs
+        while (!_songQueue.empty())
+        {
+            _songQueue.pop();
+        }
     }
 
     void Hv20tAudio::loop()
@@ -103,6 +110,19 @@ namespace devices
         {
             _state.isBusy = busy;
             notifyStateChanged();
+            
+            // If playback is active, mark as initiated
+            if (busy)
+            {
+                _playbackInitiated = true;
+            }
+            
+            // If playback just finished, check if there are queued songs
+            if (!busy && _playbackInitiated)
+            {
+                _playbackInitiated = false;
+                processQueue();
+            }
         }
     }
 
@@ -126,10 +146,11 @@ namespace devices
         if (!_playerReady)
         {
             MLOG_WARN("%s: Cannot play - DyPLayer not ready", toString().c_str());
+       
             return false;
         }
 
-        const bool isBusy = isPlaying();
+        const bool isBusy = isPlaying() || _playbackInitiated;
         if (isBusy)
         {
             if (mode == Hv20tPlayMode::StopThenPlay)
@@ -145,9 +166,9 @@ namespace devices
 
             if (mode == Hv20tPlayMode::QueueIfPlaying)
             {
-                MLOG_INFO("%s: TODO Queuing play song %i", toString().c_str(), songIndex);
-                // TODO: Add to a queue
-                // return true;
+                MLOG_INFO("%s: Queuing song %i (currently playing)", toString().c_str(), songIndex);
+                _songQueue.push(songIndex);
+                return true;
             }
         }
 
@@ -158,6 +179,7 @@ namespace devices
             MLOG_DEBUG("%s: Playing song %i", toString().c_str(), songIndex);
             _state.lastSongIndex = songIndex;
             notifyStateChanged();
+            _playbackInitiated = true;
             _player.playSpecified(static_cast<uint16_t>(songIndex + 1));
             return true;
         }
@@ -172,6 +194,14 @@ namespace devices
         }
 
         _player.stop();
+        _playbackInitiated = false;
+        
+        // Clear any queued songs when stopping
+        while (!_songQueue.empty())
+        {
+            _songQueue.pop();
+        }
+        
         return true;
     }
 
@@ -314,7 +344,25 @@ namespace devices
             return false;
         }
 
+
         return _player.checkPlayState() == DY::PlayState::Playing;
+    }
+
+    void Hv20tAudio::processQueue()
+    {
+        if (!_playerReady)
+        {
+            return;
+        }
+
+        if (!_songQueue.empty())
+        {
+            const int nextSong = _songQueue.front();
+            _songQueue.pop();
+            MLOG_DEBUG("%s: Start next queued song %i (%zu remaining in queue)", 
+                      toString().c_str(), nextSong, _songQueue.size());
+            play(nextSong, Hv20tPlayMode::StopThenPlay);
+        }
     }
 
 } // namespace devices

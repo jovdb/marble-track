@@ -368,9 +368,31 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
             {
                 deviceManager->teardown();
 
-                JsonObject configObj = doc["config"].as<JsonObject>();
-                JsonDocument configDoc;
-                configDoc.set(configObj);
+                // Manually reconstruct config with proper types to preserve arrays
+                DynamicJsonDocument configDoc(2048);
+                
+                if (doc["config"]["name"].is<String>())
+                    configDoc["name"] = doc["config"]["name"].as<String>();
+                if (doc["config"]["stepsPerRevolution"].is<long>())
+                    configDoc["stepsPerRevolution"] = doc["config"]["stepsPerRevolution"].as<long>();
+                if (doc["config"]["maxStepsPerRevolution"].is<long>())
+                    configDoc["maxStepsPerRevolution"] = doc["config"]["maxStepsPerRevolution"].as<long>();
+                if (doc["config"]["zeroPointDegree"].is<float>() || doc["config"]["zeroPointDegree"].is<double>())
+                    configDoc["zeroPointDegree"] = doc["config"]["zeroPointDegree"].as<float>();
+                if (doc["config"]["direction"].is<int>())
+                    configDoc["direction"] = doc["config"]["direction"].as<int>();
+                
+                // Explicitly handle breakPoints as array
+                if (doc["config"]["breakPoints"].is<JsonArray>())
+                {
+                    JsonArray srcArray = doc["config"]["breakPoints"].as<JsonArray>();
+                    JsonArray destArray = configDoc["breakPoints"].to<JsonArray>();
+                    for (JsonVariant item : srcArray)
+                    {
+                        destArray.add(item);
+                    }
+                }
+                
                 serializable->jsonToConfig(configDoc);
 
                 deviceManager->saveDevicesToJsonFile();
@@ -381,8 +403,12 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
                 response["triggerBy"] = "set";
                 response["deviceId"] = deviceId;
 
-                JsonDocument savedConfig;
+                DynamicJsonDocument savedConfig(2048);
                 serializable->configToJson(savedConfig);
+                if (savedConfig.overflowed())
+                {
+                    MLOG_ERROR("device-save-config: config JSON overflowed for %s", deviceId.c_str());
+                }
                 // Note: Re-setup all root devices after config change
                 deviceManager->setup();
 

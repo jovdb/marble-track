@@ -303,8 +303,12 @@ void DeviceManager::addDeviceToJsonObject(Device *device, JsonObject deviceObj)
         ISerializable *serializable = mixins::SerializableRegistry::get(device->getId());
         if (serializable)
         {
-            JsonDocument configDoc;
+            DynamicJsonDocument configDoc(2048);
             serializable->configToJson(configDoc);
+            if (configDoc.overflowed())
+            {
+                MLOG_ERROR("Config JSON overflowed for device %s when saving to file", device->getId().c_str());
+            }
             deviceObj["config"] = configDoc.as<JsonObject>();
         }
     }

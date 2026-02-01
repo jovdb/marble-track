@@ -456,24 +456,48 @@ namespace devices
     {
         if (config["name"].is<String>())
             _config.name = config["name"].as<String>();
-        if (config["stepsPerRevolution"].is<long>())
+        if (config["stepsPerRevolution"].is<long>() || config["stepsPerRevolution"].is<int>() ||
+            config["stepsPerRevolution"].is<float>() || config["stepsPerRevolution"].is<double>())
+        {
             _config.stepsPerRevolution = config["stepsPerRevolution"].as<long>();
-        if (config["maxStepsPerRevolution"].is<long>())
+        }
+        if (config["maxStepsPerRevolution"].is<long>() || config["maxStepsPerRevolution"].is<int>() ||
+            config["maxStepsPerRevolution"].is<float>() || config["maxStepsPerRevolution"].is<double>())
+        {
             _config.maxStepsPerRevolution = config["maxStepsPerRevolution"].as<long>();
-        if (config["zeroPointDegree"].is<float>())
+        }
+        if (config["zeroPointDegree"].is<float>() || config["zeroPointDegree"].is<double>() ||
+            config["zeroPointDegree"].is<long>() || config["zeroPointDegree"].is<int>())
+        {
             _config.zeroPointDegree = config["zeroPointDegree"].as<float>();
-        if (config["direction"].is<int>())
+        }
+        if (config["direction"].is<int>() || config["direction"].is<long>() ||
+            config["direction"].is<float>() || config["direction"].is<double>())
+        {
             _config.direction = config["direction"].as<int>();
+        }
 
-        if (config["breakPoints"].is<JsonArray>())
+        // Load breakPoints - check if it exists and has a size (pragmatic approach to handle ArduinoJson type detection)
+        if (config.containsKey("breakPoints") && config["breakPoints"].size() > 0)
         {
             _config.breakPoints.clear();
             size_t size = config["breakPoints"].size();
             for (size_t i = 0; i < size; i++)
             {
-                if (config["breakPoints"][i].is<float>() || config["breakPoints"][i].is<long>())
+                if (config["breakPoints"][i].is<float>() || config["breakPoints"][i].is<double>() ||
+                    config["breakPoints"][i].is<long>() || config["breakPoints"][i].is<int>())
                 {
-                    _config.breakPoints.push_back(config["breakPoints"][i].as<float>());
+                    float bp = config["breakPoints"][i].as<float>();
+                    _config.breakPoints.push_back(bp);
+                }
+                else if (config["breakPoints"][i].is<const char *>())
+                {
+                    const char *value = config["breakPoints"][i].as<const char *>();
+                    if (value)
+                    {
+                        float bp = static_cast<float>(atof(value));
+                        _config.breakPoints.push_back(bp);
+                    }
                 }
             }
         }

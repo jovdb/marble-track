@@ -157,7 +157,8 @@ namespace devices
         addChild(_wheel);
 
         // Subscribe to wheel state changes
-        _wheel->onStateChange([this](void *statePtr) { this->onWheelStateChange(statePtr); });
+        _wheel->onStateChange([this](void *statePtr)
+                              { this->onWheelStateChange(statePtr); });
 
         // Get wheel's child devices and configure them
         auto wheelStepper = _wheel->getChildByIdAs<devices::Stepper>("wheel-stepper");
@@ -239,6 +240,7 @@ namespace devices
     void MarbleController::setup()
     {
         Device::setup();
+        playStartupSound();
 
         // Set auto mode based on manual button state during setup
         isAutoMode = !_manualButton->getState().isPressed;
@@ -248,14 +250,12 @@ namespace devices
 
         if (isAutoMode)
         {
-            _audio->play(songs::AUTO_MODE);
+            _audio->play(songs::AUTO_MODE, devices::Hv20tPlayMode::QueueIfPlaying);
         }
         else
         {
-            _audio->play(songs::MAN_MODE);
+            _audio->play(songs::MAN_MODE, devices::Hv20tPlayMode::QueueIfPlaying);
         }
-
-        playStartupSound();
     }
 
     void MarbleController::teardown()
@@ -683,7 +683,8 @@ namespace devices
 
     void MarbleController::playStartupSound()
     {
-        _buzzer->tune("Startup:d=4,o=6,b=1000:c,f,b#"); // Play error tune
+        //_buzzer->tune("Startup:d=4,o=6,b=1000:c,f,b#"); // Play error tune
+        _audio->play(songs::STARTUP_SOUND);
     }
 
     void MarbleController::playErrorSound()
@@ -709,22 +710,39 @@ namespace devices
     {
         static devices::WheelStateEnum previousWheelState = devices::WheelStateEnum::UNKNOWN;
 
-        auto *wheelState = static_cast<devices::WheelState*>(statePtr);
+        auto *wheelState = static_cast<devices::WheelState *>(statePtr);
         if (!wheelState)
         {
             return;
         }
 
-        if (wheelState->state == devices::WheelStateEnum::CALIBRATING &&
-            previousWheelState != devices::WheelStateEnum::CALIBRATING)
+        // * -> CALIBRATING
+        if (previousWheelState != devices::WheelStateEnum::CALIBRATING &&
+            wheelState->state == devices::WheelStateEnum::CALIBRATING)
         {
             _audio->play(songs::WHEEL_CALIBRATION_START);
         }
 
-        if (wheelState->state == devices::WheelStateEnum::ERROR &&
-            previousWheelState != devices::WheelStateEnum::ERROR)
+        // * -> ERROR
+        if (previousWheelState != devices::WheelStateEnum::ERROR &&
+            wheelState->state == devices::WheelStateEnum::ERROR)
         {
-            _audio->play(songs::WHEEL_ZERO_NOT_FOUND);
+
+            if (wheelState->errorCode == devices::WheelErrorCode::CalibrationZeroNotFound)
+            {
+                _audio->play(songs::CALIBRATION_FIRST_ZERO_NOT_FOUND);
+            }
+            else if (wheelState->errorCode == devices::WheelErrorCode::CalibrationSecondZeroNotFound)
+            {
+                _audio->play(songs::CALIBRATION_SECOND_ZERO_NOT_FOUND);
+            }
+        }
+
+        // CALIBRATING -> IDLE
+        if (previousWheelState == devices::WheelStateEnum::CALIBRATING &&
+            wheelState->state == devices::WheelStateEnum::IDLE)
+        {
+            _audio->play(songs::WHEEL_CALIBRATION_DONE);
         }
 
         previousWheelState = wheelState->state;

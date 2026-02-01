@@ -39,6 +39,17 @@
           }
         },
         {
+          "id": "hv20t",
+          "type": "hv20t",
+          "children": [],
+          "config": {
+            "name": "Audio",
+            "rxPin": 47,
+            "txPin": 48,
+            "defaultVolumePercent": 50
+          }
+        },
+        {
           "id": "lift",
           "type": "lift",
           "children": [

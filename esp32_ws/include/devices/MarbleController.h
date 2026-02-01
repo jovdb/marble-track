@@ -7,6 +7,7 @@
 #include "devices/Button.h"
 #include "devices/Wheel.h"
 #include "devices/Buzzer.h"
+#include "devices/Hv20tAudio.h"
 #include "devices/Led.h"
 #include "devices/Lift.h"
 
@@ -47,6 +48,7 @@ namespace devices
         void blinkError(Led *ledDevice);
         Button *_manualButton;
         Buzzer *_buzzer;
+        Hv20tAudio *_audio;
         Lift *_lift;
         Wheel *_wheel;
         Led *_liftLed;

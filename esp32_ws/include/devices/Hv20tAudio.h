@@ -11,10 +11,9 @@
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"
 #include "devices/mixins/SerializableMixin.h"
-#include "pins/IPin.h"
 #include "pins/Pins.h"
+#include <DYPlayerArduino.h>
 #include <HardwareSerial.h>
-#include <deque>
 
 namespace devices
 {
@@ -68,17 +67,13 @@ namespace devices
         void configToJson(JsonDocument &doc) override;
 
     private:
-        bool initializeSerial();
-        bool initializeBusyPin();
-        void cleanupPins();
-        bool sendPlayCommand(int songIndex);
-        bool sendCommand(uint8_t command, uint8_t param = 0);
+        bool initializePlayer();
+        bool isPlaying();
 
         HardwareSerial _serial;
-        bool _serialReady = false;
-        pins::IPin *_busyPin = nullptr;
+        DY::Player _player;
+        bool _playerReady = false;
         uint8_t _volumeSteps = 0;
-        std::deque<int> _playQueue;
     };
 
 } // namespace devices

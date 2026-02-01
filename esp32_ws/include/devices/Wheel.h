@@ -33,6 +33,19 @@ namespace devices
     };
 
     /**
+     * @enum WheelErrorCode
+     * @brief Enumeration of wheel error codes
+     */
+    enum class WheelErrorCode
+    {
+        None,
+        CalibrationZeroNotFound,
+        CalibrationSecondZeroNotFound,
+        ZeroNotFound,
+        StepMismatch,
+    };
+
+    /**
      * @struct WheelConfig
      * @brief Configuration for Wheel device
      */
@@ -53,6 +66,8 @@ namespace devices
     struct WheelState
     {
         WheelStateEnum state = WheelStateEnum::UNKNOWN; // Current wheel state
+        WheelErrorCode errorCode = WheelErrorCode::None; // Last error code
+        String errorMessage = "";                        // Last error message
         long lastZeroPosition = 0;                      // Position at last zero sensor trigger
         long stepsInLastRevolution = 0;                 // Steps measured in last revolution
         int currentBreakpointIndex = -1;                // Current breakpoint index
@@ -153,6 +168,8 @@ namespace devices
          * @param steps Number of steps measured
          */
         void notifyStepsPerRevolution(long steps);
+
+        void setErrorState(WheelErrorCode errorCode, const String &errorMessage);
 
         unsigned long _initStartTime = 0; // Start time for init operation
         bool _waitingForMoveStart = false;

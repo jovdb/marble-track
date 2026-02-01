@@ -120,8 +120,12 @@ namespace devices
             // If playback just finished, check if there are queued songs
             if (!busy && _playbackInitiated)
             {
-                _playbackInitiated = false;
                 processQueue();
+                // Only reset if queue is empty (no more songs to play)
+                if (_songQueue.empty())
+                {
+                    _playbackInitiated = false;
+                }
             }
         }
     }
@@ -359,7 +363,7 @@ namespace devices
         {
             const int nextSong = _songQueue.front();
             _songQueue.pop();
-            MLOG_DEBUG("%s: Start next queued song %i (%zu remaining in queue)", 
+            MLOG_INFO("%s: Playing next queued song %i (%zu remaining in queue)", 
                       toString().c_str(), nextSong, _songQueue.size());
             play(nextSong, Hv20tPlayMode::StopThenPlay);
         }

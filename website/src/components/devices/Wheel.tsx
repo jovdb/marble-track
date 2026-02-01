@@ -42,14 +42,16 @@ export function Wheel(props: { id: string; isPopup?: boolean; onClose?: () => vo
         return "Idle";
       case "CALIBRATING":
         return "Calibrating...";
-      case "RESET":
-        return "Resetting...";
+      case "UNKNOWN":
+        return "Unknown";
+      case "INIT":
+        return "Initializing...";
       case "MOVING":
         return "Moving...";
       case undefined:
         return "";
       default:
-        return "Unknown";
+        return "?";
     }
   }
 
@@ -62,6 +64,7 @@ export function Wheel(props: { id: string; isPopup?: boolean; onClose?: () => vo
       icon={deviceType ? getDeviceIcon(deviceType) : null}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}
+      stateComponent={() => null}
     >
       <div style={{ "max-width": "300px", margin: "0 auto" }}>
         <WheelGraphic
@@ -77,40 +80,16 @@ export function Wheel(props: { id: string; isPopup?: boolean; onClose?: () => vo
       {!error() && (
         <>
           <div class={styles.device__status}>
-            <div>
-              <span class={styles["device__status-text"]}>
-                Status: {getStateString(state()?.state)}
-              </span>
-            </div>
-            {(state()?.currentBreakpointIndex ?? -1) >= 0 && (
-              <div>
-                <span>[{(state()?.currentBreakpointIndex ?? 0) + 1}]</span>
-              </div>
-            )}
-            {state()?.angle !== null && state()?.angle !== undefined && (
-              <div>
-                <span class={styles["device__status-text"]}>{state()?.angle?.toFixed(1)}°</span>
-              </div>
-            )}
-            {(state()?.targetBreakpointIndex ?? -1) >= 0 && (
-              <div>
-                -&gt;
-                <span>[{(state()?.targetBreakpointIndex ?? 0) + 1}]</span>
-              </div>
-            )}
-            {state()?.targetAngle !== undefined &&
-              state()?.targetAngle !== null &&
-              state()?.targetAngle !== state()?.angle && (
-                <div>
-                  <span class={styles["device__status-text"]}>
-                    {state()?.targetAngle?.toFixed(1)}°
-                  </span>
-                </div>
-              )}
+            {state()?.state === "UNKNOWN" && "Unknown"}
+            {state()?.state === "CALIBRATING" && "Calibrating..."}
+            {state()?.state === "INIT" && "Initializing..."}
+            {state()?.state === "IDLE" && "Idle"}
+            {state()?.state === "MOVING" &&
+              `Moving from breakpoint ${(state()?.currentBreakpointIndex ?? 0) + 1} to ${(state()?.targetBreakpointIndex ?? 0) + 1}${state()?.targetAngle >= 0 ? ` (${state()?.targetAngle?.toFixed(1)}°)` : ""}...`}
           </div>
           <div class={styles.device__controls}>
             <button class={styles.device__button} onClick={() => actions.init()}>
-              Init
+              Find breakpoint 1
             </button>
             {(() => {
               const nextBreakpointIndex = (() => {
@@ -126,12 +105,23 @@ export function Wheel(props: { id: string; isPopup?: boolean; onClose?: () => vo
                 <button
                   class={styles.device__button}
                   onClick={onNextClicked}
-                  disabled={state()?.state === "MOVING"}
+                  disabled={
+                    state()?.state === "MOVING" ||
+                    state()?.state === "CALIBRATING" ||
+                    state()?.state === "INIT"
+                  }
                 >
-                  Next {nextBreakpointDisplay}/{breakpoints().length}
+                  Go to next breakpoint {nextBreakpointDisplay}/{breakpoints().length}
                 </button>
               );
             })()}
+            <button 
+              class={styles.device__button} 
+              onClick={() => actions.stop()}
+              disabled={state()?.state === "UNKNOWN" || state()?.state === "IDLE"}
+            >
+              Stop
+            </button>
           </div>
         </>
       )}

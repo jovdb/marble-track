@@ -200,20 +200,23 @@ namespace devices
                     _state.state = WheelStateEnum::MOVING;
                     _state.targetAngle = _config.breakPoints[0];
                     moveToAngle(_config.breakPoints[0]);
+                    notifyStateChanged();
                 }
                 else
                 {
                     MLOG_INFO("%s: Init: Zero point reached at %ld, no breakpoints configured", toString().c_str(), currentPosition);
                     _state.state = WheelStateEnum::IDLE;
+                    notifyStateChanged();
                 }
             }
             else if ((millis() - _initStartTime > 300) && !_stepper->getState().isMoving)
             {
                 // Movement completed without finding zero - error
                 setErrorState(WheelErrorCode::CalibrationZeroNotFound, "Init: Zero sensor not found!");
+                notifyStateChanged();
             }
             _state.zeroSensorWasPressed = zeroPressed;
-            notifyStateChanged();
+
             break;
         }
         case WheelStateEnum::CALIBRATING:
@@ -371,6 +374,16 @@ namespace devices
 
     bool Wheel::stop()
     {
+        if (_state.state == WheelStateEnum::INIT || _state.state == WheelStateEnum::CALIBRATING)
+        {
+            _state.state = WheelStateEnum::IDLE;
+            //  _state.targetBreakpointIndex = -1;
+            //  _state.targetAngle = -1.0f;
+            //  _waitingForMoveStart = false;
+            //  _moveHasStarted = true;
+            notifyStateChanged();
+        }
+
         // Call stepper's stop method
         return _stepper->stop();
     }

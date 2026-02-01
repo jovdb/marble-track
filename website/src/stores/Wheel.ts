@@ -61,6 +61,14 @@ export function useWheel(deviceId: string) {
       },
     });
 
+  const stop = () =>
+    sendMessage({
+      type: "device-fn",
+      deviceId,
+      deviceType,
+      fn: "stop",
+    });
+
   return [
     device,
     {
@@ -69,6 +77,7 @@ export function useWheel(deviceId: string) {
       init,
       nextBreakpoint,
       moveToAngle,
+      stop,
     },
   ] as const;
 }

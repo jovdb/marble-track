@@ -31,7 +31,10 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
         const oldValue = stepsPerRevolution();
         const newValue = message.steps;
         setStepsPerRevolution(newValue);
-        console.log(`Steps per revolution updated from ${oldValue} to ${newValue}`);
+        // Set max steps per revolution with 5% extra of the received value
+        const maxValue = Math.round(newValue * 1.05);
+        setMaxStepsPerRevolution(maxValue);
+        console.log(`Steps per revolution updated from ${oldValue} to ${newValue}, max set to ${maxValue}`);
       }
     });
 

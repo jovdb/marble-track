@@ -170,7 +170,21 @@ namespace devices
 
             if (mode == Hv20tPlayMode::QueueIfPlaying)
             {
-                MLOG_INFO("%s: Queuing song %i (currently playing)", toString().c_str(), songIndex);
+                // Build queue representation string
+                String queueStr = "[";
+                if (!_songQueue.empty()) {
+                    std::queue<int> tempQueue = _songQueue; // Copy queue to iterate
+                    bool first = true;
+                    while (!tempQueue.empty()) {
+                        if (!first) queueStr += ", ";
+                        queueStr += String(tempQueue.front());
+                        tempQueue.pop();
+                        first = false;
+                    }
+                }
+                queueStr += "]";
+                
+                MLOG_INFO("%s: Queuing song %i (queue: %s)", toString().c_str(), songIndex, queueStr.c_str());
                 _songQueue.push(songIndex);
                 return true;
             }

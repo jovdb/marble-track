@@ -26,6 +26,7 @@ namespace devices
         PinConfig txPin;   // UART TX
         PinConfig busyPin; // Busy pin
         uint8_t defaultVolumePercent = 50;
+        unsigned long songTimeoutMs = 30000; // 30 seconds default timeout
     };
 
     struct Hv20tAudioState
@@ -83,6 +84,7 @@ namespace devices
         std::queue<int> _songQueue;
         bool _playbackInitiated = false;
         int _currentPlayingSong = -1;
+        unsigned long _currentSongStartTime = 0;
     };
 
 } // namespace devices

@@ -96,7 +96,8 @@ namespace devices
         _state.currentPlayingSong = -1;
         _playbackInitiated = false;
         _currentPlayingSong = -1;
-        
+        _currentSongStartTime = 0;
+
         // Clear any queued songs
         while (!_songQueue.empty())
         {
@@ -108,24 +109,49 @@ namespace devices
     {
         Device::loop();
 
+        // Check for song timeout if a song is currently playing
+        if (_currentPlayingSong >= 0 && _currentSongStartTime > 0)
+        {
+            unsigned long elapsed = millis() - _currentSongStartTime;
+            if (elapsed >= _config.songTimeoutMs)
+            {
+                MLOG_WARN("%s: Song %i timed out after %lu ms, marking as completed",
+                          toString().c_str(), _currentPlayingSong, elapsed);
+                _state.currentPlayingSong = -1;
+                _currentPlayingSong = -1;
+                _currentSongStartTime = 0;
+                _state.isBusy = false;
+                notifyStateChanged();
+
+                // Process next song in queue
+                processQueue();
+                if (_songQueue.empty())
+                {
+                    _playbackInitiated = false;
+                }
+                return; // Exit early since we handled the timeout
+            }
+        }
+
         const bool busy = isPlaying();
         if (busy != _state.isBusy)
         {
             _state.isBusy = busy;
             notifyStateChanged();
-            
+
             // If playback is active, mark as initiated
             if (busy)
             {
                 _playbackInitiated = true;
             }
-            
+
             // If playback just finished, check if there are queued songs
             if (!busy && _playbackInitiated)
             {
                 MLOG_INFO("%s: Song %i finished playing", toString().c_str(), _currentPlayingSong);
                 _state.currentPlayingSong = -1;
                 _currentPlayingSong = -1;
+                _currentSongStartTime = 0;
                 processQueue();
                 // Only reset if queue is empty (no more songs to play)
                 if (_songQueue.empty())
@@ -156,7 +182,7 @@ namespace devices
         if (!_playerReady)
         {
             MLOG_WARN("%s: Cannot play - DyPLayer not ready", toString().c_str());
-       
+
             return false;
         }
 
@@ -190,6 +216,7 @@ namespace devices
             _state.lastSongIndex = songIndex;
             _state.currentPlayingSong = songIndex;
             _currentPlayingSong = songIndex;
+            _currentSongStartTime = millis();
             notifyStateChanged();
             _playbackInitiated = true;
             _player.playSpecified(static_cast<uint16_t>(songIndex + 1));
@@ -211,13 +238,14 @@ namespace devices
         _playbackInitiated = false;
         _state.currentPlayingSong = -1;
         _currentPlayingSong = -1;
-        
+        _currentSongStartTime = 0;
+
         // Clear any queued songs when stopping
         while (!_songQueue.empty())
         {
             _songQueue.pop();
         }
-        
+
         return true;
     }
 
@@ -261,7 +289,6 @@ namespace devices
         _songQueue = std::move(tempQueue);
 
         MLOG_INFO("%s: Removed song %i from queue (currently playing: %i, queue: %s)", toString().c_str(), songIndex, _currentPlayingSong, getQueueString().c_str());
-         
 
         return removed;
     }
@@ -341,6 +368,8 @@ namespace devices
             _config.busyPin = parsePinConfig(config["busyPin"]);
         if (config["defaultVolumePercent"].is<int>())
             _config.defaultVolumePercent = clampPercent(config["defaultVolumePercent"].as<int>());
+        if (config["songTimeoutMs"].is<unsigned long>())
+            _config.songTimeoutMs = config["songTimeoutMs"].as<unsigned long>();
     }
 
     void Hv20tAudio::configToJson(JsonDocument &doc)
@@ -362,6 +391,7 @@ namespace devices
             doc["busyPin"] = pinDoc.as<JsonVariant>();
         }
         doc["defaultVolumePercent"] = _config.defaultVolumePercent;
+        doc["songTimeoutMs"] = _config.songTimeoutMs;
     }
 
     bool Hv20tAudio::initializePlayer()
@@ -397,18 +427,20 @@ namespace devices
             return false;
         }
 
-
         return _player.checkPlayState() == DY::PlayState::Playing;
     }
 
     String Hv20tAudio::getQueueString()
     {
         String queueStr = "[";
-        if (!_songQueue.empty()) {
+        if (!_songQueue.empty())
+        {
             std::queue<int> tempQueue = _songQueue; // Copy queue to iterate
             bool first = true;
-            while (!tempQueue.empty()) {
-                if (!first) queueStr += ", ";
+            while (!tempQueue.empty())
+            {
+                if (!first)
+                    queueStr += ", ";
                 queueStr += String(tempQueue.front());
                 tempQueue.pop();
                 first = false;
@@ -429,7 +461,7 @@ namespace devices
         {
             const int nextSong = _songQueue.front();
             _songQueue.pop();
-            MLOG_INFO("%s: Playing next queued song %i (remaining queue: %s)", 
+            MLOG_INFO("%s: Playing next queued song %i (remaining queue: %s)",
                       toString().c_str(), nextSong, getQueueString().c_str());
             play(nextSong, Hv20tPlayMode::StopThenPlay);
         }

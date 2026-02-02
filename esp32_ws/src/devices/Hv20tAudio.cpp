@@ -267,6 +267,15 @@ namespace devices
         return removed;
     }
 
+    int Hv20tAudio::getPlayingIndex()
+    {
+        if (isPlaying())
+        {
+            return _state.lastSongIndex;
+        }
+        return -1;
+    }
+
     void Hv20tAudio::addStateToJson(JsonDocument &doc)
     {
         doc["isBusy"] = _state.isBusy;

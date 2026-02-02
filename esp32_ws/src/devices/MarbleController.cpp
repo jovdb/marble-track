@@ -468,7 +468,16 @@ namespace devices
             MLOG_INFO("%s: Stopping manual wheel movement", toString().c_str());
 
             // playClickOffSound();
-            _audio->play(songs::getButtonUpSound(), devices::Hv20tPlayMode::SkipIfPlaying);
+            // Only replace sound if down button is still playing
+            auto index = _audio->getPlayingIndex();
+            if (index == songs::getButtonDownSound())
+            {
+                _audio->play(songs::getButtonUpSound(), devices::Hv20tPlayMode::StopThenPlay);
+            }
+            else
+            {
+                _audio->play(songs::getButtonUpSound(), devices::Hv20tPlayMode::SkipIfPlaying);
+            }
 
             _wheel->stop();
         }

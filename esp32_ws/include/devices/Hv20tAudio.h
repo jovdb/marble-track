@@ -33,6 +33,7 @@ namespace devices
         bool isBusy = false;
         uint8_t volumePercent = 50;
         int lastSongIndex = -1;
+        int currentPlayingSong = -1;
     };
 
     enum class Hv20tPlayMode
@@ -73,6 +74,7 @@ namespace devices
         bool initializePlayer();
         bool isPlaying();
         void processQueue();
+        String getQueueString();
 
         HardwareSerial _serial;
         DY::Player _player;
@@ -80,6 +82,7 @@ namespace devices
         uint8_t _volumeSteps = 0;
         std::queue<int> _songQueue;
         bool _playbackInitiated = false;
+        int _currentPlayingSong = -1;
     };
 
 } // namespace devices

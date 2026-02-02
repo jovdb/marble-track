@@ -72,6 +72,7 @@ namespace devices
         }
 
         _state.volumePercent = clampPercent(_config.defaultVolumePercent);
+        _state.currentPlayingSong = -1;
         _volumeSteps = static_cast<uint8_t>((_state.volumePercent * VOLUME_STEPS + 50) / 100);
         if (_playerReady)
         {
@@ -92,7 +93,9 @@ namespace devices
         _playerReady = false;
         _state.isBusy = false;
         _state.lastSongIndex = -1;
+        _state.currentPlayingSong = -1;
         _playbackInitiated = false;
+        _currentPlayingSong = -1;
         
         // Clear any queued songs
         while (!_songQueue.empty())
@@ -120,6 +123,9 @@ namespace devices
             // If playback just finished, check if there are queued songs
             if (!busy && _playbackInitiated)
             {
+                MLOG_INFO("%s: Song %i finished playing", toString().c_str(), _currentPlayingSong);
+                _state.currentPlayingSong = -1;
+                _currentPlayingSong = -1;
                 processQueue();
                 // Only reset if queue is empty (no more songs to play)
                 if (_songQueue.empty())
@@ -164,28 +170,14 @@ namespace devices
             }
             if (mode == Hv20tPlayMode::SkipIfPlaying)
             {
-                MLOG_INFO("%s: Skipping play song %i - Another song is still playing", toString().c_str(), songIndex);
+                MLOG_INFO("%s: Skipping play song %i - currently playing song %i", toString().c_str(), songIndex, _currentPlayingSong);
                 return true;
             }
 
             if (mode == Hv20tPlayMode::QueueIfPlaying)
             {
-                // Build queue representation string
-                String queueStr = "[";
-                if (!_songQueue.empty()) {
-                    std::queue<int> tempQueue = _songQueue; // Copy queue to iterate
-                    bool first = true;
-                    while (!tempQueue.empty()) {
-                        if (!first) queueStr += ", ";
-                        queueStr += String(tempQueue.front());
-                        tempQueue.pop();
-                        first = false;
-                    }
-                }
-                queueStr += "]";
-                
-                MLOG_INFO("%s: Queuing song %i (queue: %s)", toString().c_str(), songIndex, queueStr.c_str());
                 _songQueue.push(songIndex);
+                MLOG_INFO("%s: Queuing song %i (currently playing: %i, queue: %s)", toString().c_str(), songIndex, _currentPlayingSong, getQueueString().c_str());
                 return true;
             }
         }
@@ -194,11 +186,13 @@ namespace devices
         {
             if (songIndex > 65535)
                 songIndex = 65535;
-            MLOG_INFO("%s: Playing song %i", toString().c_str(), songIndex);
+            MLOG_INFO("%s: Playing song %i (queue: %s)", toString().c_str(), songIndex, getQueueString().c_str());
             _state.lastSongIndex = songIndex;
+            _state.currentPlayingSong = songIndex;
+            _currentPlayingSong = songIndex;
             notifyStateChanged();
             _playbackInitiated = true;
-            _player.playSpecified(static_cast<uint16_t>(songIndex));
+            _player.playSpecified(static_cast<uint16_t>(songIndex + 1));
             return true;
         }
 
@@ -215,6 +209,8 @@ namespace devices
 
         _player.stop();
         _playbackInitiated = false;
+        _state.currentPlayingSong = -1;
+        _currentPlayingSong = -1;
         
         // Clear any queued songs when stopping
         while (!_songQueue.empty())
@@ -255,7 +251,6 @@ namespace devices
             if (!removed && song == songIndex)
             {
                 removed = true;
-                MLOG_INFO("%s: Removed song %i from queue", toString().c_str(), songIndex);
             }
             else
             {
@@ -264,6 +259,10 @@ namespace devices
         }
 
         _songQueue = std::move(tempQueue);
+
+        MLOG_INFO("%s: Removed song %i from queue (currently playing: %i, queue: %s)", toString().c_str(), songIndex, _currentPlayingSong, getQueueString().c_str());
+         
+
         return removed;
     }
 
@@ -271,7 +270,7 @@ namespace devices
     {
         if (isPlaying())
         {
-            return _state.lastSongIndex;
+            return _currentPlayingSong;
         }
         return -1;
     }
@@ -281,6 +280,7 @@ namespace devices
         doc["isBusy"] = _state.isBusy;
         doc["volumePercent"] = _state.volumePercent;
         doc["lastSongIndex"] = _state.lastSongIndex;
+        doc["currentPlayingSong"] = _currentPlayingSong;
     }
 
     bool Hv20tAudio::control(const String &action, JsonObject *args)
@@ -401,6 +401,23 @@ namespace devices
         return _player.checkPlayState() == DY::PlayState::Playing;
     }
 
+    String Hv20tAudio::getQueueString()
+    {
+        String queueStr = "[";
+        if (!_songQueue.empty()) {
+            std::queue<int> tempQueue = _songQueue; // Copy queue to iterate
+            bool first = true;
+            while (!tempQueue.empty()) {
+                if (!first) queueStr += ", ";
+                queueStr += String(tempQueue.front());
+                tempQueue.pop();
+                first = false;
+            }
+        }
+        queueStr += "]";
+        return queueStr;
+    }
+
     void Hv20tAudio::processQueue()
     {
         if (!_playerReady)
@@ -412,8 +429,8 @@ namespace devices
         {
             const int nextSong = _songQueue.front();
             _songQueue.pop();
-            MLOG_INFO("%s: Playing next queued song %i (%zu remaining in queue)", 
-                      toString().c_str(), nextSong, _songQueue.size());
+            MLOG_INFO("%s: Playing next queued song %i (remaining queue: %s)", 
+                      toString().c_str(), nextSong, getQueueString().c_str());
             play(nextSong, Hv20tPlayMode::StopThenPlay);
         }
     }

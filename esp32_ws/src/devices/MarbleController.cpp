@@ -402,7 +402,7 @@ namespace devices
         auto wheelButtonState = _wheelBtn->getState();
         if (wheelButtonState.isPressed && wheelButtonState.isPressedChanged)
         {
-            _audio->play(songs::FART);
+            _audio->play(songs::FART, devices::Hv20tPlayMode::SkipIfPlaying);
         }
     }
 
@@ -439,10 +439,13 @@ namespace devices
         // Control wheel movement based on button state
         if (wheelButtonState.isPressed && wheelButtonState.isPressedChanged)
         {
+            // Button just pressed - start timing for long press detection
+            _wheelButtonPressStartTime = millis();
+            _wheelButtonLongPressTriggered = false;
 
             // Button just pressed - start continuous movement only if wheel is idle
             // Don't allow button usage when wheel is in error or init states
-            if (wheelState.state == devices::WheelStateEnum::IDLE || wheelState.state == devices::WheelStateEnum::UNKNOWN || wheelState.state == devices::WheelStateEnum::MOVING)
+            if (wheelState.state == devices::WheelStateEnum::IDLE || wheelState.state == devices::WheelStateEnum::UNKNOWN || wheelState.state == devices::WheelStateEnum::MOVING || wheelState.state == devices::WheelStateEnum::INIT)
             {
                 MLOG_INFO("%s: Starting manual wheel movement as long button is pressed", toString().c_str());
 
@@ -455,17 +458,42 @@ namespace devices
                 // }
                 _wheel->move(100000); // Large positive number for continuous movement
             }
-            else if (wheelState.state == devices::WheelStateEnum::ERROR ||
-                     wheelState.state == devices::WheelStateEnum::INIT)
+            else if (wheelState.state == devices::WheelStateEnum::ERROR)
             {
                 MLOG_WARN("%s: Cannot start manual wheel movement - wheel is in %s state",
                           toString().c_str(), wheelState.state == devices::WheelStateEnum::ERROR ? "error" : "init");
             }
         }
+        else if (wheelButtonState.isPressed && !_wheelButtonLongPressTriggered)
+        {
+            // Button still pressed - check for long press (5 seconds)
+            unsigned long pressDuration = millis() - _wheelButtonPressStartTime;
+            if (pressDuration >= 5000)
+            {
+                // Long press detected - trigger next breakpoint
+                MLOG_INFO("%s: Long wheel press detected - triggering next breakpoint", toString().c_str());
+                _wheel->nextBreakPoint();
+                _wheelButtonLongPressTriggered = true;
+                _audio->play(songs::GOTO_BREAKPOINT, devices::Hv20tPlayMode::SkipIfPlaying);
+            }
+        }
         else if (!wheelButtonState.isPressed && wheelButtonState.isPressedChanged && wheelState.state == devices::WheelStateEnum::MOVING)
         {
+
+            if (_wheelButtonLongPressTriggered)
+            {
+                // Reset long press tracking
+                _wheelButtonPressStartTime = 0;
+                _wheelButtonLongPressTriggered = false;
+                return;
+            }
+
             // Button released while moving - stop the wheel
             MLOG_INFO("%s: Stopping manual wheel movement", toString().c_str());
+
+            // Reset long press tracking
+            _wheelButtonPressStartTime = 0;
+            _wheelButtonLongPressTriggered = false;
 
             // playClickOffSound();
             // Only replace sound if down button is still playing
@@ -480,6 +508,12 @@ namespace devices
             }
 
             _wheel->stop();
+        }
+        else if (!wheelButtonState.isPressed && wheelButtonState.isPressedChanged)
+        {
+            // Button released when not moving - just reset tracking
+            _wheelButtonPressStartTime = 0;
+            _wheelButtonLongPressTriggered = false;
         }
     }
 

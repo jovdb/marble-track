@@ -169,6 +169,8 @@ namespace devices
             pins.push_back(_config.rxPin.toString());
         if (_config.txPin.pin >= 0)
             pins.push_back(_config.txPin.toString());
+        if (_config.busyPin.pin >= 0)
+            pins.push_back(_config.busyPin.toString());
         return pins;
     }
 
@@ -417,6 +419,25 @@ namespace devices
         _serial.begin(9600, SERIAL_8N1, _config.rxPin.pin, _config.txPin.pin);
         _playerReady = true;
         MLOG_INFO("%s: DyPLayer configured (RX %d, TX %d)", toString().c_str(), _config.rxPin.pin, _config.txPin.pin);
+
+        // Configure busy pin if available
+        if (_config.busyPin.pin >= 0)
+        {
+            if (!_config.busyPin.expanderId.isEmpty())
+            {
+                MLOG_WARN("%s: Busy pin expander not supported, using GPIO only", toString().c_str());
+            }
+            else
+            {
+                pinMode(_config.busyPin.pin, INPUT);
+                MLOG_INFO("%s: Busy pin configured on GPIO %d", toString().c_str(), _config.busyPin.pin);
+            }
+        }
+        else
+        {
+            MLOG_WARN("%s: Busy pin not configured - playback detection may be unreliable", toString().c_str());
+        }
+
         return true;
     }
 
@@ -427,7 +448,34 @@ namespace devices
             return false;
         }
 
-        return _player.checkPlayState() == DY::PlayState::Playing;
+        // Check software state first
+        bool softwarePlaying = (_player.checkPlayState() == DY::PlayState::Playing);
+
+        // Check hardware busy pin if configured (active LOW = playing)
+        bool hardwarePlaying = false;
+        if (_config.busyPin.pin >= 0 && _config.busyPin.expanderId.isEmpty())
+        {
+            hardwarePlaying = (digitalRead(_config.busyPin.pin) == LOW);
+        }
+
+        // If busy pin is configured, use it as primary indicator, otherwise use software state
+        if (_config.busyPin.pin >= 0 && _config.busyPin.expanderId.isEmpty())
+        {
+            // Use hardware pin as primary, but log discrepancies for debugging
+            if (softwarePlaying != hardwarePlaying)
+            {
+                MLOG_DEBUG("%s: State mismatch - Software: %s, Hardware: %s",
+                           toString().c_str(),
+                           softwarePlaying ? "playing" : "idle",
+                           hardwarePlaying ? "playing" : "idle");
+            }
+            return hardwarePlaying;
+        }
+        else
+        {
+            // Fall back to software state if no busy pin
+            return softwarePlaying;
+        }
     }
 
     String Hv20tAudio::getQueueString()

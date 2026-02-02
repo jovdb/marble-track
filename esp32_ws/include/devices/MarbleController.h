@@ -63,6 +63,10 @@ namespace devices
         unsigned long _liftButtonPressStartTime = 0;
         bool _isBallStillLoaded = false;
 
+        // Wheel button long press tracking
+        inline static unsigned long _wheelButtonPressStartTime = 0;
+        inline static bool _wheelButtonLongPressTriggered = false;
+
         // Auto lift timing control
         unsigned long _autoLiftDelayStart = 0;
         unsigned long _autoLiftDelayMs = 1000; // 1 second delay between auto operations

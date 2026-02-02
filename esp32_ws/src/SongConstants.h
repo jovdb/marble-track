@@ -10,6 +10,7 @@
 // -----------------
 // - Default
 // - Circus
+// - Kermis
 // - Space
 // - Animals
 // - 8-bit games
@@ -34,6 +35,7 @@ namespace songs
     const int BUTTON_UP = 6;
 
     const int FART = 8;
+    const int GOTO_BREAKPOINT = 16;
 
     // Button sound functions (theme-aware in future)
     inline int getButtonClickSound()

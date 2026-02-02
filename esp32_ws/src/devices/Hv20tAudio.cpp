@@ -164,7 +164,7 @@ namespace devices
             }
             if (mode == Hv20tPlayMode::SkipIfPlaying)
             {
-                MLOG_INFO("%s: Skipping play song %i - already playing", toString().c_str(), songIndex);
+                MLOG_INFO("%s: Skipping play song %i - Another song is still playing", toString().c_str(), songIndex);
                 return true;
             }
 

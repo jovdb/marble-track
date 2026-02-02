@@ -62,6 +62,7 @@ namespace devices
         bool stop();
         bool setVolume(uint8_t percent);
         bool removeFromQueue(int songIndex);
+        int getPlayingIndex();
 
         void addStateToJson(JsonDocument &doc) override;
         bool control(const String &action, JsonObject *args = nullptr) override;

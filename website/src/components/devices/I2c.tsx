@@ -16,7 +16,7 @@ export function I2c(props: { id: string; isPopup?: boolean; onClose?: () => void
     <Device
       id={props.id}
       configComponent={(onClose) => <I2cConfig id={props.id} onClose={onClose} />}
-      icon={deviceType ? getDeviceIcon(deviceType) : null}
+      icon={deviceType ? getDeviceIcon(deviceType, props.id) : null}
       stateComponent={() => null}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}

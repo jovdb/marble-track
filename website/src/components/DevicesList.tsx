@@ -430,7 +430,7 @@ export function DevicesList() {
                   {isCollapsed() ? <ChevronRightIcon /> : <ChevronDownIcon />}
                 </button>
               )}
-              {getDeviceIcon(props.device.type)}
+              {getDeviceIcon(props.device.type, props.device.id)}
             </div>
           </td>
           <td class={styles["devices-list__table-td"]}>

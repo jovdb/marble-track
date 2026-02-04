@@ -5,7 +5,7 @@ export function MarbleController(props: { id: string; isPopup?: boolean; onClose
   return (
     <Device
       id={props.id}
-      icon={getDeviceIcon("marblecontroller")}
+      icon={getDeviceIcon("marblecontroller", props.id)}
       stateComponent={() => null}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}

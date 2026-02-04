@@ -2,7 +2,6 @@
 import { JSX } from "solid-js";
 
 // Import PNG icons
-import ledIcon from "../../assets/icons/led.png";
 import servoIcon from "../../assets/icons/servo.png";
 import buttonIcon from "../../assets/icons/button.png";
 import buzzerIcon from "../../assets/icons/buzzer1.png";
@@ -10,6 +9,7 @@ import stepperIcon from "../../assets/icons/stepper.png";
 import devicesIcon from "../../assets/icons/devices.png";
 import websocketIcon from "../../assets/icons/websocket.png";
 import dotsIcon from "../../assets/icons/dots.png";
+import { LedStateIcon } from "../devices/LedStateIcon";
 
 // Icon component props
 export interface IconProps {
@@ -19,17 +19,6 @@ export interface IconProps {
   style?: JSX.CSSProperties;
   alt?: string;
 }
-
-export const LedIcon = (props: IconProps) => (
-  <img
-    src={ledIcon}
-    width={props.width || 24}
-    height={props.height || 24}
-    class={props.class}
-    style={props.style}
-    alt={props.alt || "LED"}
-  />
-);
 
 export const ServoIcon = (props: IconProps) => (
   <img
@@ -440,10 +429,10 @@ export const RestartIcon = (props: IconProps) => (
 );
 
 // Helper function to get device icon by type
-export const getDeviceIcon = (type: string, props?: IconProps) => {
+export const getDeviceIcon = (type: string, deviceId: string, props?: IconProps) => {
   switch (type.toUpperCase()) {
     case "LED":
-      return <LedIcon {...props} />;
+      return <LedStateIcon deviceId={deviceId} {...props} />;
     case "BUTTON":
       return <ButtonIcon {...props} />;
     case "BUZZER":

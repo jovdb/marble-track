@@ -64,6 +64,24 @@ export const BuzzerIcon = (props: IconProps) => (
   />
 );
 
+export const SpeakerIcon = (props: IconProps) => (
+  <svg
+    width={props.width || 24}
+    height={props.height || 24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class={props.class}
+    style={props.style}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M7 8L13 3V21L7 16H5C3.89543 16 3 15.1046 3 14V10C3 8.89543 3.89543 8 5 8H7Z" />
+  </svg>
+);
+
 export const StepperIcon = (props: IconProps) => (
   <img
     src={stepperIcon}
@@ -431,7 +449,7 @@ export const getDeviceIcon = (type: string, props?: IconProps) => {
     case "BUZZER":
       return <BuzzerIcon {...props} />;
     case "HV20T":
-      return <BuzzerIcon {...props} />;
+      return <SpeakerIcon {...props} />;
     case "I2C":
       return <I2cIcon {...props} />;
     case "SERVO":

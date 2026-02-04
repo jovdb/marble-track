@@ -1,10 +1,10 @@
 {
   "scripts": {
-    "esp-dev": "npm run esp-build && npm run esp-deploy && npm run esp-mon",
-    "esp-all": "npm run esp-build && npm run esp-deploy",
+    "esp-dev": "npm run esp-build && npm run esp-upload && npm run esp-mon",
+    "esp-all": "npm run esp-build && npm run esp-upload",
     "esp-build": "%USERPROFILE%\\.platformio\\penv\\Scripts\\platformio.exe run --environment 4d_systems_esp32s3_gen4_r8n16",
-    "esp-deploy": "%USERPROFILE%\\.platformio\\penv\\Scripts\\platformio.exe run --target upload -t nobuild --environment 4d_systems_esp32s3_gen4_r8n16",
-    "esp-deploy-ota": "%USERPROFILE%\\.platformio\\penv\\Scripts\\platformio.exe run --target upload -t nobuild --environment 4d_systems_esp32s3_gen4_r8n16_ota",
+    "esp-upload": "%USERPROFILE%\\.platformio\\penv\\Scripts\\platformio.exe run --target upload -t nobuild --environment 4d_systems_esp32s3_gen4_r8n16",
+    "esp-upload-ota": "%USERPROFILE%\\.platformio\\penv\\Scripts\\platformio.exe run --target upload -t nobuild --environment 4d_systems_esp32s3_gen4_r8n16_ota",
     "esp-clean": "%USERPROFILE%\\.platformio\\penv\\Scripts\\platformio.exe run --target clean",
     "esp-mon": "%USERPROFILE%\\.platformio\\penv\\Scripts\\platformio.exe device monitor --environment 4d_systems_esp32s3_gen4_r8n16",
     "esp-connect": "start https://thelastoutpostworkshop.github.io/microcontroller_devkit/espconnect/",
@@ -13,7 +13,7 @@
     "web-deploy": "powershell -ExecutionPolicy Bypass -File deploy-website.ps1",
     "web-all": "npm run web-build && npm run web-deploy",
     "build": "npm run esp-build && npm run web-build",
-    "upload": "npm run esp-deploy && npm run web-deploy",
+    "upload": "npm run esp-upload && npm run web-deploy",
     "all": "npm run esp-all && npm run web-all && npm run esp-mon"
   }
 }

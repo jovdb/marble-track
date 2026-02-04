@@ -19,9 +19,7 @@ export default function ServoConfig(props: ServoConfigProps) {
   const [mcpwmChannel, setMcpwmChannel] = createSignal<number>(
     device()?.config?.mcpwmChannel ?? -1
   );
-  const [frequency, setFrequency] = createSignal<string>(
-    String(device()?.config?.frequency ?? 50)
-  );
+  const [frequency, setFrequency] = createSignal<string>(String(device()?.config?.frequency ?? 50));
   const [resolutionBits, setResolutionBits] = createSignal<number>(
     device()?.config?.resolutionBits ?? 10
   );

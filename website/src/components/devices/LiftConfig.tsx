@@ -58,10 +58,10 @@ export function LiftConfig(props: { device: any; actions: any; onClose: () => vo
         <input
           type="text"
           value={deviceName()}
-            onInput={(e) => {
-              setIsNameDirty(true);
-              setDeviceName(e.currentTarget.value);
-            }}
+          onInput={(e) => {
+            setIsNameDirty(true);
+            setDeviceName(e.currentTarget.value);
+          }}
           style={{ width: "100%", padding: "0.5em", "font-size": "1em" }}
         />
       </div>
@@ -70,10 +70,10 @@ export function LiftConfig(props: { device: any; actions: any; onClose: () => vo
         <input
           type="number"
           value={minSteps()}
-            onInput={(e) => {
-              setIsMinStepsDirty(true);
-              setMinSteps(e.currentTarget.value);
-            }}
+          onInput={(e) => {
+            setIsMinStepsDirty(true);
+            setMinSteps(e.currentTarget.value);
+          }}
           style={{ width: "100%", padding: "0.5em", "font-size": "1em" }}
           min="0"
         />
@@ -83,10 +83,10 @@ export function LiftConfig(props: { device: any; actions: any; onClose: () => vo
         <input
           type="number"
           value={maxSteps()}
-            onInput={(e) => {
-              setIsMaxStepsDirty(true);
-              setMaxSteps(e.currentTarget.value);
-            }}
+          onInput={(e) => {
+            setIsMaxStepsDirty(true);
+            setMaxSteps(e.currentTarget.value);
+          }}
           style={{ width: "100%", padding: "0.5em", "font-size": "1em" }}
           min="1"
         />

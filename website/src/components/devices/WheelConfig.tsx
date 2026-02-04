@@ -43,7 +43,9 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
         // Set max steps per revolution with 5% extra of the received value
         const maxValue = Math.round(newValue * 1.05);
         setMaxStepsPerRevolution(String(maxValue));
-        console.log(`Steps per revolution updated from ${oldValue} to ${newValue}, max set to ${maxValue}`);
+        console.log(
+          `Steps per revolution updated from ${oldValue} to ${newValue}, max set to ${maxValue}`
+        );
       }
     });
 
@@ -120,7 +122,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
               class={styles.device__button}
               onClick={(e) => {
                 e.preventDefault(); // prevent post
-                
+
                 if (device()?.state?.state === "CALIBRATING") {
                   wheelActions.stop();
                   console.log("Stopping calibration");
@@ -202,9 +204,9 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                   const isDisabled =
                     !isMoving &&
                     (!toNumber(stepsPerRevolution()) ||
-                    toNumber(stepsPerRevolution()) <= 0 ||
-                    device()?.state?.lastZeroPosition === 0);
-                  
+                      toNumber(stepsPerRevolution()) <= 0 ||
+                      device()?.state?.lastZeroPosition === 0);
+
                   if (!isDisabled) {
                     if (isMoving) {
                       wheelActions.stop();
@@ -226,7 +228,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
               class={styles.device__button}
               onClick={(e) => {
                 e.preventDefault(); // prevent post
-                
+
                 if (device()?.state?.state === "INIT") {
                   wheelActions.stop();
                   console.log("Stopping init");
@@ -243,7 +245,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
               class={styles.device__button}
               onClick={(e) => {
                 e.preventDefault(); // prevent post
-                
+
                 if (device()?.state?.state === "MOVING") {
                   wheelActions.stop();
                   console.log("Stopping wheel");
@@ -257,8 +259,8 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
               disabled={
                 device()?.state?.state !== "MOVING" &&
                 (!toNumber(stepsPerRevolution()) ||
-                toNumber(stepsPerRevolution()) <= 0 ||
-                device()?.state?.lastZeroPosition === 0)
+                  toNumber(stepsPerRevolution()) <= 0 ||
+                  device()?.state?.lastZeroPosition === 0)
               }
             >
               {device()?.state?.state === "MOVING" ? "Stop" : "Move to"}
@@ -276,7 +278,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
             const currentBreakpoints = breakpoints();
             const newBreakpoint = toNumber(angle());
             // Find the insertion index to maintain increasing order
-            const insertIndex = currentBreakpoints.findIndex(bp => bp >= newBreakpoint);
+            const insertIndex = currentBreakpoints.findIndex((bp) => bp >= newBreakpoint);
             const newBreakpoints = [...currentBreakpoints];
             if (insertIndex === -1) {
               // Append if larger than all existing

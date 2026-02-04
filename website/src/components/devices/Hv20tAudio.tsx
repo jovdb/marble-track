@@ -14,6 +14,8 @@ export function Hv20tAudio(props: { id: string; isPopup?: boolean; onClose?: () 
   const state = createMemo(() => device()?.state);
   const volumePercent = createMemo(() => state()?.volumePercent ?? 50);
   const isBusy = createMemo(() => Boolean(state()?.isBusy));
+  const currentPlayingSong = createMemo(() => state()?.currentPlayingSong);
+  const songQueue = createMemo(() => state()?.songQueue ?? []);
 
   const [songIndex, setSongIndex] = createSignal(1);
   const [volume, setVolume] = createSignal(volumePercent());
@@ -36,9 +38,16 @@ export function Hv20tAudio(props: { id: string; isPopup?: boolean; onClose?: () 
     >
       <div class={deviceStyles.device__status}>
         <span class={deviceStyles["device__status-text"]}>
-          Status: {isBusy() ? "Playing" : "Idle"}
+          Status: {isBusy() ? (currentPlayingSong() !== undefined && currentPlayingSong() >= 0 ? `Playing song #${currentPlayingSong()}` : "Playing") : "Idle"}
         </span>
       </div>
+      {isBusy() && songQueue().length > 0 && (
+        <div class={deviceStyles.device__status}>
+          <span class={deviceStyles["device__status-text"]}>
+            Queue: {songQueue().join(", ")}
+          </span>
+        </div>
+      )}
 
       <div class={deviceStyles["device__input-group"]}>
         <div class={deviceStyles.device__controls}>

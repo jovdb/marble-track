@@ -19,7 +19,7 @@ export function Hv20tAudio(props: { id: string; isPopup?: boolean; onClose?: () 
 
   const [songIndex, setSongIndex] = createSignal(1);
   const [volume, setVolume] = createSignal(volumePercent());
-  const [playMode, setPlayMode] = createSignal<Hv20tPlayMode>("stop");
+  const [playMode, setPlayMode] = createSignal<Hv20tPlayMode>("queue");
 
   const handlePlay = () => actions.play(Math.trunc(songIndex()), playMode());
   const handleStop = () => actions.stop();
@@ -38,16 +38,23 @@ export function Hv20tAudio(props: { id: string; isPopup?: boolean; onClose?: () 
     >
       <div class={deviceStyles.device__status}>
         <span class={deviceStyles["device__status-text"]}>
-          Status: {isBusy() ? (currentPlayingSong() !== undefined && currentPlayingSong() >= 0 ? `Playing song #${currentPlayingSong()}` : "Playing") : "Idle"}
+          {(() => {
+            const playing = currentPlayingSong();
+            const queue = songQueue();
+            if (!isBusy()) {
+              return "Idle";
+            }
+            if (playing !== undefined && playing >= 0) {
+              const base = `Playing song #${playing}`;
+              if (queue.length > 0) {
+                return `${base} (queued: ${queue.join(", ")})`;
+              }
+              return base;
+            }
+            return "Playing";
+          })()}
         </span>
       </div>
-      {isBusy() && songQueue().length > 0 && (
-        <div class={deviceStyles.device__status}>
-          <span class={deviceStyles["device__status-text"]}>
-            Queue: {songQueue().join(", ")}
-          </span>
-        </div>
-      )}
 
       <div class={deviceStyles["device__input-group"]}>
         <div class={deviceStyles.device__controls}>

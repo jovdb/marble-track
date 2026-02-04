@@ -92,16 +92,14 @@ namespace devices
         }
         _playerReady = false;
         _state.isBusy = false;
-        _state.lastSongIndex = -1;
         _state.currentPlayingSong = -1;
         _playbackInitiated = false;
-        _currentPlayingSong = -1;
         _currentSongStartTime = 0;
 
         // Clear any queued songs
-        while (!_songQueue.empty())
+        while (!_state.songQueue.empty())
         {
-            _songQueue.pop();
+            _state.songQueue.pop();
         }
     }
 
@@ -110,26 +108,19 @@ namespace devices
         Device::loop();
 
         // Check for song timeout if a song is currently playing
-        if (_currentPlayingSong >= 0 && _currentSongStartTime > 0)
+        if (_state.currentPlayingSong >= 0 && _currentSongStartTime > 0)
         {
             unsigned long elapsed = millis() - _currentSongStartTime;
             if (elapsed >= _config.songTimeoutMs)
             {
-                MLOG_WARN("%s: Song %i timed out after %lu ms, marking as completed",
-                          toString().c_str(), _currentPlayingSong, elapsed);
+                MLOG_WARN("%s: Song %i timed out after %lu ms, stopping playback",
+                          toString().c_str(), _state.currentPlayingSong, elapsed);
+                _player.stop(); // Stop the player
+                // Reset software state - hardware state will be detected in busy check
                 _state.currentPlayingSong = -1;
-                _currentPlayingSong = -1;
                 _currentSongStartTime = 0;
-                _state.isBusy = false;
-                notifyStateChanged();
-
-                // Process next song in queue
+                // Process queue immediately since playback has been stopped
                 processQueue();
-                if (_songQueue.empty())
-                {
-                    _playbackInitiated = false;
-                }
-                return; // Exit early since we handled the timeout
             }
         }
 
@@ -148,17 +139,24 @@ namespace devices
             // If playback just finished, check if there are queued songs
             if (!busy && _playbackInitiated)
             {
-                MLOG_INFO("%s: Song %i finished playing", toString().c_str(), _currentPlayingSong);
+                MLOG_INFO("%s: Song %i finished playing", toString().c_str(), _state.currentPlayingSong);
                 _state.currentPlayingSong = -1;
-                _currentPlayingSong = -1;
                 _currentSongStartTime = 0;
                 processQueue();
                 // Only reset if queue is empty (no more songs to play)
-                if (_songQueue.empty())
+                if (_state.songQueue.empty())
                 {
                     _playbackInitiated = false;
                 }
             }
+        }
+
+        // If not busy and no song is playing but we have queued songs, start the next one
+        // This handles the case where the device starts with a queue or queue gets populated while idle
+        if (!busy && _state.currentPlayingSong == -1 && !_state.songQueue.empty())
+        {
+            MLOG_INFO("%s: Starting playback from queue", toString().c_str());
+            processQueue();
         }
     }
 
@@ -198,14 +196,15 @@ namespace devices
             }
             if (mode == Hv20tPlayMode::SkipIfPlaying)
             {
-                MLOG_INFO("%s: Skipping play song %i - currently playing song %i", toString().c_str(), songIndex, _currentPlayingSong);
+                MLOG_INFO("%s: Skipping play song %i - currently playing song %i", toString().c_str(), songIndex, _state.currentPlayingSong);
                 return true;
             }
 
             if (mode == Hv20tPlayMode::QueueIfPlaying)
             {
-                _songQueue.push(songIndex);
-                MLOG_INFO("%s: Queuing song %i (currently playing: %i, queue: %s)", toString().c_str(), songIndex, _currentPlayingSong, getQueueString().c_str());
+                _state.songQueue.push(songIndex);
+                MLOG_INFO("%s: Queuing song %i (currently playing: %i, queue: %s)", toString().c_str(), songIndex, _state.currentPlayingSong, getQueueString().c_str());
+                notifyStateChanged();
                 return true;
             }
         }
@@ -215,9 +214,7 @@ namespace devices
             if (songIndex > 65535)
                 songIndex = 65535;
             MLOG_INFO("%s: Playing song %i (queue: %s)", toString().c_str(), songIndex, getQueueString().c_str());
-            _state.lastSongIndex = songIndex;
             _state.currentPlayingSong = songIndex;
-            _currentPlayingSong = songIndex;
             _currentSongStartTime = millis();
             notifyStateChanged();
             _playbackInitiated = true;
@@ -239,13 +236,12 @@ namespace devices
         _player.stop();
         _playbackInitiated = false;
         _state.currentPlayingSong = -1;
-        _currentPlayingSong = -1;
         _currentSongStartTime = 0;
 
         // Clear any queued songs when stopping
-        while (!_songQueue.empty())
+        while (!_state.songQueue.empty())
         {
-            _songQueue.pop();
+            _state.songQueue.pop();
         }
 
         return true;
@@ -274,10 +270,10 @@ namespace devices
         std::queue<int> tempQueue;
         bool removed = false;
 
-        while (!_songQueue.empty())
+        while (!_state.songQueue.empty())
         {
-            int song = _songQueue.front();
-            _songQueue.pop();
+            int song = _state.songQueue.front();
+            _state.songQueue.pop();
             if (!removed && song == songIndex)
             {
                 removed = true;
@@ -288,9 +284,14 @@ namespace devices
             }
         }
 
-        _songQueue = std::move(tempQueue);
+        _state.songQueue = std::move(tempQueue);
 
-        MLOG_INFO("%s: Removed song %i from queue (currently playing: %i, queue: %s)", toString().c_str(), songIndex, _currentPlayingSong, getQueueString().c_str());
+        MLOG_INFO("%s: Removed song %i from queue (currently playing: %i, queue: %s)", toString().c_str(), songIndex, _state.currentPlayingSong, getQueueString().c_str());
+
+        if (removed)
+        {
+            notifyStateChanged();
+        }
 
         return removed;
     }
@@ -299,7 +300,7 @@ namespace devices
     {
         if (isPlaying())
         {
-            return _currentPlayingSong;
+            return _state.currentPlayingSong;
         }
         return -1;
     }
@@ -308,10 +309,9 @@ namespace devices
     {
         doc["isBusy"] = _state.isBusy;
         doc["volumePercent"] = _state.volumePercent;
-        doc["lastSongIndex"] = _state.lastSongIndex;
-        doc["currentPlayingSong"] = _currentPlayingSong;
+        doc["currentPlayingSong"] = _state.currentPlayingSong;
         JsonArray songQueue = doc["songQueue"].to<JsonArray>();
-        std::queue<int> tempQueue = _songQueue; // Copy queue to iterate
+        std::queue<int> tempQueue = _state.songQueue; // Copy queue to iterate
         while (!tempQueue.empty())
         {
             songQueue.add(tempQueue.front());
@@ -462,25 +462,28 @@ namespace devices
         bool hardwarePlaying = false;
         if (_config.busyPin.pin >= 0 && _config.busyPin.expanderId.isEmpty())
         {
-            hardwarePlaying = (digitalRead(_config.busyPin.pin) == LOW);
+            int pinValue = digitalRead(_config.busyPin.pin);
+            hardwarePlaying = (pinValue == LOW);
+            MLOG_DEBUG("%s: Busy pin %d = %d (%s)", toString().c_str(), _config.busyPin.pin, pinValue, hardwarePlaying ? "playing" : "idle");
         }
 
         // If busy pin is configured, use it as primary indicator, otherwise use software state
         if (_config.busyPin.pin >= 0 && _config.busyPin.expanderId.isEmpty())
         {
-            // Use hardware pin as primary, but log discrepancies for debugging
+            // Log discrepancies for debugging
             if (softwarePlaying != hardwarePlaying)
             {
-                MLOG_DEBUG("%s: State mismatch - Software: %s, Hardware: %s",
-                           toString().c_str(),
-                           softwarePlaying ? "playing" : "idle",
-                           hardwarePlaying ? "playing" : "idle");
+                MLOG_WARN("%s: State mismatch - Software: %s, Hardware: %s",
+                          toString().c_str(),
+                          softwarePlaying ? "playing" : "idle",
+                          hardwarePlaying ? "playing" : "idle");
             }
             return hardwarePlaying;
         }
         else
         {
             // Fall back to software state if no busy pin
+            MLOG_DEBUG("%s: Using software state: %s", toString().c_str(), softwarePlaying ? "playing" : "idle");
             return softwarePlaying;
         }
     }
@@ -488,9 +491,9 @@ namespace devices
     String Hv20tAudio::getQueueString()
     {
         String queueStr = "[";
-        if (!_songQueue.empty())
+        if (!_state.songQueue.empty())
         {
-            std::queue<int> tempQueue = _songQueue; // Copy queue to iterate
+            std::queue<int> tempQueue = _state.songQueue; // Copy queue to iterate
             bool first = true;
             while (!tempQueue.empty())
             {
@@ -512,13 +515,34 @@ namespace devices
             return;
         }
 
-        if (!_songQueue.empty())
+        if (!_state.songQueue.empty())
         {
-            const int nextSong = _songQueue.front();
-            _songQueue.pop();
+            const int nextSong = _state.songQueue.front();
+            _state.songQueue.pop();
+            notifyStateChanged();
             MLOG_INFO("%s: Playing next queued song %i (remaining queue: %s)",
                       toString().c_str(), nextSong, getQueueString().c_str());
-            play(nextSong, Hv20tPlayMode::StopThenPlay);
+
+            // Directly start the next song without going through busy logic
+            // since we know the previous song has finished
+            if (nextSong >= 0)
+            {
+                if (nextSong > 65535)
+                {
+                    // This shouldn't happen but clamp anyway
+                    const int clampedSong = 65535;
+                    _state.currentPlayingSong = clampedSong;
+                    _player.playSpecified(static_cast<uint16_t>(clampedSong + 1));
+                }
+                else
+                {
+                    _state.currentPlayingSong = nextSong;
+                    _player.playSpecified(static_cast<uint16_t>(nextSong + 1));
+                }
+                _currentSongStartTime = millis();
+                notifyStateChanged();
+                _playbackInitiated = true;
+            }
         }
     }
 

@@ -1,8 +1,4 @@
 {
-  "network": {
-    "ssid": "telenet-182FE",
-    "password": "cPQdRWmFx1eM"
-  },
   "devices": [
     {
       "id": "i2c-1",
@@ -44,9 +40,20 @@
           "children": [],
           "config": {
             "name": "Audio",
-            "rxPin": 47,
-            "txPin": 48,
-            "defaultVolumePercent": 50
+            "rxPin": {
+              "pin": 47,
+              "expanderId": ""
+            },
+            "txPin": {
+              "pin": 48,
+              "expanderId": ""
+            },
+            "busyPin": {
+              "pin": 45,
+              "expanderId": ""
+            },
+            "defaultVolumePercent": 50,
+            "songTimeoutMs": 30000
           }
         },
         {
@@ -64,14 +71,36 @@
                 "maxAcceleration": 100,
                 "defaultSpeed": 150,
                 "defaultAcceleration": 50,
-                "stepPin": 1,
-                "dirPin": 2,
-                "pin1": -1,
-                "pin2": -1,
-                "pin3": -1,
-                "pin4": -1,
-                "enablePin": 42,
-                "invertEnable": true
+                "stepPin": {
+                  "pin": 1,
+                  "expanderId": ""
+                },
+                "dirPin": {
+                  "pin": 2,
+                  "expanderId": ""
+                },
+                "pin1": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "pin2": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "pin3": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "pin4": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "enablePin": {
+                  "pin": 42,
+                  "expanderId": ""
+                },
+                "invertEnable": true,
+                "invertDirection": false
               }
             },
             {
@@ -148,8 +177,8 @@
           "children": [],
           "config": {
             "pin": {
-              "pin": 0,
-              "expanderId": "ex"
+              "pin": -1,
+              "expanderId": ""
             },
             "name": "Lift Led",
             "initialState": "OFF"
@@ -161,8 +190,8 @@
           "children": [],
           "config": {
             "pin": {
-              "pin": -1,
-              "expanderId": ""
+              "pin": 4,
+              "expanderId": "ex"
             },
             "name": "Lift Button",
             "debounceTimeInMs": 50,
@@ -176,7 +205,7 @@
           "children": [],
           "config": {
             "pin": {
-              "pin": -1,
+              "pin": 3,
               "expanderId": ""
             },
             "name": "Manual Mode Button",
@@ -196,18 +225,40 @@
               "config": {
                 "name": "wheel Stepper",
                 "stepperType": "DRIVER",
-                "maxSpeed": 3000,
-                "maxAcceleration": 3000,
-                "defaultSpeed": 1000,
-                "defaultAcceleration": 200,
-                "stepPin": 4,
-                "dirPin": 5,
-                "pin1": -1,
-                "pin2": -1,
-                "pin3": -1,
-                "pin4": -1,
-                "enablePin": 6,
-                "invertEnable": true
+                "maxSpeed": 120,
+                "maxAcceleration": 300,
+                "defaultSpeed": 60,
+                "defaultAcceleration": 20,
+                "stepPin": {
+                  "pin": 4,
+                  "expanderId": ""
+                },
+                "dirPin": {
+                  "pin": 5,
+                  "expanderId": ""
+                },
+                "pin1": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "pin2": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "pin3": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "pin4": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "enablePin": {
+                  "pin": 6,
+                  "expanderId": ""
+                },
+                "invertEnable": true,
+                "invertDirection": true
               }
             },
             {
@@ -216,7 +267,7 @@
               "children": [],
               "config": {
                 "pin": {
-                  "pin": -1,
+                  "pin": 7,
                   "expanderId": ""
                 },
                 "name": "Wheel Zero Sensor",
@@ -228,14 +279,16 @@
           ],
           "config": {
             "name": "Wheel",
-            "stepsPerRevolution": 138259,
-            "maxStepsPerRevolution": 150000,
+            "stepsPerRevolution": 6752,
+            "maxStepsPerRevolution": 6800,
             "zeroPointDegree": 180,
             "direction": 1,
             "breakPoints": [
+              42,
               82,
-              160,
-              285,
+              158.5,
+              202.2,
+              283.5,
               317
             ]
           }
@@ -259,10 +312,38 @@
           "children": [],
           "config": {
             "pin": {
+              "pin": 5,
+              "expanderId": "ex"
+            },
+            "name": "Wheel button",
+            "debounceTimeInMs": 50,
+            "pinMode": "PullUp",
+            "buttonType": "NormalOpen"
+          }
+        },
+        {
+          "id": "spiral-led",
+          "type": "led",
+          "children": [],
+          "config": {
+            "pin": {
               "pin": -1,
               "expanderId": ""
             },
-            "name": "",
+            "name": "Spiral Led",
+            "initialState": "OFF"
+          }
+        },
+        {
+          "id": "spiral-btn",
+          "type": "button",
+          "children": [],
+          "config": {
+            "pin": {
+              "pin": -1,
+              "expanderId": ""
+            },
+            "name": "Spiral Button",
             "debounceTimeInMs": 50,
             "pinMode": "PullUp",
             "buttonType": "NormalOpen"
@@ -276,11 +357,11 @@
       "children": [],
       "config": {
         "pin": {
-          "pin": 3,
-          "expanderId": "ex"
+          "pin": -1,
+          "expanderId": ""
         },
         "name": "Led",
-        "initialState": "OFF"
+        "initialState": "BLINKING"
       }
     }
   ]

@@ -341,7 +341,7 @@ namespace devices
         esp_err_t gpioErr = mcpwm_gpio_init(_mcpwmUnit, _mcpwmSignal, _config.pin);
         if (gpioErr != ESP_OK)
         {
-            MLOG_ERROR("%s: Failed to initialize MCPWM GPIO: %s", toString().c_str(), esp_err_to_name(gpioErr));
+            MLOG_ERROR("%s: Failed to initialize MCPWM pin %s", toString().c_str(), esp_err_to_name(gpioErr));
             _isSetup = false;
             return false;
         }

@@ -76,7 +76,7 @@ namespace pins
 
         /**
          * @brief Get a string description of the pin for logging
-         * @return String like "GPIO:5" or "MCP23017:0x20:3"
+         * @return String like "5" or "i2c:3"
          */
         virtual String toString() const = 0;
     };

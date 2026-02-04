@@ -15,7 +15,7 @@ struct PinConfig
     {
         if (expanderId.isEmpty())
         {
-            return "GPIO:" + String(pin);
+            return String(pin);
         }
         else
         {

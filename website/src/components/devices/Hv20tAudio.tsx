@@ -5,6 +5,7 @@ import deviceStyles from "./Device.module.css";
 import { getDeviceIcon } from "../icons/Icons";
 import { useHv20tAudio, type Hv20tPlayMode } from "../../stores/Hv20tAudio";
 import Hv20tAudioConfig from "./Hv20tAudioConfig";
+import { Hv20tStateIcon } from "./Hv20tStateIcon";
 
 export function Hv20tAudio(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const hv20tStore = useHv20tAudio(props.id);
@@ -37,6 +38,7 @@ export function Hv20tAudio(props: { id: string; isPopup?: boolean; onClose?: () 
       stateComponent={() => null}
     >
       <div class={deviceStyles.device__status}>
+        <Hv20tStateIcon deviceId={props.id} width={32} height={32} />
         <span class={deviceStyles["device__status-text"]}>
           {(() => {
             const playing = currentPlayingSong();

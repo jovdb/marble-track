@@ -8,6 +8,8 @@ export interface IHv20tAudioState extends IDeviceState {
   isBusy?: boolean;
   volumePercent?: number;
   lastSongIndex?: number;
+  currentPlayingSong?: number;
+  songQueue?: number[];
   [key: string]: unknown;
 }
 

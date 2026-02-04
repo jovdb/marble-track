@@ -310,6 +310,13 @@ namespace devices
         doc["volumePercent"] = _state.volumePercent;
         doc["lastSongIndex"] = _state.lastSongIndex;
         doc["currentPlayingSong"] = _currentPlayingSong;
+        JsonArray songQueue = doc["songQueue"].to<JsonArray>();
+        std::queue<int> tempQueue = _songQueue; // Copy queue to iterate
+        while (!tempQueue.empty())
+        {
+            songQueue.add(tempQueue.front());
+            tempQueue.pop();
+        }
     }
 
     bool Hv20tAudio::control(const String &action, JsonObject *args)

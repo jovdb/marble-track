@@ -1,15 +1,16 @@
 ESP32:
 
-- OTA updates
 - Use Async API for describing WS possibilities
 - Allow a name /description per GPIO port
-- Make addChild from device a protected member?
+- Use FastAccellStepper that used PWM instead of loop
+- Collect WS messages and send at end of loop as one
+  - Optionally throttle the messages every Xms
 
 Website:
 
 - WebSocket messages types and Device.tsx
 - use zod to validate state
-- haertbeat - pong
+- heartbeat - pong
 - Remove  useWebsocket.ts
 
 Both:

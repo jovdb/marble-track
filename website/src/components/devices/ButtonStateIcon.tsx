@@ -9,16 +9,28 @@ function ButtonReleasedIcon(props: IconProps) {
       height={props.height || 24}
       viewBox="0 0 24 24"
       fill="none"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke="currentcolor"
       xmlns="http://www.w3.org/2000/svg"
       class={props.class}
       style={props.style}
     >
       <g>
-        <ellipse cx="12" cy="16.5" rx="10" ry="3" stroke="#000" fill="#fff" />
-        <rect x="2" y="10" width="20" height="6.5" stroke="none" fill="#fff" />
-        <ellipse cx="12" cy="10" rx="10" ry="3" stroke="#000" fill="#fff" />
-        <line x1="2" x2="2" y1="10" y2="16.5" fill="none" stroke="#000" />
-        <line x1="22" x2="22" y1="10" y2="16.5" fill="none" stroke="#000" />
+        <line x1="1" x2="23" y1="18" y2="18"></line>
+        <line x1="1" x2="23" y1="21" y2="21"></line>
+        <line x1="1" x2="1" y1="18" y2="21"></line>
+        <line x1="23" x2="23" y1="18" y2="21"></line>
+        <line x1="1" x2="3" y1="18" y2="9"></line>
+        <line x1="23" x2="21" y1="18" y2="9"></line>
+        <line x1="3" x2="21" y1="9" y2="9"></line>
+      </g>
+      <g>
+        <ellipse cx="12" cy="12.5" rx="7" ry="3" fill="#fff"></ellipse>
+        <rect x="4.5" y="6" width="14" height="6.5" fill="#fff" stroke="none"></rect>
+        <ellipse cx="12" cy="6" rx="7" ry="3" fill="#fff"></ellipse>
+        <line x1="5" x2="5" y1="6" y2="12.5" fill="none"></line>
+        <line x1="19" x2="19" y1="6" y2="12.5" fill="none"></line>
       </g>
     </svg>
   );
@@ -31,16 +43,28 @@ function ButtonPressedIcon(props: IconProps) {
       height={props.height || 24}
       viewBox="0 0 24 24"
       fill="none"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke="currentcolor"
       xmlns="http://www.w3.org/2000/svg"
       class={props.class}
       style={props.style}
     >
       <g>
-        <ellipse cx="12" cy="16.5" rx="10" ry="3" stroke="#000" fill="#fff" />
-        <rect x="2" y="14" width="20" height="2.5" stroke="none" fill="#fff" />
-        <ellipse cx="12" cy="14" rx="10" ry="3" stroke="#000" fill="#fff" />
-        <line x1="2" x2="2" y1="14" y2="16.5" fill="none" stroke="#000" />
-        <line x1="22" x2="22" y1="14" y2="16.5" fill="none" stroke="#000" />
+        <line x1="1" x2="23" y1="18" y2="18"></line>
+        <line x1="1" x2="23" y1="21" y2="21"></line>
+        <line x1="1" x2="1" y1="18" y2="21"></line>
+        <line x1="23" x2="23" y1="18" y2="21"></line>
+        <line x1="1" x2="3" y1="18" y2="9"></line>
+        <line x1="23" x2="21" y1="18" y2="9"></line>
+        <line x1="3" x2="21" y1="9" y2="9"></line>
+      </g>
+      <g>
+        <ellipse cx="12" cy="12.5" rx="7" ry="3" fill="#fff"></ellipse>
+        <rect x="4.5" y="10" width="14" height="2.5" fill="#fff" stroke="none"></rect>
+        <ellipse cx="12" cy="10" rx="7" ry="3" fill="#fff"></ellipse>
+        <line x1="5" x2="5" y1="10" y2="12.5" fill="none"></line>
+        <line x1="19" x2="19" y1="10" y2="12.5" fill="none"></line>
       </g>
     </svg>
   );

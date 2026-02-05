@@ -58,7 +58,9 @@ bool Network::setup()
     }
     else
     {
-        MLOG_INFO("WiFi SSID not configured, starting Access Point mode");
+        MLOG_INFO("WiFi SSID not configured, will start Access Point mode");
+        _wifiConnectionAttempted = true; // Skip WiFi attempt
+
         if (startAccessPoint())
         {
             _currentMode = NetworkMode::ACCESS_POINT;
@@ -69,7 +71,6 @@ bool Network::setup()
             _currentMode = NetworkMode::DISCONNECTED;
             MLOG_ERROR("Failed to start Access Point - no network connection!");
         }
-        _wifiConnectionAttempted = true; // Mark as attempted
     }
 
     return true; // Setup initiated successfully

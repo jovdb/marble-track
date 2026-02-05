@@ -50,6 +50,7 @@ bool lastButtonPressed = false;
 void globalNotifyClientsCallback(const String &message);
 
 SerialConsole *serialConsole = nullptr;
+bool otaConfigured = false;
 
 void globalNotifyClientsCallback(const String &message)
 {
@@ -104,8 +105,6 @@ void setup()
   {
     String hostnameStr = network->getHostname();
     MLOG_INFO("Network ready, hostname: %s.local", hostnameStr.c_str());
-
-    OtaUpload::setup(*network, server);
   }
 
   // Create WebsiteHost instance after network is initialized
@@ -227,6 +226,12 @@ void loop()
   {
     network->loop(); // Handle non-blocking network connection
     network->processCaptivePortal();
+
+    if (!otaConfigured && network->getMode() != NetworkMode::DISCONNECTED)
+    {
+      OtaUpload::setup(*network, server);
+      otaConfigured = true;
+    }
   }
 
   // Keep the WebSocket alive

@@ -71,6 +71,14 @@ namespace devices
             MLOG_WARN("%s: DyPLayer not configured", toString().c_str());
         }
 
+        if (_player.checkPlayState() == DY::PlayState::Fail)
+        {
+            Serial.println("PlayerState = Fail: Restart port...");
+            _serial.end();
+            delay(100);
+            initializePlayer();
+        }
+
         _state.volumePercent = clampPercent(_config.defaultVolumePercent);
         _state.currentPlayingSong = -1;
         _volumeSteps = static_cast<uint8_t>((_state.volumePercent * VOLUME_STEPS + 50) / 100);
@@ -125,7 +133,7 @@ namespace devices
         }
 
         // Check playing state every 50ms
-        if (millis() % 50 == 0)
+        if (millis() % 500 == 0)
         {
             const bool busy = isPlaying();
             if (busy != _state.isBusy)
@@ -420,8 +428,22 @@ namespace devices
         }
 
         _serial.begin(9600, SERIAL_8N1, _config.rxPin.pin, _config.txPin.pin);
+
+        // Clear any garbage data in the buffer
+        while (_serial.available())
+        {
+            _serial.read();
+        }
+
+        // Give the HV20T module time to initialize after power-on/serial connection
+        // Many embedded modules need some time to become responsive
+        delay(50); // 1.5 second delay for module initialization
+
+        // Initialize the DYPlayer
+        _player.begin();
+
         _playerReady = true;
-        MLOG_INFO("%s: DyPLayer configured (RX %d, TX %d)", toString().c_str(), _config.rxPin.pin, _config.txPin.pin);
+        MLOG_INFO("%s: DYPlayer configured (RX %d, TX %d)", toString().c_str(), _config.rxPin.pin, _config.txPin.pin);
 
         return true;
     }
@@ -434,8 +456,9 @@ namespace devices
         }
 
         // Check software state only
-        bool softwarePlaying = (_player.checkPlayState() == DY::PlayState::Playing);
-        MLOG_DEBUG("%s: Using software state: %s", toString().c_str(), softwarePlaying ? "playing" : "idle");
+        DY::PlayState playState = _player.checkPlayState();
+        bool softwarePlaying = (playState == DY::PlayState::Playing);
+
         return softwarePlaying;
     }
 

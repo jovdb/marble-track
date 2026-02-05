@@ -69,6 +69,7 @@ namespace devices
         WheelErrorCode errorCode = WheelErrorCode::None; // Last error code
         String errorMessage = "";                        // Last error message
         long lastZeroPosition = 0;                       // Position at last zero sensor trigger
+        long pendingZeroOffset = 0;                      // Pending zero offset
         long stepsInLastRevolution = 0;                  // Steps measured in last revolution
         int currentBreakpointIndex = -1;                 // Current breakpoint index
         int targetBreakpointIndex = -1;                  // Target breakpoint index

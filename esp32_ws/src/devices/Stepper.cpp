@@ -357,6 +357,7 @@ namespace devices
 
         xSemaphoreTake(_stateMutex, portMAX_DELAY);
         _state.currentPosition = position;
+        _state.targetPosition = position;
         xSemaphoreGive(_stateMutex);
 
         notifyStateChanged();

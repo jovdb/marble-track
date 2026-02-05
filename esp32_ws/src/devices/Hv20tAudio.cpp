@@ -99,9 +99,7 @@ namespace devices
             _serial.end();
         }
         _playerReady = false;
-        _state.isBusy = false;
         _state.currentPlayingSong = -1;
-        _playbackInitiated = false;
         _currentSongStartTime = 0;
 
         // Clear any queued songs
@@ -129,46 +127,32 @@ namespace devices
                 _currentSongStartTime = 0;
                 // Process queue immediately since playback has been stopped
                 processQueue();
+                notifyStateChanged();
             }
         }
 
         // Check playing state every 50ms
-        if (millis() % 500 == 0)
+        if (millis() % 50 == 0)
         {
             const bool busy = isPlaying();
-            if (busy != _state.isBusy)
+
+            // If Ended
+            if (!busy && _state.currentPlayingSong >= 0)
             {
-                _state.isBusy = busy;
-
-                // If playback is active, mark as initiated
-                if (busy)
-                {
-                    _playbackInitiated = true;
-                }
-
-                // If playback just finished, check if there are queued songs
-                if (!busy && _playbackInitiated)
-                {
-                    MLOG_INFO("%s: Song %i finished playing", toString().c_str(), _state.currentPlayingSong);
-                    _state.currentPlayingSong = -1;
-                    _currentSongStartTime = 0;
-                    processQueue();
-                    // Only reset if queue is empty (no more songs to play)
-                    if (_state.songQueue.empty())
-                    {
-                        _playbackInitiated = false;
-                    }
-                }
+                MLOG_INFO("%s: Song %i finished playing", toString().c_str(), _state.currentPlayingSong);
+                _state.currentPlayingSong = -1;
+                _currentSongStartTime = 0;
                 notifyStateChanged();
             }
 
             // If not busy and no song is playing but we have queued songs, start the next one
             // This handles the case where the device starts with a queue or queue gets populated while idle
+            /*
             if (!busy && _state.currentPlayingSong == -1 && !_state.songQueue.empty())
             {
                 MLOG_INFO("%s: Starting playback from queue", toString().c_str());
                 processQueue();
-            }
+            }*/
         }
     }
 
@@ -192,12 +176,10 @@ namespace devices
         if (!_playerReady)
         {
             MLOG_WARN("%s: Cannot play - DyPLayer not ready", toString().c_str());
-
             return false;
         }
 
-        const bool isBusy = isPlaying() || _playbackInitiated;
-        if (isBusy || _state.currentPlayingSong >= 0)
+        if (_state.currentPlayingSong >= 0)
         {
             if (mode == Hv20tPlayMode::StopThenPlay)
             {
@@ -227,7 +209,6 @@ namespace devices
             _state.currentPlayingSong = songIndex;
             _currentSongStartTime = millis();
             notifyStateChanged();
-            _playbackInitiated = true;
             _player.playSpecified(static_cast<uint16_t>(songIndex + 1));
             return true;
         }
@@ -244,7 +225,6 @@ namespace devices
         }
 
         _player.stop();
-        _playbackInitiated = false;
         _state.currentPlayingSong = -1;
         _currentSongStartTime = 0;
 
@@ -309,16 +289,11 @@ namespace devices
 
     int Hv20tAudio::getPlayingIndex()
     {
-        if (isPlaying())
-        {
-            return _state.currentPlayingSong;
-        }
-        return -1;
+        return _state.currentPlayingSong;
     }
 
     void Hv20tAudio::addStateToJson(JsonDocument &doc)
     {
-        doc["isBusy"] = _state.isBusy;
         doc["volumePercent"] = _state.volumePercent;
         doc["currentPlayingSong"] = _state.currentPlayingSong;
         JsonArray songQueue = doc["songQueue"].to<JsonArray>();
@@ -482,6 +457,7 @@ namespace devices
         return queueStr;
     }
 
+    // No notifyStateChanged call here - caller should do it if needed
     void Hv20tAudio::processQueue()
     {
         if (!_playerReady)
@@ -493,7 +469,6 @@ namespace devices
         {
             const int nextSong = _state.songQueue.front();
             _state.songQueue.pop();
-            notifyStateChanged();
             MLOG_INFO("%s: Playing next queued song %i (remaining queue: %s)",
                       toString().c_str(), nextSong, getQueueString().c_str());
 
@@ -514,9 +489,8 @@ namespace devices
                     _player.playSpecified(static_cast<uint16_t>(nextSong + 1));
                 }
                 _currentSongStartTime = millis();
-                notifyStateChanged();
-                _playbackInitiated = true;
             }
+            notifyStateChanged();
         }
     }
 

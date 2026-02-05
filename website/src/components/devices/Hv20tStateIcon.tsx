@@ -58,7 +58,7 @@ export function Hv20tStateIcon(props: {
     const state = device.state;
     if (!state) return;
 
-    if (state.isBusy || (state.currentPlayingSong ?? -1) >= 0) {
+    if ((state.currentPlayingSong ?? -1) >= 0) {
       setIsOn(true);
     } else {
       setIsOn(false);

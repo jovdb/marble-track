@@ -5,7 +5,6 @@ import { PinConfig } from "../interfaces/WebSockets";
 const deviceType = "hv20t";
 
 export interface IHv20tAudioState extends IDeviceState {
-  isBusy?: boolean;
   volumePercent?: number;
   currentPlayingSong?: number;
   songQueue?: number[];

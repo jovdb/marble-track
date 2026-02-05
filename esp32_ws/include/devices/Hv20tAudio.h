@@ -30,7 +30,6 @@ namespace devices
 
     struct Hv20tAudioState
     {
-        bool isBusy = false;
         uint8_t volumePercent = 50;
         int currentPlayingSong = -1;
         std::queue<int> songQueue;
@@ -80,7 +79,6 @@ namespace devices
         DY::Player _player;
         bool _playerReady = false;
         uint8_t _volumeSteps = 0;
-        bool _playbackInitiated = false;
         unsigned long _currentSongStartTime = 0;
     };
 

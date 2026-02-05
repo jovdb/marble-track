@@ -128,7 +128,6 @@ namespace devices
         if (busy != _state.isBusy)
         {
             _state.isBusy = busy;
-            notifyStateChanged();
 
             // If playback is active, mark as initiated
             if (busy)
@@ -149,6 +148,7 @@ namespace devices
                     _playbackInitiated = false;
                 }
             }
+            notifyStateChanged();
         }
 
         // If not busy and no song is playing but we have queued songs, start the next one
@@ -187,7 +187,7 @@ namespace devices
         }
 
         const bool isBusy = isPlaying() || _playbackInitiated;
-        if (isBusy)
+        if (isBusy || _state.currentPlayingSong >= 0)
         {
             if (mode == Hv20tPlayMode::StopThenPlay)
             {
@@ -244,6 +244,7 @@ namespace devices
             _state.songQueue.pop();
         }
 
+        notifyStateChanged();
         return true;
     }
 

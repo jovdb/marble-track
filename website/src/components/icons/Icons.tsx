@@ -11,6 +11,7 @@ import websocketIcon from "../../assets/icons/websocket.png";
 import dotsIcon from "../../assets/icons/dots.png";
 import { LedStateIcon } from "../devices/LedStateIcon";
 import { Hv20tStateIcon } from "../devices/Hv20tStateIcon";
+import { ButtonStateIcon } from "../devices/ButtonStateIcon";
 
 // Icon component props
 export interface IconProps {
@@ -435,7 +436,7 @@ export const getDeviceIcon = (type: string, deviceId: string, props?: IconProps)
     case "LED":
       return <LedStateIcon deviceId={deviceId} {...props} />;
     case "BUTTON":
-      return <ButtonIcon {...props} />;
+      return <ButtonStateIcon deviceId={deviceId} {...props} />;
     case "BUZZER":
       return <BuzzerIcon {...props} />;
     case "HV20T":

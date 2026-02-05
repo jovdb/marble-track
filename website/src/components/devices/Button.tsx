@@ -3,7 +3,7 @@ import { Device } from "./Device";
 import deviceStyles from "./Device.module.css";
 import { useButton } from "../../stores/Button";
 import ButtonConfig from "./ButtonConfig";
-import { ButtonIcon } from "../icons/Icons";
+import { ButtonStateIcon } from "./ButtonStateIcon";
 
 export function Button(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const buttonStore = useButton(props.id);
@@ -39,7 +39,7 @@ export function Button(props: { id: string; isPopup?: boolean; onClose?: () => v
     <Device
       id={props.id}
       configComponent={(onClose) => <ButtonConfig id={props.id} onClose={onClose} />}
-      icon={<ButtonIcon />}
+      icon={<ButtonStateIcon deviceId={props.id} />}
       stateComponent={() => null}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}

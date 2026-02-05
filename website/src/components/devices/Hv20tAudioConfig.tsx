@@ -18,9 +18,6 @@ export default function Hv20tAudioConfig(props: Hv20tAudioConfigProps) {
   const [txPin, setTxPin] = createSignal<PinConfig>(
     deserializePinConfig(device?.config?.txPin ?? -1)
   );
-  const [busyPin, setBusyPin] = createSignal<PinConfig>(
-    deserializePinConfig(device?.config?.busyPin ?? -1)
-  );
   const [defaultVolumePercent, setDefaultVolumePercent] = createSignal(
     String(device?.config?.defaultVolumePercent ?? 50)
   );
@@ -45,9 +42,6 @@ export default function Hv20tAudioConfig(props: Hv20tAudioConfigProps) {
     if (typeof config.txPin === "number" || typeof config.txPin === "object") {
       setTxPin(deserializePinConfig(config.txPin));
     }
-    if (typeof config.busyPin === "number" || typeof config.busyPin === "object") {
-      setBusyPin(deserializePinConfig(config.busyPin));
-    }
     if (typeof config.defaultVolumePercent === "number") {
       setDefaultVolumePercent(String(config.defaultVolumePercent));
     }
@@ -61,7 +55,6 @@ export default function Hv20tAudioConfig(props: Hv20tAudioConfigProps) {
           name: name(),
           rxPin: rxPin(),
           txPin: txPin(),
-          busyPin: busyPin(),
           defaultVolumePercent: toNumber(defaultVolumePercent(), 50),
         })
       }
@@ -85,11 +78,6 @@ export default function Hv20tAudioConfig(props: Hv20tAudioConfigProps) {
         <DeviceConfigRow>
           <DeviceConfigItem name="TX Pin:">
             <PinSelect value={txPin()} onChange={setTxPin} excludeDeviceId={props.id} />
-          </DeviceConfigItem>
-        </DeviceConfigRow>
-        <DeviceConfigRow>
-          <DeviceConfigItem name="Busy Pin:">
-            <PinSelect value={busyPin()} onChange={setBusyPin} excludeDeviceId={props.id} />
           </DeviceConfigItem>
         </DeviceConfigRow>
         <DeviceConfigRow>

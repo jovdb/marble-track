@@ -24,7 +24,6 @@ namespace devices
         String name = "HV20T";
         PinConfig rxPin;   // UART RX
         PinConfig txPin;   // UART TX
-        PinConfig busyPin; // Busy pin
         uint8_t defaultVolumePercent = 50;
         unsigned long songTimeoutMs = 30000; // 30 seconds default timeout
     };

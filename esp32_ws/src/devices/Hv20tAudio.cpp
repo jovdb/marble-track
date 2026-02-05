@@ -124,39 +124,43 @@ namespace devices
             }
         }
 
-        const bool busy = isPlaying();
-        if (busy != _state.isBusy)
+        // Check playing state every 50ms
+        if (millis() % 50 == 0)
         {
-            _state.isBusy = busy;
-
-            // If playback is active, mark as initiated
-            if (busy)
+            const bool busy = isPlaying();
+            if (busy != _state.isBusy)
             {
-                _playbackInitiated = true;
-            }
+                _state.isBusy = busy;
 
-            // If playback just finished, check if there are queued songs
-            if (!busy && _playbackInitiated)
-            {
-                MLOG_INFO("%s: Song %i finished playing", toString().c_str(), _state.currentPlayingSong);
-                _state.currentPlayingSong = -1;
-                _currentSongStartTime = 0;
-                processQueue();
-                // Only reset if queue is empty (no more songs to play)
-                if (_state.songQueue.empty())
+                // If playback is active, mark as initiated
+                if (busy)
                 {
-                    _playbackInitiated = false;
+                    _playbackInitiated = true;
                 }
-            }
-            notifyStateChanged();
-        }
 
-        // If not busy and no song is playing but we have queued songs, start the next one
-        // This handles the case where the device starts with a queue or queue gets populated while idle
-        if (!busy && _state.currentPlayingSong == -1 && !_state.songQueue.empty())
-        {
-            MLOG_INFO("%s: Starting playback from queue", toString().c_str());
-            processQueue();
+                // If playback just finished, check if there are queued songs
+                if (!busy && _playbackInitiated)
+                {
+                    MLOG_INFO("%s: Song %i finished playing", toString().c_str(), _state.currentPlayingSong);
+                    _state.currentPlayingSong = -1;
+                    _currentSongStartTime = 0;
+                    processQueue();
+                    // Only reset if queue is empty (no more songs to play)
+                    if (_state.songQueue.empty())
+                    {
+                        _playbackInitiated = false;
+                    }
+                }
+                notifyStateChanged();
+            }
+
+            // If not busy and no song is playing but we have queued songs, start the next one
+            // This handles the case where the device starts with a queue or queue gets populated while idle
+            if (!busy && _state.currentPlayingSong == -1 && !_state.songQueue.empty())
+            {
+                MLOG_INFO("%s: Starting playback from queue", toString().c_str());
+                processQueue();
+            }
         }
     }
 
@@ -167,8 +171,6 @@ namespace devices
             pins.push_back(_config.rxPin.toString());
         if (_config.txPin.pin >= 0)
             pins.push_back(_config.txPin.toString());
-        if (_config.busyPin.pin >= 0)
-            pins.push_back(_config.busyPin.toString());
         return pins;
     }
 
@@ -374,8 +376,6 @@ namespace devices
             _config.rxPin = parsePinConfig(config["rxPin"]);
         if (!config["txPin"].isNull())
             _config.txPin = parsePinConfig(config["txPin"]);
-        if (!config["busyPin"].isNull())
-            _config.busyPin = parsePinConfig(config["busyPin"]);
         if (config["defaultVolumePercent"].is<int>())
             _config.defaultVolumePercent = clampPercent(config["defaultVolumePercent"].as<int>());
         if (config["songTimeoutMs"].is<unsigned long>())
@@ -394,11 +394,6 @@ namespace devices
             JsonDocument pinDoc;
             PinFactory::configToJson(_config.txPin, pinDoc);
             doc["txPin"] = pinDoc.as<JsonVariant>();
-        }
-        {
-            JsonDocument pinDoc;
-            PinFactory::configToJson(_config.busyPin, pinDoc);
-            doc["busyPin"] = pinDoc.as<JsonVariant>();
         }
         doc["defaultVolumePercent"] = _config.defaultVolumePercent;
         doc["songTimeoutMs"] = _config.songTimeoutMs;
@@ -428,24 +423,6 @@ namespace devices
         _playerReady = true;
         MLOG_INFO("%s: DyPLayer configured (RX %d, TX %d)", toString().c_str(), _config.rxPin.pin, _config.txPin.pin);
 
-        // Configure busy pin if available
-        if (_config.busyPin.pin >= 0)
-        {
-            if (!_config.busyPin.expanderId.isEmpty())
-            {
-                MLOG_WARN("%s: Busy pin expander not supported, using GPIO only", toString().c_str());
-            }
-            else
-            {
-                pinMode(_config.busyPin.pin, INPUT);
-                MLOG_INFO("%s: Busy pin configured on GPIO %d", toString().c_str(), _config.busyPin.pin);
-            }
-        }
-        else
-        {
-            MLOG_WARN("%s: Busy pin not configured - playback detection may be unreliable", toString().c_str());
-        }
-
         return true;
     }
 
@@ -456,37 +433,10 @@ namespace devices
             return false;
         }
 
-        // Check software state first
+        // Check software state only
         bool softwarePlaying = (_player.checkPlayState() == DY::PlayState::Playing);
-
-        // Check hardware busy pin if configured (active LOW = playing)
-        bool hardwarePlaying = false;
-        if (_config.busyPin.pin >= 0 && _config.busyPin.expanderId.isEmpty())
-        {
-            int pinValue = digitalRead(_config.busyPin.pin);
-            hardwarePlaying = (pinValue == LOW);
-            MLOG_DEBUG("%s: Busy pin %d = %d (%s)", toString().c_str(), _config.busyPin.pin, pinValue, hardwarePlaying ? "playing" : "idle");
-        }
-
-        // If busy pin is configured, use it as primary indicator, otherwise use software state
-        if (_config.busyPin.pin >= 0 && _config.busyPin.expanderId.isEmpty())
-        {
-            // Log discrepancies for debugging
-            if (softwarePlaying != hardwarePlaying)
-            {
-                MLOG_WARN("%s: State mismatch - Software: %s, Hardware: %s",
-                          toString().c_str(),
-                          softwarePlaying ? "playing" : "idle",
-                          hardwarePlaying ? "playing" : "idle");
-            }
-            return hardwarePlaying;
-        }
-        else
-        {
-            // Fall back to software state if no busy pin
-            MLOG_DEBUG("%s: Using software state: %s", toString().c_str(), softwarePlaying ? "playing" : "idle");
-            return softwarePlaying;
-        }
+        MLOG_DEBUG("%s: Using software state: %s", toString().c_str(), softwarePlaying ? "playing" : "idle");
+        return softwarePlaying;
     }
 
     String Hv20tAudio::getQueueString()

@@ -16,7 +16,6 @@ export interface IHv20tAudioConfig extends IDeviceConfig {
   name?: string;
   rxPin?: PinConfig | number;
   txPin?: PinConfig | number;
-  busyPin?: PinConfig | number;
   defaultVolumePercent?: number;
   [key: string]: unknown;
 }

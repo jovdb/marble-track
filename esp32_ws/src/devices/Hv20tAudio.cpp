@@ -453,14 +453,12 @@ namespace devices
     {
         if (!_playerReady)
         {
-            MLOG_ERROR("%s: Cannot check playing state - DyPLayer not ready", toString().c_str());
             return false;
         }
 
         // Check software state first
         bool softwarePlaying = (_player.checkPlayState() == DY::PlayState::Playing);
 
-        /*
         // Check hardware busy pin if configured (active LOW = playing)
         bool hardwarePlaying = false;
         if (_config.busyPin.pin >= 0 && _config.busyPin.expanderId.isEmpty())
@@ -489,7 +487,6 @@ namespace devices
             MLOG_DEBUG("%s: Using software state: %s", toString().c_str(), softwarePlaying ? "playing" : "idle");
             return softwarePlaying;
         }
-        */
     }
 
     String Hv20tAudio::getQueueString()

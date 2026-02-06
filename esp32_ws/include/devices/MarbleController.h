@@ -76,6 +76,10 @@ namespace devices
         // Random delay before next wheel trigger
         unsigned long _randomWheelDelayMs = 0;
 
+        // Idle sound tracking
+        unsigned long _lastButtonPressTime = 0;
+        bool _idleSoundPlayed = false;
+
         bool isAutoMode = false;
     };
 

@@ -62,6 +62,10 @@ namespace devices
         Device::setup();
         playStartupSound();
 
+        // Initialize idle tracking
+        _lastButtonPressTime = millis();
+        _idleSoundPlayed = false;
+
         // Set auto mode based on manual button state during setup
         isAutoMode = !_manualButton->getState().isPressed;
 
@@ -87,12 +91,20 @@ namespace devices
         _autoLiftDelayStart = 0;
         _wheelIdleStartTime = 0;
         _randomWheelDelayMs = 0;
+        _lastButtonPressTime = 0;
+        _idleSoundPlayed = false;
         isAutoMode = false;
     }
 
     void MarbleController::loop()
     {
         Device::loop();
+
+        // Check for idle timeout (5 minutes = 300000 ms)
+        if (millis() - _lastButtonPressTime > 300000UL && !_idleSoundPlayed) {
+            _audio->play(songs::IDLE, devices::Hv20tPlayMode::QueueIfPlaying);
+            _idleSoundPlayed = true;
+        }
 
         if (isAutoMode)
         {
@@ -164,6 +176,9 @@ namespace devices
             auto liftButtonState = _liftBtn->getState();
             if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
+                // Reset idle timer
+                _lastButtonPressTime = millis();
+                _idleSoundPlayed = false;
                 // playClickSound();
                 _audio->play(songs::getButtonClickSound(), devices::Hv20tPlayMode::SkipIfPlaying);
                 _lift->init();
@@ -196,6 +211,9 @@ namespace devices
             auto liftButtonState = _liftBtn->getState();
             if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
             {
+                // Reset idle timer
+                _lastButtonPressTime = millis();
+                _idleSoundPlayed = false;
                 playClickSound();
                 if (liftState.isLoaded)
                 {
@@ -217,12 +235,18 @@ namespace devices
             {
                 if (liftState.isLoaded)
                 {
+                    // Reset idle timer
+                    _lastButtonPressTime = millis();
+                    _idleSoundPlayed = false;
                     // Loaded: start timing for unload duration
                     _liftButtonPressStartTime = millis();
                     _isBallStillLoaded = true;
                 }
                 else
                 {
+                    // Reset idle timer
+                    _lastButtonPressTime = millis();
+                    _idleSoundPlayed = false;
                     // Unloaded: move down
                     _lift->down();
                 }
@@ -402,6 +426,9 @@ namespace devices
         auto wheelButtonState = _wheelBtn->getState();
         if (wheelButtonState.isPressed && wheelButtonState.isPressedChanged)
         {
+            // Reset idle timer
+            _lastButtonPressTime = millis();
+            _idleSoundPlayed = false;
             _audio->play(songs::FART, devices::Hv20tPlayMode::SkipIfPlaying);
         }
     }
@@ -439,6 +466,9 @@ namespace devices
         // Control wheel movement based on button state
         if (wheelButtonState.isPressed && wheelButtonState.isPressedChanged)
         {
+            // Reset idle timer
+            _lastButtonPressTime = millis();
+            _idleSoundPlayed = false;
             // Button just pressed - start timing for long press detection
             _wheelButtonPressStartTime = millis();
             _wheelButtonLongPressTriggered = false;

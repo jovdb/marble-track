@@ -303,7 +303,7 @@ void DeviceManager::addDeviceToJsonObject(Device *device, JsonObject deviceObj)
         ISerializable *serializable = mixins::SerializableRegistry::get(device->getId());
         if (serializable)
         {
-            DynamicJsonDocument configDoc(2048);
+            JsonDocument configDoc;
             serializable->configToJson(configDoc);
             if (configDoc.overflowed())
             {

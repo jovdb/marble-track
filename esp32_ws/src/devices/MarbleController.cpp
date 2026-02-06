@@ -25,6 +25,10 @@ namespace devices
         _lift = new devices::Lift("lift");
         addChild(_lift);
 
+        // Subscribe to lift state changes
+        _lift->onStateChange([this](void *statePtr)
+                             { this->onLiftStateChange(statePtr); });
+
         _liftLed = new devices::Led("lift-led");
         addChild(_liftLed);
 
@@ -504,7 +508,7 @@ namespace devices
                 MLOG_INFO("%s: Long wheel press detected - triggering next breakpoint", toString().c_str());
                 _wheel->nextBreakPoint();
                 _wheelButtonLongPressTriggered = true;
-                _audio->play(songs::GOTO_BREAKPOINT, devices::Hv20tPlayMode::SkipIfPlaying);
+                _audio->play(songs::WHEEL_GOTO_BREAKPOINT, devices::Hv20tPlayMode::SkipIfPlaying);
             }
         }
         else if (!wheelButtonState.isPressed && wheelButtonState.isPressedChanged && wheelState.state == devices::WheelStateEnum::MOVING)
@@ -626,14 +630,15 @@ namespace devices
         }
 
         // ERROR -> *
+        // If error is gone, remove queued error songs
         if (previousWheelState == devices::WheelStateEnum::ERROR &&
             wheelState->state != devices::WheelStateEnum::ERROR)
         {
             // Don't play error that are not active anymore
             _audio->removeFromQueue(songs::WHEEL_ZERO_NOT_FOUND);
-            _audio->removeFromQueue(songs::CALIBRATION_FIRST_ZERO_NOT_FOUND);
-            _audio->removeFromQueue(songs::CALIBRATION_SECOND_ZERO_NOT_FOUND);
-            _audio->removeFromQueue(songs::UNEXPECTED_ZERO_TRIGGER);
+            _audio->removeFromQueue(songs::WHEEL_CALIBRATION_FIRST_ZERO_NOT_FOUND);
+            _audio->removeFromQueue(songs::WHEEL_CALIBRATION_SECOND_ZERO_NOT_FOUND);
+            _audio->removeFromQueue(songs::WHEEL_UNEXPECTED_ZERO_TRIGGER);
         }
 
         // * -> ERROR
@@ -643,11 +648,11 @@ namespace devices
 
             if (wheelState->errorCode == devices::WheelErrorCode::CalibrationZeroNotFound)
             {
-                _audio->play(songs::CALIBRATION_FIRST_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
+                _audio->play(songs::WHEEL_CALIBRATION_FIRST_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
             }
             else if (wheelState->errorCode == devices::WheelErrorCode::CalibrationSecondZeroNotFound)
             {
-                _audio->play(songs::CALIBRATION_SECOND_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
+                _audio->play(songs::WHEEL_CALIBRATION_SECOND_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
             }
             else if (wheelState->errorCode == devices::WheelErrorCode::ZeroNotFound)
             {
@@ -655,7 +660,7 @@ namespace devices
             }
             else if (wheelState->errorCode == devices::WheelErrorCode::UnexpectedZeroTrigger)
             {
-                _audio->play(songs::UNEXPECTED_ZERO_TRIGGER, devices::Hv20tPlayMode::QueueIfPlaying);
+                _audio->play(songs::WHEEL_UNEXPECTED_ZERO_TRIGGER, devices::Hv20tPlayMode::QueueIfPlaying);
             }
             else
             {
@@ -670,6 +675,42 @@ namespace devices
             _audio->play(songs::WHEEL_CALIBRATION_END, devices::Hv20tPlayMode::QueueIfPlaying);
         }
         previousWheelState = wheelState->state;
+    }
+
+    void MarbleController::onLiftStateChange(void *statePtr)
+    {
+        static devices::LiftStateEnum previousLiftState = devices::LiftStateEnum::UNKNOWN;
+
+        auto *liftState = static_cast<devices::LiftState *>(statePtr);
+        if (!liftState)
+        {
+            return;
+        }
+
+        // ERROR -> *
+        // If error is gone, remove queued error songs
+        if (previousLiftState == devices::LiftStateEnum::ERROR &&
+            liftState->state != devices::LiftStateEnum::ERROR)
+        {
+            // Don't play error that are not active anymore
+            _audio->removeFromQueue(songs::LIFT_INIT_ERROR);
+        }
+
+        // * -> ERROR
+        if (previousLiftState != devices::LiftStateEnum::ERROR &&
+            liftState->state == devices::LiftStateEnum::ERROR)
+        {
+            if (liftState->errorCode == devices::LiftErrorCode::LIFT_NO_ZERO)
+            {
+                _audio->play(songs::LIFT_INIT_ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+            }
+            else
+            {
+                MLOG_ERROR("%s: Unknown Lift errorCode %d, cannot play audio", toString().c_str(), static_cast<int>(liftState->errorCode));
+            }
+        }
+
+        previousLiftState = liftState->state;
     }
 
 } // namespace devices

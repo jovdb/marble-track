@@ -536,7 +536,7 @@ namespace devices
         }
 
         // Load breakPoints - check if it exists and has a size (pragmatic approach to handle ArduinoJson type detection)
-        if (config.containsKey("breakPoints") && config["breakPoints"].size() > 0)
+        if (config["breakPoints"].is<JsonArray>() && config["breakPoints"].size() > 0)
         {
             _config.breakPoints.clear();
             size_t size = config["breakPoints"].size();

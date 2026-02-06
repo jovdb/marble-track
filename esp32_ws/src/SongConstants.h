@@ -35,7 +35,6 @@ namespace songs
     const int BUTTON_UP = 6;
 
     const int FART = 8;
-    const int GOTO_BREAKPOINT = 16;
 
     // Button sound functions (theme-aware in future)
     inline int getButtonClickSound()
@@ -62,11 +61,20 @@ namespace songs
     // Calibratie reuzenwiel beëindigd...
     const int WHEEL_CALIBRATION_END = 12;
     // Reuzenwiel calibratie gefaald. Eikpunt van het reuzenwiel was niet gevonden. Mogelijke oorzaken: 'Max steps per revolutions' configuratie te laag, reuzenwiel slipt door of zero sensor defect.
-    const int CALIBRATION_FIRST_ZERO_NOT_FOUND = 13;
+    const int WHEEL_CALIBRATION_FIRST_ZERO_NOT_FOUND = 13;
     // Reuzenwiel calibratie gefaald. Tweede eikpunt van het reuzenwiel was niet gevonden tijdens calibratie. Mogelijke oorzaken: 'Max steps per revolutions' configuratie te laag of reuzenwiel slipt door.
-    const int CALIBRATION_SECOND_ZERO_NOT_FOUND = 14;
+    const int WHEEL_CALIBRATION_SECOND_ZERO_NOT_FOUND = 14;
     // Eikpunt van reuzewiel is onverwacht geactiveerd. Mogelijke oorzaken: reuzenwiel slipt door of hercalibratie nodig.
-    const int UNEXPECTED_ZERO_TRIGGER = 15;
+    const int WHEEL_UNEXPECTED_ZERO_TRIGGER = 15;
+    // Sound effect at long press
+    const int WHEEL_GOTO_BREAKPOINT = 16;
+
+    // Lift initialisatie mislukt.
+    // Enkele mogelijk oorzaken:
+    // 1) Als de lift niet beweegt, controleer dan of de stepper motor werkt
+    // 2) Als de lift bewoog maar stopte voor ze beneden was, dan is configuratie 'Max steps' te laag.
+    // 3) Als de lift niet stopte onderaan, controleer dan de sensor door die manueel in te drukken
+    const int LIFT_INIT_ERROR = 17;
 
 }
 

@@ -95,7 +95,7 @@ void DeviceManager::loadDeviceConfigFromJson(Device *device, JsonObject deviceOb
         ISerializable *serializable = mixins::SerializableRegistry::get(device->getId());
         if (serializable)
         {
-            MLOG_DEBUG("%s: loading JSON config", device->toString().c_str());
+            // MLOG_DEBUG("%s: loading JSON config", device->toString().c_str());
             JsonDocument configDoc;
             if (deviceObj["config"].is<JsonObject>())
             {

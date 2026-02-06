@@ -62,7 +62,7 @@
           "children": [
             {
               "id": "lift-stepper",
-              "type": "stepper",
+              "type": "pwmstepper",
               "children": [],
               "config": {
                 "name": "Lift Stepper",
@@ -109,7 +109,7 @@
               "children": [],
               "config": {
                 "pin": {
-                  "pin": -1,
+                  "pin": 38,
                   "expanderId": ""
                 },
                 "name": "Lift Limit Switch",
@@ -124,7 +124,7 @@
               "children": [],
               "config": {
                 "pin": {
-                  "pin": -1,
+                  "pin": 39,
                   "expanderId": ""
                 },
                 "name": "Lift Ball Sensor",
@@ -138,7 +138,7 @@
               "type": "servo",
               "children": [],
               "config": {
-                "pin": 39,
+                "pin": 40,
                 "name": "Lift Loader",
                 "mcpwmChannel": 0,
                 "frequency": 50,
@@ -153,7 +153,7 @@
               "type": "servo",
               "children": [],
               "config": {
-                "pin": 38,
+                "pin": 41,
                 "name": "Lift Unloader",
                 "mcpwmChannel": 1,
                 "frequency": 50,
@@ -167,7 +167,7 @@
           "config": {
             "name": "Lift",
             "minSteps": 0,
-            "maxSteps": 1500,
+            "maxSteps": 2230,
             "downFactor": 1.015
           }
         },

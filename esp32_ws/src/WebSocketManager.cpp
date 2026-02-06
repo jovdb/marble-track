@@ -1224,7 +1224,7 @@ void WebSocketManager::handleSetNetworkConfig(JsonDocument &doc)
     {
         response["success"] = true;
         response["message"] = "Network settings updated and saved";
-        MLOG_INFO("Network settings saved to config file");
+        MLOG_INFO("Network settings saved.");
     }
     else
     {

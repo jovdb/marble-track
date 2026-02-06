@@ -268,7 +268,7 @@ void DeviceManager::saveDevicesToJsonFile()
     {
         serializeJson(doc, file);
         file.close();
-        MLOG_INFO("Saved devices list to %s", CONFIG_FILE);
+        MLOG_INFO("Saved devices list to: http://marble-track.local/%s", CONFIG_FILE);
     }
     else
     {
@@ -467,7 +467,7 @@ bool DeviceManager::saveNetworkSettings(const NetworkSettings &settings)
     {
         serializeJson(doc, file);
         file.close();
-        MLOG_INFO("Saved network settings to config: SSID='%s'", settings.ssid.c_str());
+        MLOG_INFO("Saved network settings to http://marble-track.local/%s: SSID='%s'", CONFIG_FILE, settings.ssid.c_str());
         return true;
     }
     else
@@ -524,7 +524,7 @@ bool DeviceManager::saveLoggingSettings()
     {
         serializeJson(doc, file);
         file.close();
-        MLOG_INFO("Saved logging settings to config (enabledTypes=0x%02X)", LogConfig::enabledTypes);
+        MLOG_INFO("Saved logging settings to http://marble-track.local/%s (logging/enabledTypes=0x%02X)", CONFIG_FILE, LogConfig::enabledTypes);
         return true;
     }
 

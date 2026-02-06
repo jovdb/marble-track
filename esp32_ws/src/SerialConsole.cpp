@@ -705,7 +705,7 @@ void SerialConsole::saveAndApplyNetworkSettings()
     }
     else
     {
-        Serial.println("✅ Network credentials saved to /config.json.");
+        Serial.println("✅ Network credentials saved.");
     }
 
     Serial.println();

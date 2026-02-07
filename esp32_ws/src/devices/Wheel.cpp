@@ -123,7 +123,7 @@ namespace devices
         {
             auto stepperState = _stepper->getState();
 
-            if (_waitingForMoveStart && (stepperState.isMoving || stepperState.moveJustStarted))
+            if (_waitingForMoveStart && stepperState.isMoving)
             {
                 _waitingForMoveStart = false;
                 _moveHasStarted = true;

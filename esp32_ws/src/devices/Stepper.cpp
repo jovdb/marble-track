@@ -93,17 +93,12 @@ namespace devices
     Stepper::Stepper(const String &id)
         : Device(id, "stepper")
     {
-        _stateMutex = xSemaphoreCreateMutex();
     }
 
     Stepper::~Stepper()
     {
         cleanupAccelStepper();
         cleanupPins();
-        if (_stateMutex != nullptr)
-        {
-            vSemaphoreDelete(_stateMutex);
-        }
     }
 
     void Stepper::setup()
@@ -216,11 +211,6 @@ namespace devices
                 }
             }
             MLOG_INFO("%s: Setup complete on pins %s, type: %s", toString().c_str(), pinStr.c_str(), _config.stepperType.c_str());
-
-            if (!startTask("StepperTask", 4096, 1, 1))
-            {
-                MLOG_ERROR("%s: Failed to start RTOS task", toString().c_str());
-            }
         }
         else
         {
@@ -231,8 +221,6 @@ namespace devices
     void Stepper::teardown()
     {
         Device::teardown();
-
-        stopTask();
 
         if (_config.stepPin.expanderId.isEmpty() && _config.stepPin.pin >= 0)
             pinMode(_config.stepPin.pin, INPUT);
@@ -252,18 +240,27 @@ namespace devices
         cleanupAccelStepper();
         cleanupPins();
 
-        if (_stateMutex && xSemaphoreTake(_stateMutex, pdMS_TO_TICKS(50)) == pdTRUE)
-        {
-            _state.isMoving = false;
-            _state.moveJustStarted = false;
-            _state.moveCommand.pending = false;
-            xSemaphoreGive(_stateMutex);
-        }
+        _state.isMoving = false;
     }
 
     void Stepper::loop()
     {
         Device::loop();
+
+        if (_driver)
+        {
+            bool wasMoving = _state.isMoving;
+            bool isRunning = _driver->run();
+            _state.isMoving = isRunning;
+            _state.currentPosition = _driver->currentPosition();
+
+            if (wasMoving && !isRunning)
+            {
+                disableStepper();
+                MLOG_INFO("%s: Movement completed at position %ld", toString().c_str(), _driver->currentPosition());
+                notifyStateChanged();
+            }
+        }
     }
 
     std::vector<String> Stepper::getPins() const
@@ -299,15 +296,17 @@ namespace devices
 
         prepareForMove(speed, acceleration);
 
-        xSemaphoreTake(_stateMutex, portMAX_DELAY);
-        _state.moveCommand.pending = true;
-        _state.moveCommand.type = "move";
-        _state.moveCommand.steps = steps;
-        _state.moveCommand.speed = speed;
-        _state.moveCommand.acceleration = acceleration;
-        xSemaphoreGive(_stateMutex);
+        enableStepper();
+        _driver->setMaxSpeed(speed);
+        _driver->setAcceleration(acceleration);
+        _driver->move(steps);
 
-        notifyTask();
+        _state.isMoving = true;
+        _state.currentPosition = _driver->currentPosition();
+        _state.targetPosition = _driver->targetPosition();
+
+        MLOG_INFO("%s: Started moving %ld steps at %f steps/s, accel %f steps/s²", toString().c_str(), steps, speed, acceleration);
+        notifyStateChanged();
         return true;
     }
 
@@ -318,15 +317,17 @@ namespace devices
 
         prepareForMove(speed, acceleration);
 
-        xSemaphoreTake(_stateMutex, portMAX_DELAY);
-        _state.moveCommand.pending = true;
-        _state.moveCommand.type = "moveTo";
-        _state.moveCommand.position = position;
-        _state.moveCommand.speed = speed;
-        _state.moveCommand.acceleration = acceleration;
-        xSemaphoreGive(_stateMutex);
+        enableStepper();
+        _driver->setMaxSpeed(speed);
+        _driver->setAcceleration(acceleration);
+        _driver->moveTo(position);
 
-        notifyTask();
+        _state.isMoving = true;
+        _state.currentPosition = _driver->currentPosition();
+        _state.targetPosition = position;
+
+        MLOG_INFO("%s: Started moving to position %ld at %f steps/s, accel %f steps/s²", toString().c_str(), position, speed, acceleration);
+        notifyStateChanged();
         return true;
     }
 
@@ -338,13 +339,9 @@ namespace devices
         if (acceleration <= 0)
             acceleration = _config.defaultAcceleration;
 
-        xSemaphoreTake(_stateMutex, portMAX_DELAY);
-        _state.moveCommand.pending = true;
-        _state.moveCommand.type = "stop";
-        _state.moveCommand.acceleration = acceleration;
-        xSemaphoreGive(_stateMutex);
-
-        notifyTask();
+        _driver->setAcceleration(acceleration);
+        _driver->stop();
+        // Don't set _state.isMoving = false here, let the loop handle it
         return true;
     }
 
@@ -355,10 +352,8 @@ namespace devices
 
         _driver->setCurrentPosition(position);
 
-        xSemaphoreTake(_stateMutex, portMAX_DELAY);
         _state.currentPosition = position;
         _state.targetPosition = position;
-        xSemaphoreGive(_stateMutex);
 
         notifyStateChanged();
         return true;
@@ -366,13 +361,9 @@ namespace devices
 
     void Stepper::addStateToJson(JsonDocument &doc)
     {
-        if (xSemaphoreTake(_stateMutex, portMAX_DELAY) == pdTRUE)
-        {
-            doc["currentPosition"] = _state.currentPosition;
-            doc["targetPosition"] = _state.targetPosition;
-            doc["isMoving"] = _state.isMoving;
-            xSemaphoreGive(_stateMutex);
-        }
+        doc["currentPosition"] = _state.currentPosition;
+        doc["targetPosition"] = _state.targetPosition;
+        doc["isMoving"] = _state.isMoving;
     }
 
     bool Stepper::control(const String &action, JsonObject *args)
@@ -493,107 +484,6 @@ namespace devices
         }
         doc["invertEnable"] = _config.invertEnable;
         doc["invertDirection"] = _config.invertDirection;
-    }
-
-    void Stepper::task()
-    {
-        MLOG_DEBUG("%s: RTOS task started", toString().c_str());
-
-        while (true)
-        {
-            // Wait for command or periodic check
-            ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(10));
-
-            // Handle pending commands
-            xSemaphoreTake(_stateMutex, portMAX_DELAY);
-            if (_state.moveCommand.pending)
-            {
-                MoveCommand cmd = _state.moveCommand;
-                _state.moveCommand.pending = false;
-                xSemaphoreGive(_stateMutex);
-
-                if (cmd.type == "move")
-                {
-                    enableStepper();
-                    float actualSpeed = cmd.speed > 0 ? cmd.speed : _config.defaultSpeed;
-                    float actualAcceleration = cmd.acceleration > 0 ? cmd.acceleration : _config.defaultAcceleration;
-                    _driver->setMaxSpeed(actualSpeed);
-                    _driver->setAcceleration(actualAcceleration);
-                    _driver->move(cmd.steps);
-
-                    xSemaphoreTake(_stateMutex, portMAX_DELAY);
-                    _state.isMoving = true;
-                    _state.moveJustStarted = true;
-                    _state.currentPosition = _driver->currentPosition();
-                    _state.targetPosition = _driver->targetPosition();
-                    xSemaphoreGive(_stateMutex);
-
-                    MLOG_INFO("%s: Started moving %ld steps at %f steps/s, accel %f steps/s²", toString().c_str(), cmd.steps, actualSpeed, actualAcceleration);
-                    notifyStateChanged();
-                }
-                else if (cmd.type == "moveTo")
-                {
-                    enableStepper();
-                    float actualSpeed = cmd.speed > 0 ? cmd.speed : _config.defaultSpeed;
-                    float actualAcceleration = cmd.acceleration > 0 ? cmd.acceleration : _config.defaultAcceleration;
-                    _driver->setMaxSpeed(actualSpeed);
-                    _driver->setAcceleration(actualAcceleration);
-                    _driver->moveTo(cmd.position);
-
-                    xSemaphoreTake(_stateMutex, portMAX_DELAY);
-                    _state.isMoving = true;
-                    _state.moveJustStarted = true;
-                    _state.currentPosition = _driver->currentPosition();
-                    _state.targetPosition = cmd.position;
-                    xSemaphoreGive(_stateMutex);
-
-                    MLOG_INFO("%s: Started moving to position %ld at %f steps/s, accel %f steps/s²", toString().c_str(), cmd.position, actualSpeed, actualAcceleration);
-                    notifyStateChanged();
-                }
-                else if (cmd.type == "stop")
-                {
-                    _driver->setAcceleration(cmd.acceleration > 0 ? cmd.acceleration : _config.defaultAcceleration);
-                    _driver->stop();
-                    // Don't set _state.isMoving = false here, let the run loop handle it
-                }
-            }
-            else
-            {
-                xSemaphoreGive(_stateMutex);
-            }
-
-            // Run the stepper
-            if (_driver)
-            {
-                xSemaphoreTake(_stateMutex, portMAX_DELAY);
-                bool wasMoving = _state.isMoving;
-                bool moveJustStarted = _state.moveJustStarted;
-                xSemaphoreGive(_stateMutex);
-
-                if (moveJustStarted)
-                {
-                    xSemaphoreTake(_stateMutex, portMAX_DELAY);
-                    _state.moveJustStarted = false;
-                    xSemaphoreGive(_stateMutex);
-                }
-                else
-                {
-                    bool isRunning = _driver->run();
-
-                    xSemaphoreTake(_stateMutex, portMAX_DELAY);
-                    _state.isMoving = isRunning;
-                    _state.currentPosition = _driver->currentPosition();
-                    xSemaphoreGive(_stateMutex);
-
-                    if (wasMoving && !isRunning)
-                    {
-                        disableStepper();
-                        MLOG_INFO("%s: Movement completed at position %ld", toString().c_str(), _driver->currentPosition());
-                        notifyStateChanged();
-                    }
-                }
-            }
-        }
     }
 
     void Stepper::initializeAccelStepper()

@@ -227,7 +227,7 @@ void loop()
     network->loop(); // Handle non-blocking network connection
     network->processCaptivePortal();
 
-    if (!otaConfigured && network->isWiFiConnected())
+    if (!otaConfigured && network->getMode() != NetworkMode::DISCONNECTED)
     {
       OtaUpload::setup(*network, server);
       otaConfigured = true;

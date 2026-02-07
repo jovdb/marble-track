@@ -45,6 +45,7 @@
   - Build: npm run esp-build
   - Upload: npm run esp-upload
   - Monitor Serial output logs: npm run esp-min
+  - Debug crashes: npm run esp-debug ['Saved PC:' from crash]
   - Deploy latest website: npm run web-deploy
 
 ## Logging

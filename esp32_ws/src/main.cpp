@@ -79,6 +79,42 @@ void setup()
   MLOG_INFO("Starting Marble Track System");
   MLOG_INFO("Build version: %s %s", __DATE__, __TIME__);
 
+  // Fetch the reset reason
+  esp_reset_reason_t reason = esp_reset_reason();
+
+  switch (reason)
+  {
+  case ESP_RST_POWERON:
+    // Serial.println("Power-on reset");
+    break;
+  case ESP_RST_EXT:
+    MLOG_INFO("Restarted by external pin...");
+    break;
+  case ESP_RST_SW:
+    MLOG_INFO("Restarted by software (esp_restart)...");
+    break;
+  case ESP_RST_PANIC:
+    MLOG_ERROR("Restarted due to software crash / exception! (ESP_RST_PANIC)");
+    break;
+  case ESP_RST_INT_WDT:
+    MLOG_ERROR("Restarted due to interrupt watchdog reset! (ESP_RST_INT_WDT)");
+    break;
+  case ESP_RST_TASK_WDT:
+    MLOG_ERROR("Restarted due to task watchdog reset! (ESP_RST_TASK_WDT)");
+    break;
+  case ESP_RST_DEEPSLEEP:
+    MLOG_INFO("Wakeup from Deep Sleep");
+    break;
+  case ESP_RST_BROWNOUT:
+    MLOG_ERROR("Brownout reset (Voltage dip)! (ESP_RST_BROWNOUT)");
+    break;
+  case ESP_RST_SDIO:
+    MLOG_INFO("Restarted over SDIO");
+    break;
+  default:
+    MLOG_WARN("Unknown reset reason");
+  }
+
   // First mount so config file can be loaded
   littleFSManager.setup();
 

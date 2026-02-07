@@ -40,7 +40,8 @@
 
 ## Build & deployment
 
-- PlatformIO: `pio run` build, `pio run --target upload` flash firmware, `uploadfs` for LittleFS.
+- PlatformIO: always run with the full path because it isn't installed globally
+`pio run` build, `pio run --target upload` flash firmware, `uploadfs` for LittleFS.
 - `deploy-website.ps1`: Builds UI, uploads assets.
 - Serial: 115200 baud for logs.
 

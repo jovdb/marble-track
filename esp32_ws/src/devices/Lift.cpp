@@ -543,7 +543,7 @@ namespace devices
         notifyStateChanged();
 
         // Set loader to 100 (fully open) - simplified control
-        return _loader->setValue(100);
+        return _loader->setValue(100, 0);
     }
 
     bool Lift::loadBallEnd()
@@ -553,7 +553,7 @@ namespace devices
         notifyStateChanged();
 
         // Set loader to 0 (fully closed) - simplified control
-        return _loader->setValue(0);
+        return _loader->setValue(0, 0);
     }
 
     bool Lift::unloadBallStart(float durationRatio)
@@ -565,8 +565,7 @@ namespace devices
         notifyStateChanged();
 
         // Set unloader to 100 (fully open) - with duration
-        int durationMs = _unloader->getConfig().defaultDurationInMs * durationRatio;
-        return _unloader->setValue(100, durationMs);
+        return _unloader->setValue(100, 0);
     }
 
     bool Lift::unloadBallEnd(float durationRatio)
@@ -577,8 +576,7 @@ namespace devices
         notifyStateChanged();
 
         // Set unloader to 0 (fully closed) - with duration
-        int durationMs = _unloader->getConfig().defaultDurationInMs * durationRatio;
-        return _unloader->setValue(0, durationMs);
+        return _unloader->setValue(0, 0);
     }
 
     // Helper methods for stepper control - simplified implementations
@@ -636,7 +634,7 @@ namespace devices
             // Move unload out of the way
             MLOG_DEBUG("%s: Init step 1: Unloading start", toString().c_str());
             _state.initStep = 2;
-            _unloader->setValue(100);
+            _unloader->setValue(100, 0);
             nextInitStepTime = millis() + _unloader->getConfig().defaultDurationInMs;
             break;
         }
@@ -644,7 +642,7 @@ namespace devices
         {
             MLOG_DEBUG("%s: Init step 2: Unloading end", toString().c_str());
             _state.initStep = 3;
-            _unloader->setValue(0);
+            _unloader->setValue(0, 0);
             nextInitStepTime = millis() + _unloader->getConfig().defaultDurationInMs;
             break;
         }
@@ -679,7 +677,7 @@ namespace devices
 
             // load ball
             _state.initStep = 5;
-            _loader->setValue(100);
+            _loader->setValue(100, 0);
             nextInitStepTime = millis() + _loader->getConfig().defaultDurationInMs;
             break;
         }
@@ -687,7 +685,7 @@ namespace devices
         {
             MLOG_DEBUG("%s: Init step 5: Loading end", toString().c_str());
             _state.initStep = 6;
-            _loader->setValue(0);
+            _loader->setValue(0, 0);
             nextInitStepTime = millis() + _loader->getConfig().defaultDurationInMs + 500;
             break;
         }
@@ -709,7 +707,7 @@ namespace devices
 
             MLOG_DEBUG("%s: Init step 7: Unloading start", toString().c_str());
             _state.initStep = 8;
-            _unloader->setValue(100);
+            _unloader->setValue(100, 0);
             nextInitStepTime = millis() + _unloader->getConfig().defaultDurationInMs;
             break;
         }
@@ -717,7 +715,7 @@ namespace devices
         {
             MLOG_DEBUG("%s: Init step 8: Unloading end", toString().c_str());
             _state.initStep = 9;
-            _unloader->setValue(0);
+            _unloader->setValue(0, 0);
             nextInitStepTime = millis() + _unloader->getConfig().defaultDurationInMs;
             break;
         }

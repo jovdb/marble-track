@@ -11,10 +11,7 @@
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"
 #include "devices/mixins/SerializableMixin.h"
-#include "devices/mixins/RtosMixin.h"
 #include "McPwmChannels.h"
-#include <atomic>
-#include <freertos/semphr.h>
 
 namespace devices
 {
@@ -55,8 +52,7 @@ namespace devices
                   public ConfigMixin<Servo, ServoConfig>,
                   public StateMixin<Servo, ServoState>,
                   public ControllableMixin<Servo>,
-                  public SerializableMixin<Servo>,
-                  public RtosMixin<Servo>
+                  public SerializableMixin<Servo>
     {
     public:
         explicit Servo(const String &id);
@@ -68,16 +64,16 @@ namespace devices
         std::vector<String> getPins() const override;
 
         /**
-         * @brief Set servo position with optional animation
+         * @brief Set servo position
          * @param value Position as normalized value (0.0-1.0)
-         * @param durationMs Animation duration in milliseconds (-1 for default)
+         * @param durationMs Ignored, always immediate
          * @return true if successful, false otherwise
          */
         bool setValue(float value, int durationMs = -1);
 
         /**
-         * @brief Stop any current animation
-         * @return true if stopped, false if not animating
+         * @brief Stop any current animation (no-op)
+         * @return false
          */
         bool stop();
 
@@ -88,9 +84,6 @@ namespace devices
         // SerializableMixin implementation
         void jsonToConfig(const JsonDocument &config) override;
         void configToJson(JsonDocument &doc) override;
-
-        // RTOS task implementation
-        void task() override;
 
     private:
         /**
@@ -113,26 +106,6 @@ namespace devices
          */
         bool setDutyCycle(float dutyCycle, bool notifyChange = true);
 
-        /**
-         * @brief Set duty cycle with animation
-         * @param dutyCycle Duty cycle percentage (0-100)
-         * @param durationMs Animation duration in milliseconds
-         * @return true if successful, false otherwise
-         */
-        bool setDutyCycleAnimated(float dutyCycle, uint32_t durationMs);
-
-        /**
-         * @brief Update animation progress
-         */
-        void updateAnimation();
-
-        /**
-         * @brief Ease-in-out quadratic function for smooth animation
-         * @param t Progress value (0.0-1.0)
-         * @return Eased progress value
-         */
-        float easeInOutQuad(float t);
-
         // MCPWM configuration
         int _mcpwmChannelIndex = -1;
         mcpwm_unit_t _mcpwmUnit = MCPWM_UNIT_0;
@@ -140,16 +113,10 @@ namespace devices
         mcpwm_operator_t _mcpwmOperator = MCPWM_OPR_A;
         mcpwm_io_signals_t _mcpwmSignal = MCPWM0A;
 
-        // Animation state (thread-safe with atomics)
-        std::atomic<float> _currentDutyCycle = 0.0f;
-        std::atomic<float> _startDutyCycle = 0.0f;
-        std::atomic<float> _targetDutyCycle = 0.0f;
-        std::atomic<uint32_t> _animationStartTime = 0;
-        std::atomic<uint32_t> _animationDuration = 0;
-        std::atomic<bool> _isAnimating = false;
+        // State
+        float _currentDutyCycle = 0.0f;
 
         bool _isSetup = false;
-        SemaphoreHandle_t _stateMutex; // Mutex for thread-safe state access
         bool _wasAutoAssigned = false; // Flag to track if channel was auto-assigned
     };
 

@@ -40,10 +40,19 @@
 
 ## Build & deployment
 
-- PlatformIO: always run with the full path because it isn't installed globally
-`pio run` build, `pio run --target upload` flash firmware, `uploadfs` for LittleFS.
-- `deploy-website.ps1`: Builds UI, uploads assets.
-- Serial: 115200 baud for logs.
+- PlatformIO: is used, run with the full path because it isn't installed globally
+  Better is to run in parent folder
+  - Build: npm run esp-build
+  - Upload: npm run esp-upload
+  - Monitor Serial output logs: npm run esp-min
+  - Deploy latest website: npm run web-deploy
+
+## Logging
+
+Prefer to log with one of these functions
+They can be configured to disable/enable logging:
+
+- MLOG_DEBUG, MLOG_INFO, MLOG_WARN, MLOG_ERROR
 
 ## Pins
 

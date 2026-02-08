@@ -14,9 +14,7 @@ export function Hv20tAudio(props: { id: string; isPopup?: boolean; onClose?: () 
 
   const state = createMemo(() => device()?.state);
   const volumePercent = createMemo(() => state()?.volumePercent ?? 50);
-  const isBusy = createMemo(() =>
-    Boolean((state()?.currentPlayingSong ?? -1) >= 0)
-  );
+  const isBusy = createMemo(() => Boolean((state()?.currentPlayingSong ?? -1) >= 0));
   const currentPlayingSong = createMemo(() => state()?.currentPlayingSong);
   const songQueue = createMemo(() => state()?.songQueue ?? []);
 

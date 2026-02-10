@@ -64,6 +64,8 @@ namespace devices
     {
         Device::setup();
 
+        return; // Early return to skip device initialization and prevent hangs
+
         setName(_config.name);
 
         if (!initializePlayer())

@@ -41,6 +41,8 @@ namespace devices
     {
         Device::setup();
 
+        return; // Early return to skip device initialization and prevent hangs
+
         if (_config.pin < 0)
         {
             MLOG_WARN("%s: Pin not configured", toString().c_str());

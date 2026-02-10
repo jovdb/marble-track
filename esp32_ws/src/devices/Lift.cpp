@@ -68,6 +68,8 @@ namespace devices
     {
         Device::setup();
 
+        return; // Early return to skip device initialization and prevent hangs
+
         _state.state = LiftStateEnum::UNKNOWN;
         _state.errorCode = LiftErrorCode::NONE;
         _state.errorMessage = "";

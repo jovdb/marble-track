@@ -64,6 +64,9 @@ namespace devices
     void MarbleController::setup()
     {
         Device::setup();
+
+        return; // Early return to skip device initialization and prevent hangs
+
         playStartupSound();
 
         // Initialize idle tracking

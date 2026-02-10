@@ -27,6 +27,8 @@ namespace devices
     {
         Device::setup();
 
+        return; // Early return to skip device initialization and prevent hangs
+
         // Determine if auto-assignment was requested
         _wasAutoAssigned = (_config.mcpwmChannel == -1);
 

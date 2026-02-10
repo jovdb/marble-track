@@ -103,159 +103,133 @@ namespace devices
 
     void Stepper::setup()
     {
-        try {
-            Device::setup();
+        Device::setup();
 
-            setName(_config.name);
+        setName(_config.name);
 
-            if (_config.stepperType.isEmpty())
+        if (_config.stepperType.isEmpty())
+        {
+            MLOG_WARN("%s: Stepper type not configured", toString().c_str());
+            return;
+        }
+
+        cleanupPins();
+
+        auto configureOutputPin = [&](const PinConfig &config, pins::IPin *&pin, const char *label, bool required) -> bool
+        {
+            if (config.pin < 0)
             {
-                MLOG_WARN("%s: Stepper type not configured", toString().c_str());
-                return;
-            }
-
-            // Validate stepper type
-            if (_config.stepperType != "DRIVER" && _config.stepperType != "HALF4WIRE" && _config.stepperType != "FULL4WIRE") {
-                MLOG_ERROR("%s: Invalid stepper type '%s'. Must be DRIVER, HALF4WIRE, or FULL4WIRE", 
-                          toString().c_str(), _config.stepperType.c_str());
-                return;
-            }
-
-            cleanupPins();
-
-            auto configureOutputPin = [&](const PinConfig &config, pins::IPin *&pin, const char *label, bool required) -> bool
-            {
-                // Validate pin range and expanderId
-                if (config.pin < -1 || config.pin > 50) {
-                    if (required) {
-                        MLOG_ERROR("%s: %s has invalid pin value %d (must be 0-50 or -1)", toString().c_str(), label, config.pin);
-                        return false;
-                    }
-                    return true;
-                }
-                
-                if (config.pin < 0)
+                if (required)
                 {
-                    if (required)
-                    {
-                        MLOG_WARN("%s: %s not configured", toString().c_str(), label);
-                        return false;
-                    }
-                    return true;
-                }
-
-                pin = PinFactory::createPin(config);
-                if (!pin)
-                {
-                    MLOG_ERROR("%s: Failed to create %s %s", toString().c_str(), label, config.toString().c_str());
+                    MLOG_WARN("%s: %s not configured", toString().c_str(), label);
                     return false;
                 }
-
-                if (!pin->setup(config.pin, pins::PinMode::Output))
-                {
-                    MLOG_ERROR("%s: Failed to setup %s %s", toString().c_str(), label, config.toString().c_str());
-                    return false;
-                }
-
                 return true;
-            };
-
-            if (_config.stepperType == "DRIVER")
-            {
-                if (!configureOutputPin(_config.stepPin, _stepPin, "step pin", true))
-                {
-                    cleanupPins();
-                    return;
-                }
-                if (!configureOutputPin(_config.dirPin, _dirPin, "direction pin", true))
-                {
-                    cleanupPins();
-                    return;
-                }
-            }
-            else if (_config.stepperType == "HALF4WIRE" || _config.stepperType == "FULL4WIRE")
-            {
-                if (!configureOutputPin(_config.pin1, _pin1, "pin1", true))
-                {
-                    cleanupPins();
-                    return;
-                }
-                if (!configureOutputPin(_config.pin2, _pin2, "pin2", true))
-                {
-                    cleanupPins();
-                    return;
-                }
-                if (!configureOutputPin(_config.pin3, _pin3, "pin3", true))
-                {
-                    cleanupPins();
-                    return;
-                }
-                if (!configureOutputPin(_config.pin4, _pin4, "pin4", true))
-                {
-                    cleanupPins();
-                    return;
-                }
             }
 
-            if (!configureOutputPin(_config.enablePin, _enablePin, "enable pin", false))
+            pin = PinFactory::createPin(config);
+            if (!pin)
+            {
+                MLOG_ERROR("%s: Failed to create %s %s", toString().c_str(), label, config.toString().c_str());
+                return false;
+            }
+
+            if (!pin->setup(config.pin, pins::PinMode::Output))
+            {
+                MLOG_ERROR("%s: Failed to setup %s %s", toString().c_str(), label, config.toString().c_str());
+                return false;
+            }
+
+            return true;
+        };
+
+        if (_config.stepperType == "DRIVER")
+        {
+            if (!configureOutputPin(_config.stepPin, _stepPin, "step pin", true))
             {
                 cleanupPins();
                 return;
             }
-
-            initializeAccelStepper();
-
-            if (_driver)
+            if (!configureOutputPin(_config.dirPin, _dirPin, "direction pin", true))
             {
-                // Validate float values before passing to AccelStepper
-                float maxSpeed = _config.maxSpeed;
-                float maxAccel = _config.maxAcceleration;
-                
-                if (isnan(maxSpeed) || isinf(maxSpeed) || maxSpeed <= 0 || maxSpeed > 100000) {
-                    MLOG_WARN("%s: Invalid maxSpeed %.2f, using default 1000", toString().c_str(), maxSpeed);
-                    maxSpeed = 1000.0f;
-                }
-                
-                if (isnan(maxAccel) || isinf(maxAccel) || maxAccel <= 0 || maxAccel > 100000) {
-                    MLOG_WARN("%s: Invalid maxAcceleration %.2f, using default 1000", toString().c_str(), maxAccel);
-                    maxAccel = 1000.0f;
-                }
-                
-                _driver->setMaxSpeed(maxSpeed);
-                _driver->setAcceleration(maxAccel);
-                _driver->setCurrentPosition(0);
-
-                if (_enablePin && _enablePin->isConfigured())
-                {
-                    disableStepper();
-                }
-
-                // Log all pins used
-                std::vector<String> pins = getPins();
-                String pinStr = "";
-                if (!pins.empty())
-                {
-                    for (size_t i = 0; i < pins.size(); i++)
-                    {
-                        if (i > 0)
-                            pinStr += ", ";
-                        pinStr += pins[i];
-                    }
-                }
-                MLOG_INFO("%s: Setup complete on pins %s, type: %s", toString().c_str(), pinStr.c_str(), _config.stepperType.c_str());
+                cleanupPins();
+                return;
             }
-            else
+        }
+        else if (_config.stepperType == "HALF4WIRE" || _config.stepperType == "FULL4WIRE")
+        {
+            if (!configureOutputPin(_config.pin1, _pin1, "pin1", true))
             {
-                MLOG_ERROR("%s: Failed to initialize AccelStepper", toString().c_str());
+                cleanupPins();
+                return;
             }
-        } catch (const std::exception& e) {
-            MLOG_ERROR("%s: Exception during setup: %s", toString().c_str(), e.what());
+            if (!configureOutputPin(_config.pin2, _pin2, "pin2", true))
+            {
+                cleanupPins();
+                return;
+            }
+            if (!configureOutputPin(_config.pin3, _pin3, "pin3", true))
+            {
+                cleanupPins();
+                return;
+            }
+            if (!configureOutputPin(_config.pin4, _pin4, "pin4", true))
+            {
+                cleanupPins();
+                return;
+            }
+        }
+
+        if (!configureOutputPin(_config.enablePin, _enablePin, "enable pin", false))
+        {
             cleanupPins();
-            cleanupAccelStepper();
-        } catch (...) {
-            MLOG_ERROR("%s: Unknown exception during setup", toString().c_str());
-            cleanupPins();
-            cleanupAccelStepper();
+            return;
+        }
+
+        initializeAccelStepper();
+
+        if (_driver)
+        {
+            // Validate float values before passing to AccelStepper
+            float maxSpeed = _config.maxSpeed;
+            float maxAccel = _config.maxAcceleration;
+            
+            if (isnan(maxSpeed) || isinf(maxSpeed) || maxSpeed <= 0 || maxSpeed > 100000) {
+                MLOG_WARN("%s: Invalid maxSpeed %.2f, using default 1000", toString().c_str(), maxSpeed);
+                maxSpeed = 1000.0f;
+            }
+            
+            if (isnan(maxAccel) || isinf(maxAccel) || maxAccel <= 0 || maxAccel > 100000) {
+                MLOG_WARN("%s: Invalid maxAcceleration %.2f, using default 1000", toString().c_str(), maxAccel);
+                maxAccel = 1000.0f;
+            }
+            
+            _driver->setMaxSpeed(maxSpeed);
+            _driver->setAcceleration(maxAccel);
+            _driver->setCurrentPosition(0);
+
+            if (_enablePin && _enablePin->isConfigured())
+            {
+                disableStepper();
+            }
+
+            // Log all pins used
+            std::vector<String> pins = getPins();
+            String pinStr = "";
+            if (!pins.empty())
+            {
+                for (size_t i = 0; i < pins.size(); i++)
+                {
+                    if (i > 0)
+                        pinStr += ", ";
+                    pinStr += pins[i];
+                }
+            }
+            MLOG_INFO("%s: Setup complete on pins %s, type: %s", toString().c_str(), pinStr.c_str(), _config.stepperType.c_str());
+        }
+        else
+        {
+            MLOG_ERROR("%s: Failed to initialize AccelStepper", toString().c_str());
         }
     }
 

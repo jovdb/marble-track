@@ -25,9 +25,8 @@ namespace devices
 
     void IoExpander::setup()
     {
-        Device::setup();
 
-        return; // Early return to skip I2C expander initialization and prevent hangs
+        Device::setup();
 
         // Set the device name
         setName(_config.name);

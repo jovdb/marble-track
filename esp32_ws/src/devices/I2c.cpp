@@ -24,8 +24,6 @@ namespace devices
     {
         Device::setup();
 
-        return; // Early return to skip I2C initialization and prevent hangs
-
         Wire.end(); // Ensure any previous instance is closed
 
         const auto &config = getConfig();

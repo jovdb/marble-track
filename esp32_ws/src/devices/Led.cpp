@@ -29,8 +29,6 @@ namespace devices
     {
         Device::setup();
 
-        return; // Early return to skip device initialization and prevent hangs
-
         // Set the device name
         setName(_config.name);
 

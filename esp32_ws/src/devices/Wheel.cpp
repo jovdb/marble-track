@@ -54,9 +54,6 @@ namespace devices
     void Wheel::setup()
     {
         Device::setup();
-
-        return; // Early return to skip device initialization and prevent hangs
-
         setName(_config.name);
 
         // Initialize breakpoints if not configured

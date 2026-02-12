@@ -30,6 +30,9 @@ namespace devices
         // Set the device name
         setName(_config.name);
 
+        // End any previous I2C setup
+        Wire.end();
+
         // Get the I2C device
         devices::I2c *i2cDevice = nullptr;
         if (!_config.i2cDeviceId.isEmpty())
@@ -57,8 +60,13 @@ namespace devices
         int sdaPin = i2cPins[0].toInt();
         int sclPin = i2cPins[1].toInt();
 
-        // End any previous I2C setup
-        Wire.end();
+        if (sdaPin < 0 || sclPin < 0)
+        {
+            MLOG_ERROR("%s: I2C device '%s' has invalid SDA/SCL pins (SDA=%d, SCL=%d)",
+                       toString().c_str(), _config.i2cDeviceId.c_str(), sdaPin, sclPin);
+            _isPresent = false;
+            return;
+        }
 
         // Initialize I2C with pins from the I2C device
         Wire.begin(sdaPin, sclPin);

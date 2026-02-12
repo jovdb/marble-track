@@ -47,6 +47,11 @@ namespace devices
         // Create the pin using the factory
         _config.pinConfig.pin = _config.pinConfig.pin;
         _pin = PinFactory::createPin(_config.pinConfig);
+        if (_pin == nullptr)
+        {
+            MLOG_ERROR("%s: Failed to create pin for expander '%s'", toString().c_str(), _config.pinConfig.expanderId.c_str());
+            return;
+        }
 
         // Determine pin mode for setup
         pins::PinMode pinSetupMode;

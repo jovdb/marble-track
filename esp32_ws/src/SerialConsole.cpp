@@ -135,7 +135,7 @@ void SerialConsole::handleCommand(const String &input)
         {
             for (size_t i = 0; i < allDevices.size(); i++)
             {
-                if (allDevices[i] != nullptr)
+                if (allDevices[i])
                 {
                     Serial.printf("  %d. %s [%s] %s\n",
                                   static_cast<int>(i + 1),
@@ -509,7 +509,7 @@ void SerialConsole::logNetworkInfo()
             wsCount = static_cast<unsigned long>(m_wsManager->getClientCount());
         }
 
-        if (m_network != nullptr)
+        if (m_network)
         {
             Serial.printf("  🌍 URL : http://%s.local\n", hostname.c_str());
             Serial.printf("  🔗 WS  : ws://%s.local/ws (%lu client(s) connected)\n", hostname.c_str(), wsCount);
@@ -670,7 +670,7 @@ void SerialConsole::saveAndApplyNetworkSettings()
     Serial.println();
     Serial.println("� Applying network settings...");
 
-    if (m_network != nullptr)
+    if (m_network)
     {
         NetworkMode result = m_network->applySettings(newSettings);
         switch (result)
@@ -736,7 +736,7 @@ void SerialConsole::startDeleteDeviceFlow()
     Serial.println("🗑️  Delete a device:");
     for (int i = 0; i < deviceCount; ++i)
     {
-        if (deviceList[i] != nullptr)
+        if (deviceList[i])
         {
             m_session.deviceIds.push_back(deviceList[i]->getId());
             Serial.printf("  %d. %s [%s]\n",

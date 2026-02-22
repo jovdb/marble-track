@@ -580,7 +580,7 @@ namespace devices
 
     void MarbleController::blinkError(Led *ledDevice)
     {
-        if (ledDevice == nullptr)
+        if (!ledDevice)
         {
             return;
         }

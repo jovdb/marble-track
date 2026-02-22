@@ -542,7 +542,7 @@ DeviceManager::DeviceManager(NotifyClients callback) : devicesCount(0), notifyCl
 
 bool DeviceManager::addDevice(Device *device)
 {
-    if (devicesCount < MAX_DEVICES && device != nullptr)
+    if (devicesCount < MAX_DEVICES && device)
     {
         devices[devicesCount] = device;
         devicesCount++;
@@ -550,7 +550,7 @@ bool DeviceManager::addDevice(Device *device)
         return true;
     }
 
-    if (device == nullptr)
+    if (!device)
     {
         MLOG_ERROR("Error: Cannot add null device");
     }
@@ -569,7 +569,7 @@ bool DeviceManager::addDevice(const String &deviceType, const String &deviceId, 
         return false;
     }
 
-    if (getDeviceById(deviceId) != nullptr)
+    if (getDeviceById(deviceId))
     {
         MLOG_ERROR("Cannot add device: Device with ID '%s' already exists", deviceId.c_str());
         return false;
@@ -609,7 +609,7 @@ void DeviceManager::getDevices(Device **deviceList, int &count, int maxResults)
     count = 0;
     for (int i = 0; i < devicesCount && count < maxResults; i++)
     {
-        if (devices[i] != nullptr)
+        if (devices[i])
         {
             deviceList[count] = devices[i];
             count++;
@@ -646,7 +646,7 @@ void DeviceManager::loop()
 {
     for (int i = 0; i < devicesCount; i++)
     {
-        if (devices[i] != nullptr)
+        if (devices[i])
         {
             devices[i]->loop();
         }
@@ -657,7 +657,7 @@ Device *DeviceManager::getDeviceById(const String &deviceId) const
 {
     for (int i = 0; i < devicesCount; i++)
     {
-        if (devices[i] != nullptr)
+        if (devices[i])
         {
             Device *found = findDeviceRecursiveById(devices[i], deviceId);
             if (found)
@@ -686,7 +686,7 @@ Device *DeviceManager::getDeviceByType(const String &deviceType) const
 {
     for (int i = 0; i < devicesCount; i++)
     {
-        if (devices[i] != nullptr)
+        if (devices[i])
         {
             Device *found = findDeviceRecursiveByType(devices[i], deviceType);
             if (found)

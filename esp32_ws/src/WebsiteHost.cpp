@@ -9,7 +9,7 @@ WebsiteHost::WebsiteHost(Network *networkInstance)
 
 void WebsiteHost::setupRoutes()
 {
-    if (server == nullptr)
+    if (!server)
         return;
 
     // Captive Portal Detection and Windows/Proxy Probe Short-circuit

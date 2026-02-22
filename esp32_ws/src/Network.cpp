@@ -31,7 +31,7 @@ static const unsigned long CONNECTION_CHECK_INTERVAL_MS = 500; // Interval to ch
 
 Network::~Network()
 {
-    if (_dnsServer != nullptr)
+    if (_dnsServer)
     {
         delete _dnsServer;
         _dnsServer = nullptr;
@@ -88,7 +88,7 @@ bool Network::startAccessPoint()
         IPAddress IP = WiFi.softAPIP();
 
         // Set up captive portal DNS server
-        if (_dnsServer == nullptr)
+        if (!_dnsServer)
         {
             _dnsServer = new DNSServer();
         }
@@ -215,7 +215,7 @@ String Network::getStatusJSON() const
     return json;
 }void Network::processCaptivePortal()
 {
-    if (_currentMode == NetworkMode::ACCESS_POINT && _dnsServer != nullptr)
+    if (_currentMode == NetworkMode::ACCESS_POINT && _dnsServer)
     {
         _dnsServer->processNextRequest();
     }
@@ -267,7 +267,7 @@ NetworkMode Network::applySettings(const NetworkSettings &settings)
     _wifi_ssid = settings.ssid;
     _wifi_password = settings.password;
 
-    if (_dnsServer != nullptr)
+    if (_dnsServer)
     {
         _dnsServer->stop();
         delete _dnsServer;

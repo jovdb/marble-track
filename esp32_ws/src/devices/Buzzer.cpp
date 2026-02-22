@@ -31,7 +31,7 @@ namespace devices
         }
 
         // Clean up mutex
-        if (_stateMutex != nullptr)
+        if (_stateMutex)
         {
             vSemaphoreDelete(_stateMutex);
         }

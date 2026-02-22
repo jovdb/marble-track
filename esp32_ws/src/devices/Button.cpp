@@ -17,7 +17,7 @@ namespace devices
 
     Button::~Button()
     {
-        if (_pin != nullptr)
+        if (_pin)
         {
             delete _pin;
             _pin = nullptr;
@@ -32,7 +32,7 @@ namespace devices
         setName(_config.name);
 
         // Clean up any existing pin
-        if (_pin != nullptr)
+        if (_pin)
         {
             delete _pin;
             _pin = nullptr;
@@ -46,7 +46,7 @@ namespace devices
 
         // Create the pin using the factory
         _pin = PinFactory::createPin(_config.pinConfig);
-        if (_pin == nullptr)
+        if (!_pin)
         {
             MLOG_ERROR("%s: Failed to create pin for expander '%s'", toString().c_str(), _config.pinConfig.expanderId.c_str());
             return;
@@ -94,7 +94,7 @@ namespace devices
             pinMode(_config.pinConfig.pin, INPUT);
         }
 
-        if (_pin != nullptr)
+        if (_pin)
         {
             delete _pin;
             _pin = nullptr;
@@ -141,7 +141,7 @@ namespace devices
 
     std::vector<String> Button::getPins() const
     {
-        if (_pin != nullptr)
+        if (_pin)
         {
             String pinStr = _pin->toString();
             if (!pinStr.isEmpty())

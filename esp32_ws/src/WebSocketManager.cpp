@@ -152,7 +152,7 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
 
         for (int i = 0; i < count; i++)
         {
-            if (deviceList[i] != nullptr)
+            if (deviceList[i])
             {
                 // Skip devices that are single children (have exactly one child with no children)
                 auto children = deviceList[i]->getChildren();
@@ -971,7 +971,7 @@ void WebSocketManager::handleAddDevice(JsonDocument &doc)
     }
 
     // Check if device already exists
-    if (deviceManager->getDeviceById(deviceId) != nullptr)
+    if (deviceManager->getDeviceById(deviceId))
     {
         response["error"] = "Device with ID '" + deviceId + "' already exists";
         String respStr;
@@ -992,7 +992,7 @@ void WebSocketManager::handleAddDevice(JsonDocument &doc)
 
     // Setup the new device
     Device *newDevice = deviceManager->getDeviceById(deviceId);
-    if (newDevice != nullptr)
+    if (newDevice)
     {
         newDevice->setup();
     }

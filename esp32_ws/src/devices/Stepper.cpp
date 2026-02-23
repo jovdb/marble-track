@@ -11,6 +11,16 @@ namespace devices
 {
     namespace
     {
+        FastAccelStepperEngine engine = FastAccelStepperEngine();
+        bool engineInitialized = false;
+
+        void initFastAccelStepperEngine() {
+            if (!engineInitialized) {
+                engine.init();
+                engineInitialized = true;
+            }
+        }
+
         PinConfig parsePinConfig(const JsonVariantConst &value)
         {
             PinConfig config;
@@ -227,9 +237,36 @@ namespace devices
             }
             MLOG_INFO("%s: Setup complete on pins %s, type: %s", toString().c_str(), pinStr.c_str(), _config.stepperType.c_str());
         }
+        else if (_fastDriver)
+        {
+            float maxSpeed = _config.maxSpeed;
+            float maxAccel = _config.maxAcceleration;
+            
+            if (isnan(maxSpeed) || isinf(maxSpeed) || maxSpeed <= 0 || maxSpeed > 100000) maxSpeed = 1000.0f;
+            if (isnan(maxAccel) || isinf(maxAccel) || maxAccel <= 0 || maxAccel > 100000) maxAccel = 1000.0f;
+            
+            _fastDriver->setSpeedInHz((uint32_t)maxSpeed);
+            _fastDriver->setAcceleration((uint32_t)maxAccel);
+            _fastDriver->setCurrentPosition(0);
+
+            if (_enablePin && _enablePin->isConfigured()) disableStepper();
+            
+            std::vector<String> pins = getPins();
+            String pinStr = "";
+            if (!pins.empty())
+            {
+                for (size_t i = 0; i < pins.size(); i++)
+                {
+                    if (i > 0)
+                        pinStr += ", ";
+                    pinStr += pins[i];
+                }
+            }
+            MLOG_INFO("%s: Setup complete on pins %s, type: %s (PWM)", toString().c_str(), pinStr.c_str(), _config.stepperType.c_str());
+        }
         else
         {
-            MLOG_ERROR("%s: Failed to initialize AccelStepper", toString().c_str());
+            MLOG_ERROR("%s: Failed to initialize Stepper", toString().c_str());
         }
     }
 
@@ -276,6 +313,20 @@ namespace devices
                 notifyStateChanged();
             }
         }
+        else if (_fastDriver)
+        {
+            bool wasMoving = _state.isMoving;
+            bool isRunning = _fastDriver->isRunning();
+            _state.isMoving = isRunning;
+            _state.currentPosition = _fastDriver->getCurrentPosition();
+
+            if (wasMoving && !isRunning)
+            {
+                disableStepper();
+                MLOG_INFO("%s: Movement completed at position %ld", toString().c_str(), _fastDriver->getCurrentPosition());
+                notifyStateChanged();
+            }
+        }
     }
 
     std::vector<String> Stepper::getPins() const
@@ -312,13 +363,22 @@ namespace devices
         prepareForMove(speed, acceleration);
 
         enableStepper();
-        _driver->setMaxSpeed(speed);
-        _driver->setAcceleration(acceleration);
-        _driver->move(steps);
+        
+        if (_driver) {
+            _driver->setMaxSpeed(speed);
+            _driver->setAcceleration(acceleration);
+            _driver->move(steps);
+            _state.targetPosition = _driver->targetPosition();
+            _state.currentPosition = _driver->currentPosition();
+        } else if (_fastDriver) {
+            _fastDriver->setSpeedInHz((uint32_t)speed);
+            _fastDriver->setAcceleration((uint32_t)acceleration);
+            _fastDriver->move(steps);
+            _state.targetPosition = _fastDriver->targetPos();
+            _state.currentPosition = _fastDriver->getCurrentPosition();
+        }
 
         _state.isMoving = true;
-        _state.currentPosition = _driver->currentPosition();
-        _state.targetPosition = _driver->targetPosition();
 
         MLOG_INFO("%s: Started moving %ld steps at %f steps/s, accel %f steps/s²", toString().c_str(), steps, speed, acceleration);
         notifyStateChanged();
@@ -333,12 +393,20 @@ namespace devices
         prepareForMove(speed, acceleration);
 
         enableStepper();
-        _driver->setMaxSpeed(speed);
-        _driver->setAcceleration(acceleration);
-        _driver->moveTo(position);
+        
+        if (_driver) {
+            _driver->setMaxSpeed(speed);
+            _driver->setAcceleration(acceleration);
+            _driver->moveTo(position);
+            _state.currentPosition = _driver->currentPosition();
+        } else if (_fastDriver) {
+            _fastDriver->setSpeedInHz((uint32_t)speed);
+            _fastDriver->setAcceleration((uint32_t)acceleration);
+            _fastDriver->moveTo(position);
+            _state.currentPosition = _fastDriver->getCurrentPosition();
+        }
 
         _state.isMoving = true;
-        _state.currentPosition = _driver->currentPosition();
         _state.targetPosition = position;
 
         MLOG_INFO("%s: Started moving to position %ld at %f steps/s, accel %f steps/s²", toString().c_str(), position, speed, acceleration);
@@ -354,8 +422,19 @@ namespace devices
         if (acceleration <= 0)
             acceleration = _config.defaultAcceleration;
 
-        _driver->setAcceleration(acceleration);
-        _driver->stop();
+        if (isnan(acceleration) || isinf(acceleration) || acceleration <= 0)
+            acceleration = _config.defaultAcceleration;
+
+        if (_driver) {
+            _driver->setAcceleration(acceleration);
+            _driver->stop();
+        } else if (_fastDriver) {
+            _fastDriver->setAcceleration((uint32_t)acceleration);
+            // FastAccelStepper docs: stopMove() does not itself apply new accel settings.
+            // Push the updated ramp parameters first so stop decelerates as requested.
+            _fastDriver->applySpeedAcceleration();
+            _fastDriver->stopMove();
+        }
         // Don't set _state.isMoving = false here, let the loop handle it
         return true;
     }
@@ -365,7 +444,11 @@ namespace devices
         if (!ensureReady("setCurrentPosition"))
             return false;
 
-        _driver->setCurrentPosition(position);
+        if (_driver) {
+            _driver->setCurrentPosition(position);
+        } else if (_fastDriver) {
+            _fastDriver->setCurrentPosition(position);
+        }
 
         _state.currentPosition = position;
         _state.targetPosition = position;
@@ -426,6 +509,8 @@ namespace devices
             _config.name = config["name"].as<String>();
         if (config["stepperType"].is<String>())
             _config.stepperType = config["stepperType"].as<String>();
+        if (config["usePwm"].is<bool>())
+            _config.usePwm = config["usePwm"].as<bool>();
         if (config["maxSpeed"].is<float>())
             _config.maxSpeed = config["maxSpeed"].as<float>();
         if (config["maxAcceleration"].is<float>())
@@ -458,6 +543,7 @@ namespace devices
     {
         doc["name"] = _config.name;
         doc["stepperType"] = _config.stepperType;
+        doc["usePwm"] = _config.usePwm;
         doc["maxSpeed"] = _config.maxSpeed;
         doc["maxAcceleration"] = _config.maxAcceleration;
         doc["defaultSpeed"] = _config.defaultSpeed;
@@ -505,40 +591,70 @@ namespace devices
     {
         cleanupAccelStepper();
 
-        if (_config.stepperType == "DRIVER")
+        if (_config.usePwm)
         {
-            if (!_stepPin || !_dirPin)
+            if (_config.stepperType != "DRIVER")
             {
-                MLOG_ERROR("%s: Stepper DRIVER pins not configured", toString().c_str());
-                _driver = nullptr;
+                MLOG_ERROR("%s: FastAccelStepper (PWM) only supports DRIVER type", toString().c_str());
                 return;
             }
-            _driver = new PinAccelStepper(AccelStepper::DRIVER, _stepPin, _dirPin, nullptr, nullptr, _config.invertDirection);
-        }
-        else if (_config.stepperType == "HALF4WIRE")
-        {
-            if (!_pin1 || !_pin2 || !_pin3 || !_pin4)
+            if (!_stepPin || !_dirPin || !_config.stepPin.expanderId.isEmpty() || !_config.dirPin.expanderId.isEmpty())
             {
-                MLOG_ERROR("%s: Stepper HALF4WIRE pins not configured", toString().c_str());
-                _driver = nullptr;
+                MLOG_ERROR("%s: FastAccelStepper requires direct GPIO pins", toString().c_str());
                 return;
             }
-            _driver = new PinAccelStepper(AccelStepper::HALF4WIRE, _pin1, _pin3, _pin2, _pin4, false);
-        }
-        else if (_config.stepperType == "FULL4WIRE")
-        {
-            if (!_pin1 || !_pin2 || !_pin3 || !_pin4)
+
+            initFastAccelStepperEngine();
+            _fastDriver = engine.stepperConnectToPin(_config.stepPin.pin);
+            if (_fastDriver)
             {
-                MLOG_ERROR("%s: Stepper FULL4WIRE pins not configured", toString().c_str());
-                _driver = nullptr;
-                return;
+                // PinAccelStepper drives direction HIGH for positive/count-up moves by default.
+                // FastAccelStepper's dirHighCountsUp must match that polarity.
+                _fastDriver->setDirectionPin(_config.dirPin.pin, !_config.invertDirection);
+                // We handle enable pin manually in enableStepper/disableStepper
             }
-            _driver = new PinAccelStepper(AccelStepper::FULL4WIRE, _pin1, _pin3, _pin2, _pin4, false);
+            else
+            {
+                MLOG_ERROR("%s: Failed to connect FastAccelStepper to pin %d", toString().c_str(), _config.stepPin.pin);
+            }
         }
         else
         {
-            MLOG_ERROR("%s: Unknown stepper type: %s", toString().c_str(), _config.stepperType.c_str());
-            _driver = nullptr;
+            if (_config.stepperType == "DRIVER")
+            {
+                if (!_stepPin || !_dirPin)
+                {
+                    MLOG_ERROR("%s: Stepper DRIVER pins not configured", toString().c_str());
+                    _driver = nullptr;
+                    return;
+                }
+                _driver = new PinAccelStepper(AccelStepper::DRIVER, _stepPin, _dirPin, nullptr, nullptr, _config.invertDirection);
+            }
+            else if (_config.stepperType == "HALF4WIRE")
+            {
+                if (!_pin1 || !_pin2 || !_pin3 || !_pin4)
+                {
+                    MLOG_ERROR("%s: Stepper HALF4WIRE pins not configured", toString().c_str());
+                    _driver = nullptr;
+                    return;
+                }
+                _driver = new PinAccelStepper(AccelStepper::HALF4WIRE, _pin1, _pin3, _pin2, _pin4, false);
+            }
+            else if (_config.stepperType == "FULL4WIRE")
+            {
+                if (!_pin1 || !_pin2 || !_pin3 || !_pin4)
+                {
+                    MLOG_ERROR("%s: Stepper FULL4WIRE pins not configured", toString().c_str());
+                    _driver = nullptr;
+                    return;
+                }
+                _driver = new PinAccelStepper(AccelStepper::FULL4WIRE, _pin1, _pin3, _pin2, _pin4, false);
+            }
+            else
+            {
+                MLOG_ERROR("%s: Unknown stepper type: %s", toString().c_str(), _config.stepperType.c_str());
+                _driver = nullptr;
+            }
         }
     }
 
@@ -548,6 +664,11 @@ namespace devices
         {
             delete _driver;
             _driver = nullptr;
+        }
+        if (_fastDriver)
+        {
+            _fastDriver->stopMove();
+            _fastDriver = nullptr;
         }
     }
 
@@ -638,7 +759,7 @@ namespace devices
 
     bool Stepper::ensureReady(const char *action, bool logWarning) const
     {
-        if (!_driver)
+        if (!_driver && !_fastDriver)
         {
             if (logWarning && action)
                 MLOG_WARN("%s: Stepper not initialized - cannot %s", toString().c_str(), action);

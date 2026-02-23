@@ -18,6 +18,7 @@ export interface IStepperConfig extends IDeviceConfig {
   name?: string;
   configured?: boolean;
   stepperType?: StepperType;
+  usePwm?: boolean;
   maxSpeed?: number;
   maxAcceleration?: number;
   defaultSpeed?: number;

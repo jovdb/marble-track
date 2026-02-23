@@ -18,6 +18,7 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
 
   const [name, setName] = createSignal("Stepper");
   const [stepperType, setStepperType] = createSignal<StepperType>("DRIVER");
+  const [usePwm, setUsePwm] = createSignal(false);
   const [stepPin, setStepPin] = createSignal<PinConfig>(deserializePinConfig(-1));
   const [dirPin, setDirPin] = createSignal<PinConfig>(deserializePinConfig(-1));
   const [enablePin, setEnablePin] = createSignal<PinConfig>(deserializePinConfig(-1));
@@ -51,6 +52,10 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
       setStepperType(cfg.stepperType as StepperType);
     } else {
       setStepperType("DRIVER");
+    }
+
+    if (typeof cfg.usePwm === "boolean") {
+      setUsePwm(cfg.usePwm);
     }
 
     if (cfg.stepperType === "DRIVER") {
@@ -117,6 +122,7 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
     const payload: IStepperConfig = {
       name: name().trim() || device()?.id,
       stepperType: stepperType(),
+      usePwm: usePwm(),
       maxSpeed: toNumber(maxSpeed(), 0),
       maxAcceleration: toNumber(maxAcceleration(), 0),
       defaultSpeed: toNumber(defaultSpeed(), 0),
@@ -168,6 +174,17 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
             </select>
           </DeviceConfigItem>
         </DeviceConfigRow>
+        <Show when={stepperType() === "DRIVER"}>
+          <DeviceConfigRow>
+            <DeviceConfigItem name="Use PWM (FastAccelStepper)">
+              <input
+                type="checkbox"
+                checked={usePwm()}
+                onChange={(event) => setUsePwm(event.currentTarget.checked)}
+              />
+            </DeviceConfigItem>
+          </DeviceConfigRow>
+        </Show>
         <Show when={!isFourPin()}>
           <DeviceConfigRow>
             <DeviceConfigItem name="Step pin">

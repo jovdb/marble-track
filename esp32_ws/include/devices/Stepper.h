@@ -15,6 +15,7 @@
 #include "pins/IPin.h"
 #include "pins/Pins.h"
 #include <AccelStepper.h>
+#include <FastAccelStepper.h>
 #include <freertos/semphr.h>
 
 namespace devices
@@ -28,6 +29,7 @@ namespace devices
     {
         String name = "Stepper";     // Device name
         String stepperType = "";     // "DRIVER", "HALF4WIRE", "FULL4WIRE"
+        bool usePwm = false;         // Use FastAccelStepper (PWM) instead of AccelStepper
         float maxSpeed = 1000.0f;    // Maximum speed in steps per second
         float maxAcceleration = 500.0f; // Acceleration in steps per second per second
         float defaultSpeed = 500.0f; // Default speed
@@ -115,6 +117,7 @@ namespace devices
 
     private:
         AccelStepper *_driver = nullptr;
+        FastAccelStepper *_fastDriver = nullptr;
 
         pins::IPin *_stepPin = nullptr;
         pins::IPin *_dirPin = nullptr;

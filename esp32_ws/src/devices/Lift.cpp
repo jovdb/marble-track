@@ -8,7 +8,7 @@ namespace devices
 {
 
     /* Move 2% extra down */
-    const float DOWN_FACTOR = 1.015f; // Move 2% extra when going down to ensure full descent
+    const float DOWN_FACTOR = 1.012f; // Move 2% extra when going down to ensure full descent
 
     Lift::Lift(const String &id)
         : Device(id, "lift")

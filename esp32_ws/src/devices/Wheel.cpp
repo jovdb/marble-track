@@ -8,6 +8,7 @@
 #include "devices/Button.h"
 #include "Logging.h"
 #include <ArduinoJson.h>
+#include <cmath>
 #include <cstdlib>
 
 namespace devices
@@ -374,13 +375,28 @@ namespace devices
         while (angle >= 360)
             angle -= 360;
 
-        // Calculate target position
-        long targetPosition = _state.lastZeroPosition + (angle / 360.0) * _config.stepsPerRevolution;
         long currentPosition = _stepper->getState().currentPosition;
-        long stepsToMove = targetPosition - currentPosition;
 
-        MLOG_INFO("%s: Moving to %.1f° (%ld -> %ld = %ld steps)",
-                  toString().c_str(), angle, currentPosition, targetPosition, stepsToMove);
+        // Always move forward: compute current wheel angle from zero reference,
+        // then wrap target delta to [0, 360).
+        float currentAngle = 0.0f;
+        long relSteps = currentPosition - _state.lastZeroPosition;
+        long relStepsNorm = relSteps % _config.stepsPerRevolution;
+        if (relStepsNorm < 0)
+            relStepsNorm += _config.stepsPerRevolution;
+        currentAngle = (relStepsNorm / (float)_config.stepsPerRevolution) * 360.0f;
+
+        float angleDiff = angle - currentAngle;
+        while (angleDiff < 0.0f)
+            angleDiff += 360.0f;
+        while (angleDiff >= 360.0f)
+            angleDiff -= 360.0f;
+
+        long stepsToMove = lroundf((angleDiff / 360.0f) * _config.stepsPerRevolution);
+        long targetPosition = currentPosition + stepsToMove;
+
+        MLOG_INFO("%s: Moving to %.1f° (current %.1f°, forward diff %.1f° = %ld steps)",
+              toString().c_str(), angle, currentAngle, angleDiff, stepsToMove);
 
         return move(stepsToMove);
     }
@@ -410,16 +426,15 @@ namespace devices
                                  ? _config.breakPoints[_state.currentBreakpointIndex]
                                  : 0.0f;
 
-        // Calculate the shortest angular distance
+        // Always move forward to the next breakpoint.
         float angleDiff = targetAngle - currentAngle;
-        // Normalize to -180 to 180 range
-        while (angleDiff > 180)
-            angleDiff -= 360;
-        while (angleDiff <= -180)
-            angleDiff += 360;
+        while (angleDiff < 0.0f)
+            angleDiff += 360.0f;
+        while (angleDiff >= 360.0f)
+            angleDiff -= 360.0f;
 
         // Convert angle difference to steps
-        long stepsToMove = (angleDiff / 360.0f) * _config.stepsPerRevolution;
+        long stepsToMove = lroundf((angleDiff / 360.0f) * _config.stepsPerRevolution);
 
         _state.targetAngle = targetAngle;
 

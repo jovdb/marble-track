@@ -133,7 +133,7 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
     if (!hasClients())
         return;
 
-    StaticJsonDocument<8192> response; // Allocate 8KB for device list
+    JsonDocument response;
     response["type"] = "devices-list";
 
     if (!deviceManager)
@@ -470,7 +470,7 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
 
                 if (configDoc.overflowed())
                 {
-                    MLOG_ERROR("Config JSON overflowed for device %s! Needed %d bytes", deviceId.c_str(), configDoc.memoryUsage());
+                    MLOG_ERROR("Config JSON overflowed for device %s", deviceId.c_str());
                 }
 
                 response["config"] = configDoc;
@@ -548,7 +548,7 @@ void WebSocketManager::handleGetDevicesConfig(JsonDocument &doc)
     if (!hasClients())
         return;
 
-    StaticJsonDocument<8192> response; // Allocate 8KB for full config
+    JsonDocument response;
     response["type"] = "devices-config";
     if (!deviceManager)
     {
@@ -557,7 +557,7 @@ void WebSocketManager::handleGetDevicesConfig(JsonDocument &doc)
     else
     {
         // Build a config snapshot that mirrors saveDevicesToJsonFile()
-        StaticJsonDocument<8192> configDoc; // Allocate 8KB for config
+        JsonDocument configDoc;
         JsonArray devicesArray = configDoc["devices"].to<JsonArray>();
         deviceManager->addDevicesToJsonArray(devicesArray);
         response["config"] = configDoc;

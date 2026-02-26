@@ -35,6 +35,8 @@ namespace songs
     const int BUTTON_UP = 6;
 
     const int FART = 8;
+    const int NOTIFICATION = 18;
+    const int ERROR = 19;
 
     // Button sound functions (theme-aware in future)
     inline int getButtonClickSound()

@@ -108,6 +108,7 @@ namespace devices
         // Check for idle timeout (5 minutes = 300000 ms)
         if (millis() - _lastButtonPressTime > 300000UL && !_idleSoundPlayed)
         {
+            _audio->play(songs::NOTIFICATION, devices::Hv20tPlayMode::QueueIfPlaying);
             _audio->play(songs::IDLE, devices::Hv20tPlayMode::QueueIfPlaying);
             _idleSoundPlayed = true;
         }
@@ -704,6 +705,7 @@ namespace devices
         {
             if (liftState->errorCode == devices::LiftErrorCode::LIFT_NO_ZERO)
             {
+                _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
                 _audio->play(songs::LIFT_INIT_ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
             }
             else

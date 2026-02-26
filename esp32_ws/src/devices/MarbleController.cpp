@@ -106,7 +106,8 @@ namespace devices
         Device::loop();
 
         // Check for idle timeout (5 minutes = 300000 ms)
-        if (millis() - _lastButtonPressTime > 300000UL && !_idleSoundPlayed) {
+        if (millis() - _lastButtonPressTime > 300000UL && !_idleSoundPlayed)
+        {
             _audio->play(songs::IDLE, devices::Hv20tPlayMode::QueueIfPlaying);
             _idleSoundPlayed = true;
         }
@@ -412,7 +413,7 @@ namespace devices
             {
                 _wheelIdleStartTime = millis();
                 _randomWheelDelayMs = 3000 + random(100, 30000);
-                MLOG_INFO("%s: Next wheel trigger in %.ds", toString().c_str(), _randomWheelDelayMs / 1000);
+                MLOG_INFO("%s: Next random wheel trigger starts in %.ds", toString().c_str(), _randomWheelDelayMs / 1000);
             }
             else if (millis() >= _wheelIdleStartTime + _randomWheelDelayMs)
             {

@@ -634,7 +634,7 @@ namespace devices
             // Move unload out of the way
             MLOG_DEBUG("%s: Init step 1: Unloading start", toString().c_str());
             _state.initStep = 2;
-            _unloader->setValue(100, 0);
+            _unloader->setValue(100, -1);
             nextInitStepTime = millis() + _unloader->getConfig().defaultDurationInMs;
             break;
         }
@@ -642,7 +642,7 @@ namespace devices
         {
             MLOG_DEBUG("%s: Init step 2: Unloading end", toString().c_str());
             _state.initStep = 3;
-            _unloader->setValue(0, 0);
+            _unloader->setValue(0, -1);
             nextInitStepTime = millis() + _unloader->getConfig().defaultDurationInMs;
             break;
         }
@@ -677,7 +677,7 @@ namespace devices
 
             // load ball
             _state.initStep = 5;
-            _loader->setValue(100, 0);
+            _loader->setValue(100, -1);
             nextInitStepTime = millis() + _loader->getConfig().defaultDurationInMs;
             break;
         }
@@ -685,7 +685,7 @@ namespace devices
         {
             MLOG_DEBUG("%s: Init step 5: Loading end", toString().c_str());
             _state.initStep = 6;
-            _loader->setValue(0, 0);
+            _loader->setValue(0, -1);
             nextInitStepTime = millis() + _loader->getConfig().defaultDurationInMs + 500;
             break;
         }
@@ -707,7 +707,7 @@ namespace devices
 
             MLOG_DEBUG("%s: Init step 7: Unloading start", toString().c_str());
             _state.initStep = 8;
-            _unloader->setValue(100, 0);
+            _unloader->setValue(100, -1);
             nextInitStepTime = millis() + _unloader->getConfig().defaultDurationInMs;
             break;
         }
@@ -715,7 +715,7 @@ namespace devices
         {
             MLOG_DEBUG("%s: Init step 8: Unloading end", toString().c_str());
             _state.initStep = 9;
-            _unloader->setValue(0, 0);
+            _unloader->setValue(0, -1);
             nextInitStepTime = millis() + _unloader->getConfig().defaultDurationInMs;
             break;
         }

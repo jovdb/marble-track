@@ -66,14 +66,14 @@ namespace devices
         /**
          * @brief Set servo position
          * @param value Position as normalized value (0.0-1.0)
-         * @param durationMs Ignored, always immediate
+         * @param durationMs Transition duration in milliseconds (-1 uses configured default)
          * @return true if successful, false otherwise
          */
         bool setValue(float value, int durationMs = -1);
 
         /**
-         * @brief Stop any current animation (no-op)
-         * @return false
+         * @brief Stop any current animation
+         * @return true when an animation was active and stopped, false otherwise
          */
         bool stop();
 
@@ -115,6 +115,11 @@ namespace devices
 
         // State
         float _currentDutyCycle = 0.0f;
+        bool _isAnimating = false;
+        float _animationStartDutyCycle = 0.0f;
+        float _animationTargetDutyCycle = 0.0f;
+        uint32_t _animationStartTimeMs = 0;
+        uint32_t _animationDurationMs = 0;
 
         bool _isSetup = false;
         bool _wasAutoAssigned = false; // Flag to track if channel was auto-assigned

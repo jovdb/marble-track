@@ -53,6 +53,12 @@ namespace devices
     {
         Device::teardown();
 
+        _isAnimating = false;
+        _animationStartDutyCycle = 0.0f;
+        _animationTargetDutyCycle = 0.0f;
+        _animationStartTimeMs = 0;
+        _animationDurationMs = 0;
+
         if (_mcpwmChannelIndex >= 0)
         {
             McPwmChannels::release(_mcpwmChannelIndex);
@@ -70,6 +76,25 @@ namespace devices
     void Servo::loop()
     {
         Device::loop();
+
+        if (!_isSetup || !_isAnimating)
+        {
+            return;
+        }
+
+        const uint32_t now = millis();
+        const uint32_t elapsed = now - _animationStartTimeMs;
+
+        if (elapsed >= _animationDurationMs)
+        {
+            setDutyCycle(_animationTargetDutyCycle);
+            _isAnimating = false;
+            return;
+        }
+
+        const float progress = static_cast<float>(elapsed) / static_cast<float>(_animationDurationMs);
+        const float nextDutyCycle = _animationStartDutyCycle + ((_animationTargetDutyCycle - _animationStartDutyCycle) * progress);
+        setDutyCycle(nextDutyCycle, false);
     }
 
     std::vector<String> Servo::getPins() const
@@ -98,22 +123,51 @@ namespace devices
         // Map normalized value (0.0-1.0) to duty cycle range (min-max)
         float dutyCycle = _config.minDutyCycle + (value * (_config.maxDutyCycle - _config.minDutyCycle));
 
-        MLOG_INFO("%s: setValue(%.3f) -> duty cycle %.1f%% (range: %.1f%%-%.1f%%)",
-                  toString().c_str(), value, dutyCycle, _config.minDutyCycle, _config.maxDutyCycle);
+        const uint32_t requestedDurationMs = durationMs >= 0 ? static_cast<uint32_t>(durationMs) : _config.defaultDurationInMs;
 
-        return setDutyCycle(dutyCycle);
+        if (requestedDurationMs == 0)
+        {
+            _isAnimating = false;
+            MLOG_INFO("%s: setValue(%.3f) immediate -> duty cycle %.1f%%", toString().c_str(), value, dutyCycle);
+            return setDutyCycle(dutyCycle);
+        }
+
+        _animationStartDutyCycle = _currentDutyCycle;
+        _animationTargetDutyCycle = dutyCycle;
+        _animationStartTimeMs = millis();
+        _animationDurationMs = requestedDurationMs;
+        _isAnimating = true;
+
+        MLOG_INFO("%s: setValue(%.3f) over %lu ms -> duty cycle %.1f%% (range: %.1f%%-%.1f%%)",
+                  toString().c_str(), value, static_cast<unsigned long>(_animationDurationMs), dutyCycle, _config.minDutyCycle, _config.maxDutyCycle);
+
+        notifyStateChanged();
+        return true;
     }
 
     bool Servo::stop()
     {
-        MLOG_INFO("%s: Stop ignored, no animation", toString().c_str());
-        return false;
+        if (!_isAnimating)
+        {
+            MLOG_INFO("%s: Stop ignored, no animation", toString().c_str());
+            return false;
+        }
+
+        _isAnimating = false;
+        notifyStateChanged();
+        MLOG_INFO("%s: Animation stopped", toString().c_str());
+        return true;
     }
 
     void Servo::addStateToJson(JsonDocument &doc)
     {
-        doc["running"] = false;
-        doc["value"] = (_currentDutyCycle - _config.minDutyCycle) / (_config.maxDutyCycle - _config.minDutyCycle) * 100.0f;
+        const float currentValue = ((_currentDutyCycle - _config.minDutyCycle) / (_config.maxDutyCycle - _config.minDutyCycle)) * 100.0f;
+        const float targetValue = ((_animationTargetDutyCycle - _config.minDutyCycle) / (_config.maxDutyCycle - _config.minDutyCycle)) * 100.0f;
+
+        doc["running"] = _isAnimating;
+        doc["value"] = currentValue;
+        doc["targetValue"] = _isAnimating ? targetValue : currentValue;
+        doc["targetDurationMs"] = _isAnimating ? _animationDurationMs : 0;
     }
 
     bool Servo::control(const String &action, JsonObject *args)

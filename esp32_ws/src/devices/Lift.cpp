@@ -693,7 +693,7 @@ namespace devices
         {
             MLOG_DEBUG("%s: Init step 6: Moving possible loaded lift up", toString().c_str());
             _state.initStep = 7;
-            moveStepperTo(_config.maxSteps, _stepper->getConfig().defaultSpeed * 0.5f);
+            moveStepperTo(_config.maxSteps, 1);
             nextInitStepTime = millis() + 10; // wait until move started
             break;
         }
@@ -724,7 +724,7 @@ namespace devices
             MLOG_DEBUG("%s: Init step 9: Moving back down until limit switch", toString().c_str());
             _state.initStep = 10;
             long steps = (_config.minSteps - _config.maxSteps) * DOWN_FACTOR;
-            moveStepper(steps, _stepper->getConfig().defaultSpeed);
+            moveStepper(steps, 1);
             nextInitStepTime = millis() + 100;
             break;
         }

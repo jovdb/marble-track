@@ -11,6 +11,7 @@
  * - MLOG_DEBUG(format, ...)    - Debug messages
  * - MLOG_WS_SEND(format, ...)  - WebSocket send messages
  * - MLOG_WS_RECEIVE(format, ...) - WebSocket receive messages
+ * - MLOG_LOOPS(format, ...)    - Main loop performance messages
  *
  * Usage examples:
  *   MLOG_INFO("System started");
@@ -42,7 +43,8 @@ enum LogType : uint8_t
     LOG_ERROR = 0x08,
     LOG_WS_RECEIVE = 0x10,
     LOG_WS_SEND = 0x20,
-    LOG_PLOT = 0x40
+    LOG_PLOT = 0x40,
+    LOG_LOOPS_PER_SECOND = 0x80
 };
 
 // Global logging configuration
@@ -152,6 +154,15 @@ const int minTaskPlaceholderChars = 11;
             Serial.printf(">" format "\r\n", ##__VA_ARGS__); \
         }                                                    \
     } while (0)
+
+#define MLOG_LOOPS(format, ...)                                                                             \
+    do                                                                                                       \
+    {                                                                                                        \
+        if (LogConfig::isEnabled(LOG_LOOPS_PER_SECOND))                                                      \
+        {                                                                                                    \
+            Serial.printf("[%6lu][ ][%-13s]: " format "\r\n", millis(), pcTaskGetName(NULL), ##__VA_ARGS__); \
+        }                                                                                                    \
+    } while (0)
 #else
 // Logging disabled - all macros become no-ops (zero overhead)
 #define MLOG_INFO(format, ...)
@@ -161,6 +172,7 @@ const int minTaskPlaceholderChars = 11;
 #define MLOG_WS_SEND(format, ...)
 #define MLOG_WS_RECEIVE(format, ...)
 #define MLOG_PLOT(format, ...)
+#define MLOG_LOOPS(format, ...)
 #endif
 
 #endif // LOGGING_H

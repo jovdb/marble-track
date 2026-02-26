@@ -244,6 +244,16 @@ void setup()
 
 void loop()
 {
+  static unsigned long loopCount = 0;
+  static unsigned long lastLoopRateLogMs = 0;
+
+  if (lastLoopRateLogMs == 0)
+  {
+    lastLoopRateLogMs = millis();
+  }
+
+  loopCount++;
+
   // Begin batching WebSocket messages for this loop iteration
   wsManager.beginBatch();
 
@@ -284,6 +294,16 @@ void loop()
   if (autoMode)
   {
     autoMode->loop();
+  }
+
+  const unsigned long now = millis();
+  const unsigned long elapsedMs = now - lastLoopRateLogMs;
+  if (elapsedMs >= 1000)
+  {
+    const float loopsPerSecond = (static_cast<float>(loopCount) * 1000.0f) / static_cast<float>(elapsedMs);
+    MLOG_LOOPS("%.0f loops/sec", loopsPerSecond, loopCount, elapsedMs);
+    loopCount = 0;
+    lastLoopRateLogMs = now;
   }
 
   // Send all batched WebSocket messages at once

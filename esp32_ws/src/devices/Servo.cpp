@@ -10,6 +10,33 @@
 namespace devices
 {
 
+    namespace
+    {
+        constexpr int MCPWM_UNIT_COUNT = 2;
+        constexpr int MCPWM_TIMER_COUNT = 3;
+
+        bool s_timerInitialized[MCPWM_UNIT_COUNT][MCPWM_TIMER_COUNT] = {{false}};
+        uint32_t s_timerFrequency[MCPWM_UNIT_COUNT][MCPWM_TIMER_COUNT] = {{0}};
+
+        bool resolveMcpwmIndexes(mcpwm_unit_t unit, mcpwm_timer_t timer, int &unitIndex, int &timerIndex)
+        {
+            unitIndex = static_cast<int>(unit);
+            timerIndex = static_cast<int>(timer);
+
+            if (unitIndex < 0 || unitIndex >= MCPWM_UNIT_COUNT)
+            {
+                return false;
+            }
+
+            if (timerIndex < 0 || timerIndex >= MCPWM_TIMER_COUNT)
+            {
+                return false;
+            }
+
+            return true;
+        }
+    }
+
     Servo::Servo(const String &id)
         : Device(id, "servo")
     {
@@ -326,6 +353,10 @@ namespace devices
         _mcpwmSignal = McPwmChannels::getSignal(_mcpwmChannelIndex);
         _mcpwmOperator = (_mcpwmChannelIndex % 2 == 0) ? MCPWM_OPR_A : MCPWM_OPR_B;
 
+        MLOG_DEBUG("%s: MCPWM mapping channel=%d timer=%d signal=%d operator=%s pin=%d freq=%lu",
+               toString().c_str(), _mcpwmChannelIndex, static_cast<int>(_mcpwmTimer), static_cast<int>(_mcpwmSignal),
+               _mcpwmOperator == MCPWM_OPR_A ? "A" : "B", _config.pin, static_cast<unsigned long>(_config.frequency));
+
         bool configured = configureMCPWM();
         if (configured)
         {
@@ -353,6 +384,9 @@ namespace devices
             return false;
         }
 
+        MLOG_DEBUG("%s: MCPWM GPIO route unit=%d signal=%d -> pin=%d",
+                   toString().c_str(), static_cast<int>(_mcpwmUnit), static_cast<int>(_mcpwmSignal), _config.pin);
+
         // Configure MCPWM
         mcpwm_config_t pwm_config = {
             .frequency = _config.frequency,
@@ -362,12 +396,46 @@ namespace devices
             .counter_mode = MCPWM_UP_COUNTER,
         };
 
-        esp_err_t err = mcpwm_init(_mcpwmUnit, _mcpwmTimer, &pwm_config);
-        if (err != ESP_OK)
+        int unitIndex = -1;
+        int timerIndex = -1;
+        if (!resolveMcpwmIndexes(_mcpwmUnit, _mcpwmTimer, unitIndex, timerIndex))
         {
-            MLOG_ERROR("%s: MCPWM initialization failed: %s", toString().c_str(), esp_err_to_name(err));
+            MLOG_ERROR("%s: Invalid MCPWM mapping unit=%d timer=%d", toString().c_str(), static_cast<int>(_mcpwmUnit), static_cast<int>(_mcpwmTimer));
             _isSetup = false;
             return false;
+        }
+
+        if (!s_timerInitialized[unitIndex][timerIndex])
+        {
+            esp_err_t err = mcpwm_init(_mcpwmUnit, _mcpwmTimer, &pwm_config);
+            if (err != ESP_OK)
+            {
+                MLOG_ERROR("%s: MCPWM initialization failed: %s", toString().c_str(), esp_err_to_name(err));
+                _isSetup = false;
+                return false;
+            }
+
+            s_timerInitialized[unitIndex][timerIndex] = true;
+            s_timerFrequency[unitIndex][timerIndex] = _config.frequency;
+
+            MLOG_DEBUG("%s: Initialized MCPWM timer unit=%d timer=%d frequency=%lu",
+                       toString().c_str(), unitIndex, timerIndex, static_cast<unsigned long>(_config.frequency));
+        }
+        else
+        {
+            const uint32_t configuredFrequency = s_timerFrequency[unitIndex][timerIndex];
+            if (configuredFrequency != _config.frequency)
+            {
+                MLOG_ERROR("%s: MCPWM timer unit=%d timer=%d already initialized at %lu Hz, requested %lu Hz",
+                           toString().c_str(), unitIndex, timerIndex,
+                           static_cast<unsigned long>(configuredFrequency),
+                           static_cast<unsigned long>(_config.frequency));
+                _isSetup = false;
+                return false;
+            }
+
+            MLOG_DEBUG("%s: Reusing MCPWM timer unit=%d timer=%d at %lu Hz",
+                       toString().c_str(), unitIndex, timerIndex, static_cast<unsigned long>(configuredFrequency));
         }
 
         return true;

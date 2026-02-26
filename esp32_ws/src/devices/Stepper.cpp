@@ -605,7 +605,16 @@ namespace devices
             }
 
             initFastAccelStepperEngine();
+            #if defined(SUPPORT_SELECT_DRIVER_TYPE)
+            _fastDriver = engine.stepperConnectToPin(_config.stepPin.pin, DRIVER_RMT);
+            if (!_fastDriver)
+            {
+                MLOG_WARN("%s: RMT driver unavailable for step pin %d, trying default FastAccelStepper backend", toString().c_str(), _config.stepPin.pin);
+                _fastDriver = engine.stepperConnectToPin(_config.stepPin.pin, DRIVER_DONT_CARE);
+            }
+            #else
             _fastDriver = engine.stepperConnectToPin(_config.stepPin.pin);
+            #endif
             if (_fastDriver)
             {
                 // PinAccelStepper drives direction HIGH for positive/count-up moves by default.

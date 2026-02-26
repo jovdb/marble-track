@@ -380,7 +380,7 @@ namespace devices
 
         _state.isMoving = true;
 
-        MLOG_INFO("%s: Started moving %ld steps at %f steps/s, accel %f steps/s²", toString().c_str(), steps, speed, acceleration);
+        MLOG_INFO("%s: Started moving %ld steps at %.0f steps/s, accel %.0f steps/s²", toString().c_str(), steps, speed, acceleration);
         notifyStateChanged();
         return true;
     }
@@ -409,7 +409,7 @@ namespace devices
         _state.isMoving = true;
         _state.targetPosition = position;
 
-        MLOG_INFO("%s: Started moving to position %ld at %f steps/s, accel %f steps/s²", toString().c_str(), position, speed, acceleration);
+        MLOG_INFO("%s: Started moving to position %ld at %.0f steps/s, accel %.0f steps/s²", toString().c_str(), position, speed, acceleration);
         notifyStateChanged();
         return true;
     }

@@ -112,8 +112,6 @@ void setup(Network &network, AsyncWebServer &server) {
   const String hostname = network.getHostname();
   MLOG_INFO("Configuring OTA services with hostname: %s", hostname.c_str());
 
-  delay(1000);
-
   ArduinoOTA.setHostname(hostname.c_str());
   ArduinoOTA.setPassword("marbletrack");
   ArduinoOTA.onStart([]() { Serial.println("OTA Update Start"); });

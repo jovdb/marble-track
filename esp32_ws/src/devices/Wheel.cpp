@@ -310,7 +310,7 @@ namespace devices
     {
         if (_state.state != WheelStateEnum::CALIBRATING && _state.state != WheelStateEnum::INIT)
         {
-            MLOG_INFO("%s: Moving %ld steps", toString().c_str(), steps);
+            // MLOG_INFO("%s: Moving %ld steps", toString().c_str(), steps);
             _state.state = WheelStateEnum::MOVING;
             _waitingForMoveStart = true;
             _moveHasStarted = false;

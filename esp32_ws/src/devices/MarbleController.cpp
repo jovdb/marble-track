@@ -590,7 +590,7 @@ namespace devices
     void MarbleController::playStartupSound()
     {
         //_buzzer->tune("Startup:d=4,o=6,b=1000:c,f,b#"); // Play error tune
-        _audio->play(songs::STARTUP_SOUND);
+        _audio->play(songs::STARTUP_SOUND, devices::Hv20tPlayMode::SkipIfPlaying);
     }
 
     void MarbleController::playErrorSound()

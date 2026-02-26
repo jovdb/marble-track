@@ -142,17 +142,17 @@ namespace devices
                 MLOG_INFO("%s: Song %i finished playing", toString().c_str(), _state.currentPlayingSong);
                 _state.currentPlayingSong = -1;
                 _currentSongStartTime = 0;
+                processQueue();
                 notifyStateChanged();
             }
 
             // If not busy and no song is playing but we have queued songs, start the next one
             // This handles the case where the device starts with a queue or queue gets populated while idle
-            /*
             if (!busy && _state.currentPlayingSong == -1 && !_state.songQueue.empty())
             {
                 MLOG_INFO("%s: Starting playback from queue", toString().c_str());
                 processQueue();
-            }*/
+            }
         }
     }
 

@@ -48,10 +48,6 @@
               "pin": 48,
               "expanderId": ""
             },
-            "busyPin": {
-              "pin": 45,
-              "expanderId": ""
-            },
             "defaultVolumePercent": 50,
             "songTimeoutMs": 30000
           }
@@ -62,15 +58,16 @@
           "children": [
             {
               "id": "lift-stepper",
-              "type": "pwmstepper",
+              "type": "stepper",
               "children": [],
               "config": {
                 "name": "Lift Stepper",
                 "stepperType": "DRIVER",
-                "maxSpeed": 400,
-                "maxAcceleration": 100,
-                "defaultSpeed": 150,
-                "defaultAcceleration": 50,
+                "usePwm": true,
+                "maxSpeed": 2500,
+                "maxAcceleration": 2500,
+                "defaultSpeed": 1000,
+                "defaultAcceleration": 1000,
                 "stepPin": {
                   "pin": 1,
                   "expanderId": ""
@@ -160,14 +157,14 @@
                 "resolutionBits": 10,
                 "minDutyCycle": 12.2,
                 "maxDutyCycle": 4,
-                "defaultDurationInMs": 1200
+                "defaultDurationInMs": 400
               }
             }
           ],
           "config": {
             "name": "Lift",
             "minSteps": 0,
-            "maxSteps": 2230,
+            "maxSteps": 4460,
             "downFactor": 1.015
           }
         },
@@ -225,6 +222,7 @@
               "config": {
                 "name": "wheel Stepper",
                 "stepperType": "DRIVER",
+                "usePwm": true,
                 "maxSpeed": 120,
                 "maxAcceleration": 300,
                 "defaultSpeed": 60,
@@ -284,12 +282,11 @@
             "zeroPointDegree": 180,
             "direction": 1,
             "breakPoints": [
-              42,
-              82,
-              158.5,
-              202.2,
-              283.5,
-              317
+              45,
+              90,
+              180,
+              30,
+              270
             ]
           }
         },

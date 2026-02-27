@@ -46,6 +46,9 @@ namespace devices
         void loopAutoWheel();
         void loopAutoSpiral();
         void blinkError(Led *ledDevice);
+        void blinkBusy(Led *ledDevice);
+        void blinkInit(Led *ledDevice);
+        void blinkAttention(Led *ledDevice);
         void onWheelStateChange(void *statePtr);
         void onLiftStateChange(void *statePtr);
         Button *_manualButton;
@@ -77,6 +80,8 @@ namespace devices
         bool _autoPowerUnloadSongStarted = false;
         unsigned long _autoPowerUnloadStartTime = 0;
         unsigned long _autoLiftUpLoadedSince = 0;
+        unsigned long _autoNoBallLiftStartTime = 0;
+        unsigned long _autoNoBallLiftDelayMs = 0;
 
         // 0 = not idle, >0 = idle start time
         unsigned long _wheelIdleStartTime = 0;

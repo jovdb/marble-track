@@ -19,6 +19,8 @@ namespace devices
         static constexpr unsigned long PowerSongDurationMs = 5200UL;
         static constexpr unsigned long PowerSongStartDelayMs = 500UL;
         static constexpr unsigned long AutoPowerSongStartDelayMs = 1000UL;
+        static constexpr unsigned long AutoNoBallRandomMinDelayMs = 120000UL;
+        static constexpr unsigned long AutoNoBallRandomMaxDelayMs = 300000UL;
     }
 
     MarbleController::MarbleController(const String &id) : Device(id, "marblecontroller")
@@ -82,6 +84,8 @@ namespace devices
         _autoPowerUnloadSongStarted = false;
         _autoPowerUnloadStartTime = 0;
         _autoLiftUpLoadedSince = 0;
+        _autoNoBallLiftStartTime = 0;
+        _autoNoBallLiftDelayMs = 0;
 
         // Set auto mode based on manual button state during setup
         isAutoMode = !_manualButton->getState().isPressed;
@@ -111,6 +115,8 @@ namespace devices
         _autoPowerUnloadSongStarted = false;
         _autoPowerUnloadStartTime = 0;
         _autoLiftUpLoadedSince = 0;
+        _autoNoBallLiftStartTime = 0;
+        _autoNoBallLiftDelayMs = 0;
         _autoLiftDelayStart = 0;
         _wheelIdleStartTime = 0;
         _randomWheelDelayMs = 0;
@@ -197,14 +203,14 @@ namespace devices
         }
         case devices::LiftStateEnum::INIT:
         {
-            _liftLed->blink(240, 240);
+            blinkInit(_wheelLed);
             break;
         }
         case devices::LiftStateEnum::LIFT_DOWN_LOADING:
         case devices::LiftStateEnum::LIFT_UP_UNLOADING:
         case devices::LiftStateEnum::MOVING_UP:
         case devices::LiftStateEnum::MOVING_DOWN:
-            _liftLed->blink(480, 480);
+            blinkBusy(_liftLed);
             break;
         case devices::LiftStateEnum::UNKNOWN:
         case devices::LiftStateEnum::LIFT_DOWN:
@@ -212,7 +218,7 @@ namespace devices
         {
             if (liftState.ballWaitingSince > 0 && liftState.ballWaitingSince + 60000 < millis())
             {
-                _liftLed->blink(360, 120); // Needs attention
+                blinkAttention(_liftLed);
             }
             else
             {
@@ -382,6 +388,12 @@ namespace devices
             _autoLiftUpLoadedSince = 0;
         }
 
+        if (liftState.state != devices::LiftStateEnum::LIFT_DOWN || liftState.isLoaded || liftState.ballWaitingSince > 0)
+        {
+            _autoNoBallLiftStartTime = 0;
+            _autoNoBallLiftDelayMs = 0;
+        }
+
         switch (liftState.state)
         {
         case devices::LiftStateEnum::UNKNOWN:
@@ -404,7 +416,7 @@ namespace devices
         case devices::LiftStateEnum::LIFT_UP_UNLOADING:
         case devices::LiftStateEnum::MOVING_UP:
         case devices::LiftStateEnum::MOVING_DOWN:
-            _liftLed->blink(100, 100, 0);
+            blinkBusy(_liftLed);
             break;
 
         case devices::LiftStateEnum::LIFT_DOWN:
@@ -419,6 +431,9 @@ namespace devices
             }
             else if (liftState.ballWaitingSince > 0)
             {
+                _autoNoBallLiftStartTime = 0;
+                _autoNoBallLiftDelayMs = 0;
+
                 // Not loaded: wait 1000ms before starting load
                 if (_autoLiftDelayStart == 0)
                 {
@@ -437,6 +452,28 @@ namespace devices
             else
             {
                 _autoLiftDelayStart = 0;
+
+                if (_autoNoBallLiftStartTime == 0)
+                {
+                    _autoNoBallLiftStartTime = millis();
+                    _autoNoBallLiftDelayMs = random(
+                        lift_timing::AutoNoBallRandomMinDelayMs,
+                        lift_timing::AutoNoBallRandomMaxDelayMs + 1UL);
+                    break;
+                }
+
+                if ((millis() - _autoNoBallLiftStartTime) >= _autoNoBallLiftDelayMs)
+                {
+                    MLOG_INFO("%s: Auto lift random start (no ball waiting) after %lus",
+                              toString().c_str(),
+                              _autoNoBallLiftDelayMs / 1000UL);
+
+                    if (_lift->loadBall())
+                    {
+                        _autoNoBallLiftStartTime = 0;
+                        _autoNoBallLiftDelayMs = 0;
+                    }
+                }
             }
             break;
         }
@@ -537,11 +574,11 @@ namespace devices
         case devices::WheelStateEnum::CALIBRATING:
         case devices::WheelStateEnum::INIT:
         {
-            _wheelLed->blink(240, 240); // LED blinks during init
+            blinkInit(_wheelLed);
             break;
         }
         case devices::WheelStateEnum::MOVING:
-            _wheelLed->blink(480, 320, 160); // LED blinks when moving
+            blinkBusy(_wheelLed);
             break;
 
         default:
@@ -611,10 +648,10 @@ namespace devices
             break;
         case devices::WheelStateEnum::CALIBRATING:
         case devices::WheelStateEnum::INIT:
-            _wheelLed->blink(240, 240); // LED blinks during init
+            blinkInit(_wheelLed);
             break;
         case devices::WheelStateEnum::MOVING:
-            _wheelLed->blink(480, 320, 160); // LED blinks when moving
+            blinkBusy(_wheelLed);
             break;
         case devices::WheelStateEnum::IDLE:
             _wheelLed->set(true); // LED on when idle
@@ -727,7 +764,7 @@ namespace devices
             }
             else
             {
-                _spiralLed->blink(20, 940);
+                // _spiralLed->blink(20, 940);
             }
         }
     }
@@ -740,6 +777,36 @@ namespace devices
         }
 
         ledDevice->blink(20, 940);
+    }
+
+    void MarbleController::blinkBusy(Led *ledDevice)
+    {
+        if (!ledDevice)
+        {
+            return;
+        }
+
+        ledDevice->blink(480, 480);
+    }
+
+    void MarbleController::blinkInit(Led *ledDevice)
+    {
+        if (!ledDevice)
+        {
+            return;
+        }
+
+        ledDevice->blink(480, 480);
+    }
+
+    void MarbleController::blinkAttention(Led *ledDevice)
+    {
+        if (!ledDevice)
+        {
+            return;
+        }
+
+        ledDevice->blink(360, 120); // Needs attention
     }
 
     void MarbleController::playStartupSound()

@@ -9,11 +9,17 @@
 #include "devices/Stepper.h"
 #include "SongConstants.h"
 
-int powerSongDuration = 5200;
 extern DeviceManager deviceManager;
 
 namespace devices
 {
+
+    namespace lift_timing
+    {
+        static constexpr unsigned long PowerSongDurationMs = 5200UL;
+        static constexpr unsigned long PowerSongStartDelayMs = 500UL;
+        static constexpr unsigned long AutoPowerSongStartDelayMs = 1000UL;
+    }
 
     MarbleController::MarbleController(const String &id) : Device(id, "marblecontroller")
     {
@@ -72,6 +78,10 @@ namespace devices
         _lastButtonPressTime = millis();
         _idleSoundPlayed = false;
         _liftQueuedPresses = 0;
+        _autoPowerUnloadPending = false;
+        _autoPowerUnloadSongStarted = false;
+        _autoPowerUnloadStartTime = 0;
+        _autoLiftUpLoadedSince = 0;
 
         // Set auto mode based on manual button state during setup
         isAutoMode = !_manualButton->getState().isPressed;
@@ -97,6 +107,10 @@ namespace devices
         _isBallStillLoaded = false;
         _isLiftPowerUnloadSongPlaying = false;
         _liftQueuedPresses = 0;
+        _autoPowerUnloadPending = false;
+        _autoPowerUnloadSongStarted = false;
+        _autoPowerUnloadStartTime = 0;
+        _autoLiftUpLoadedSince = 0;
         _autoLiftDelayStart = 0;
         _wheelIdleStartTime = 0;
         _randomWheelDelayMs = 0;
@@ -110,7 +124,7 @@ namespace devices
         Device::loop();
 
         // Check for idle timeout (5 minutes = 300000 ms)
-        if (millis() - _lastButtonPressTime > 300000UL && !_idleSoundPlayed)
+        if (!isAutoMode && millis() - _lastButtonPressTime > 300000UL && !_idleSoundPlayed)
         {
             _audio->play(songs::NOTIFICATION, devices::Hv20tPlayMode::QueueIfPlaying);
             _audio->play(songs::IDLE, devices::Hv20tPlayMode::QueueIfPlaying);
@@ -322,13 +336,13 @@ namespace devices
                 // Button still pressed - play power unload song from 500ms
                 unsigned long pressDuration = millis() - _liftButtonPressStartTime;
 
-                if (pressDuration >= 500 && !_isLiftPowerUnloadSongPlaying)
+                if (pressDuration >= lift_timing::PowerSongStartDelayMs && !_isLiftPowerUnloadSongPlaying)
                 {
                     _audio->play(songs::LIFT_POWER_UNLOAD, devices::Hv20tPlayMode::StopThenPlay);
                     _isLiftPowerUnloadSongPlaying = true;
                 }
 
-                if (pressDuration >= powerSongDuration)
+                if (pressDuration >= lift_timing::PowerSongDurationMs)
                 {
                     MLOG_INFO("%s: Long press detected (%.2fs), Power unload", toString().c_str());
                     // Long press: unload with full speed immediately
@@ -339,7 +353,7 @@ namespace devices
             else if (_isBallStillLoaded && !liftButtonState.isPressed)
             {
                 unsigned long pressDuration = millis() - _liftButtonPressStartTime;
-                if (pressDuration < powerSongDuration && _isLiftPowerUnloadSongPlaying)
+                if (pressDuration < lift_timing::PowerSongDurationMs && _isLiftPowerUnloadSongPlaying)
                 {
                     _audio->stop();
                 }
@@ -359,6 +373,14 @@ namespace devices
     {
         // Auto lift control logic - automatic cycling through lift operations
         auto liftState = _lift->getState();
+
+        if (liftState.state != devices::LiftStateEnum::LIFT_UP || !liftState.isLoaded)
+        {
+            _autoPowerUnloadPending = false;
+            _autoPowerUnloadSongStarted = false;
+            _autoPowerUnloadStartTime = 0;
+            _autoLiftUpLoadedSince = 0;
+        }
 
         switch (liftState.state)
         {
@@ -389,13 +411,6 @@ namespace devices
         {
             _isLiftPowerUnloadSongPlaying = false;
 
-            // Check if we need to wait before next operation
-            if (_autoLiftDelayStart > 0 && (millis() - _autoLiftDelayStart) < _autoLiftDelayMs)
-            {
-                // Still waiting, do nothing
-                break;
-            }
-
             if (liftState.isLoaded)
             {
                 // Loaded: move up to unload position
@@ -404,9 +419,24 @@ namespace devices
             }
             else if (liftState.ballWaitingSince > 0)
             {
-                // Not loaded: load a ball
+                // Not loaded: wait 1000ms before starting load
+                if (_autoLiftDelayStart == 0)
+                {
+                    _autoLiftDelayStart = millis();
+                    break;
+                }
+
+                if ((millis() - _autoLiftDelayStart) < _autoLiftDelayMs)
+                {
+                    break;
+                }
+
                 _lift->loadBall();
-                _autoLiftDelayStart = 0; // Reset delay timer
+                _autoLiftDelayStart = 0;
+            }
+            else
+            {
+                _autoLiftDelayStart = 0;
             }
             break;
         }
@@ -422,15 +452,65 @@ namespace devices
 
             if (liftState.isLoaded)
             {
-                // Loaded: unload the ball
-                _lift->unloadBall(1.0f); // Full unload
-                _autoLiftDelayStart = 0; // Reset delay timer
+                if (_autoLiftUpLoadedSince == 0)
+                {
+                    _autoLiftUpLoadedSince = millis();
+                    _autoPowerUnloadPending = (random(100) < 25);
+                    _autoPowerUnloadSongStarted = false;
+                    _autoPowerUnloadStartTime = 0;
+                    break;
+                }
+
+                const unsigned long loadedLiftUpElapsed = millis() - _autoLiftUpLoadedSince;
+
+                // Wait until lift-end song is ready (loaded LIFT_UP + 1000ms)
+                if (loadedLiftUpElapsed < lift_timing::AutoPowerSongStartDelayMs)
+                {
+                    break;
+                }
+
+                if (_autoPowerUnloadPending)
+                {
+                    if (!_autoPowerUnloadSongStarted)
+                    {
+                        _audio->play(songs::LIFT_POWER_UNLOAD, devices::Hv20tPlayMode::StopThenPlay);
+                        _autoPowerUnloadSongStarted = true;
+                        _autoPowerUnloadStartTime = millis();
+                        break;
+                    }
+
+                    const unsigned long powerSongElapsed = millis() - _autoPowerUnloadStartTime;
+                    if (powerSongElapsed >= lift_timing::PowerSongDurationMs - 500)
+                    {
+                        if (_lift->unloadBall(0.2f))
+                        {
+                            _autoPowerUnloadPending = false;
+                            _autoPowerUnloadSongStarted = false;
+                            _autoPowerUnloadStartTime = 0;
+                            _autoLiftUpLoadedSince = 0;
+                            _autoLiftDelayStart = 0;
+                        }
+                    }
+                }
+                else
+                {
+                    // Non power unload: also wait 1000ms at loaded LIFT_UP, then unload normally
+                    if (_lift->unloadBall(1.0f))
+                    {
+                        _autoLiftUpLoadedSince = 0;
+                        _autoLiftDelayStart = 0;
+                    }
+                }
             }
             else
             {
                 // Not loaded: move down to loading position
                 _lift->down();
                 _autoLiftDelayStart = 0; // Reset delay timer
+                _autoPowerUnloadPending = false;
+                _autoPowerUnloadSongStarted = false;
+                _autoPowerUnloadStartTime = 0;
+                _autoLiftUpLoadedSince = 0;
             }
             break;
         }
@@ -768,7 +848,7 @@ namespace devices
             liftState->state == devices::LiftStateEnum::LIFT_UP &&
             liftState->isLoaded)
         {
-            _audio->play(songs::LIFT_STOP, devices::Hv20tPlayMode::QueueIfPlaying);
+            _audio->play(songs::LIFT_STOP, devices::Hv20tPlayMode::SkipIfPlaying);
         }
 
         if (previousLiftState != devices::LiftStateEnum::LIFT_DOWN &&

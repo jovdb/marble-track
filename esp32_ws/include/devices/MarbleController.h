@@ -73,6 +73,10 @@ namespace devices
         // Auto lift timing control
         unsigned long _autoLiftDelayStart = 0;
         unsigned long _autoLiftDelayMs = 1000; // 1 second delay between auto operations
+        bool _autoPowerUnloadPending = false;
+        bool _autoPowerUnloadSongStarted = false;
+        unsigned long _autoPowerUnloadStartTime = 0;
+        unsigned long _autoLiftUpLoadedSince = 0;
 
         // 0 = not idle, >0 = idle start time
         unsigned long _wheelIdleStartTime = 0;

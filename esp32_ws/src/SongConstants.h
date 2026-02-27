@@ -35,8 +35,8 @@ namespace songs
     const int BUTTON_UP = 6;
 
     const int FART = 8;
-    const int NOTIFICATION = 18;
-    const int ERROR = 19;
+    const int NOTIFICATION = 19;
+    const int ERROR = 20;
 
     // Button sound functions (theme-aware in future)
     inline int getButtonClickSound()
@@ -77,6 +77,10 @@ namespace songs
     // 2) Als de lift bewoog maar stopte voor ze beneden was, dan is configuratie 'Max steps' te laag.
     // 3) Als de lift niet stopte onderaan, controleer dan de sensor door die manueel in te drukken
     const int LIFT_INIT_ERROR = 17;
+    
+    // De lift heeft de bodem niet bereikt, controleer of er een bal onder zit.
+    // Zet toestel uit, verwijder de bal en zet het opnieuw aan.
+    const int LIFT_NO_ZERO = 18;
 
 }
 

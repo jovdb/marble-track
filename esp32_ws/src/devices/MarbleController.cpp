@@ -194,15 +194,28 @@ namespace devices
         }
 
         case devices::LiftStateEnum::ERROR:
-            // Handle error state - maybe blink LED faster
+        {
+            // Play sound for new errors, or button pressed again
+            auto liftButtonState = _liftBtn->getState();
 
-            // Play sound for new errors
             if (liftState.onErrorChange)
             {
-                playErrorSound();
-                blinkError(_liftLed);
+                if (liftState.errorCode == devices::LiftErrorCode::LIFT_NO_ZERO)
+                {
+                    _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+                    _audio->play(songs::LIFT_NO_ZERO, devices::Hv20tPlayMode::QueueIfPlaying);
+                }
+            }
+
+            else if (liftButtonState.isPressedChanged && liftButtonState.isPressed)
+            {
+                if (liftState.errorCode == devices::LiftErrorCode::LIFT_NO_ZERO)
+                {
+                    _audio->play(songs::LIFT_NO_ZERO, devices::Hv20tPlayMode::SkipIfPlaying);
+                }
             }
             break;
+        }
 
         // BUSY
         case devices::LiftStateEnum::INIT:

@@ -140,12 +140,6 @@ namespace devices
 
         _state.onErrorChange = false;
 
-        if (_state.state == LiftStateEnum::ERROR)
-        {
-            _state.errorMessage = ""; // Clear error message when error is resolved
-            _state.errorCode = LiftErrorCode::NONE;
-        }
-
         // Check ball sensor state and notify if changed
         bool ballWaiting = _ballSensor ? _ballSensor->getState().isPressed : false;
 
@@ -652,7 +646,7 @@ namespace devices
             // Move slowly down to find limit switch
             _state.initStep = 4;
             long steps = (_config.minSteps - _config.maxSteps) * DOWN_FACTOR;
-            moveStepper(steps, 0.5);
+            moveStepper(steps, 0.3f);
             nextInitStepTime = millis() + 100;
             break;
         }
@@ -660,7 +654,7 @@ namespace devices
         {
             if (!_stepper->getState().isMoving)
             {
-                setError(LiftErrorCode::LIFT_NO_ZERO, "Initialization failed: limit switch not triggered");
+                setError(LiftErrorCode::LIFT_INIT_NO_ZERO, "Initialization failed: limit switch not triggered");
                 return;
             }
 
@@ -732,7 +726,7 @@ namespace devices
         {
             if (!_stepper->getState().isMoving)
             {
-                setError(LiftErrorCode::LIFT_NO_ZERO, "Initialization failed: limit switch not triggered");
+                setError(LiftErrorCode::LIFT_INIT_NO_ZERO, "Initialization failed: limit switch not triggered");
                 return; // Wait until next step time
             }
 

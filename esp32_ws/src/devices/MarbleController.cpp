@@ -198,20 +198,15 @@ namespace devices
             // Play sound for new errors, or button pressed again
             auto liftButtonState = _liftBtn->getState();
 
-            if (liftState.onErrorChange)
-            {
-                if (liftState.errorCode == devices::LiftErrorCode::LIFT_NO_ZERO)
-                {
-                    _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
-                    _audio->play(songs::LIFT_NO_ZERO, devices::Hv20tPlayMode::QueueIfPlaying);
-                }
-            }
-
-            else if (liftButtonState.isPressedChanged && liftButtonState.isPressed)
+            if (liftButtonState.isPressedChanged && liftButtonState.isPressed)
             {
                 if (liftState.errorCode == devices::LiftErrorCode::LIFT_NO_ZERO)
                 {
                     _audio->play(songs::LIFT_NO_ZERO, devices::Hv20tPlayMode::SkipIfPlaying);
+                }
+                else if (liftState.errorCode == devices::LiftErrorCode::LIFT_INIT_NO_ZERO)
+                {
+                    _audio->play(songs::LIFT_INIT_ERROR, devices::Hv20tPlayMode::SkipIfPlaying);
                 }
             }
             break;
@@ -312,7 +307,6 @@ namespace devices
             // Play sound for new errors
             if (liftState.onErrorChange)
             {
-                playErrorSound();
                 blinkError(_liftLed);
             }
             break;
@@ -705,12 +699,10 @@ namespace devices
 
         // ERROR -> *
         // If error is gone, remove queued error songs
-        if (previousLiftState == devices::LiftStateEnum::ERROR &&
-            liftState->state != devices::LiftStateEnum::ERROR)
-        {
-            // Don't play error that are not active anymore
-            _audio->removeFromQueue(songs::LIFT_INIT_ERROR);
-        }
+        // if (previousLiftState == devices::LiftStateEnum::ERROR &&
+        //     liftState->state != devices::LiftStateEnum::ERROR)
+        // {
+        // }
 
         // * -> ERROR
         if (previousLiftState != devices::LiftStateEnum::ERROR &&
@@ -719,11 +711,12 @@ namespace devices
             if (liftState->errorCode == devices::LiftErrorCode::LIFT_NO_ZERO)
             {
                 _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
-                _audio->play(songs::LIFT_INIT_ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+                _audio->play(songs::LIFT_NO_ZERO, devices::Hv20tPlayMode::QueueIfPlaying);
             }
-            else
+            else if (liftState->errorCode == devices::LiftErrorCode::LIFT_INIT_NO_ZERO)
             {
-                MLOG_ERROR("%s: Unknown Lift errorCode %d, cannot play audio", toString().c_str(), static_cast<int>(liftState->errorCode));
+                _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+                _audio->play(songs::LIFT_INIT_ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
             }
         }
 

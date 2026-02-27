@@ -42,6 +42,7 @@ namespace devices
     enum class LiftErrorCode
     {
         NONE,
+        LIFT_INIT_NO_ZERO,
         LIFT_CONFIGURATION_ERROR,
         LIFT_STATE_ERROR,
         LIFT_NO_ZERO,

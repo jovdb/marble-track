@@ -556,6 +556,7 @@ namespace devices
         MLOG_INFO("%s: Unloading ball...", toString().c_str());
         _state.state = LiftStateEnum::LIFT_UP_UNLOADING;
         _unloadStartTime = millis();
+        _unloadEndTime = 0;
         notifyStateChanged();
 
         // Set unloader to 100 (fully open) - with duration
@@ -564,13 +565,25 @@ namespace devices
 
     bool Lift::unloadBallEnd(float durationRatio)
     {
+        // Phase 1: start closing the unloader once opening phase is done
+        if (_unloadEndTime == 0)
+        {
+            _unloadEndTime = millis();
+            return _unloader->setValue(0);
+        }
+
+        // Phase 2: wait until closing animation has completed before reporting LIFT_UP
+        if (millis() - _unloadEndTime < _unloader->getConfig().defaultDurationInMs)
+        {
+            return true;
+        }
 
         _state.state = LiftStateEnum::LIFT_UP;
         _state.isLoaded = false;
+        _unloadStartTime = 0;
+        _unloadEndTime = 0;
         notifyStateChanged();
-
-        // Set unloader to 0 (fully closed) - with duration
-        return _unloader->setValue(0);
+        return true;
     }
 
     // Helper methods for stepper control - simplified implementations

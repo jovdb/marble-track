@@ -148,11 +148,14 @@ namespace devices
 
         bool wasWaiting = (_state.ballWaitingSince > 0);
         bool changed = (wasWaiting != ballWaiting);
-        
-        if (ballWaiting && !wasWaiting) {
+
+        if (ballWaiting && !wasWaiting)
+        {
             // Ball started waiting - record timestamp
             _state.ballWaitingSince = millis();
-        } else if (!ballWaiting && wasWaiting) {
+        }
+        else if (!ballWaiting && wasWaiting)
+        {
             // Ball stopped waiting - reset timestamp
             _state.ballWaitingSince = 0;
         }
@@ -641,8 +644,9 @@ namespace devices
             // Move unload out of the way
             MLOG_DEBUG("%s: Init step 1: Unloading start", toString().c_str());
             _state.initStep = 2;
-            _unloader->setValue(100);
-            nextInitStepTime = millis() + _unloader->getConfig().defaultDurationInMs;
+            auto duration = _unloader->getConfig().defaultDurationInMs;
+            _unloader->setValue(100, duration);
+            nextInitStepTime = millis() + duration + 300;
             break;
         }
         case 2:
@@ -685,16 +689,18 @@ namespace devices
 
             // load ball
             _state.initStep = 5;
-            _loader->setValue(100);
-            nextInitStepTime = millis() + _loader->getConfig().defaultDurationInMs;
+            auto duration = _unloader->getConfig().defaultDurationInMs;
+            _loader->setValue(100, duration);
+            nextInitStepTime = millis() + duration + 300;
             break;
         }
         case 5:
         {
             MLOG_DEBUG("%s: Init step 5: Loading end", toString().c_str());
             _state.initStep = 6;
-            _loader->setValue(0);
-            nextInitStepTime = millis() + _loader->getConfig().defaultDurationInMs + 500;
+            auto duration = _loader->getConfig().defaultDurationInMs;
+            _loader->setValue(0, duration);
+            nextInitStepTime = millis() + duration + 500;
             break;
         }
         case 6:
@@ -717,7 +723,7 @@ namespace devices
             _state.initStep = 8;
             auto duration = _unloader->getConfig().defaultDurationInMs / 2;
             _unloader->setValue(100, duration);
-            nextInitStepTime = millis() + duration;
+            nextInitStepTime = millis() + duration + 300;
             break;
         }
         case 8:

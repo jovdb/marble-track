@@ -9,6 +9,7 @@
 #include "devices/Stepper.h"
 #include "SongConstants.h"
 
+int powerSongDuration = 5200;
 extern DeviceManager deviceManager;
 
 namespace devices
@@ -94,6 +95,7 @@ namespace devices
 
         _liftButtonPressStartTime = 0;
         _isBallStillLoaded = false;
+        _isLiftPowerUnloadSongPlaying = false;
         _liftQueuedPresses = 0;
         _autoLiftDelayStart = 0;
         _wheelIdleStartTime = 0;
@@ -163,7 +165,6 @@ namespace devices
             if (maxQueuedPresses > 0 && _liftQueuedPresses < maxQueuedPresses)
             {
                 _liftQueuedPresses++;
-                playClickSound();
                 MLOG_INFO("%s: Queued lift button press (%u/%u) in state %u",
                           toString().c_str(),
                           static_cast<unsigned>(_liftQueuedPresses),
@@ -212,6 +213,7 @@ namespace devices
         {
             _isBallStillLoaded = false;
             _liftButtonPressStartTime = 0;
+            _isLiftPowerUnloadSongPlaying = false;
         }
 
         // Lift Logic
@@ -259,7 +261,6 @@ namespace devices
             // Replay queued press: loaded + queued => go up and consume one
             if (liftState.isLoaded && _liftQueuedPresses > 0)
             {
-                playClickSound();
                 if (_lift->up())
                 {
                     _liftQueuedPresses--;
@@ -286,8 +287,7 @@ namespace devices
             // Replay queued press: loaded + queued => unload and consume one
             if (liftState.isLoaded && _liftQueuedPresses > 0)
             {
-                playClickSound();
-                if (_lift->unloadBall(0.5f))
+                if (_lift->unloadBall(1.0f))
                 {
                     _liftQueuedPresses--;
                     _isBallStillLoaded = false;
@@ -297,7 +297,6 @@ namespace devices
             // Post-unload continuation: if queue remains when up+unloaded, go down and clear queue
             else if (!liftState.isLoaded && _liftQueuedPresses > 0)
             {
-                playClickSound();
                 if (_lift->down())
                 {
                     _liftQueuedPresses = 0;
@@ -310,6 +309,7 @@ namespace devices
                     // Loaded: start timing for unload duration
                     _liftButtonPressStartTime = millis();
                     _isBallStillLoaded = true;
+                    _isLiftPowerUnloadSongPlaying = false;
                 }
                 else
                 {
@@ -319,20 +319,34 @@ namespace devices
             }
             else if (_isBallStillLoaded && liftButtonState.isPressed)
             {
-                // Button still pressed - check if we've reached the 500ms threshold
+                // Button still pressed - play power unload song from 500ms
                 unsigned long pressDuration = millis() - _liftButtonPressStartTime;
-                if (pressDuration >= 500)
+
+                if (pressDuration >= 500 && !_isLiftPowerUnloadSongPlaying)
                 {
+                    _audio->play(songs::LIFT_POWER_UNLOAD, devices::Hv20tPlayMode::StopThenPlay);
+                    _isLiftPowerUnloadSongPlaying = true;
+                }
+
+                if (pressDuration >= powerSongDuration)
+                {
+                    MLOG_INFO("%s: Long press detected (%.2fs), Power unload", toString().c_str());
                     // Long press: unload with full speed immediately
-                    _lift->unloadBall(1.0f);
-                    _buzzer->tune("Power Up:d=32,o=5,b=300:c,c#,d#,e,f#,g#,a#,b"); // Play power up tune
+                    _lift->unloadBall(0.2f);
                     _isBallStillLoaded = false;
                 }
             }
             else if (_isBallStillLoaded && !liftButtonState.isPressed)
             {
-                // Slow unload
-                _lift->unloadBall(0.5f);
+                unsigned long pressDuration = millis() - _liftButtonPressStartTime;
+                if (pressDuration < powerSongDuration && _isLiftPowerUnloadSongPlaying)
+                {
+                    _audio->stop();
+                }
+                _isLiftPowerUnloadSongPlaying = false;
+
+                // Normal click unload (default duration)
+                _lift->unloadBall(1.0f);
                 playClickSound();
                 _isBallStillLoaded = false;
             }
@@ -373,6 +387,8 @@ namespace devices
 
         case devices::LiftStateEnum::LIFT_DOWN:
         {
+            _isLiftPowerUnloadSongPlaying = false;
+
             // Check if we need to wait before next operation
             if (_autoLiftDelayStart > 0 && (millis() - _autoLiftDelayStart) < _autoLiftDelayMs)
             {
@@ -746,6 +762,20 @@ namespace devices
         if (!liftState)
         {
             return;
+        }
+
+        if (previousLiftState != devices::LiftStateEnum::LIFT_UP &&
+            liftState->state == devices::LiftStateEnum::LIFT_UP &&
+            liftState->isLoaded)
+        {
+            _audio->play(songs::LIFT_STOP, devices::Hv20tPlayMode::QueueIfPlaying);
+        }
+
+        if (previousLiftState != devices::LiftStateEnum::LIFT_DOWN &&
+            liftState->state == devices::LiftStateEnum::LIFT_DOWN &&
+            !liftState->isLoaded)
+        {
+            _audio->play(songs::LIFT_STOP, devices::Hv20tPlayMode::QueueIfPlaying);
         }
 
         // ERROR -> *

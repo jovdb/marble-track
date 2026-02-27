@@ -131,6 +131,7 @@ namespace devices
         _loadStartTime = 0;
         _unloadStartTime = 0;
         _unloadEndTime = 0;
+        _unloadDurationMs = 0;
         _stepperStartTime = 0;
     }
 
@@ -191,7 +192,7 @@ namespace devices
             break;
         case LiftStateEnum::LIFT_UP_UNLOADING:
             // Wait 2 seconds after starting unload, then end the unloading process
-            if (millis() - _unloadStartTime >= _unloader->getConfig().defaultDurationInMs + 200)
+            if (millis() - _unloadStartTime >= _unloadDurationMs + 200)
             {
                 unloadBallEnd(1.0f);
             }
@@ -556,14 +557,27 @@ namespace devices
     bool Lift::unloadBallStart(float durationRatio)
     {
 
+        if (durationRatio <= 0.0f)
+        {
+            durationRatio = 1.0f;
+        }
+
+        const uint32_t baseDuration = _unloader->getConfig().defaultDurationInMs;
+        uint32_t scaledDuration = static_cast<uint32_t>(static_cast<float>(baseDuration) * durationRatio);
+        if (scaledDuration == 0)
+        {
+            scaledDuration = 1;
+        }
+
         MLOG_INFO("%s: Unloading ball...", toString().c_str());
         _state.state = LiftStateEnum::LIFT_UP_UNLOADING;
         _unloadStartTime = millis();
         _unloadEndTime = 0;
+        _unloadDurationMs = scaledDuration;
         notifyStateChanged();
 
         // Set unloader to 100 (fully open) - with duration
-        return _unloader->setValue(100);
+        return _unloader->setValue(100, static_cast<int>(_unloadDurationMs));
     }
 
     bool Lift::unloadBallEnd(float durationRatio)
@@ -572,11 +586,11 @@ namespace devices
         if (_unloadEndTime == 0)
         {
             _unloadEndTime = millis();
-            return _unloader->setValue(0);
+            return _unloader->setValue(0, static_cast<int>(_unloadDurationMs));
         }
 
         // Phase 2: wait until closing animation has completed before reporting LIFT_UP
-        if (millis() - _unloadEndTime < _unloader->getConfig().defaultDurationInMs)
+        if (millis() - _unloadEndTime < _unloadDurationMs)
         {
             return true;
         }
@@ -585,6 +599,7 @@ namespace devices
         _state.isLoaded = false;
         _unloadStartTime = 0;
         _unloadEndTime = 0;
+        _unloadDurationMs = 0;
         notifyStateChanged();
         return true;
     }

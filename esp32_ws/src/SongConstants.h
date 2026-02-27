@@ -35,8 +35,8 @@ namespace songs
     const int BUTTON_UP = 6;
 
     const int FART = 8;
-    const int NOTIFICATION = 19;
-    const int ERROR = 20;
+    const int NOTIFICATION = 21;
+    const int ERROR = 22;
 
     // Button sound functions (theme-aware in future)
     inline int getButtonClickSound()
@@ -81,6 +81,10 @@ namespace songs
     // De lift heeft de bodem niet bereikt, controleer of er een bal onder zit.
     // Zet toestel uit, verwijder de bal en zet het opnieuw aan.
     const int LIFT_NO_ZERO = 18;
+
+    // Elevator bell
+    const int LIFT_STOP = 19;
+    const int LIFT_POWER_UNLOAD = 20;
 
 }
 

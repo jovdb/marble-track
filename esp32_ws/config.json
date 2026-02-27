@@ -66,7 +66,7 @@
                 "usePwm": true,
                 "maxSpeed": 2500,
                 "maxAcceleration": 2500,
-                "defaultSpeed": 1000,
+                "defaultSpeed": 2000,
                 "defaultAcceleration": 1000,
                 "stepPin": {
                   "pin": 1,
@@ -140,8 +140,8 @@
                 "mcpwmChannel": 0,
                 "frequency": 50,
                 "resolutionBits": 10,
-                "minDutyCycle": 9.5,
-                "maxDutyCycle": 5.5,
+                "minDutyCycle": 9.7,
+                "maxDutyCycle": 5.4,
                 "defaultDurationInMs": 200
               }
             },
@@ -155,16 +155,16 @@
                 "mcpwmChannel": 1,
                 "frequency": 50,
                 "resolutionBits": 10,
-                "minDutyCycle": 12.2,
-                "maxDutyCycle": 4,
-                "defaultDurationInMs": 400
+                "minDutyCycle": 11.2,
+                "maxDutyCycle": 5.4,
+                "defaultDurationInMs": 1200
               }
             }
           ],
           "config": {
             "name": "Lift",
             "minSteps": 0,
-            "maxSteps": 4460,
+            "maxSteps": 4470,
             "downFactor": 1.015
           }
         },
@@ -174,8 +174,8 @@
           "children": [],
           "config": {
             "pin": {
-              "pin": -1,
-              "expanderId": ""
+              "pin": 0,
+              "expanderId": "ex"
             },
             "name": "Lift Led",
             "initialState": "OFF"

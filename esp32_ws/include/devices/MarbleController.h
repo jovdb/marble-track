@@ -63,6 +63,7 @@ namespace devices
         // Button timing for unload duration control
         unsigned long _liftButtonPressStartTime = 0;
         bool _isBallStillLoaded = false;
+        uint8_t _liftQueuedPresses = 0;
 
         // Wheel button long press tracking
         inline static unsigned long _wheelButtonPressStartTime = 0;

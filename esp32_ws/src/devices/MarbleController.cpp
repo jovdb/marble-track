@@ -70,6 +70,7 @@ namespace devices
         // Initialize idle tracking
         _lastButtonPressTime = millis();
         _idleSoundPlayed = false;
+        _liftQueuedPresses = 0;
 
         // Set auto mode based on manual button state during setup
         isAutoMode = !_manualButton->getState().isPressed;
@@ -93,6 +94,7 @@ namespace devices
 
         _liftButtonPressStartTime = 0;
         _isBallStillLoaded = false;
+        _liftQueuedPresses = 0;
         _autoLiftDelayStart = 0;
         _wheelIdleStartTime = 0;
         _randomWheelDelayMs = 0;
@@ -129,8 +131,46 @@ namespace devices
 
     void MarbleController::loopManualLift()
     {
-
         auto liftState = _lift->getState();
+        auto liftButtonState = _liftBtn->getState();
+        const bool liftButtonPressedEdge = liftButtonState.isPressed && liftButtonState.isPressedChanged;
+
+        if (liftButtonPressedEdge)
+        {
+            _lastButtonPressTime = millis();
+            _idleSoundPlayed = false;
+        }
+
+        // Queue button presses in busy/manual transition states
+        if (liftButtonPressedEdge)
+        {
+            uint8_t maxQueuedPresses = 0;
+            switch (liftState.state)
+            {
+            case devices::LiftStateEnum::LIFT_DOWN_LOADING:
+                maxQueuedPresses = 3;
+                break;
+            case devices::LiftStateEnum::MOVING_UP:
+                maxQueuedPresses = 2;
+                break;
+            case devices::LiftStateEnum::LIFT_UP_UNLOADING:
+                maxQueuedPresses = 1;
+                break;
+            default:
+                break;
+            }
+
+            if (maxQueuedPresses > 0 && _liftQueuedPresses < maxQueuedPresses)
+            {
+                _liftQueuedPresses++;
+                playClickSound();
+                MLOG_INFO("%s: Queued lift button press (%u/%u) in state %u",
+                          toString().c_str(),
+                          static_cast<unsigned>(_liftQueuedPresses),
+                          static_cast<unsigned>(maxQueuedPresses),
+                          static_cast<unsigned>(liftState.state));
+            }
+        }
 
         // LED
         switch (liftState.state)
@@ -180,13 +220,8 @@ namespace devices
         case devices::LiftStateEnum::UNKNOWN:
         {
             // Init will start at press
-            auto liftButtonState = _liftBtn->getState();
-            if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
+            if (liftButtonPressedEdge)
             {
-                // Reset idle timer
-                _lastButtonPressTime = millis();
-                _idleSoundPlayed = false;
-                // playClickSound();
                 _audio->play(songs::getButtonClickSound(), devices::Hv20tPlayMode::SkipIfPlaying);
                 _lift->init();
             }
@@ -196,9 +231,7 @@ namespace devices
         case devices::LiftStateEnum::ERROR:
         {
             // Play sound for new errors, or button pressed again
-            auto liftButtonState = _liftBtn->getState();
-
-            if (liftButtonState.isPressedChanged && liftButtonState.isPressed)
+            if (liftButtonPressedEdge)
             {
                 if (liftState.errorCode == devices::LiftErrorCode::LIFT_NO_ZERO)
                 {
@@ -223,12 +256,17 @@ namespace devices
 
         case devices::LiftStateEnum::LIFT_DOWN:
         {
-            auto liftButtonState = _liftBtn->getState();
-            if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
+            // Replay queued press: loaded + queued => go up and consume one
+            if (liftState.isLoaded && _liftQueuedPresses > 0)
             {
-                // Reset idle timer
-                _lastButtonPressTime = millis();
-                _idleSoundPlayed = false;
+                playClickSound();
+                if (_lift->up())
+                {
+                    _liftQueuedPresses--;
+                }
+            }
+            else if (liftButtonPressedEdge)
+            {
                 playClickSound();
                 if (liftState.isLoaded)
                 {
@@ -245,23 +283,36 @@ namespace devices
 
         case devices::LiftStateEnum::LIFT_UP:
         {
-            auto liftButtonState = _liftBtn->getState();
-            if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
+            // Replay queued press: loaded + queued => unload and consume one
+            if (liftState.isLoaded && _liftQueuedPresses > 0)
+            {
+                playClickSound();
+                if (_lift->unloadBall(0.5f))
+                {
+                    _liftQueuedPresses--;
+                    _isBallStillLoaded = false;
+                    _liftButtonPressStartTime = 0;
+                }
+            }
+            // Post-unload continuation: if queue remains when up+unloaded, go down and clear queue
+            else if (!liftState.isLoaded && _liftQueuedPresses > 0)
+            {
+                playClickSound();
+                if (_lift->down())
+                {
+                    _liftQueuedPresses = 0;
+                }
+            }
+            else if (liftButtonPressedEdge)
             {
                 if (liftState.isLoaded)
                 {
-                    // Reset idle timer
-                    _lastButtonPressTime = millis();
-                    _idleSoundPlayed = false;
                     // Loaded: start timing for unload duration
                     _liftButtonPressStartTime = millis();
                     _isBallStillLoaded = true;
                 }
                 else
                 {
-                    // Reset idle timer
-                    _lastButtonPressTime = millis();
-                    _idleSoundPlayed = false;
                     // Unloaded: move down
                     _lift->down();
                 }

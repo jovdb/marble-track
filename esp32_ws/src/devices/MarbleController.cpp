@@ -379,6 +379,9 @@ namespace devices
     {
         // Auto lift control logic - automatic cycling through lift operations
         auto liftState = _lift->getState();
+        auto liftButtonState = _liftBtn->getState();
+        const bool liftButtonPressedEdge = liftButtonState.isPressed && liftButtonState.isPressedChanged;
+        const bool liftButtonReleasedEdge = !liftButtonState.isPressed && liftButtonState.isPressedChanged;
 
         if (liftState.state != devices::LiftStateEnum::LIFT_UP || !liftState.isLoaded)
         {
@@ -423,6 +426,9 @@ namespace devices
         {
             _isLiftPowerUnloadSongPlaying = false;
 
+            if (_liftLed)
+                _liftLed->set(true);
+
             if (liftState.isLoaded)
             {
                 // Loaded: move up to unload position
@@ -452,6 +458,20 @@ namespace devices
             else
             {
                 _autoLiftDelayStart = 0;
+
+                if (liftButtonPressedEdge)
+                {
+                    _audio->play(songs::getButtonDownSound(), devices::Hv20tPlayMode::SkipIfPlaying);
+                }
+
+                if (liftButtonReleasedEdge)
+                {
+                    _audio->play(songs::getButtonUpSound(), devices::Hv20tPlayMode::SkipIfPlaying);
+                    _autoNoBallLiftStartTime = 0;
+                    _autoNoBallLiftDelayMs = 0;
+                    _lift->loadBall();
+                    break;
+                }
 
                 if (_autoNoBallLiftStartTime == 0)
                 {

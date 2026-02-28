@@ -21,6 +21,8 @@ namespace devices
         static constexpr unsigned long AutoPowerSongStartDelayMs = 1000UL;
         static constexpr unsigned long AutoNoBallRandomMinDelayMs = 120000UL;
         static constexpr unsigned long AutoNoBallRandomMaxDelayMs = 300000UL;
+        static constexpr float AutoDownNoBallSpeedRatio = 0.3f;
+        static constexpr float AutoDownNormalSpeedRatio = 1.0f;
     }
 
     MarbleController::MarbleController(const String &id) : Device(id, "marblecontroller")
@@ -86,6 +88,7 @@ namespace devices
         _autoLiftUpLoadedSince = 0;
         _autoNoBallLiftStartTime = 0;
         _autoNoBallLiftDelayMs = 0;
+        _autoLiftMovingDownSlow = false;
 
         // Set auto mode based on manual button state during setup
         isAutoMode = !_manualButton->getState().isPressed;
@@ -117,6 +120,7 @@ namespace devices
         _autoLiftUpLoadedSince = 0;
         _autoNoBallLiftStartTime = 0;
         _autoNoBallLiftDelayMs = 0;
+        _autoLiftMovingDownSlow = false;
         _autoLiftDelayStart = 0;
         _wheelIdleStartTime = 0;
         _randomWheelDelayMs = 0;
@@ -397,6 +401,11 @@ namespace devices
             _autoNoBallLiftDelayMs = 0;
         }
 
+        if (liftState.state != devices::LiftStateEnum::MOVING_DOWN)
+        {
+            _autoLiftMovingDownSlow = false;
+        }
+
         switch (liftState.state)
         {
         case devices::LiftStateEnum::UNKNOWN:
@@ -418,8 +427,19 @@ namespace devices
         case devices::LiftStateEnum::LIFT_DOWN_LOADING:
         case devices::LiftStateEnum::LIFT_UP_UNLOADING:
         case devices::LiftStateEnum::MOVING_UP:
+            blinkBusy(_liftLed);
+            break;
+
         case devices::LiftStateEnum::MOVING_DOWN:
             blinkBusy(_liftLed);
+            if (_autoLiftMovingDownSlow && liftState.ballWaitingSince > 0)
+            {
+                if (_lift->down(lift_timing::AutoDownNormalSpeedRatio))
+                {
+                    _autoLiftMovingDownSlow = false;
+                    MLOG_INFO("%s: Ball waiting detected during auto down, switching to normal speed", toString().c_str());
+                }
+            }
             break;
 
         case devices::LiftStateEnum::LIFT_DOWN:
@@ -562,7 +582,18 @@ namespace devices
             else
             {
                 // Not loaded: move down to loading position
-                _lift->down();
+                if (liftState.ballWaitingSince > 0)
+                {
+                    _autoLiftMovingDownSlow = false;
+                    _lift->down(lift_timing::AutoDownNormalSpeedRatio);
+                }
+                else
+                {
+                    if (_lift->down(lift_timing::AutoDownNoBallSpeedRatio))
+                    {
+                        _autoLiftMovingDownSlow = true;
+                    }
+                }
                 _autoLiftDelayStart = 0; // Reset delay timer
                 _autoPowerUnloadPending = false;
                 _autoPowerUnloadSongStarted = false;

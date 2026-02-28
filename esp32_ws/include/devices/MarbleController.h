@@ -82,6 +82,7 @@ namespace devices
         unsigned long _autoLiftUpLoadedSince = 0;
         unsigned long _autoNoBallLiftStartTime = 0;
         unsigned long _autoNoBallLiftDelayMs = 0;
+        bool _autoLiftMovingDownSlow = false;
 
         // 0 = not idle, >0 = idle start time
         unsigned long _wheelIdleStartTime = 0;

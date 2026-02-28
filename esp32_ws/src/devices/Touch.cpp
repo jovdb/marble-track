@@ -47,6 +47,8 @@ namespace devices
         _hasCandidate = false;
         _candidateTouched = false;
         _candidateSince = 0;
+        _debugIntervalMs = 200;
+        _lastDebugAtMs = 0;
         _streamValues = false;
         _streamIntervalMs = 200;
         _lastStreamAtMs = 0;
@@ -96,6 +98,8 @@ namespace devices
         _hasCandidate = false;
         _candidateTouched = false;
         _candidateSince = 0;
+        _debugIntervalMs = 200;
+        _lastDebugAtMs = 0;
         _streamValues = false;
         _streamIntervalMs = 200;
         _lastStreamAtMs = 0;
@@ -128,12 +132,17 @@ namespace devices
 
         if (_debug)
         {
-            MLOG_INFO("%s: touchRead pin=%d value=%d threshold=%d touched=%s",
-                      toString().c_str(),
-                      _config.pin,
-                      value,
-                      _config.threshold,
-                      touched ? "true" : "false");
+            const unsigned long now = millis();
+            if (now - _lastDebugAtMs >= _debugIntervalMs)
+            {
+                _lastDebugAtMs = now;
+                MLOG_INFO("%s: touchRead pin=%d value=%d threshold=%d touched=%s",
+                          toString().c_str(),
+                          _config.pin,
+                          value,
+                          _config.threshold,
+                          touched ? "true" : "false");
+            }
         }
 
         if (_streamValues)

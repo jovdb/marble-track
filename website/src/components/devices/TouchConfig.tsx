@@ -1,14 +1,17 @@
-import { createEffect, createSignal } from "solid-js";
+import { createEffect, createSignal, onCleanup } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import PinSelect from "../PinSelect";
 import { PinConfig, deserializePinConfig } from "../../interfaces/WebSockets";
 import { useTouch } from "../../stores/Touch";
 import { CURRENT_ESP32_TYPE, getTouchPinsForEsp32Type } from "../../utils/esp32Pins";
+import deviceStyles from "./Device.module.css";
 
 interface TouchConfigProps {
   id: string;
   onClose: () => void;
 }
+
+const LIVE_STREAM_INTERVAL_MS = 500;
 
 function normalizeName(value: unknown): string {
   if (typeof value === "string" && value.trim().length > 0) {
@@ -42,7 +45,7 @@ function normalizeDuration(value: unknown): number {
 }
 
 export default function TouchConfig(props: TouchConfigProps) {
-  const [device, { setDeviceConfig }] = useTouch(props.id);
+  const [device, { setDeviceConfig, setStreaming, readValue }] = useTouch(props.id);
   const touchPins = getTouchPinsForEsp32Type(CURRENT_ESP32_TYPE);
 
   const [name, setName] = createSignal(normalizeName(device?.config?.name));
@@ -53,6 +56,7 @@ export default function TouchConfig(props: TouchConfigProps) {
   const [durationMs, setDurationMs] = createSignal(
     String(normalizeDuration(device?.config?.durationMs))
   );
+  const [liveValues, setLiveValues] = createSignal(false);
 
   const toNumber = (value: string, fallback: number) => {
     const number = Number(value);
@@ -61,6 +65,24 @@ export default function TouchConfig(props: TouchConfigProps) {
     }
 
     return number;
+  };
+
+  const applyStreaming = (enabled: boolean) => {
+    setStreaming(enabled, LIVE_STREAM_INTERVAL_MS);
+  };
+
+  const getCurrentValue = () =>
+    typeof device?.state?.value === "number" ? (device.state.value as number) : undefined;
+
+  const getThresholdValue = () => Math.max(0, Math.floor(toNumber(threshold(), 30000)));
+
+  const isAboveThreshold = () => {
+    const currentValue = getCurrentValue();
+    if (currentValue === undefined) {
+      return false;
+    }
+
+    return currentValue > getThresholdValue();
   };
 
   createEffect(() => {
@@ -73,6 +95,12 @@ export default function TouchConfig(props: TouchConfigProps) {
     setPin(normalizePinConfig(config.pin));
     setThreshold(String(normalizeThreshold(config.threshold)));
     setDurationMs(String(normalizeDuration(config.durationMs)));
+  });
+
+  onCleanup(() => {
+    if (liveValues()) {
+      applyStreaming(false);
+    }
   });
 
   const handleSave = () => {
@@ -118,6 +146,43 @@ export default function TouchConfig(props: TouchConfigProps) {
               onInput={(event) => setThreshold(event.currentTarget.value)}
               style={{ "margin-left": "0.5rem", width: "6rem" }}
             />
+          </DeviceConfigItem>
+        </DeviceConfigRow>
+        <DeviceConfigRow>
+          <DeviceConfigItem name="Current value:">
+            <span style={{ "margin-left": "0.5rem" }}>
+              {typeof device?.state?.value === "number" ? device.state.value : "-"}
+            </span>
+            <button
+              type="button"
+              classList={{
+                [deviceStyles.device__button]: true,
+                [deviceStyles["device__button--secondary"]]: isAboveThreshold(),
+              }}
+              style={{ "margin-left": "0.5rem", gap: "0.5rem" }}
+              onClick={(event) => event.preventDefault()}
+            >
+              {isAboveThreshold() ? "Touched" : "Untouched"}
+            </button>
+          </DeviceConfigItem>
+        </DeviceConfigRow>
+        <DeviceConfigRow>
+          <DeviceConfigItem name="Live values:">
+            <label style={{ "margin-left": "0.5rem", display: "inline-flex", gap: "0.4rem" }}>
+              <input
+                type="checkbox"
+                checked={liveValues()}
+                onChange={(event) => {
+                  const enabled = event.currentTarget.checked;
+                  setLiveValues(enabled);
+                  applyStreaming(enabled);
+                  if (enabled) {
+                    readValue();
+                  }
+                }}
+              />
+              (Every 0.5s)
+            </label>
           </DeviceConfigItem>
         </DeviceConfigRow>
         <DeviceConfigRow>

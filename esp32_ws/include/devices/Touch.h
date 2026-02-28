@@ -52,7 +52,10 @@ namespace devices
         void configToJson(JsonDocument &doc) override;
 
     private:
-        bool _debug = true;
+        bool _debug = false;
+        bool _streamValues = false;
+        unsigned long _streamIntervalMs = 200;
+        unsigned long _lastStreamAtMs = 0;
         bool _isSimulated = false;
         bool _simulatedTouched = false;
 

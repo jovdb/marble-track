@@ -47,6 +47,9 @@ namespace devices
         _hasCandidate = false;
         _candidateTouched = false;
         _candidateSince = 0;
+        _streamValues = false;
+        _streamIntervalMs = 200;
+        _lastStreamAtMs = 0;
         _isSimulated = false;
         _simulatedTouched = false;
 
@@ -93,6 +96,9 @@ namespace devices
         _hasCandidate = false;
         _candidateTouched = false;
         _candidateSince = 0;
+        _streamValues = false;
+        _streamIntervalMs = 200;
+        _lastStreamAtMs = 0;
 
         _state.value = 0;
         _state.touched = false;
@@ -128,6 +134,16 @@ namespace devices
                       value,
                       _config.threshold,
                       touched ? "true" : "false");
+        }
+
+        if (_streamValues)
+        {
+            const unsigned long now = millis();
+            if (now - _lastStreamAtMs >= _streamIntervalMs)
+            {
+                _lastStreamAtMs = now;
+                notifyStateChanged();
+            }
         }
 
         if (touched == _state.touched)
@@ -173,6 +189,33 @@ namespace devices
     bool Touch::control(const String &action, JsonObject *args)
     {
         (void)args;
+
+        if (action == "setStreaming")
+        {
+            if (!args)
+            {
+                return false;
+            }
+
+            if ((*args)["enabled"].is<bool>())
+            {
+                _streamValues = (*args)["enabled"].as<bool>();
+            }
+
+            if ((*args)["intervalMs"].is<unsigned long>())
+            {
+                _streamIntervalMs = (*args)["intervalMs"].as<unsigned long>();
+            }
+
+            if (_streamIntervalMs < 20)
+            {
+                _streamIntervalMs = 20;
+            }
+
+            _lastStreamAtMs = 0;
+            notifyStateChanged();
+            return true;
+        }
 
         if (action != "touch" && action != "untouch")
         {

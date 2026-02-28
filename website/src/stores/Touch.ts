@@ -39,12 +39,25 @@ export function useTouch(deviceId: string) {
       args: {},
     });
 
+  const setStreaming = (enabled: boolean, intervalMs = 500) =>
+    sendMessage({
+      type: "device-fn",
+      deviceId,
+      deviceType,
+      fn: "setStreaming",
+      args: { enabled, intervalMs },
+    });
+
+  const readValue = () => actions.getDeviceState();
+
   return [
     device,
     {
       ...actions,
       touch,
       untouch,
+      setStreaming,
+      readValue,
     },
   ] as const;
 }

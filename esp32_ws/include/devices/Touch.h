@@ -55,6 +55,8 @@ namespace devices
         bool _debug = true;
         unsigned long _debugIntervalMs = 200;
         unsigned long _lastDebugAtMs = 0;
+        unsigned long _plotIntervalMs = 200;
+        unsigned long _lastPlotAtMs = 0;
         bool _streamValues = false;
         unsigned long _streamIntervalMs = 200;
         unsigned long _lastStreamAtMs = 0;

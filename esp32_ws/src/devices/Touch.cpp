@@ -43,12 +43,15 @@ namespace devices
         Device::setup();
 
         setName(_config.name);
+        LogConfig::enable(LOG_PLOT);
 
         _hasCandidate = false;
         _candidateTouched = false;
         _candidateSince = 0;
         _debugIntervalMs = 200;
         _lastDebugAtMs = 0;
+        _plotIntervalMs = 200;
+        _lastPlotAtMs = 0;
         _streamValues = false;
         _streamIntervalMs = 200;
         _lastStreamAtMs = 0;
@@ -100,6 +103,8 @@ namespace devices
         _candidateSince = 0;
         _debugIntervalMs = 200;
         _lastDebugAtMs = 0;
+        _plotIntervalMs = 200;
+        _lastPlotAtMs = 0;
         _streamValues = false;
         _streamIntervalMs = 200;
         _lastStreamAtMs = 0;
@@ -129,10 +134,20 @@ namespace devices
         int value = 0;
         bool touched = readTouched(value);
         _state.value = value;
+        const unsigned long now = millis();
+
+        if (now - _lastPlotAtMs >= _plotIntervalMs)
+        {
+            _lastPlotAtMs = now;
+            MLOG_PLOT("%s_touch:%d,%s_threshold:%d",
+                      _id.c_str(),
+                      value,
+                      _id.c_str(),
+                      _config.threshold);
+        }
 
         if (_debug)
         {
-            const unsigned long now = millis();
             if (now - _lastDebugAtMs >= _debugIntervalMs)
             {
                 _lastDebugAtMs = now;
@@ -147,7 +162,6 @@ namespace devices
 
         if (_streamValues)
         {
-            const unsigned long now = millis();
             if (now - _lastStreamAtMs >= _streamIntervalMs)
             {
                 _lastStreamAtMs = now;

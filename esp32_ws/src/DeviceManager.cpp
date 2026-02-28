@@ -16,6 +16,7 @@
 #include "devices/IoExpander.h"
 #include "devices/I2c.h"
 #include "devices/Hv20tAudio.h"
+#include "devices/Touch.h"
 #include "devices/mixins/SerializableMixin.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
@@ -70,6 +71,10 @@ Device *DeviceManager::createDevice(const String &deviceId, const String &device
     else if (upperType == "HV20T")
     {
         return new devices::Hv20tAudio(deviceId);
+    }
+    else if (upperType == "TOUCH")
+    {
+        return new devices::Touch(deviceId);
     }
 
     MLOG_WARN("Unknown device type: %s", upperType.c_str());

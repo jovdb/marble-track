@@ -12,6 +12,7 @@ import dotsIcon from "../../assets/icons/dots.png";
 import { LedStateIcon } from "../devices/LedStateIcon";
 import { Hv20tStateIcon } from "../devices/Hv20tStateIcon";
 import { ButtonStateIcon } from "../devices/ButtonStateIcon";
+import { TouchStateIcon } from "../devices/TouchStateIcon";
 
 // Icon component props
 export interface IconProps {
@@ -437,6 +438,8 @@ export const getDeviceIcon = (type: string, deviceId: string, props?: IconProps)
       return <LedStateIcon deviceId={deviceId} {...props} />;
     case "BUTTON":
       return <ButtonStateIcon deviceId={deviceId} {...props} />;
+    case "TOUCH":
+      return <TouchStateIcon deviceId={deviceId} {...props} />;
     case "BUZZER":
       return <BuzzerIcon {...props} />;
     case "HV20T":

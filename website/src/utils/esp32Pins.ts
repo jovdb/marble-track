@@ -17,6 +17,23 @@ export const ESP32_RESERVED_PINS = [35, 36, 37];
 // All possible ESP32 GPIO pins (0-49)
 export const ESP32_ALL_PINS = Array.from({ length: 50 }, (_, i) => i);
 
+export type Esp32Type = "esp32" | "esp32s2" | "esp32s3" | "esp32c3" | "esp32c6" | "esp32h2";
+
+export const ESP32_TOUCH_PINS_BY_TYPE: Record<Esp32Type, number[]> = {
+  esp32: [0, 2, 4, 12, 13, 14, 15, 27, 32, 33],
+  esp32s2: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+  esp32s3: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+  esp32c3: [],
+  esp32c6: [],
+  esp32h2: [],
+};
+
+export const CURRENT_ESP32_TYPE: Esp32Type = "esp32s3";
+
+export function getTouchPinsForEsp32Type(type: Esp32Type): number[] {
+  return ESP32_TOUCH_PINS_BY_TYPE[type] ?? [];
+}
+
 // Helper function to check if a pin is available
 export function isPinAvailable(pin: number): boolean {
   return ESP32_AVAILABLE_PINS.includes(pin);

@@ -21,7 +21,7 @@ namespace devices
         static constexpr unsigned long AutoPowerSongStartDelayMs = 1000UL;
         static constexpr unsigned long AutoNoBallRandomMinDelayMs = 120000UL;
         static constexpr unsigned long AutoNoBallRandomMaxDelayMs = 300000UL;
-        static constexpr float AutoDownNoBallSpeedRatio = 0.3f;
+        static constexpr float AutoDownNoBallSpeedRatio = 0.2f;
         static constexpr float AutoDownNormalSpeedRatio = 1.0f;
     }
 

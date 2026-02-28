@@ -31,6 +31,7 @@ const COMPOSITION_DEVICE_TYPES = [
   "MarbleController",
   "Servo",
   "Stepper",
+  "Touch",
   "Wheel",
 ] as const;
 

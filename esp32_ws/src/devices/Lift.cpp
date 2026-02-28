@@ -293,6 +293,8 @@ namespace devices
         case LiftStateEnum::MOVING_DOWN: // for changed speed
         case LiftStateEnum::MOVING_UP:
         {
+            const bool wasMovingDown = (_state.state == LiftStateEnum::MOVING_DOWN);
+
             // Check if lift is already at or below min position
             long currentPos = getCurrentPosition();
             if (currentPos <= _config.minSteps)
@@ -302,9 +304,24 @@ namespace devices
                 break;
             }
 
-            long steps = (_config.minSteps - currentPos) * DOWN_FACTOR;
             _state.state = LiftStateEnum::MOVING_DOWN;
-            isSuccess = moveStepper(steps, speedRatio);
+
+            if (wasMovingDown)
+            {
+                long targetPos = _stepper->getState().targetPosition;
+                if (targetPos >= currentPos)
+                {
+                    long steps = (_config.minSteps - currentPos) * DOWN_FACTOR;
+                    targetPos = currentPos + steps;
+                }
+                isSuccess = moveStepperTo(targetPos, speedRatio);
+            }
+            else
+            {
+                long steps = (_config.minSteps - currentPos) * DOWN_FACTOR;
+                isSuccess = moveStepper(steps, speedRatio);
+            }
+
             notifyStateChanged();
             break;
         }

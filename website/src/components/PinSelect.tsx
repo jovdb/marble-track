@@ -12,11 +12,13 @@ interface PinSelectProps {
   title?: string;
   excludeDeviceId?: string;
   showExpanderPins?: boolean;
+  availableGpioPins?: number[];
 }
 
 export default function PinSelect(props: PinSelectProps) {
   const [devicesStore, { getDeviceConfig }] = useDevices();
   const usedPins = createMemo(() => getUsedPins(devicesStore.devices, props.excludeDeviceId));
+  const availablePins = createMemo(() => props.availableGpioPins ?? ESP32_AVAILABLE_PINS);
   const getPinUsage = (pinKey: string) => usedPins().get(pinKey);
 
   const expanderPinOptions = createMemo(() => {
@@ -72,7 +74,7 @@ export default function PinSelect(props: PinSelectProps) {
     }
     // Check if it's a GPIO pin
     const pinNum = parseInt(selectedValue);
-    if (!isNaN(pinNum) && ESP32_AVAILABLE_PINS.includes(pinNum)) {
+    if (!isNaN(pinNum) && availablePins().includes(pinNum)) {
       props.onChange({ pin: pinNum, expanderId: "" });
       return;
     }
@@ -95,7 +97,7 @@ export default function PinSelect(props: PinSelectProps) {
       title={props.title}
     >
       <option value={-1}>Disabled</option>
-      <For each={ESP32_AVAILABLE_PINS}>
+      <For each={availablePins()}>
         {(pinNum) => {
           const deviceId = getPinUsage(String(pinNum));
           return (

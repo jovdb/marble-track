@@ -56,6 +56,7 @@ namespace devices
         Hv20tAudio *_audio;
         Lift *_lift;
         Wheel *_wheel;
+        Wheel *_splitter;
         Led *_liftLed;
         Button *_liftBtn;
         Led *_wheelLed;

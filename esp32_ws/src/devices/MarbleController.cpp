@@ -53,6 +53,13 @@ namespace devices
         _wheel = new devices::Wheel("wheel");
         addChild(_wheel);
 
+        JsonDocument splitterConfig;
+        splitterConfig["name"] = "Splitter";
+
+        _splitter = new devices::Wheel("splitter");
+        _splitter->jsonToConfig(splitterConfig);
+        addChild(_splitter);
+
         // Subscribe to wheel state changes
         _wheel->onStateChange([this](void *statePtr)
                               { this->onWheelStateChange(statePtr); });

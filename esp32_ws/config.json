@@ -319,6 +319,85 @@
           }
         },
         {
+          "id": "splitter",
+          "type": "wheel",
+          "children": [
+            {
+              "id": "splitter-stepper",
+              "type": "stepper",
+              "children": [],
+              "config": {
+                "name": "Splitter Stepper",
+                "stepperType": "DRIVER",
+                "usePwm": true,
+                "maxSpeed": 3000,
+                "maxAcceleration": 3000,
+                "defaultSpeed": 1000,
+                "defaultAcceleration": 200,
+                "stepPin": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "dirPin": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "pin1": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "pin2": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "pin3": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "pin4": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "enablePin": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "invertEnable": true,
+                "invertDirection": false
+              }
+            },
+            {
+              "id": "splitter-zero-sensor",
+              "type": "button",
+              "children": [],
+              "config": {
+                "pin": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "name": "Splitter Zero Sensor",
+                "debounceTimeInMs": 50,
+                "pinMode": "PullUp",
+                "buttonType": "NormalOpen"
+              }
+            }
+          ],
+          "config": {
+            "name": "Splitter",
+            "stepsPerRevolution": 0,
+            "maxStepsPerRevolution": 10000,
+            "zeroPointDegree": 0,
+            "direction": 1,
+            "breakPoints": [
+              45,
+              90,
+              180,
+              30,
+              270
+            ]
+          }
+        },
+        {
           "id": "spiral-led",
           "type": "led",
           "children": [],

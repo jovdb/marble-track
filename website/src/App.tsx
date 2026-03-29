@@ -1,4 +1,4 @@
-import { type Component, onMount, onCleanup } from "solid-js";
+import { type Component, onMount, onCleanup, Show } from "solid-js";
 
 import { Header } from "./components/Header";
 import { DevicesList } from "./components/DevicesList";
@@ -10,6 +10,8 @@ import logo from "./assets/logo-64.png";
 import styles from "./App.module.css";
 import { Providers } from "./Providers";
 import { Devices } from "./components/Devices";
+import { SerialLog } from "./components/SerialLog";
+import { isSerialOpen } from "./stores/serial";
 
 const App: Component = () => {
   let animatedFavicon: AnimatedFavicon;
@@ -47,6 +49,12 @@ const App: Component = () => {
       <Providers>
         <Header />
         <main>
+          <Show when={isSerialOpen()}>
+            <section class={styles.app__section}>
+              <SerialLog />
+            </section>
+          </Show>
+
           <section class={styles.app__section}>
             <CollapsibleSection
               title="Available Devices"

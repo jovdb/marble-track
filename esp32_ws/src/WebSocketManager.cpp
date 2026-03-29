@@ -7,6 +7,7 @@
 #include "devices/Button.h"
 #include "devices/Device.h"
 #include "devices/I2c.h"
+#include "Config.h"
 #include "DeviceManager.h"
 #include "Network.h"
 #include "NetworkSettings.h"
@@ -17,6 +18,35 @@ static WebSocketManager *instance = nullptr;
 namespace
 {
     constexpr size_t kMaxQueuedBatchMessages = 64;
+
+    const char *getResetReasonString(esp_reset_reason_t reason)
+    {
+        switch (reason)
+        {
+        case ESP_RST_POWERON:
+            return "power-on";
+        case ESP_RST_EXT:
+            return "external-pin";
+        case ESP_RST_SW:
+            return "software";
+        case ESP_RST_PANIC:
+            return "panic";
+        case ESP_RST_INT_WDT:
+            return "interrupt-watchdog";
+        case ESP_RST_TASK_WDT:
+            return "task-watchdog";
+        case ESP_RST_WDT:
+            return "other-watchdog";
+        case ESP_RST_DEEPSLEEP:
+            return "deep-sleep";
+        case ESP_RST_BROWNOUT:
+            return "brownout";
+        case ESP_RST_SDIO:
+            return "sdio";
+        default:
+            return "unknown";
+        }
+    }
 }
 
 String createJsonResponse(bool success, const String &message, const String &data, const String &requestId, const String &type = "", const String &deviceId = "")
@@ -174,6 +204,36 @@ void WebSocketManager::handleGetDevices(JsonDocument &doc)
     notifyClients(message);
 }
 
+void WebSocketManager::handleGetSystemInfo(JsonDocument &doc)
+{
+    if (!hasClients())
+        return;
+
+    JsonDocument response;
+    response["type"] = "system-info";
+    response["serialBaudRate"] = Config::SERIAL_BAUD_RATE;
+    response["firmwareBuild"] = String(__DATE__) + " " + String(__TIME__);
+    response["freeHeap"] = ESP.getFreeHeap();
+    response["uptimeMs"] = millis();
+    response["webSocketClients"] = ws.count();
+    response["resetReason"] = getResetReasonString(esp_reset_reason());
+    response["chipModel"] = ESP.getChipModel();
+    response["sdkVersion"] = ESP.getSdkVersion();
+
+    if (network)
+    {
+        response["hostname"] = network->getHostname();
+        response["ipAddress"] = network->getIPAddress().toString();
+        response["connectionInfo"] = network->getConnectionInfo();
+    }
+
+    String message;
+    serializeJson(response, message);
+    notifyClients(message);
+
+    MLOG_INFO("Sent system info to client");
+}
+
 /**
  * @brief Recursively serialize a device and its children to JSON
  * @param device The device to serialize
@@ -268,6 +328,12 @@ void WebSocketManager::parseMessage(String message)
     if (type == "devices-list")
     {
         handleGetDevices(doc);
+        return;
+    }
+
+    if (type == "system-info")
+    {
+        handleGetSystemInfo(doc);
         return;
     }
 

@@ -78,6 +78,20 @@ export interface NetworkStatus {
   clients?: number;
 }
 
+export interface SystemInfo {
+  serialBaudRate: number;
+  firmwareBuild: string;
+  hostname?: string;
+  ipAddress?: string;
+  connectionInfo?: string;
+  freeHeap?: number;
+  uptimeMs?: number;
+  webSocketClients?: number;
+  resetReason?: string;
+  chipModel?: string;
+  sdkVersion?: string;
+}
+
 interface IWsMessageBase<TType extends string = string> {
   type: TType;
 }
@@ -209,6 +223,10 @@ export type IWsReceiveExpanderAddressesMessage =
       addresses: number[];
     });
 
+export type IWsReceiveSystemInfoMessage =
+  | (IWsMessageBase<"system-info"> & _IWsErrorResponse)
+  | (IWsMessageBase<"system-info"> & SystemInfo);
+
 // Individual message type (non-batch)
 export type IWsReceiveSingleMessage =
   | IWsReceiveDevicesListMessage
@@ -227,6 +245,7 @@ export type IWsReceiveSingleMessage =
   | IWsReceiveDevicesConfigMessage
   | IWsReceiveStepsPerRevolutionMessage
   | IWsReceiveExpanderAddressesMessage
+  | IWsReceiveSystemInfoMessage
   | IWsReceivePongMessage;
 
 // Message is always an array of messages (batch)
@@ -291,6 +310,8 @@ export type IWsSendGetExpanderAddressesMessage = IWsMessageBase<"expander-addres
   i2cDeviceId: string;
 };
 
+export type IWsSendGetSystemInfoMessage = IWsMessageBase<"system-info">;
+
 export type IWsSendMessage =
   | IWsSendRestartMessage
   | IWsSendGetDevicesMessage
@@ -308,4 +329,5 @@ export type IWsSendMessage =
   | IWsSendGetNetworksMessage
   | IWsSendGetNetworkStatusMessage
   | IWsSendGetExpanderAddressesMessage
+  | IWsSendGetSystemInfoMessage
   | IWsSendPingMessage;

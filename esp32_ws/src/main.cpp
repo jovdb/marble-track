@@ -68,7 +68,7 @@ devices::MarbleController *marbleController = nullptr;
 void setup()
 {
   // Initialize serial communication
-  Serial.begin(115200);
+  Serial.begin(Config::SERIAL_BAUD_RATE);
 
   // Logging setup
   esp_log_level_set("*", ESP_LOG_INFO);

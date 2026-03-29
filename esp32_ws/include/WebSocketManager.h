@@ -33,6 +33,7 @@ private:
     void handleDeviceState(JsonDocument &doc);
     void handleDeviceGetState(JsonDocument &doc);
     void handleGetDevices(JsonDocument &doc);
+    void handleGetSystemInfo(JsonDocument &doc);
     void serializeDeviceToJson(Device *device, JsonObject deviceObj);
 
 public:

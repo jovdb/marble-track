@@ -15,7 +15,7 @@
 // Network Configuration
 namespace Config
 {
-    // All config flags removed; set values directly in code as needed.
+    constexpr unsigned long SERIAL_BAUD_RATE = 115200;
 }
 
 #endif

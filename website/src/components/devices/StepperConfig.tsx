@@ -127,7 +127,7 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
       maxAcceleration: toNumber(maxAcceleration(), 0),
       defaultSpeed: toNumber(defaultSpeed(), 0),
       defaultAcceleration: toNumber(defaultAcceleration(), 0),
-      invertEnable: invertEnable(),
+      invertEnable: isFourPin() ? false : invertEnable(),
       invertDirection: invertDirection(),
     };
 
@@ -136,9 +136,6 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
       payload.pin2 = pin2();
       payload.pin3 = pin3();
       payload.pin4 = pin4();
-      if (enablePin().pin >= 0) {
-        payload.enablePin = enablePin();
-      }
     } else {
       payload.stepPin = stepPin();
       payload.dirPin = dirPin();
@@ -276,25 +273,6 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
                 onChange={setPin4}
                 excludeDeviceId={props.id}
                 showExpanderPins={true}
-              />
-            </DeviceConfigItem>
-          </DeviceConfigRow>
-          <DeviceConfigRow>
-            <DeviceConfigItem name="Enable pin">
-              <PinSelect
-                value={enablePin()}
-                onChange={setEnablePin}
-                excludeDeviceId={props.id}
-                showExpanderPins={true}
-              />
-            </DeviceConfigItem>
-          </DeviceConfigRow>
-          <DeviceConfigRow>
-            <DeviceConfigItem name="Invert enable">
-              <input
-                type="checkbox"
-                checked={invertEnable()}
-                onChange={(event) => setInvertEnable(event.currentTarget.checked)}
               />
             </DeviceConfigItem>
           </DeviceConfigRow>

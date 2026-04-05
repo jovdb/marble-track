@@ -91,12 +91,6 @@ namespace devices
     {
         Device::loop();
 
-        if (!_stepper || !_zeroSensor)
-        {
-            return;
-        }
-
-        // Reset error flag
         if (_state.onError)
         {
             _state.onError = false;

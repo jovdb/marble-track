@@ -35,6 +35,9 @@ const COMPOSITION_DEVICE_TYPES = [
   "Wheel",
 ] as const;
 
+const DRAG_AUTOSCROLL_EDGE_PX = 80;
+const DRAG_AUTOSCROLL_STEP_PX = 18;
+
 export function DevicesList() {
   const [devicesState, { loadDevices }] = useDevices();
   const [socketState, socketActions] = useWebSocket2();
@@ -53,6 +56,21 @@ export function DevicesList() {
   const [dragOverDeviceId, setDragOverDeviceId] = createSignal<string | null>(null);
   const [dragDirection, setDragDirection] = createSignal<"up" | "down" | null>(null);
   const [activeDeviceId, setActiveDeviceId] = createSignal<string | null>(null);
+
+  const handleDocumentDragOverForAutoScroll = (e: DragEvent) => {
+    if (!draggedDeviceId()) {
+      return;
+    }
+
+    if (e.clientY <= DRAG_AUTOSCROLL_EDGE_PX) {
+      window.scrollBy({ top: -DRAG_AUTOSCROLL_STEP_PX, behavior: "auto" });
+      return;
+    }
+
+    if (e.clientY >= window.innerHeight - DRAG_AUTOSCROLL_EDGE_PX) {
+      window.scrollBy({ top: DRAG_AUTOSCROLL_STEP_PX, behavior: "auto" });
+    }
+  };
 
   // Initialize collapsed devices - expand root devices one level
   createEffect(() => {
@@ -491,7 +509,10 @@ export function DevicesList() {
   });
 
   onMount(() => {
+    document.addEventListener("dragover", handleDocumentDragOverForAutoScroll, { passive: true });
+
     onCleanup(() => {
+      document.removeEventListener("dragover", handleDocumentDragOverForAutoScroll);
       unsubscribe();
     });
   });

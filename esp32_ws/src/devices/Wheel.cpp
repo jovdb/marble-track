@@ -15,11 +15,13 @@ namespace devices
 {
 
     // Default breakpoints (same as original)
-    static const float defaultBreakpoints[] = {45.0, 90.0, 180.0, 30.0, 270.0};
+    static const float defaultBreakpoints[] = {45.0, 90.0, 180.0, 270.0};
 
     Wheel::Wheel(const String &id)
         : Device(id, "wheel")
     {
+        _config.breakPoints.assign(std::begin(defaultBreakpoints), std::end(defaultBreakpoints));
+
         // Create stepper child
         _stepper = new Stepper(getId() + "-stepper");
         addChild(_stepper);
@@ -56,12 +58,6 @@ namespace devices
     {
         Device::setup();
         setName(_config.name);
-
-        // Initialize breakpoints if not configured
-        if (_config.breakPoints.empty())
-        {
-            _config.breakPoints.assign(std::begin(defaultBreakpoints), std::end(defaultBreakpoints));
-        }
 
         MLOG_DEBUG("%s: Setup complete", toString().c_str());
     }
@@ -543,8 +539,8 @@ namespace devices
             _config.direction = config["direction"].as<int>();
         }
 
-        // Load breakPoints - check if it exists and has a size (pragmatic approach to handle ArduinoJson type detection)
-        if (config["breakPoints"].is<JsonArray>() && config["breakPoints"].size() > 0)
+        // Honor incoming breakPoints exactly, including an explicit empty array.
+        if (config["breakPoints"].is<JsonArray>())
         {
             _config.breakPoints.clear();
             size_t size = config["breakPoints"].size();

@@ -268,7 +268,7 @@ void DeviceManager::saveDevicesToJsonFile()
     addDevicesToJsonArray(devicesArray);
 
     // Save back to file
-    File file = LittleFS.open(CONFIG_FILE, FILE_WRITE);
+    File file = LittleFS.open(CONFIG_FILE, "w");
     if (file)
     {
         serializeJson(doc, file);
@@ -467,7 +467,7 @@ bool DeviceManager::saveNetworkSettings(const NetworkSettings &settings)
     networkObj["ssid"] = settings.ssid;
     networkObj["password"] = settings.password;
 
-    File file = LittleFS.open(CONFIG_FILE, FILE_WRITE);
+    File file = LittleFS.open(CONFIG_FILE, "w");
     if (file)
     {
         serializeJson(doc, file);
@@ -524,7 +524,7 @@ bool DeviceManager::saveLoggingSettings()
     JsonObject loggingObj = rootObj["logging"].to<JsonObject>();
     loggingObj["enabledTypes"] = LogConfig::enabledTypes;
 
-    File file = LittleFS.open(CONFIG_FILE, FILE_WRITE);
+    File file = LittleFS.open(CONFIG_FILE, "w");
     if (file)
     {
         serializeJson(doc, file);

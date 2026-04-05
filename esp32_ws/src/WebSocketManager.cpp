@@ -434,8 +434,9 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
                 deviceManager->teardown();
 
                 // Apply the incoming config to the device
-                JsonObject configObj = doc["config"];
-                serializable->jsonToConfig(configObj);
+                JsonDocument configDoc;
+                configDoc.set(doc["config"].as<JsonObject>());
+                serializable->jsonToConfig(configDoc);
 
                 deviceManager->saveDevicesToJsonFile();
 

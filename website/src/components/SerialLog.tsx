@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, createSignal, For } from "solid-js";
+import { Component, createEffect, createMemo, createSignal, For, onMount } from "solid-js";
 import styles from "./SerialLog.module.css";
 import { useSerial } from "../hooks/useSerial";
 import type { ISerialLogEntry } from "../hooks/useSerial";
@@ -37,7 +37,7 @@ function getLogTypeClass(logType: string | null): string | undefined {
 }
 
 const SerialLog: Component = () => {
-  const { connect, disconnect, isConnected, logs, clear } = useSerial();
+  const { connect, connectToPairedPort, disconnect, isConnected, logs, clear } = useSerial();
   const [systemInfo] = useSystemInfo();
   const [wrapLines, setWrapLines] = createSignal(false);
   const [autoScroll, setAutoScroll] = createSignal(true);
@@ -73,6 +73,18 @@ const SerialLog: Component = () => {
       alert("Serial connect failed: " + (e as Error).message);
     }
   };
+
+  onMount(async () => {
+    if (isConnected()) {
+      return;
+    }
+
+    try {
+      await connectToPairedPort({ baudRate: baudRate() });
+    } catch (e) {
+      console.warn("Serial auto-connect skipped", e);
+    }
+  });
 
   return (
     <CollapsibleSection title="USB Monitoring" icon={<BugIcon width={24} height={24} />}>

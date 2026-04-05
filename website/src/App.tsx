@@ -11,14 +11,31 @@ import styles from "./App.module.css";
 import { Providers } from "./Providers";
 import { Devices } from "./components/Devices";
 import { SerialLog } from "./components/SerialLog";
-import { isSerialOpen } from "./stores/serial";
+import { isSerialOpen, openSerialPanel } from "./stores/serial";
 
 const App: Component = () => {
   let animatedFavicon: AnimatedFavicon;
 
+  const openSerialPanelIfUsbAvailable = async () => {
+    const serialApi = (navigator as any).serial;
+    if (!serialApi?.getPorts) {
+      return;
+    }
+
+    try {
+      const ports = await serialApi.getPorts();
+      if (ports.length > 0) {
+        openSerialPanel();
+      }
+    } catch (e) {
+      console.warn("Failed to read available serial ports", e);
+    }
+  };
+
   onMount(async () => {
     animatedFavicon = new AnimatedFavicon();
     await animatedFavicon.start(logo);
+    await openSerialPanelIfUsbAvailable();
   });
 
   onCleanup(() => {

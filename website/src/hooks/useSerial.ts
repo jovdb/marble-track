@@ -7,6 +7,14 @@ export interface ISerialLogEntry {
   logType: string | null;
 }
 
+function isIgnorableSerialStateError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return error.name === "InvalidStateError" || error.message.includes("already closed");
+}
+
 function parseLogType(line: string): string | null {
   const match = line.match(/^\[[^\]]+\]\[([^\]]+)\]\[[^\]]+\].*/);
   if (!match) {
@@ -30,6 +38,32 @@ export function useSerial() {
   let reader: any = null;
   let pendingLine = "";
 
+  const flushPendingLine = () => {
+    if (pendingLine.length > 0) {
+      appendLogs([pendingLine]);
+      pendingLine = "";
+    }
+  };
+
+  const safeClosePort = async () => {
+    if (!port) {
+      return;
+    }
+
+    const portToClose = port;
+    port = null;
+
+    try {
+      if (portToClose.readable || portToClose.writable) {
+        await portToClose.close();
+      }
+    } catch (e) {
+      if (!isIgnorableSerialStateError(e)) {
+        throw e;
+      }
+    }
+  };
+
   const clear = () => setLogs([]);
 
   const appendLogs = (newLines: string[]) => {
@@ -52,15 +86,61 @@ export function useSerial() {
     });
   };
 
-  async function connect(options: { baudRate?: number } = { baudRate: 115200 }) {
-    if (!(navigator as any).serial) {
+  async function getPairedPorts() {
+    const serialApi = (navigator as any).serial;
+    if (!serialApi?.getPorts) {
+      return [] as any[];
+    }
+
+    return (await serialApi.getPorts()) as any[];
+  }
+
+  async function attachToPort(nextPort: any, baudRate: number) {
+    port = nextPort;
+
+    try {
+      if (!port.readable) {
+        await port.open({ baudRate });
+      }
+
+      setIsConnected(true);
+      readLoop();
+    } catch (e) {
+      setIsConnected(false);
+      await safeClosePort();
+      throw e;
+    }
+  }
+
+  async function connect(options: { baudRate?: number; port?: any } = { baudRate: 115200 }) {
+    const serialApi = (navigator as any).serial;
+    if (!serialApi) {
       throw new Error("Web Serial API not supported in this browser");
     }
 
-    port = await (navigator as any).serial.requestPort();
-    await port.open({ baudRate: options.baudRate ?? 115200 });
-    setIsConnected(true);
-    readLoop();
+    const selectedPort = options.port ?? (await serialApi.requestPort());
+    await attachToPort(selectedPort, options.baudRate ?? 115200);
+  }
+
+  async function connectToPairedPort(options: { baudRate?: number } = { baudRate: 115200 }) {
+    const pairedPorts = await getPairedPorts();
+    const baudRate = options.baudRate ?? 115200;
+    let lastError: unknown = null;
+
+    for (const pairedPort of pairedPorts) {
+      try {
+        await attachToPort(pairedPort, baudRate);
+        return true;
+      } catch (e) {
+        lastError = e;
+      }
+    }
+
+    if (lastError) {
+      console.warn("Serial auto-connect skipped", lastError);
+    }
+
+    return false;
   }
 
   async function disconnect() {
@@ -69,18 +149,14 @@ export function useSerial() {
         await reader.cancel();
         reader = null;
       }
-      if (port) {
-        await port.close();
-        port = null;
-      }
+      await safeClosePort();
     } catch (e) {
-      console.error("Error closing serial", e);
+      if (!isIgnorableSerialStateError(e)) {
+        console.error("Error closing serial", e);
+      }
     }
 
-    if (pendingLine.length > 0) {
-      appendLogs([pendingLine]);
-      pendingLine = "";
-    }
+    flushPendingLine();
 
     setIsConnected(false);
   }
@@ -114,22 +190,34 @@ export function useSerial() {
       }
     } catch (e) {
       console.error("Serial read loop error", e);
+    } finally {
+      reader = null;
     }
   }
 
   onCleanup(() => {
     // best-effort cleanup
-    try {
-      if (reader) reader.cancel();
-      if (port) port.close();
-      pendingLine = "";
-    } catch {
-      // Ignore cleanup errors during unmount.
-    }
+    void (async () => {
+      try {
+        if (reader) {
+          await reader.cancel();
+          reader = null;
+        }
+
+        await safeClosePort();
+      } catch {
+        // Ignore cleanup errors during unmount.
+      } finally {
+        pendingLine = "";
+        setIsConnected(false);
+      }
+    })();
   });
 
   return {
     connect,
+    connectToPairedPort,
+    getPairedPorts,
     disconnect,
     isConnected,
     logs,

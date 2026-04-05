@@ -131,10 +131,9 @@ void WebSocketManager::handleGetExpanderAddresses(JsonDocument &doc)
     int sdaPin = i2cPins[0].toInt();
     int sclPin = i2cPins[1].toInt();
 
-    // Initialize I2C
-    Wire.end();
-    Wire.begin(sdaPin, sclPin);
-
+    // Wire is already initialized by the I2C device, no need to reinitialize it here
+    // Resetting Wire mid-operation can corrupt the buffer (causes "NULL TX buffer pointer" errors)
+    
     // Scan I2C bus for devices (addresses 0x03 to 0x77)
     JsonArray addresses = response["addresses"].to<JsonArray>();
     int deviceCount = 0;

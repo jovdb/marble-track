@@ -31,9 +31,6 @@ namespace devices
         // Set the device name
         setName(_config.name);
 
-        // End any previous I2C setup
-        Wire.end();
-
         // Get the I2C device
         devices::I2c *i2cDevice = nullptr;
         if (!_config.i2cDeviceId.isEmpty())
@@ -78,10 +75,8 @@ namespace devices
             return;
         }
 
-        // Initialize I2C with pins from the I2C device
-        Wire.begin(sdaPin, sclPin);
-
-        // Check if device is present
+        // Wire is managed by the I2C device, no need to reinitialize it here
+        // Just use the already configured Wire instance to check if the device is present
         Wire.beginTransmission(_config.i2cAddress);
         uint8_t error = Wire.endTransmission();
         _isPresent = (error == 0);

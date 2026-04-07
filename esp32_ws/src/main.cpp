@@ -14,7 +14,6 @@
 
 #include "SerialConsole.h"
 #include "OtaUpload.h"
-#include "AutoMode.h"
 #include "devices/MarbleController.h"
 
 // Composition-based devices
@@ -62,7 +61,6 @@ void globalNotifyClientsCallback(const String &message)
 
 DeviceManager deviceManager(globalNotifyClientsCallback);
 
-AutoMode *autoMode = nullptr;
 devices::MarbleController *marbleController = nullptr;
 
 void setup()
@@ -179,33 +177,11 @@ void setup()
   deviceManager.setOnDevicesChanged([]()
                                     {
                                       // Cleanup existing modes
-                                      if (autoMode)
-                                      {
-                                        delete autoMode;
-                                        autoMode = nullptr;
-                                      }
                                       if (marbleController)
                                       {
                                         delete marbleController;
                                         marbleController = nullptr;
                                       }
-
-                                      // Recreate mode based on button state
-                                      // TODO: Re-enable when Button is converted to composition device
-                                      // const Button *manualBtn = deviceManager.getDeviceByIdAs<Button>("manual-btn");
-                                      // if (manualBtn && manualBtn->isPressed())
-                                      // {
-                                      //   MLOG_INFO("Device changed: Initializing MANUAL mode");
-                                      //   marbleController = deviceManager.getDeviceByIdAs<MarbleController>("marble-controller");
-                                      //   marbleController->setup();
-                                      // }
-                                      // else
-                                      // {
-                                      // MLOG_INFO("Device changed: Initializing AUTOMATIC mode");
-                                      // autoMode = new AutoMode(deviceManager);
-                                      // autoMode->setup();
-
-                                      // }
                                     });
 
   // TODO: Re-enable when Button is converted to composition device
@@ -218,10 +194,6 @@ void setup()
   // }
   // else
   // {
-  // MLOG_INFO("Operation mode: AUTOMATIC");
-  // autoMode = new AutoMode(deviceManager);
-  // autoMode->setup();
-
   marbleController = deviceManager.getDeviceByIdAs<devices::MarbleController>("marble-controller");
   // }
 
@@ -290,10 +262,6 @@ void loop()
   if (marbleController)
   {
     // Since it's a device, loop is called via deviceManager.loop()
-  }
-  if (autoMode)
-  {
-    autoMode->loop();
   }
 
   const unsigned long now = millis();

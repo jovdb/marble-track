@@ -539,28 +539,15 @@ namespace devices
             _config.direction = config["direction"].as<int>();
         }
 
-        // Honor incoming breakPoints exactly, including an explicit empty array.
-        if (config["breakPoints"].is<JsonArray>())
+        // Load breakPoints from JSON and coerce each item to float.
+        JsonVariantConst breakPointsValue = config["breakPoints"];
+        if (breakPointsValue.is<JsonArrayConst>())
         {
+            JsonArrayConst breakPoints = breakPointsValue.as<JsonArrayConst>();
             _config.breakPoints.clear();
-            size_t size = config["breakPoints"].size();
-            for (size_t i = 0; i < size; i++)
+            for (JsonVariantConst item : breakPoints)
             {
-                if (config["breakPoints"][i].is<float>() || config["breakPoints"][i].is<double>() ||
-                    config["breakPoints"][i].is<long>() || config["breakPoints"][i].is<int>())
-                {
-                    float bp = config["breakPoints"][i].as<float>();
-                    _config.breakPoints.push_back(bp);
-                }
-                else if (config["breakPoints"][i].is<const char *>())
-                {
-                    const char *value = config["breakPoints"][i].as<const char *>();
-                    if (value)
-                    {
-                        float bp = static_cast<float>(atof(value));
-                        _config.breakPoints.push_back(bp);
-                    }
-                }
+                _config.breakPoints.push_back(item.as<float>());
             }
         }
     }

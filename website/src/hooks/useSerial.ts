@@ -1,6 +1,6 @@
 import { createSignal, onCleanup } from "solid-js";
 
-const SERIAL_LOG_MAX_HISTORY = 1000;
+const SERIAL_LOG_MAX_HISTORY = 10000;
 
 export interface ISerialLogEntry {
   line: string;

@@ -6,6 +6,52 @@ import { useSystemInfo } from "../stores/SystemInfo";
 import { CollapsibleSection } from "./CollapsibleSection";
 import { BugIcon } from "./icons/Icons";
 
+type SerialFilterType = "debug" | "info" | "warning" | "error" | "ws-recv" | "ws-send";
+
+interface ISerialFilterOption {
+  value: SerialFilterType;
+  label: string;
+}
+
+const SERIAL_FILTER_OPTIONS: ISerialFilterOption[] = [
+  { value: "debug", label: "Debug" },
+  { value: "info", label: "Info" },
+  { value: "warning", label: "Warning" },
+  { value: "error", label: "Error" },
+  { value: "ws-recv", label: "WS ESP32 Received" },
+  { value: "ws-send", label: "WS ESP32 Send" },
+];
+
+function getFilterTypeForLogType(logType: string | null): SerialFilterType {
+  if (!logType) {
+    return "info";
+  }
+
+  const normalizedType = logType.toUpperCase();
+
+  if (normalizedType === "E" || normalizedType === "ERROR") {
+    return "error";
+  }
+
+  if (normalizedType === "W" || normalizedType === "WARN" || normalizedType === "WARNING") {
+    return "warning";
+  }
+
+  if (normalizedType === "D" || normalizedType === "DEBUG") {
+    return "debug";
+  }
+
+  if (normalizedType === "WS_RECV") {
+    return "ws-recv";
+  }
+
+  if (normalizedType === "WS_SEND" || normalizedType === "WE_SEND") {
+    return "ws-send";
+  }
+
+  return "info";
+}
+
 function getLogTypeClass(logType: string | null): string | undefined {
   if (!logType) {
     return undefined;
@@ -41,11 +87,46 @@ const SerialLog: Component = () => {
   const [systemInfo] = useSystemInfo();
   const [wrapLines, setWrapLines] = createSignal(false);
   const [autoScroll, setAutoScroll] = createSignal(true);
+  const [selectedFilters, setSelectedFilters] = createSignal<Set<SerialFilterType>>(
+    new Set(SERIAL_FILTER_OPTIONS.map((opt) => opt.value))
+  );
   let logContainerRef: HTMLDivElement | undefined;
   const baudRate = createMemo(() => systemInfo.serialBaudRate || 115200);
 
+  const toggleFilter = (filterType: SerialFilterType) => {
+    setSelectedFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(filterType)) {
+        next.delete(filterType);
+      } else {
+        next.add(filterType);
+      }
+      return next;
+    });
+  };
+
+  const isAllChecked = createMemo(() => selectedFilters().size === SERIAL_FILTER_OPTIONS.length);
+
+  const toggleAllFilters = () => {
+    if (isAllChecked()) {
+      setSelectedFilters(new Set<SerialFilterType>());
+    } else {
+      setSelectedFilters(new Set(SERIAL_FILTER_OPTIONS.map((opt) => opt.value)));
+    }
+  };
+
+  const filteredLogs = createMemo(() => {
+    const selected = selectedFilters();
+    const allLogs = logs();
+
+    return allLogs.filter((entry) => {
+      const filterType = getFilterTypeForLogType(entry.logType);
+      return selected.has(filterType);
+    });
+  });
+
   createEffect(() => {
-    logs();
+    filteredLogs();
 
     if (!autoScroll() || !logContainerRef) {
       return;
@@ -110,6 +191,25 @@ const SerialLog: Component = () => {
           <span>Auto-scroll</span>
         </label>
 
+        <div class={styles["serial-log__filter-checkboxes"]}>
+          <label class={styles["serial-log__filter-checkbox"]}>
+            <input type="checkbox" checked={isAllChecked()} onChange={toggleAllFilters} />
+            <span>All</span>
+          </label>
+          <For each={SERIAL_FILTER_OPTIONS}>
+            {(option) => (
+              <label class={styles["serial-log__filter-checkbox"]}>
+                <input
+                  type="checkbox"
+                  checked={selectedFilters().has(option.value)}
+                  onChange={() => toggleFilter(option.value)}
+                />
+                <span>{option.label}</span>
+              </label>
+            )}
+          </For>
+        </div>
+
         <div class={styles["serial-log__actions"]}>
           <button
             class={`${styles["serial-log__button"]} ${
@@ -138,7 +238,7 @@ const SerialLog: Component = () => {
           [styles["serial-log__log--wrapped"]]: wrapLines(),
         }}
       >
-        <For each={logs()}>
+        <For each={filteredLogs()}>
           {(entry: ISerialLogEntry) => (
             <div
               classList={{
@@ -161,7 +261,9 @@ const SerialLog: Component = () => {
         >
           {isConnected() ? "Connected" : "Disconnected"}
         </span>
-        <span>{logs().length} entries</span>
+        <span>
+          {filteredLogs().length} / {logs().length} entries
+        </span>
       </div>
     </CollapsibleSection>
   );

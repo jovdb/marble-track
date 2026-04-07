@@ -15,20 +15,9 @@
       "type": "ioexpander",
       "children": [],
       "config": {
-        "name": "IO Expander Front ",
+        "name": "IO Expander2",
         "expanderType": "PCF8574",
         "i2cAddress": 32,
-        "i2cDeviceId": "i2c-1"
-      }
-    },
-    {
-      "id": "ex2",
-      "type": "ioexpander",
-      "children": [],
-      "config": {
-        "name": "IO Expander",
-        "expanderType": "PCF8574",
-        "i2cAddress": 33,
         "i2cDeviceId": "i2c-1"
       }
     },
@@ -76,9 +65,9 @@
                 "stepperType": "DRIVER",
                 "usePwm": true,
                 "maxSpeed": 2500,
-                "maxAcceleration": 5000,
-                "defaultSpeed": 750,
-                "defaultAcceleration": 200,
+                "maxAcceleration": 2500,
+                "defaultSpeed": 2000,
+                "defaultAcceleration": 1000,
                 "stepPin": {
                   "pin": 1,
                   "expanderId": ""
@@ -136,7 +125,7 @@
                   "expanderId": ""
                 },
                 "name": "Lift Ball Sensor",
-                "debounceTimeInMs": 50,
+                "debounceTimeInMs": 100,
                 "pinMode": "PullUp",
                 "buttonType": "NormalOpen"
               }
@@ -152,7 +141,7 @@
                 "frequency": 50,
                 "resolutionBits": 10,
                 "minDutyCycle": 9.7,
-                "maxDutyCycle": 4.5,
+                "maxDutyCycle": 5.4,
                 "defaultDurationInMs": 200
               }
             },
@@ -234,9 +223,9 @@
                 "name": "wheel Stepper",
                 "stepperType": "DRIVER",
                 "usePwm": true,
-                "maxSpeed": 500,
+                "maxSpeed": 120,
                 "maxAcceleration": 300,
-                "defaultSpeed": 120,
+                "defaultSpeed": 60,
                 "defaultAcceleration": 20,
                 "stepPin": {
                   "pin": 4,
@@ -292,95 +281,13 @@
             "maxStepsPerRevolution": 6800,
             "zeroPointDegree": 180,
             "direction": 1,
-            "breakPoints": [45, 90, 180, 30, 270]
-          }
-        },
-        {
-          "id": "splitter",
-          "type": "wheel",
-          "children": [
-            {
-              "id": "splitter-stepper",
-              "type": "stepper",
-              "children": [],
-              "config": {
-                "name": "Splitter Stepper",
-                "stepperType": "FULL4WIRE",
-                "usePwm": false,
-                "maxSpeed": 1000,
-                "maxAcceleration": 1000,
-                "defaultSpeed": 100,
-                "defaultAcceleration": 20,
-                "stepPin": {
-                  "pin": -1,
-                  "expanderId": ""
-                },
-                "dirPin": {
-                  "pin": -1,
-                  "expanderId": ""
-                },
-                "pin1": {
-                  "pin": 46,
-                  "expanderId": ""
-                },
-                "pin2": {
-                  "pin": 9,
-                  "expanderId": ""
-                },
-                "pin3": {
-                  "pin": 10,
-                  "expanderId": ""
-                },
-                "pin4": {
-                  "pin": 11,
-                  "expanderId": ""
-                },
-                "enablePin": {
-                  "pin": -1,
-                  "expanderId": ""
-                },
-                "invertEnable": true,
-                "invertDirection": false
-              }
-            },
-            {
-              "id": "splitter-zero-sensor",
-              "type": "button",
-              "children": [],
-              "config": {
-                "pin": {
-                  "pin": 1,
-                  "expanderId": "ex2"
-                },
-                "name": "Wheel Zero Sensor",
-                "debounceTimeInMs": 50,
-                "pinMode": "PullUp",
-                "buttonType": "NormalOpen"
-              }
-            }
-          ],
-          "config": {
-            "name": "Splitter",
-            "stepsPerRevolution": 2048,
-            "maxStepsPerRevolution": 2100,
-            "zeroPointDegree": 0,
-            "direction": 1,
-            "breakPoints": [95, 210, 315]
-          }
-        },
-        {
-          "id": "splitter-sensor",
-          "type": "button",
-          "children": [],
-          "config": {
-            "pin": {
-              "pin": 0,
-              "expanderId": "ex2"
-            },
-            "name": "Splitter ball sensor",
-            "debounceTimeInMs": 50,
-            "pinMode": "Floating",
-            "buttonType": "NormalClosed"
+            "breakPoints": [
+              45,
+              90,
+              180,
+              30,
+              270
+            ]
           }
         },
         {
@@ -409,6 +316,85 @@
             "debounceTimeInMs": 50,
             "pinMode": "PullUp",
             "buttonType": "NormalOpen"
+          }
+        },
+        {
+          "id": "splitter",
+          "type": "wheel",
+          "children": [
+            {
+              "id": "splitter-stepper",
+              "type": "stepper",
+              "children": [],
+              "config": {
+                "name": "Splitter Stepper",
+                "stepperType": "DRIVER",
+                "usePwm": true,
+                "maxSpeed": 3000,
+                "maxAcceleration": 3000,
+                "defaultSpeed": 1000,
+                "defaultAcceleration": 200,
+                "stepPin": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "dirPin": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "pin1": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "pin2": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "pin3": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "pin4": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "enablePin": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "invertEnable": true,
+                "invertDirection": false
+              }
+            },
+            {
+              "id": "splitter-zero-sensor",
+              "type": "button",
+              "children": [],
+              "config": {
+                "pin": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "name": "Splitter Zero Sensor",
+                "debounceTimeInMs": 50,
+                "pinMode": "PullUp",
+                "buttonType": "NormalOpen"
+              }
+            }
+          ],
+          "config": {
+            "name": "Splitter",
+            "stepsPerRevolution": 0,
+            "maxStepsPerRevolution": 10000,
+            "zeroPointDegree": 0,
+            "direction": 1,
+            "breakPoints": [
+              45,
+              90,
+              180,
+              30,
+              270
+            ]
           }
         },
         {

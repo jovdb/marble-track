@@ -45,6 +45,7 @@ namespace devices
         void loopAutoLift();
         void loopAutoWheel();
         void loopAutoSpiral();
+        void loopSplitter();
         void blinkError(Led *ledDevice);
         void blinkBusy(Led *ledDevice);
         void blinkInit(Led *ledDevice);
@@ -63,6 +64,16 @@ namespace devices
         Button *_wheelBtn;
         Led *_spiralLed;
         Button *_spiralBtn;
+        Button *_splitterSensor;
+
+        // Splitter sensor pulse counter and delay logic
+        uint8_t _splitterCounter = 0;
+        unsigned long _splitterDelayStart = 0;
+        unsigned long _splitterSensorPressStartTime = 0;
+        bool _splitterSensorWasPressed = false;
+        bool _splitterLongPressApplied = false;
+        bool _splitterMovePending = false;
+        bool _splitterMoveSawBusy = false;
 
         // Button timing for unload duration control
         unsigned long _liftButtonPressStartTime = 0;

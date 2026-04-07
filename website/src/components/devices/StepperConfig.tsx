@@ -127,7 +127,7 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
       maxAcceleration: toNumber(maxAcceleration(), 0),
       defaultSpeed: toNumber(defaultSpeed(), 0),
       defaultAcceleration: toNumber(defaultAcceleration(), 0),
-      invertEnable: isFourPin() ? false : invertEnable(),
+      invertEnable: isFourPin() ? true : invertEnable(),
       invertDirection: invertDirection(),
     };
 

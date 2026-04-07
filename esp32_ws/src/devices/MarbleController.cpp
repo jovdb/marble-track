@@ -77,6 +77,9 @@ namespace devices
 
         _spiralBtn = new devices::Button("spiral-btn");
         addChild(_spiralBtn);
+
+        _splitterSensor = new devices::Button("splitter-sensor");
+        addChild(_splitterSensor);
     }
 
     void MarbleController::setup()
@@ -95,6 +98,16 @@ namespace devices
         _autoLiftUpLoadedSince = 0;
         _autoNoBallLiftStartTime = 0;
         _autoNoBallLiftDelayMs = 0;
+        _autoLiftMovingDownSlow = false;
+
+        // Initialize splitter sensor variables
+        _splitterCounter = 0;
+        _splitterDelayStart = 0;
+        _splitterSensorPressStartTime = 0;
+        _splitterSensorWasPressed = false;
+        _splitterLongPressApplied = false;
+        _splitterMovePending = false;
+        _splitterMoveSawBusy = false;
         _autoLiftMovingDownSlow = false;
 
         // Set auto mode based on manual button state during setup
@@ -134,6 +147,15 @@ namespace devices
         _lastButtonPressTime = 0;
         _idleSoundPlayed = false;
         isAutoMode = false;
+
+        // Reset splitter sensor variables
+        _splitterCounter = 0;
+        _splitterDelayStart = 0;
+        _splitterSensorPressStartTime = 0;
+        _splitterSensorWasPressed = false;
+        _splitterLongPressApplied = false;
+        _splitterMovePending = false;
+        _splitterMoveSawBusy = false;
     }
 
     void MarbleController::loop()
@@ -160,6 +182,8 @@ namespace devices
             loopManualWheel();
             loopManualSpiral();
         }
+
+        loopSplitter();
     }
 
     void MarbleController::loopManualLift()
@@ -825,6 +849,111 @@ namespace devices
                 // _spiralLed->blink(20, 940);
             }
         }
+    }
+
+    void MarbleController::loopSplitter()
+    {
+        if (!_splitterSensor || !_splitter)
+        {
+            return;
+        }
+
+        const unsigned long now = millis();
+        const auto splitterSensorState = _splitterSensor->getState();
+        const bool isPressed = splitterSensorState.isPressed;
+        const bool pressedEdge = isPressed && !_splitterSensorWasPressed;
+        const bool releasedEdge = !isPressed && _splitterSensorWasPressed;
+        _splitterSensorWasPressed = isPressed;
+
+        if (pressedEdge)
+        {
+            _splitterSensorPressStartTime = now;
+            _splitterLongPressApplied = false;
+
+            if (_splitterCounter < 255)
+            {
+                _splitterCounter++;
+            }
+
+            MLOG_INFO("%s: Splitter pulse queued, counter=%u", toString().c_str(), static_cast<unsigned>(_splitterCounter));
+        }
+
+        if (releasedEdge)
+        {
+            _splitterSensorPressStartTime = 0;
+            _splitterLongPressApplied = false;
+        }
+
+        if (isPressed && _splitterSensorPressStartTime > 0 && !_splitterLongPressApplied)
+        {
+            const unsigned long pressDuration = now - _splitterSensorPressStartTime;
+            if (pressDuration > 1000)
+            {
+                if (_splitterCounter < 3)
+                {
+                    _splitterCounter = 3;
+                }
+                _splitterLongPressApplied = true;
+                MLOG_INFO("%s: Splitter long press detected, counter=%u", toString().c_str(), static_cast<unsigned>(_splitterCounter));
+            }
+        }
+
+        auto splitterState = _splitter->getState();
+
+        // Wait for motion to finish before consuming a queued pulse.
+        if (_splitterMovePending)
+        {
+            if (splitterState.state != devices::WheelStateEnum::IDLE)
+            {
+                _splitterMoveSawBusy = true;
+            }
+            else if (_splitterMoveSawBusy)
+            {
+                _splitterMovePending = false;
+                _splitterMoveSawBusy = false;
+
+                if (_splitterCounter > 0)
+                {
+                    _splitterCounter--;
+                }
+
+                MLOG_INFO("%s: Splitter reached idle, remaining queue=%u", toString().c_str(), static_cast<unsigned>(_splitterCounter));
+                _splitterDelayStart = (_splitterCounter > 0) ? now : 0;
+            }
+
+            return;
+        }
+
+        if (_splitterCounter == 0)
+        {
+            _splitterDelayStart = 0;
+            return;
+        }
+
+        if (_splitterDelayStart == 0)
+        {
+            _splitterDelayStart = now;
+            MLOG_INFO("%s: Splitter delay started, queue=%u", toString().c_str(), static_cast<unsigned>(_splitterCounter));
+            return;
+        }
+
+        if ((now - _splitterDelayStart) < 500UL)
+        {
+            return;
+        }
+
+        if (_splitter->nextBreakPoint())
+        {
+            _splitterMovePending = true;
+            splitterState = _splitter->getState();
+            _splitterMoveSawBusy = (splitterState.state != devices::WheelStateEnum::IDLE);
+            _splitterDelayStart = 0;
+            MLOG_INFO("%s: Splitter move started, queue=%u", toString().c_str(), static_cast<unsigned>(_splitterCounter));
+            return;
+        }
+
+        // Retry later if the command was rejected (for example while not ready).
+        _splitterDelayStart = now;
     }
 
     void MarbleController::blinkError(Led *ledDevice)

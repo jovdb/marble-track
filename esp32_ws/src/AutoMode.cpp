@@ -71,12 +71,6 @@ void AutoMode::loop()
     const byte stepCount = 3;
     const int stepDurationMs = 200;
 
-    int step = static_cast<int>(std::floor((currentMillis % (stepCount * stepDurationMs)) / stepDurationMs));
-    if (_wheelBtnLed)
-        _wheelBtnLed->set(step == 1);
-    if (_splitterBtnLed)
-        _splitterBtnLed->set(step == 2);
-
     // Wheel ball exit counting
     static uint wheelExitMaxBallCount = 2; // Max number of ball loaded due to reset
     static ulong lastWheelExitTime = 0;

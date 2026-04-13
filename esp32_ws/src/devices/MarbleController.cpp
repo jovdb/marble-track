@@ -238,7 +238,7 @@ namespace devices
         }
         case devices::LiftStateEnum::INIT:
         {
-            blinkInit(_wheelLed);
+            blinkInit(_liftLed);
             break;
         }
         case devices::LiftStateEnum::LIFT_DOWN_LOADING:

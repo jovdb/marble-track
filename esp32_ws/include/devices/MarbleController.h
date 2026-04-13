@@ -39,6 +39,7 @@ namespace devices
         void playStartupSound();
 
     private:
+        static constexpr unsigned long WHEEL_LONG_PRESS_DURATION_MS = 8000UL;
         void loopManualLift();
         void loopManualWheel();
         void loopManualSpiral();

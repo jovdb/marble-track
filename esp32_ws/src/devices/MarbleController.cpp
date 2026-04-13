@@ -776,9 +776,9 @@ namespace devices
         }
         else if (wheelButtonState.isPressed && !_wheelButtonLongPressTriggered)
         {
-            // Button still pressed - check for long press (5 seconds)
+            // Button still pressed - check for long press (8 seconds)
             unsigned long pressDuration = millis() - _wheelButtonPressStartTime;
-            if (pressDuration >= 5000)
+            if (pressDuration >= WHEEL_LONG_PRESS_DURATION_MS)
             {
                 // Long press detected - trigger next breakpoint
                 MLOG_INFO("%s: Long wheel press detected - triggering next breakpoint", toString().c_str());
@@ -870,7 +870,7 @@ namespace devices
             _splitterSensorPressStartTime = now;
             _splitterLongPressApplied = false;
 
-            if (_splitterCounter < 255)
+            if (_splitterCounter < 10)
             {
                 _splitterCounter++;
             }

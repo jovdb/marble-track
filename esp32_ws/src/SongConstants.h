@@ -56,30 +56,31 @@ namespace songs
 
     // WHEEL
     //------
-    // Reuzenwiel eikpunt niet gevonden, mogelijk slipt het reuzenwiel door, defect aan de zero sensor of hercalibratie nodig....
+    // Reuzenwiel eikpunt niet gevonden. (Fout code 10)
     const int WHEEL_ZERO_NOT_FOUND = 10;
     // Reuzenwiel calibratie wordt gestart, dit kan even duren...
     const int WHEEL_CALIBRATION_START = 11;
-    // Calibratie reuzenwiel beëindigd...
+    // Reuzenwiel calibratie beëindigd...
     const int WHEEL_CALIBRATION_END = 12;
-    // Reuzenwiel calibratie gefaald. Eikpunt van het reuzenwiel was niet gevonden. Mogelijke oorzaken: 'Max steps per revolutions' configuratie te laag, reuzenwiel slipt door of zero sensor defect.
+    // Reuzenwiel eikpunt gevonden op een onverwachte plaatst, mogelijks was het reuzenwiel geblokkeerd of is hercalibratie nodig. (Fout code 13)
     const int WHEEL_CALIBRATION_FIRST_ZERO_NOT_FOUND = 13;
-    // Reuzenwiel calibratie gefaald. Tweede eikpunt van het reuzenwiel was niet gevonden tijdens calibratie. Mogelijke oorzaken: 'Max steps per revolutions' configuratie te laag of reuzenwiel slipt door.
+    // Reuzenwiel calibratie mislukt. (Foutcode 14)
+    // Het eikpunt is geen 2de keer gevonden.
+    // Mogelijks is de 'Max steps per revolutions' configuratie te laag of heeft het reuzenwiel door geslipt.
     const int WHEEL_CALIBRATION_SECOND_ZERO_NOT_FOUND = 14;
-    // Eikpunt van reuzewiel is onverwacht geactiveerd. Mogelijke oorzaken: reuzenwiel slipt door of hercalibratie nodig.
+    // Reuzenwiel eikpunt is op een onverwacht punt geactiveerd. (Fout code 15)
+    // Mogelijks heeft het reuzenwiel doorgeslipt of is een hercalibratie nodig.
     const int WHEEL_UNEXPECTED_ZERO_TRIGGER = 15;
     // Sound effect at long press
     const int WHEEL_GOTO_BREAKPOINT = 16;
 
-    // Lift initialisatie mislukt.
-    // Enkele mogelijk oorzaken:
-    // 1) Als de lift niet beweegt, controleer dan of de stepper motor werkt
-    // 2) Als de lift bewoog maar stopte voor ze beneden was, dan is configuratie 'Max steps' te laag.
-    // 3) Als de lift niet stopte onderaan, controleer dan de sensor door die manueel in te drukken
+    // Lift initialisatie mislukt. (Fout code 17)
+    // Lift wordt uitgeschakeld tot er herstart wordt
     const int LIFT_INIT_ERROR = 17;
-    
-    // De lift heeft de bodem niet bereikt, controleer of er een bal onder zit.
-    // Zet toestel uit, verwijder de bal en zet het opnieuw aan.
+
+    // Lift zero sensor niet gevonden (Fout code 18)
+    // Controleer of er een bal onder zit.
+    // Lift wordt uitgeschakeld tot er herstart wordt
     const int LIFT_NO_ZERO = 18;
 
     // Elevator bell

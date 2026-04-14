@@ -18,11 +18,11 @@ GENERAL
 Vergeet mij niet uit te schakelen
 
 WHEEL:
-- 00010: Eikpunt van het reuzenwiel niet gevonden. 
+- 00010: Reuzenwiel eikpunt niet gevonden. (Fout code 10)
 - 00011: Reuzenwiel calibratie wordt gestart, dit kan even duren...
-- 00012: Calibratie reuzenwiel succesvol beëindigd...
-- 00013: Eikpunt van het reuzenwiel op onverwachte plaatst, wiel was geblokkeerd of hercalibratie nodig.
-- 00014: Initializatie reuzenwiel mislukt
+- 00012: Reuzenwiel calibratie succesvol beëindigd...
+- 00013: Reuzenwiel eikpunt gevonden op een onverwachte plaatst, mogelijks was het reuzenwiel geblokkeerd of is hercalibratie nodig. (Fout code 13)
+- 00014: Reuzenwiel initializatie mislukt (Fout code 14)
 
 LIFT
 - Fout: Gelijkvloer van de lift niet gevonden.

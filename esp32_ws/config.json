@@ -11,7 +11,7 @@
       }
     },
     {
-      "id": "ex",
+      "id": "ex1",
       "type": "ioexpander",
       "children": [],
       "config": {
@@ -186,7 +186,7 @@
           "config": {
             "pin": {
               "pin": 0,
-              "expanderId": "ex"
+              "expanderId": "ex1"
             },
             "name": "Lift Led",
             "initialState": "OFF"
@@ -199,7 +199,7 @@
           "config": {
             "pin": {
               "pin": 4,
-              "expanderId": "ex"
+              "expanderId": "ex1"
             },
             "name": "Lift Button",
             "debounceTimeInMs": 50,
@@ -288,11 +288,13 @@
           ],
           "config": {
             "name": "Wheel",
-            "stepsPerRevolution": 6752,
+            "stepsPerRevolution": 6750,
             "maxStepsPerRevolution": 6800,
-            "zeroPointDegree": 180,
+            "zeroPointDegree": 240,
             "direction": 1,
-            "breakPoints": [45, 90, 180, 30, 270]
+            "breakPoints": [
+              190
+            ]
           }
         },
         {
@@ -365,22 +367,11 @@
             "maxStepsPerRevolution": 2100,
             "zeroPointDegree": 0,
             "direction": 1,
-            "breakPoints": [95, 210, 315]
-          }
-        },
-        {
-          "id": "splitter-sensor",
-          "type": "button",
-          "children": [],
-          "config": {
-            "pin": {
-              "pin": 0,
-              "expanderId": "ex2"
-            },
-            "name": "Splitter ball sensor",
-            "debounceTimeInMs": 50,
-            "pinMode": "Floating",
-            "buttonType": "NormalClosed"
+            "breakPoints": [
+              95,
+              210,
+              315
+            ]
           }
         },
         {
@@ -390,7 +381,7 @@
           "config": {
             "pin": {
               "pin": 1,
-              "expanderId": "ex"
+              "expanderId": "ex1"
             },
             "name": "",
             "initialState": "OFF"
@@ -403,7 +394,7 @@
           "config": {
             "pin": {
               "pin": 5,
-              "expanderId": "ex"
+              "expanderId": "ex1"
             },
             "name": "Wheel button",
             "debounceTimeInMs": 50,
@@ -436,6 +427,21 @@
             "name": "Spiral Button",
             "debounceTimeInMs": 50,
             "pinMode": "PullUp",
+            "buttonType": "NormalOpen"
+          }
+        },
+        {
+          "id": "splitter-sensor",
+          "type": "button",
+          "children": [],
+          "config": {
+            "pin": {
+              "pin": 2,
+              "expanderId": "ex2"
+            },
+            "name": "Button",
+            "debounceTimeInMs": 50,
+            "pinMode": "Floating",
             "buttonType": "NormalOpen"
           }
         }

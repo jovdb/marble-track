@@ -26,7 +26,7 @@ namespace devices
         /**
          * @brief Play an error sound using the buzzer
          */
-        void playErrorSound(std::vector<int> additionalReplaceSongIndexes = {});
+        void playErrorSound(Hv20tPlayMode mode = Hv20tPlayMode::SkipIfPlaying, std::vector<int> additionalReplaceSongIndexes = {});
 
         /**
          * @brief Play a click sound using the buzzer

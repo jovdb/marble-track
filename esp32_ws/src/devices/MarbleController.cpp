@@ -199,72 +199,6 @@ namespace devices
             _idleSoundPlayed = false;
         }
 
-        // Queue button presses in busy/manual transition states
-        /*
-        if (liftButtonPressedEdge)
-        {
-            uint8_t maxQueuedPresses = 1;
-            switch (liftState.state)
-            {
-            case devices::LiftStateEnum::LIFT_DOWN:
-                if (liftState.isLoaded)
-                {
-                    maxQueuedPresses = 3;
-                }
-                else
-                {
-                    maxQueuedPresses = 4;
-                }
-                break;
-            case devices::LiftStateEnum::LIFT_DOWN_LOADING:
-                maxQueuedPresses = 3;
-
-                break;
-            case devices::LiftStateEnum::MOVING_UP:
-                maxQueuedPresses = 2;
-                break;
-            case devices::LiftStateEnum::LIFT_UP:
-                if (liftState.isLoaded)
-                {
-                    maxQueuedPresses = 2;
-                }
-                else
-                {
-                    maxQueuedPresses = 1;
-                }
-                break;
-            case devices::LiftStateEnum::LIFT_UP_UNLOADING:
-                maxQueuedPresses = 1;
-                break;
-            case devices::LiftStateEnum::ERROR:
-                maxQueuedPresses = 0;
-                break;
-            default:
-                break;
-            }
-            MLOG_DEBUG("%s: Lift button pressed in state %u with %u queued presses, max allowed %u",
-                       toString().c_str(),
-                       static_cast<unsigned>(liftState.state),
-                       static_cast<unsigned>(_liftQueuedPresses),
-                       static_cast<unsigned>(maxQueuedPresses));
-
-            if (maxQueuedPresses > 0 && _liftQueuedPresses < maxQueuedPresses)
-            {
-                _liftQueuedPresses++;
-                MLOG_INFO("%s: Queued lift button press (%u/%u) in state %u",
-                          toString().c_str(),
-                          static_cast<unsigned>(_liftQueuedPresses),
-                          static_cast<unsigned>(maxQueuedPresses),
-                          static_cast<unsigned>(liftState.state));
-                playButtonClick({songs::LIFT_STOP});
-            }
-            else
-            {
-                playErrorSound();
-            }
-        }
-        */
-
         // LED
         switch (liftState.state)
         {
@@ -337,10 +271,10 @@ namespace devices
         {
             _liftQueuedPresses = 0;
 
-            // Play sound for new errors, or button pressed again
+            // Play error sound again when button pressed again
             if (liftButtonPressedEdge)
             {
-                playErrorSound();
+                playErrorSound(devices::Hv20tPlayMode::QueueIfPlaying);
                 if (liftState.errorCode == devices::LiftErrorCode::LIFT_NO_ZERO)
                 {
                     _audio->play(songs::LIFT_NO_ZERO, devices::Hv20tPlayMode::QueueIfPlaying);
@@ -355,7 +289,7 @@ namespace devices
         case devices::LiftStateEnum::INIT:
             if (liftButtonPressedEdge)
             {
-                playErrorSound();
+                playErrorSound(devices::Hv20tPlayMode::QueueIfPlaying);
                 _audio->play(songs::LIFT_INIT_BUSY, devices::Hv20tPlayMode::QueueIfPlaying);
             }
             break;
@@ -369,7 +303,7 @@ namespace devices
                 }
                 else
                 {
-                    playErrorSound();
+                    playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
                 }
             }
             break;
@@ -383,7 +317,7 @@ namespace devices
                 }
                 else
                 {
-                    playErrorSound();
+                    playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
                 }
             }
             break;
@@ -397,14 +331,14 @@ namespace devices
                 }
                 else
                 {
-                    playErrorSound();
+                    playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
                 }
             }
             break;
         case devices::LiftStateEnum::MOVING_DOWN: // Loading in progress
             if (liftButtonPressedEdge)
             {
-                playErrorSound();
+                playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
             }
             break;
 
@@ -552,32 +486,71 @@ namespace devices
             _autoLiftMovingDownSlow = false;
         }
 
+        // LED
         switch (liftState.state)
         {
         case devices::LiftStateEnum::UNKNOWN:
-            // Wait for initialization
             _liftLed->set(false);
+            break;
+        case devices::LiftStateEnum::ERROR:
+            blinkError(_liftLed);
+            break;
+        case devices::LiftStateEnum::INIT:
+        case devices::LiftStateEnum::LIFT_DOWN_LOADING:
+        case devices::LiftStateEnum::LIFT_UP_UNLOADING:
+        case devices::LiftStateEnum::MOVING_UP:
+        case devices::LiftStateEnum::MOVING_DOWN:
+        case devices::LiftStateEnum::LIFT_UP:
+            blinkBusy(_liftLed);
+            break;
+
+        case devices::LiftStateEnum::LIFT_DOWN:
+        {
+            _liftLed->set(true);
+            break;
+        }
+        }
+
+        // LOGIC
+        switch (liftState.state)
+        {
+        case devices::LiftStateEnum::UNKNOWN:
             _lift->init();
             break;
 
         case devices::LiftStateEnum::ERROR:
-            // Play sound for new errors
-            if (liftState.onErrorChange)
+            // Play error sound again when button pressed again
+            if (liftButtonPressedEdge)
             {
-                blinkError(_liftLed);
+                playErrorSound(devices::Hv20tPlayMode::QueueIfPlaying, {songs::LIFT_STOP});
+                if (liftState.errorCode == devices::LiftErrorCode::LIFT_NO_ZERO)
+                {
+                    _audio->play(songs::LIFT_NO_ZERO, devices::Hv20tPlayMode::QueueIfPlaying);
+                }
+                else if (liftState.errorCode == devices::LiftErrorCode::LIFT_INIT_NO_ZERO)
+                {
+                    _audio->play(songs::LIFT_INIT_ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+                }
             }
             break;
 
         // BUSY states - just blink LED
         case devices::LiftStateEnum::INIT:
+            if (liftButtonPressedEdge)
+            {
+                playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
+                _audio->play(songs::LIFT_INIT_BUSY, devices::Hv20tPlayMode::QueueIfPlaying);
+            }
+            break;
         case devices::LiftStateEnum::LIFT_DOWN_LOADING:
         case devices::LiftStateEnum::LIFT_UP_UNLOADING:
         case devices::LiftStateEnum::MOVING_UP:
-            blinkBusy(_liftLed);
+            if (liftButtonPressedEdge)
+                playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
             break;
 
         case devices::LiftStateEnum::MOVING_DOWN:
-            blinkBusy(_liftLed);
+
             if (_autoLiftMovingDownSlow && liftState.ballWaitingSince > 0)
             {
                 if (_lift->down(lift_timing::AutoDownNormalSpeedRatio))
@@ -586,14 +559,27 @@ namespace devices
                     MLOG_INFO("%s: Ball waiting detected during auto down, switching to normal speed", toString().c_str());
                 }
             }
+            else if (liftButtonPressedEdge)
+            {
+                if (_autoLiftMovingDownSlow)
+                {
+                    if (_lift->down(lift_timing::AutoDownNormalSpeedRatio))
+                    {
+                        _autoLiftMovingDownSlow = false;
+                        playButtonClick({songs::LIFT_STOP});
+                    }
+                }
+                else
+                {
+                    playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
+                }
+            }
+
             break;
 
         case devices::LiftStateEnum::LIFT_DOWN:
         {
             _isLiftPowerUnloadSongPlaying = false;
-
-            if (_liftLed)
-                _liftLed->set(true);
 
             if (liftState.isLoaded)
             {
@@ -666,6 +652,9 @@ namespace devices
 
         case devices::LiftStateEnum::LIFT_UP:
         {
+            if (liftButtonPressedEdge)
+                playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
+
             // Check if we need to wait before next operation
             if (_autoLiftDelayStart > 0 && (millis() - _autoLiftDelayStart) < _autoLiftDelayMs)
             {
@@ -1108,7 +1097,7 @@ namespace devices
         _audio->play(songs::STARTUP_SOUND, devices::Hv20tPlayMode::QueueIfPlaying);
     }
 
-    void MarbleController::playErrorSound(std::vector<int> additionalReplaceSongIndexes)
+    void MarbleController::playErrorSound(Hv20tPlayMode mode, std::vector<int> additionalReplaceSongIndexes)
     {
 
         // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
@@ -1139,7 +1128,7 @@ namespace devices
         }
         else
         {
-            _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+            _audio->play(songs::ERROR, mode);
         }
     }
 
@@ -1357,12 +1346,12 @@ namespace devices
         {
             if (liftState->errorCode == devices::LiftErrorCode::LIFT_NO_ZERO)
             {
-                _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+                playErrorSound(Hv20tPlayMode::QueueIfPlaying, {songs::LIFT_STOP});
                 _audio->play(songs::LIFT_NO_ZERO, devices::Hv20tPlayMode::QueueIfPlaying);
             }
             else if (liftState->errorCode == devices::LiftErrorCode::LIFT_INIT_NO_ZERO)
             {
-                _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+                playErrorSound(Hv20tPlayMode::QueueIfPlaying, {songs::LIFT_STOP});
                 _audio->play(songs::LIFT_INIT_ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
             }
         }

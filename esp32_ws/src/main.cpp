@@ -184,18 +184,6 @@ void setup()
                                         marbleController = nullptr;
                                       } });
 
-  marbleController = deviceManager.getDeviceByIdAs<devices::MarbleController>("controller");
-  if (marbleController)
-  {
-    MLOG_INFO("MarbleController with id 'controller' not found.");
-  }
-
-  if (network && network->getMode() != NetworkMode::WIFI_CLIENT && marbleController)
-  {
-    MLOG_WARN("Not connected to WiFi at startup - queueing NO_NETWORK sound");
-    marbleController->getAudio()->play(songs::NO_NETWORK, devices::Hv20tPlayMode::QueueIfPlaying);
-  }
-
   MLOG_INFO("System initialization complete!");
   MLOG_INFO("--------------------------");
 }
@@ -235,6 +223,21 @@ void loop()
     {
       OtaUpload::setup(*network, server);
       otaConfigured = true;
+    }
+
+    if (!network->isModeChanged() && !network->isWiFiConnected())
+    {
+      marbleController = deviceManager.getDeviceByIdAs<devices::MarbleController>("controller");
+      if (marbleController)
+      {
+        MLOG_INFO("MarbleController with id 'controller' not found.");
+      }
+
+      if (network && !network->isConnecting() && network->getMode() != NetworkMode::WIFI_CLIENT && marbleController)
+      {
+        MLOG_WARN("Not connected to WiFi at startup - queueing NO_NETWORK sound");
+        marbleController->getAudio()->play(songs::NO_NETWORK, devices::Hv20tPlayMode::QueueIfPlaying);
+      }
     }
   }
 

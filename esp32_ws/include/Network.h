@@ -78,10 +78,10 @@ public:
     NetworkMode getMode() const { return _currentMode; }
 
     /**
-     * @brief Check if device is in Access Point mode
-     * @return true if in AP mode, false otherwise
+     * @brief Check if network mode has changed in the current loop iteration
+     * @return true if mode changed in this loop, false otherwise
      */
-    bool isAccessPointMode() const { return _currentMode == NetworkMode::ACCESS_POINT; }
+    bool isModeChanged() const { return _isModeChanged; }
 
     /**
      * @brief Check if WiFi is connected
@@ -138,6 +138,7 @@ private:
     bool _isConnecting;
     unsigned long _connectionStartTime;
     bool _wifiConnectionAttempted;
+    bool _isModeChanged;
 
     // Private methods
     bool startAccessPoint();

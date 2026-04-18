@@ -6,13 +6,13 @@
 
 Network::Network(const char *wifi_ssid, const char *wifi_password)
     : _wifi_ssid(wifi_ssid), _wifi_password(wifi_password), _currentMode(NetworkMode::DISCONNECTED), _dnsServer(nullptr),
-      _isConnecting(false), _connectionStartTime(0), _wifiConnectionAttempted(false)
+      _isConnecting(false), _connectionStartTime(0), _wifiConnectionAttempted(false), _isModeChanged(false)
 {
 }
 
 Network::Network(const NetworkSettings& settings)
     : _wifi_ssid(settings.ssid), _wifi_password(settings.password), _currentMode(NetworkMode::DISCONNECTED), _dnsServer(nullptr),
-      _isConnecting(false), _connectionStartTime(0), _wifiConnectionAttempted(false)
+      _isConnecting(false), _connectionStartTime(0), _wifiConnectionAttempted(false), _isModeChanged(false)
 {
 }
 
@@ -45,6 +45,7 @@ bool Network::setup()
     _connectionStartTime = 0;
     _wifiConnectionAttempted = false;
     _currentMode = NetworkMode::DISCONNECTED;
+    _isModeChanged = false;
 
     // Start WiFi connection attempt (non-blocking)
     if (!_wifi_ssid.isEmpty())
@@ -210,6 +211,8 @@ String Network::getStatusJSON() const
         break;
     }
 
+    doc["isModeChanged"] = _isModeChanged;
+
     String json;
     serializeJson(doc, json);
     return json;
@@ -233,6 +236,7 @@ void Network::loop()
             // WiFi connected successfully
             _isConnecting = false;
             _currentMode = NetworkMode::WIFI_CLIENT;
+            _isModeChanged = true;
             MLOG_INFO("Connected to WiFi: http://%s", WiFi.localIP().toString().c_str());
             
             // Start mDNS
@@ -248,11 +252,13 @@ void Network::loop()
             if (startAccessPoint())
             {
                 _currentMode = NetworkMode::ACCESS_POINT;
+                _isModeChanged = true;
                 setupMDNS();
             }
             else
             {
                 _currentMode = NetworkMode::DISCONNECTED;
+                _isModeChanged = true;
                 MLOG_ERROR("Failed to start Access Point - no network connection!");
             }
         }
@@ -260,6 +266,9 @@ void Network::loop()
     
     // Handle captive portal processing
     processCaptivePortal();
+
+    // Reset mode changed flag after one loop iteration
+    _isModeChanged = false;
 }
 
 NetworkMode Network::applySettings(const NetworkSettings &settings)
@@ -286,6 +295,7 @@ NetworkMode Network::applySettings(const NetworkSettings &settings)
     _isConnecting = false;
     _connectionStartTime = 0;
     _wifiConnectionAttempted = false;
+    _isModeChanged = false;
 
     setup();
 

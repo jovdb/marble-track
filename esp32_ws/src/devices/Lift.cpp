@@ -715,18 +715,31 @@ namespace devices
                 return;
             }
 
-            MLOG_DEBUG("%s: Init step 4: Moving back up after bottom reached to unload possible ball in lift", toString().c_str());
-            _stepper->stop(IMMEDIATE_DECELERATION);
+            MLOG_DEBUG("%s: Init step 4: Bottom reached, stopping stepper", toString().c_str());
             _stepper->setCurrentPosition(0);
+            _stepper->stop(IMMEDIATE_DECELERATION);
             _stepperStartTime = 0;
 
-            // go back up
+            // go to wait step
             _state.initStep = 5;
+            nextInitStepTime = millis() + 10;
+            break;
+        }
+        case 5:
+        {
+            // Wait for stepper to stop
+            if (_stepper->getState().isMoving)
+            {
+                return;
+            }
+
+            MLOG_DEBUG("%s: Init step 5: Moving back up after bottom reached to unload possible ball in lift", toString().c_str());
+            _state.initStep = 6;
             moveStepperTo(_config.maxSteps, 1);
             nextInitStepTime = millis() + 10; // wait until move started
             break;
         }
-        case 5:
+        case 6:
         {
             // Wait until top reached
             if (_stepper->getState().isMoving)
@@ -734,32 +747,32 @@ namespace devices
                 return; // Wait until move completed
             }
 
-            MLOG_DEBUG("%s: Init step 5: Unloading start", toString().c_str());
-            _state.initStep = 6;
+            MLOG_DEBUG("%s: Init step 6: Unloading start", toString().c_str());
+            _state.initStep = 7;
             auto duration = _unloader->getConfig().defaultDurationInMs / 2;
             _unloader->setValue(100, duration);
             nextInitStepTime = millis() + duration + 300;
             break;
         }
-        case 6:
+        case 7:
         {
-            MLOG_DEBUG("%s: Init step 6: Unloading end", toString().c_str());
-            _state.initStep = 7;
+            MLOG_DEBUG("%s: Init step 7: Unloading end", toString().c_str());
+            _state.initStep = 8;
             auto duration = _unloader->getConfig().defaultDurationInMs;
             _unloader->setValue(0, duration);
             nextInitStepTime = millis() + duration + 300;
             break;
         }
-        case 7:
+        case 8:
         {
-            MLOG_DEBUG("%s: Init step 7: Moving back down until limit switch", toString().c_str());
-            _state.initStep = 8;
+            MLOG_DEBUG("%s: Init step 8: Moving back down until limit switch", toString().c_str());
+            _state.initStep = 9;
             long steps = (_config.minSteps - _config.maxSteps) * DOWN_FACTOR;
             moveStepper(steps, 1);
             nextInitStepTime = millis() + 100;
             break;
         }
-        case 8:
+        case 9:
         {
             if (!_stepper->getState().isMoving)
             {
@@ -773,7 +786,7 @@ namespace devices
                 return;
             }
 
-            MLOG_DEBUG("%s: Init step 8: Loading start", toString().c_str());
+            MLOG_DEBUG("%s: Init step 9: Loading start", toString().c_str());
             _stepper->setCurrentPosition(0);
             _stepper->stop(IMMEDIATE_DECELERATION);
             _stepperStartTime = 0;

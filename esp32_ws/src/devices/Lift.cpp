@@ -9,6 +9,7 @@ namespace devices
 
     /* Move 2% extra down */
     const float DOWN_FACTOR = 1.01f; // Move 2% extra when going down to ensure full descent
+    const float IMMEDIATE_DECELERATION = 1000000.0f; // Very high deceleration for immediate stop
 
     Lift::Lift(const String &id)
         : Device(id, "lift")
@@ -223,7 +224,7 @@ namespace devices
 
             MLOG_DEBUG("%s: Reached bottom with limit switch", toString().c_str());
             _stepper->setCurrentPosition(0);
-            _stepper->stop(100000);
+            _stepper->stop(IMMEDIATE_DECELERATION);
             _stepperStartTime = 0;
             _state.state = LiftStateEnum::LIFT_DOWN;
             notifyStateChanged();
@@ -678,7 +679,7 @@ namespace devices
             _state.initStep = 2;
             auto duration = _unloader->getConfig().defaultDurationInMs;
             _unloader->setValue(100, duration);
-            nextInitStepTime = millis() + duration + 300;
+            nextInitStepTime = millis() + duration + 50;
             break;
         }
         case 2:
@@ -715,8 +716,8 @@ namespace devices
             }
 
             MLOG_DEBUG("%s: Init step 4: Moving back up after bottom reached to unload possible ball in lift", toString().c_str());
+            _stepper->stop(IMMEDIATE_DECELERATION);
             _stepper->setCurrentPosition(0);
-            _stepper->stop(100000);
             _stepperStartTime = 0;
 
             // go back up
@@ -774,7 +775,7 @@ namespace devices
 
             MLOG_DEBUG("%s: Init step 8: Loading start", toString().c_str());
             _stepper->setCurrentPosition(0);
-            _stepper->stop(100000);
+            _stepper->stop(IMMEDIATE_DECELERATION);
             _stepperStartTime = 0;
 
             // Init complete

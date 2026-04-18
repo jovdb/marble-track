@@ -870,7 +870,7 @@ namespace devices
             _splitterSensorPressStartTime = now;
             _splitterLongPressApplied = false;
 
-            if (_splitterCounter < 10)
+            if (_splitterCounter < 5)
             {
                 _splitterCounter++;
             }

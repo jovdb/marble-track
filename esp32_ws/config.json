@@ -175,7 +175,7 @@
           "config": {
             "name": "Lift",
             "minSteps": 0,
-            "maxSteps": 4470,
+            "maxSteps": 4455,
             "downFactor": 1.015
           }
         },

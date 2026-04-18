@@ -225,9 +225,9 @@ void loop()
       otaConfigured = true;
     }
 
-    if (!network->isModeChanged() && !network->isWiFiConnected())
+    marbleController = deviceManager.getDeviceByIdAs<devices::MarbleController>("controller");
+    if (!network->isModeChanged() && !network->isWiFiConnected() && marbleController)
     {
-      marbleController = deviceManager.getDeviceByIdAs<devices::MarbleController>("controller");
       if (marbleController)
       {
         MLOG_INFO("MarbleController with id 'controller' not found.");

@@ -910,6 +910,7 @@ namespace devices
             {
                 // Long press detected - trigger next breakpoint
                 MLOG_INFO("%s: Long wheel press detected - triggering next breakpoint", toString().c_str());
+                _wheel->stop(); // Stop continuous movement before triggering next breakpoint
                 _wheel->nextBreakPoint();
                 _wheelButtonLongPressTriggered = true;
                 _audio->play(songs::WHEEL_GOTO_BREAKPOINT, devices::Hv20tPlayMode::SkipIfPlaying);

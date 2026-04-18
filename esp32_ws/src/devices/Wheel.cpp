@@ -386,7 +386,7 @@ namespace devices
         long targetPosition = currentPosition + stepsToMove;
 
         MLOG_INFO("%s: Moving to %.1f° (current %.1f°, forward diff %.1f° = %ld steps)",
-              toString().c_str(), angle, currentAngle, angleDiff, stepsToMove);
+                  toString().c_str(), angle, currentAngle, angleDiff, stepsToMove);
 
         return move(stepsToMove);
     }
@@ -410,11 +410,11 @@ namespace devices
         // Calculate target angle
         float targetAngle = _config.breakPoints[nextIndex];
 
-        // For more reliable positioning, calculate based on current breakpoint angle
-        // instead of relying on potentially drifted stepper position
-        float currentAngle = (_state.currentBreakpointIndex >= 0 && _state.currentBreakpointIndex < (int)_config.breakPoints.size())
-                                 ? _config.breakPoints[_state.currentBreakpointIndex]
-                                 : 0.0f;
+        // Update current angle before calculating movement
+        updateCurrentAngle();
+
+        // Use actual current angle instead of breakpoint angle (wheel may have drifted)
+        float currentAngle = _state.currentAngle;
 
         // Always move forward to the next breakpoint.
         float angleDiff = targetAngle - currentAngle;
@@ -427,6 +427,14 @@ namespace devices
         long stepsToMove = lroundf((angleDiff / 360.0f) * _config.stepsPerRevolution);
 
         _state.targetAngle = targetAngle;
+
+        // Special case: if there's only 1 breakpoint, rotate a full revolution instead of staying still
+        if (targetAngle == currentAngle)
+        {
+            stepsToMove = _config.stepsPerRevolution;
+            MLOG_INFO("%s: Only 1 breakpoint configured, rotating full revolution (%ld steps)",
+                      toString().c_str(), stepsToMove);
+        }
 
         MLOG_INFO("%s: Moving to next breakpoint index %d, angle %.1f° (from %.1f°, diff %.1f° = %ld steps)",
                   toString().c_str(), nextIndex, targetAngle, currentAngle, angleDiff, stepsToMove);

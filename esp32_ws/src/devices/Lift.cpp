@@ -8,7 +8,7 @@ namespace devices
 {
 
     /* Move 2% extra down */
-    const float DOWN_FACTOR = 1.01f; // Move 2% extra when going down to ensure full descent
+    const float DOWN_FACTOR = 1.008f; // Move 0.5% extra when going down to ensure full descent
     const float IMMEDIATE_DECELERATION = 1000000.0f; // Very high deceleration for immediate stop
 
     Lift::Lift(const String &id)

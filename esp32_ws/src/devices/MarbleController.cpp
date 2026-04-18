@@ -215,8 +215,17 @@ namespace devices
         case devices::LiftStateEnum::LIFT_DOWN_LOADING:
         case devices::LiftStateEnum::LIFT_UP_UNLOADING:
         case devices::LiftStateEnum::MOVING_UP:
-        case devices::LiftStateEnum::MOVING_DOWN:
             blinkBusy(_liftLed);
+            break;
+        case devices::LiftStateEnum::MOVING_DOWN:
+            if (_autoLiftMovingDownSlow)
+            {
+                _liftLed->set(true);
+            }
+            else
+            {
+                blinkBusy(_liftLed);
+            }
             break;
         case devices::LiftStateEnum::UNKNOWN:
         case devices::LiftStateEnum::LIFT_DOWN:
@@ -499,9 +508,18 @@ namespace devices
         case devices::LiftStateEnum::LIFT_DOWN_LOADING:
         case devices::LiftStateEnum::LIFT_UP_UNLOADING:
         case devices::LiftStateEnum::MOVING_UP:
-        case devices::LiftStateEnum::MOVING_DOWN:
         case devices::LiftStateEnum::LIFT_UP:
             blinkBusy(_liftLed);
+            break;
+        case devices::LiftStateEnum::MOVING_DOWN:
+            if (_autoLiftMovingDownSlow)
+            {
+                _liftLed->set(true);
+            }
+            else
+            {
+                blinkBusy(_liftLed);
+            }
             break;
 
         case devices::LiftStateEnum::LIFT_DOWN:

@@ -283,15 +283,7 @@ namespace devices
             // Play error sound again when button pressed again
             if (liftButtonPressedEdge)
             {
-                playErrorSound(devices::Hv20tPlayMode::QueueIfPlaying);
-                if (liftState.errorCode == devices::LiftErrorCode::LIFT_NO_ZERO)
-                {
-                    _audio->play(songs::LIFT_NO_ZERO, devices::Hv20tPlayMode::QueueIfPlaying);
-                }
-                else if (liftState.errorCode == devices::LiftErrorCode::LIFT_INIT_NO_ZERO)
-                {
-                    _audio->play(songs::LIFT_INIT_ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
-                }
+                playLiftError(&liftState);
             }
             break;
         }
@@ -540,15 +532,7 @@ namespace devices
             // Play error sound again when button pressed again
             if (liftButtonPressedEdge)
             {
-                playErrorSound(devices::Hv20tPlayMode::QueueIfPlaying, {songs::LIFT_STOP});
-                if (liftState.errorCode == devices::LiftErrorCode::LIFT_NO_ZERO)
-                {
-                    _audio->play(songs::LIFT_NO_ZERO, devices::Hv20tPlayMode::QueueIfPlaying);
-                }
-                else if (liftState.errorCode == devices::LiftErrorCode::LIFT_INIT_NO_ZERO)
-                {
-                    _audio->play(songs::LIFT_INIT_ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
-                }
+                playLiftError(&liftState);
             }
             break;
 
@@ -1150,6 +1134,20 @@ namespace devices
         }
     }
 
+    void MarbleController::playLiftError(const devices::LiftState *liftState)
+    {
+        if (liftState->errorCode == devices::LiftErrorCode::LIFT_NO_ZERO)
+        {
+            playErrorSound(Hv20tPlayMode::QueueIfPlaying, {songs::LIFT_STOP});
+            _audio->play(songs::LIFT_NO_ZERO, devices::Hv20tPlayMode::QueueIfPlaying);
+        }
+        else if (liftState->errorCode == devices::LiftErrorCode::LIFT_INIT_NO_ZERO)
+        {
+            playErrorSound(Hv20tPlayMode::QueueIfPlaying, {songs::LIFT_STOP});
+            _audio->play(songs::LIFT_INIT_ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+        }
+    }
+
     void MarbleController::playClickSound()
     {
         // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
@@ -1362,16 +1360,7 @@ namespace devices
         if (previousLiftState != devices::LiftStateEnum::ERROR &&
             liftState->state == devices::LiftStateEnum::ERROR)
         {
-            if (liftState->errorCode == devices::LiftErrorCode::LIFT_NO_ZERO)
-            {
-                playErrorSound(Hv20tPlayMode::QueueIfPlaying, {songs::LIFT_STOP});
-                _audio->play(songs::LIFT_NO_ZERO, devices::Hv20tPlayMode::QueueIfPlaying);
-            }
-            else if (liftState->errorCode == devices::LiftErrorCode::LIFT_INIT_NO_ZERO)
-            {
-                playErrorSound(Hv20tPlayMode::QueueIfPlaying, {songs::LIFT_STOP});
-                _audio->play(songs::LIFT_INIT_ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
-            }
+            playLiftError(liftState);
         }
 
         previousLiftState = liftState->state;

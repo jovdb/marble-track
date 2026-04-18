@@ -114,8 +114,14 @@ namespace devices
         bool _idleSoundPlayed = false;
 
         bool isAutoMode = false;
-    };
 
-} // namespace devices
+    private:
+        /**
+         * @brief Play lift-specific error sounds based on error code
+         * @param liftState Pointer to the lift state containing error information
+         */
+        void playLiftError(const devices::LiftState *liftState);
+    }
+}
 
 #endif // MARBLECONTROLLER_H

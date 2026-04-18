@@ -87,6 +87,7 @@ namespace songs
     // Elevator bell
     const int LIFT_STOP = 19;
     const int LIFT_POWER_UNLOAD = 20;
+    const int LIFT_INIT_BUSY = 24;
 
 }
 

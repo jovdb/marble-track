@@ -191,6 +191,7 @@ namespace devices
         auto liftState = _lift->getState();
         auto liftButtonState = _liftBtn->getState();
         const bool liftButtonPressedEdge = liftButtonState.isPressed && liftButtonState.isPressedChanged;
+        const bool liftButtonReleasedEdge = !liftButtonState.isPressed && liftButtonState.isPressedChanged;
 
         if (liftButtonPressedEdge)
         {
@@ -199,23 +200,53 @@ namespace devices
         }
 
         // Queue button presses in busy/manual transition states
+        /*
         if (liftButtonPressedEdge)
         {
-            uint8_t maxQueuedPresses = 0;
+            uint8_t maxQueuedPresses = 1;
             switch (liftState.state)
             {
+            case devices::LiftStateEnum::LIFT_DOWN:
+                if (liftState.isLoaded)
+                {
+                    maxQueuedPresses = 3;
+                }
+                else
+                {
+                    maxQueuedPresses = 4;
+                }
+                break;
             case devices::LiftStateEnum::LIFT_DOWN_LOADING:
                 maxQueuedPresses = 3;
+
                 break;
             case devices::LiftStateEnum::MOVING_UP:
                 maxQueuedPresses = 2;
                 break;
+            case devices::LiftStateEnum::LIFT_UP:
+                if (liftState.isLoaded)
+                {
+                    maxQueuedPresses = 2;
+                }
+                else
+                {
+                    maxQueuedPresses = 1;
+                }
+                break;
             case devices::LiftStateEnum::LIFT_UP_UNLOADING:
                 maxQueuedPresses = 1;
+                break;
+            case devices::LiftStateEnum::ERROR:
+                maxQueuedPresses = 0;
                 break;
             default:
                 break;
             }
+            MLOG_DEBUG("%s: Lift button pressed in state %u with %u queued presses, max allowed %u",
+                       toString().c_str(),
+                       static_cast<unsigned>(liftState.state),
+                       static_cast<unsigned>(_liftQueuedPresses),
+                       static_cast<unsigned>(maxQueuedPresses));
 
             if (maxQueuedPresses > 0 && _liftQueuedPresses < maxQueuedPresses)
             {
@@ -225,8 +256,14 @@ namespace devices
                           static_cast<unsigned>(_liftQueuedPresses),
                           static_cast<unsigned>(maxQueuedPresses),
                           static_cast<unsigned>(liftState.state));
+                playButtonClick({songs::LIFT_STOP});
+            }
+            else
+            {
+                playErrorSound();
             }
         }
+        */
 
         // LED
         switch (liftState.state)
@@ -271,93 +308,159 @@ namespace devices
             _isLiftPowerUnloadSongPlaying = false;
         }
 
+        // Log lift state and queued presses for debugging
+        if (liftButtonPressedEdge)
+        {
+            MLOG_DEBUG("BEFORE %s: Lift state: %u, isLoaded: %u, ballWaitingSince: %lu, queuedPresses: %u",
+                       toString().c_str(),
+                       static_cast<unsigned>(liftState.state),
+                       static_cast<unsigned>(liftState.isLoaded),
+                       liftState.ballWaitingSince,
+                       static_cast<unsigned>(_liftQueuedPresses));
+        }
         // Lift Logic
         switch (liftState.state)
         {
         case devices::LiftStateEnum::UNKNOWN:
         {
+            _liftQueuedPresses = 0;
             // Init will start at press
             if (liftButtonPressedEdge)
             {
-                _audio->play(songs::getButtonClickSound(), devices::Hv20tPlayMode::SkipIfPlaying);
                 _lift->init();
+                playButtonClick();
             }
             break;
         }
 
         case devices::LiftStateEnum::ERROR:
         {
+            _liftQueuedPresses = 0;
+
             // Play sound for new errors, or button pressed again
             if (liftButtonPressedEdge)
             {
+                playErrorSound();
                 if (liftState.errorCode == devices::LiftErrorCode::LIFT_NO_ZERO)
                 {
-                    _audio->play(songs::LIFT_NO_ZERO, devices::Hv20tPlayMode::SkipIfPlaying);
+                    _audio->play(songs::LIFT_NO_ZERO, devices::Hv20tPlayMode::QueueIfPlaying);
                 }
                 else if (liftState.errorCode == devices::LiftErrorCode::LIFT_INIT_NO_ZERO)
                 {
-                    _audio->play(songs::LIFT_INIT_ERROR, devices::Hv20tPlayMode::SkipIfPlaying);
+                    _audio->play(songs::LIFT_INIT_ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
                 }
             }
             break;
         }
-
-        // BUSY
         case devices::LiftStateEnum::INIT:
+            if (liftButtonPressedEdge)
+            {
+                playErrorSound();
+                _audio->play(songs::LIFT_INIT_BUSY, devices::Hv20tPlayMode::QueueIfPlaying);
+            }
+            break;
         case devices::LiftStateEnum::LIFT_DOWN_LOADING:
-        case devices::LiftStateEnum::LIFT_UP_UNLOADING:
+            if (liftButtonPressedEdge)
+            {
+                if (_liftQueuedPresses < 3)
+                {
+                    _liftQueuedPresses++;
+                    playButtonClick({songs::LIFT_STOP});
+                }
+                else
+                {
+                    playErrorSound();
+                }
+            }
+            break;
         case devices::LiftStateEnum::MOVING_UP:
+            if (liftButtonPressedEdge)
+            {
+                if (_liftQueuedPresses < 2)
+                {
+                    _liftQueuedPresses++;
+                    playButtonClick({songs::LIFT_STOP});
+                }
+                else
+                {
+                    playErrorSound();
+                }
+            }
+            break;
+        case devices::LiftStateEnum::LIFT_UP_UNLOADING:
+            if (liftButtonPressedEdge)
+            {
+                if (_liftQueuedPresses < 1)
+                {
+                    _liftQueuedPresses++;
+                    playButtonClick({songs::LIFT_STOP});
+                }
+                else
+                {
+                    playErrorSound();
+                }
+            }
+            break;
         case devices::LiftStateEnum::MOVING_DOWN: // Loading in progress
-            // Busy, no new actions can be started
+            if (liftButtonPressedEdge)
+            {
+                playErrorSound();
+            }
             break;
 
         case devices::LiftStateEnum::LIFT_DOWN:
         {
             // Replay queued press: loaded + queued => go up and consume one
-            if (liftState.isLoaded && _liftQueuedPresses > 0)
+            if (_liftQueuedPresses > 0 || liftButtonPressedEdge)
             {
-                if (_lift->up())
-                {
-                    _liftQueuedPresses--;
-                }
-            }
-            else if (liftButtonPressedEdge)
-            {
-                playClickSound();
                 if (liftState.isLoaded)
                 {
-                    _lift->up();
+                    if (_lift->up())
+                    {
+                        if (!liftButtonPressedEdge)
+                            _liftQueuedPresses--;
+                    }
+                    if (liftButtonPressedEdge)
+                        playButtonClick({songs::LIFT_STOP});
                 }
                 else
                 {
-                    _lift->loadBall();
+                    if (_lift->loadBall())
+                    {
+                        if (!liftButtonPressedEdge)
+                            _liftQueuedPresses--;
+                    }
+                    if (liftButtonPressedEdge)
+                        playButtonClick({songs::LIFT_STOP});
                 }
             }
-
             break;
         }
-
         case devices::LiftStateEnum::LIFT_UP:
         {
-            // Replay queued press: loaded + queued => unload and consume one
-            if (liftState.isLoaded && _liftQueuedPresses > 0)
+            // Queued
+            if (_liftQueuedPresses > 0 && !liftButtonPressedEdge)
             {
-                if (_lift->unloadBall(1.0f))
+                if (liftState.isLoaded)
                 {
-                    _liftQueuedPresses--;
-                    _isBallStillLoaded = false;
-                    _liftButtonPressStartTime = 0;
+                    if (_lift->unloadBall(1.0f))
+                    {
+                        _liftQueuedPresses--;
+                        _isBallStillLoaded = false;
+                        _liftButtonPressStartTime = 0;
+                    }
+                }
+                else
+                {
+                    // If not loaded but still queued, try going down to load if possible
+                    if (_lift->down())
+                    {
+                        _liftQueuedPresses = 0;
+                    }
                 }
             }
-            // Post-unload continuation: if queue remains when up+unloaded, go down and clear queue
-            else if (!liftState.isLoaded && _liftQueuedPresses > 0)
-            {
-                if (_lift->down())
-                {
-                    _liftQueuedPresses = 0;
-                }
-            }
-            else if (liftButtonPressedEdge)
+
+            if (liftButtonPressedEdge)
             {
                 if (liftState.isLoaded)
                 {
@@ -370,6 +473,7 @@ namespace devices
                 {
                     // Unloaded: move down
                     _lift->down();
+                    playButtonClick({songs::LIFT_STOP});
                 }
             }
             else if (_isBallStillLoaded && liftButtonState.isPressed)
@@ -402,11 +506,22 @@ namespace devices
 
                 // Normal click unload (default duration)
                 _lift->unloadBall(1.0f);
-                playClickSound();
+                // playClickSound();
+                playButtonClick({songs::LIFT_STOP});
                 _isBallStillLoaded = false;
             }
             break;
         }
+        }
+
+        if (liftButtonPressedEdge)
+        {
+            MLOG_DEBUG("AFTER: %s: Lift state: %u, isLoaded: %u, ballWaitingSince: %lu, queuedPresses: %u",
+                       toString().c_str(),
+                       static_cast<unsigned>(liftState.state),
+                       static_cast<unsigned>(liftState.isLoaded),
+                       liftState.ballWaitingSince,
+                       static_cast<unsigned>(_liftQueuedPresses));
         }
     }
 
@@ -512,12 +627,12 @@ namespace devices
 
                 if (liftButtonPressedEdge)
                 {
-                    _audio->play(songs::getButtonDownSound(), devices::Hv20tPlayMode::SkipIfPlaying);
+                    playButtonDown({songs::LIFT_STOP});
                 }
 
                 if (liftButtonReleasedEdge)
                 {
-                    _audio->play(songs::getButtonUpSound(), devices::Hv20tPlayMode::SkipIfPlaying);
+                    playButtonUp({songs::LIFT_STOP});
                     _autoNoBallLiftStartTime = 0;
                     _autoNoBallLiftDelayMs = 0;
                     _lift->loadBall();
@@ -760,7 +875,7 @@ namespace devices
                 MLOG_INFO("%s: Starting manual wheel movement as long button is pressed", toString().c_str());
 
                 // playClickSound();
-                _audio->play(songs::getButtonDownSound(), devices::Hv20tPlayMode::SkipIfPlaying);
+                playButtonDown();
 
                 // Reset current position to prevent overflow;
                 // if (wheelState.state != devices::WheelStateEnum::MOVING)
@@ -806,16 +921,7 @@ namespace devices
             _wheelButtonLongPressTriggered = false;
 
             // playClickOffSound();
-            // Only replace sound if down button is still playing
-            auto index = _audio->getPlayingIndex();
-            if (index == songs::getButtonDownSound())
-            {
-                _audio->play(songs::getButtonUpSound(), devices::Hv20tPlayMode::StopThenPlay);
-            }
-            else
-            {
-                _audio->play(songs::getButtonUpSound(), devices::Hv20tPlayMode::SkipIfPlaying);
-            }
+            playButtonUp();
 
             _wheel->stop();
         }
@@ -1002,11 +1108,39 @@ namespace devices
         _audio->play(songs::STARTUP_SOUND, devices::Hv20tPlayMode::QueueIfPlaying);
     }
 
-    void MarbleController::playErrorSound()
+    void MarbleController::playErrorSound(std::vector<int> additionalReplaceSongIndexes)
     {
 
         // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
-        _buzzer->tune("Error:d=4,o=6,b=100:a,d"); // Play error tune
+        // _buzzer->tune("Error:d=4,o=6,b=100:a,d"); // Play error tune
+
+        // Create the default replace list with button sounds
+        std::vector<int> replaceSongIndexes = {songs::getButtonDownSound(), songs::getButtonUpSound(), songs::getButtonClickSound(), songs::ERROR};
+
+        // Add any additional indexes
+        replaceSongIndexes.insert(replaceSongIndexes.end(), additionalReplaceSongIndexes.begin(), additionalReplaceSongIndexes.end());
+
+        // Check if any song from the replace list is currently playing
+        auto currentIndex = _audio->getPlayingIndex();
+        bool shouldReplace = false;
+
+        for (int songIndex : replaceSongIndexes)
+        {
+            if (currentIndex == songIndex)
+            {
+                shouldReplace = true;
+                break;
+            }
+        }
+
+        if (shouldReplace)
+        {
+            _audio->play(songs::ERROR, devices::Hv20tPlayMode::StopThenPlay);
+        }
+        else
+        {
+            _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+        }
     }
 
     void MarbleController::playClickSound()
@@ -1019,6 +1153,99 @@ namespace devices
     {
         // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
         _buzzer->tone(320, 50);
+    }
+
+    void MarbleController::playButtonDown(std::vector<int> additionalReplaceSongIndexes)
+    {
+        // Create the default replace list with button sounds
+        std::vector<int> replaceSongIndexes = {songs::getButtonDownSound(), songs::getButtonUpSound(), songs::getButtonClickSound()};
+
+        // Add any additional indexes
+        replaceSongIndexes.insert(replaceSongIndexes.end(), additionalReplaceSongIndexes.begin(), additionalReplaceSongIndexes.end());
+
+        // Check if any song from the replace list is currently playing
+        auto currentIndex = _audio->getPlayingIndex();
+        bool shouldReplace = false;
+
+        for (int songIndex : replaceSongIndexes)
+        {
+            if (currentIndex == songIndex)
+            {
+                shouldReplace = true;
+                break;
+            }
+        }
+
+        if (shouldReplace)
+        {
+            _audio->play(songs::getButtonDownSound(), devices::Hv20tPlayMode::StopThenPlay);
+        }
+        else
+        {
+            _audio->play(songs::getButtonDownSound(), devices::Hv20tPlayMode::SkipIfPlaying);
+        }
+    }
+
+    void MarbleController::playButtonUp(std::vector<int> additionalReplaceSongIndexes)
+    {
+        // Create the default replace list with button sounds
+        std::vector<int> replaceSongIndexes = {songs::getButtonDownSound(), songs::getButtonUpSound(), songs::getButtonClickSound()};
+
+        // Add any additional indexes
+        replaceSongIndexes.insert(replaceSongIndexes.end(), additionalReplaceSongIndexes.begin(), additionalReplaceSongIndexes.end());
+
+        // Check if any song from the replace list is currently playing
+        auto currentIndex = _audio->getPlayingIndex();
+        bool shouldReplace = false;
+
+        for (int songIndex : replaceSongIndexes)
+        {
+            if (currentIndex == songIndex)
+            {
+                shouldReplace = true;
+                break;
+            }
+        }
+
+        if (shouldReplace)
+        {
+            _audio->play(songs::getButtonUpSound(), devices::Hv20tPlayMode::StopThenPlay);
+        }
+        else
+        {
+            _audio->play(songs::getButtonUpSound(), devices::Hv20tPlayMode::SkipIfPlaying);
+        }
+    }
+
+    void MarbleController::playButtonClick(std::vector<int> additionalReplaceSongIndexes)
+    {
+        // Create the default replace list with button sounds
+        std::vector<int> replaceSongIndexes = {songs::getButtonDownSound(), songs::getButtonUpSound(), songs::getButtonClickSound()};
+
+        // Add any additional indexes
+        replaceSongIndexes.insert(replaceSongIndexes.end(), additionalReplaceSongIndexes.begin(), additionalReplaceSongIndexes.end());
+
+        // Check if any song from the replace list is currently playing
+        auto currentIndex = _audio->getPlayingIndex();
+        bool shouldReplace = false;
+
+        for (int songIndex : replaceSongIndexes)
+        {
+            if (currentIndex == songIndex)
+            {
+                shouldReplace = true;
+                break;
+            }
+        }
+
+        if (shouldReplace)
+        {
+            _audio->play(songs::getButtonClickSound(), devices::Hv20tPlayMode::StopThenPlay);
+        }
+        else
+        {
+            _audio->play(songs::getButtonClickSound(), devices::Hv20tPlayMode::SkipIfPlaying);
+        }
     }
 
     void MarbleController::onWheelStateChange(void *statePtr)
@@ -1059,18 +1286,22 @@ namespace devices
 
             if (wheelState->errorCode == devices::WheelErrorCode::CalibrationZeroNotFound)
             {
+                _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
                 _audio->play(songs::WHEEL_CALIBRATION_FIRST_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
             }
             else if (wheelState->errorCode == devices::WheelErrorCode::CalibrationSecondZeroNotFound)
             {
+                _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
                 _audio->play(songs::WHEEL_CALIBRATION_SECOND_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
             }
             else if (wheelState->errorCode == devices::WheelErrorCode::ZeroNotFound)
             {
+                _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
                 _audio->play(songs::WHEEL_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
             }
             else if (wheelState->errorCode == devices::WheelErrorCode::UnexpectedZeroTrigger)
             {
+                _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
                 _audio->play(songs::WHEEL_UNEXPECTED_ZERO_TRIGGER, devices::Hv20tPlayMode::QueueIfPlaying);
             }
             else
@@ -1083,6 +1314,7 @@ namespace devices
         if (previousWheelState == devices::WheelStateEnum::CALIBRATING &&
             wheelState->state == devices::WheelStateEnum::IDLE)
         {
+            _audio->play(songs::NOTIFICATION, devices::Hv20tPlayMode::QueueIfPlaying);
             _audio->play(songs::WHEEL_CALIBRATION_END, devices::Hv20tPlayMode::QueueIfPlaying);
         }
         previousWheelState = wheelState->state;

@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <functional>
+#include <vector>
 #include "Device.h"
 #include "devices/Button.h"
 #include "devices/Wheel.h"
@@ -25,24 +26,26 @@ namespace devices
         /**
          * @brief Play an error sound using the buzzer
          */
-        void playErrorSound();
+        void playErrorSound(std::vector<int> additionalReplaceSongIndexes = {});
 
         /**
          * @brief Play a click sound using the buzzer
          */
         void playClickSound();
         void playClickOffSound();
-
-        /**
-         * @brief Play a startup sound using the buzzer
-         */
         void playStartupSound();
+        void playButtonDown(std::vector<int> additionalReplaceSongIndexes = {});
+        void playButtonUp(std::vector<int> additionalReplaceSongIndexes = {});
+        void playButtonClick(std::vector<int> additionalReplaceSongIndexes = {});
 
         /**
          * @brief Get the audio device
          * @return Pointer to the audio device
          */
-        devices::Hv20tAudio* getAudio() { return _audio; }
+        devices::Hv20tAudio *getAudio()
+        {
+            return _audio;
+        }
         static constexpr unsigned long WHEEL_LONG_PRESS_DURATION_MS = 8000UL;
         void loopManualLift();
         void loopManualWheel();

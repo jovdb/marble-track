@@ -740,12 +740,20 @@ namespace devices
             break;
         }
         }
+
+        if (liftButtonPressedEdge)
+        {
+            _lastButtonPressTime = millis();
+            _idleSoundPlayed = false;
+        }
     }
 
     void MarbleController::loopAutoWheel()
     {
         // Auto wheel control logic - similar to AutoMode.cpp
         auto wheelState = _wheel->getState();
+        auto wheelButtonState = _wheelBtn->getState();
+        auto isWheelButtonPressedEdge = wheelButtonState.isPressed && wheelButtonState.isPressedChanged;
 
         // Wheel led
         switch (wheelState.state)
@@ -782,9 +790,19 @@ namespace devices
             break;
 
         case devices::WheelStateEnum::ERROR:
+            if (isWheelButtonPressedEdge)
+            {
+                playWheelError(&wheelState);
+            }
+            break;
+
         case devices::WheelStateEnum::CALIBRATING:
         case devices::WheelStateEnum::INIT:
         case devices::WheelStateEnum::MOVING:
+            if (isWheelButtonPressedEdge)
+            {
+                playErrorSound();
+            }
             break;
 
         case devices::WheelStateEnum::IDLE:
@@ -801,6 +819,12 @@ namespace devices
                 _wheel->nextBreakPoint();
                 _wheelIdleStartTime = 0;
             }
+            else if (isWheelButtonPressedEdge)
+            {
+                _wheel->nextBreakPoint();
+                playButtonClick();
+            }
+
             break;
 
         default:
@@ -809,13 +833,11 @@ namespace devices
         }
 
         // Control wheel movement based on button state
-        auto wheelButtonState = _wheelBtn->getState();
-        if (wheelButtonState.isPressed && wheelButtonState.isPressedChanged)
+        if (isWheelButtonPressedEdge)
         {
             // Reset idle timer
             _lastButtonPressTime = millis();
             _idleSoundPlayed = false;
-            _audio->play(songs::FART, devices::Hv20tPlayMode::SkipIfPlaying);
         }
     }
 
@@ -1148,6 +1170,34 @@ namespace devices
         }
     }
 
+    void MarbleController::playWheelError(const devices::WheelState *wheelState)
+    {
+        if (wheelState->errorCode == devices::WheelErrorCode::CalibrationZeroNotFound)
+        {
+            _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+            _audio->play(songs::WHEEL_CALIBRATION_FIRST_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
+        }
+        else if (wheelState->errorCode == devices::WheelErrorCode::CalibrationSecondZeroNotFound)
+        {
+            _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+            _audio->play(songs::WHEEL_CALIBRATION_SECOND_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
+        }
+        else if (wheelState->errorCode == devices::WheelErrorCode::ZeroNotFound)
+        {
+            _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+            _audio->play(songs::WHEEL_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
+        }
+        else if (wheelState->errorCode == devices::WheelErrorCode::UnexpectedZeroTrigger)
+        {
+            _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+            _audio->play(songs::WHEEL_UNEXPECTED_ZERO_TRIGGER, devices::Hv20tPlayMode::QueueIfPlaying);
+        }
+        else
+        {
+            MLOG_ERROR("%s: Unknown Wheel errorCode %d, cannot play audio", toString().c_str(), wheelState->errorCode);
+        }
+    }
+
     void MarbleController::playClickSound()
     {
         // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
@@ -1288,31 +1338,7 @@ namespace devices
         if (previousWheelState != devices::WheelStateEnum::ERROR &&
             wheelState->state == devices::WheelStateEnum::ERROR)
         {
-
-            if (wheelState->errorCode == devices::WheelErrorCode::CalibrationZeroNotFound)
-            {
-                _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
-                _audio->play(songs::WHEEL_CALIBRATION_FIRST_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
-            }
-            else if (wheelState->errorCode == devices::WheelErrorCode::CalibrationSecondZeroNotFound)
-            {
-                _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
-                _audio->play(songs::WHEEL_CALIBRATION_SECOND_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
-            }
-            else if (wheelState->errorCode == devices::WheelErrorCode::ZeroNotFound)
-            {
-                _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
-                _audio->play(songs::WHEEL_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
-            }
-            else if (wheelState->errorCode == devices::WheelErrorCode::UnexpectedZeroTrigger)
-            {
-                _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
-                _audio->play(songs::WHEEL_UNEXPECTED_ZERO_TRIGGER, devices::Hv20tPlayMode::QueueIfPlaying);
-            }
-            else
-            {
-                MLOG_ERROR("%s: Unknown Wheel errorCode %d, cannot play audio", toString().c_str(), wheelState->errorCode);
-            }
+            playWheelError(wheelState);
         }
 
         // CALIBRATING -> IDLE

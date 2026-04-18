@@ -121,7 +121,14 @@ namespace devices
          * @param liftState Pointer to the lift state containing error information
          */
         void playLiftError(const devices::LiftState *liftState);
-    }
-}
+
+        /**
+         * @brief Play wheel-specific error sounds based on error code
+         * @param wheelState Pointer to the wheel state containing error information
+         */
+        void playWheelError(const devices::WheelState *wheelState);
+    };
+
+} // namespace devices
 
 #endif // MARBLECONTROLLER_H

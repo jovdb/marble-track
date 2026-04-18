@@ -15,6 +15,7 @@
 #include "SerialConsole.h"
 #include "OtaUpload.h"
 #include "devices/MarbleController.h"
+#include "SongConstants.h"
 
 // Composition-based devices
 #include "devices/Led.h"
@@ -181,34 +182,19 @@ void setup()
                                       {
                                         delete marbleController;
                                         marbleController = nullptr;
-                                      }
-                                    });
+                                      } });
 
-  // TODO: Re-enable when Button is converted to composition device
-  // const Button *manualBtn = deviceManager.getDeviceByIdAs<Button>("manual-btn");
-  // if (manualBtn && manualBtn->isPressed())
-  // {
-  //   MLOG_INFO("Operation mode: MANUAL");
-  //   marbleController = deviceManager.getDeviceByIdAs<MarbleController>("marble-controller");
-  //   marbleController->setup();
-  // }
-  // else
-  // {
-  marbleController = deviceManager.getDeviceByIdAs<devices::MarbleController>("marble-controller");
-  // }
+  marbleController = deviceManager.getDeviceByIdAs<devices::MarbleController>("controller");
+  if (marbleController)
+  {
+    MLOG_INFO("MarbleController with id 'controller' not found.");
+  }
 
-  // Startup sound
-  // TODO: Re-enable when Buzzer is converted to composition device
-  // Buzzer *buzzer = deviceManager.getDeviceByTypeAs<Buzzer>("buzzer");
-  // if (buzzer)
-  // {
-  //   MLOG_INFO("Startup tone");
-  //   buzzer->startupTone(); // Play startup tone sequence
-  // }
-
-  // MLOG_INFO("Device management initialized - Total devices: %d", deviceManager.getDeviceCount());
-
-  // State change broadcasting is now enabled during setup
+  if (network && network->getMode() != NetworkMode::WIFI_CLIENT && marbleController)
+  {
+    MLOG_WARN("Not connected to WiFi at startup - queueing NO_NETWORK sound");
+    marbleController->getAudio()->play(songs::NO_NETWORK, devices::Hv20tPlayMode::QueueIfPlaying);
+  }
 
   MLOG_INFO("System initialization complete!");
   MLOG_INFO("--------------------------");

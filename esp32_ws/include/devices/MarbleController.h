@@ -38,7 +38,11 @@ namespace devices
          */
         void playStartupSound();
 
-    private:
+        /**
+         * @brief Get the audio device
+         * @return Pointer to the audio device
+         */
+        devices::Hv20tAudio* getAudio() { return _audio; }
         static constexpr unsigned long WHEEL_LONG_PRESS_DURATION_MS = 8000UL;
         void loopManualLift();
         void loopManualWheel();

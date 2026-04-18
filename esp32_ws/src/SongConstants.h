@@ -37,6 +37,7 @@ namespace songs
     const int FART = 8;
     const int NOTIFICATION = 21;
     const int ERROR = 22;
+    const int NO_NETWORK = 23;
 
     // Button sound functions (theme-aware in future)
     inline int getButtonClickSound()

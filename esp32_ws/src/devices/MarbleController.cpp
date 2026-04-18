@@ -999,7 +999,7 @@ namespace devices
     void MarbleController::playStartupSound()
     {
         //_buzzer->tune("Startup:d=4,o=6,b=1000:c,f,b#"); // Play error tune
-        _audio->play(songs::STARTUP_SOUND, devices::Hv20tPlayMode::SkipIfPlaying);
+        _audio->play(songs::STARTUP_SOUND, devices::Hv20tPlayMode::QueueIfPlaying);
     }
 
     void MarbleController::playErrorSound()

@@ -226,15 +226,12 @@ void loop()
     }
 
     marbleController = deviceManager.getDeviceByIdAs<devices::MarbleController>("controller");
+    static auto hasLoggedNoNetwork = false;
     if (!network->isModeChanged() && !network->isWiFiConnected() && marbleController)
     {
-      if (marbleController)
+      if (!hasLoggedNoNetwork && network && !network->isConnecting() && network->getMode() != NetworkMode::WIFI_CLIENT && marbleController)
       {
-        MLOG_INFO("MarbleController with id 'controller' not found.");
-      }
-
-      if (network && !network->isConnecting() && network->getMode() != NetworkMode::WIFI_CLIENT && marbleController)
-      {
+        hasLoggedNoNetwork = true;
         MLOG_WARN("Not connected to WiFi at startup - queueing NO_NETWORK sound");
         marbleController->getAudio()->play(songs::NO_NETWORK, devices::Hv20tPlayMode::QueueIfPlaying);
       }

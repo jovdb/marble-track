@@ -236,14 +236,14 @@
                 "usePwm": true,
                 "maxSpeed": 500,
                 "maxAcceleration": 300,
-                "defaultSpeed": 120,
-                "defaultAcceleration": 20,
+                "defaultSpeed": 500,
+                "defaultAcceleration": 100,
                 "stepPin": {
                   "pin": 4,
                   "expanderId": ""
                 },
                 "dirPin": {
-                  "pin": 5,
+                  "pin": 5, 
                   "expanderId": ""
                 },
                 "pin1": {
@@ -288,12 +288,14 @@
           ],
           "config": {
             "name": "Wheel",
-            "stepsPerRevolution": 6750,
+            "stepsPerRevolution": 6754,
             "maxStepsPerRevolution": 6800,
-            "zeroPointDegree": 240,
+            "zeroPointDegree": 55,
             "direction": 1,
             "breakPoints": [
-              190
+              158,
+              190,
+              283
             ]
           }
         },
@@ -436,12 +438,12 @@
           "children": [],
           "config": {
             "pin": {
-              "pin": 2,
+              "pin": 0,
               "expanderId": "ex2"
             },
             "name": "Button",
-            "debounceTimeInMs": 50,
-            "pinMode": "Floating",
+            "debounceTimeInMs": 30,
+            "pinMode": "PullUp",
             "buttonType": "NormalOpen"
           }
         }

@@ -75,10 +75,10 @@
                 "name": "Lift Stepper",
                 "stepperType": "DRIVER",
                 "usePwm": true,
-                "maxSpeed": 2500,
-                "maxAcceleration": 5000,
-                "defaultSpeed": 750,
-                "defaultAcceleration": 200,
+                "maxSpeed": 7000,
+                "maxAcceleration": 10000,
+                "defaultSpeed": 2400,
+                "defaultAcceleration": 2400,
                 "stepPin": {
                   "pin": 1,
                   "expanderId": ""

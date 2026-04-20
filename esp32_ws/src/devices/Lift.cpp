@@ -8,7 +8,7 @@ namespace devices
 {
 
     /* Move 2% extra down */
-    const float DOWN_FACTOR = 1.008f; // Move 0.5% extra when going down to ensure full descent
+    const float DOWN_FACTOR = 1.005f;                // Move 0.5% extra when going down to ensure full descent
     const float IMMEDIATE_DECELERATION = 1000000.0f; // Very high deceleration for immediate stop
 
     Lift::Lift(const String &id)
@@ -128,6 +128,7 @@ namespace devices
         _state.ballWaitingSince = 0;
         _state.isLoaded = false;
         _state.initStep = 0;
+        _initSpeedRatio = 1.0f;
 
         _loadStartTime = 0;
         _unloadStartTime = 0;
@@ -334,12 +335,13 @@ namespace devices
         return isSuccess;
     }
 
-    bool Lift::init()
+    bool Lift::init(float speedRatio)
     {
-        MLOG_INFO("%s: Starting init sequence", toString().c_str());
+        MLOG_INFO("%s: Starting init sequence with speed ratio %.2f", toString().c_str(), speedRatio);
 
         _state.state = LiftStateEnum::INIT;
         _state.initStep = 1; // unload end
+        _initSpeedRatio = speedRatio;
 
         notifyStateChanged();
         return true;
@@ -538,6 +540,8 @@ namespace devices
         {
         case LiftErrorCode::NONE:
             return "";
+        case LiftErrorCode::LIFT_INIT_NO_ZERO:
+            return "LIFT_INIT_NO_ZERO";
         case LiftErrorCode::LIFT_CONFIGURATION_ERROR:
             return "LIFT_CONFIGURATION_ERROR";
         case LiftErrorCode::LIFT_STATE_ERROR:
@@ -697,13 +701,13 @@ namespace devices
             // Move slowly down to find limit switch
             _state.initStep = 4;
             long steps = (_config.minSteps - _config.maxSteps) * DOWN_FACTOR;
-            moveStepper(steps, 0.3f);
+            moveStepper(steps, 0.3f * _initSpeedRatio);
             nextInitStepTime = millis() + 100;
             break;
         }
         case 4:
         {
-            if (!_stepper->getState().isMoving)
+            if (!_stepper->getState().isMoving && _limitSwitch && !_limitSwitch->getState().isPressed)
             {
                 setError(LiftErrorCode::LIFT_INIT_NO_ZERO, "Initialization failed: limit switch not triggered");
                 return;
@@ -735,7 +739,7 @@ namespace devices
 
             MLOG_DEBUG("%s: Init step 5: Moving back up after bottom reached to unload possible ball in lift", toString().c_str());
             _state.initStep = 6;
-            moveStepperTo(_config.maxSteps, 1);
+            moveStepperTo(_config.maxSteps, _initSpeedRatio);
             nextInitStepTime = millis() + 10; // wait until move started
             break;
         }
@@ -768,13 +772,13 @@ namespace devices
             MLOG_DEBUG("%s: Init step 8: Moving back down until limit switch", toString().c_str());
             _state.initStep = 9;
             long steps = (_config.minSteps - _config.maxSteps) * DOWN_FACTOR;
-            moveStepper(steps, 1);
+            moveStepper(steps, _initSpeedRatio);
             nextInitStepTime = millis() + 100;
             break;
         }
         case 9:
         {
-            if (!_stepper->getState().isMoving)
+            if (!_stepper->getState().isMoving && _limitSwitch && !_limitSwitch->getState().isPressed)
             {
                 setError(LiftErrorCode::LIFT_INIT_NO_ZERO, "Initialization failed: limit switch not triggered");
                 return;

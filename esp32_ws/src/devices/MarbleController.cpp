@@ -23,6 +23,8 @@ namespace devices
         static constexpr unsigned long AutoNoBallRandomMaxDelayMs = 300000UL;
         static constexpr float AutoDownNoBallSpeedRatio = 0.2f;
         static constexpr float AutoDownNormalSpeedRatio = 1.0f;
+        static constexpr float LiftAutoSpeedRatio = 0.25f;
+        static constexpr float LiftManualSpeedRatio = 1.0f;
     }
 
     MarbleController::MarbleController(const String &id) : Device(id, "marblecontroller")
@@ -270,7 +272,7 @@ namespace devices
             // Init will start at press
             if (liftButtonPressedEdge)
             {
-                _lift->init();
+                _lift->init(lift_timing::LiftManualSpeedRatio);
                 playButtonClick();
             }
             break;
@@ -350,7 +352,7 @@ namespace devices
             {
                 if (liftState.isLoaded)
                 {
-                    if (_lift->up())
+                    if (_lift->up(lift_timing::LiftManualSpeedRatio))
                     {
                         if (!liftButtonPressedEdge)
                             _liftQueuedPresses--;
@@ -388,7 +390,7 @@ namespace devices
                 else
                 {
                     // If not loaded but still queued, try going down to load if possible
-                    if (_lift->down())
+                    if (_lift->down(lift_timing::LiftManualSpeedRatio))
                     {
                         _liftQueuedPresses = 0;
                     }
@@ -407,7 +409,7 @@ namespace devices
                 else
                 {
                     // Unloaded: move down
-                    _lift->down();
+                    _lift->down(lift_timing::LiftManualSpeedRatio);
                     playButtonClick({songs::LIFT_STOP});
                 }
             }
@@ -525,7 +527,7 @@ namespace devices
         switch (liftState.state)
         {
         case devices::LiftStateEnum::UNKNOWN:
-            _lift->init();
+            _lift->init(lift_timing::LiftAutoSpeedRatio);
             break;
 
         case devices::LiftStateEnum::ERROR:
@@ -555,7 +557,7 @@ namespace devices
 
             if (_autoLiftMovingDownSlow && liftState.ballWaitingSince > 0)
             {
-                if (_lift->down(lift_timing::AutoDownNormalSpeedRatio))
+                if (_lift->down(lift_timing::AutoDownNormalSpeedRatio * lift_timing::LiftAutoSpeedRatio))
                 {
                     _autoLiftMovingDownSlow = false;
                     MLOG_INFO("%s: Ball waiting detected during auto down, switching to normal speed", toString().c_str());
@@ -565,7 +567,7 @@ namespace devices
             {
                 if (_autoLiftMovingDownSlow)
                 {
-                    if (_lift->down(lift_timing::AutoDownNormalSpeedRatio))
+                    if (_lift->down(lift_timing::AutoDownNormalSpeedRatio * lift_timing::LiftAutoSpeedRatio))
                     {
                         _autoLiftMovingDownSlow = false;
                         playButtonClick({songs::LIFT_STOP});
@@ -586,7 +588,7 @@ namespace devices
             if (liftState.isLoaded)
             {
                 // Loaded: move up to unload position
-                _lift->up();
+                _lift->up(lift_timing::LiftAutoSpeedRatio);
                 _autoLiftDelayStart = 0; // Reset delay timer
             }
             else if (liftState.ballWaitingSince > 0)
@@ -722,11 +724,11 @@ namespace devices
                 if (liftState.ballWaitingSince > 0)
                 {
                     _autoLiftMovingDownSlow = false;
-                    _lift->down(lift_timing::AutoDownNormalSpeedRatio);
+                    _lift->down(lift_timing::AutoDownNormalSpeedRatio * lift_timing::LiftAutoSpeedRatio);
                 }
                 else
                 {
-                    if (_lift->down(lift_timing::AutoDownNoBallSpeedRatio))
+                    if (_lift->down(lift_timing::AutoDownNoBallSpeedRatio * lift_timing::LiftAutoSpeedRatio))
                     {
                         _autoLiftMovingDownSlow = true;
                     }

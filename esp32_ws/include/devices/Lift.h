@@ -113,9 +113,10 @@ namespace devices
 
         /**
          * @brief Initialize the lift (calibration sequence)
+         * @param speedRatio Speed ratio for initialization (1.0 = default speed)
          * @return true if init started, false otherwise
          */
-        bool init();
+        bool init(float speedRatio = 1.0f);
 
         /**
          * @brief Load a ball into the lift
@@ -249,6 +250,8 @@ namespace devices
          * @brief Handle initialization sequence
          */
         void initLoop();
+
+        float _initSpeedRatio = 1.0f; // Speed ratio for initialization
     };
 
 } // namespace devices

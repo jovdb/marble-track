@@ -21,6 +21,7 @@ namespace devices
         static constexpr unsigned long AutoPowerSongStartDelayMs = 1000UL;
         static constexpr unsigned long AutoNoBallRandomMinDelayMs = 120000UL;
         static constexpr unsigned long AutoNoBallRandomMaxDelayMs = 300000UL;
+        static constexpr unsigned long ErrorLongPressDurationMs = 10000UL; // 10 seconds for error recovery
         static constexpr float AutoDownNoBallSpeedRatio = 0.2f;
         static constexpr float AutoDownNormalSpeedRatio = 1.0f;
         static constexpr float LiftAutoSpeedRatio = 0.25f;
@@ -195,6 +196,7 @@ namespace devices
         const bool liftButtonPressedEdge = liftButtonState.isPressed && liftButtonState.isPressedChanged;
         const bool liftButtonReleasedEdge = !liftButtonState.isPressed && liftButtonState.isPressedChanged;
 
+        // Idle tracking
         if (liftButtonPressedEdge)
         {
             _lastButtonPressTime = millis();
@@ -249,20 +251,10 @@ namespace devices
         if (liftState.state != devices::LiftStateEnum::LIFT_UP)
         {
             _isBallStillLoaded = false;
-            _liftButtonPressStartTime = 0;
+            // _liftButtonPressStartTime = 0;
             _isLiftPowerUnloadSongPlaying = false;
         }
 
-        // Log lift state and queued presses for debugging
-        if (liftButtonPressedEdge)
-        {
-            MLOG_DEBUG("BEFORE %s: Lift state: %u, isLoaded: %u, ballWaitingSince: %lu, queuedPresses: %u",
-                       toString().c_str(),
-                       static_cast<unsigned>(liftState.state),
-                       static_cast<unsigned>(liftState.isLoaded),
-                       liftState.ballWaitingSince,
-                       static_cast<unsigned>(_liftQueuedPresses));
-        }
         // Lift Logic
         switch (liftState.state)
         {
@@ -282,10 +274,28 @@ namespace devices
         {
             _liftQueuedPresses = 0;
 
-            // Play error sound again when button pressed again
             if (liftButtonPressedEdge)
             {
                 playLiftError(&liftState);
+                _liftButtonPressStartTime = millis();
+            }
+
+            unsigned long pressDuration = _liftButtonPressStartTime > 0 ? millis() - _liftButtonPressStartTime : 0;
+
+            // DEBUG ALL Parts of the next if
+            MLOG_DEBUG("%s: Pressed: %u, PressedStartTime: %u, duration: %u",
+                       toString().c_str(),
+                       static_cast<unsigned>(liftButtonState.isPressed),
+                       static_cast<unsigned>(_liftButtonPressStartTime),
+                       static_cast<unsigned>(liftButtonState.isPressed ? pressDuration : 0));
+
+            // Check for long press while button is held
+            if (liftButtonState.isPressed && (pressDuration >= lift_timing::ErrorLongPressDurationMs))
+            {
+                MLOG_INFO("%s: Error recovery long press detected, starting lift init", toString().c_str());
+                _lift->init(lift_timing::LiftManualSpeedRatio);
+                playButtonClick();
+                _liftButtonPressStartTime = 0; // Reset to prevent retriggering
             }
             break;
         }
@@ -449,16 +459,6 @@ namespace devices
             }
             break;
         }
-        }
-
-        if (liftButtonPressedEdge)
-        {
-            MLOG_DEBUG("AFTER: %s: Lift state: %u, isLoaded: %u, ballWaitingSince: %lu, queuedPresses: %u",
-                       toString().c_str(),
-                       static_cast<unsigned>(liftState.state),
-                       static_cast<unsigned>(liftState.isLoaded),
-                       liftState.ballWaitingSince,
-                       static_cast<unsigned>(_liftQueuedPresses));
         }
     }
 
@@ -743,6 +743,7 @@ namespace devices
         }
         }
 
+        // Idle tracking
         if (liftButtonPressedEdge)
         {
             _lastButtonPressTime = millis();

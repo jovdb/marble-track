@@ -531,10 +531,20 @@ namespace devices
             break;
 
         case devices::LiftStateEnum::ERROR:
-            // Play error sound again when button pressed again
             if (liftButtonPressedEdge)
             {
                 playLiftError(&liftState);
+                _liftButtonPressStartTime = millis();
+            }
+
+            // Check for long press while button is held
+            if (liftButtonState.isPressed && _liftButtonPressStartTime > 0 &&
+                ((millis() - _liftButtonPressStartTime) >= lift_timing::ErrorLongPressDurationMs))
+            {
+                MLOG_INFO("%s: Error recovery long press detected in auto mode, starting lift init", toString().c_str());
+                _lift->init(lift_timing::LiftAutoSpeedRatio);
+                playButtonClick();
+                _liftButtonPressStartTime = 0; // Reset to prevent retriggering
             }
             break;
 

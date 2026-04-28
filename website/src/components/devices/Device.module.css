@@ -4,7 +4,7 @@
   background-color: var(--color-surface-elevated);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-xs);
   overflow: hidden;
   transition:
     border-color var(--transition-fast),
@@ -15,12 +15,12 @@
 .device:hover,
 .device:focus-within {
   border-color: var(--color-border-strong);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .device__header {
   padding: var(--spacing-3) var(--spacing-4);
-  background-color: var(--color-surface);
+  background-color: var(--color-panel-header);
   border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
@@ -52,7 +52,8 @@
   width: 32px;
   height: 32px;
   border-radius: var(--radius-md);
-  color: var(--color-primary-600);
+  color: var(--color-primary-700);
+  background: var(--color-primary-100);
 }
 
 .device__title {
@@ -87,7 +88,7 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0;
 }
 
 .device__error-badge {
@@ -98,7 +99,7 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0;
 }
 
 .device__content {
@@ -111,7 +112,7 @@
   gap: var(--spacing-3);
   margin-bottom: var(--spacing-4);
   padding: var(--spacing-3) var(--spacing-4);
-  background-color: var(--color-surface);
+  background-color: var(--color-surface-muted);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
 }
@@ -155,7 +156,7 @@
 .device__input:focus {
   outline: none;
   border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
 .device__select {
@@ -172,7 +173,7 @@
 .device__select:focus {
   outline: none;
   border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
 .device__error {
@@ -224,14 +225,14 @@
 }
 
 .device__button--secondary {
-  background-color: var(--color-primary-600);
+  background-color: var(--color-accent-500);
   color: var(--color-text-inverse);
-  border-color: var(--color-primary-600);
+  border-color: var(--color-accent-500);
 }
 
 .device__button--secondary:hover:not(:disabled) {
-  background-color: var(--color-primary-700);
-  border-color: var(--color-primary-700);
+  background-color: var(--color-accent-600);
+  border-color: var(--color-accent-600);
   color: var(--color-text-inverse);
 }
 
@@ -270,14 +271,14 @@
 .device__header-button:focus-visible {
   outline: none;
   border-color: var(--color-primary-400);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
 .device__header-button--active {
   background-color: var(--color-primary-100);
   border-color: var(--color-primary-300);
   color: var(--color-primary-700);
-  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08);
+  box-shadow: inset 4px 0 0 var(--color-primary-500);
 }
 
 .device__collapse-button {
@@ -300,7 +301,7 @@
 
 .device__collapse-button:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
 .device__chevron {

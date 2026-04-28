@@ -65,7 +65,7 @@ const App: Component = () => {
     <div class={styles.app}>
       <Providers>
         <Header />
-        <main>
+        <main class={styles.app__main}>
           <Show when={isSerialOpen()}>
             <section class={styles.app__section}>
               <SerialLog />

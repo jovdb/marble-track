@@ -283,7 +283,12 @@ const WebSocketMessages: Component = () => {
           </div>
         </div>
 
-        <button onClick={() => wsActions.clearMessages()}>Clear Messages</button>
+        <button
+          class={styles["websocket-messages__clear-button"]}
+          onClick={() => wsActions.clearMessages()}
+        >
+          Clear Messages
+        </button>
       </div>
 
       <div ref={scrollContainerRef} class={styles["websocket-messages__scrollable-content"]}>

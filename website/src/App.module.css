@@ -1,38 +1,21 @@
-/* Individual config button styling */
-.app__config-button {
-  background: #0078d4;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition:
-    background 0.2s,
-    box-shadow 0.2s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-.app__config-button:hover {
-  background: #005fa3;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
 /* App Component - BEM CSS Module */
 
 .app {
   min-height: 100vh;
-  background-color: var(--color-surface);
+  background:
+    linear-gradient(180deg, rgba(40, 87, 232, 0.08), transparent 18rem), var(--color-background);
 }
 
 .app__main {
   flex: 1;
-  padding: var(--spacing-6);
-  max-width: 1200px;
+  padding: var(--spacing-5) var(--spacing-6) var(--spacing-8);
+  max-width: 1280px;
   margin: 0 auto;
   width: 100%;
 }
 
 .app__section {
-  margin: var(--spacing-6);
+  margin: 0 0 var(--spacing-5);
 }
 
 .app__section:last-child {

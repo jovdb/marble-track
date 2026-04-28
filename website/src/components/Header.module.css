@@ -4,9 +4,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--spacing-4) var(--spacing-6);
+  gap: var(--spacing-4);
+  padding: var(--spacing-3) var(--spacing-6);
   background-color: var(--color-surface-elevated);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 3px solid var(--color-primary-500);
   box-shadow: var(--shadow-sm);
   position: sticky;
   top: 0;
@@ -17,11 +18,16 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-3);
+  min-width: 0;
 }
 
 .header__logo {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
+  padding: 3px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-50);
+  border: 1px solid var(--color-primary-200);
 }
 
 .header__logo--connected {
@@ -33,7 +39,7 @@
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
-  letter-spacing: -0.025em;
+  letter-spacing: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -43,6 +49,9 @@
 .header__right {
   display: flex;
   align-items: center;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .header__status {
@@ -82,22 +91,27 @@
 }
 
 .header__button {
-  color: #444;
-  padding: 0 0.25em;
-}
-
-.header__icon-button {
+  color: var(--color-text-secondary);
+  padding: 0;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2.25rem;
-  min-height: 2.25rem;
   border-radius: var(--radius-md);
-  background: var(--color-surface);
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
 }
 
+.header__icon-button {
+  background: var(--color-surface-muted);
+}
+
+.header__button:hover,
 .header__icon-button:hover {
-  background: var(--color-surface-elevated);
+  border-color: var(--color-primary-300);
+  background: var(--color-primary-50);
+  color: var(--color-primary-700);
 }
 
 .header__button.header__toggle-button {
@@ -107,7 +121,7 @@
   min-width: 2.25rem;
   min-height: 2.25rem;
   border-radius: var(--radius-md);
-  background: var(--color-surface);
+  background: var(--color-surface-muted);
   transition:
     background-color var(--transition-fast),
     color var(--transition-fast),
@@ -115,7 +129,7 @@
 }
 
 .header__button.header__toggle-button:hover {
-  background: var(--color-surface-elevated);
+  background: var(--color-primary-50);
 }
 
 .header__button.header__toggle-button:focus,
@@ -127,11 +141,25 @@
 
 .header__button.header__toggle-button.header__button--active {
   color: var(--color-primary-700);
-  background: color-mix(in srgb, var(--color-primary-500) 18%, white);
+  background: var(--color-primary-100);
+  border-color: var(--color-primary-300);
 }
 
 .header__button.header__toggle-button.header__button--active:hover {
-  background: color-mix(in srgb, var(--color-primary-500) 24%, white);
+  background: var(--color-primary-200);
+}
+
+@media (max-width: 640px) {
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: var(--spacing-3);
+  }
+
+  .header__right {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 400px) {

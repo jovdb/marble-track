@@ -2,8 +2,9 @@
   margin: 0 0 var(--spacing-4);
   padding: var(--spacing-3) var(--spacing-4);
   border-radius: var(--radius-md);
-  background: var(--color-surface-elevated);
-  color: var(--color-text-secondary);
+  background: var(--color-info-50);
+  color: var(--color-info-800);
+  border: 1px solid var(--color-info-200);
   font-size: var(--font-size-sm);
 }
 
@@ -58,7 +59,7 @@
   padding: var(--spacing-2) var(--spacing-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: var(--color-surface);
+  background: var(--color-surface-muted);
   color: var(--color-text-primary);
   display: inline-flex;
   align-items: center;
@@ -86,12 +87,12 @@
   overflow: auto;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  background: #101828;
   font-family:
     ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Segoe UI Mono", monospace;
   font-size: var(--font-size-sm);
   line-height: 1.4;
-  color: var(--color-text-secondary);
+  color: #d0d5dd;
   white-space: pre;
 }
 
@@ -110,19 +111,19 @@
 }
 
 .serial-log__line--warning {
-  color: #f97316;
+  color: var(--color-warning-400);
 }
 
 .serial-log__line--debug {
-  color: #b1b9c7;
+  color: #98a2b3;
 }
 
 .serial-log__line--ws-recv {
-  color: #2563eb;
+  color: var(--color-info-300);
 }
 
 .serial-log__line--ws-send {
-  color: #38bdf8;
+  color: var(--color-accent-300);
 }
 
 .serial-log__status {
@@ -178,7 +179,7 @@
 
 .serial-log__button--secondary {
   border-color: var(--color-border);
-  background: var(--color-surface);
+  background: var(--color-surface-muted);
 }
 
 .serial-log__button:not(:disabled):hover {

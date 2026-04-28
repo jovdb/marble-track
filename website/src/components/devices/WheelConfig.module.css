@@ -23,6 +23,7 @@
   margin-bottom: 0.5em;
   background: var(--color-surface);
   border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
   box-shadow: var(--shadow-xs);
   padding: 0.5em 0.75em;
 }

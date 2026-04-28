@@ -38,6 +38,57 @@ body {
   font-family: var(--font-family-base);
   background-color: var(--color-background);
   color: var(--color-text-primary);
+  min-width: 320px;
+}
+
+a {
+  color: var(--color-primary-600);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+button[type="button"],
+button[type="reset"],
+button[type="submit"],
+input[type="button"],
+input[type="reset"],
+input[type="submit"] {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+button:not(:disabled):hover,
+button[type="button"]:not(:disabled):hover,
+button[type="reset"]:not(:disabled):hover,
+button[type="submit"]:not(:disabled):hover,
+input[type="button"]:not(:disabled):hover,
+input[type="reset"]:not(:disabled):hover,
+input[type="submit"]:not(:disabled):hover {
+  border-color: var(--color-primary-300);
+  background-color: var(--color-surface-hover);
+  color: var(--color-primary-700);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: var(--color-primary-400);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
 /* Ensure our custom button classes take precedence over Pico */
@@ -51,6 +102,9 @@ input:not([type="checkbox"]):not([type="radio"]),
 textarea,
 select {
   box-sizing: border-box;
+  border-color: var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
 }
 
 input:not([type="checkbox"], [type="radio"]),
@@ -78,4 +132,11 @@ td,
 th {
   background-color: unset;
   border-bottom: unset;
+}
+
+th {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0;
 }

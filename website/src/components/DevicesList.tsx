@@ -563,7 +563,7 @@ export function DevicesList() {
       {/* Add Device Button */}
       <div class={styles["device-list__actions"]}>
         <button
-          class={styles["app__config-button"]}
+          class={`${styles["devices-list__button"]} ${styles["devices-list__button--accent"]}`}
           onClick={() => setShowAddModal(true)}
           disabled={!socketState.isConnected}
         >
@@ -621,7 +621,7 @@ export function DevicesList() {
               </button>
               <button
                 type="submit"
-                class={styles["modal-button modal-button--primary"]}
+                class={`${styles["modal-button"]} ${styles["modal-button--primary"]}`}
                 disabled={!socketState.isConnected}
               >
                 Add Device
@@ -633,14 +633,14 @@ export function DevicesList() {
 
       <div class={styles["device-list__buttons"]}>
         <button
-          class={styles["app__config-button"]}
+          class={styles["devices-list__button"]}
           onClick={handleDownloadConfig}
           disabled={!socketState.isConnected}
         >
           Download Config
         </button>
         <button
-          class={styles["app__config-button"]}
+          class={styles["devices-list__button"]}
           onClick={handleUploadConfig}
           disabled={!socketState.isConnected}
         >

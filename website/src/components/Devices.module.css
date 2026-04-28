@@ -1,7 +1,7 @@
 .app__devices-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: var(--spacing-6);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-4);
 }
 
 .app__no-devices {
@@ -10,8 +10,8 @@
   color: var(--color-text-tertiary);
   font-style: italic;
   padding: var(--spacing-8) var(--spacing-4);
-  background-color: var(--color-surface);
-  border: 1px dashed var(--color-border);
+  background-color: var(--color-info-50);
+  border: 1px dashed var(--color-info-300);
   border-radius: var(--radius-md);
 }
 

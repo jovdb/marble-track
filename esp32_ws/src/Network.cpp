@@ -216,7 +216,18 @@ String Network::getStatusJSON() const
     String json;
     serializeJson(doc, json);
     return json;
-}void Network::processCaptivePortal()
+}
+
+void Network::notifyModeChanged()
+{
+    _isModeChanged = true;
+    for (auto &cb : _modeChangeCallbacks)
+    {
+        if (cb) cb(_currentMode);
+    }
+}
+
+void Network::processCaptivePortal()
 {
     if (_currentMode == NetworkMode::ACCESS_POINT && _dnsServer)
     {
@@ -236,7 +247,7 @@ void Network::loop()
             // WiFi connected successfully
             _isConnecting = false;
             _currentMode = NetworkMode::WIFI_CLIENT;
-            _isModeChanged = true;
+            notifyModeChanged();
             MLOG_INFO("Connected to WiFi: http://%s", WiFi.localIP().toString().c_str());
             
             // Start mDNS
@@ -252,13 +263,13 @@ void Network::loop()
             if (startAccessPoint())
             {
                 _currentMode = NetworkMode::ACCESS_POINT;
-                _isModeChanged = true;
+                notifyModeChanged();
                 setupMDNS();
             }
             else
             {
                 _currentMode = NetworkMode::DISCONNECTED;
-                _isModeChanged = true;
+                notifyModeChanged();
                 MLOG_ERROR("Failed to start Access Point - no network connection!");
             }
         }

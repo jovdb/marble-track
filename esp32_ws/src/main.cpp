@@ -136,6 +136,17 @@ void setup()
   // Initialize Network (will try WiFi, fall back to AP if needed)
   bool networkInitialized = network->setup();
 
+  // Subscribe to network mode changes (event-based; replaces polling).
+  // Triggered once per transition, so we don't have to worry about checking
+  // a flag at the right time inside the main loop.
+  network->onModeChanged([](NetworkMode newMode) {
+    if (newMode != NetworkMode::WIFI_CLIENT && marbleController)
+    {
+      MLOG_WARN("Not connected to WiFi - queueing NO_NETWORK sound");
+      marbleController->getAudio()->play(songs::NO_NETWORK, devices::Hv20tPlayMode::QueueIfPlaying);
+    }
+  });
+
   if (!networkInitialized)
   {
     MLOG_ERROR("Network initialization failed! System may not be accessible.");
@@ -233,16 +244,6 @@ void loop()
     }
 
     marbleController = deviceManager.getDeviceByIdAs<devices::MarbleController>("controller");
-    static auto hasLoggedNoNetwork = false;
-    if (!network->isModeChanged() && !network->isWiFiConnected() && marbleController)
-    {
-      if (!hasLoggedNoNetwork && network && !network->isConnecting() && network->getMode() != NetworkMode::WIFI_CLIENT && marbleController)
-      {
-        hasLoggedNoNetwork = true;
-        MLOG_WARN("Not connected to WiFi at startup - queueing NO_NETWORK sound");
-        marbleController->getAudio()->play(songs::NO_NETWORK, devices::Hv20tPlayMode::QueueIfPlaying);
-      }
-    }
   }
 
   // Keep the WebSocket alive

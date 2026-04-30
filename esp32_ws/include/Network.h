@@ -16,6 +16,8 @@
 #include <WiFi.h>
 #include <DNSServer.h>
 #include <ArduinoJson.h>
+#include <functional>
+#include <vector>
 #include "Config.h"
 #include "NetworkSettings.h"
 
@@ -81,14 +83,21 @@ public:
      * @brief Check if network mode has changed in the current loop iteration
      * @return true if mode changed in this loop, false otherwise
      *
-     * @note POLLING LIMITATION: This flag is set to true for exactly one call
-     * to Network::loop() (the one in which the transition is detected) and is
-     * reset to false at the start of the NEXT loop() call. Callers that invoke
-     * isModeChanged() outside of loop() — or after Network::loop() has already
-     * run in the same tick — will miss the transition. All subscribers must
-     * check isModeChanged() in the same main-loop tick as Network::loop().
+     * @deprecated Prefer onModeChanged() instead. This polling flag is only
+     * valid for one loop tick and is easy to miss; the callback fires reliably
+     * on every transition.
      */
     bool isModeChanged() const { return _isModeChanged; }
+
+    /**
+     * @brief Subscribe to network mode change events.
+     *
+     * The callback fires once per transition (immediately, inside loop()),
+     * receiving the new NetworkMode. Multiple subscribers are supported.
+     * Subscribers do not need to worry about polling timing.
+     */
+    using ModeChangeCallback = std::function<void(NetworkMode)>;
+    void onModeChanged(ModeChangeCallback cb) { _modeChangeCallbacks.push_back(std::move(cb)); }
 
     /**
      * @brief Check if WiFi is connected
@@ -146,6 +155,13 @@ private:
     unsigned long _connectionStartTime;
     bool _wifiConnectionAttempted;
     bool _isModeChanged;
+
+    // Subscribers notified on every mode transition (event-based alternative
+    // to polling isModeChanged()). Fired from within loop() with the new mode.
+    std::vector<ModeChangeCallback> _modeChangeCallbacks;
+
+    // Helper: set _isModeChanged and fire all subscribers.
+    void notifyModeChanged();
 
     // Private methods
     bool startAccessPoint();

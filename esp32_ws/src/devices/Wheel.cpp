@@ -139,7 +139,7 @@ namespace devices
                         if (percentDiff > 0.1f)
                         {
                             char errorMessage[128];
-                            sprintf(errorMessage, "Steps per revolution mismatch - measured: %ld, configured: %ld (%.2f%% difference)", _state.stepsInLastRevolution, _config.stepsPerRevolution, percentDiff);
+                            snprintf(errorMessage, sizeof(errorMessage), "Steps per revolution mismatch - measured: %ld, configured: %ld (%.2f%% difference)", _state.stepsInLastRevolution, _config.stepsPerRevolution, percentDiff);
                             setErrorState(WheelErrorCode::UnexpectedZeroTrigger, errorMessage);
                         }
                     }

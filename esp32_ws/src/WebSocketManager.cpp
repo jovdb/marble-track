@@ -12,7 +12,17 @@
 #include "Network.h"
 #include "NetworkSettings.h"
 
-// Static instance for callback access (simplified to single instance)
+// Singleton instance pointer used by the C-style AsyncWebSocket event callback.
+//
+// ESPAsyncWebServer requires the event handler to be a plain function (or a
+// captureless lambda), not a member function. To route the callback into the
+// WebSocketManager object, a file-scope pointer to the single active instance
+// is stored here and dereferenced inside the lambda (see setup()).
+//
+// Limitation: only one WebSocketManager may be alive at a time. Creating a
+// second instance will silently overwrite this pointer, and the first instance
+// will stop receiving events. If multiple WebSocket endpoints are ever needed,
+// replace this with a map<AsyncWebSocket*, WebSocketManager*>.
 static WebSocketManager *instance = nullptr;
 
 namespace

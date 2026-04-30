@@ -526,17 +526,11 @@ void WebSocketManager::handleSetDevicesConfig(JsonDocument &doc)
             response["message"] = "config.json updated";
 
             MLOG_INFO("Config written to file, reloading devices");
-            // Reload devices from the new config.
-            // teardown() first so hardware resources (stepper engines,
-            // LEDC channels, I2C, IoExpander state) are released before
-            // setup() re-acquires them under the new configuration.
-            // Without this, re-setup conflicts with still-active hardware.
+            // Atomic reload: teardown -> load -> setup -> notifyDevicesChanged.
+            // See DeviceManager::reloadFromJsonFile() for the ordering rationale.
             if (deviceManager)
             {
-                deviceManager->teardown();
-                deviceManager->loadDevicesFromJsonFile();
-                deviceManager->setup();
-                deviceManager->notifyDevicesChanged();
+                deviceManager->reloadFromJsonFile();
             }
         }
     }

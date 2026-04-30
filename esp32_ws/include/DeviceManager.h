@@ -94,6 +94,22 @@ public:
     void saveDevicesToJsonFile();
 
     /**
+     * @brief Atomically reload the device tree from /config.json.
+     *
+     * Performs the full safe reload sequence in one call:
+     *   1. teardown()  \u2014 release hardware resources (LEDC, MCPWM, I2C, IO\u2011expander
+     *                    state, stepper engines, etc.) so they are free before the
+     *                    new tree tries to acquire them.
+     *   2. loadDevicesFromJsonFile()  \u2014 drop existing devices and rebuild from disk.
+     *   3. setup()     \u2014 initialize the new device tree.
+     *   4. notifyDevicesChanged()  \u2014 fire listeners (CachedDeviceRef, website, ...).
+     *
+     * Callers (e.g. WebSocket set-devices-config handler) should prefer this over
+     * calling the individual steps; getting the order wrong leaves hardware in a\n     * conflicting state and dangles cached device pointers.
+     */
+    void reloadFromJsonFile();
+
+    /**
      * @brief Populate a JSON array with a tree snapshot of all root devices
      *
      * The output uses a tree structure where:

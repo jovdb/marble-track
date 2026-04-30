@@ -144,7 +144,6 @@ void DeviceManager::loadDeviceConfigFromJson(Device *device, JsonObject deviceOb
 void DeviceManager::loadDevicesFromJsonFile()
 {
     MLOG_DEBUG("Loading devices from JSON file: %s", CONFIG_FILE);
-
     if (!LittleFS.exists(CONFIG_FILE))
     {
         MLOG_INFO("File %s not found.", CONFIG_FILE);
@@ -340,6 +339,18 @@ void DeviceManager::addDevicesToJsonArray(JsonArray &devicesArray)
             addDeviceToJsonObject(devices[i], deviceObj);
         }
     }
+}
+
+void DeviceManager::reloadFromJsonFile()
+{
+    // Atomic reload: tear down current devices (releases hardware), rebuild from
+    // disk, set up the new tree, then notify listeners. See header for ordering
+    // rationale.
+    MLOG_INFO("DeviceManager: reloading device tree from %s", CONFIG_FILE);
+    teardown();
+    loadDevicesFromJsonFile();
+    setup();
+    notifyDevicesChanged();
 }
 
 NetworkSettings DeviceManager::loadNetworkSettings()

@@ -665,9 +665,11 @@ void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
         {
             if (info->final && info->index == 0 && info->len == len)
             {
-                // Single frame message
-                data[len] = 0;
-                String message = (char *)data;
+                // Single frame message.
+                // Use the explicit-length String constructor instead of
+                // null-terminating data[len] — that write is one byte past
+                // the buffer the library allocated (valid indices 0..len-1).
+                String message((char *)data, len);
                 parseMessage(message);
             }
             else

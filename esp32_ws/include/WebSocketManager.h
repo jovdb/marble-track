@@ -23,7 +23,17 @@ private:
     bool scanInProgress = false;
     std::map<uint32_t, String> messageBuffers;
     
-    // Message batching - collects messages during loop
+    // Message batching
+    //
+    // Wire format: every outbound WebSocket message is a JSON *array*.
+    // Outside a batch each call to notifyClients() sends a single-element
+    // array "[<msg>]". Inside a batch (beginBatch/endBatch) messages are
+    // queued and sent together as one multi-element array "[<m1>,<m2>,...]"
+    // at endBatch(). The website must always unwrap the top-level array.
+    //
+    // Messages are dropped (with a MLOG_WARN) when the queue exceeds
+    // kMaxQueuedBatchMessages or when the WebSocket send buffer is full.
+    // Callers must not rely on guaranteed delivery of non-critical updates.
     std::vector<String> messageQueue;
     bool batchingActive = false;
 

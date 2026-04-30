@@ -13,6 +13,7 @@ class DeviceManager;
 
 #include <map>
 #include <vector>
+#include <functional>
 
 class WebSocketManager
 {
@@ -36,6 +37,12 @@ private:
     // Callers must not rely on guaranteed delivery of non-critical updates.
     std::vector<String> messageQueue;
     bool batchingActive = false;
+
+    // Message-type dispatch table. Built once in the constructor; parseMessage()
+    // looks up the incoming "type" field and invokes the matching handler. Adding
+    // a new message type means adding one entry here — no edits to parseMessage().
+    using MessageHandler = std::function<void(JsonDocument &)>;
+    std::map<String, MessageHandler> dispatchTable;
 
     // Helper methods for cleaner message handling
     void handleRestart();

@@ -317,98 +317,16 @@ void WebSocketManager::parseMessage(String message)
         type = doc["data"]["type"] | "";
     }
 
-    // Handle special type
-    if (type == "restart")
+    // Look up the handler for this message type and invoke it. Unknown types
+    // are silently ignored (matching the previous behavior of the if-chain).
+    auto it = dispatchTable.find(type);
+    if (it != dispatchTable.end())
     {
-        handleRestart();
-        return;
+        it->second(doc);
     }
-    if (type == "device-fn")
+    else
     {
-        handleDeviceFunction(doc);
-        return;
-    }
-    if (type == "device-state")
-    {
-        handleDeviceGetState(doc);
-        return;
-    }
-
-    if (type == "devices-list")
-    {
-        handleGetDevices(doc);
-        return;
-    }
-
-    if (type == "system-info")
-    {
-        handleGetSystemInfo(doc);
-        return;
-    }
-
-    // Handler for replacing config.json via websocket upload
-    if (type == "set-devices-config")
-    {
-        handleSetDevicesConfig(doc);
-        return;
-    }
-
-    // New handler for downloading devices.json config
-    if (type == "devices-config")
-    {
-        handleGetDevicesConfig(doc);
-        return;
-    }
-
-    if (type == "device-save-config")
-    {
-        handleDeviceSaveConfig(doc);
-        return;
-    }
-    if (type == "device-read-config")
-    {
-        handleDeviceReadConfig(doc);
-        return;
-    }
-    if (type == "add-device")
-    {
-        handleAddDevice(doc);
-        return;
-    }
-    if (type == "remove-device")
-    {
-        handleRemoveDevice(doc);
-        return;
-    }
-    if (type == "reorder-devices")
-    {
-        handleReorderDevices(doc);
-        return;
-    }
-    if (type == "network-config")
-    {
-        handleGetNetworkConfig(doc);
-        return;
-    }
-    if (type == "set-network-config")
-    {
-        handleSetNetworkConfig(doc);
-        return;
-    }
-    if (type == "networks")
-    {
-        handleGetNetworks(doc);
-        return;
-    }
-    if (type == "network-status")
-    {
-        handleGetNetworkStatus(doc);
-        return;
-    }
-    if (type == "expander-addresses")
-    {
-        handleGetExpanderAddresses(doc);
-        return;
+        MLOG_WARN("Unknown WebSocket message type: '%s'", type.c_str());
     }
 }
 
@@ -738,6 +656,27 @@ WebSocketManager::WebSocketManager(DeviceManager *deviceManager, Network *networ
     : ws(path), deviceManager(deviceManager), network(network), batchingActive(false)
 {
     instance = this;
+
+    // Build the message-type dispatch table. Each entry maps the wire "type"
+    // string to the handler method. Adding a new message type means adding one
+    // line here; parseMessage() does not need to change.
+    dispatchTable["restart"]              = [this](JsonDocument &)    { handleRestart(); };
+    dispatchTable["device-fn"]            = [this](JsonDocument &d)   { handleDeviceFunction(d); };
+    dispatchTable["device-state"]         = [this](JsonDocument &d)   { handleDeviceGetState(d); };
+    dispatchTable["devices-list"]         = [this](JsonDocument &d)   { handleGetDevices(d); };
+    dispatchTable["system-info"]          = [this](JsonDocument &d)   { handleGetSystemInfo(d); };
+    dispatchTable["set-devices-config"]   = [this](JsonDocument &d)   { handleSetDevicesConfig(d); };
+    dispatchTable["devices-config"]       = [this](JsonDocument &d)   { handleGetDevicesConfig(d); };
+    dispatchTable["device-save-config"]   = [this](JsonDocument &d)   { handleDeviceSaveConfig(d); };
+    dispatchTable["device-read-config"]   = [this](JsonDocument &d)   { handleDeviceReadConfig(d); };
+    dispatchTable["add-device"]           = [this](JsonDocument &d)   { handleAddDevice(d); };
+    dispatchTable["remove-device"]        = [this](JsonDocument &d)   { handleRemoveDevice(d); };
+    dispatchTable["reorder-devices"]      = [this](JsonDocument &d)   { handleReorderDevices(d); };
+    dispatchTable["network-config"]       = [this](JsonDocument &d)   { handleGetNetworkConfig(d); };
+    dispatchTable["set-network-config"]   = [this](JsonDocument &d)   { handleSetNetworkConfig(d); };
+    dispatchTable["networks"]             = [this](JsonDocument &d)   { handleGetNetworks(d); };
+    dispatchTable["network-status"]       = [this](JsonDocument &d)   { handleGetNetworkStatus(d); };
+    dispatchTable["expander-addresses"]   = [this](JsonDocument &d)   { handleGetExpanderAddresses(d); };
 }
 
 void WebSocketManager::setup(AsyncWebServer &server)

@@ -26,32 +26,31 @@
 #include "devices/mixins/ControllableMixin.h"
 
 // Timing variable for automatic mode
-unsigned long lastAutoToggleTime = 0;
-
 #include "NetworkSettings.h"
 
-// Create network and server instances
-Network *network = nullptr; // Will be created after loading settings
+// =============================================================================
+// Global services
+//
+// Long-lived singletons that exist for the entire lifetime of the firmware.
+// Roughly grouped by role:
+//   Storage / config:  littleFSManager, deviceManager
+//   Network / IO:      network, server, websiteHost, wsManager, serialConsole
+//   Domain:            marbleController (cached reference into deviceManager)
+//
+// Some are pointers because they depend on values loaded from /config.json
+// (e.g. WiFi credentials) and therefore cannot be constructed until setup()
+// has read the filesystem.
+// =============================================================================
+
+Network *network = nullptr;             // Created in setup() after loading NetworkSettings.
 AsyncWebServer server(80);
 LittleFSManager littleFSManager;
-// WebsiteHost websiteHost(&network);
-WebsiteHost *websiteHost = nullptr; // Will be created after network initialization
+WebsiteHost *websiteHost = nullptr;     // Created in setup() once network exists.
 WebSocketManager wsManager(nullptr, nullptr, "/ws");
-
-// Global status LED
-
-// Button press toggle for LED blinking
-bool blinkingActive = false;
-bool lastButtonPressed = false;
-
-// Device instances
-// ...existing code...
+SerialConsole *serialConsole = nullptr; // Created in setup() once network exists.
 
 // Function declarations
 void globalNotifyClientsCallback(const String &message);
-
-SerialConsole *serialConsole = nullptr;
-bool otaConfigured = false;
 
 void globalNotifyClientsCallback(const String &message)
 {
@@ -200,6 +199,7 @@ void loop()
 {
   static unsigned long loopCount = 0;
   static unsigned long lastLoopRateLogMs = 0;
+  static bool otaConfigured = false; // Initialized once OTA is set up after network connection.
 
   if (lastLoopRateLogMs == 0)
   {

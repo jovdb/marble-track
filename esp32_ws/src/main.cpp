@@ -62,6 +62,10 @@ void globalNotifyClientsCallback(const String &message)
 
 DeviceManager deviceManager(globalNotifyClientsCallback);
 
+// Cached pointer to the MarbleController device owned by deviceManager.
+// NEVER call delete on this; deviceManager owns the lifetime.
+// Cleared by the onDevicesChanged callback (set in setup()) and
+// reassigned each loop() iteration via getDeviceByIdAs<>().
 devices::MarbleController *marbleController = nullptr;
 
 void setup()

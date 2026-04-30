@@ -20,12 +20,21 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
   const [isMaxStepsDirty, setIsMaxStepsDirty] = createSignal(false);
   const [angle, setAngle] = createSignal("");
   const [breakpoints, setBreakpoints] = createSignal<number[]>([]);
+  const [isBreakpointsDirty, setIsBreakpointsDirty] = createSignal(false);
   const [zeroPointDegree, setZeroPointDegree] = createSignal("");
   const [isZeroPointDirty, setIsZeroPointDirty] = createSignal(false);
 
   const toNumber = (value: string, fallback = 0) => {
     const num = Number(value);
     return Number.isFinite(num) ? num : fallback;
+  };
+
+  // Mark the breakpoints list as dirty whenever the user mutates it locally,
+  // so the createMemo below stops overwriting the local edits with whatever
+  // is currently in the device store.
+  const updateBreakpoints = (next: number[]) => {
+    setIsBreakpointsDirty(true);
+    setBreakpoints(next);
   };
 
   const [, { subscribe }] = useWebSocket2();
@@ -66,6 +75,13 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
         zeroPointDegree: toNumber(zeroPointDegree()),
       };
       actions.setDeviceConfig(updatedConfig);
+      // Clear dirty flags so the UI re-syncs to whatever the firmware
+      // confirms via the next device-config message.
+      setIsNameDirty(false);
+      setIsStepsDirty(false);
+      setIsMaxStepsDirty(false);
+      setIsZeroPointDirty(false);
+      setIsBreakpointsDirty(false);
     }
   };
 
@@ -82,7 +98,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
     if (cfg && typeof cfg.maxStepsPerRevolution === "number" && !isMaxStepsDirty()) {
       setMaxStepsPerRevolution(String(cfg.maxStepsPerRevolution));
     }
-    if (cfg && cfg.breakPoints && breakpoints().length === 0) {
+    if (cfg && cfg.breakPoints && !isBreakpointsDirty()) {
       setBreakpoints([...cfg.breakPoints]);
     }
     if (cfg && typeof cfg.zeroPointDegree === "number" && !isZeroPointDirty()) {
@@ -287,7 +303,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
               // Insert at the found index
               newBreakpoints.splice(insertIndex, 0, newBreakpoint);
             }
-            setBreakpoints(newBreakpoints);
+            updateBreakpoints(newBreakpoints);
           }}
         >
           + Add Breakpoint
@@ -313,7 +329,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                             newBreakpoints[index()],
                             newBreakpoints[index() - 1],
                           ];
-                          setBreakpoints(newBreakpoints);
+                          updateBreakpoints(newBreakpoints);
                         }
                       }}
                     >
@@ -331,7 +347,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                             newBreakpoints[index()],
                             newBreakpoints[index() + 1],
                           ];
-                          setBreakpoints(newBreakpoints);
+                          updateBreakpoints(newBreakpoints);
                         }
                       }}
                     >
@@ -343,7 +359,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                         e.preventDefault();
                         const currentBreakpoints = breakpoints();
                         const newBreakpoints = currentBreakpoints.filter((_, i) => i !== index());
-                        setBreakpoints(newBreakpoints);
+                        updateBreakpoints(newBreakpoints);
                       }}
                     >
                       ✕

@@ -174,15 +174,18 @@ void setup()
   // Setup pin factory to resolve expander addresses
   PinFactory::setup();
 
-  // Set callback for device changes
+  // Set callback for device changes.
+  // NOTE: `marbleController` is a cached pointer to a Device that is owned by
+  // `deviceManager` (set in loop() via getDeviceByIdAs<MarbleController>("controller")).
+  // Deleting it here would leave a dangling pointer inside DeviceManager.devices[],
+  // which crashes on the next deviceManager.loop() iteration and causes the ESP
+  // to restart after every device-save-config (and can lose subsequent state
+  // updates such as wheel breakpoints). Just clear our cached pointer; the
+  // device-tree teardown/setup is already handled by handleDeviceSaveConfig.
   deviceManager.setOnDevicesChanged([]()
                                     {
-                                      // Cleanup existing modes
-                                      if (marbleController)
-                                      {
-                                        delete marbleController;
-                                        marbleController = nullptr;
-                                      } });
+                                      marbleController = nullptr;
+                                    });
 
   MLOG_INFO("System initialization complete!");
   MLOG_INFO("--------------------------");

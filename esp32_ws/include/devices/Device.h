@@ -25,6 +25,22 @@
  * - RTOS task support (withRtos)
  * - Configuration persistence (makeSerializable)
  * - WebSocket control (makeControllable)
+ *
+ * Two-phase initialization contract for serializable devices:
+ *   Phase 1 (constructor): Build the device in a working DEFAULT state.
+ *     The convention is to extract the defaults into a private
+ *     applyDefaultConfig() helper called from the constructor, so the
+ *     default values live in one labelled place rather than being mixed
+ *     in with other construction logic. After Phase 1 the device is
+ *     usable even if no /config.json exists.
+ *   Phase 2 (after construction): DeviceManager calls jsonToConfig() with
+ *     the persisted JSON, overriding the Phase-1 defaults field-by-field.
+ *     Missing JSON fields keep their default values.
+ *
+ * Note: applyDefaultConfig() is intentionally NOT declared as a virtual on
+ * the base class because virtual dispatch from a base-class constructor
+ * would not reach the derived override. Each derived device is responsible
+ * for calling its own applyDefaultConfig() from its constructor.
  */
 class Device
 {

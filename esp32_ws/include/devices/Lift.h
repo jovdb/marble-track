@@ -172,6 +172,15 @@ namespace devices
 
     private:
         /**
+         * @brief Phase-1 default configuration (see Device.h two-phase init contract).
+         *
+         * Sets _config plus child-device defaults so the Lift is in a usable
+         * state immediately after construction. jsonToConfig() may later
+         * overwrite individual fields with persisted values.
+         */
+        void applyDefaultConfig();
+
+        /**
          * @brief Convert LiftStateEnum to string
          * @param state State enum value
          * @return String representation

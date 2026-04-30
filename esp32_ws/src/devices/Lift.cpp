@@ -14,6 +14,16 @@ namespace devices
     Lift::Lift(const String &id)
         : Device(id, "lift")
     {
+        // See Device.h "Two-phase initialization contract".
+        applyDefaultConfig();
+    }
+
+    Lift::~Lift()
+    {
+    }
+
+    void Lift::applyDefaultConfig()
+    {
         // Set default lift configuration
         _config.name = "Lift";
         _config.minSteps = 0;
@@ -59,10 +69,6 @@ namespace devices
         // Pin will be configured by parent MarbleController
         _unloader->setConfig(unloaderCfg);
         addChild(_unloader);
-    }
-
-    Lift::~Lift()
-    {
     }
 
     void Lift::setup()

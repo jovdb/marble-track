@@ -20,13 +20,16 @@ namespace devices
     Wheel::Wheel(const String &id)
         : Device(id, "wheel")
     {
-        // Two-phase initialization:
-        // Phase 1 (here): create child devices with built-in defaults so the
-        //   Wheel is always in a usable state even if config.json is missing
-        //   or corrupt.
-        // Phase 2: DeviceManager::loadDeviceConfigFromJson() calls jsonToConfig()
-        //   after construction, overwriting these defaults with the persisted
-        //   values from config.json.
+        // See Device.h "Two-phase initialization contract".
+        applyDefaultConfig();
+    }
+
+    Wheel::~Wheel()
+    {
+    }
+
+    void Wheel::applyDefaultConfig()
+    {
         _config.breakPoints.assign(std::begin(defaultBreakpoints), std::end(defaultBreakpoints));
 
         // Create stepper child
@@ -55,10 +58,6 @@ namespace devices
         sensorConfig["debounceMs"] = 50;
         sensorConfig["buttonType"] = "NormalOpen";
         _zeroSensor->jsonToConfig(sensorConfig);
-    }
-
-    Wheel::~Wheel()
-    {
     }
 
     void Wheel::setup()

@@ -524,28 +524,24 @@ namespace devices
 
     void Wheel::jsonToConfig(const JsonDocument &config)
     {
+        // ArduinoJson stores numbers with the originating type. When the
+        // sender is JavaScript, integers arrive as int/long while floats
+        // arrive as double. isNumeric() accepts all arithmetic variants so
+        // we don't need four separate is<T>() checks per field.
+        auto isNumeric = [](JsonVariantConst v) {
+            return v.is<long>() || v.is<int>() || v.is<float>() || v.is<double>();
+        };
+
         if (config["name"].is<String>())
             _config.name = config["name"].as<String>();
-        if (config["stepsPerRevolution"].is<long>() || config["stepsPerRevolution"].is<int>() ||
-            config["stepsPerRevolution"].is<float>() || config["stepsPerRevolution"].is<double>())
-        {
+        if (isNumeric(config["stepsPerRevolution"]))
             _config.stepsPerRevolution = config["stepsPerRevolution"].as<long>();
-        }
-        if (config["maxStepsPerRevolution"].is<long>() || config["maxStepsPerRevolution"].is<int>() ||
-            config["maxStepsPerRevolution"].is<float>() || config["maxStepsPerRevolution"].is<double>())
-        {
+        if (isNumeric(config["maxStepsPerRevolution"]))
             _config.maxStepsPerRevolution = config["maxStepsPerRevolution"].as<long>();
-        }
-        if (config["zeroPointDegree"].is<float>() || config["zeroPointDegree"].is<double>() ||
-            config["zeroPointDegree"].is<long>() || config["zeroPointDegree"].is<int>())
-        {
+        if (isNumeric(config["zeroPointDegree"]))
             _config.zeroPointDegree = config["zeroPointDegree"].as<float>();
-        }
-        if (config["direction"].is<int>() || config["direction"].is<long>() ||
-            config["direction"].is<float>() || config["direction"].is<double>())
-        {
+        if (isNumeric(config["direction"]))
             _config.direction = config["direction"].as<int>();
-        }
 
         // Load breakPoints from JSON and coerce each item to float.
         JsonVariantConst breakPointsValue = config["breakPoints"];

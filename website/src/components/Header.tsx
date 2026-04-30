@@ -38,16 +38,9 @@ const Header: Component = () => {
   });
 
   const connectionTitle = createMemo(() => {
-    const parts = [`Connected to ${webSocket.url}`];
-
-    if (systemInfo.connectionInfo) {
-      parts.push(systemInfo.connectionInfo);
-    }
-    if (systemInfo.freeHeap !== undefined) {
-      parts.push(`Free heap: ${systemInfo.freeHeap} bytes`);
-    }
-
-    return parts.join("\n");
+    return webSocket.isConnected
+      ? `Connected to ${webSocket.url}`
+      : `Disconnected from ${webSocket.url}`;
   });
 
   // Reset button handler
@@ -81,7 +74,7 @@ const Header: Component = () => {
           </h1>
         </div>
         <div class={styles.header__right}>
-          <span title={connectionTitle()} class={styles.header__button}>
+          <span title={connectionTitle()} class={styles.header__statusIcon}>
             {webSocket.isConnected ? <ConnectedIcon /> : <DisconnectedIcon />}
           </span>
           <TransparentButton
@@ -126,7 +119,7 @@ const Header: Component = () => {
             title={isSerialOpen() ? "Hide USB monitoring" : "Show USB monitoring"}
             aria-pressed={isSerialOpen()}
             onClick={toggleSerialPanel}
-            class={`${styles.header__button} ${styles["header__toggle-button"]} ${isSerialOpen() ? styles["header__button--active"] : ""}`}
+            class={`${styles.header__button} ${isSerialOpen() ? styles["header__button--active"] : ""}`}
           >
             <BugIcon />
           </TransparentButton>

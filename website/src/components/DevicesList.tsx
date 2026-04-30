@@ -560,17 +560,6 @@ export function DevicesList() {
         </Show>
       </Popup>
 
-      {/* Add Device Button */}
-      <div class={styles["device-list__actions"]}>
-        <button
-          class={`${styles["devices-list__button"]} ${styles["devices-list__button--accent"]}`}
-          onClick={() => setShowAddModal(true)}
-          disabled={!socketState.isConnected}
-        >
-          Add Device
-        </button>
-      </div>
-
       {/* Add Device Modal */}
       {showAddModal() && (
         <div class={styles["modal-overlay"]} onClick={() => setShowAddModal(false)}>
@@ -632,6 +621,13 @@ export function DevicesList() {
       )}
 
       <div class={styles["device-list__buttons"]}>
+        <button
+          class={styles["devices-list__button"]}
+          onClick={() => setShowAddModal(true)}
+          disabled={!socketState.isConnected}
+        >
+          Add Device
+        </button>
         <button
           class={styles["devices-list__button"]}
           onClick={handleDownloadConfig}

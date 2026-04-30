@@ -192,7 +192,7 @@ export function Device(props: DeviceProps) {
             </button>
             <Show when={props.onClose}>
               <button
-                class={styles["device__header-button"]}
+                class={styles["device__header-close-button"]}
                 type="button"
                 aria-label="Close device"
                 title="Close"

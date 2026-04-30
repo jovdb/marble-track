@@ -332,13 +332,7 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
           <div style={{ color: "red" }}>
             <p>Error: {networkError()}</p>
           </div>
-        ) : networkInfo() ? (
-          <div>
-            <p>
-              <strong>SSID:</strong> {networkInfo()?.ssid}
-            </p>
-          </div>
-        ) : (
+        ) : networkInfo() ? null : (
           <div>
             <p>Loading network configuration...</p>
           </div>

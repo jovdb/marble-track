@@ -249,7 +249,7 @@
 .device-list__buttons {
   display: flex;
   gap: var(--spacing-2);
-  justify-content: flex-end;
+  justify-content: flex-start;
   margin-top: var(--spacing-4);
   flex-wrap: wrap;
 }
@@ -286,25 +286,6 @@
   background: var(--color-surface-muted);
   color: var(--color-text-tertiary);
   cursor: not-allowed;
-}
-
-.devices-list__button--accent {
-  background: var(--color-accent-500);
-  border-color: var(--color-accent-500);
-  color: var(--color-text-inverse);
-}
-
-.devices-list__button--accent:hover:not(:disabled) {
-  background: var(--color-accent-600);
-  border-color: var(--color-accent-600);
-  color: var(--color-text-inverse);
-}
-
-.devices-list__button--accent:disabled {
-  border-color: var(--color-accent-200);
-  background: var(--color-accent-100);
-  color: var(--color-accent-800);
-  opacity: 0.58;
 }
 
 .devices-list__collapse-button {

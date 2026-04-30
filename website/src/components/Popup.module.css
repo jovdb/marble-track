@@ -27,7 +27,7 @@
 }
 
 .popup__header {
-  padding: var(--spacing-6) var(--spacing-6) var(--spacing-4);
+  padding: 4px var(--spacing-3);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-panel-header);
   display: flex;
@@ -37,19 +37,19 @@
 
 .popup__title {
   margin: 0;
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
 }
 
 .popup__body {
-  padding: var(--spacing-4) var(--spacing-6);
+  padding: var(--spacing-4);
   flex: 1;
   overflow-y: auto;
 }
 
 .popup__footer {
-  padding: var(--spacing-4) var(--spacing-6) var(--spacing-6);
+  padding: var(--spacing-3) var(--spacing-4);
   border-top: 1px solid var(--color-border);
   background: var(--color-panel-header);
   display: flex;

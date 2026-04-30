@@ -748,6 +748,18 @@ bool DeviceManager::removeDevice(const String &deviceId)
     }
 
     MLOG_WARN("Device not found for removal: %s", deviceId.c_str());
+
+    // Check if the caller accidentally passed a child device id. removeDevice
+    // only operates on root-level entries; children are owned by their parent.
+    for (Device *root : getAllDevices())
+    {
+        if (root && root->getChildById(deviceId) != nullptr)
+        {
+            MLOG_WARN("  '%s' is a child of '%s'; child devices cannot be removed independently",
+                      deviceId.c_str(), root->getId().c_str());
+            break;
+        }
+    }
     return false;
 }
 

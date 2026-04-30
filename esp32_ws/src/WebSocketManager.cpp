@@ -656,6 +656,10 @@ void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
 
     case WS_EVT_DISCONNECT:
         MLOG_INFO("WebSocket client #%u disconnected", client->id());
+        // Erase any partial multi-frame message that was being accumulated
+        // for this client; leaving it would be a permanent memory leak because
+        // the client id may be reused for a different connection later.
+        messageBuffers.erase(client->id());
         break;
 
     case WS_EVT_DATA:

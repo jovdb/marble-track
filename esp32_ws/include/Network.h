@@ -80,6 +80,13 @@ public:
     /**
      * @brief Check if network mode has changed in the current loop iteration
      * @return true if mode changed in this loop, false otherwise
+     *
+     * @note POLLING LIMITATION: This flag is set to true for exactly one call
+     * to Network::loop() (the one in which the transition is detected) and is
+     * reset to false at the start of the NEXT loop() call. Callers that invoke
+     * isModeChanged() outside of loop() — or after Network::loop() has already
+     * run in the same tick — will miss the transition. All subscribers must
+     * check isModeChanged() in the same main-loop tick as Network::loop().
      */
     bool isModeChanged() const { return _isModeChanged; }
 

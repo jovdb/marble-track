@@ -408,10 +408,11 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
     if (!hasClients())
         return;
 
+    static constexpr const char *kType = "device-save-config";
     const String deviceId = doc["deviceId"] | "";
     if (!deviceManager)
     {
-        notifyClients(createJsonResponse(false, "DeviceManager not available", "", "", "device-save-config", deviceId));
+        notifyClients(createJsonResponse(false, "DeviceManager not available", "", "", kType, deviceId));
         return;
     }
 
@@ -421,7 +422,7 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
     {
         if (!doc["config"].is<JsonObject>())
         {
-            notifyClients(createJsonResponse(false, "No config provided", "", "", "device-save-config", deviceId));
+            notifyClients(createJsonResponse(false, "No config provided", "", "", kType, deviceId));
             return;
         }
 
@@ -495,11 +496,11 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
         }
 
         // Device exists but doesn't support serializable
-        notifyClients(createJsonResponse(false, "Device does not support config: " + device->getType(), "", "", "device-save-config", deviceId));
+        notifyClients(createJsonResponse(false, "Device does not support config: " + device->getType(), "", "", kType, deviceId));
         return;
     }
 
-    notifyClients(createJsonResponse(false, "Device not found: " + deviceId, "", "", "device-save-config", deviceId));
+    notifyClients(createJsonResponse(false, "Device not found: " + deviceId, "", "", kType, deviceId));
 }
 
 // Read config for a device and send to client
@@ -508,11 +509,12 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
     if (!hasClients())
         return;
 
+    static constexpr const char *kType = "device-read-config";
     const String deviceId = doc["deviceId"] | "";
 
     if (!deviceManager)
     {
-        String response = createJsonResponse(false, "DeviceManager not available", "", "", "device-read-config", deviceId);
+        String response = createJsonResponse(false, "DeviceManager not available", "", "", kType, deviceId);
         notifyClients(response);
         return;
     }
@@ -558,7 +560,7 @@ void WebSocketManager::handleDeviceReadConfig(JsonDocument &doc)
     }
 
     MLOG_ERROR("Device not found for config read request: %s", deviceId.c_str());
-    String response = createJsonResponse(false, "Device not found: " + deviceId, "", "", "device-read-config", deviceId);
+    String response = createJsonResponse(false, "Device not found: " + deviceId, "", "", kType, deviceId);
     notifyClients(response);
 }
 

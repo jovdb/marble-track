@@ -16,6 +16,12 @@ class DeviceManager
 {
 
 private:
+    // Fixed-size array instead of std::vector to avoid heap fragmentation on
+    // the ESP32's limited SRAM. Heap allocation during runtime can cause
+    // long-term fragmentation that leads to allocation failures. The array
+    // holds *root* devices only; each device's children are reached
+    // recursively via Device::getChildren(). Raise MAX_DEVICES if the limit
+    // is hit (currently 30 root slots).
     static const int MAX_DEVICES = 30;
     Device *devices[MAX_DEVICES];
     int devicesCount;

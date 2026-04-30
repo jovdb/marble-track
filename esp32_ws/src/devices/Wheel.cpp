@@ -135,7 +135,7 @@ namespace devices
                     // Check revolution consistency
                     if (_config.stepsPerRevolution > 0 && _state.stepsInLastRevolution > 0)
                     {
-                        float percentDiff = abs(_state.stepsInLastRevolution - _config.stepsPerRevolution) / (float)_config.stepsPerRevolution * 100.0f;
+                        float percentDiff = std::abs(_state.stepsInLastRevolution - _config.stepsPerRevolution) / (float)_config.stepsPerRevolution * 100.0f;
                         if (percentDiff > 0.1f)
                         {
                             char errorMessage[128];

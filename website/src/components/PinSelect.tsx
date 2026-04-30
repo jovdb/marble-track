@@ -1,4 +1,4 @@
-import { For, createMemo } from "solid-js";
+import { For, createEffect, createMemo } from "solid-js";
 import { ESP32_AVAILABLE_PINS, getUsedPins } from "../utils/esp32Pins";
 import { useDevices } from "../stores/Devices";
 import { PinConfig } from "../interfaces/WebSockets";
@@ -21,13 +21,36 @@ export default function PinSelect(props: PinSelectProps) {
   const availablePins = createMemo(() => props.availableGpioPins ?? ESP32_AVAILABLE_PINS);
   const getPinUsage = (pinKey: string) => usedPins().get(pinKey);
 
+  // List of expander device ids (does NOT depend on their config). We only
+  // recompute this when devices are added/removed, so requesting their
+  // configs below cannot create a feedback loop with the device store.
+  const expanderDeviceIds = createMemo(() =>
+    Object.values(devicesStore.devices)
+      .filter((device) => device.type === "ioexpander")
+      .map((device) => device.id)
+  );
+
+  // Track which expander configs we've already requested so we never spam the
+  // websocket when the store updates (e.g. when the expander config arrives,
+  // which would otherwise re-fire this effect and cause the <select> to
+  // re-render mid-update — visible as the pin combobox toggling between the
+  // expander pin and "Disabled" before settling on "Disabled").
+  const requestedExpanderConfigs = new Set<string>();
+  createEffect(() => {
+    for (const id of expanderDeviceIds()) {
+      if (!requestedExpanderConfigs.has(id)) {
+        requestedExpanderConfigs.add(id);
+        getDeviceConfig(id);
+      }
+    }
+  });
+
   const expanderPinOptions = createMemo(() => {
     if (!props.showExpanderPins) return [];
 
     const options: { value: PinConfig; label: string }[] = [];
     Object.values(devicesStore.devices).forEach((device) => {
       if (device.type === "ioexpander") {
-        getDeviceConfig(device.id);
         if (device.config) {
           const config = device.config as any;
           const expanderType = config.expanderType || "PCF8574";
@@ -89,6 +112,24 @@ export default function PinSelect(props: PinSelectProps) {
 
   return (
     <select
+      ref={(el) => {
+        // The expander <option> the current value points to may not exist
+        // yet when the popup first opens (we have to wait for the expander's
+        // config to arrive over the websocket). Setting `<select>.value` to
+        // a non-existent option is silently ignored by the browser, so the
+        // select would stay on "Disabled" forever even after the option
+        // shows up. Re-apply the value whenever either the selected pin or
+        // the option list changes so the select catches up.
+        createEffect(() => {
+          const desired = getSelectedValue();
+          // Track option-list dependencies so this effect re-runs when they update.
+          availablePins();
+          expanderPinOptions();
+          if (el && el.value !== desired) {
+            el.value = desired;
+          }
+        });
+      }}
       value={getSelectedValue()}
       onChange={handleChange}
       disabled={props.disabled}

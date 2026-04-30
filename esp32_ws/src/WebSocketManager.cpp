@@ -653,9 +653,17 @@ void WebSocketManager::onEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
 }
 
 WebSocketManager::WebSocketManager(DeviceManager *deviceManager, Network *network, const char *path)
-    : ws(path), deviceManager(deviceManager), network(network), batchingActive(false)
+    : ws(path), deviceManager(deviceManager), network(network)
 {
     instance = this;
+
+    // Initialize the message batcher. The transport callbacks capture `this`
+    // and forward to the AsyncWebSocket; all wire-format concerns live in
+    // MessageBatcher.
+    batcher.reset(new MessageBatcher(
+        [this](const String &payload) { ws.textAll(payload); },
+        [this]() { return ws.availableForWriteAll(); },
+        kMaxQueuedBatchMessages));
 
     // Build the message-type dispatch table. Each entry maps the wire "type"
     // string to the handler method. Adding a new message type means adding one
@@ -755,83 +763,23 @@ void WebSocketManager::notifyClients(String state)
 {
     if (!hasClients())
         return;
-
-    if (batchingActive)
-    {
-        // Queue message for batch sending
-        if (messageQueue.size() >= kMaxQueuedBatchMessages)
-        {
-            MLOG_WARN("WebSocket batch queue full (%u). Dropping message.", static_cast<unsigned>(kMaxQueuedBatchMessages));
-            return;
-        }
-
-        messageQueue.push_back(state);
-    }
-    else
-    {
-        if (!ws.availableForWriteAll())
-        {
-            MLOG_WARN("WebSocket send buffer full. Dropping message.");
-            return;
-        }
-
-        // Send immediately as array
-        String arrayMessage = "[" + state + "]";
-        MLOG_WS_SEND("%s", arrayMessage.c_str());
-        ws.textAll(arrayMessage);
-    }
+    batcher->send(state);
 }
 
 void WebSocketManager::beginBatch()
 {
-    batchingActive = true;
-    messageQueue.clear();
+    batcher->beginBatch();
 }
 
 void WebSocketManager::endBatch()
 {
-    batchingActive = false;
-
-    if (!hasClients() || messageQueue.empty())
+    if (!hasClients())
     {
-        messageQueue.clear();
+        // Still end the batch (clears state) but skip the flush.
+        batcher->endBatch();
         return;
     }
-
-    if (!ws.availableForWriteAll())
-    {
-        MLOG_WARN("WebSocket send buffer full. Dropping %u batched messages.", static_cast<unsigned>(messageQueue.size()));
-        messageQueue.clear();
-        return;
-    }
-
-    // Always send as array, even for single messages
-    String batchMessage = "[";
-
-    bool firstMessage = true;
-    for (size_t i = 0; i < messageQueue.size(); i++)
-    {
-        // Skip empty messages to prevent double commas
-        if (messageQueue[i].isEmpty())
-        {
-            continue;
-        }
-
-        if (!firstMessage)
-        {
-            batchMessage += ",";
-        }
-        firstMessage = false;
-
-        MLOG_WS_SEND("%s", messageQueue[i].c_str());
-        batchMessage += messageQueue[i];
-    }
-
-    batchMessage += "]";
-
-    ws.textAll(batchMessage);
-
-    messageQueue.clear();
+    batcher->endBatch();
 }
 
 void WebSocketManager::setDeviceManager(DeviceManager *deviceManager)

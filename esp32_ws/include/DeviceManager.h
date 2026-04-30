@@ -29,6 +29,7 @@ private:
     NotifyClients notifyClients;
     HasClients hasClients;
     std::function<void()> onDevicesChanged;
+    std::vector<std::function<void()>> onDevicesChangedListeners;
 
 public:
     NetworkSettings loadNetworkSettings();
@@ -54,9 +55,17 @@ public:
 
     DeviceManager(NotifyClients callback = nullptr);
 
+    // Subscribe to device-tree change events. Multiple subscribers are supported;
+    // all are invoked from notifyDevicesChanged(). Prefer addOnDevicesChanged()
+    // over setOnDevicesChanged() to avoid clobbering existing subscribers.
+    void addOnDevicesChanged(std::function<void()> callback) { onDevicesChangedListeners.push_back(std::move(callback)); }
     void setOnDevicesChanged(std::function<void()> callback) { onDevicesChanged = callback; }
     void setHasClients(HasClients callback) { hasClients = callback; }
-    void notifyDevicesChanged() { if (onDevicesChanged) onDevicesChanged(); }
+    void notifyDevicesChanged()
+    {
+        if (onDevicesChanged) onDevicesChanged();
+        for (auto &cb : onDevicesChangedListeners) { if (cb) cb(); }
+    }
 
     bool addDevice(Device *device);
     bool removeDevice(const String &deviceId);

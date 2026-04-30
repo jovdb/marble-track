@@ -9,6 +9,7 @@
 #include "WebsiteHost.h"
 #include "WebSocketManager.h"
 #include "DeviceManager.h"
+#include "CachedDeviceRef.h"
 #include "devices/Buzzer.h"
 #include "esp_log.h"
 
@@ -62,11 +63,10 @@ void globalNotifyClientsCallback(const String &message)
 
 DeviceManager deviceManager(globalNotifyClientsCallback);
 
-// Cached pointer to the MarbleController device owned by deviceManager.
-// NEVER call delete on this; deviceManager owns the lifetime.
-// Cleared by the onDevicesChanged callback (set in setup()) and
-// reassigned each loop() iteration via getDeviceByIdAs<>().
-devices::MarbleController *marbleController = nullptr;
+// Self-invalidating cached reference to the MarbleController device. The
+// underlying device is owned by deviceManager; this wrapper subscribes to
+// device-tree changes and re-resolves the pointer on demand. Never delete.
+CachedDeviceRef<devices::MarbleController> marbleController(deviceManager, "controller");
 
 void setup()
 {
@@ -189,18 +189,8 @@ void setup()
   // Setup pin factory to resolve expander addresses
   PinFactory::setup();
 
-  // Set callback for device changes.
-  // NOTE: `marbleController` is a cached pointer to a Device that is owned by
-  // `deviceManager` (set in loop() via getDeviceByIdAs<MarbleController>("controller")).
-  // Deleting it here would leave a dangling pointer inside DeviceManager.devices[],
-  // which crashes on the next deviceManager.loop() iteration and causes the ESP
-  // to restart after every device-save-config (and can lose subsequent state
-  // updates such as wheel breakpoints). Just clear our cached pointer; the
-  // device-tree teardown/setup is already handled by handleDeviceSaveConfig.
-  deviceManager.setOnDevicesChanged([]()
-                                    {
-                                      marbleController = nullptr;
-                                    });
+  // (No manual cache-busting needed: marbleController is a CachedDeviceRef
+  // and self-invalidates on device-tree changes.)
 
   MLOG_INFO("System initialization complete!");
   MLOG_INFO("--------------------------");
@@ -242,8 +232,6 @@ void loop()
       OtaUpload::setup(*network, server);
       otaConfigured = true;
     }
-
-    marbleController = deviceManager.getDeviceByIdAs<devices::MarbleController>("controller");
   }
 
   // Keep the WebSocket alive
@@ -252,11 +240,7 @@ void loop()
   // Run all devices using DeviceManager
   deviceManager.loop();
 
-  // Run the active mode
-  if (marbleController)
-  {
-    // Since it's a device, loop is called via deviceManager.loop()
-  }
+  // (marbleController is a CachedDeviceRef and resolves itself on access.)
 
   const unsigned long now = millis();
   const unsigned long elapsedMs = now - lastLoopRateLogMs;

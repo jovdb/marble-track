@@ -196,8 +196,18 @@ void DeviceManager::loadDevicesFromJsonFile()
         {
             // Disable this if esp32 keeps rebooting due to config error
             loadDeviceConfigFromJson(newDevice, deviceObj);
-            addDevice(newDevice);
-            roots++;
+            if (!addDevice(newDevice))
+            {
+                // addDevice() failed (e.g. MAX_DEVICES reached); free the
+                // device here to avoid a memory leak because DeviceManager
+                // will not take ownership on failure.
+                MLOG_ERROR("Failed to add device '%s', deleting to avoid leak", id.c_str());
+                delete newDevice;
+            }
+            else
+            {
+                roots++;
+            }
         }
     }
 

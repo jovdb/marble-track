@@ -20,6 +20,13 @@ namespace devices
     Wheel::Wheel(const String &id)
         : Device(id, "wheel")
     {
+        // Two-phase initialization:
+        // Phase 1 (here): create child devices with built-in defaults so the
+        //   Wheel is always in a usable state even if config.json is missing
+        //   or corrupt.
+        // Phase 2: DeviceManager::loadDeviceConfigFromJson() calls jsonToConfig()
+        //   after construction, overwriting these defaults with the persisted
+        //   values from config.json.
         _config.breakPoints.assign(std::begin(defaultBreakpoints), std::end(defaultBreakpoints));
 
         // Create stepper child
@@ -30,7 +37,7 @@ namespace devices
         _zeroSensor = new Button(getId() + "-zero-sensor");
         addChild(_zeroSensor);
 
-        // Set default config for stepper
+        // Set default config for stepper (overwritten by jsonToConfig in phase 2)
         JsonDocument stepperConfig;
         stepperConfig["name"] = "Wheel Stepper";
         stepperConfig["stepperType"] = "DRIVER";
@@ -41,7 +48,7 @@ namespace devices
 
         _stepper->jsonToConfig(stepperConfig);
 
-        // Set default config for zero sensor
+        // Set default config for zero sensor (overwritten by jsonToConfig in phase 2)
         JsonDocument sensorConfig;
         sensorConfig["name"] = "Wheel Zero Sensor";
         sensorConfig["pinMode"] = "pullup";

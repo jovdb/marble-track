@@ -458,6 +458,10 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
 
                 response["config"] = savedConfig;
 
+                if (response.overflowed())
+                {
+                    MLOG_ERROR("device-save-config: response JSON overflowed for %s", deviceId.c_str());
+                }
                 String respStr;
                 serializeJson(response, respStr);
                 notifyClients(respStr);

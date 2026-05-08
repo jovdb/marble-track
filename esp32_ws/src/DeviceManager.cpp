@@ -17,6 +17,7 @@
 #include "devices/I2c.h"
 #include "devices/Hv20tAudio.h"
 #include "devices/Touch.h"
+#include "devices/PwmExpander.h"
 #include "devices/mixins/SerializableMixin.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
@@ -63,6 +64,10 @@ Device *DeviceManager::createDevice(const String &deviceId, const String &device
     else if (upperType == "IOEXPANDER")
     {
         return new devices::IoExpander(deviceId);
+    }
+    else if (upperType == "PWMEXPANDER")
+    {
+        return new devices::PwmExpander(deviceId);
     }
     else if (upperType == "I2C")
     {

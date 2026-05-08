@@ -26,7 +26,7 @@ export default function PinSelect(props: PinSelectProps) {
   // configs below cannot create a feedback loop with the device store.
   const expanderDeviceIds = createMemo(() =>
     Object.values(devicesStore.devices)
-      .filter((device) => device.type === "ioexpander")
+      .filter((device) => device.type === "ioexpander" || device.type === "pwmexpander")
       .map((device) => device.id)
   );
 
@@ -72,6 +72,20 @@ export default function PinSelect(props: PinSelectProps) {
               label: usedBy ? `${pinString} (used by '${usedBy}')` : pinString,
             });
           }
+        }
+      } else if (device.type === "pwmexpander") {
+        // PCA9685 always has 16 channels (0-15)
+        for (let ch = 0; ch < 16; ch++) {
+          const deviceName = (device.config?.name as string) || device.id;
+          const pinString = `${deviceName}:${ch}`;
+          const usedBy = getPinUsage(`${device.id}:${ch}`);
+          options.push({
+            value: {
+              pin: ch,
+              expanderId: device.id,
+            },
+            label: usedBy ? `${pinString} (used by '${usedBy}')` : pinString,
+          });
         }
       }
     });

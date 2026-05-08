@@ -4,6 +4,7 @@
 #include <map>
 #include "DeviceManager.h"
 #include "devices/IoExpander.h"
+#include "devices/PwmExpander.h"
 
 // Extern device manager for pin creation
 extern DeviceManager deviceManager;
@@ -46,7 +47,24 @@ pins::IPin *PinFactory::createPin(const PinConfig &config)
         return new pins::GpioPin();
     }
     
-    // Look up expander device by ID
+    // Resolve the expander device first, then branch on its type.
+    // getDeviceByIdAs uses static_cast, so we must check getType() before casting.
+    auto *rawDevice = deviceManager.getDeviceById(config.expanderId);
+
+    // Check if it's a PwmExpander (PCA9685)
+    if (rawDevice && rawDevice->getType() == "pwmexpander")
+    {
+        auto *pwmExpander = static_cast<devices::PwmExpander *>(rawDevice);
+        auto *driver = pwmExpander->getDriver();
+        if (!driver)
+        {
+            MLOG_ERROR("PinFactory: PwmExpander '%s' driver not ready", config.expanderId.c_str());
+            return nullptr;
+        }
+        return new pins::PwmExpanderPin(driver, config.expanderId);
+    }
+
+    // Look up IoExpander device by ID
     auto expander = deviceManager.getDeviceByIdAs<devices::IoExpander>(config.expanderId);
     if (!expander)
     {

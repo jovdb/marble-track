@@ -8,6 +8,7 @@ import { Buzzer } from "./devices/Buzzer";
 import { Gate } from "./devices/Gate";
 import { I2c } from "./devices/I2c";
 import { IoExpander } from "./devices/IoExpander";
+import { PwmExpander } from "./devices/PwmExpander";
 import { Servo } from "./devices/Servo";
 import { Stepper } from "./devices/Stepper";
 import { Wheel } from "./devices/Wheel";
@@ -87,6 +88,8 @@ export function renderDeviceComponent(
       return <Gate id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "ioexpander":
       return <IoExpander id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
+    case "pwmexpander":
+      return <PwmExpander id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "wheel":
       return <Wheel id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "servo":

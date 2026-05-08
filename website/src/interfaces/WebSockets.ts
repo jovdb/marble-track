@@ -5,6 +5,7 @@ export type DeviceType =
   | "gate"
   | "hv20t"
   | "ioexpander"
+  | "pwmexpander"
   | "i2c"
   | "led"
   | "lift"

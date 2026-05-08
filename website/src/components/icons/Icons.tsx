@@ -154,6 +154,26 @@ export const IoExpanderIcon = (props: IconProps) => (
   </svg>
 );
 
+export const PwmExpanderIcon = (props: IconProps) => (
+  <svg
+    width={props.width || 24}
+    height={props.height || 24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class={props.class}
+    style={props.style}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+    {/* PWM waveform */}
+    <polyline points="2,16 2,8 6,8 6,16 10,16 10,8 16,8 16,16 18,16 18,12 22,12" />
+  </svg>
+);
+
 export const I2cIcon = (props: IconProps) => (
   <svg
     width={props.width || 24}
@@ -485,6 +505,8 @@ export const getDeviceIcon = (type: string, deviceId: string, props?: IconProps)
       return <ClipboardIcon {...props} />;
     case "IOEXPANDER":
       return <IoExpanderIcon {...props} />;
+    case "PWMEXPANDER":
+      return <PwmExpanderIcon {...props} />;
     default:
       return null; // Default fallback
   }

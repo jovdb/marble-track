@@ -5,6 +5,7 @@
 #include "IPin.h"
 #include "GpioPin.h"
 #include "I2cExpanderPin.h"
+#include "PwmExpanderPin.h"
 
 struct PinConfig
 {

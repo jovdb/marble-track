@@ -177,10 +177,8 @@ namespace devices
         }
 
         // Clamp value between 0.0 and 1.0
-        if (value < 0.0f)
-            value = 0.0f;
-        if (value > 1.0f)
-            value = 1.0f;
+        if (value < 0.0f) value = 0.0f;
+        if (value > 1.0f) value = 1.0f;
 
         // Map normalized value (0.0-1.0) to duty cycle range (min-max)
         float dutyCycle = _config.minDutyCycle + (value * (_config.maxDutyCycle - _config.minDutyCycle));
@@ -525,9 +523,13 @@ namespace devices
         if (_pwmPin != nullptr)
         {
             // PwmExpander path: convert duty cycle percentage (0-100) to 12-bit raw value (0-4095)
-            // The PCA9685 doesn't use 50Hz timing for duty cycle %; we drive position directly
             uint16_t raw = static_cast<uint16_t>(dutyCycle / 100.0f * 4095.0f);
-            _pwmPin->writePwm(raw);
+            bool ok = _pwmPin->writePwm(raw);
+            if (!ok)
+            {
+                MLOG_ERROR("%s: writePwm(%d) failed — PwmExpanderPin not set up or driver null", toString().c_str(), raw);
+                return false;
+            }
         }
         else
         {
@@ -580,7 +582,15 @@ namespace devices
         }
 
         _pwmPin = static_cast<pins::PwmExpanderPin *>(pin);
-        _pwmPin->setup(_config.pinConfig.pin, pins::PinMode::Output);
+        if (!_pwmPin->setup(_config.pinConfig.pin, pins::PinMode::Output))
+        {
+            MLOG_ERROR("%s: PwmExpanderPin::setup failed for expander '%s' ch %d (driver null?)",
+                       toString().c_str(), _config.pinConfig.expanderId.c_str(), _config.pinConfig.pin);
+            delete _pwmPin;
+            _pwmPin = nullptr;
+            _isSetup = false;
+            return false;
+        }
 
         // Output the minimum duty cycle immediately so the servo has a valid
         // signal from the start and animations don't begin from a 0 ms pulse.

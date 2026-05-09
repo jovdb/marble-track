@@ -42,11 +42,16 @@ export function PwmExpander(props: { id: string; isPopup?: boolean; onClose?: ()
       <div style={{ padding: "0.5rem", "font-size": "0.9rem" }}>
         <div>
           <strong>Status:</strong>{" "}
-          {isPresent() === undefined
-            ? "Unknown"
-            : isPresent()
-              ? <span style={{ color: "green" }}>Connected</span>
-              : <span style={{ color: "orange" }}>Not found</span>}
+          {isPresent() === undefined ? (
+            "Unknown"
+          ) : isPresent() ? (
+            <span style={{ color: "green" }}>Connected</span>
+          ) : (
+            <span style={{ color: "orange" }}>Not found</span>
+          )}
+        </div>
+        <div>
+          <strong>Type:</strong> PCA9685
         </div>
         <div>
           <strong>I²C Bus:</strong> {i2cDeviceName()}
@@ -58,7 +63,7 @@ export function PwmExpander(props: { id: string; isPopup?: boolean; onClose?: ()
           <strong>Frequency:</strong> {frequency()}
         </div>
         <div>
-          <strong>Available Pins:</strong> 0-15 (16 total)
+          <strong>Available Pins:</strong> 16
         </div>
       </div>
     </Device>

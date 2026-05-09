@@ -15,7 +15,7 @@ extern DeviceManager deviceManager;
 namespace devices
 {
     IoExpander::IoExpander(const String &id)
-        : Device(id, "ioexpander"), _isPresent(false)
+        : Device(id, "ioexpander")
     {
     }
 
@@ -41,7 +41,8 @@ namespace devices
         if (!i2cDevice)
         {
             MLOG_ERROR("%s: Required I2C device '%s' not found", toString().c_str(), _config.i2cDeviceId.c_str());
-            _isPresent = false;
+            _state.isPresent = false;
+            notifyStateChanged();
             return;
         }
 
@@ -50,7 +51,8 @@ namespace devices
         if (!i2cDevice->isSetup())
         {
             MLOG_ERROR("%s: I2C device '%s' is not set up, make sure it is configured before this device", toString().c_str(), _config.i2cDeviceId.c_str());
-            _isPresent = false;
+            _state.isPresent = false;
+            notifyStateChanged();
             return;
         }
 
@@ -60,7 +62,8 @@ namespace devices
         {
             MLOG_ERROR("%s: I2C device '%s' does not have SDA/SCL pins configured",
                        toString().c_str(), _config.i2cDeviceId.c_str());
-            _isPresent = false;
+            _state.isPresent = false;
+            notifyStateChanged();
             return;
         }
 
@@ -71,7 +74,8 @@ namespace devices
         {
             MLOG_ERROR("%s: I2C device '%s' has invalid SDA/SCL pins (SDA=%d, SCL=%d)",
                        toString().c_str(), _config.i2cDeviceId.c_str(), sdaPin, sclPin);
-            _isPresent = false;
+            _state.isPresent = false;
+            notifyStateChanged();
             return;
         }
 
@@ -79,9 +83,10 @@ namespace devices
         // Just use the already configured Wire instance to check if the device is present
         Wire.beginTransmission(_config.i2cAddress);
         uint8_t error = Wire.endTransmission();
-        _isPresent = (error == 0);
+        _state.isPresent = (error == 0);
+        notifyStateChanged();
 
-        if (_isPresent)
+        if (_state.isPresent)
         {
             MLOG_INFO("%s: Found %s at address 0x%02X on I2C bus '%s' (SDA=%d, SCL=%d) with %d pins",
                       toString().c_str(),
@@ -106,7 +111,8 @@ namespace devices
     void IoExpander::teardown()
     {
         Device::teardown();
-        _isPresent = false;
+        _state.isPresent = false;
+        notifyStateChanged();
     }
 
     void IoExpander::loop()
@@ -124,7 +130,7 @@ namespace devices
 
     bool IoExpander::isDevicePresent() const
     {
-        return _isPresent;
+        return _state.isPresent;
     }
 
     int IoExpander::getPinCount() const
@@ -197,7 +203,7 @@ namespace devices
 
     void IoExpander::addStateToJson(JsonDocument &doc)
     {
-        doc["isPresent"] = _isPresent;
+        doc["isPresent"] = _state.isPresent;
     }
 
     bool IoExpander::control(const String & /*action*/, JsonObject * /*args*/)

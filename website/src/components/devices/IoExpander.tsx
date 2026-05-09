@@ -42,11 +42,13 @@ export function IoExpander(props: { id: string; isPopup?: boolean; onClose?: () 
       <div style={{ padding: "0.5rem", "font-size": "0.9rem" }}>
         <div>
           <strong>Status:</strong>{" "}
-          {isPresent() === undefined
-            ? "Unknown"
-            : isPresent()
-              ? <span style={{ color: "green" }}>Connected</span>
-              : <span style={{ color: "orange" }}>Not found</span>}
+          {isPresent() === undefined ? (
+            "Unknown"
+          ) : isPresent() ? (
+            <span style={{ color: "green" }}>Connected</span>
+          ) : (
+            <span style={{ color: "orange" }}>Not found</span>
+          )}
         </div>
         <div>
           <strong>Type:</strong> {expanderType()}
@@ -58,7 +60,7 @@ export function IoExpander(props: { id: string; isPopup?: boolean; onClose?: () 
           <div>
             <strong>Address:</strong> {i2cAddress()}
           </div>
-          <strong>Available Pins:</strong> 0-{pinCount() - 1} ({pinCount()} total)
+          <strong>Available Pins:</strong> {pinCount()}
         </div>
       </div>
     </Device>

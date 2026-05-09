@@ -10,6 +10,7 @@
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"
 #include "devices/mixins/SerializableMixin.h"
+#include "devices/mixins/StateMixin.h"
 #include <Wire.h>
 
 namespace devices
@@ -37,6 +38,15 @@ namespace devices
     };
 
     /**
+     * @struct IoExpanderState
+     * @brief State structure for IoExpander device
+     */
+    struct IoExpanderState
+    {
+        bool isPresent = false; // Whether the I2C device responded
+    };
+
+    /**
      * @class IoExpander
      * @brief I2C IO Expander device that provides additional GPIO pins
      * 
@@ -45,6 +55,7 @@ namespace devices
      */
     class IoExpander : public Device,
                        public ConfigMixin<IoExpander, IoExpanderConfig>,
+                       public StateMixin<IoExpander, IoExpanderState>,
                        public ControllableMixin<IoExpander>,
                        public SerializableMixin<IoExpander>
     {
@@ -96,8 +107,6 @@ namespace devices
         void configToJson(JsonDocument &doc) override;
 
     private:
-        bool _isPresent = false;  // Whether the device was found on the I2C bus
-
         /**
          * @brief Convert string to expander type
          * @param typeStr String representation of expander type

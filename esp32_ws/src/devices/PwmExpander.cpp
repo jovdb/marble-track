@@ -42,7 +42,8 @@ namespace devices
         if (!i2cDevice)
         {
             MLOG_ERROR("%s: Required I2C device '%s' not found", toString().c_str(), _config.i2cDeviceId.c_str());
-            _isPresent = false;
+            _state.isPresent = false;
+            notifyStateChanged();
             return;
         }
 
@@ -50,16 +51,18 @@ namespace devices
         {
             MLOG_ERROR("%s: I2C device '%s' is not set up; configure it before this device",
                        toString().c_str(), _config.i2cDeviceId.c_str());
-            _isPresent = false;
+            _state.isPresent = false;
+            notifyStateChanged();
             return;
         }
 
         // Quick I2C presence check
         Wire.beginTransmission(_config.i2cAddress);
         uint8_t error = Wire.endTransmission();
-        _isPresent = (error == 0);
+        _state.isPresent = (error == 0);
+        notifyStateChanged();
 
-        if (!_isPresent)
+        if (!_state.isPresent)
         {
             MLOG_WARN("%s: PCA9685 not found at address 0x%02X on I2C bus '%s' (I2C error: %d)",
                       toString().c_str(), _config.i2cAddress, _config.i2cDeviceId.c_str(), error);
@@ -100,7 +103,8 @@ namespace devices
             delete _driver;
             _driver = nullptr;
         }
-        _isPresent = false;
+        _state.isPresent = false;
+        notifyStateChanged();
     }
 
     void PwmExpander::loop()
@@ -117,7 +121,7 @@ namespace devices
 
     bool PwmExpander::isDevicePresent() const
     {
-        return _isPresent;
+        return _state.isPresent;
     }
 
     void PwmExpander::jsonToConfig(const JsonDocument &config)
@@ -142,7 +146,7 @@ namespace devices
 
     void PwmExpander::addStateToJson(JsonDocument &doc)
     {
-        doc["isPresent"] = _isPresent;
+        doc["isPresent"] = _state.isPresent;
     }
 
     bool PwmExpander::control(const String & /*action*/, JsonObject * /*args*/)

@@ -10,6 +10,7 @@
 #include "devices/mixins/ConfigMixin.h"
 #include "devices/mixins/ControllableMixin.h"
 #include "devices/mixins/SerializableMixin.h"
+#include "devices/mixins/StateMixin.h"
 #include <Adafruit_PWMServoDriver.h>
 #include <Wire.h>
 
@@ -28,6 +29,15 @@ namespace devices
     };
 
     /**
+     * @struct PwmExpanderState
+     * @brief State structure for PwmExpander device
+     */
+    struct PwmExpanderState
+    {
+        bool isPresent = false; // Whether the PCA9685 responded on the I2C bus
+    };
+
+    /**
      * @class PwmExpander
      * @brief PCA9685 16-channel 12-bit PWM expander device
      *
@@ -36,6 +46,7 @@ namespace devices
      */
     class PwmExpander : public Device,
                         public ConfigMixin<PwmExpander, PwmExpanderConfig>,
+                        public StateMixin<PwmExpander, PwmExpanderState>,
                         public ControllableMixin<PwmExpander>,
                         public SerializableMixin<PwmExpander>
     {
@@ -72,7 +83,6 @@ namespace devices
         void configToJson(JsonDocument &doc) override;
 
     private:
-        bool _isPresent = false;
         Adafruit_PWMServoDriver *_driver = nullptr;
     };
 

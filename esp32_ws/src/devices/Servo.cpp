@@ -122,7 +122,9 @@ namespace devices
 
         if (_pwmPin != nullptr)
         {
-            _pwmPin->writePwm(0);
+            // Do NOT call writePwm(0) here: the PwmExpander's I2C driver
+            // may already be torn down (Wire.end() called), causing a crash.
+            // The PCA9685 retains its last state until next setup().
             delete _pwmPin;
             _pwmPin = nullptr;
         }
@@ -414,6 +416,14 @@ namespace devices
         bool configured = configureMCPWM();
         if (configured)
         {
+            // Output the minimum duty cycle immediately so the servo has a valid
+            // signal from the start and animations don't begin from a 0 ms pulse.
+            _currentDutyCycle = _config.minDutyCycle;
+            esp_err_t err = mcpwm_set_duty(_mcpwmUnit, _mcpwmTimer, _mcpwmOperator, _config.minDutyCycle);
+            if (err == ESP_OK)
+            {
+                mcpwm_set_duty_type(_mcpwmUnit, _mcpwmTimer, _mcpwmOperator, MCPWM_DUTY_MODE_0);
+            }
             _isSetup = true;
             notifyStateChanged();
         }
@@ -571,6 +581,14 @@ namespace devices
 
         _pwmPin = static_cast<pins::PwmExpanderPin *>(pin);
         _pwmPin->setup(_config.pinConfig.pin, pins::PinMode::Output);
+
+        // Output the minimum duty cycle immediately so the servo has a valid
+        // signal from the start and animations don't begin from a 0 ms pulse.
+        _currentDutyCycle = _config.minDutyCycle;
+        uint16_t initialRaw = static_cast<uint16_t>(_config.minDutyCycle / 100.0f * 4095.0f);
+        _pwmPin->writePwm(initialRaw);
+        MLOG_INFO("%s: PwmExpander initial duty cycle %.1f%% (raw %d)",
+                  toString().c_str(), _config.minDutyCycle, initialRaw);
 
         _isSetup = true;
         notifyStateChanged();

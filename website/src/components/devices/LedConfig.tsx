@@ -69,6 +69,7 @@ export default function LedConfig(props: LedConfigProps) {
               style={{ "margin-left": "0.5rem" }}
               excludeDeviceId={props.id}
               showExpanderPins={true}
+              showPwmExpanderPins={true}
             />
           </DeviceConfigItem>
         </DeviceConfigRow>

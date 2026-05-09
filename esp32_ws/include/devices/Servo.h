@@ -12,6 +12,8 @@
 #include "devices/mixins/ControllableMixin.h"
 #include "devices/mixins/SerializableMixin.h"
 #include "McPwmChannels.h"
+#include "pins/Pins.h"
+#include "pins/PwmExpanderPin.h"
 
 namespace devices
 {
@@ -22,11 +24,11 @@ namespace devices
      */
     struct ServoConfig
     {
-        int pin = -1;                    // GPIO pin number (-1 = not configured)
+        PinConfig pinConfig;             // Pin configuration (GPIO or PwmExpander channel)
         String name = "Servo";           // Device name
-        int mcpwmChannel = -1;           // MCPWM channel (-1 = auto-assign)
-        uint32_t frequency = 50;         // PWM frequency in Hz
-        uint8_t resolutionBits = 10;     // PWM resolution bits
+        int mcpwmChannel = -1;           // MCPWM channel (-1 = auto-assign, ignored for PwmExpander)
+        uint32_t frequency = 50;         // PWM frequency in Hz (ignored for PwmExpander)
+        uint8_t resolutionBits = 10;     // PWM resolution bits (ignored for PwmExpander)
         float minDutyCycle = 2.5f;       // Minimum duty cycle percentage
         float maxDutyCycle = 12.5f;      // Maximum duty cycle percentage
         uint32_t defaultDurationInMs = 500; // Default animation duration
@@ -93,6 +95,12 @@ namespace devices
         bool setupServo();
 
         /**
+         * @brief Setup PwmExpander channel for servo control
+         * @return true if successful, false otherwise
+         */
+        bool setupPwmExpander();
+
+        /**
          * @brief Configure MCPWM parameters
          * @return true if successful, false otherwise
          */
@@ -106,12 +114,15 @@ namespace devices
          */
         bool setDutyCycle(float dutyCycle, bool notifyChange = true);
 
-        // MCPWM configuration
+        // MCPWM configuration (used only when pin is a plain GPIO pin)
         int _mcpwmChannelIndex = -1;
         mcpwm_unit_t _mcpwmUnit = MCPWM_UNIT_0;
         mcpwm_timer_t _mcpwmTimer = MCPWM_TIMER_0;
         mcpwm_operator_t _mcpwmOperator = MCPWM_OPR_A;
         mcpwm_io_signals_t _mcpwmSignal = MCPWM0A;
+
+        // PwmExpander pin (used when pinConfig.expanderId is set)
+        pins::PwmExpanderPin *_pwmPin = nullptr;
 
         // State
         float _currentDutyCycle = 0.0f;

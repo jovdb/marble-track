@@ -319,8 +319,8 @@ export function DevicesList() {
     });
 
   // Helper function to collect all pins from device and its children recursively
-  const collectAllPins = (device: IDevice): number[] => {
-    const pins: number[] = [...(device.pins || [])];
+  const collectAllPins = (device: IDevice): string[] => {
+    const pins: string[] = [...(device.pins || [])];
 
     device.children?.forEach((child) => {
       const childDevice = devicesState.devices[child.id];

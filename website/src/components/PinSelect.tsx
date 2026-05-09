@@ -11,7 +11,10 @@ interface PinSelectProps {
   class?: string;
   title?: string;
   excludeDeviceId?: string;
+  /** Show IoExpander pins (PCF8574, PCF8575, MCP23017) */
   showExpanderPins?: boolean;
+  /** Show PwmExpander pins (PCA9685) */
+  showPwmExpanderPins?: boolean;
   availableGpioPins?: number[];
 }
 
@@ -26,7 +29,11 @@ export default function PinSelect(props: PinSelectProps) {
   // configs below cannot create a feedback loop with the device store.
   const expanderDeviceIds = createMemo(() =>
     Object.values(devicesStore.devices)
-      .filter((device) => device.type === "ioexpander" || device.type === "pwmexpander")
+      .filter((device) => {
+        if (device.type === "ioexpander") return props.showExpanderPins;
+        if (device.type === "pwmexpander") return props.showPwmExpanderPins;
+        return false;
+      })
       .map((device) => device.id)
   );
 
@@ -46,11 +53,11 @@ export default function PinSelect(props: PinSelectProps) {
   });
 
   const expanderPinOptions = createMemo(() => {
-    if (!props.showExpanderPins) return [];
+    if (!props.showExpanderPins && !props.showPwmExpanderPins) return [];
 
     const options: { value: PinConfig; label: string }[] = [];
     Object.values(devicesStore.devices).forEach((device) => {
-      if (device.type === "ioexpander") {
+      if (device.type === "ioexpander" && props.showExpanderPins) {
         if (device.config) {
           const config = device.config as any;
           const expanderType = config.expanderType || "PCF8574";
@@ -73,7 +80,7 @@ export default function PinSelect(props: PinSelectProps) {
             });
           }
         }
-      } else if (device.type === "pwmexpander") {
+      } else if (device.type === "pwmexpander" && props.showPwmExpanderPins) {
         // PCA9685 always has 16 channels (0-15)
         for (let ch = 0; ch < 16; ch++) {
           const deviceName = (device.config?.name as string) || device.id;

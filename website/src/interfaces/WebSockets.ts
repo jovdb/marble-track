@@ -55,7 +55,7 @@ interface _IWsSuccessResponse {
 export interface DeviceInfo {
   id: string;
   type: DeviceType;
-  pins?: number[];
+  pins?: string[];
   /** Generic features mirrored from firmware mixins */
   features?: string[];
   children?: DeviceInfo[];

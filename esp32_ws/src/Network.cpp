@@ -24,7 +24,7 @@ String Network::getHostname() const
     return hostname;
 }
 
-static const char *AP_SSID = "MarbleTrackAP";
+static const char *AP_SSID = "MarbleTrack";
 static const char *AP_PASSWORD = "";                           // Default password for the Access Point
 static const unsigned long WIFI_TIMEOUT_MS = 10000;            // Timeout for WiFi connection
 static const unsigned long CONNECTION_CHECK_INTERVAL_MS = 500; // Interval to check connection status

@@ -4,6 +4,8 @@
  */
 
 #include "devices/Servo.h"
+#include "pins/Pins.h"
+#include "pins/PwmExpanderPin.h"
 #include "Logging.h"
 #include <ArduinoJson.h>
 
@@ -48,6 +50,11 @@ namespace devices
         {
             McPwmChannels::release(_mcpwmChannelIndex);
         }
+        if (_pwmPin != nullptr)
+        {
+            delete _pwmPin;
+            _pwmPin = nullptr;
+        }
     }
 
     void Servo::setup()
@@ -57,23 +64,39 @@ namespace devices
         // Determine if auto-assignment was requested
         _wasAutoAssigned = (_config.mcpwmChannel == -1);
 
-        if (_config.pin < 0)
+        if (_config.pinConfig.expanderId.isEmpty())
         {
-            MLOG_WARN("%s: Pin not configured", toString().c_str());
-            return;
+            // GPIO / MCPWM path
+            if (_config.pinConfig.pin < 0)
+            {
+                MLOG_WARN("%s: Pin not configured", toString().c_str());
+                return;
+            }
+
+            // Set the device name
+            setName(_config.name);
+
+            // Setup MCPWM for servo control
+            if (!setupServo())
+            {
+                MLOG_ERROR("%s: Failed to setup servo", toString().c_str());
+                return;
+            }
+
+            MLOG_INFO("%s: Setup on pin %d, MCPWM channel %d", toString().c_str(), _config.pinConfig.pin, _mcpwmChannelIndex);
         }
-
-        // Set the device name
-        setName(_config.name);
-
-        // Setup MCPWM for servo control
-        if (!setupServo())
+        else
         {
-            MLOG_ERROR("%s: Failed to setup servo", toString().c_str());
-            return;
-        }
+            // PwmExpander path
+            setName(_config.name);
+            if (!setupPwmExpander())
+            {
+                MLOG_ERROR("%s: Failed to setup PwmExpander channel", toString().c_str());
+                return;
+            }
 
-        MLOG_INFO("%s: Setup on pin %d, MCPWM channel %d", toString().c_str(), _config.pin, _mcpwmChannelIndex);
+            MLOG_INFO("%s: Setup on PwmExpander '%s' channel %d", toString().c_str(), _config.pinConfig.expanderId.c_str(), _config.pinConfig.pin);
+        }
     }
 
     void Servo::teardown()
@@ -92,9 +115,16 @@ namespace devices
             _mcpwmChannelIndex = -1;
         }
 
-        if (_config.pin >= 0)
+        if (_config.pinConfig.expanderId.isEmpty() && _config.pinConfig.pin >= 0)
         {
-            pinMode(_config.pin, INPUT);
+            pinMode(_config.pinConfig.pin, INPUT);
+        }
+
+        if (_pwmPin != nullptr)
+        {
+            _pwmPin->writePwm(0);
+            delete _pwmPin;
+            _pwmPin = nullptr;
         }
 
         _isSetup = false;
@@ -126,11 +156,14 @@ namespace devices
 
     std::vector<String> Servo::getPins() const
     {
-        if (_config.pin == -1)
+        if (_config.pinConfig.expanderId.isEmpty())
         {
-            return {};
+            if (_config.pinConfig.pin < 0)
+                return {};
+            return {String(_config.pinConfig.pin)};
         }
-        return {String(_config.pin)};
+        // PwmExpander pins are not GPIO — not reported
+        return {};
     }
 
     bool Servo::setValue(float value, int durationMs)
@@ -234,9 +267,28 @@ namespace devices
 
     void Servo::jsonToConfig(const JsonDocument &config)
     {
-        if (config["pin"].is<int>())
+        // Parse pin — supports PinConfig object or backward-compat integer
+        if (config["pin"].is<JsonObjectConst>())
         {
-            _config.pin = config["pin"].as<int>();
+            JsonObjectConst pinObj = config["pin"].as<JsonObjectConst>();
+            if (pinObj["pin"].is<int>())
+            {
+                _config.pinConfig.pin = pinObj["pin"].as<int>();
+            }
+            if (pinObj["expanderId"].is<String>())
+            {
+                _config.pinConfig.expanderId = pinObj["expanderId"].as<String>();
+            }
+            else
+            {
+                _config.pinConfig.expanderId = "";
+            }
+        }
+        else if (config["pin"].is<int>())
+        {
+            // Backward-compat: plain integer pin
+            _config.pinConfig.pin = config["pin"].as<int>();
+            _config.pinConfig.expanderId = "";
         }
         if (config["name"].is<String>())
         {
@@ -278,7 +330,9 @@ namespace devices
 
     void Servo::configToJson(JsonDocument &doc)
     {
-        doc["pin"] = _config.pin;
+        JsonObject pinObj = doc["pin"].to<JsonObject>();
+        pinObj["pin"] = _config.pinConfig.pin;
+        pinObj["expanderId"] = _config.pinConfig.expanderId;
         doc["name"] = _config.name;
         doc["mcpwmChannel"] = _config.mcpwmChannel;
         doc["frequency"] = _config.frequency;
@@ -290,7 +344,7 @@ namespace devices
 
     bool Servo::setupServo()
     {
-        if (_config.pin < 0)
+        if (_config.pinConfig.pin < 0)
         {
             MLOG_WARN("%s: Invalid pin. Pin must be >= 0.", toString().c_str());
             _isSetup = false;
@@ -355,7 +409,7 @@ namespace devices
 
         MLOG_DEBUG("%s: MCPWM mapping channel=%d timer=%d signal=%d operator=%s pin=%d freq=%lu",
                toString().c_str(), _mcpwmChannelIndex, static_cast<int>(_mcpwmTimer), static_cast<int>(_mcpwmSignal),
-               _mcpwmOperator == MCPWM_OPR_A ? "A" : "B", _config.pin, static_cast<unsigned long>(_config.frequency));
+               _mcpwmOperator == MCPWM_OPR_A ? "A" : "B", _config.pinConfig.pin, static_cast<unsigned long>(_config.frequency));
 
         bool configured = configureMCPWM();
         if (configured)
@@ -369,14 +423,14 @@ namespace devices
 
     bool Servo::configureMCPWM()
     {
-        if (_config.pin < 0)
+        if (_config.pinConfig.pin < 0)
         {
             MLOG_WARN("%s: Cannot configure MCPWM without a valid pin.", toString().c_str());
             _isSetup = false;
             return false;
         }
 
-        esp_err_t gpioErr = mcpwm_gpio_init(_mcpwmUnit, _mcpwmSignal, _config.pin);
+        esp_err_t gpioErr = mcpwm_gpio_init(_mcpwmUnit, _mcpwmSignal, _config.pinConfig.pin);
         if (gpioErr != ESP_OK)
         {
             MLOG_ERROR("%s: Failed to initialize MCPWM pin %s", toString().c_str(), esp_err_to_name(gpioErr));
@@ -385,7 +439,7 @@ namespace devices
         }
 
         MLOG_DEBUG("%s: MCPWM GPIO route unit=%d signal=%d -> pin=%d",
-                   toString().c_str(), static_cast<int>(_mcpwmUnit), static_cast<int>(_mcpwmSignal), _config.pin);
+                   toString().c_str(), static_cast<int>(_mcpwmUnit), static_cast<int>(_mcpwmSignal), _config.pinConfig.pin);
 
         // Configure MCPWM
         mcpwm_config_t pwm_config = {
@@ -458,20 +512,68 @@ namespace devices
         _currentDutyCycle = dutyCycle;
 
         // Set the duty cycle using MCPWM
-        esp_err_t err = mcpwm_set_duty(_mcpwmUnit, _mcpwmTimer, _mcpwmOperator, dutyCycle);
-        if (err != ESP_OK)
+        if (_pwmPin != nullptr)
         {
-            MLOG_ERROR("%s: Failed to set duty cycle: %s", toString().c_str(), esp_err_to_name(err));
-            return false;
+            // PwmExpander path: convert duty cycle percentage (0-100) to 12-bit raw value (0-4095)
+            // The PCA9685 doesn't use 50Hz timing for duty cycle %; we drive position directly
+            uint16_t raw = static_cast<uint16_t>(dutyCycle / 100.0f * 4095.0f);
+            _pwmPin->writePwm(raw);
         }
+        else
+        {
+            // MCPWM path
+            esp_err_t err = mcpwm_set_duty(_mcpwmUnit, _mcpwmTimer, _mcpwmOperator, dutyCycle);
+            if (err != ESP_OK)
+            {
+                MLOG_ERROR("%s: Failed to set duty cycle: %s", toString().c_str(), esp_err_to_name(err));
+                return false;
+            }
 
-        // Update duty cycle type to percentage
-        mcpwm_set_duty_type(_mcpwmUnit, _mcpwmTimer, _mcpwmOperator, MCPWM_DUTY_MODE_0);
+            // Update duty cycle type to percentage
+            mcpwm_set_duty_type(_mcpwmUnit, _mcpwmTimer, _mcpwmOperator, MCPWM_DUTY_MODE_0);
+        }
 
         if (notifyChange)
         {
             notifyStateChanged();
         }
+        return true;
+    }
+
+    bool Servo::setupPwmExpander()
+    {
+        if (_config.pinConfig.expanderId.isEmpty())
+        {
+            MLOG_WARN("%s: setupPwmExpander called without expanderId", toString().c_str());
+            return false;
+        }
+
+        if (_config.pinConfig.pin < 0 || _config.pinConfig.pin > 15)
+        {
+            MLOG_WARN("%s: Invalid PwmExpander channel %d (must be 0-15)", toString().c_str(), _config.pinConfig.pin);
+            return false;
+        }
+
+        if (_pwmPin != nullptr)
+        {
+            delete _pwmPin;
+            _pwmPin = nullptr;
+        }
+
+        pins::IPin *pin = PinFactory::createPin(_config.pinConfig);
+        if (pin == nullptr)
+        {
+            MLOG_ERROR("%s: Failed to create PwmExpanderPin for expander '%s' ch %d",
+                       toString().c_str(), _config.pinConfig.expanderId.c_str(), _config.pinConfig.pin);
+            _isSetup = false;
+            return false;
+        }
+
+        _pwmPin = static_cast<pins::PwmExpanderPin *>(pin);
+        _pwmPin->setup(_config.pinConfig.pin, pins::PinMode::Output);
+
+        _isSetup = true;
+        notifyStateChanged();
         return true;
     }
 

@@ -282,13 +282,6 @@ namespace devices
 
             unsigned long pressDuration = _liftButtonPressStartTime > 0 ? millis() - _liftButtonPressStartTime : 0;
 
-            // DEBUG ALL Parts of the next if
-            MLOG_DEBUG("%s: Pressed: %u, PressedStartTime: %u, duration: %u",
-                       toString().c_str(),
-                       static_cast<unsigned>(liftButtonState.isPressed),
-                       static_cast<unsigned>(_liftButtonPressStartTime),
-                       static_cast<unsigned>(liftButtonState.isPressed ? pressDuration : 0));
-
             // Check for long press while button is held
             if (liftButtonState.isPressed && (pressDuration >= lift_timing::ErrorLongPressDurationMs))
             {

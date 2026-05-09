@@ -13,7 +13,7 @@ interface IServoState extends IDeviceState {
 
 export interface IServoConfig extends IDeviceConfig {
   name?: string;
-  pin?: number;
+  pin?: number | { pin: number; expanderId: string };
   mcpwmChannel?: number;
   frequency?: number;
   resolutionBits?: number;

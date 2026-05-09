@@ -13,7 +13,7 @@ export interface IDevice<
 > {
   id: string;
   type: string;
-  pins?: number[];
+  pins?: string[];
   /** Generic features mirrored from firmware mixins */
   features?: string[];
   state?: TState;

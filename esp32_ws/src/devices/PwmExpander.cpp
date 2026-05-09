@@ -94,12 +94,12 @@ namespace devices
     {
         Device::teardown();
 
+        // Do NOT communicate with the device here: the I2C bus (Wire) may already
+        // be torn down, causing a NULL-buffer crash inside Wire::requestFrom().
+        // Just release the driver object; PCA9685 retains its last state until
+        // power-cycle, and setup() will re-initialise it cleanly.
         if (_driver)
         {
-            // Turn off all channels
-            for (int ch = 0; ch < 16; ch++)
-                _driver->setPin(ch, 0, false);
-
             delete _driver;
             _driver = nullptr;
         }

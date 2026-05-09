@@ -243,7 +243,7 @@
                   "expanderId": ""
                 },
                 "dirPin": {
-                  "pin": 5, 
+                  "pin": 5,
                   "expanderId": ""
                 },
                 "pin1": {
@@ -294,8 +294,8 @@
             "direction": 1,
             "breakPoints": [
               158,
-              190,
-              283
+              202,
+              283.5
             ]
           }
         },
@@ -313,8 +313,8 @@
                 "usePwm": false,
                 "maxSpeed": 1000,
                 "maxAcceleration": 1000,
-                "defaultSpeed": 100,
-                "defaultAcceleration": 20,
+                "defaultSpeed": 300,
+                "defaultAcceleration": 100,
                 "stepPin": {
                   "pin": -1,
                   "expanderId": ""
@@ -460,6 +460,50 @@
         },
         "name": "Led",
         "initialState": "BLINKING"
+      }
+    },
+    {
+      "id": "Test-stepper",
+      "type": "stepper",
+      "children": [],
+      "config": {
+        "name": "Stepper",
+        "stepperType": "DRIVER",
+        "usePwm": true,
+        "maxSpeed": 1000,
+        "maxAcceleration": 500,
+        "defaultSpeed": 500,
+        "defaultAcceleration": 250,
+        "stepPin": {
+          "pin": 13,
+          "expanderId": ""
+        },
+        "dirPin": {
+          "pin": 12,
+          "expanderId": ""
+        },
+        "pin1": {
+          "pin": -1,
+          "expanderId": ""
+        },
+        "pin2": {
+          "pin": -1,
+          "expanderId": ""
+        },
+        "pin3": {
+          "pin": -1,
+          "expanderId": ""
+        },
+        "pin4": {
+          "pin": -1,
+          "expanderId": ""
+        },
+        "enablePin": {
+          "pin": -1,
+          "expanderId": ""
+        },
+        "invertEnable": false,
+        "invertDirection": false
       }
     }
   ]

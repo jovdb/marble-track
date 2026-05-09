@@ -651,45 +651,13 @@ void DeviceManager::getDevices(Device **deviceList, int &count, int maxResults)
 void DeviceManager::setup()
 {
     MLOG_DEBUG("DeviceManager setup started (root only devices)");
-
-    // Two-pass setup: infrastructure devices first (i2c, ioexpander, pwmexpander),
-    // then consumer devices. This ensures that devices depending on expanders
-    // (e.g. Servo with a PwmExpander pin) always find the driver ready,
-    // regardless of the order devices were added by the user.
-    const char *infraTypes[] = {"i2c", "ioexpander", "pwmexpander"};
-    constexpr int infraCount = 3;
-
-    // Pass 1: infrastructure
     for (int i = 0; i < devicesCount; i++)
     {
-        if (!devices[i]) continue;
-        const String &type = devices[i]->getType();
-        for (int t = 0; t < infraCount; t++)
-        {
-            if (type == infraTypes[t])
-            {
-                devices[i]->setup();
-                break;
-            }
-        }
-    }
-
-    // Pass 2: all other devices
-    for (int i = 0; i < devicesCount; i++)
-    {
-        if (!devices[i]) continue;
-        const String &type = devices[i]->getType();
-        bool isInfra = false;
-        for (int t = 0; t < infraCount; t++)
-        {
-            if (type == infraTypes[t]) { isInfra = true; break; }
-        }
-        if (!isInfra)
+        if (devices[i])
         {
             devices[i]->setup();
         }
     }
-
     MLOG_DEBUG("DeviceManager setup ended");
     MLOG_DEBUG("-----------------------");
 }

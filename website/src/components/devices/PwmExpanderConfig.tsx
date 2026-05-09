@@ -84,7 +84,6 @@ export default function PwmExpanderConfig(props: PwmExpanderConfigProps) {
         frequency: frequency(),
       },
     });
-    props.onClose();
   };
 
   // Default PCA9685 addresses (0x40-0x7F)

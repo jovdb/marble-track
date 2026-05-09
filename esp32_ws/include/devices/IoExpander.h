@@ -8,6 +8,7 @@
 
 #include "devices/Device.h"
 #include "devices/mixins/ConfigMixin.h"
+#include "devices/mixins/ControllableMixin.h"
 #include "devices/mixins/SerializableMixin.h"
 #include <Wire.h>
 
@@ -42,8 +43,9 @@ namespace devices
      * This device configures an I2C bus and makes expander pins available
      * for use by other devices through the PinFactory.
      */
-    class IoExpander : public Device, 
-                       public ConfigMixin<IoExpander, IoExpanderConfig>, 
+    class IoExpander : public Device,
+                       public ConfigMixin<IoExpander, IoExpanderConfig>,
+                       public ControllableMixin<IoExpander>,
                        public SerializableMixin<IoExpander>
     {
     public:
@@ -84,6 +86,10 @@ namespace devices
          * @return Expander type string
          */
         String getExpanderTypeString() const;
+
+        // ControllableMixin implementation
+        void addStateToJson(JsonDocument &doc) override;
+        bool control(const String &action, JsonObject *args = nullptr) override;
 
         // SerializableMixin implementation
         void jsonToConfig(const JsonDocument &config) override;

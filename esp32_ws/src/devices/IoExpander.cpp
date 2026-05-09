@@ -195,4 +195,14 @@ namespace devices
         doc["i2cDeviceId"] = _config.i2cDeviceId;
     }
 
+    void IoExpander::addStateToJson(JsonDocument &doc)
+    {
+        doc["isPresent"] = _isPresent;
+    }
+
+    bool IoExpander::control(const String & /*action*/, JsonObject * /*args*/)
+    {
+        return false;
+    }
+
 } // namespace devices

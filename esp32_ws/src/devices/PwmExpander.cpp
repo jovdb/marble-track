@@ -128,7 +128,7 @@ namespace devices
             _config.i2cDeviceId = config["i2cDeviceId"].as<String>();
         if (config["i2cAddress"].is<int>())
             _config.i2cAddress = static_cast<uint8_t>(config["i2cAddress"].as<int>());
-        if (config["frequency"].is<float>())
+        if (config["frequency"].is<float>() || config["frequency"].is<int>())
             _config.frequency = config["frequency"].as<float>();
     }
 
@@ -138,6 +138,16 @@ namespace devices
         doc["i2cDeviceId"] = _config.i2cDeviceId;
         doc["i2cAddress"]  = _config.i2cAddress;
         doc["frequency"]   = _config.frequency;
+    }
+
+    void PwmExpander::addStateToJson(JsonDocument &doc)
+    {
+        doc["isPresent"] = _isPresent;
+    }
+
+    bool PwmExpander::control(const String & /*action*/, JsonObject * /*args*/)
+    {
+        return false;
     }
 
 } // namespace devices

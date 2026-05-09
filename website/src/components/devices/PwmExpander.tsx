@@ -9,6 +9,9 @@ export function PwmExpander(props: { id: string; isPopup?: boolean; onClose?: ()
 
   const deviceType = device?.type;
   const config = () => device?.config;
+  const state = () => device?.state;
+
+  const isPresent = () => state()?.isPresent as boolean | undefined;
 
   const i2cAddress = () => {
     const addr = config()?.i2cAddress as number | undefined;
@@ -37,6 +40,14 @@ export function PwmExpander(props: { id: string; isPopup?: boolean; onClose?: ()
       onClose={props.onClose}
     >
       <div style={{ padding: "0.5rem", "font-size": "0.9rem" }}>
+        <div>
+          <strong>Status:</strong>{" "}
+          {isPresent() === undefined
+            ? "Unknown"
+            : isPresent()
+              ? <span style={{ color: "green" }}>Connected</span>
+              : <span style={{ color: "orange" }}>Not found</span>}
+        </div>
         <div>
           <strong>I²C Bus:</strong> {i2cDeviceName()}
         </div>

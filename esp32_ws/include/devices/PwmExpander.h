@@ -8,6 +8,7 @@
 
 #include "devices/Device.h"
 #include "devices/mixins/ConfigMixin.h"
+#include "devices/mixins/ControllableMixin.h"
 #include "devices/mixins/SerializableMixin.h"
 #include <Adafruit_PWMServoDriver.h>
 #include <Wire.h>
@@ -35,6 +36,7 @@ namespace devices
      */
     class PwmExpander : public Device,
                         public ConfigMixin<PwmExpander, PwmExpanderConfig>,
+                        public ControllableMixin<PwmExpander>,
                         public SerializableMixin<PwmExpander>
     {
     public:
@@ -60,6 +62,10 @@ namespace devices
          * @return Pointer to Adafruit_PWMServoDriver, or nullptr if not set up
          */
         Adafruit_PWMServoDriver *getDriver() { return _driver; }
+
+        // ControllableMixin implementation
+        void addStateToJson(JsonDocument &doc) override;
+        bool control(const String &action, JsonObject *args = nullptr) override;
 
         // SerializableMixin implementation
         void jsonToConfig(const JsonDocument &config) override;

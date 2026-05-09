@@ -17,9 +17,9 @@ export function IoExpander(props: { id: string; isPopup?: boolean; onClose?: () 
   };
   const i2cDeviceName = () => {
     const i2cDeviceId = config()?.i2cDeviceId as string;
-    if (!i2cDeviceId) return "No I2C bus selected";
+    if (!i2cDeviceId) return "No I²C bus selected";
     const i2cDevice = devicesStore.devices[i2cDeviceId];
-    return (i2cDevice?.config?.name as string) || i2cDevice?.id || "Unknown I2C bus";
+    return (i2cDevice?.config?.name as string) || i2cDevice?.id || "Unknown I²C bus";
   };
   const pinCount = () => {
     const type = expanderType();
@@ -42,7 +42,7 @@ export function IoExpander(props: { id: string; isPopup?: boolean; onClose?: () 
           <strong>Type:</strong> {expanderType()}
         </div>
         <div>
-          <strong>I2C Bus:</strong> {i2cDeviceName()}
+          <strong>I²C Bus:</strong> {i2cDeviceName()}
         </div>
         <div>
           <div>

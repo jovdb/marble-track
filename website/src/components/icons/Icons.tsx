@@ -168,9 +168,7 @@ export const PwmExpanderIcon = (props: IconProps) => (
     style={props.style}
     xmlns="http://www.w3.org/2000/svg"
   >
-    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-    {/* PWM waveform */}
-    <polyline points="2,16 2,8 6,8 6,16 10,16 10,8 16,8 16,16 18,16 18,12 22,12" />
+    <path d="M2 16 H6 V8 H11 V16 H15 V8 H20 V16 H22" />
   </svg>
 );
 

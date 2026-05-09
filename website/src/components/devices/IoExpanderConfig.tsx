@@ -64,7 +64,7 @@ export default function IoExpanderConfig(props: IoExpanderConfigProps) {
   const requestAddresses = () => {
     const busId = i2cDeviceId();
     if (!busId) {
-      setScanError("Please select an I2C bus first");
+      setScanError("Please select an I²C bus first");
       return;
     }
     setIsScanning(true);
@@ -133,13 +133,13 @@ export default function IoExpanderConfig(props: IoExpanderConfigProps) {
           </DeviceConfigItem>
         </DeviceConfigRow>
         <DeviceConfigRow>
-          <DeviceConfigItem name="I2C Bus:">
+          <DeviceConfigItem name="I²C Bus:">
             <select
               value={i2cDeviceId()}
               onChange={(event) => setI2cDeviceId(event.currentTarget.value)}
               style={{ "margin-left": "0.5rem" }}
             >
-              <option value="">Select I2C Bus...</option>
+              <option value="">Select I²C Bus...</option>
               <For each={i2cDevices()}>
                 {(i2cDevice) => (
                   <option value={i2cDevice.id}>
@@ -151,7 +151,7 @@ export default function IoExpanderConfig(props: IoExpanderConfigProps) {
           </DeviceConfigItem>
         </DeviceConfigRow>
         <DeviceConfigRow>
-          <DeviceConfigItem name="I2C Address:">
+          <DeviceConfigItem name="I²C Address:">
             <select
               value={i2cAddress()}
               onChange={(event) => setI2cAddress(Number(event.currentTarget.value))}

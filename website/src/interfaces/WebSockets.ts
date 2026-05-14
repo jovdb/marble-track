@@ -11,6 +11,7 @@ export type DeviceType =
   | "lift"
   | "marblecontroller"
   | "servo"
+  | "servogate"
   | "stepper"
   | "touch"
   | "wheel";

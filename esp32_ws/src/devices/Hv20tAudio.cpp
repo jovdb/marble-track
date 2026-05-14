@@ -84,8 +84,15 @@ namespace devices
         _volumeSteps = static_cast<uint8_t>((_state.volumePercent * VOLUME_STEPS + 50) / 100);
         if (_playerReady)
         {
+            // Use a short read timeout so any accidental blocking readBytes() call
+            // never stalls the main loop. The async poll reads only when
+            // available() >= 5, so this is a safety net rather than the primary guard.
+            _serial.setTimeout(20);
             setVolume(_state.volumePercent);
         }
+        _pollState = PollState::Idle;
+        _lastPollSentMs = 0;
+        _pollSentAtMs = 0;
     }
 
     void Hv20tAudio::teardown()
@@ -101,6 +108,7 @@ namespace devices
         _playerReady = false;
         _state.currentPlayingSong = -1;
         _currentSongStartTime = 0;
+        _pollState = PollState::Idle;
 
         // Clear any queued songs
         while (!_state.songQueue.empty())
@@ -131,28 +139,66 @@ namespace devices
             }
         }
 
-        // Check playing state every 50ms
-        if (millis() % 50 == 0)
+        // Non-blocking async song-end detection.
+        // Phase 1 (Idle): write the poll command to the UART TX FIFO – returns immediately.
+        // Phase 2 (Sent): on a later loop() call the module's 5-byte response will be in
+        //                 the RX FIFO; read it without waiting (available() guard).
+        if (_playerReady && _state.currentPlayingSong >= 0)
         {
-            const bool busy = isPlaying();
-
-            // If Ended
-            if (!busy && _state.currentPlayingSong >= 0)
+            unsigned long now = millis();
+            if (_pollState == PollState::Idle)
             {
-                MLOG_INFO("%s: Song %i finished playing", toString().c_str(), _state.currentPlayingSong);
-                _state.currentPlayingSong = -1;
-                _currentSongStartTime = 0;
-                processQueue();
-                notifyStateChanged();
+                if (now - _lastPollSentMs >= POLL_INTERVAL_MS)
+                {
+                    // Discard any stale RX bytes before sending a fresh poll.
+                    while (_serial.available())
+                        _serial.read();
+                    // checkPlayState command: 0xaa 0x01 0x00  CRC=0xab
+                    static const uint8_t pollCmd[] = {0xaa, 0x01, 0x00, 0xab};
+                    _serial.write(pollCmd, sizeof(pollCmd)); // non-blocking TX
+                    _pollState = PollState::Sent;
+                    _pollSentAtMs = now;
+                }
             }
-
-            // If not busy and no song is playing but we have queued songs, start the next one
-            // This handles the case where the device starts with a queue or queue gets populated while idle
-            if (!busy && _state.currentPlayingSong == -1 && !_state.songQueue.empty())
+            else // PollState::Sent
             {
-                MLOG_INFO("%s: Starting playback from queue", toString().c_str());
-                processQueue();
+                if (_serial.available() >= 5)
+                {
+                    // Response already buffered – read without blocking.
+                    uint8_t buffer[5];
+                    _serial.readBytes(buffer, 5);
+                    // Response: 0xaa 0x01 0x01 <state> <crc>
+                    // state: 0=stopped, 1=playing, 2=paused
+                    if (buffer[0] == 0xaa)
+                    {
+                        const bool stillPlaying = (buffer[3] == 1);
+                        if (!stillPlaying)
+                        {
+                            MLOG_INFO("%s: Song %i finished playing", toString().c_str(), _state.currentPlayingSong);
+                            _state.currentPlayingSong = -1;
+                            _currentSongStartTime = 0;
+                            processQueue();
+                            notifyStateChanged();
+                        }
+                    }
+                    _pollState = PollState::Idle;
+                    _lastPollSentMs = now;
+                }
+                else if (now - _pollSentAtMs >= POLL_RESPONSE_WAIT_MS)
+                {
+                    // Module did not respond in time – drain any partial bytes and retry next cycle.
+                    while (_serial.available())
+                        _serial.read();
+                    _pollState = PollState::Idle;
+                    _lastPollSentMs = now;
+                }
             }
+        }
+        else if (_playerReady && _state.currentPlayingSong == -1 && !_state.songQueue.empty())
+        {
+            // Queue populated while idle (e.g. first song after device start).
+            MLOG_INFO("%s: Starting playback from queue", toString().c_str());
+            processQueue();
         }
     }
 
@@ -184,7 +230,7 @@ namespace devices
             if (mode == Hv20tPlayMode::StopThenPlay)
             {
                 MLOG_INFO("%s: Replace current song with song %i", toString().c_str(), songIndex);
-                stop();
+                stop(); // also resets poll state and flushes RX
             }
             if (mode == Hv20tPlayMode::SkipIfPlaying)
             {
@@ -206,6 +252,12 @@ namespace devices
             if (songIndex > 65535)
                 songIndex = 65535;
             MLOG_INFO("%s: Playing song %i (queue: %s)", toString().c_str(), songIndex, getQueueString().c_str());
+            // Reset poll state and flush RX so we don't read a stale poll response
+            // after this new song starts.
+            _pollState = PollState::Idle;
+            _lastPollSentMs = millis(); // delay first poll until POLL_INTERVAL_MS after start
+            while (_serial.available())
+                _serial.read();
             _state.currentPlayingSong = songIndex;
             _currentSongStartTime = millis();
             notifyStateChanged();
@@ -223,6 +275,12 @@ namespace devices
             MLOG_WARN("%s: Cannot stop - DyPLayer not ready", toString().c_str());
             return false;
         }
+
+        // Cancel any in-flight async poll and flush the RX buffer so a stale
+        // poll response can't be mistaken for the next song's response.
+        _pollState = PollState::Idle;
+        while (_serial.available())
+            _serial.read();
 
         _player.stop();
         _state.currentPlayingSong = -1;
@@ -423,19 +481,10 @@ namespace devices
         return true;
     }
 
-    bool Hv20tAudio::isPlaying()
-    {
-        if (!_playerReady)
-        {
-            return false;
-        }
-
-        // Check software state only
-        DY::PlayState playState = _player.checkPlayState();
-        bool softwarePlaying = (playState == DY::PlayState::Playing);
-
-        return softwarePlaying;
-    }
+    // NOTE: isPlaying() is no longer called from loop() – song-end detection
+    // is handled by the non-blocking async poll there. This method is kept only
+    // for external callers that can tolerate a brief (~20ms) UART round-trip.
+    // (setup() reduced the serial timeout to 20ms to cap the blocking duration.)
 
     String Hv20tAudio::getQueueString()
     {

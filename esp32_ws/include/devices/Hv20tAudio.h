@@ -71,7 +71,6 @@ namespace devices
 
     private:
         bool initializePlayer();
-        bool isPlaying();
         void processQueue();
         String getQueueString();
 
@@ -80,6 +79,17 @@ namespace devices
         bool _playerReady = false;
         uint8_t _volumeSteps = 0;
         unsigned long _currentSongStartTime = 0;
+
+        // Async (non-blocking) song-end detection.
+        // Phase 1: write the 4-byte checkPlayState command to the UART TX FIFO.
+        // Phase 2: on a later loop() call, check _serial.available() >= 5 and
+        //          read the already-buffered response – no waiting, no blocking.
+        enum class PollState : uint8_t { Idle, Sent };
+        PollState _pollState = PollState::Idle;
+        unsigned long _lastPollSentMs = 0;
+        unsigned long _pollSentAtMs = 0;
+        static constexpr unsigned long POLL_INTERVAL_MS = 200; // how often to poll
+        static constexpr unsigned long POLL_RESPONSE_WAIT_MS = 20; // give up after this
     };
 
 } // namespace devices

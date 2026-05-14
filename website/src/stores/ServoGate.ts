@@ -16,6 +16,7 @@ export interface IServoGateConfig extends IDeviceConfig {
   closeDelayMs?: number;
   betweenDelayMs?: number;
   fullQueueCount?: number;
+  initialQueueCount?: number;
   [key: string]: unknown;
 }
 

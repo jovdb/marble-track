@@ -240,6 +240,52 @@
           }
         },
         {
+          "id": "tower",
+          "type": "servogate",
+          "children": [
+            {
+              "id": "tower-button",
+              "type": "button",
+              "children": [],
+              "config": {
+                "pin": {
+                  "pin": 17,
+                  "expanderId": ""
+                },
+                "name": "ServoGate Button",
+                "debounceTimeInMs": 150,
+                "pinMode": "PullDown",
+                "buttonType": "NormalOpen"
+              }
+            },
+            {
+              "id": "tower-servo",
+              "type": "servo",
+              "children": [],
+              "config": {
+                "pin": {
+                  "pin": 0,
+                  "expanderId": "pwm-ex-1"
+                },
+                "name": "ServoGate Servo",
+                "mcpwmChannel": -1,
+                "frequency": 50,
+                "resolutionBits": 10,
+                "minDutyCycle": 11,
+                "maxDutyCycle": 4,
+                "defaultDurationInMs": 4000
+              }
+            }
+          ],
+          "config": {
+            "name": "ServoGate",
+            "openDelayMs": 500,
+            "closeDelayMs": 1000,
+            "betweenDelayMs": 500,
+            "fullQueueCount": 8
+          }
+        },
+        {
           "id": "wheel",
           "type": "wheel",
           "children": [

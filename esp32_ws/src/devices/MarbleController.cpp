@@ -7,6 +7,7 @@
 #include "devices/Wheel.h"
 #include "devices/Led.h"
 #include "devices/Stepper.h"
+#include "devices/ServoGate.h"
 #include "SongConstants.h"
 
 extern DeviceManager deviceManager;
@@ -51,6 +52,54 @@ namespace devices
 
         _manualButton = new devices::Button("manual-btn");
         addChild(_manualButton);
+
+        auto *tower = new devices::ServoGate("tower");
+
+        auto towerConfig = tower->getConfig();
+        towerConfig.name = "ServoGate";
+        towerConfig.openDelayMs = 500;
+        towerConfig.closeDelayMs = 1000;
+        towerConfig.betweenDelayMs = 500;
+        towerConfig.fullQueueCount = 8;
+        tower->setConfig(towerConfig);
+
+        for (Device *child : tower->getChildren())
+        {
+            if (!child)
+            {
+                continue;
+            }
+
+            if (child->getId() == "tower-button" && child->getType() == "button")
+            {
+                auto *button = static_cast<devices::Button *>(child);
+                auto buttonConfig = button->getConfig();
+                buttonConfig.pinConfig.pin = 17;
+                buttonConfig.pinConfig.expanderId = "";
+                buttonConfig.name = "ServoGate Button";
+                buttonConfig.debounceTimeInMs = 150;
+                buttonConfig.pinMode = devices::PinModeOption::PullDown;
+                buttonConfig.buttonType = devices::ButtonType::NormalOpen;
+                button->setConfig(buttonConfig);
+            }
+            else if (child->getId() == "tower-servo" && child->getType() == "servo")
+            {
+                auto *servo = static_cast<devices::Servo *>(child);
+                auto servoConfig = servo->getConfig();
+                servoConfig.pinConfig.pin = 0;
+                servoConfig.pinConfig.expanderId = "pwm-ex-1";
+                servoConfig.name = "ServoGate Servo";
+                servoConfig.mcpwmChannel = -1;
+                servoConfig.frequency = 50;
+                servoConfig.resolutionBits = 10;
+                servoConfig.minDutyCycle = 11;
+                servoConfig.maxDutyCycle = 4;
+                servoConfig.defaultDurationInMs = 4000;
+                servo->setConfig(servoConfig);
+            }
+        }
+
+        addChild(tower);
 
         // Create wheel with proper config
         _wheel = new devices::Wheel("wheel");

@@ -31,6 +31,7 @@ const COMPOSITION_DEVICE_TYPES = [
   "Lift",
   "MarbleController",
   "Servo",
+  "ServoGate",
   "Stepper",
   "Touch",
   "Wheel",

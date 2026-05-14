@@ -66,7 +66,7 @@ namespace devices
         startTimer(_config.openDelayMs);
         _state.gateState = fsmStateToString(_fsm);
         notifyStateChanged();
-        MLOG_INFO("%s: Cycle started, waiting %lu ms before opening (queue=%d)",
+        MLOG_INFO("%s: Starting cycle in %lu ms (queue=%d)",
                   toString().c_str(), static_cast<unsigned long>(_config.openDelayMs), _state.queueCount);
     }
 
@@ -86,7 +86,7 @@ namespace devices
                     if (_state.queueCount < _config.fullQueueCount)
                     {
                         _state.queueCount++;
-                        MLOG_INFO("%s: Button clicked, queue=%d", toString().c_str(), _state.queueCount);
+                        // MLOG_INFO("%s: Button clicked, queue=%d", toString().c_str(), _state.queueCount);
                         notifyStateChanged();
                     }
                 }
@@ -122,7 +122,7 @@ namespace devices
                 _fsm = ServoGateFsmState::OPENING;
                 _state.gateState = fsmStateToString(_fsm);
                 notifyStateChanged();
-                MLOG_INFO("%s: Opening servo over %lu ms", toString().c_str(), static_cast<unsigned long>(servoDuration));
+                // MLOG_INFO("%s: Opening servo over %lu ms", toString().c_str(), static_cast<unsigned long>(servoDuration));
             }
             break;
 
@@ -133,7 +133,7 @@ namespace devices
                 _fsm = ServoGateFsmState::WAIT_CLOSE;
                 _state.gateState = fsmStateToString(_fsm);
                 notifyStateChanged();
-                MLOG_INFO("%s: Servo open, holding %lu ms before closing", toString().c_str(), static_cast<unsigned long>(_config.closeDelayMs));
+                // MLOG_INFO("%s: Servo open, holding %lu ms before closing", toString().c_str(), static_cast<unsigned long>(_config.closeDelayMs));
             }
             break;
 
@@ -147,7 +147,7 @@ namespace devices
                 _fsm = ServoGateFsmState::CLOSING;
                 _state.gateState = fsmStateToString(_fsm);
                 notifyStateChanged();
-                MLOG_INFO("%s: Closing servo over %lu ms", toString().c_str(), static_cast<unsigned long>(servoDuration));
+                // MLOG_INFO("%s: Closing servo over %lu ms", toString().c_str(), static_cast<unsigned long>(servoDuration));
             }
             break;
 
@@ -156,7 +156,7 @@ namespace devices
             {
                 _state.queueCount--;
                 _state.pulseCount++;
-                MLOG_INFO("%s: Cycle complete (total pulses=%d), queue=%d",
+             //   MLOG_INFO("%s: Cycle complete (total pulses=%d), queue=%d",
                           toString().c_str(), _state.pulseCount, _state.queueCount);
 
                 if (_state.queueCount > 0)

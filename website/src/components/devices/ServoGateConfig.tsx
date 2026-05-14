@@ -23,6 +23,9 @@ export default function ServoGateConfig(props: ServoGateConfigProps) {
   const [fullQueueCount, setFullQueueCount] = createSignal(
     String(device()?.config?.fullQueueCount ?? 5)
   );
+  const [initialQueueCount, setInitialQueueCount] = createSignal(
+    String(device()?.config?.initialQueueCount ?? 0)
+  );
 
   const toNumber = (value: string, fallback = 0) => {
     const num = Number(value);
@@ -37,6 +40,7 @@ export default function ServoGateConfig(props: ServoGateConfigProps) {
     if (typeof config.closeDelayMs === "number") setCloseDelayMs(String(config.closeDelayMs));
     if (typeof config.betweenDelayMs === "number") setBetweenDelayMs(String(config.betweenDelayMs));
     if (typeof config.fullQueueCount === "number") setFullQueueCount(String(config.fullQueueCount));
+    if (typeof config.initialQueueCount === "number") setInitialQueueCount(String(config.initialQueueCount));
   });
 
   return (
@@ -49,6 +53,7 @@ export default function ServoGateConfig(props: ServoGateConfigProps) {
           closeDelayMs: toNumber(closeDelayMs(), 1000),
           betweenDelayMs: toNumber(betweenDelayMs(), 500),
           fullQueueCount: toNumber(fullQueueCount(), 5),
+          initialQueueCount: toNumber(initialQueueCount(), 0),
         })
       }
       onClose={props.onClose}
@@ -113,6 +118,19 @@ export default function ServoGateConfig(props: ServoGateConfigProps) {
               onInput={(e) => setFullQueueCount(e.currentTarget.value)}
               style={{ width: "6em", "margin-left": "0.5rem" }}
               title="Queue size at which the button is considered held (queue fills to this value)"
+            />
+          </DeviceConfigItem>
+        </DeviceConfigRow>
+        <DeviceConfigRow>
+          <DeviceConfigItem name="Initial queue count:">
+            <input
+              type="number"
+              value={initialQueueCount()}
+              min={0}
+              step={1}
+              onInput={(e) => setInitialQueueCount(e.currentTarget.value)}
+              style={{ width: "6em", "margin-left": "0.5rem" }}
+              title="Initial value for the queue count (default 0)"
             />
           </DeviceConfigItem>
         </DeviceConfigRow>

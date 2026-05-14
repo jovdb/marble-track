@@ -21,6 +21,8 @@
 #include "devices/mixins/SerializableMixin.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
+static constexpr const char *CONFIG_BAK_FILE = "/config.json.bak";
+static constexpr const char *CONFIG_TMP_FILE = "/config.json.tmp";
 
 Device *DeviceManager::createDevice(const String &deviceId, const String &deviceType)
 {
@@ -168,8 +170,27 @@ void DeviceManager::loadDevicesFromJsonFile()
 
     if (err || !doc.is<JsonObject>())
     {
-        MLOG_ERROR("Failed to parse config JSON file");
-        return;
+        MLOG_ERROR("Failed to parse config JSON file (%s), trying backup", err ? err.c_str() : "not an object");
+        if (!LittleFS.exists(CONFIG_BAK_FILE))
+        {
+            MLOG_ERROR("No backup config found, cannot recover");
+            return;
+        }
+        File bakFile = LittleFS.open(CONFIG_BAK_FILE, FILE_READ);
+        if (!bakFile)
+        {
+            MLOG_ERROR("Failed to open backup config file");
+            return;
+        }
+        doc.clear();
+        err = deserializeJson(doc, bakFile);
+        bakFile.close();
+        if (err || !doc.is<JsonObject>())
+        {
+            MLOG_ERROR("Backup config also corrupt, cannot recover");
+            return;
+        }
+        MLOG_WARN("Recovered from backup config %s", CONFIG_BAK_FILE);
     }
 
     // Clear existing devices
@@ -281,17 +302,31 @@ void DeviceManager::saveDevicesToJsonFile()
     JsonArray devicesArray = rootObj["devices"].to<JsonArray>();
     addDevicesToJsonArray(devicesArray);
 
-    // Save back to file
-    File file = LittleFS.open(CONFIG_FILE, "w");
+    // Save back to file via temp → rename so a failed write never truncates the live config.
+    File file = LittleFS.open(CONFIG_TMP_FILE, "w");
     if (file)
     {
-        serializeJson(doc, file);
+        size_t written = serializeJson(doc, file);
         file.close();
-        MLOG_INFO("Saved devices list to: http://marble-track.local/%s", CONFIG_FILE);
+        if (written == 0)
+        {
+            LittleFS.remove(CONFIG_TMP_FILE);
+            MLOG_ERROR("serializeJson wrote 0 bytes to %s (storage full?), config NOT saved", CONFIG_TMP_FILE);
+        }
+        else
+        {
+            if (LittleFS.exists(CONFIG_FILE))
+            {
+                LittleFS.remove(CONFIG_BAK_FILE);
+                LittleFS.rename(CONFIG_FILE, CONFIG_BAK_FILE);
+            }
+            LittleFS.rename(CONFIG_TMP_FILE, CONFIG_FILE);
+            MLOG_INFO("Saved devices list to: http://marble-track.local%s", CONFIG_FILE);
+        }
     }
     else
     {
-        MLOG_ERROR("Failed to open %s for writing", CONFIG_FILE);
+        MLOG_ERROR("Failed to open %s for writing", CONFIG_TMP_FILE);
     }
 }
 

@@ -512,25 +512,45 @@ void WebSocketManager::handleSetDevicesConfig(JsonDocument &doc)
     else
     {
         MLOG_INFO("Config object found, attempting to write to file");
-        File file = LittleFS.open("/config.json", "w");
+        // Write to a temp file first so a failed write never corrupts the live config.
+        static constexpr const char *TMP_FILE = "/config.json.tmp";
+        static constexpr const char *BAK_FILE = "/config.json.bak";
+        File file = LittleFS.open(TMP_FILE, "w");
         if (!file)
         {
             response["success"] = false;
-            response["error"] = "Failed to open config.json for writing";
+            response["error"] = "Failed to open temp config file for writing";
         }
         else
         {
-            serializeJson(doc["config"], file);
+            size_t written = serializeJson(doc["config"], file);
             file.close();
-            response["success"] = true;
-            response["message"] = "config.json updated";
 
-            MLOG_INFO("Config written to file, reloading devices");
-            // Atomic reload: teardown -> load -> setup -> notifyDevicesChanged.
-            // See DeviceManager::reloadFromJsonFile() for the ordering rationale.
-            if (deviceManager)
+            if (written == 0)
             {
-                deviceManager->reloadFromJsonFile();
+                LittleFS.remove(TMP_FILE);
+                response["success"] = false;
+                response["error"] = "serializeJson wrote 0 bytes (storage full?)";
+            }
+            else
+            {
+                // Promote: backup current config, then rename temp → live.
+                if (LittleFS.exists("/config.json"))
+                {
+                    LittleFS.remove(BAK_FILE);
+                    LittleFS.rename("/config.json", BAK_FILE);
+                }
+                LittleFS.rename(TMP_FILE, "/config.json");
+                response["success"] = true;
+                response["message"] = "config.json updated";
+
+                MLOG_INFO("Config written to file, reloading devices");
+                // Atomic reload: teardown -> load -> setup -> notifyDevicesChanged.
+                // See DeviceManager::reloadFromJsonFile() for the ordering rationale.
+                if (deviceManager)
+                {
+                    deviceManager->reloadFromJsonFile();
+                }
             }
         }
     }

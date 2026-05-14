@@ -33,6 +33,17 @@
       }
     },
     {
+      "id": "pwm-ex-1",
+      "type": "pwmexpander",
+      "children": [],
+      "config": {
+        "name": "PWM Expander",
+        "i2cDeviceId": "i2c-1",
+        "i2cAddress": 64,
+        "frequency": 50
+      }
+    },
+    {
       "id": "controller",
       "type": "marblecontroller",
       "children": [
@@ -146,7 +157,10 @@
               "type": "servo",
               "children": [],
               "config": {
-                "pin": 40,
+                "pin": {
+                  "pin": 40,
+                  "expanderId": ""
+                },
                 "name": "Lift Loader",
                 "mcpwmChannel": 0,
                 "frequency": 50,
@@ -161,7 +175,10 @@
               "type": "servo",
               "children": [],
               "config": {
-                "pin": 41,
+                "pin": {
+                  "pin": 41,
+                  "expanderId": ""
+                },
                 "name": "Lift Unloader",
                 "mcpwmChannel": 1,
                 "frequency": 50,
@@ -236,7 +253,7 @@
                 "usePwm": true,
                 "maxSpeed": 500,
                 "maxAcceleration": 300,
-                "defaultSpeed": 500,
+                "defaultSpeed": 250,
                 "defaultAcceleration": 100,
                 "stepPin": {
                   "pin": 4,
@@ -463,47 +480,21 @@
       }
     },
     {
-      "id": "Test-stepper",
-      "type": "stepper",
+      "id": "test-servo",
+      "type": "servo",
       "children": [],
       "config": {
-        "name": "Stepper",
-        "stepperType": "DRIVER",
-        "usePwm": true,
-        "maxSpeed": 1000,
-        "maxAcceleration": 500,
-        "defaultSpeed": 500,
-        "defaultAcceleration": 250,
-        "stepPin": {
-          "pin": 13,
-          "expanderId": ""
+        "pin": {
+          "pin": 0,
+          "expanderId": "pwm-ex-1"
         },
-        "dirPin": {
-          "pin": 12,
-          "expanderId": ""
-        },
-        "pin1": {
-          "pin": -1,
-          "expanderId": ""
-        },
-        "pin2": {
-          "pin": -1,
-          "expanderId": ""
-        },
-        "pin3": {
-          "pin": -1,
-          "expanderId": ""
-        },
-        "pin4": {
-          "pin": -1,
-          "expanderId": ""
-        },
-        "enablePin": {
-          "pin": -1,
-          "expanderId": ""
-        },
-        "invertEnable": false,
-        "invertDirection": false
+        "name": "Servo",
+        "mcpwmChannel": -1,
+        "frequency": 50,
+        "resolutionBits": 10,
+        "minDutyCycle": 3,
+        "maxDutyCycle": 12.5,
+        "defaultDurationInMs": 500
       }
     }
   ]

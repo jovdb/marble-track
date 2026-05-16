@@ -198,29 +198,50 @@ namespace devices
             bool zeroPressed = _zeroSensor->getState().isPressed;
             if (zeroPressed && !_state.zeroSensorWasPressed)
             {
-                // Zero sensor triggered - stop and set position
+                // Zero sensor triggered while the motor is still moving.
+                // Record the sensor position as the zero reference.
                 long currentPosition = _stepper->getState().currentPosition;
                 _state.lastZeroPosition = currentPosition;
-                _stepper->stop();
-
-                // Update current angle after zero position is set
                 updateCurrentAngle();
 
-                // Move to first breakpoint if configured
+                // Move to first breakpoint if configured.
+                // Use moveTo() (absolute target) instead of stop() + moveToAngle() (relative).
+                // stop() puts AccelStepper in deceleration mode (_n < 0); an immediate
+                // move() call then causes the speed profile to overshoot by ~22 steps.
+                // moveTo() issues one clean absolute target so AccelStepper decelerates
+                // smoothly from its current speed and stops exactly at the right position.
                 if (!_config.breakPoints.empty() && _config.stepsPerRevolution > 0)
                 {
-                    MLOG_INFO("%s: Init: Zero point reached at %ld, moving to first breakpoint...", toString().c_str(), currentPosition);
+                    // Compute absolute stepper target for breakPoints[0].
+                    // zeroPointDegree: sensor fires this many degrees past physical zero,
+                    // so subtract that offset so breakpoints are measured from physical zero.
+                    long zeroOffsetSteps   = lroundf((_config.zeroPointDegree / 360.0f) * _config.stepsPerRevolution);
+                    long stepsToBreakpoint = lroundf((_config.breakPoints[0]  / 360.0f) * _config.stepsPerRevolution);
+                    long absoluteTarget    = currentPosition - zeroOffsetSteps + stepsToBreakpoint;
+                    // Always move forward; if the target falls behind current position
+                    // (e.g. breakPoints[0] < zeroPointDegree), advance one full revolution.
+                    if (absoluteTarget <= currentPosition)
+                        absoluteTarget += _config.stepsPerRevolution;
+
+                    MLOG_INFO("%s: Init: Zero point reached at %ld, moving to first breakpoint (abs target %ld)...",
+                              toString().c_str(), currentPosition, absoluteTarget);
+
                     _state.currentBreakpointIndex = -1;
-                    _state.targetBreakpointIndex = 0;
-                    _state.state = WheelStateEnum::MOVING;
-                    _state.targetAngle = _config.breakPoints[0];
-                    moveToAngle(_config.breakPoints[0]);
+                    _state.targetBreakpointIndex  = 0;
+                    _state.state                  = WheelStateEnum::MOVING;
+                    _state.targetAngle            = _config.breakPoints[0];
+                    _waitingForMoveStart          = true;
+                    _moveHasStarted               = false;
+                    _state.pendingZeroOffset      = 0;
                     updateCurrentAngle();
                     notifyStateChanged();
+
+                    _stepper->moveTo(absoluteTarget);
                 }
                 else
                 {
                     MLOG_INFO("%s: Init: Zero point reached at %ld, no breakpoints configured", toString().c_str(), currentPosition);
+                    _stepper->stop();
                     _state.state = WheelStateEnum::IDLE;
                     updateCurrentAngle();
                     notifyStateChanged();

@@ -85,6 +85,12 @@ namespace devices
         bool move(long steps, float speed = -1, float acceleration = -1);
 
         /**
+         * @brief Check if the stepper driver has been successfully initialized
+         * @return true if the stepper is ready to accept move commands
+         */
+        bool isReady() const;
+
+        /**
          * @brief Move to absolute position
          * @param position Target position
          * @param speed Speed in steps/second (-1 for default)

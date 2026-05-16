@@ -321,6 +321,14 @@ namespace devices
 
     bool Wheel::calibrate(long maxStepsPerRevolution)
     {
+        if (!_stepper->isReady())
+        {
+            setErrorState(WheelErrorCode::StepperNotInitialized,
+                          "Calibration failed: stepper is not initialized. Check stepper type and pin configuration.");
+            notifyStateChanged();
+            return false;
+        }
+
         MLOG_INFO("%s: Calibration started", toString().c_str());
         _state.state = WheelStateEnum::CALIBRATING;
         _state.lastZeroPosition = 0;
@@ -339,6 +347,14 @@ namespace devices
 
     bool Wheel::init(long maxStepsPerRevolution)
     {
+        if (!_stepper->isReady())
+        {
+            setErrorState(WheelErrorCode::StepperNotInitialized,
+                          "Init failed: stepper is not initialized. Check stepper type and pin configuration.");
+            notifyStateChanged();
+            return false;
+        }
+
         MLOG_INFO("%s: Init started", toString().c_str());
         _state.state = WheelStateEnum::INIT;
         _state.currentBreakpointIndex = -1;

@@ -43,6 +43,7 @@ namespace devices
         CalibrationSecondZeroNotFound,
         ZeroNotFound,
         UnexpectedZeroTrigger,
+        StepperNotInitialized,
     };
 
     /**

@@ -766,6 +766,11 @@ namespace devices
             acceleration = _config.maxAcceleration;
     }
 
+    bool Stepper::isReady() const
+    {
+        return _driver != nullptr || _fastDriver != nullptr;
+    }
+
     bool Stepper::ensureReady(const char *action, bool logWarning) const
     {
         if (!_driver && !_fastDriver)

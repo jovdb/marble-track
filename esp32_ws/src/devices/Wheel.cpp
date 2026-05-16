@@ -433,6 +433,12 @@ namespace devices
         long stepsToMove = lroundf((angleDiff / 360.0f) * _config.stepsPerRevolution);
         long targetPosition = currentPosition + stepsToMove;
 
+        if (stepsToMove == 0)
+        {
+            MLOG_INFO("%s: Already at %.1f°, no movement needed", toString().c_str(), angle);
+            return true;
+        }
+
         MLOG_INFO("%s: Moving to %.1f° (current %.1f°, forward diff %.1f° = %ld steps)",
                   toString().c_str(), angle, currentAngle, angleDiff, stepsToMove);
 

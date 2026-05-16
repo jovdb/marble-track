@@ -77,15 +77,16 @@ namespace devices
             void step1(long step) override
             {
                 (void)step;
-                if (!_pin1 || !_pin2)
+                if (!_pin1)
                     return;
 
-                bool isCw = _direction == DIRECTION_CW;
-                if (_invertDirection)
+                if (_pin2)
                 {
-                    isCw = !isCw;
+                    bool isCw = _direction == DIRECTION_CW;
+                    if (_invertDirection)
+                        isCw = !isCw;
+                    _pin2->write(isCw ? HIGH : LOW);
                 }
-                _pin2->write(isCw ? HIGH : LOW);
                 _pin1->write(HIGH);
                 delayMicroseconds(1);
                 _pin1->write(LOW);
@@ -160,7 +161,7 @@ namespace devices
                 cleanupPins();
                 return;
             }
-            if (!configureOutputPin(_config.dirPin, _dirPin, "direction pin", true))
+            if (!configureOutputPin(_config.dirPin, _dirPin, "direction pin", false))
             {
                 cleanupPins();
                 return;
@@ -598,9 +599,14 @@ namespace devices
                 MLOG_ERROR("%s: FastAccelStepper (PWM) only supports DRIVER type", toString().c_str());
                 return;
             }
-            if (!_stepPin || !_dirPin || !_config.stepPin.expanderId.isEmpty() || !_config.dirPin.expanderId.isEmpty())
+            if (!_stepPin || !_config.stepPin.expanderId.isEmpty())
             {
-                MLOG_ERROR("%s: FastAccelStepper requires direct GPIO pins", toString().c_str());
+                MLOG_ERROR("%s: FastAccelStepper requires a direct GPIO step pin", toString().c_str());
+                return;
+            }
+            if (_dirPin && !_config.dirPin.expanderId.isEmpty())
+            {
+                MLOG_ERROR("%s: FastAccelStepper requires a direct GPIO direction pin", toString().c_str());
                 return;
             }
 
@@ -617,9 +623,12 @@ namespace devices
             #endif
             if (_fastDriver)
             {
-                // PinAccelStepper drives direction HIGH for positive/count-up moves by default.
-                // FastAccelStepper's dirHighCountsUp must match that polarity.
-                _fastDriver->setDirectionPin(_config.dirPin.pin, !_config.invertDirection);
+                if (_dirPin && _config.dirPin.pin >= 0)
+                {
+                    // PinAccelStepper drives direction HIGH for positive/count-up moves by default.
+                    // FastAccelStepper's dirHighCountsUp must match that polarity.
+                    _fastDriver->setDirectionPin(_config.dirPin.pin, !_config.invertDirection);
+                }
                 // We handle enable pin manually in enableStepper/disableStepper
             }
             else
@@ -631,9 +640,9 @@ namespace devices
         {
             if (_config.stepperType == "DRIVER")
             {
-                if (!_stepPin || !_dirPin)
+                if (!_stepPin)
                 {
-                    MLOG_ERROR("%s: Stepper DRIVER pins not configured", toString().c_str());
+                    MLOG_ERROR("%s: Stepper DRIVER step pin not configured", toString().c_str());
                     _driver = nullptr;
                     return;
                 }

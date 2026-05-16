@@ -753,6 +753,18 @@ Device *DeviceManager::findDeviceRecursiveById(Device *root, const String &devic
     return nullptr;
 }
 
+Device *DeviceManager::getRootDeviceOf(Device *device) const
+{
+    if (!device)
+        return nullptr;
+    for (int i = 0; i < devicesCount; i++)
+    {
+        if (devices[i] && findDeviceRecursiveById(devices[i], device->getId()))
+            return devices[i];
+    }
+    return device; // fallback: treat as root
+}
+
 Device *DeviceManager::getDeviceByType(const String &deviceType) const
 {
     for (int i = 0; i < devicesCount; i++)

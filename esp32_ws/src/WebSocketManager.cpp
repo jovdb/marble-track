@@ -364,10 +364,14 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
                 JsonDocument configDoc;
                 configDoc.set(doc["config"].as<JsonObject>());
 
-                // Restart only the affected device so other devices keep running
-                device->teardown();
+                // Restart from the root parent so that parent state (e.g. Wheel's
+                // lastZeroPosition) is fully reset when a child (e.g. Stepper) is
+                // reconfigured.  If `device` is already a root, root == device and
+                // the behaviour is identical to before.
+                Device *root = deviceManager->getRootDeviceOf(device);
+                root->teardown();
                 serializable->jsonToConfig(configDoc);
-                device->setup();
+                root->setup();
 
                 deviceManager->saveDevicesToJsonFile();
 

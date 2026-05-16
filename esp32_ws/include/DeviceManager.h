@@ -47,6 +47,10 @@ public:
 
     Device *getDeviceById(const String &deviceId) const;
 
+    // Returns the root (top-level) device that contains `device` in its subtree.
+    // If `device` is already a root device, returns `device` itself.
+    Device *getRootDeviceOf(Device *device) const;
+
     template <typename T>
     T *getDeviceByIdAs(const String &deviceId) const
     {

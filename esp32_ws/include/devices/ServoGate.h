@@ -73,6 +73,9 @@ namespace devices
         Button *_button = nullptr;
         Servo *_servo = nullptr;
 
+        unsigned long _buttonPressStartMs = 0;
+        bool _holdQueueFillApplied = false;
+
         ServoGateFsmState _fsm = ServoGateFsmState::IDLE;
         unsigned long _timerStart = 0;
         uint32_t _timerDuration = 0;

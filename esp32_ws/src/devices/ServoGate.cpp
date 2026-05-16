@@ -10,6 +10,11 @@
 namespace devices
 {
 
+    namespace servo_gate_timing
+    {
+        static constexpr unsigned long HoldToFillQueueMs = 2000UL;
+    }
+
     ServoGate::ServoGate(const String &id)
         : Device(id, "servogate")
     {
@@ -33,6 +38,8 @@ namespace devices
         setName(_config.name);
 
         _fsm = ServoGateFsmState::IDLE;
+        _buttonPressStartMs = 0;
+        _holdQueueFillApplied = false;
         _timerStart = 0;
         _timerDuration = 0;
         _state.gateState = "Idle";
@@ -47,6 +54,8 @@ namespace devices
     {
         Device::teardown();
         _fsm = ServoGateFsmState::IDLE;
+        _buttonPressStartMs = 0;
+        _holdQueueFillApplied = false;
     }
 
     bool ServoGate::isTimerExpired() const
@@ -82,6 +91,9 @@ namespace devices
             {
                 if (btnState.isPressedChanged)
                 {
+                    _buttonPressStartMs = millis();
+                    _holdQueueFillApplied = false;
+
                     // New click: add one to queue
                     if (_state.queueCount < _config.fullQueueCount)
                     {
@@ -92,14 +104,22 @@ namespace devices
                 }
                 else
                 {
-                    // Still held: fill queue
-                    if (_state.queueCount < _config.fullQueueCount)
+                    // Still held: after 2s continuous hold, fill queue once.
+                    if (!_holdQueueFillApplied &&
+                        _state.queueCount < _config.fullQueueCount &&
+                        (millis() - _buttonPressStartMs) >= servo_gate_timing::HoldToFillQueueMs)
                     {
                         _state.queueCount = _config.fullQueueCount;
+                        _holdQueueFillApplied = true;
                         MLOG_INFO("%s: Button held, queue filled to %d", toString().c_str(), _state.queueCount);
                         notifyStateChanged();
                     }
                 }
+            }
+            else if (btnState.isPressedChanged)
+            {
+                _buttonPressStartMs = 0;
+                _holdQueueFillApplied = false;
             }
         }
 
@@ -156,8 +176,7 @@ namespace devices
             {
                 _state.queueCount--;
                 _state.pulseCount++;
-             //   MLOG_INFO("%s: Cycle complete (total pulses=%d), queue=%d",
-                          toString().c_str(), _state.pulseCount, _state.queueCount);
+                     // MLOG_INFO("%s: Cycle complete (total pulses=%d), queue=%d", toString().c_str(), _state.pulseCount, _state.queueCount);
 
                 if (_state.queueCount > 0)
                 {

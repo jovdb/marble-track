@@ -360,12 +360,14 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
             ISerializable *serializable = mixins::SerializableRegistry::get(deviceId);
             if (serializable)
             {
-                deviceManager->teardown();
-
                 // Apply the incoming config to the device
                 JsonDocument configDoc;
                 configDoc.set(doc["config"].as<JsonObject>());
+
+                // Restart only the affected device so other devices keep running
+                device->teardown();
                 serializable->jsonToConfig(configDoc);
+                device->setup();
 
                 deviceManager->saveDevicesToJsonFile();
 
@@ -381,8 +383,6 @@ void WebSocketManager::handleDeviceSaveConfig(JsonDocument &doc)
                 {
                     MLOG_ERROR("device-save-config: config JSON overflowed for %s", deviceId.c_str());
                 }
-                // Note: Re-setup all root devices after config change
-                deviceManager->setup();
 
                 response["config"] = savedConfig;
 

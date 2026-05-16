@@ -391,8 +391,13 @@ namespace devices
 
         // Always move forward: compute current wheel angle from zero reference,
         // then wrap target delta to [0, 360).
+        // zeroPointDegree shifts the reference so the sensor position = zeroPointDegree°
+        // and breakpoints are measured from physical zero.
+        long zeroOffsetSteps = (_config.stepsPerRevolution > 0)
+            ? lroundf((_config.zeroPointDegree / 360.0f) * _config.stepsPerRevolution)
+            : 0L;
         float currentAngle = 0.0f;
-        long relSteps = currentPosition - _state.lastZeroPosition;
+        long relSteps = currentPosition - _state.lastZeroPosition + zeroOffsetSteps;
         long relStepsNorm = relSteps % _config.stepsPerRevolution;
         if (relStepsNorm < 0)
             relStepsNorm += _config.stepsPerRevolution;
@@ -648,7 +653,10 @@ namespace devices
         {
             long currentPosition = _stepper->getState().currentPosition;
             long effectiveLastZero = _state.lastZeroPosition + _state.pendingZeroOffset;
-            long stepsFromZero = currentPosition - effectiveLastZero;
+            // zeroPointDegree: the sensor fires at this many degrees past physical zero.
+            // Adding the corresponding steps makes "at sensor" = zeroPointDegree°.
+            long zeroOffsetSteps = lroundf((_config.zeroPointDegree / 360.0f) * _config.stepsPerRevolution);
+            long stepsFromZero = currentPosition - effectiveLastZero + zeroOffsetSteps;
             float angle = (stepsFromZero * 360.0f) / _config.stepsPerRevolution;
             // Normalize angle to 0-360 range
             while (angle < 0)

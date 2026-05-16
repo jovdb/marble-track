@@ -314,7 +314,12 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
             <ul class={wheelStyles["wheel-config__list"]}>
               <For each={breakpoints()}>
                 {(bp, index) => (
-                  <li class={wheelStyles["wheel-config__item"]}>
+                  <li
+                    class={wheelStyles["wheel-config__item"]}
+                    onClick={() => setAngle(String(bp))}
+                    style={{ cursor: "pointer" }}
+                    title={`Set angle to ${bp}°`}
+                  >
                     <span class={wheelStyles["wheel-config__value"]}>{bp}</span>
 
                     <button
@@ -322,6 +327,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                       title="Move Up"
                       onClick={(e) => {
                         e.preventDefault();
+                        e.stopPropagation();
                         const currentBreakpoints = breakpoints();
                         const newBreakpoints = [...currentBreakpoints];
                         if (index() > 0) {
@@ -340,6 +346,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                       title="Move Down"
                       onClick={(e) => {
                         e.preventDefault();
+                        e.stopPropagation();
                         const currentBreakpoints = breakpoints();
                         const newBreakpoints = [...currentBreakpoints];
                         if (index() < newBreakpoints.length - 1) {
@@ -357,6 +364,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                       title="Delete"
                       onClick={(e) => {
                         e.preventDefault();
+                        e.stopPropagation();
                         const currentBreakpoints = breakpoints();
                         const newBreakpoints = currentBreakpoints.filter((_, i) => i !== index());
                         updateBreakpoints(newBreakpoints);

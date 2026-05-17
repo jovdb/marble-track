@@ -1,6 +1,6 @@
 import { Device } from "./Device";
 import { debounce } from "@solid-primitives/scheduled";
-import { createEffect, createMemo, createSignal, Show } from "solid-js";
+import { createEffect, createMemo, createSignal } from "solid-js";
 import deviceStyles from "./Device.module.css";
 import servoStyles from "./Servo.module.css";
 import { useServo } from "../../stores/Servo";
@@ -46,10 +46,8 @@ export function Servo(props: { id: string; isPopup?: boolean; onClose?: () => vo
   const sliderValue = createMemo(() => currentValue() ?? 0);
 
   const servoState = createMemo(() => deviceState()?.state ?? "Unknown");
-  const isMoving = createMemo(() => servoState() === "Moving");
   const isDisabled = createMemo(() => servoState() === "Disabled");
   const isError = createMemo(() => servoState() === "Error");
-  const isReady = createMemo(() => servoState() === "Ready");
 
   const statusText = createMemo(() => {
     const state = servoState();

@@ -577,31 +577,14 @@ export const TowerIcon = (props: IconProps) => (
         d="M 16 5 
            L 32 5 
            Q 30 8, 27 11 
-           L 27 20 
-           L 21 20 
+           L 27 30 
+           L 21 30 
            L 21 11 
            Q 18 8, 16 5 Z 
            M 19 8 
            L 29 8 
            M 21 11 
            L 27 11"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-
-      <path
-        d="M 21 20 
-           L 27 20 
-           L 27 30 
-           L 21 30 Z"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
       />
 
       <path
@@ -609,20 +592,11 @@ export const TowerIcon = (props: IconProps) => (
            Q 20 38, 24 38 
            Q 28 38, 28 34 
            A 8 8 0 1 1 20 34 Z"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
       />
 
       <path
         d="M 16 41 L 32 41 
            M 24 38 L 24 48"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
       />
     </g>
   </svg>

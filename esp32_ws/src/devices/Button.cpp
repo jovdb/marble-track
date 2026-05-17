@@ -219,9 +219,11 @@ namespace devices
     {
         if (_isSimulated)
         {
-            bool isClosed = _simulatedIsPressed;
-            _state.input = contactStateToPinState(isClosed);
-            return isClosed;
+            // _simulatedIsPressed stores the contact-closed state
+            bool contactClosed = _simulatedIsPressed;
+            _state.input = contactStateToPinState(contactClosed);
+            // NC inversion always applies in simulation (no Floating exception needed)
+            return (_config.buttonType == ButtonType::NormalClosed) ? !contactClosed : contactClosed;
         }
 
         if (_pin == nullptr || !_pin->isConfigured())
@@ -230,10 +232,18 @@ namespace devices
         int pinState = _pin->read();
         _state.input = pinState;
 
-        // Contact is closed if:
-        // PullUp: pin is LOW
-        // PullDown/Floating: pin is HIGH
-        return (_config.pinMode == PinModeOption::PullUp) ? (pinState == LOW) : (pinState == HIGH);
+        // Determine if the switch contact is electrically closed.
+        // PullUp:           LOW  → contact pulls pin to GND  → contact closed
+        // PullDown/Floating: HIGH → contact pulls pin to VCC → contact closed
+        bool contactClosed = (_config.pinMode == PinModeOption::PullUp) ? (pinState == LOW) : (pinState == HIGH);
+
+        // For NormallyClosed buttons with a defined pull resistor, pressing opens the
+        // contact (inverts the closed sense).  Floating mode has no defined reference
+        // level so NC acts identically to NO — no inversion.
+        if (_config.buttonType == ButtonType::NormalClosed && _config.pinMode != PinModeOption::Floating)
+            return !contactClosed;
+
+        return contactClosed;
     }
 
     int Button::contactStateToPinState(bool isClosed) const

@@ -55,13 +55,34 @@ namespace devices
             return;
         }
 
-        // Quick I2C presence check
+        // I2C health check
         Wire.beginTransmission(_config.i2cAddress);
-        uint8_t error = Wire.endTransmission();
+        uint8_t error = Wire.endTransmission(true); // true = send stop bit, release bus
 
         if (error != 0)
         {
-            Device::setError("NOT_FOUND", "PCA9685 not found at 0x" + String(_config.i2cAddress, HEX));
+            String errorCode;
+            String errorMsg;
+            switch (error)
+            {
+            case 2:
+                errorCode = "NO_ACK";
+                errorMsg = "PCA9685 at 0x" + String(_config.i2cAddress, HEX) + " not responding (no ACK \u2014 is it connected?)";
+                break;
+            case 4:
+                errorCode = "BUS_ERROR";
+                errorMsg = "I²C bus error for PCA9685 at 0x" + String(_config.i2cAddress, HEX) + " (check pull-ups)";
+                break;
+            case 5:
+                errorCode = "TIMEOUT";
+                errorMsg = "I²C timeout for PCA9685 at 0x" + String(_config.i2cAddress, HEX);
+                break;
+            default:
+                errorCode = "I2C_ERROR_" + String(error);
+                errorMsg = "I²C error " + String(error) + " for PCA9685 at 0x" + String(_config.i2cAddress, HEX);
+                break;
+            }
+            Device::setError(errorCode, errorMsg);
             _state.state = "Error";
             notifyStateChanged();
             MLOG_WARN("%s: PCA9685 not found at address 0x%02X on I2C bus '%s' (I2C error: %d)",

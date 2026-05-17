@@ -84,6 +84,10 @@ namespace devices
         // Calls loop() on children (button and servo) first
         Device::loop();
 
+        // Check if the gate servo is in error; skip button/FSM processing if so
+        if (checkChildErrors())
+            return;
+
         if (_button != nullptr)
         {
             const auto &btnState = _button->getState();
@@ -281,6 +285,31 @@ namespace devices
         case ServoGateFsmState::BETWEEN:    return "Between";
         default:                            return "Unknown";
         }
+    }
+
+    bool ServoGate::checkChildErrors()
+    {
+        const bool servoInError = _servo != nullptr && _servo->getState().state == ServoStateEnum::ERROR;
+
+        if (servoInError && !_childErrorActive)
+        {
+            // Servo just entered error — block the gate
+            MLOG_ERROR("%s: required child 'servo' has an error: %s", toString().c_str(), _servo->getState().errorMessage.c_str());
+            _childErrorActive = true;
+            _state.queueCount = 0;
+            _fsm = ServoGateFsmState::IDLE;
+            _state.gateState = fsmStateToString(_fsm);
+            notifyStateChanged();
+        }
+        else if (!servoInError && _childErrorActive)
+        {
+            // Servo error has cleared — resume
+            MLOG_INFO("%s: Child servo error resolved, resuming", toString().c_str());
+            _childErrorActive = false;
+            notifyStateChanged();
+        }
+
+        return _childErrorActive;
     }
 
 } // namespace devices

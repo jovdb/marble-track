@@ -149,6 +149,10 @@ namespace devices
 
         _state.onErrorChange = false;
 
+        // Check if any required child servo is in error; skip state machine if so
+        if (checkChildErrors())
+            return;
+
         // Check ball sensor state and notify if changed
         bool ballWaiting = _ballSensor ? _ballSensor->getState().isPressed : false;
 
@@ -554,6 +558,8 @@ namespace devices
             return "LIFT_STATE_ERROR";
         case LiftErrorCode::LIFT_NO_ZERO:
             return "LIFT_NO_ZERO";
+        case LiftErrorCode::LIFT_CHILD_ERROR:
+            return "LIFT_CHILD_ERROR";
         default:
             MLOG_ERROR("%s: Unknown Lift error code in errorCodeToString: %d", toString().c_str(), static_cast<int>(errorCode));
             return "UNKNOWN_ERROR_CODE";
@@ -668,6 +674,49 @@ namespace devices
         _state.errorCode = errorCode;  // Store the error code
 
         notifyStateChanged();
+    }
+
+    bool Lift::checkChildErrors()
+    {
+        if (_state.state == LiftStateEnum::ERROR)
+        {
+            // Auto-clear if we were in child error and children have since recovered
+            if (_state.errorCode == LiftErrorCode::LIFT_CHILD_ERROR)
+            {
+                const bool loaderInError = _loader != nullptr && _loader->getState().state == ServoStateEnum::ERROR;
+                const bool unloaderInError = _unloader != nullptr && _unloader->getState().state == ServoStateEnum::ERROR;
+                if (!loaderInError && !unloaderInError)
+                {
+                    MLOG_INFO("%s: Child servo error resolved, clearing error", toString().c_str());
+                    _state.state = LiftStateEnum::UNKNOWN;
+                    _state.errorCode = LiftErrorCode::NONE;
+                    _state.errorMessage = "";
+                    _state.onErrorChange = true;
+                    notifyStateChanged();
+                    return false;
+                }
+                return true; // Still in child error
+            }
+            return false; // Error from a different cause, not a child error
+        }
+
+        // Check loader servo
+        if (_loader != nullptr && _loader->getState().state == ServoStateEnum::ERROR)
+        {
+            String message = "required child 'loader' has an error: " + _loader->getState().errorMessage;
+            setError(LiftErrorCode::LIFT_CHILD_ERROR, message);
+            return true;
+        }
+
+        // Check unloader servo
+        if (_unloader != nullptr && _unloader->getState().state == ServoStateEnum::ERROR)
+        {
+            String message = "required child 'unloader' has an error: " + _unloader->getState().errorMessage;
+            setError(LiftErrorCode::LIFT_CHILD_ERROR, message);
+            return true;
+        }
+
+        return false;
     }
 
     void Lift::initLoop()

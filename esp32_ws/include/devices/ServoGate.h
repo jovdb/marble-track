@@ -79,11 +79,18 @@ namespace devices
         ServoGateFsmState _fsm = ServoGateFsmState::IDLE;
         unsigned long _timerStart = 0;
         uint32_t _timerDuration = 0;
+        bool _childErrorActive = false; // True while a required child is in error
 
         bool isTimerExpired() const;
         void startTimer(uint32_t durationMs);
         void startCycle();
         String fsmStateToString(ServoGateFsmState state) const;
+
+        /**
+         * @brief Check if the gate servo is in error and propagate
+         * @return true if the child servo is currently in error
+         */
+        bool checkChildErrors();
     };
 
 } // namespace devices

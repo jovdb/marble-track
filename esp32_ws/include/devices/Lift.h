@@ -46,6 +46,7 @@ namespace devices
         LIFT_CONFIGURATION_ERROR,
         LIFT_STATE_ERROR,
         LIFT_NO_ZERO,
+        LIFT_CHILD_ERROR, // Error propagated from a required child device
     };
 
     /**
@@ -247,6 +248,12 @@ namespace devices
          * @return true if stopped
          */
         bool stopStepper();
+
+        /**
+         * @brief Check if any required child servo is in error and propagate
+         * @return true if any child is currently in error
+         */
+        bool checkChildErrors();
 
         /**
          * @brief Set error state

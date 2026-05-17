@@ -77,6 +77,7 @@ namespace devices
 
         _state.state = LiftStateEnum::UNKNOWN;
         _state.onErrorChange = false;
+        _loadEndTime = 0;
 
         if (_stepper->getPins().empty())
 
@@ -133,6 +134,7 @@ namespace devices
         _initSpeedRatio = 1.0f;
 
         _loadStartTime = 0;
+        _loadEndTime = 0;
         _unloadStartTime = 0;
         _unloadEndTime = 0;
         _unloadDurationMs = 0;
@@ -565,6 +567,7 @@ namespace devices
         MLOG_INFO("%s: Loading ball...", toString().c_str());
         _state.state = LiftStateEnum::LIFT_DOWN_LOADING;
         _loadStartTime = millis();
+        _loadEndTime = 0;
         _state.isLoaded = true;
         notifyStateChanged();
 
@@ -574,12 +577,27 @@ namespace devices
 
     bool Lift::loadBallEnd()
     {
+        // Phase 1: start closing the loader once the loading phase is complete
+        if (_loadEndTime == 0)
+        {
+            _loadEndTime = millis();
+            return _loader->setValue(0, static_cast<int>(_loader->getConfig().defaultDurationInMs));
+        }
+
+        // Phase 2: wait until the close animation has completed before reporting LIFT_DOWN
+        if (millis() - _loadEndTime < _loader->getConfig().defaultDurationInMs)
+        {
+            return true;
+        }
+
+        // Disable the load servo after the closing motion finishes
+        _loader->disable();
 
         _state.state = LiftStateEnum::LIFT_DOWN;
+        _loadStartTime = 0;
+        _loadEndTime = 0;
         notifyStateChanged();
-
-        // Set loader to 0 (fully closed) - simplified control
-        return _loader->setValue(0);
+        return true;
     }
 
     bool Lift::unloadBallStart(float durationRatio)
@@ -622,6 +640,9 @@ namespace devices
         {
             return true;
         }
+
+        // Turn off PWM to save power and reduce heat - simplified control
+        _unloader->disable();
 
         _state.state = LiftStateEnum::LIFT_UP;
         _state.isLoaded = false;

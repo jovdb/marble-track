@@ -168,6 +168,7 @@ namespace devices
         unsigned long _unloadEndTime = 0;    // Unload operation end time
         uint32_t _unloadDurationMs = 0;      // Active unload open/close duration
         unsigned long _stepperStartTime = 0; // Stepper start time (0 when stopped)
+        unsigned long _loadEndTime = 0;      // Load operation close end time
 
     private:
         /**

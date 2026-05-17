@@ -314,6 +314,8 @@ export type IWsSendGetExpanderAddressesMessage = IWsMessageBase<"expander-addres
 
 export type IWsSendGetSystemInfoMessage = IWsMessageBase<"system-info">;
 
+export type IWsSendGetAllDeviceStatesMessage = IWsMessageBase<"devices-all-states">;
+
 export type IWsSendMessage =
   | IWsSendRestartMessage
   | IWsSendGetDevicesMessage
@@ -332,4 +334,5 @@ export type IWsSendMessage =
   | IWsSendGetNetworkStatusMessage
   | IWsSendGetExpanderAddressesMessage
   | IWsSendGetSystemInfoMessage
+  | IWsSendGetAllDeviceStatesMessage
   | IWsSendPingMessage;

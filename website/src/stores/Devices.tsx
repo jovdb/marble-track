@@ -79,6 +79,12 @@ export function createDevicesStore({
               draft.devices = newDevices;
             })
           );
+
+          // Request state for every device in one bulk message so the
+          // Available Devices list can show error indicators without needing
+          // the user to open a device popup first. A single "devices-all-states"
+          // request avoids flooding the ESP32 send buffer with N individual requests.
+          sendMessage({ type: "devices-all-states" });
         }
         break;
       }

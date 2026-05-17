@@ -689,6 +689,7 @@ WebSocketManager::WebSocketManager(DeviceManager *deviceManager, Network *networ
     dispatchTable["restart"]              = [this](JsonDocument &)    { handleRestart(); };
     dispatchTable["device-fn"]            = [this](JsonDocument &d)   { handleDeviceFunction(d); };
     dispatchTable["device-state"]         = [this](JsonDocument &d)   { handleDeviceGetState(d); };
+    dispatchTable["devices-all-states"]    = [this](JsonDocument &d)   { handleGetAllDeviceStates(d); };
     dispatchTable["devices-list"]         = [this](JsonDocument &d)   { handleGetDevices(d); };
     dispatchTable["system-info"]          = [this](JsonDocument &d)   { handleGetSystemInfo(d); };
     dispatchTable["set-devices-config"]   = [this](JsonDocument &d)   { handleSetDevicesConfig(d); };
@@ -875,6 +876,56 @@ void WebSocketManager::handleDeviceFunction(JsonDocument &doc)
     {
         MLOG_WARN("handleDeviceFunction: Device not found or not controllable: %s", deviceId.c_str());
     }
+}
+
+void WebSocketManager::handleGetAllDeviceStates(JsonDocument &doc)
+{
+    if (!hasClients() || !deviceManager)
+        return;
+
+    // Collect all devices (roots + children at every depth).
+    std::vector<Device *> allDevices = deviceManager->getAllDevices();
+
+    // Wrap every per-device state response in one batch so the entire
+    // snapshot goes out in a single WebSocket frame and never overflows
+    // the send buffer on reconnection.
+    beginBatch();
+    for (Device *device : allDevices)
+    {
+        if (!device)
+            continue;
+
+        const String deviceId = device->getId();
+
+        JsonDocument responseDoc;
+        responseDoc["type"] = "device-state";
+        responseDoc["success"] = true;
+        responseDoc["deviceId"] = deviceId;
+
+        if (device->hasMixin("controllable"))
+        {
+            IControllable *ctrl = mixins::ControllableRegistry::get(deviceId);
+            if (ctrl)
+            {
+                JsonDocument stateDoc;
+                ctrl->addStateToJson(stateDoc);
+                responseDoc["state"] = stateDoc;
+            }
+            else
+            {
+                responseDoc["state"] = nullptr;
+            }
+        }
+        else
+        {
+            responseDoc["state"] = nullptr;
+        }
+
+        String response;
+        serializeJson(responseDoc, response);
+        notifyClients(response);
+    }
+    endBatch();
 }
 
 void WebSocketManager::handleDeviceGetState(JsonDocument &doc)

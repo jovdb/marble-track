@@ -64,6 +64,9 @@ public:
     // Made public to allow global function access
     void parseMessage(String message);
 
+    // Device state handlers
+    void handleGetAllDeviceStates(JsonDocument &doc);
+
     // Device config handlers
     void handleDeviceSaveConfig(JsonDocument &doc);
     void handleDeviceReadConfig(JsonDocument &doc);

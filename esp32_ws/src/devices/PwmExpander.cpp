@@ -27,11 +27,8 @@ namespace devices
         }
     }
 
-    void PwmExpander::setup()
+    void PwmExpander::init()
     {
-        Device::setup();
-        setName(_config.name);
-
         // Resolve I2C bus device
         devices::I2c *i2cDevice = nullptr;
         if (!_config.i2cDeviceId.isEmpty())
@@ -72,10 +69,6 @@ namespace devices
             return;
         }
 
-        Device::clearError();
-        _state.state = "Found";
-        notifyStateChanged();
-
         // Create and initialise the Adafruit driver
         if (_driver)
         {
@@ -93,8 +86,18 @@ namespace devices
         }
         _driver->setPWMFreq(freq);
 
+        Device::clearError();
+        _state.state = "Ready";
+        notifyStateChanged();
         MLOG_INFO("%s: PCA9685 ready at 0x%02X, %.1f Hz, 16 channels",
                   toString().c_str(), _config.i2cAddress, freq);
+    }
+
+    void PwmExpander::setup()
+    {
+        Device::setup();
+        setName(_config.name);
+        init();
     }
 
     void PwmExpander::teardown()
@@ -126,7 +129,7 @@ namespace devices
 
     bool PwmExpander::isDevicePresent() const
     {
-        return _state.state == "Found";
+        return _state.state == "Ready";
     }
 
     void PwmExpander::jsonToConfig(const JsonDocument &config)
@@ -154,8 +157,16 @@ namespace devices
         doc["state"] = _state.state;
     }
 
-    bool PwmExpander::control(const String & /*action*/, JsonObject * /*args*/)
+    bool PwmExpander::control(const String &action, JsonObject * /*args*/)
     {
+        if (action == "init")
+        {
+            MLOG_INFO("%s: Re-initialising on request", toString().c_str());
+            _state.state = "Init";
+            notifyStateChanged();
+            init();
+            return true;
+        }
         return false;
     }
 

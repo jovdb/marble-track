@@ -34,7 +34,9 @@ namespace devices
      */
     struct PwmExpanderState
     {
-        // "Found" = PCA9685 responded on I2C bus, "Error" = not found or misconfigured
+        // "Ready" = PCA9685 responded on I2C bus
+        // "Init"  = re-probe in progress
+        // "Error" = not found or misconfigured
         String state = "Error";
     };
 
@@ -63,6 +65,9 @@ namespace devices
         /** @brief Whether the PCA9685 responded on the I2C bus during setup */
         bool isDevicePresent() const;
 
+        /** @brief (Re-)probe the I2C bus and initialise the driver; updates state/error. */
+        void init();
+
         /** @brief Always 16 channels on a PCA9685 */
         int getPinCount() const { return 16; }
 
@@ -85,6 +90,8 @@ namespace devices
 
     private:
         Adafruit_PWMServoDriver *_driver = nullptr;
+
+
     };
 
 } // namespace devices

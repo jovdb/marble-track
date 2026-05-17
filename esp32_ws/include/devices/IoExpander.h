@@ -43,7 +43,9 @@ namespace devices
      */
     struct IoExpanderState
     {
-        // "Found" = device responded on I2C bus, "Error" = not found or misconfigured
+        // "Ready" = device responded on I2C bus
+        // "Init"  = re-probe in progress
+        // "Error" = not found or misconfigured
         String state = "Error";
     };
 
@@ -74,6 +76,12 @@ namespace devices
          * @return true if the device acknowledges on the I2C bus
          */
         bool isDevicePresent() const;
+
+        /**
+         * @brief (Re-)probe the I2C bus and update state/error.
+         * Called from setup() and from control("init").
+         */
+        void init();
 
         /**
          * @brief Get the number of pins available on this expander
@@ -114,6 +122,8 @@ namespace devices
          * @return Expander type enum
          */
         IoExpanderType stringToExpanderType(const String &typeStr) const;
+
+
     };
 
 } // namespace devices

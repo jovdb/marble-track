@@ -1,10 +1,12 @@
-import { Device } from "./Device";
+﻿import { Device } from "./Device";
 import { getDeviceIcon } from "../icons/Icons";
-import { useDevice, useDevices } from "../../stores/Devices";
+import { useDevices } from "../../stores/Devices";
+import { useIoExpander } from "../../stores/IoExpander";
 import IoExpanderConfig from "./IoExpanderConfig";
+import styles from "./Device.module.css";
 
 export function IoExpander(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
-  const [device] = useDevice(props.id);
+  const [device, actions] = useIoExpander(props.id);
   const [devicesStore] = useDevices();
 
   const deviceType = device?.type;
@@ -30,6 +32,13 @@ export function IoExpander(props: { id: string; isPopup?: boolean; onClose?: () 
     return 0;
   };
 
+  const statusText = () => {
+    const s = expanderState();
+    if (s === "Ready") return <span style={{ color: "green" }}>Connected</span>;
+    if (s === "Init") return <span style={{ color: "cornflowerblue" }}>Initializing&hellip;</span>;
+    return <span>Unknown</span>;
+  };
+
   return (
     <Device
       id={props.id}
@@ -40,14 +49,7 @@ export function IoExpander(props: { id: string; isPopup?: boolean; onClose?: () 
     >
       <div style={{ padding: "0.5rem", "font-size": "0.9rem" }}>
         <div>
-          <strong>Status:</strong>{" "}
-          {expanderState() === undefined ? (
-            "Unknown"
-          ) : expanderState() === "Found" ? (
-            <span style={{ color: "green" }}>Connected</span>
-          ) : (
-            <span style={{ color: "orange" }}>Not found</span>
-          )}
+          <strong>Status:</strong> {statusText()}
         </div>
         <div>
           <strong>Type:</strong> {expanderType()}
@@ -56,11 +58,21 @@ export function IoExpander(props: { id: string; isPopup?: boolean; onClose?: () 
           <strong>I²C Bus:</strong> {i2cDeviceName()}
         </div>
         <div>
-          <div>
-            <strong>Address:</strong> {i2cAddress()}
-          </div>
+          <strong>Address:</strong> {i2cAddress()}
+        </div>
+        <div>
           <strong>Available Pins:</strong> {pinCount()}
         </div>
+      </div>
+      <div class={styles.device__controls}>
+        <button
+          class={styles.device__button}
+          onClick={() => actions.init()}
+          disabled={expanderState() === "Ready" || expanderState() === "Init"}
+          title="Re-probe the I²C bus and re-initialise the expander"
+        >
+          Init
+        </button>
       </div>
     </Device>
   );

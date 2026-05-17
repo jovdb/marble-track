@@ -23,14 +23,8 @@ namespace devices
     {
     }
 
-    void IoExpander::setup()
+    void IoExpander::init()
     {
-
-        Device::setup();
-
-        // Set the device name
-        setName(_config.name);
-
         // Get the I2C device
         devices::I2c *i2cDevice = nullptr;
         if (!_config.i2cDeviceId.isEmpty())
@@ -47,8 +41,6 @@ namespace devices
             return;
         }
 
-        // Check if I2C device has been set up
-        // Otherwise address device is not found
         if (!i2cDevice->isSetup())
         {
             MLOG_ERROR("%s: I2C device '%s' is not set up, make sure it is configured before this device", toString().c_str(), _config.i2cDeviceId.c_str());
@@ -58,7 +50,6 @@ namespace devices
             return;
         }
 
-        // Get SDA and SCL pins from the I2C device
         auto i2cPins = i2cDevice->getPins();
         if (i2cPins.size() < 2)
         {
@@ -83,15 +74,13 @@ namespace devices
             return;
         }
 
-        // Wire is managed by the I2C device, no need to reinitialize it here
-        // Just use the already configured Wire instance to check if the device is present
         Wire.beginTransmission(_config.i2cAddress);
         uint8_t error = Wire.endTransmission();
 
         if (error == 0)
         {
             Device::clearError();
-            _state.state = "Found";
+            _state.state = "Ready";
             notifyStateChanged();
             MLOG_INFO("%s: Found %s at address 0x%02X on I2C bus '%s' (SDA=%d, SCL=%d) with %d pins",
                       toString().c_str(),
@@ -116,6 +105,13 @@ namespace devices
         }
     }
 
+    void IoExpander::setup()
+    {
+        Device::setup();
+        setName(_config.name);
+        init();
+    }
+
     void IoExpander::teardown()
     {
         Device::teardown();
@@ -136,7 +132,7 @@ namespace devices
 
     bool IoExpander::isDevicePresent() const
     {
-        return _state.state == "Found";
+        return _state.state == "Ready";
     }
 
     int IoExpander::getPinCount() const
@@ -212,8 +208,16 @@ namespace devices
         doc["state"] = _state.state;
     }
 
-    bool IoExpander::control(const String & /*action*/, JsonObject * /*args*/)
+    bool IoExpander::control(const String &action, JsonObject * /*args*/)
     {
+        if (action == "init")
+        {
+            MLOG_INFO("%s: Re-initialising on request", toString().c_str());
+            _state.state = "Init";
+            notifyStateChanged();
+            init();
+            return true;
+        }
         return false;
     }
 

@@ -1,10 +1,12 @@
-import { Device } from "./Device";
+﻿import { Device } from "./Device";
 import { getDeviceIcon } from "../icons/Icons";
-import { useDevice, useDevices } from "../../stores/Devices";
+import { useDevices } from "../../stores/Devices";
+import { usePwmExpander } from "../../stores/PwmExpander";
 import PwmExpanderConfig from "./PwmExpanderConfig";
+import styles from "./Device.module.css";
 
 export function PwmExpander(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
-  const [device] = useDevice(props.id);
+  const [device, actions] = usePwmExpander(props.id);
   const [devicesStore] = useDevices();
 
   const deviceType = device?.type;
@@ -30,6 +32,13 @@ export function PwmExpander(props: { id: string; isPopup?: boolean; onClose?: ()
     return freq !== undefined ? `${freq} Hz` : "Unknown";
   };
 
+  const statusText = () => {
+    const s = expanderState();
+    if (s === "Ready") return <span style={{ color: "green" }}>Connected</span>;
+    if (s === "Init") return <span style={{ color: "cornflowerblue" }}>Initializing&hellip;</span>;
+    return <span>Unknown</span>;
+  };
+
   return (
     <Device
       id={props.id}
@@ -40,14 +49,7 @@ export function PwmExpander(props: { id: string; isPopup?: boolean; onClose?: ()
     >
       <div style={{ padding: "0.5rem", "font-size": "0.9rem" }}>
         <div>
-          <strong>Status:</strong>{" "}
-          {expanderState() === undefined ? (
-            "Unknown"
-          ) : expanderState() === "Found" ? (
-            <span style={{ color: "green" }}>Connected</span>
-          ) : (
-            <span style={{ color: "orange" }}>Not found</span>
-          )}
+          <strong>Status:</strong> {statusText()}
         </div>
         <div>
           <strong>Type:</strong> PCA9685
@@ -64,6 +66,16 @@ export function PwmExpander(props: { id: string; isPopup?: boolean; onClose?: ()
         <div>
           <strong>Available Pins:</strong> 16
         </div>
+      </div>
+      <div class={styles.device__controls}>
+        <button
+          class={styles.device__button}
+          onClick={() => actions.init()}
+          disabled={expanderState() === "Ready" || expanderState() === "Init"}
+          title="Re-probe the I²C bus and re-initialise the PCA9685"
+        >
+          Init
+        </button>
       </div>
     </Device>
   );

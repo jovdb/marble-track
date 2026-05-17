@@ -2,6 +2,9 @@
   --servo-indicator-off: var(--color-gray-400);
   --servo-indicator-moving: var(--color-warning-500);
   --servo-indicator-glow: rgba(234, 179, 8, 0.45);
+  --servo-indicator-disabled: var(--color-gray-300);
+  --servo-indicator-ready: var(--color-success-500, #22c55e);
+  --servo-indicator-error: var(--color-error-500, #ef4444);
 
   width: 16px;
   height: 16px;
@@ -19,7 +22,35 @@
   box-shadow: 0 0 8px var(--servo-indicator-glow);
 }
 
+.servo__status-indicator--ready {
+  background-color: var(--servo-indicator-ready);
+  box-shadow: none;
+}
+
+.servo__status-indicator--disabled {
+  background-color: var(--servo-indicator-disabled);
+  box-shadow: none;
+}
+
+.servo__status-indicator--error {
+  background-color: var(--servo-indicator-error);
+  box-shadow: none;
+}
+
 .servo__status-indicator--off {
   background-color: var(--servo-indicator-off);
   box-shadow: none;
+}
+
+.servo__error {
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--color-error-500, #ef4444);
+  margin-top: 4px;
+}
+
+.servo__state-badge {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--color-gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }

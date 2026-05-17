@@ -1,6 +1,6 @@
 import { Device } from "./Device";
 import { debounce } from "@solid-primitives/scheduled";
-import { createEffect, createMemo, createSignal } from "solid-js";
+import { createEffect, createMemo, createSignal, Show } from "solid-js";
 import deviceStyles from "./Device.module.css";
 import servoStyles from "./Servo.module.css";
 import { useServo } from "../../stores/Servo";
@@ -44,11 +44,31 @@ export function Servo(props: { id: string; isPopup?: boolean; onClose?: () => vo
   }, 100);
 
   const sliderValue = createMemo(() => currentValue() ?? 0);
+
+  const servoState = createMemo(() => deviceState()?.state ?? "Unknown");
+  const isMoving = createMemo(() => servoState() === "Moving");
+  const isDisabled = createMemo(() => servoState() === "Disabled");
+  const isError = createMemo(() => servoState() === "Error");
+  const isReady = createMemo(() => servoState() === "Ready");
+
   const statusText = createMemo(() => {
-    const value = sliderValue();
-    return deviceState()?.running
-      ? `Moving from ${deviceState()?.value?.toFixed(0)}% to ${deviceState()?.targetValue?.toFixed(0) ?? value.toFixed(0)}%`
-      : `Position: ${value.toFixed(0)}%`;
+    const state = servoState();
+    if (state === "Moving") {
+      return `Moving from ${deviceState()?.value?.toFixed(0)}% to ${deviceState()?.targetValue?.toFixed(0) ?? sliderValue().toFixed(0)}%`;
+    }
+    if (state === "Disabled") return "Disabled — servo can rotate freely";
+    if (state === "Error") return "Error";
+    if (state === "Unknown") return "Position unknown";
+    return `Position: ${sliderValue().toFixed(0)}%`;
+  });
+
+  const indicatorClass = createMemo(() => {
+    const state = servoState();
+    if (state === "Moving") return servoStyles["servo__status-indicator--moving"];
+    if (state === "Ready") return servoStyles["servo__status-indicator--ready"];
+    if (state === "Disabled") return servoStyles["servo__status-indicator--disabled"];
+    if (state === "Error") return servoStyles["servo__status-indicator--error"];
+    return servoStyles["servo__status-indicator--off"];
   });
 
   return (
@@ -64,12 +84,15 @@ export function Servo(props: { id: string; isPopup?: boolean; onClose?: () => vo
         <div
           classList={{
             [servoStyles["servo__status-indicator"]]: true,
-            [servoStyles["servo__status-indicator--moving"]]: Boolean(deviceState()?.running),
-            [servoStyles["servo__status-indicator--off"]]: !deviceState()?.running,
+            [indicatorClass()]: true,
           }}
         ></div>
         <span class={deviceStyles["device__status-text"]}>{statusText()}</span>
       </div>
+
+      <Show when={isError() && deviceState()?.errorMessage}>
+        <div class={servoStyles.servo__error}>{deviceState()?.errorMessage}</div>
+      </Show>
 
       <div class={deviceStyles["device__input-group"]}>
         <label class={deviceStyles.device__label} for={`value-${props.id}`}>
@@ -108,6 +131,17 @@ export function Servo(props: { id: string; isPopup?: boolean; onClose?: () => vo
             setCurrentDuration(value);
           }}
         />
+      </div>
+
+      <div class={deviceStyles["device__controls"]}>
+        <button
+          class={deviceStyles["device__button"]}
+          onClick={() => actions.disable()}
+          disabled={isDisabled() || isError() || servoState() === "Unknown"}
+          title="Disable PWM signal — servo can rotate freely"
+        >
+          Disable
+        </button>
       </div>
     </Device>
   );

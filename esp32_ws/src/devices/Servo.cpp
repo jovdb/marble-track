@@ -70,6 +70,7 @@ namespace devices
             if (_config.pinConfig.pin < 0)
             {
                 MLOG_WARN("%s: Pin not configured", toString().c_str());
+                setError(ServoErrorCode::SETUP_FAILED, "Pin not configured");
                 return;
             }
 
@@ -79,7 +80,7 @@ namespace devices
             // Setup MCPWM for servo control
             if (!setupServo())
             {
-                MLOG_ERROR("%s: Failed to setup servo", toString().c_str());
+                setError(ServoErrorCode::SETUP_FAILED, "Failed to setup MCPWM");
                 return;
             }
 
@@ -91,12 +92,17 @@ namespace devices
             setName(_config.name);
             if (!setupPwmExpander())
             {
-                MLOG_ERROR("%s: Failed to setup PwmExpander channel", toString().c_str());
+                setError(ServoErrorCode::SETUP_FAILED, "Failed to setup PwmExpander");
                 return;
             }
 
             MLOG_INFO("%s: Setup on PwmExpander '%s' channel %d", toString().c_str(), _config.pinConfig.expanderId.c_str(), _config.pinConfig.pin);
         }
+
+        // Setup succeeded; position is unknown until setValue is called
+        _state.state = ServoStateEnum::UNKNOWN;
+        _state.errorCode = ServoErrorCode::NONE;
+        _state.errorMessage = "";
     }
 
     void Servo::teardown()
@@ -108,6 +114,9 @@ namespace devices
         _animationTargetDutyCycle = 0.0f;
         _animationStartTimeMs = 0;
         _animationDurationMs = 0;
+        _state.state = ServoStateEnum::UNKNOWN;
+        _state.errorCode = ServoErrorCode::NONE;
+        _state.errorMessage = "";
 
         if (_mcpwmChannelIndex >= 0)
         {
@@ -144,8 +153,11 @@ namespace devices
 
         if (elapsed >= _animationDurationMs)
         {
-            setDutyCycle(_animationTargetDutyCycle);
+            setDutyCycle(_animationTargetDutyCycle, false);
             _isAnimating = false;
+            _state.state = ServoStateEnum::READY;
+            _state.running = false;
+            notifyStateChanged();
             return;
         }
 
@@ -186,6 +198,8 @@ namespace devices
         if (requestedDurationMs == 0)
         {
             _isAnimating = false;
+            _state.state = ServoStateEnum::READY;
+            _state.running = false;
             MLOG_INFO("%s: setValue(%.3f) immediate -> duty cycle %.1f%%", toString().c_str(), value, dutyCycle);
             return setDutyCycle(dutyCycle);
         }
@@ -195,6 +209,8 @@ namespace devices
         _animationStartTimeMs = millis();
         _animationDurationMs = requestedDurationMs;
         _isAnimating = true;
+        _state.state = ServoStateEnum::MOVING;
+        _state.running = true;
 
         MLOG_INFO("%s: setValue(%.3f) over %lu ms -> duty cycle %.1f%% (range: %.1f%%-%.1f%%)",
                   toString().c_str(), value, static_cast<unsigned long>(_animationDurationMs), dutyCycle, _config.minDutyCycle, _config.maxDutyCycle);
@@ -212,8 +228,43 @@ namespace devices
         }
 
         _isAnimating = false;
+        _state.state = ServoStateEnum::READY;
+        _state.running = false;
         notifyStateChanged();
         MLOG_INFO("%s: Animation stopped", toString().c_str());
+        return true;
+    }
+
+    bool Servo::disable()
+    {
+        if (!_isSetup)
+        {
+            MLOG_WARN("%s: Not setup. Configure pin first.", toString().c_str());
+            return false;
+        }
+
+        if (_state.state == ServoStateEnum::SERVO_DISABLED)
+        {
+            return true; // Already disabled
+        }
+
+        _isAnimating = false;
+        _state.running = false;
+
+        // Write 0 duty to hardware without updating _currentDutyCycle (position remains known)
+        if (_pwmPin != nullptr)
+        {
+            _pwmPin->writePwm(0);
+        }
+        else
+        {
+            mcpwm_set_duty(_mcpwmUnit, _mcpwmTimer, _mcpwmOperator, 0.0f);
+            mcpwm_set_duty_type(_mcpwmUnit, _mcpwmTimer, _mcpwmOperator, MCPWM_DUTY_MODE_0);
+        }
+
+        _state.state = ServoStateEnum::SERVO_DISABLED;
+        notifyStateChanged();
+        MLOG_INFO("%s: Disabled (servo can rotate freely)", toString().c_str());
         return true;
     }
 
@@ -222,6 +273,9 @@ namespace devices
         const float currentValue = ((_currentDutyCycle - _config.minDutyCycle) / (_config.maxDutyCycle - _config.minDutyCycle)) * 100.0f;
         const float targetValue = ((_animationTargetDutyCycle - _config.minDutyCycle) / (_config.maxDutyCycle - _config.minDutyCycle)) * 100.0f;
 
+        doc["state"] = stateToString(_state.state);
+        doc["errorCode"] = errorCodeToString(_state.errorCode);
+        doc["errorMessage"] = _state.errorMessage;
         doc["running"] = _isAnimating;
         doc["value"] = currentValue;
         doc["targetValue"] = _isAnimating ? targetValue : currentValue;
@@ -255,6 +309,10 @@ namespace devices
         else if (action == "stop")
         {
             return stop();
+        }
+        else if (action == "disable")
+        {
+            return disable();
         }
         else
         {
@@ -585,6 +643,51 @@ namespace devices
         _isSetup = true;
         notifyStateChanged();
         return true;
+    }
+
+    void Servo::setError(ServoErrorCode errorCode, const String &message)
+    {
+        MLOG_ERROR("%s: %s - %s", toString().c_str(), errorCodeToString(errorCode).c_str(), message.c_str());
+        _state.state = ServoStateEnum::ERROR;
+        _state.errorCode = errorCode;
+        _state.errorMessage = message;
+        _isAnimating = false;
+        _state.running = false;
+        notifyStateChanged();
+    }
+
+    String Servo::stateToString(ServoStateEnum state) const
+    {
+        switch (state)
+        {
+        case ServoStateEnum::UNKNOWN:
+            return "Unknown";
+        case ServoStateEnum::SERVO_DISABLED:
+            return "Disabled";
+        case ServoStateEnum::READY:
+            return "Ready";
+        case ServoStateEnum::MOVING:
+            return "Moving";
+        case ServoStateEnum::ERROR:
+            return "Error";
+        default:
+            MLOG_ERROR("%s: Unknown servo state in stateToString: %d", toString().c_str(), static_cast<int>(state));
+            return "Unknown";
+        }
+    }
+
+    String Servo::errorCodeToString(ServoErrorCode errorCode) const
+    {
+        switch (errorCode)
+        {
+        case ServoErrorCode::NONE:
+            return "";
+        case ServoErrorCode::SETUP_FAILED:
+            return "SetupFailed";
+        default:
+            MLOG_ERROR("%s: Unknown servo error code in errorCodeToString: %d", toString().c_str(), static_cast<int>(errorCode));
+            return "UnknownError";
+        }
     }
 
 } // namespace devices

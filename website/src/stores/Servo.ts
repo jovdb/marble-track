@@ -3,11 +3,17 @@ import { useDevice } from "./Devices";
 
 const deviceType = "servo";
 
+export type ServoStateEnum = "Unknown" | "Disabled" | "Ready" | "Moving" | "Error";
+export type ServoErrorCode = "" | "SetupFailed";
+
 interface IServoState extends IDeviceState {
+  state?: ServoStateEnum;
   value?: number;
   targetValue?: number;
   targetDurationMs?: number;
   running?: boolean;
+  errorCode?: ServoErrorCode;
+  errorMessage?: string;
   [key: string]: unknown;
 }
 
@@ -50,12 +56,22 @@ export function useServo(deviceId: string) {
       args: {},
     });
 
+  const disable = () =>
+    sendMessage({
+      type: "device-fn",
+      deviceId,
+      deviceType,
+      fn: "disable",
+      args: {},
+    });
+
   return [
     device,
     {
       ...actions,
       setValue,
       stop,
+      disable,
     },
   ] as const;
 }

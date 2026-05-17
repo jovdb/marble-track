@@ -35,12 +35,38 @@ namespace devices
     };
 
     /**
+     * @enum ServoStateEnum
+     * @brief Enumeration of possible servo states
+     */
+    enum class ServoStateEnum
+    {
+        UNKNOWN,        // Never been enabled/set; position is not known
+        SERVO_DISABLED, // PWM signal disabled; servo can rotate freely
+        READY,          // Holding a known position
+        MOVING,         // Animating toward a target position
+        ERROR,          // Error occurred during setup or operation
+    };
+
+    /**
+     * @enum ServoErrorCode
+     * @brief Enumeration of possible servo error codes
+     */
+    enum class ServoErrorCode
+    {
+        NONE,
+        SETUP_FAILED,
+    };
+
+    /**
      * @struct ServoState
      * @brief State structure for Servo device
      */
     struct ServoState
     {
-        bool running = false;        // True if animation is in progress
+        ServoStateEnum state = ServoStateEnum::UNKNOWN; // Current servo state
+        ServoErrorCode errorCode = ServoErrorCode::NONE; // Last error code
+        String errorMessage = "";    // Last error message
+        bool running = false;        // True if animation is in progress (derived from state)
         float value = 0.0f;          // Current position as percentage (0-100)
         float targetValue = 0.0f;    // Target position as percentage (0-100)
         uint32_t targetDurationMs = 0; // Remaining animation time in ms
@@ -78,6 +104,12 @@ namespace devices
          * @return true when an animation was active and stopped, false otherwise
          */
         bool stop();
+
+        /**
+         * @brief Disable the servo (stop PWM signal, servo can rotate freely)
+         * @return true if successful, false otherwise
+         */
+        bool disable();
 
         // ControllableMixin implementation
         void addStateToJson(JsonDocument &doc) override;
@@ -134,6 +166,21 @@ namespace devices
 
         bool _isSetup = false;
         bool _wasAutoAssigned = false; // Flag to track if channel was auto-assigned
+
+        /**
+         * @brief Convert ServoStateEnum to string for JSON serialization
+         */
+        String stateToString(ServoStateEnum state) const;
+
+        /**
+         * @brief Convert ServoErrorCode to string for JSON serialization
+         */
+        String errorCodeToString(ServoErrorCode errorCode) const;
+
+        /**
+         * @brief Set error state with code and message
+         */
+        void setError(ServoErrorCode errorCode, const String &message);
     };
 
 } // namespace devices

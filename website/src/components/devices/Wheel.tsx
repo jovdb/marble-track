@@ -15,8 +15,6 @@ export function Wheel(props: { id: string; isPopup?: boolean; onClose?: () => vo
   const actions = wheelStore[1];
 
   const state = () => device()?.state;
-  // TODO: Handle error state - might need to be added to device state
-  const error = () => undefined; // Placeholder until error handling is implemented
 
   const deviceType = device()?.type;
   const uiAngle = useWheelAnimation(state);
@@ -56,60 +54,50 @@ export function Wheel(props: { id: string; isPopup?: boolean; onClose?: () => vo
           isSearchingZero={isSearchingZero()}
         />
       </div>
-      {error() && <div class={styles.device__error}>{error()}</div>}
-      {!error() && (
-        <>
-          <div class={styles.device__status}>
-            {state()?.state === "UNKNOWN" && "Unknown"}
-            {state()?.state === "CALIBRATING" && "Calibrating..."}
-            {state()?.state === "INIT" && "Initializing..."}
-            {state()?.state === "IDLE" && "Idle"}
-            {state()?.state === "MOVING" &&
-              `Moving from breakpoint ${(state()?.currentBreakpointIndex ?? 0) + 1} to ${(state()?.targetBreakpointIndex ?? 0) + 1}${(state()?.targetAngle ?? 0) >= 0 ? ` (${state()?.targetAngle?.toFixed(1)}°)` : ""}...`}
-            {state()?.state === "ERROR" && (
-              <span style={{ color: "red" }}>
-                Error {state()?.errorCode}: {state()?.errorMessage}
-              </span>
-            )}
-          </div>
-          <div class={styles.device__controls}>
-            <button class={styles.device__button} onClick={() => actions.init()}>
-              Find breakpoint 1
-            </button>
-            {(() => {
-              const nextBreakpointIndex = (() => {
-                const target = state()?.targetBreakpointIndex;
-                if (target !== undefined && target >= 0) {
-                  return target;
-                }
-                const current = state()?.currentBreakpointIndex ?? -1;
-                return (current + 1) % breakpoints().length;
-              })();
-              const nextBreakpointDisplay = nextBreakpointIndex + 1;
-              return (
-                <button
-                  class={styles.device__button}
-                  onClick={onNextClicked}
-                  disabled={
-                    state()?.state === "MOVING" ||
-                    state()?.state === "CALIBRATING" ||
-                    state()?.state === "INIT"
-                  }
-                >
-                  Go to next breakpoint {nextBreakpointDisplay}/{breakpoints().length}
-                </button>
-              );
-            })()}
+      <div class={styles.device__status}>
+        {state()?.state === "UNKNOWN" && "Unknown"}
+        {state()?.state === "CALIBRATING" && "Calibrating..."}
+        {state()?.state === "INIT" && "Initializing..."}
+        {state()?.state === "IDLE" && "Idle"}
+        {state()?.state === "MOVING" &&
+          `Moving from breakpoint ${(state()?.currentBreakpointIndex ?? 0) + 1} to ${(state()?.targetBreakpointIndex ?? 0) + 1}${(state()?.targetAngle ?? 0) >= 0 ? ` (${state()?.targetAngle?.toFixed(1)}°)` : ""}...`}
+      </div>
+      <div class={styles.device__controls}>
+        <button class={styles.device__button} onClick={() => actions.init()}>
+          Find breakpoint 1
+        </button>
+        {(() => {
+          const nextBreakpointIndex = (() => {
+            const target = state()?.targetBreakpointIndex;
+            if (target !== undefined && target >= 0) {
+              return target;
+            }
+            const current = state()?.currentBreakpointIndex ?? -1;
+            return (current + 1) % breakpoints().length;
+          })();
+          const nextBreakpointDisplay = nextBreakpointIndex + 1;
+          return (
             <button
               class={styles.device__button}
-              onClick={() => actions.stop()}
-              disabled={state()?.state === "UNKNOWN" || state()?.state === "IDLE"}
+              onClick={onNextClicked}
+              disabled={
+                state()?.state === "MOVING" ||
+                state()?.state === "CALIBRATING" ||
+                state()?.state === "INIT"
+              }
             >
-              Stop
+              Go to next breakpoint {nextBreakpointDisplay}/{breakpoints().length}
             </button>
-          </div>
-        </>
-      )}
+          );
+        })()}
+        <button
+          class={styles.device__button}
+          onClick={() => actions.stop()}
+          disabled={state()?.state === "UNKNOWN" || state()?.state === "IDLE"}
+        >
+          Stop
+        </button>
+      </div>
     </Device>
   );
 }

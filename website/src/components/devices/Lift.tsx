@@ -16,8 +16,6 @@ export function Lift(props: { id: string; isPopup?: boolean; onClose?: () => voi
 
   const state = () => device()?.state;
   const config = () => device()?.config;
-  const error = () =>
-    state()?.errorMessage || (state()?.state === "Error" ? "Device is in error state" : undefined);
 
   // Compute total move duration (ms) from stepper config using a trapezoidal motion profile.
   // We assume full-range travel (minSteps → maxSteps) for both up and down.
@@ -138,8 +136,6 @@ export function Lift(props: { id: string; isPopup?: boolean; onClose?: () => voi
           <path d="M -10 0 A 10 10 0 0 0 10 0" fill="transparent" stroke="black" stroke-width={2} />
         </g>
       </svg>
-
-      {error() && <div class={styles.device__error}>{error()}</div>}
 
       <div class={styles.device__controls}>
         <button class={styles.device__button} onClick={() => actions.init()} disabled={isMoving()}>

@@ -194,6 +194,7 @@ namespace devices
         unsigned long _initStartTime = 0; // Start time for init operation
         bool _waitingForMoveStart = false;
         bool _moveHasStarted = false;
+        bool _driftCorrectionApplied = false; // Set when moveTo correction fires mid-move; skips setCurrentPosition rollback
     };
 
 } // namespace devices

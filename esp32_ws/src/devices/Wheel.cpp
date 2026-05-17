@@ -132,20 +132,38 @@ namespace devices
                 // Apply pending zero offset if any
                 if (_state.pendingZeroOffset != 0)
                 {
-                    long currentPosition = _stepper->getState().currentPosition;
-                    _stepper->setCurrentPosition(currentPosition - _state.pendingZeroOffset);
-                    _state.lastZeroPosition += _state.pendingZeroOffset;
                     _state.stepsInLastRevolution = _state.pendingZeroOffset;
+                    if (_driftCorrectionApplied)
+                    {
+                        // moveTo correction already placed the motor at the exact target.
+                        // Only update lastZeroPosition — do NOT reset the stepper counter;
+                        // the internal position IS the correct absolute position.
+                        _state.lastZeroPosition += _state.pendingZeroOffset;
+                        _driftCorrectionApplied = false;
+                    }
+                    else
+                    {
+                        // Relative move: roll the internal counter back by one revolution
+                        // so the counter stays manageable and angle arithmetic stays in range.
+                        long currentPosition = _stepper->getState().currentPosition;
+                        _stepper->setCurrentPosition(currentPosition - _state.pendingZeroOffset);
+                        _state.lastZeroPosition += _state.pendingZeroOffset;
+                    }
 
-                    // Check revolution consistency
+                    // Check revolution consistency (warn only; don't error on small drift)
                     if (_config.stepsPerRevolution > 0 && _state.stepsInLastRevolution > 0)
                     {
                         float percentDiff = std::abs(_state.stepsInLastRevolution - _config.stepsPerRevolution) / (float)_config.stepsPerRevolution * 100.0f;
-                        if (percentDiff > 0.1f)
+                        if (percentDiff > 5.0f)
                         {
                             char errorMessage[128];
                             snprintf(errorMessage, sizeof(errorMessage), "Steps per revolution mismatch - measured: %ld, configured: %ld (%.2f%% difference)", _state.stepsInLastRevolution, _config.stepsPerRevolution, percentDiff);
                             setErrorState(WheelErrorCode::UnexpectedZeroTrigger, errorMessage);
+                        }
+                        else if (percentDiff > 0.1f)
+                        {
+                            MLOG_WARN("%s: Minor revolution drift: measured %ld, configured %ld (%.2f%%)",
+                                      toString().c_str(), _state.stepsInLastRevolution, _config.stepsPerRevolution, percentDiff);
                         }
                     }
 
@@ -169,9 +187,28 @@ namespace devices
             bool zeroPressed = _zeroSensor->getState().isPressed;
             if (zeroPressed && !_state.zeroSensorWasPressed)
             {
-                // Zero sensor triggered - record pending offset
+                // Zero sensor triggered mid-move: record how far we have come since the
+                // last known zero so the post-move block can update the position reference.
                 long currentPosition = _stepper->getState().currentPosition;
                 _state.pendingZeroOffset = currentPosition - _state.lastZeroPosition;
+
+                // Real-time drift correction: recompute the absolute target from the
+                // sensor's exact position, mirroring what the INIT state already does.
+                // This corrects the current move, not just the next one.
+                if (_state.targetAngle >= 0.0f && _config.stepsPerRevolution > 0)
+                {
+                    long zeroOffsetSteps = lroundf((_config.zeroPointDegree / 360.0f) * _config.stepsPerRevolution);
+                    long stepsToTarget   = lroundf((_state.targetAngle            / 360.0f) * _config.stepsPerRevolution);
+                    long absoluteTarget  = currentPosition - zeroOffsetSteps + stepsToTarget;
+                    // Always move forward
+                    if (absoluteTarget <= currentPosition)
+                        absoluteTarget += _config.stepsPerRevolution;
+
+                    MLOG_INFO("%s: Zero triggered mid-move at %ld, correcting target to %ld (%.1f°)",
+                              toString().c_str(), currentPosition, absoluteTarget, _state.targetAngle);
+                    _stepper->moveTo(absoluteTarget);
+                    _driftCorrectionApplied = true;
+                }
             }
             else
             {
@@ -331,6 +368,7 @@ namespace devices
             _waitingForMoveStart = true;
             _moveHasStarted = false;
             _state.pendingZeroOffset = 0;
+            _driftCorrectionApplied = false;
             updateCurrentAngle();
             notifyStateChanged();
         }

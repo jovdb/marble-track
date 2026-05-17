@@ -8,6 +8,7 @@
 #include "pins/PwmExpanderPin.h"
 #include "Logging.h"
 #include <ArduinoJson.h>
+#include <LittleFS.h>
 
 namespace devices
 {
@@ -102,6 +103,9 @@ namespace devices
         // Setup succeeded; position is unknown until setValue is called
         _state.state = ServoStateEnum::UNKNOWN;
         Device::clearError();
+
+        // Restore last known position for smooth first move on reboot
+        loadPersistedValue();
     }
 
     void Servo::teardown()
@@ -115,6 +119,14 @@ namespace devices
         _animationDurationMs = 0;
         _state.state = ServoStateEnum::UNKNOWN;
         Device::clearError();
+
+        // Flush any pending position persist before releasing hardware
+        if (_persistDirty)
+        {
+            _persistDirty = false;
+            writePersistedValue(_lastKnownValue);
+        }
+        _lastKnownValue = -1.0f;
 
         if (_mcpwmChannelIndex >= 0)
         {
@@ -141,10 +153,18 @@ namespace devices
     {
         Device::loop();
 
-        if (!_isSetup || !_isAnimating)
-        {
+        if (!_isSetup)
             return;
+
+        // Deferred non-blocking persist: flush to LittleFS once animation completes
+        if (_persistDirty && !_isAnimating)
+        {
+            _persistDirty = false;
+            writePersistedValue(_lastKnownValue);
         }
+
+        if (!_isAnimating)
+            return;
 
         const uint32_t now = millis();
         const uint32_t elapsed = now - _animationStartTimeMs;
@@ -192,10 +212,22 @@ namespace devices
         if (value < 0.0f) value = 0.0f;
         if (value > 1.0f) value = 1.0f;
 
+        // On the very first move from UNKNOWN state, assume the servo is still at the
+        // last persisted position so animation starts from there, preventing a sudden jump.
+        const bool isFirstMove = (_state.state == ServoStateEnum::UNKNOWN);
+        if (isFirstMove && _lastKnownValue >= 0.0f)
+        {
+            _currentDutyCycle = _config.minDutyCycle + (_lastKnownValue * (_config.maxDutyCycle - _config.minDutyCycle));
+        }
+
         // Map normalized value (0.0-1.0) to duty cycle range (min-max)
         float dutyCycle = _config.minDutyCycle + (value * (_config.maxDutyCycle - _config.minDutyCycle));
 
         const uint32_t requestedDurationMs = durationMs >= 0 ? static_cast<uint32_t>(durationMs) : _config.defaultDurationInMs;
+
+        // Schedule non-blocking persist (flushed to flash from loop() once the servo is idle)
+        _lastKnownValue = value;
+        _persistDirty = true;
 
         if (requestedDurationMs == 0)
         {
@@ -703,6 +735,38 @@ namespace devices
             MLOG_ERROR("%s: Unknown servo error code in errorCodeToString: %d", toString().c_str(), static_cast<int>(errorCode));
             return "UnknownError";
         }
+    }
+
+    void Servo::writePersistedValue(float value)
+    {
+        String path = "/servo-" + getId() + ".dat";
+        File file = LittleFS.open(path, "w", true);
+        if (!file)
+        {
+            MLOG_WARN("%s: Failed to persist position to %s", toString().c_str(), path.c_str());
+            return;
+        }
+        file.print(value, 6);
+        file.close();
+        MLOG_DEBUG("%s: Persisted position %.4f to %s", toString().c_str(), value, path.c_str());
+    }
+
+    bool Servo::loadPersistedValue()
+    {
+        _lastKnownValue = -1.0f;
+        String path = "/servo-" + getId() + ".dat";
+        File file = LittleFS.open(path, "r");
+        if (!file)
+            return false;
+        String content = file.readString();
+        file.close();
+        float value = content.toFloat();
+        if (value < 0.0f || value > 1.0f)
+            return false;
+        _lastKnownValue = value;
+        _currentDutyCycle = _config.minDutyCycle + (value * (_config.maxDutyCycle - _config.minDutyCycle));
+        MLOG_INFO("%s: Restored last position %.4f (duty %.2f%%)", toString().c_str(), value, _currentDutyCycle);
+        return true;
     }
 
 } // namespace devices

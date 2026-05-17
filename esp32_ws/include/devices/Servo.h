@@ -185,6 +185,13 @@ namespace devices
          * @brief Set error state with code and message
          */
         void setError(ServoErrorCode errorCode, const String &message);
+
+        // LittleFS persistence for last-set position (non-blocking: dirty flag + deferred flush)
+        float _lastKnownValue = -1.0f; // Last set normalized value (-1 = unknown)
+        bool _persistDirty = false;    // Deferred flash write pending
+
+        void writePersistedValue(float value); // Blocking flash write; only called from loop() when idle
+        bool loadPersistedValue();             // Called once at setup
     };
 
 } // namespace devices

@@ -8,7 +8,9 @@
 
 #include "devices/Device.h"
 #include "devices/mixins/ConfigMixin.h"
+#include "devices/mixins/ControllableMixin.h"
 #include "devices/mixins/SerializableMixin.h"
+#include "devices/mixins/StateMixin.h"
 #include <Wire.h>
 
 namespace devices
@@ -26,10 +28,25 @@ namespace devices
     };
 
     /**
+     * @struct I2cState
+     * @brief State structure for I2C bus device
+     */
+    struct I2cState
+    {
+        // "Ready" = bus initialized with valid SDA/SCL pins
+        // "Error" = pins missing or invalid
+        String state = "Error";
+    };
+
+    /**
      * @class I2c
      * @brief I2C bus device for configuring I2C communication
      */
-    class I2c : public Device, public ConfigMixin<I2c, I2cConfig>, public SerializableMixin<I2c>
+    class I2c : public Device,
+                 public ConfigMixin<I2c, I2cConfig>,
+                 public StateMixin<I2c, I2cState>,
+                 public ControllableMixin<I2c>,
+                 public SerializableMixin<I2c>
     {
     public:
         explicit I2c(const String &id);
@@ -39,6 +56,10 @@ namespace devices
         void setup() override;
         void teardown() override;
         std::vector<String> getPins() const override;
+
+        // ControllableMixin implementation
+        void addDeviceStateToJson(JsonDocument &doc) override;
+        bool control(const String &action, JsonObject *args = nullptr) override;
 
         // SerializableMixin implementation
         void jsonToConfig(const JsonDocument &config) override;

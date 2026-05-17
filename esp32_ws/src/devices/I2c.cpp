@@ -23,6 +23,7 @@ namespace devices
     void I2c::setup()
     {
         Device::setup();
+        setName(getConfig().name);
 
         Wire.end(); // Ensure any previous instance is closed
 
@@ -30,10 +31,16 @@ namespace devices
         if (config.sdaPin >= 0 && config.sclPin >= 0)
         {
             Wire.begin(config.sdaPin, config.sclPin);
+            clearError();
+            _state.state = "Ready";
+            notifyStateChanged();
             MLOG_INFO("%s: I2C bus initialized on SDA=%d, SCL=%d", toString().c_str(), config.sdaPin, config.sclPin);
         }
         else
         {
+            setError("CONFIG_ERROR", "SDA/SCL pins not configured");
+            _state.state = "Error";
+            notifyStateChanged();
             MLOG_WARN("%s: I2C bus not initialized: invalid pins SDA=%d, SCL=%d", toString().c_str(), config.sdaPin, config.sclPin);
         }
     }
@@ -88,6 +95,16 @@ namespace devices
         doc["name"] = config.name;
         doc["sdaPin"] = config.sdaPin;
         doc["sclPin"] = config.sclPin;
+    }
+
+    void I2c::addDeviceStateToJson(JsonDocument &doc)
+    {
+        doc["state"] = _state.state;
+    }
+
+    bool I2c::control(const String & /*action*/, JsonObject * /*args*/)
+    {
+        return false;
     }
 
 } // namespace devices

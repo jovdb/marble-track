@@ -3,8 +3,7 @@ import styles from "./Device.module.css";
 import { useDevice } from "../../stores/Devices";
 import { renderDeviceComponent } from "../Devices";
 import { useWebSocket2, IWebSocketMessage } from "../../hooks/useWebSocket";
-import { BroadcastIcon } from "../icons/Icons";
-import DeviceJsonState from "../DeviceJsonState";
+import { BroadcastIcon, JsonIcon } from "../icons/Icons";
 import DeviceJsonConfig from "../DeviceJsonConfig";
 
 interface DeviceProps {
@@ -33,6 +32,7 @@ export function Device(props: DeviceProps) {
 
   const [showConfig, setShowConfig] = createSignal(false);
   const [showMessagesPanel, setShowMessages] = createSignal(false);
+  const [showData, setShowData] = createSignal(false);
   const [wsStore] = useWebSocket2();
 
   const name = createMemo(
@@ -45,6 +45,7 @@ export function Device(props: DeviceProps) {
 
   const configPanelId = `device-config-${props.id}`;
   const logsPanelId = `device-logs-${props.id}`;
+  const dataPanelId = `device-data-${props.id}`;
 
   return (
     <div class={styles.device} data-device-id={props.id} id={`device-${props.id}`}>
@@ -113,6 +114,7 @@ export function Device(props: DeviceProps) {
                   setShowConfig((v) => !v);
                   setShowChildren(false);
                   setShowMessages(false);
+                  setShowData(false);
                 }}
               >
                 <svg
@@ -146,6 +148,7 @@ export function Device(props: DeviceProps) {
                   setShowChildren((v) => !v);
                   setShowConfig(false);
                   setShowMessages(false);
+                  setShowData(false);
                 }}
               >
                 <svg
@@ -186,9 +189,31 @@ export function Device(props: DeviceProps) {
                 setShowMessages((v) => !v);
                 setShowChildren(false);
                 setShowConfig(false);
+                setShowData(false);
               }}
             >
               <BroadcastIcon />
+            </button>
+            <button
+              classList={{
+                [styles["device__header-button"]]: true,
+                [styles["device__header-button--active"]]: showData(),
+              }}
+              type="button"
+              aria-expanded={showData()}
+              aria-controls={dataPanelId}
+              aria-label={showData() ? "Hide JSON data" : "Show JSON data"}
+              title={showData() ? "Hide JSON data" : "Show JSON data"}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isCollapsed() && canCollapse()) setIsCollapsed(false);
+                setShowData((v) => !v);
+                setShowChildren(false);
+                setShowConfig(false);
+                setShowMessages(false);
+              }}
+            >
+              <JsonIcon />
             </button>
             <Show when={props.onClose}>
               <button
@@ -209,7 +234,7 @@ export function Device(props: DeviceProps) {
       </div>
       <Show when={!isCollapsed()}>
         <div class={styles.device__content}>
-          <Show when={!showChildren() && !showConfig() && !showMessagesPanel()}>
+          <Show when={!showChildren() && !showConfig() && !showMessagesPanel() && !showData()}>
             <Show when={device()?.stateErrorMessage}>
               <div class={styles.device__error} role="alert">
                 {device()?.stateErrorMessage}
@@ -219,9 +244,6 @@ export function Device(props: DeviceProps) {
             <Show when={!device()?.stateErrorMessage}>
               <Show when={props.stateComponent !== undefined}>
                 {props.stateComponent?.({ state: device()?.state })}
-              </Show>
-              <Show when={props.stateComponent === undefined && device()?.state !== undefined}>
-                <DeviceJsonState state={device()?.state} />
               </Show>
               {props.children}
             </Show>
@@ -258,6 +280,16 @@ export function Device(props: DeviceProps) {
           <Show when={showMessagesPanel()}>
             <div class={styles.device__children} id={logsPanelId} role="region" aria-live="polite">
               <DeviceLogs deviceId={props.id} messages={wsStore.lastMessages} />
+            </div>
+          </Show>
+          <Show when={showData()}>
+            <div class={styles.device__children} id={dataPanelId} role="region" aria-live="polite">
+              <DeviceDataPanel
+                id={props.id}
+                type={device()?.type}
+                state={device()?.state}
+                config={device()?.config}
+              />
             </div>
           </Show>
         </div>
@@ -314,6 +346,60 @@ function DeviceLogs(props: { deviceId: string; messages: IWebSocketMessage[] }) 
         </For>
         {filteredMessages().length === 0 && <div>No messages for this device</div>}
       </div>
+    </div>
+  );
+}
+
+function DeviceDataPanel(props: { id: string; type?: string; state: unknown; config: unknown }) {
+  const preStyle: JSX.CSSProperties = {
+    "white-space": "pre-wrap",
+    "font-family":
+      "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+    "font-size": "0.8rem",
+    background: "#f6f8fa",
+    padding: "0.5rem",
+    "border-radius": "6px",
+    border: "1px solid #e1e4e8",
+    margin: "0",
+    overflow: "auto",
+    "max-height": "300px",
+  };
+
+  return (
+    <div style={{ padding: "0.25rem 0" }}>
+      <h4
+        style={{
+          margin: "0 0 0.25rem 0",
+          "font-size": "0.8rem",
+          "text-transform": "uppercase",
+          color: "#666",
+        }}
+      >
+        Device
+      </h4>
+      <pre style={preStyle}>{JSON.stringify({ id: props.id, type: props.type }, null, 2)}</pre>
+      <h4
+        style={{
+          margin: "0.75rem 0 0.25rem 0",
+          "font-size": "0.8rem",
+          "text-transform": "uppercase",
+          color: "#666",
+        }}
+      >
+        State
+      </h4>
+      <pre style={preStyle}>{JSON.stringify(props.state ?? {}, null, 2)}</pre>
+      <h4
+        style={{
+          margin: "0.75rem 0 0.25rem 0",
+          "font-size": "0.8rem",
+          "text-transform": "uppercase",
+          color: "#666",
+        }}
+      >
+        Config
+      </h4>
+      <pre style={preStyle}>{JSON.stringify(props.config ?? {}, null, 2)}</pre>
     </div>
   );
 }

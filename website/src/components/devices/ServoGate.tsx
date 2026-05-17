@@ -57,7 +57,6 @@ export function ServoGate(props: { id: string; isPopup?: boolean; onClose?: () =
       configComponent={(onClose) => <ServoGateConfig id={props.id} onClose={onClose} />}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}
-      stateComponent={() => null}
     >
       {/* Gate SVG visualisation */}
       <div style={{ "text-align": "center", "margin-bottom": "10px" }}>

@@ -59,7 +59,6 @@ export function Stepper(props: { id: string; isPopup?: boolean; onClose?: () => 
       icon={<StepperIcon />}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}
-      stateComponent={() => null}
     >
       <div class={styles.device__status}>
         <div

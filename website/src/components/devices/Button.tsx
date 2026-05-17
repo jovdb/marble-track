@@ -40,7 +40,6 @@ export function Button(props: { id: string; isPopup?: boolean; onClose?: () => v
       id={props.id}
       configComponent={(onClose) => <ButtonConfig id={props.id} onClose={onClose} />}
       icon={<ButtonStateIcon deviceId={props.id} />}
-      stateComponent={() => null}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}
     >

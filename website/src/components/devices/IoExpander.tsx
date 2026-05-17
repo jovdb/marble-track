@@ -35,7 +35,6 @@ export function IoExpander(props: { id: string; isPopup?: boolean; onClose?: () 
       id={props.id}
       configComponent={(onClose) => <IoExpanderConfig id={props.id} onClose={onClose} />}
       icon={deviceType ? getDeviceIcon(deviceType, props.id) : null}
-      stateComponent={() => null}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}
     >

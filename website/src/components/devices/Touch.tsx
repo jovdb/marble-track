@@ -32,7 +32,6 @@ export function Touch(props: { id: string; isPopup?: boolean; onClose?: () => vo
       id={props.id}
       configComponent={(onClose) => <TouchConfig id={props.id} onClose={onClose} />}
       icon={<TouchStateIcon deviceId={props.id} />}
-      stateComponent={() => null}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}
     >

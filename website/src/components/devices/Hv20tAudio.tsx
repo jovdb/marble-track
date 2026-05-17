@@ -35,7 +35,6 @@ export function Hv20tAudio(props: { id: string; isPopup?: boolean; onClose?: () 
       icon={getDeviceIcon("hv20t", props.id)}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}
-      stateComponent={() => null}
     >
       <div class={deviceStyles.device__status}>
         <Hv20tStateIcon deviceId={props.id} width={32} height={32} />

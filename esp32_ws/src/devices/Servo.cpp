@@ -202,15 +202,23 @@ namespace devices
 
     bool Servo::setValue(float value, int durationMs)
     {
+        if (hasError())
+        {
+            MLOG_WARN("%s: Cannot set value while in error state.", toString().c_str());
+            return false;
+        }
+
         if (!_isSetup)
         {
-            MLOG_WARN("%s: Not setup. Configure pin first.", toString().c_str());
+            MLOG_WARN("%s: Not setup.", toString().c_str());
             return false;
         }
 
         // Clamp value between 0.0 and 1.0
-        if (value < 0.0f) value = 0.0f;
-        if (value > 1.0f) value = 1.0f;
+        if (value < 0.0f)
+            value = 0.0f;
+        if (value > 1.0f)
+            value = 1.0f;
 
         // On the very first move from UNKNOWN state, assume the servo is still at the
         // last persisted position so animation starts from there, preventing a sudden jump.
@@ -271,9 +279,15 @@ namespace devices
 
     bool Servo::disable()
     {
+        if (hasError())
+        {
+            MLOG_WARN("%s: Cannot set value while in error state.", toString().c_str());
+            return false;
+        }
+
         if (!_isSetup)
         {
-            MLOG_WARN("%s: Not setup. Configure pin first.", toString().c_str());
+            MLOG_WARN("%s: Not setup.", toString().c_str());
             return false;
         }
 
@@ -500,8 +514,8 @@ namespace devices
         _mcpwmOperator = (_mcpwmChannelIndex % 2 == 0) ? MCPWM_OPR_A : MCPWM_OPR_B;
 
         MLOG_DEBUG("%s: MCPWM mapping channel=%d timer=%d signal=%d operator=%s pin=%d freq=%lu",
-               toString().c_str(), _mcpwmChannelIndex, static_cast<int>(_mcpwmTimer), static_cast<int>(_mcpwmSignal),
-               _mcpwmOperator == MCPWM_OPR_A ? "A" : "B", _config.pinConfig.pin, static_cast<unsigned long>(_config.frequency));
+                   toString().c_str(), _mcpwmChannelIndex, static_cast<int>(_mcpwmTimer), static_cast<int>(_mcpwmSignal),
+                   _mcpwmOperator == MCPWM_OPR_A ? "A" : "B", _config.pinConfig.pin, static_cast<unsigned long>(_config.frequency));
 
         bool configured = configureMCPWM();
         if (configured)
@@ -589,9 +603,15 @@ namespace devices
 
     bool Servo::setDutyCycle(float dutyCycle, bool notifyChange)
     {
+        if (hasError())
+        {
+            MLOG_WARN("%s: Cannot set value while in error state.", toString().c_str());
+            return false;
+        }
+
         if (!_isSetup)
         {
-            MLOG_WARN("%s: Not setup. Configure pin first.", toString().c_str());
+            MLOG_WARN("%s: Not setup.", toString().c_str());
             return false;
         }
 
@@ -748,7 +768,7 @@ namespace devices
         }
         file.print(value, 6);
         file.close();
-        MLOG_DEBUG("%s: Persisted position %.4f to %s", toString().c_str(), value, path.c_str());
+        // MLOG_DEBUG("%s: Persisted position %.4f to %s", toString().c_str(), value, path.c_str());
     }
 
     bool Servo::loadPersistedValue()

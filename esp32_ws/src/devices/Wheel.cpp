@@ -569,7 +569,6 @@ namespace devices
         doc["targetAngle"] = _state.targetAngle;
         doc["currentAngle"] = _state.currentAngle;
         doc["onError"] = _state.onError;
-        doc["breakpointChanged"] = _state.breakpointChanged;
         doc["stepsInLastRevolution"] = _state.stepsInLastRevolution;
     }
 

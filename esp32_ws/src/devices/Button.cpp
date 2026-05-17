@@ -164,7 +164,6 @@ namespace devices
     {
         doc["value"] = _state.input;
         doc["isPressed"] = _state.isPressed;
-        doc["isPressedChanged"] = _state.isPressedChanged;
     }
 
     bool Button::control(const String &action, JsonObject *args)

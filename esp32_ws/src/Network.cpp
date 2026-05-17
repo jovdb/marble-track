@@ -10,7 +10,7 @@ Network::Network(const char *wifi_ssid, const char *wifi_password)
 {
 }
 
-Network::Network(const NetworkSettings& settings)
+Network::Network(const NetworkSettings &settings)
     : _wifi_ssid(settings.ssid), _wifi_password(settings.password), _currentMode(NetworkMode::DISCONNECTED), _dnsServer(nullptr),
       _isConnecting(false), _connectionStartTime(0), _wifiConnectionAttempted(false), _isModeChanged(false)
 {
@@ -119,7 +119,7 @@ void Network::setupMDNS()
         if (mdns_hostname_set("marble-track") == ESP_OK)
         {
             mdns_instance_name_set("Marble Track Controller");
-            
+
             // Add HTTP service
             if (mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0) == ESP_OK)
             {
@@ -211,8 +211,6 @@ String Network::getStatusJSON() const
         break;
     }
 
-    doc["isModeChanged"] = _isModeChanged;
-
     String json;
     serializeJson(doc, json);
     return json;
@@ -223,7 +221,8 @@ void Network::notifyModeChanged()
     _isModeChanged = true;
     for (auto &cb : _modeChangeCallbacks)
     {
-        if (cb) cb(_currentMode);
+        if (cb)
+            cb(_currentMode);
     }
 }
 
@@ -241,7 +240,7 @@ void Network::loop()
     if (_isConnecting)
     {
         wl_status_t status = WiFi.status();
-        
+
         if (status == WL_CONNECTED)
         {
             // WiFi connected successfully
@@ -249,7 +248,7 @@ void Network::loop()
             _currentMode = NetworkMode::WIFI_CLIENT;
             notifyModeChanged();
             MLOG_INFO("Connected to WiFi: http://%s", WiFi.localIP().toString().c_str());
-            
+
             // Start mDNS
             setupMDNS();
         }
@@ -259,7 +258,7 @@ void Network::loop()
             _isConnecting = false;
             MLOG_ERROR("WiFi connection timeout - starting Access Point mode");
             WiFi.disconnect();
-            
+
             if (startAccessPoint())
             {
                 _currentMode = NetworkMode::ACCESS_POINT;
@@ -274,7 +273,7 @@ void Network::loop()
             }
         }
     }
-    
+
     // Handle captive portal processing
     processCaptivePortal();
 

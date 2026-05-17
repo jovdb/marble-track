@@ -206,7 +206,6 @@ namespace devices
     {
         doc["value"] = _state.value;
         doc["touched"] = _state.touched;
-        doc["isTouchedChanged"] = _state.isTouchedChanged;
     }
 
     bool Touch::control(const String &action, JsonObject *args)

@@ -391,6 +391,7 @@ namespace devices
         }
 
         MLOG_INFO("%s: Calibration started", toString().c_str());
+        Device::clearError();
         _state.state = WheelStateEnum::CALIBRATING;
         _state.lastZeroPosition = 0;
         _state.pendingZeroOffset = 0;
@@ -417,6 +418,7 @@ namespace devices
         }
 
         MLOG_INFO("%s: Init started", toString().c_str());
+        Device::clearError();
         _state.state = WheelStateEnum::INIT;
         _state.currentBreakpointIndex = -1;
         _state.targetBreakpointIndex = -1;

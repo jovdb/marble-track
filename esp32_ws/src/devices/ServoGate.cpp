@@ -76,6 +76,7 @@ namespace devices
 
     void ServoGate::startCycle()
     {
+        Device::clearError();
         _fsm = ServoGateFsmState::WAIT_OPEN;
         startTimer(_config.openDelayMs);
         _state.gateState = fsmStateToString(_fsm);
@@ -312,6 +313,7 @@ namespace devices
             // Servo error has cleared — resume
             MLOG_INFO("%s: Child servo error resolved, resuming", toString().c_str());
             _childErrorActive = false;
+            Device::clearError();
             notifyStateChanged();
         }
 

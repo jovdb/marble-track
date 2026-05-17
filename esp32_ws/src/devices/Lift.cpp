@@ -346,7 +346,7 @@ namespace devices
     bool Lift::init(float speedRatio)
     {
         MLOG_INFO("%s: Starting init sequence with speed ratio %.2f", toString().c_str(), speedRatio);
-
+        Device::clearError();
         _state.state = LiftStateEnum::INIT;
         _state.initStep = 1; // unload end
         _initSpeedRatio = speedRatio;

@@ -114,7 +114,7 @@ namespace devices
         bool setCurrentPosition(long position);
 
         // ControllableMixin implementation
-        void addStateToJson(JsonDocument &doc) override;
+        void addDeviceStateToJson(JsonDocument &doc) override;
         bool control(const String &action, JsonObject *args = nullptr) override;
 
         // SerializableMixin implementation

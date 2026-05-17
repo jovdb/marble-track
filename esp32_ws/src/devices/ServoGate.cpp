@@ -206,7 +206,7 @@ namespace devices
         }
     }
 
-    void ServoGate::addStateToJson(JsonDocument &doc)
+    void ServoGate::addDeviceStateToJson(JsonDocument &doc)
     {
         doc["gateState"] = _state.gateState;
         doc["queueCount"] = _state.queueCount;
@@ -294,7 +294,7 @@ namespace devices
         if (servoInError && !_childErrorActive)
         {
             // Servo just entered error — block the gate
-            MLOG_ERROR("%s: required child 'servo' has an error: %s", toString().c_str(), _servo->getState().errorMessage.c_str());
+            MLOG_ERROR("%s: required child 'servo' has an error: %s", toString().c_str(), _servo->getErrorMessage().c_str());
             _childErrorActive = true;
             _state.queueCount = 0;
             _fsm = ServoGateFsmState::IDLE;

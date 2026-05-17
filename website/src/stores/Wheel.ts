@@ -12,7 +12,7 @@ export interface IWheelState extends IDeviceState {
   acceleration?: number;
   currentBreakpointIndex?: number;
   targetBreakpointIndex?: number;
-  errorCode?: number;
+  errorCode?: string;
   errorMessage?: string;
   [key: string]: unknown;
 }

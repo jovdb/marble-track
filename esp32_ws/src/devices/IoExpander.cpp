@@ -201,7 +201,7 @@ namespace devices
         doc["i2cDeviceId"] = _config.i2cDeviceId;
     }
 
-    void IoExpander::addStateToJson(JsonDocument &doc)
+    void IoExpander::addDeviceStateToJson(JsonDocument &doc)
     {
         doc["isPresent"] = _state.isPresent;
     }

@@ -106,7 +106,7 @@ namespace devices
         bool tune(const String &rtttl);
 
         // ControllableMixin implementation
-        void addStateToJson(JsonDocument &doc) override;
+        void addDeviceStateToJson(JsonDocument &doc) override;
         bool control(const String &action, JsonObject *args = nullptr) override;
 
         // SerializableMixin implementation

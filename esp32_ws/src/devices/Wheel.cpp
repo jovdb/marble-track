@@ -73,8 +73,7 @@ namespace devices
         Device::teardown();
 
         _state.state = WheelStateEnum::UNKNOWN;
-        _state.errorCode = WheelErrorCode::None;
-        _state.errorMessage = "";
+        Device::clearError();
         _state.lastZeroPosition = 0;
         _state.pendingZeroOffset = 0;
         _state.stepsInLastRevolution = 0;
@@ -517,11 +516,9 @@ namespace devices
         return _state.currentBreakpointIndex;
     }
 
-    void Wheel::addStateToJson(JsonDocument &doc)
+    void Wheel::addDeviceStateToJson(JsonDocument &doc)
     {
         doc["state"] = stateToString(_state.state);
-        doc["errorCode"] = static_cast<int>(_state.errorCode);
-        doc["errorMessage"] = _state.errorMessage;
         doc["lastZeroPosition"] = _state.lastZeroPosition;
         doc["pendingZeroOffset"] = _state.pendingZeroOffset;
         doc["currentBreakpointIndex"] = _state.currentBreakpointIndex;
@@ -650,9 +647,28 @@ namespace devices
     {
         _state.state = WheelStateEnum::ERROR;
         _state.onError = true;
-        _state.errorCode = errorCode;
-        _state.errorMessage = errorMessage;
-        MLOG_ERROR("%s: %s", toString().c_str(), errorMessage.c_str());
+        Device::setError(errorCodeToString(errorCode), errorMessage);
+    }
+
+    String Wheel::errorCodeToString(WheelErrorCode errorCode) const
+    {
+        switch (errorCode)
+        {
+        case WheelErrorCode::None:
+            return "None";
+        case WheelErrorCode::CalibrationZeroNotFound:
+            return "CalibrationZeroNotFound";
+        case WheelErrorCode::CalibrationSecondZeroNotFound:
+            return "CalibrationSecondZeroNotFound";
+        case WheelErrorCode::ZeroNotFound:
+            return "ZeroNotFound";
+        case WheelErrorCode::UnexpectedZeroTrigger:
+            return "UnexpectedZeroTrigger";
+        case WheelErrorCode::StepperNotInitialized:
+            return "StepperNotInitialized";
+        default:
+            return "Unknown";
+        }
     }
 
     void Wheel::notifyStepsPerRevolution(long steps)

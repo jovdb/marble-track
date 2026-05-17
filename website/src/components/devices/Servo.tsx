@@ -57,10 +57,7 @@ export function Servo(props: { id: string; isPopup?: boolean; onClose?: () => vo
       return `Moving from ${deviceState()?.value?.toFixed(0)}% to ${deviceState()?.targetValue?.toFixed(0) ?? sliderValue().toFixed(0)}%`;
     }
     if (state === "Disabled") return "Disabled — servo can rotate freely";
-    if (state === "Error") {
-      const code = deviceState()?.errorCode;
-      return code ? `Error [${code}]` : "Error";
-    }
+    if (state === "Error") return "Error";
     if (state === "Unknown") return "Position unknown";
     return `Position: ${sliderValue().toFixed(0)}%`;
   });

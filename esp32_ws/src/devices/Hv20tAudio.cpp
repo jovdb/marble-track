@@ -350,7 +350,7 @@ namespace devices
         return _state.currentPlayingSong;
     }
 
-    void Hv20tAudio::addStateToJson(JsonDocument &doc)
+    void Hv20tAudio::addDeviceStateToJson(JsonDocument &doc)
     {
         doc["volumePercent"] = _state.volumePercent;
         doc["currentPlayingSong"] = _state.currentPlayingSong;

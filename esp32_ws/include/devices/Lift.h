@@ -72,8 +72,6 @@ namespace devices
         bool isLoaded = false;                         // Whether lift has a ball loaded
         int initStep = 0;                              // Current initialization step
         bool onErrorChange = false;                    // Error flag
-        String errorMessage = "";                      // Last error message
-        LiftErrorCode errorCode = LiftErrorCode::NONE; // Last error code
     };
 
     /**
@@ -151,7 +149,7 @@ namespace devices
         bool isInitialized() const;
 
         // ControllableMixin implementation
-        void addStateToJson(JsonDocument &doc) override;
+        void addDeviceStateToJson(JsonDocument &doc) override;
         bool control(const String &action, JsonObject *args = nullptr) override;
 
         // SerializableMixin implementation

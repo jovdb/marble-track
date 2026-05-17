@@ -46,7 +46,11 @@ public:
  * @brief Mixin that provides state serialization capability for WebSocket control
  *
  * The derived class must implement:
- * - void addStateToJson(JsonDocument &doc) - Add device state to a JSON document
+ * - void addDeviceStateToJson(JsonDocument &doc) - Add device-specific state fields
+ *
+ * Error fields (errorCode / errorMessage) are injected automatically by this mixin
+ * into every addStateToJson call so no call-site needs to remember to add them.
+ *
  * Automatically registers itself with Device::registerMixin("ControllableMixin")
  */
 template <typename Derived>
@@ -66,10 +70,31 @@ public:
      */
     virtual bool control(const String &action, JsonObject *args = nullptr) = 0;
 
+    /**
+     * @brief Implements IControllable::addStateToJson as a final wrapper.
+     * Calls addDeviceStateToJson() for device-specific fields, then always
+     * appends errorCode and errorMessage from the Device base class.
+     * This guarantees every caller — push notifications and pull requests alike —
+     * gets the error fields without any extra code at the call site.
+     */
+    void addStateToJson(JsonDocument &doc) override final
+    {
+        auto *derived = static_cast<Derived *>(this);
+        addDeviceStateToJson(doc);
+        doc["errorCode"] = derived->getErrorCode();
+        doc["errorMessage"] = derived->getErrorMessage();
+    }
+
     // Provide Device virtual override via mixin when combined
     virtual IControllable *getControllableInterface() { return this; }
 
 protected:
+    /**
+     * @brief Pure virtual: derived devices fill in their own state fields.
+     * Do NOT add errorCode/errorMessage here; the wrapper above handles them.
+     */
+    virtual void addDeviceStateToJson(JsonDocument &doc) = 0;
+
     ControllableMixin()
     {
         // Register this mixin with the base class
@@ -111,7 +136,8 @@ private:
         doc["success"] = true;
 
         JsonDocument stateDoc;
-        addStateToJson(stateDoc);
+        addStateToJson(stateDoc); // error fields are injected inside addStateToJson
+
         doc["state"] = stateDoc;
 
         String message;

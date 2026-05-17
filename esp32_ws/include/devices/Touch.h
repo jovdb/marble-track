@@ -45,7 +45,7 @@ namespace devices
         void loop() override;
         std::vector<String> getPins() const override;
 
-        void addStateToJson(JsonDocument &doc) override;
+        void addDeviceStateToJson(JsonDocument &doc) override;
         bool control(const String &action, JsonObject *args = nullptr) override;
 
         void jsonToConfig(const JsonDocument &config) override;

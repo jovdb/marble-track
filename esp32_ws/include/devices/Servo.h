@@ -64,8 +64,6 @@ namespace devices
     struct ServoState
     {
         ServoStateEnum state = ServoStateEnum::UNKNOWN; // Current servo state
-        ServoErrorCode errorCode = ServoErrorCode::NONE; // Last error code
-        String errorMessage = "";    // Last error message
         bool running = false;        // True if animation is in progress (derived from state)
         float value = 0.0f;          // Current position as percentage (0-100)
         float targetValue = 0.0f;    // Target position as percentage (0-100)
@@ -111,8 +109,14 @@ namespace devices
          */
         bool disable();
 
+        /**
+         * @brief Clear the current error and return to UNKNOWN state
+         * @return true if the error was cleared, false if not in error state
+         */
+        bool clearError();
+
         // ControllableMixin implementation
-        void addStateToJson(JsonDocument &doc) override;
+        void addDeviceStateToJson(JsonDocument &doc) override;
         bool control(const String &action, JsonObject *args = nullptr) override;
 
         // SerializableMixin implementation

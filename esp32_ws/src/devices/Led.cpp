@@ -198,7 +198,7 @@ namespace devices
         }
     }
 
-    void Led::addStateToJson(JsonDocument &doc)
+    void Led::addDeviceStateToJson(JsonDocument &doc)
     {
         doc["mode"] = _state.mode;
         doc["blinkOnTime"] = _state.blinkOnTime;

@@ -120,13 +120,13 @@ namespace devices
          * @brief Play lift-specific error sounds based on error code
          * @param liftState Pointer to the lift state containing error information
          */
-        void playLiftError(const devices::LiftState *liftState);
+        void playLiftError(const String &errorCode);
 
         /**
          * @brief Play wheel-specific error sounds based on error code
          * @param wheelState Pointer to the wheel state containing error information
          */
-        void playWheelError(const devices::WheelState *wheelState);
+        void playWheelError(const String &errorCode);
     };
 
 } // namespace devices

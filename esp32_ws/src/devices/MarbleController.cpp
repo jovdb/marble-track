@@ -325,7 +325,7 @@ namespace devices
 
             if (liftButtonPressedEdge)
             {
-                playLiftError(&liftState);
+                playLiftError(_lift->getErrorCode());
                 _liftButtonPressStartTime = millis();
             }
 
@@ -575,7 +575,7 @@ namespace devices
         case devices::LiftStateEnum::ERROR:
             if (liftButtonPressedEdge)
             {
-                playLiftError(&liftState);
+                playLiftError(_lift->getErrorCode());
                 _liftButtonPressStartTime = millis();
             }
 
@@ -847,7 +847,7 @@ namespace devices
         case devices::WheelStateEnum::ERROR:
             if (isWheelButtonPressedEdge)
             {
-                playWheelError(&wheelState);
+                playWheelError(_wheel->getErrorCode());
                 _wheelButtonPressStartTime = millis();
                 _wheelButtonLongPressTriggered = false;
             }
@@ -971,7 +971,7 @@ namespace devices
             else if (wheelState.state == devices::WheelStateEnum::ERROR)
             {
                 // In error state: play error sound and let the long-press timer run
-                playWheelError(&wheelState);
+                playWheelError(_wheel->getErrorCode());
             }
         }
         else if (wheelButtonState.isPressed && !_wheelButtonLongPressTriggered)
@@ -1239,45 +1239,45 @@ namespace devices
         }
     }
 
-    void MarbleController::playLiftError(const devices::LiftState *liftState)
+    void MarbleController::playLiftError(const String &errorCode)
     {
-        if (liftState->errorCode == devices::LiftErrorCode::LIFT_NO_ZERO)
+        if (errorCode == "LIFT_NO_ZERO")
         {
             playErrorSound(Hv20tPlayMode::QueueIfPlaying, {songs::LIFT_STOP});
             _audio->play(songs::LIFT_NO_ZERO, devices::Hv20tPlayMode::QueueIfPlaying);
         }
-        else if (liftState->errorCode == devices::LiftErrorCode::LIFT_INIT_NO_ZERO)
+        else if (errorCode == "LIFT_INIT_NO_ZERO")
         {
             playErrorSound(Hv20tPlayMode::QueueIfPlaying, {songs::LIFT_STOP});
             _audio->play(songs::LIFT_INIT_ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
         }
     }
 
-    void MarbleController::playWheelError(const devices::WheelState *wheelState)
+    void MarbleController::playWheelError(const String &errorCode)
     {
-        if (wheelState->errorCode == devices::WheelErrorCode::CalibrationZeroNotFound)
+        if (errorCode == "CalibrationZeroNotFound")
         {
             _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
             _audio->play(songs::WHEEL_CALIBRATION_FIRST_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
         }
-        else if (wheelState->errorCode == devices::WheelErrorCode::CalibrationSecondZeroNotFound)
+        else if (errorCode == "CalibrationSecondZeroNotFound")
         {
             _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
             _audio->play(songs::WHEEL_CALIBRATION_SECOND_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
         }
-        else if (wheelState->errorCode == devices::WheelErrorCode::ZeroNotFound)
+        else if (errorCode == "ZeroNotFound")
         {
             _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
             _audio->play(songs::WHEEL_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
         }
-        else if (wheelState->errorCode == devices::WheelErrorCode::UnexpectedZeroTrigger)
+        else if (errorCode == "UnexpectedZeroTrigger")
         {
             _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
             _audio->play(songs::WHEEL_UNEXPECTED_ZERO_TRIGGER, devices::Hv20tPlayMode::QueueIfPlaying);
         }
         else
         {
-            MLOG_ERROR("%s: Unknown Wheel errorCode %d, cannot play audio", toString().c_str(), wheelState->errorCode);
+            MLOG_ERROR("%s: Unknown Wheel errorCode '%s', cannot play audio", toString().c_str(), errorCode.c_str());
         }
     }
 
@@ -1421,7 +1421,7 @@ namespace devices
         if (previousWheelState != devices::WheelStateEnum::ERROR &&
             wheelState->state == devices::WheelStateEnum::ERROR)
         {
-            playWheelError(wheelState);
+            playWheelError(_wheel->getErrorCode());
         }
 
         // CALIBRATING -> IDLE
@@ -1469,7 +1469,7 @@ namespace devices
         if (previousLiftState != devices::LiftStateEnum::ERROR &&
             liftState->state == devices::LiftStateEnum::ERROR)
         {
-            playLiftError(liftState);
+            playLiftError(_lift->getErrorCode());
         }
 
         previousLiftState = liftState->state;

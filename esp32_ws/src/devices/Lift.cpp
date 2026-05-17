@@ -76,8 +76,6 @@ namespace devices
         Device::setup();
 
         _state.state = LiftStateEnum::UNKNOWN;
-        _state.errorCode = LiftErrorCode::NONE;
-        _state.errorMessage = "";
         _state.onErrorChange = false;
 
         if (_stepper->getPins().empty())
@@ -128,8 +126,6 @@ namespace devices
         Device::teardown();
 
         _state.state = LiftStateEnum::UNKNOWN;
-        _state.errorCode = LiftErrorCode::NONE;
-        _state.errorMessage = "";
         _state.onErrorChange = false;
         _state.ballWaitingSince = 0;
         _state.isLoaded = false;
@@ -429,7 +425,7 @@ namespace devices
         return _state.state != LiftStateEnum::INIT && _state.state != LiftStateEnum::UNKNOWN;
     }
 
-    void Lift::addStateToJson(JsonDocument &doc)
+    void Lift::addDeviceStateToJson(JsonDocument &doc)
     {
         doc["state"] = stateToString(_state.state);
         doc["ballWaitingSince"] = _state.ballWaitingSince;
@@ -439,8 +435,6 @@ namespace devices
         {
             doc["currentPosition"] = getCurrentPosition();
         }
-        doc["errorMessage"] = _state.errorMessage;
-        doc["errorCode"] = errorCodeToString(_state.errorCode);
     }
 
     bool Lift::control(const String &action, JsonObject *args)
@@ -667,11 +661,9 @@ namespace devices
 
     void Lift::setError(LiftErrorCode errorCode, const String &message)
     {
-        MLOG_ERROR("%s: %s - %s", toString().c_str(), errorCodeToString(errorCode).c_str(), message.c_str());
         _state.state = LiftStateEnum::ERROR;
         _state.onErrorChange = true;
-        _state.errorMessage = message; // Store the error message
-        _state.errorCode = errorCode;  // Store the error code
+        Device::setError(errorCodeToString(errorCode), message);
 
         notifyStateChanged();
     }
@@ -681,7 +673,7 @@ namespace devices
         if (_state.state == LiftStateEnum::ERROR)
         {
             // Auto-clear if we were in child error and children have since recovered
-            if (_state.errorCode == LiftErrorCode::LIFT_CHILD_ERROR)
+            if (getErrorCode() == errorCodeToString(LiftErrorCode::LIFT_CHILD_ERROR))
             {
                 const bool loaderInError = _loader != nullptr && _loader->getState().state == ServoStateEnum::ERROR;
                 const bool unloaderInError = _unloader != nullptr && _unloader->getState().state == ServoStateEnum::ERROR;
@@ -689,9 +681,8 @@ namespace devices
                 {
                     MLOG_INFO("%s: Child servo error resolved, clearing error", toString().c_str());
                     _state.state = LiftStateEnum::UNKNOWN;
-                    _state.errorCode = LiftErrorCode::NONE;
-                    _state.errorMessage = "";
                     _state.onErrorChange = true;
+                    Device::clearError();
                     notifyStateChanged();
                     return false;
                 }
@@ -703,7 +694,7 @@ namespace devices
         // Check loader servo
         if (_loader != nullptr && _loader->getState().state == ServoStateEnum::ERROR)
         {
-            String message = "required child 'loader' has an error: " + _loader->getState().errorMessage;
+            String message = "required child 'loader' has an error: " + _loader->getErrorMessage();
             setError(LiftErrorCode::LIFT_CHILD_ERROR, message);
             return true;
         }
@@ -711,7 +702,7 @@ namespace devices
         // Check unloader servo
         if (_unloader != nullptr && _unloader->getState().state == ServoStateEnum::ERROR)
         {
-            String message = "required child 'unloader' has an error: " + _unloader->getState().errorMessage;
+            String message = "required child 'unloader' has an error: " + _unloader->getErrorMessage();
             setError(LiftErrorCode::LIFT_CHILD_ERROR, message);
             return true;
         }

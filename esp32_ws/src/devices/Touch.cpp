@@ -202,7 +202,7 @@ namespace devices
         return {String(_config.pin)};
     }
 
-    void Touch::addStateToJson(JsonDocument &doc)
+    void Touch::addDeviceStateToJson(JsonDocument &doc)
     {
         doc["value"] = _state.value;
         doc["touched"] = _state.touched;

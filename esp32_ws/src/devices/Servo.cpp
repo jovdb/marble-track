@@ -101,8 +101,7 @@ namespace devices
 
         // Setup succeeded; position is unknown until setValue is called
         _state.state = ServoStateEnum::UNKNOWN;
-        _state.errorCode = ServoErrorCode::NONE;
-        _state.errorMessage = "";
+        Device::clearError();
     }
 
     void Servo::teardown()
@@ -115,8 +114,7 @@ namespace devices
         _animationStartTimeMs = 0;
         _animationDurationMs = 0;
         _state.state = ServoStateEnum::UNKNOWN;
-        _state.errorCode = ServoErrorCode::NONE;
-        _state.errorMessage = "";
+        Device::clearError();
 
         if (_mcpwmChannelIndex >= 0)
         {
@@ -268,14 +266,12 @@ namespace devices
         return true;
     }
 
-    void Servo::addStateToJson(JsonDocument &doc)
+    void Servo::addDeviceStateToJson(JsonDocument &doc)
     {
         const float currentValue = ((_currentDutyCycle - _config.minDutyCycle) / (_config.maxDutyCycle - _config.minDutyCycle)) * 100.0f;
         const float targetValue = ((_animationTargetDutyCycle - _config.minDutyCycle) / (_config.maxDutyCycle - _config.minDutyCycle)) * 100.0f;
 
         doc["state"] = stateToString(_state.state);
-        doc["errorCode"] = errorCodeToString(_state.errorCode);
-        doc["errorMessage"] = _state.errorMessage;
         doc["running"] = _isAnimating;
         doc["value"] = currentValue;
         doc["targetValue"] = _isAnimating ? targetValue : currentValue;
@@ -313,6 +309,10 @@ namespace devices
         else if (action == "disable")
         {
             return disable();
+        }
+        else if (action == "clearError")
+        {
+            return clearError();
         }
         else
         {
@@ -647,13 +647,24 @@ namespace devices
 
     void Servo::setError(ServoErrorCode errorCode, const String &message)
     {
-        MLOG_ERROR("%s: %s - %s", toString().c_str(), errorCodeToString(errorCode).c_str(), message.c_str());
         _state.state = ServoStateEnum::ERROR;
-        _state.errorCode = errorCode;
-        _state.errorMessage = message;
+        Device::setError(errorCodeToString(errorCode), message);
         _isAnimating = false;
         _state.running = false;
         notifyStateChanged();
+    }
+
+    bool Servo::clearError()
+    {
+        if (_state.state != ServoStateEnum::ERROR)
+        {
+            return false;
+        }
+        _state.state = ServoStateEnum::UNKNOWN;
+        Device::clearError();
+        notifyStateChanged();
+        MLOG_INFO("%s: Error cleared", toString().c_str());
+        return true;
     }
 
     String Servo::stateToString(ServoStateEnum state) const

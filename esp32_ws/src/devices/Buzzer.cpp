@@ -232,7 +232,7 @@ namespace devices
         return true;
     }
 
-    void Buzzer::addStateToJson(JsonDocument &doc)
+    void Buzzer::addDeviceStateToJson(JsonDocument &doc)
     {
         // Thread-safe state read
         if (xSemaphoreTake(_stateMutex, portMAX_DELAY) == pdTRUE)

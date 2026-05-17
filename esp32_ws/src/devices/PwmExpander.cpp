@@ -144,7 +144,7 @@ namespace devices
         doc["frequency"]   = _config.frequency;
     }
 
-    void PwmExpander::addStateToJson(JsonDocument &doc)
+    void PwmExpander::addDeviceStateToJson(JsonDocument &doc)
     {
         doc["isPresent"] = _state.isPresent;
     }

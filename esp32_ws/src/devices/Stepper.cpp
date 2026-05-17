@@ -458,7 +458,7 @@ namespace devices
         return true;
     }
 
-    void Stepper::addStateToJson(JsonDocument &doc)
+    void Stepper::addDeviceStateToJson(JsonDocument &doc)
     {
         doc["currentPosition"] = _state.currentPosition;
         doc["targetPosition"] = _state.targetPosition;

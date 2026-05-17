@@ -160,7 +160,7 @@ namespace devices
         return !_state.isPressed;
     }
 
-    void Button::addStateToJson(JsonDocument &doc)
+    void Button::addDeviceStateToJson(JsonDocument &doc)
     {
         doc["value"] = _state.input;
         doc["isPressed"] = _state.isPressed;

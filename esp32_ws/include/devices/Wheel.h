@@ -67,8 +67,6 @@ namespace devices
     struct WheelState
     {
         WheelStateEnum state = WheelStateEnum::UNKNOWN;  // Current wheel state
-        WheelErrorCode errorCode = WheelErrorCode::None; // Last error code
-        String errorMessage = "";                        // Last error message
         long lastZeroPosition = 0;                       // Position at last zero sensor trigger
         long pendingZeroOffset = 0;                      // Pending zero offset
         long stepsInLastRevolution = 0;                  // Steps measured in last revolution
@@ -147,7 +145,7 @@ namespace devices
         bool stop();
 
         // ControllableMixin implementation
-        void addStateToJson(JsonDocument &doc) override;
+        void addDeviceStateToJson(JsonDocument &doc) override;
         bool control(const String &action, JsonObject *args = nullptr) override;
 
         // SerializableMixin implementation
@@ -174,6 +172,11 @@ namespace devices
          * @return String representation
          */
         String stateToString(WheelStateEnum state) const;
+
+        /**
+         * @brief Convert WheelErrorCode to string for JSON serialization
+         */
+        String errorCodeToString(WheelErrorCode errorCode) const;
 
         /**
          * @brief Notify clients about steps per revolution measurement

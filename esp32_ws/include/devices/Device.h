@@ -75,6 +75,11 @@ public:
         return static_cast<T *>(getChildById(id));
     }
 
+    // Error state (available on every device, serialized automatically by ControllableMixin)
+    bool hasError() const { return !_errorCode.isEmpty(); }
+    const String &getErrorCode() const { return _errorCode; }
+    const String &getErrorMessage() const { return _errorMessage; }
+
     // Pins (for collision detection)
     virtual std::vector<String> getPins() const { return {}; }
 
@@ -90,6 +95,16 @@ protected:
     bool _isInitialized = false;
     std::vector<Device *> _children;
     std::vector<String> _mixins;
+
+    void setError(const String &errorCode, const String &errorMessage);
+    void clearError();
+
+    // Walks the subtree of _children depth-first.
+    // Returns the first descendant that has an error, or nullptr.
+    Device *getFirstChildWithError() const;
+private:
+    String _errorCode;    // Empty string = no error
+    String _errorMessage;
 };
 
 #endif // DEVICE_H

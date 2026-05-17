@@ -77,6 +77,35 @@ String Device::toString() const
     return upperType + "[" + _id + "]";
 }
 
+void Device::setError(const String &errorCode, const String &errorMessage)
+{
+    MLOG_ERROR("%s: %s - %s", toString().c_str(), errorCode.c_str(), errorMessage.c_str());
+    _errorCode = errorCode;
+    _errorMessage = errorMessage;
+}
+
+void Device::clearError()
+{
+    _errorCode = "";
+    _errorMessage = "";
+}
+
+Device *Device::getFirstChildWithError() const
+{
+    for (Device *child : _children)
+    {
+        if (!child)
+            continue;
+        // Depth-first: check the subtree before the child itself
+        Device *subtreeError = child->getFirstChildWithError();
+        if (subtreeError)
+            return subtreeError;
+        if (child->hasError())
+            return child;
+    }
+    return nullptr;
+}
+
 void Device::registerMixin(const String &mixinName)
 {
     // Avoid duplicates

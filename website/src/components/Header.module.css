@@ -24,10 +24,6 @@
 .header__logo {
   width: 34px;
   height: 34px;
-  padding: 3px;
-  border-radius: var(--radius-md);
-  background: var(--color-primary-50);
-  border: 1px solid var(--color-primary-200);
 }
 
 .header__logo--connected {

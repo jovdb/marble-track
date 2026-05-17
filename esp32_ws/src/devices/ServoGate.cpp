@@ -54,6 +54,11 @@ namespace devices
     {
         Device::teardown();
         _fsm = ServoGateFsmState::IDLE;
+
+        // Stop sending PWM to allow free rotation when idle
+        if (_servo)
+            _servo->disable();
+
         _buttonPressStartMs = 0;
         _holdQueueFillApplied = false;
     }
@@ -180,7 +185,7 @@ namespace devices
             {
                 _state.queueCount--;
                 _state.pulseCount++;
-                     // MLOG_INFO("%s: Cycle complete (total pulses=%d), queue=%d", toString().c_str(), _state.pulseCount, _state.queueCount);
+                // MLOG_INFO("%s: Cycle complete (total pulses=%d), queue=%d", toString().c_str(), _state.pulseCount, _state.queueCount);
 
                 if (_state.queueCount > 0)
                 {
@@ -192,6 +197,9 @@ namespace devices
                 {
                     _fsm = ServoGateFsmState::IDLE;
                     _state.gateState = fsmStateToString(_fsm);
+                    // Stop sending PWM to allow free rotation when idle
+                    if (_servo)
+                        _servo->disable();
                 }
                 notifyStateChanged();
             }
@@ -226,18 +234,6 @@ namespace devices
             }
             MLOG_WARN("%s: Queue full (%d), trigger ignored", toString().c_str(), _state.queueCount);
             return false;
-        }
-        else if (action == "reset")
-        {
-            _state.queueCount = 0;
-            _state.pulseCount = 0;
-            if (_servo)
-                _servo->setValue(0.0f, 0);
-            _fsm = ServoGateFsmState::IDLE;
-            _state.gateState = fsmStateToString(_fsm);
-            notifyStateChanged();
-            MLOG_INFO("%s: Reset", toString().c_str());
-            return true;
         }
 
         MLOG_WARN("%s: Unknown action: %s", toString().c_str(), action.c_str());
@@ -277,13 +273,20 @@ namespace devices
     {
         switch (state)
         {
-        case ServoGateFsmState::IDLE:       return "Idle";
-        case ServoGateFsmState::WAIT_OPEN:  return "WaitOpen";
-        case ServoGateFsmState::OPENING:    return "Opening";
-        case ServoGateFsmState::WAIT_CLOSE: return "WaitClose";
-        case ServoGateFsmState::CLOSING:    return "Closing";
-        case ServoGateFsmState::BETWEEN:    return "Between";
-        default:                            return "Unknown";
+        case ServoGateFsmState::IDLE:
+            return "Idle";
+        case ServoGateFsmState::WAIT_OPEN:
+            return "WaitOpen";
+        case ServoGateFsmState::OPENING:
+            return "Opening";
+        case ServoGateFsmState::WAIT_CLOSE:
+            return "WaitClose";
+        case ServoGateFsmState::CLOSING:
+            return "Closing";
+        case ServoGateFsmState::BETWEEN:
+            return "Between";
+        default:
+            return "Unknown";
         }
     }
 
@@ -299,6 +302,9 @@ namespace devices
             _state.queueCount = 0;
             _fsm = ServoGateFsmState::IDLE;
             _state.gateState = fsmStateToString(_fsm);
+            // Stop sending PWM to allow free rotation when idle
+            if (_servo)
+                _servo->disable();
             notifyStateChanged();
         }
         else if (!servoInError && _childErrorActive)

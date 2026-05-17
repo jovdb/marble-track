@@ -863,6 +863,15 @@ namespace devices
             _stepper->stop(IMMEDIATE_DECELERATION);
             _stepperStartTime = 0;
 
+            _state.initStep = 10;
+            break;
+        }
+        case 10:
+        {
+            
+            MLOG_DEBUG("%s: Init step 10: Init loader", toString().c_str());
+            _loader->setValue(0); // Move loader down
+
             // Init complete
             MLOG_INFO("%s: Initialization complete", toString().c_str());
             _state.state = LiftStateEnum::LIFT_DOWN;

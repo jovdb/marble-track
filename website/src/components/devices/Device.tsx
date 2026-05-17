@@ -3,7 +3,7 @@ import styles from "./Device.module.css";
 import { useDevice } from "../../stores/Devices";
 import { renderDeviceComponent } from "../Devices";
 import { useWebSocket2, IWebSocketMessage } from "../../hooks/useWebSocket";
-import { BroadcastIcon, JsonIcon } from "../icons/Icons";
+import { BroadcastIcon, JsonIcon, WarningIcon } from "../icons/Icons";
 import DeviceJsonConfig from "../DeviceJsonConfig";
 
 interface DeviceProps {
@@ -42,6 +42,17 @@ export function Device(props: DeviceProps) {
       "Unknown Device"
   );
   const deviceType = createMemo(() => device()?.type);
+  const stateErrorLabel = createMemo(() => {
+    const state = device()?.state as Record<string, unknown> | undefined;
+    const errorCode = typeof state?.errorCode === "string" ? state.errorCode : "";
+    const errorMessage = typeof state?.errorMessage === "string" ? state.errorMessage : "";
+
+    if (errorCode || errorMessage) {
+      return [errorCode, errorMessage].filter(Boolean).join(": ");
+    }
+
+    return device()?.stateErrorMessage ?? "";
+  });
 
   const configPanelId = `device-config-${props.id}`;
   const logsPanelId = `device-logs-${props.id}`;
@@ -90,7 +101,14 @@ export function Device(props: DeviceProps) {
               {props.icon}
             </div>
           </Show>
-          <h3 class={styles.device__title}>{name()}</h3>
+          <h3 class={styles.device__title}>
+            <span>{name()}</span>
+            <Show when={stateErrorLabel()}>
+              <span class={styles["device__title-error"]} title={stateErrorLabel()}>
+                <WarningIcon width={16} height={16} />
+              </span>
+            </Show>
+          </h3>
         </div>
         <div class={styles["device__header-right"]}>
           <div class={styles["device__header-actions"]}>

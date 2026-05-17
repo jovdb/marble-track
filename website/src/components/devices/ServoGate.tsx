@@ -4,6 +4,7 @@ import deviceStyles from "./Device.module.css";
 import { useServoGate } from "../../stores/ServoGate";
 import ServoGateConfig from "./ServoGateConfig";
 import { useServo } from "../../stores/Servo";
+import { getDeviceIcon } from "../icons/Icons";
 
 type GateState = "Idle" | "WaitOpen" | "Opening" | "WaitClose" | "Closing" | "Between";
 
@@ -12,6 +13,7 @@ export function ServoGate(props: { id: string; isPopup?: boolean; onClose?: () =
   const device = () => servoGateStore[0];
   const actions = servoGateStore[1];
 
+  const deviceType = device()?.type;
   const state = () => device()?.state;
   const config = () => device()?.config;
 
@@ -56,6 +58,7 @@ export function ServoGate(props: { id: string; isPopup?: boolean; onClose?: () =
       id={props.id}
       configComponent={(onClose) => <ServoGateConfig id={props.id} onClose={onClose} />}
       isCollapsible={!props.isPopup}
+      icon={deviceType ? getDeviceIcon(deviceType, props.id) : null}
       onClose={props.onClose}
     >
       {/* Gate SVG visualisation */}

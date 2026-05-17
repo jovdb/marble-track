@@ -368,7 +368,7 @@ namespace devices
         return move(maxSteps * 2 * _config.direction);
     }
 
-    bool Wheel::init(long maxStepsPerRevolution)
+    bool Wheel::init(long maxStepsPerRevolution, float speedRatio)
     {
         if (!_stepper->isReady())
         {
@@ -387,7 +387,7 @@ namespace devices
         notifyStateChanged();
 
         const long maxSteps = (maxStepsPerRevolution > 0) ? maxStepsPerRevolution : _config.maxStepsPerRevolution;
-        return move(maxSteps * _config.direction);
+        return move(maxSteps * _config.direction, speedRatio);
     }
 
     bool Wheel::moveToAngle(float angle)

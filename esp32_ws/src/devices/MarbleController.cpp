@@ -31,7 +31,7 @@ namespace devices
 
     namespace wheel_timing
     {
-        static constexpr float AutoSpeedRatio = 0.8f;
+        static constexpr float AutoSpeedRatio = 0.6f;
     }
 
     MarbleController::MarbleController(const String &id) : Device(id, "marblecontroller")
@@ -846,7 +846,7 @@ namespace devices
         switch (wheelState.state)
         {
         case devices::WheelStateEnum::UNKNOWN:
-            _wheel->init();
+            _wheel->init(-1, wheel_timing::AutoSpeedRatio);
             break;
 
         case devices::WheelStateEnum::ERROR:
@@ -861,7 +861,7 @@ namespace devices
                 ((millis() - _wheelButtonPressStartTime) >= WHEEL_LONG_PRESS_DURATION_MS))
             {
                 MLOG_INFO("%s: Error recovery long press detected in auto mode, starting wheel init", toString().c_str());
-                _wheel->init();
+                _wheel->init(-1, wheel_timing::AutoSpeedRatio);
                 playButtonClick();
                 _wheelButtonPressStartTime = 0;
                 _wheelButtonLongPressTriggered = true;

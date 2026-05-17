@@ -117,7 +117,7 @@ namespace devices
          * @brief Initialize the wheel to find zero position
          * @return true if init started, false otherwise
          */
-        bool init(long maxStepsPerRevolution = -1);
+        bool init(long maxStepsPerRevolution = -1, float speedRatio = 1.0f);
 
         /**
          * @brief Move to a specific angle (0-359.9 degrees)

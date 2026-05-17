@@ -5,6 +5,7 @@ import {
   ChevronRightIcon,
   ChevronDownIcon,
   GripIcon,
+  WarningIcon,
 } from "./icons/Icons";
 import styles from "./DevicesList.module.css";
 import { useDevices, type IDevice } from "../stores/Devices";
@@ -311,6 +312,29 @@ export function DevicesList() {
     }
   });
 
+  // Returns a human-readable error label for a device if it has a firmware error or a WS state error.
+  const deviceErrorLabel = (device: IDevice): string | undefined => {
+    const state = device.state as Record<string, unknown> | undefined;
+    const code = state?.errorCode as string | undefined;
+    const msg = state?.errorMessage as string | undefined;
+    if (code || msg) return [code, msg].filter(Boolean).join(": ");
+    return device.stateErrorMessage;
+  };
+
+  // Recursively searches a device's children (at any depth) for a non-empty error label.
+  // Used to surface child errors on a collapsed parent row.
+  const findChildError = (device: IDevice): string | undefined => {
+    for (const child of device.children ?? []) {
+      const childDevice = devicesState.devices[child.id];
+      if (!childDevice) continue;
+      const label = deviceErrorLabel(childDevice);
+      if (label) return label;
+      const deeper = findChildError(childDevice);
+      if (deeper) return deeper;
+    }
+    return undefined;
+  };
+
   // Compute top-level devices (exclude devices that are children of other devices)
   const topLevelDevices = () =>
     Object.values(devicesState.devices).filter((device) => {
@@ -353,6 +377,11 @@ export function DevicesList() {
       "padding-left": `${depth * 24}px`,
     };
 
+    // Error label: own error always; child errors only when row is collapsed.
+    const errorLabel = () =>
+      deviceErrorLabel(props.device) || (isCollapsed() ? findChildError(props.device) : undefined);
+    const rowErrorLabel = () => errorLabel();
+
     // Determine which pins to display
     const displayPins = () => {
       if (hasChildren && isCollapsed()) {
@@ -367,7 +396,9 @@ export function DevicesList() {
     return (
       <>
         <tr
-          class={`${styles["devices-list__table-row"]} ${dragDirectionClass()} ${
+          class={`${styles["devices-list__table-row"]} ${
+            rowErrorLabel() ? styles["devices-list__table-row--error"] : ""
+          } ${dragDirectionClass()} ${
             selectedDevicesState.selectedDevices().has(props.device.id)
               ? styles["devices-list__table-row--selected"]
               : ""
@@ -452,6 +483,11 @@ export function DevicesList() {
                 </button>
               )}
               {getDeviceIcon(props.device.type, props.device.id)}
+              {rowErrorLabel() && (
+                <span class={styles["devices-list__error-icon"]} title={rowErrorLabel()}>
+                  <WarningIcon width={14} height={14} />
+                </span>
+              )}
             </div>
           </td>
           <td class={styles["devices-list__table-td"]}>

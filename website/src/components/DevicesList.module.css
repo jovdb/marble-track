@@ -175,6 +175,13 @@
   gap: var(--spacing-1);
 }
 
+.devices-list__error-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--color-danger-600);
+}
+
 .devices-list__drag-handle {
   cursor: grab;
   color: var(--color-text-tertiary);
@@ -209,6 +216,16 @@
 .devices-list__table-row--selected {
   background-color: var(--color-info-50);
   box-shadow: inset 4px 0 0 var(--color-info-500);
+}
+
+.devices-list__table-row--error,
+.devices-list__table-row--error > td {
+  background-color: var(--color-danger-200);
+}
+
+.devices-list__table-row--error:hover,
+.devices-list__table-row--error:hover > td {
+  background-color: var(--color-danger-300);
 }
 
 .devices-list__type-badge {

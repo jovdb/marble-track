@@ -81,8 +81,14 @@ public:
     {
         auto *derived = static_cast<Derived *>(this);
         addDeviceStateToJson(doc);
-        doc["errorCode"] = derived->getErrorCode();
-        doc["errorMessage"] = derived->getErrorMessage();
+
+        const String &errorCode = derived->getErrorCode();
+        if (errorCode.length() > 0)
+            doc["errorCode"] = errorCode;
+
+        const String &errorMessage = derived->getErrorMessage();
+        if (errorMessage.length() > 0)
+            doc["errorMessage"] = errorMessage;
     }
 
     // Provide Device virtual override via mixin when combined

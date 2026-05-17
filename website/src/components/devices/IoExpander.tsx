@@ -11,7 +11,7 @@ export function IoExpander(props: { id: string; isPopup?: boolean; onClose?: () 
   const config = () => device?.config;
   const state = () => device?.state;
 
-  const isPresent = () => state()?.isPresent as boolean | undefined;
+  const expanderState = () => state()?.state as string | undefined;
   const expanderType = () => (config()?.expanderType as string) ?? "Unknown";
   const i2cAddress = () => {
     const addr = config()?.i2cAddress as number | undefined;
@@ -41,9 +41,9 @@ export function IoExpander(props: { id: string; isPopup?: boolean; onClose?: () 
       <div style={{ padding: "0.5rem", "font-size": "0.9rem" }}>
         <div>
           <strong>Status:</strong>{" "}
-          {isPresent() === undefined ? (
+          {expanderState() === undefined ? (
             "Unknown"
-          ) : isPresent() ? (
+          ) : expanderState() === "Found" ? (
             <span style={{ color: "green" }}>Connected</span>
           ) : (
             <span style={{ color: "orange" }}>Not found</span>

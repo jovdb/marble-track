@@ -253,18 +253,16 @@ export function Device(props: DeviceProps) {
       <Show when={!isCollapsed()}>
         <div class={styles.device__content}>
           <Show when={!showChildren() && !showConfig() && !showMessagesPanel() && !showData()}>
-            <Show when={device()?.stateErrorMessage}>
+            <Show when={stateErrorLabel()}>
               <div class={styles.device__error} role="alert">
-                {device()?.stateErrorMessage}
+                {stateErrorLabel()}
               </div>
             </Show>
 
-            <Show when={!device()?.stateErrorMessage}>
-              <Show when={props.stateComponent !== undefined}>
-                {props.stateComponent?.({ state: device()?.state })}
-              </Show>
-              {props.children}
+            <Show when={props.stateComponent !== undefined}>
+              {props.stateComponent?.({ state: device()?.state })}
             </Show>
+            {props.children}
           </Show>
 
           {showChildren() && device()?.children?.length && (

@@ -43,7 +43,8 @@ namespace devices
      */
     struct IoExpanderState
     {
-        bool isPresent = false; // Whether the I2C device responded
+        // "Found" = device responded on I2C bus, "Error" = not found or misconfigured
+        String state = "Error";
     };
 
     /**

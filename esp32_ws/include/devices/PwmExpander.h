@@ -34,7 +34,8 @@ namespace devices
      */
     struct PwmExpanderState
     {
-        bool isPresent = false; // Whether the PCA9685 responded on the I2C bus
+        // "Found" = PCA9685 responded on I2C bus, "Error" = not found or misconfigured
+        String state = "Error";
     };
 
     /**

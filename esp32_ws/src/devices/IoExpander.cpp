@@ -41,7 +41,8 @@ namespace devices
         if (!i2cDevice)
         {
             MLOG_ERROR("%s: Required I2C device '%s' not found", toString().c_str(), _config.i2cDeviceId.c_str());
-            _state.isPresent = false;
+            Device::setError("NOT_FOUND", "I2C device '" + _config.i2cDeviceId + "' not found");
+            _state.state = "Error";
             notifyStateChanged();
             return;
         }
@@ -51,7 +52,8 @@ namespace devices
         if (!i2cDevice->isSetup())
         {
             MLOG_ERROR("%s: I2C device '%s' is not set up, make sure it is configured before this device", toString().c_str(), _config.i2cDeviceId.c_str());
-            _state.isPresent = false;
+            Device::setError("NOT_READY", "I2C device '" + _config.i2cDeviceId + "' is not set up");
+            _state.state = "Error";
             notifyStateChanged();
             return;
         }
@@ -62,7 +64,8 @@ namespace devices
         {
             MLOG_ERROR("%s: I2C device '%s' does not have SDA/SCL pins configured",
                        toString().c_str(), _config.i2cDeviceId.c_str());
-            _state.isPresent = false;
+            Device::setError("CONFIG_ERROR", "I2C device '" + _config.i2cDeviceId + "' has no SDA/SCL pins");
+            _state.state = "Error";
             notifyStateChanged();
             return;
         }
@@ -74,7 +77,8 @@ namespace devices
         {
             MLOG_ERROR("%s: I2C device '%s' has invalid SDA/SCL pins (SDA=%d, SCL=%d)",
                        toString().c_str(), _config.i2cDeviceId.c_str(), sdaPin, sclPin);
-            _state.isPresent = false;
+            Device::setError("CONFIG_ERROR", "I2C device '" + _config.i2cDeviceId + "' has invalid pins");
+            _state.state = "Error";
             notifyStateChanged();
             return;
         }
@@ -83,11 +87,12 @@ namespace devices
         // Just use the already configured Wire instance to check if the device is present
         Wire.beginTransmission(_config.i2cAddress);
         uint8_t error = Wire.endTransmission();
-        _state.isPresent = (error == 0);
-        notifyStateChanged();
 
-        if (_state.isPresent)
+        if (error == 0)
         {
+            Device::clearError();
+            _state.state = "Found";
+            notifyStateChanged();
             MLOG_INFO("%s: Found %s at address 0x%02X on I2C bus '%s' (SDA=%d, SCL=%d) with %d pins",
                       toString().c_str(),
                       getExpanderTypeString().c_str(),
@@ -99,6 +104,9 @@ namespace devices
         }
         else
         {
+            Device::setError("NOT_FOUND", getExpanderTypeString() + " not found at 0x" + String(_config.i2cAddress, HEX));
+            _state.state = "Error";
+            notifyStateChanged();
             MLOG_WARN("%s: %s not found at address 0x%02X on I2C bus '%s' (I2C error: %d)",
                       toString().c_str(),
                       getExpanderTypeString().c_str(),
@@ -111,8 +119,6 @@ namespace devices
     void IoExpander::teardown()
     {
         Device::teardown();
-        _state.isPresent = false;
-        notifyStateChanged();
     }
 
     void IoExpander::loop()
@@ -130,7 +136,7 @@ namespace devices
 
     bool IoExpander::isDevicePresent() const
     {
-        return _state.isPresent;
+        return _state.state == "Found";
     }
 
     int IoExpander::getPinCount() const
@@ -203,7 +209,7 @@ namespace devices
 
     void IoExpander::addDeviceStateToJson(JsonDocument &doc)
     {
-        doc["isPresent"] = _state.isPresent;
+        doc["state"] = _state.state;
     }
 
     bool IoExpander::control(const String & /*action*/, JsonObject * /*args*/)

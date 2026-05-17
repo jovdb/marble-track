@@ -42,7 +42,8 @@ namespace devices
         if (!i2cDevice)
         {
             MLOG_ERROR("%s: Required I2C device '%s' not found", toString().c_str(), _config.i2cDeviceId.c_str());
-            _state.isPresent = false;
+            Device::setError("NOT_FOUND", "I2C device '" + _config.i2cDeviceId + "' not found");
+            _state.state = "Error";
             notifyStateChanged();
             return;
         }
@@ -51,7 +52,8 @@ namespace devices
         {
             MLOG_ERROR("%s: I2C device '%s' is not set up; configure it before this device",
                        toString().c_str(), _config.i2cDeviceId.c_str());
-            _state.isPresent = false;
+            Device::setError("NOT_READY", "I2C device '" + _config.i2cDeviceId + "' is not set up");
+            _state.state = "Error";
             notifyStateChanged();
             return;
         }
@@ -59,15 +61,20 @@ namespace devices
         // Quick I2C presence check
         Wire.beginTransmission(_config.i2cAddress);
         uint8_t error = Wire.endTransmission();
-        _state.isPresent = (error == 0);
-        notifyStateChanged();
 
-        if (!_state.isPresent)
+        if (error != 0)
         {
+            Device::setError("NOT_FOUND", "PCA9685 not found at 0x" + String(_config.i2cAddress, HEX));
+            _state.state = "Error";
+            notifyStateChanged();
             MLOG_WARN("%s: PCA9685 not found at address 0x%02X on I2C bus '%s' (I2C error: %d)",
                       toString().c_str(), _config.i2cAddress, _config.i2cDeviceId.c_str(), error);
             return;
         }
+
+        Device::clearError();
+        _state.state = "Found";
+        notifyStateChanged();
 
         // Create and initialise the Adafruit driver
         if (_driver)
@@ -103,8 +110,6 @@ namespace devices
             delete _driver;
             _driver = nullptr;
         }
-        _state.isPresent = false;
-        notifyStateChanged();
     }
 
     void PwmExpander::loop()
@@ -121,7 +126,7 @@ namespace devices
 
     bool PwmExpander::isDevicePresent() const
     {
-        return _state.isPresent;
+        return _state.state == "Found";
     }
 
     void PwmExpander::jsonToConfig(const JsonDocument &config)
@@ -146,7 +151,7 @@ namespace devices
 
     void PwmExpander::addDeviceStateToJson(JsonDocument &doc)
     {
-        doc["isPresent"] = _state.isPresent;
+        doc["state"] = _state.state;
     }
 
     bool PwmExpander::control(const String & /*action*/, JsonObject * /*args*/)

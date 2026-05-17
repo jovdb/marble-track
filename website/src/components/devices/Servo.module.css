@@ -48,6 +48,17 @@
   margin-top: 4px;
 }
 
+.servo__status-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.servo__error-message {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--color-error-500, #ef4444);
+}
+
 .servo__state-badge {
   font-size: var(--font-size-xs, 0.75rem);
   color: var(--color-gray-500);

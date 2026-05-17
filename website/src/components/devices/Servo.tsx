@@ -57,7 +57,10 @@ export function Servo(props: { id: string; isPopup?: boolean; onClose?: () => vo
       return `Moving from ${deviceState()?.value?.toFixed(0)}% to ${deviceState()?.targetValue?.toFixed(0) ?? sliderValue().toFixed(0)}%`;
     }
     if (state === "Disabled") return "Disabled — servo can rotate freely";
-    if (state === "Error") return "Error";
+    if (state === "Error") {
+      const code = deviceState()?.errorCode;
+      return code ? `Error [${code}]` : "Error";
+    }
     if (state === "Unknown") return "Position unknown";
     return `Position: ${sliderValue().toFixed(0)}%`;
   });
@@ -87,12 +90,13 @@ export function Servo(props: { id: string; isPopup?: boolean; onClose?: () => vo
             [indicatorClass()]: true,
           }}
         ></div>
-        <span class={deviceStyles["device__status-text"]}>{statusText()}</span>
+        <div class={servoStyles["servo__status-content"]}>
+          <span class={deviceStyles["device__status-text"]}>{statusText()}</span>
+          <Show when={isError() && deviceState()?.errorMessage}>
+            <span class={servoStyles["servo__error-message"]}>{deviceState()?.errorMessage}</span>
+          </Show>
+        </div>
       </div>
-
-      <Show when={isError() && deviceState()?.errorMessage}>
-        <div class={servoStyles.servo__error}>{deviceState()?.errorMessage}</div>
-      </Show>
 
       <div class={deviceStyles["device__input-group"]}>
         <label class={deviceStyles.device__label} for={`value-${props.id}`}>

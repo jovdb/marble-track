@@ -105,7 +105,7 @@ namespace devices
          * @param steps Number of steps to move
          * @return true if move initiated, false otherwise
          */
-        bool move(long steps);
+        bool move(long steps, float speedRatio = 1.0f);
 
         /**
          * @brief Calibrate the wheel by measuring steps per revolution
@@ -130,7 +130,7 @@ namespace devices
          * @brief Move to the next breakpoint
          * @return true if move initiated, false otherwise
          */
-        bool nextBreakPoint();
+        bool nextBreakPoint(float speedRatio = 1.0f);
 
         /**
          * @brief Get current breakpoint index

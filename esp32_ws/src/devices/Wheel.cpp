@@ -322,7 +322,7 @@ namespace devices
         // }
     }
 
-    bool Wheel::move(long steps)
+    bool Wheel::move(long steps, float speedRatio)
     {
         if (_state.state != WheelStateEnum::CALIBRATING && _state.state != WheelStateEnum::INIT)
         {
@@ -335,8 +335,11 @@ namespace devices
             notifyStateChanged();
         }
 
-        // Call stepper's move method
-        return _stepper->move(steps);
+        // Call stepper's move method with optional speed scaling
+        if (speedRatio <= 0.0f)
+            speedRatio = 1.0f;
+        const float speed = _stepper->getConfig().defaultSpeed * speedRatio;
+        return _stepper->move(steps, speed);
     }
 
     bool Wheel::calibrate(long maxStepsPerRevolution)
@@ -444,7 +447,7 @@ namespace devices
         return move(stepsToMove);
     }
 
-    bool Wheel::nextBreakPoint()
+    bool Wheel::nextBreakPoint(float speedRatio)
     {
         if (_config.breakPoints.empty())
         {
@@ -491,7 +494,7 @@ namespace devices
 
         MLOG_INFO("%s: Moving to next breakpoint index %d, angle %.1f° (from %.1f°, diff %.1f° = %ld steps)",
                   toString().c_str(), nextIndex, targetAngle, currentAngle, angleDiff, stepsToMove);
-        return move(stepsToMove);
+        return move(stepsToMove, speedRatio);
     }
 
     bool Wheel::stop()

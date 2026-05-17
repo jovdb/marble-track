@@ -29,6 +29,11 @@ namespace devices
         static constexpr float LiftManualSpeedRatio = 1.0f;
     }
 
+    namespace wheel_timing
+    {
+        static constexpr float AutoSpeedRatio = 0.8f;
+    }
+
     MarbleController::MarbleController(const String &id) : Device(id, "marblecontroller")
     {
         _buzzer = new devices::Buzzer("buzzer");
@@ -888,12 +893,12 @@ namespace devices
             else if (millis() >= _wheelIdleStartTime + _randomWheelDelayMs)
             {
                 MLOG_INFO("%s: Triggering wheel next breakpoint", toString().c_str());
-                _wheel->nextBreakPoint();
+                _wheel->nextBreakPoint(wheel_timing::AutoSpeedRatio);
                 _wheelIdleStartTime = 0;
             }
             else if (isWheelButtonPressedEdge)
             {
-                _wheel->nextBreakPoint();
+                _wheel->nextBreakPoint(wheel_timing::AutoSpeedRatio);
                 playButtonClick();
             }
 

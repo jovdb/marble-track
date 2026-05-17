@@ -40,7 +40,8 @@ export default function ServoGateConfig(props: ServoGateConfigProps) {
     if (typeof config.closeDelayMs === "number") setCloseDelayMs(String(config.closeDelayMs));
     if (typeof config.betweenDelayMs === "number") setBetweenDelayMs(String(config.betweenDelayMs));
     if (typeof config.fullQueueCount === "number") setFullQueueCount(String(config.fullQueueCount));
-    if (typeof config.initialQueueCount === "number") setInitialQueueCount(String(config.initialQueueCount));
+    if (typeof config.initialQueueCount === "number")
+      setInitialQueueCount(String(config.initialQueueCount));
   });
 
   return (

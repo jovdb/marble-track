@@ -166,14 +166,18 @@ namespace devices
 
     std::vector<String> Servo::getPins() const
     {
-        if (_config.pinConfig.expanderId.isEmpty())
+        if (!_config.pinConfig.expanderId.isEmpty())
         {
-            if (_config.pinConfig.pin < 0)
-                return {};
-            return {String(_config.pinConfig.pin)};
+            // PwmExpander path: report as "expanderId:channel"
+            if (_pwmPin)
+                return {_pwmPin->toString()};
+            if (_config.pinConfig.pin >= 0)
+                return {_config.pinConfig.expanderId + ":" + String(_config.pinConfig.pin)};
+            return {};
         }
-        // PwmExpander pins are not GPIO — not reported
-        return {};
+        if (_config.pinConfig.pin < 0)
+            return {};
+        return {String(_config.pinConfig.pin)};
     }
 
     bool Servo::setValue(float value, int durationMs)

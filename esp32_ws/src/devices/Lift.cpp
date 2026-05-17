@@ -838,6 +838,7 @@ namespace devices
         {
             MLOG_DEBUG("%s: Init step 8: Moving back down until limit switch", toString().c_str());
             _state.initStep = 9;
+            _unloader->disable();
             long steps = (_config.minSteps - _config.maxSteps) * DOWN_FACTOR;
             moveStepper(steps, _initSpeedRatio);
             nextInitStepTime = millis() + 100;

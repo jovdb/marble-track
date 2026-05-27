@@ -1,0 +1,85 @@
+.launcher {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.launcher__visual {
+  display: flex;
+  justify-content: center;
+}
+
+.launcher__status {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.launcher__state-badge {
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.8rem;
+  background: var(--color-surface, #f0f0f0);
+  border: 1px solid var(--color-border, #ccc);
+}
+
+.launcher__indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+}
+
+.launcher__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid #999;
+  background: #ddd;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.launcher__dot--active-waiting {
+  background: orange;
+  border-color: #c80;
+}
+
+.launcher__dot--active-loaded {
+  background: #4488ff;
+  border-color: #226;
+}
+
+.launcher__controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.launcher__button {
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--color-border, #ccc);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  background: var(--color-surface, #f8f8f8);
+}
+
+.launcher__button:hover:not(:disabled) {
+  background: var(--color-surface-hover, #e8e8e8);
+}
+
+.launcher__button--launch {
+  background: #e74c3c;
+  color: white;
+  border-color: #c0392b;
+  font-weight: bold;
+}
+
+.launcher__button--launch:hover:not(:disabled) {
+  background: #c0392b;
+}

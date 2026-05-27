@@ -19,6 +19,7 @@
 #include "devices/Touch.h"
 #include "devices/PwmExpander.h"
 #include "devices/ServoGate.h"
+#include "devices/Launcher.h"
 #include "devices/mixins/SerializableMixin.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
@@ -87,6 +88,10 @@ Device *DeviceManager::createDevice(const String &deviceId, const String &device
     else if (upperType == "SERVOGATE")
     {
         return new devices::ServoGate(deviceId);
+    }
+    else if (upperType == "LAUNCHER")
+    {
+        return new devices::Launcher(deviceId);
     }
 
     MLOG_WARN("Unknown device type: %s", upperType.c_str());

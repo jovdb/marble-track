@@ -55,6 +55,7 @@ namespace devices
         void loopAutoWheel();
         void loopAutoSpiral();
         void loopSplitter();
+        void loopManualLauncher();
         void blinkError(Led *ledDevice);
         void blinkBusy(Led *ledDevice);
         void blinkInit(Led *ledDevice);
@@ -75,6 +76,8 @@ namespace devices
         Button *_spiralBtn;
         Button *_splitterSensor;
         Launcher *_launcher;
+        Led *_launcherLed;
+        Button *_launcherBtn;
 
         // Splitter sensor pulse counter and delay logic
         uint8_t _splitterCounter = 0;
@@ -105,6 +108,19 @@ namespace devices
         unsigned long _autoNoBallLiftStartTime = 0;
         unsigned long _autoNoBallLiftDelayMs = 0;
         bool _autoLiftMovingDownSlow = false;
+
+        // Launcher manual mode timing
+        enum class LauncherPhase
+        {
+            IDLE,
+            POST_LAUNCH_DELAY, ///< Waiting 500 ms after launch before calling load()
+            LOADING,           ///< load() called; waiting for arm to finish moving
+            POST_LOAD_DELAY    ///< Waiting 500 ms after load before accepting next press
+        };
+        LauncherPhase _launcherPhase = LauncherPhase::IDLE;
+        unsigned long _launcherPhaseStart = 0;
+        static constexpr unsigned long LauncherPostLaunchDelayMs = 500UL;
+        static constexpr unsigned long LauncherPostLoadDelayMs = 500UL;
 
         // 0 = not idle, >0 = idle start time
         unsigned long _wheelIdleStartTime = 0;

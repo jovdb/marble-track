@@ -85,8 +85,40 @@ export function Launcher(props: { id: string; isPopup?: boolean; onClose?: () =>
                 }}
               >
                 <path
-                  d="M 2 22 A 2 2 0 1 0 11 22 L 14 22 L 35 22 A 4 4 0 0 0 39 18 A 4 4 0 0 0 35 14 M 33.5
+                  d="M 2 22 A 2 2 0 1 0 11 22 L 14 22 L 35 22 A 4 4 0 0 0 35 13 M 33.5
             22 L 33.5 25 L 31 30 A 5 5 0 0 0 38.5 20"
+                />
+                <circle
+                  cx="6.5"
+                  cy="22"
+                  r="3.5"
+                  fill={
+                    isBallLoaded() && (state()?.state === "Down" || state()?.state === "MovingUp")
+                      ? "blue"
+                      : "none"
+                  }
+                  stroke="none"
+                />
+                <circle
+                  cx="35"
+                  cy="17.5"
+                  r="3.5"
+                  fill={isBallLoaded() && state()?.state === "MovingDown" ? "blue" : "none"}
+                  stroke="none"
+                />
+              </g>
+              <g
+                style={{
+                  transform: `rotate(95deg)`,
+                  "transform-origin": "33.5px 25px",
+                }}
+              >
+                <circle
+                  cx="35"
+                  cy="17.5"
+                  r="3.5"
+                  fill={isBallWaiting() ? "blue" : "none"}
+                  stroke="none"
                 />
               </g>
             </g>

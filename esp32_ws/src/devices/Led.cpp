@@ -42,6 +42,7 @@ namespace devices
         if (_config.pinConfig.pin < 0)
         {
             MLOG_WARN("%s: Setup: Pin not configured", toString().c_str());
+            setError("CONFIG_ERROR", "Pin not configured");
             return;
         }
 
@@ -50,18 +51,21 @@ namespace devices
         if (!_pin)
         {
             MLOG_ERROR("%s: Failed to create pin for expander '%s'", toString().c_str(), _config.pinConfig.expanderId.c_str());
+            setError("CONFIG_ERROR", "Failed to create pin for expander '" + _config.pinConfig.expanderId + "'");
             return;
         }
 
         if (!_pin->setup(_config.pinConfig.pin, pins::PinMode::Output))
         {
             MLOG_ERROR("%s: Failed to setup pin %s", toString().c_str(), _config.pinConfig.toString().c_str());
+            setError("CONFIG_ERROR", "Failed to setup pin " + _config.pinConfig.toString());
             // delete _pin;
             //    _pin = nullptr;
             return;
         }
         MLOG_INFO("%s: Setup on %s", toString().c_str(), _pin->toString().c_str());
 
+        clearError();
         // Apply initial state
         // Delay until first loop so all devices are setup?
         if (_config.initialState == "ON")
@@ -98,6 +102,7 @@ namespace devices
         _state.blinkOffTime = 500;
         _state.blinkDelay = 0;
         _isPrevBlinkingOn = -1;
+        clearError();
     }
 
     std::vector<String> Led::getPins() const

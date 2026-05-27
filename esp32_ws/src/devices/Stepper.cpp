@@ -121,6 +121,7 @@ namespace devices
         if (_config.stepperType.isEmpty())
         {
             MLOG_WARN("%s: Stepper type not configured", toString().c_str());
+            setError("CONFIG_ERROR", "Stepper type not configured");
             return;
         }
 
@@ -133,6 +134,7 @@ namespace devices
                 if (required)
                 {
                     MLOG_WARN("%s: %s not configured", toString().c_str(), label);
+                    setError("CONFIG_ERROR", String(label) + " not configured");
                     return false;
                 }
                 return true;
@@ -142,12 +144,14 @@ namespace devices
             if (!pin)
             {
                 MLOG_ERROR("%s: Failed to create %s %s", toString().c_str(), label, config.toString().c_str());
+                setError("CONFIG_ERROR", "Failed to create " + String(label) + " " + config.toString());
                 return false;
             }
 
             if (!pin->setup(config.pin, pins::PinMode::Output))
             {
                 MLOG_ERROR("%s: Failed to setup %s %s", toString().c_str(), label, config.toString().c_str());
+                setError("CONFIG_ERROR", "Failed to setup " + String(label) + " " + config.toString());
                 return false;
             }
 
@@ -237,6 +241,7 @@ namespace devices
                 }
             }
             MLOG_INFO("%s: Setup complete on pins %s, type: %s", toString().c_str(), pinStr.c_str(), _config.stepperType.c_str());
+            clearError();
         }
         else if (_fastDriver)
         {
@@ -264,10 +269,13 @@ namespace devices
                 }
             }
             MLOG_INFO("%s: Setup complete on pins %s, type: %s (PWM)", toString().c_str(), pinStr.c_str(), _config.stepperType.c_str());
+            clearError();
         }
         else
         {
             MLOG_ERROR("%s: Failed to initialize Stepper", toString().c_str());
+            if (!hasError())
+                setError("SETUP_FAILED", "Failed to initialize Stepper");
         }
     }
 
@@ -294,6 +302,7 @@ namespace devices
         cleanupPins();
 
         _state.isMoving = false;
+        clearError();
     }
 
     void Stepper::loop()
@@ -597,16 +606,19 @@ namespace devices
             if (_config.stepperType != "DRIVER")
             {
                 MLOG_ERROR("%s: FastAccelStepper (PWM) only supports DRIVER type", toString().c_str());
+                setError("CONFIG_ERROR", "FastAccelStepper (PWM) only supports DRIVER type");
                 return;
             }
             if (!_stepPin || !_config.stepPin.expanderId.isEmpty())
             {
                 MLOG_ERROR("%s: FastAccelStepper requires a direct GPIO step pin", toString().c_str());
+                setError("CONFIG_ERROR", "FastAccelStepper requires a direct GPIO step pin");
                 return;
             }
             if (_dirPin && !_config.dirPin.expanderId.isEmpty())
             {
                 MLOG_ERROR("%s: FastAccelStepper requires a direct GPIO direction pin", toString().c_str());
+                setError("CONFIG_ERROR", "FastAccelStepper requires a direct GPIO direction pin");
                 return;
             }
 
@@ -634,6 +646,7 @@ namespace devices
             else
             {
                 MLOG_ERROR("%s: Failed to connect FastAccelStepper to pin %d", toString().c_str(), _config.stepPin.pin);
+                setError("SETUP_FAILED", "Failed to connect FastAccelStepper to pin " + String(_config.stepPin.pin));
             }
         }
         else
@@ -643,6 +656,7 @@ namespace devices
                 if (!_stepPin)
                 {
                     MLOG_ERROR("%s: Stepper DRIVER step pin not configured", toString().c_str());
+                    setError("CONFIG_ERROR", "Stepper DRIVER step pin not configured");
                     _driver = nullptr;
                     return;
                 }
@@ -653,6 +667,7 @@ namespace devices
                 if (!_pin1 || !_pin2 || !_pin3 || !_pin4)
                 {
                     MLOG_ERROR("%s: Stepper HALF4WIRE pins not configured", toString().c_str());
+                    setError("CONFIG_ERROR", "Stepper HALF4WIRE pins not configured");
                     _driver = nullptr;
                     return;
                 }
@@ -663,6 +678,7 @@ namespace devices
                 if (!_pin1 || !_pin2 || !_pin3 || !_pin4)
                 {
                     MLOG_ERROR("%s: Stepper FULL4WIRE pins not configured", toString().c_str());
+                    setError("CONFIG_ERROR", "Stepper FULL4WIRE pins not configured");
                     _driver = nullptr;
                     return;
                 }
@@ -671,6 +687,7 @@ namespace devices
             else
             {
                 MLOG_ERROR("%s: Unknown stepper type: %s", toString().c_str(), _config.stepperType.c_str());
+                setError("CONFIG_ERROR", "Unknown stepper type: " + _config.stepperType);
                 _driver = nullptr;
             }
         }

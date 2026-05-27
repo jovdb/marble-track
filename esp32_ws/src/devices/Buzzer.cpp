@@ -44,6 +44,7 @@ namespace devices
         if (_config.pin < 0)
         {
             MLOG_WARN("%s: Pin not configured", toString().c_str());
+            setError("CONFIG_ERROR", "Pin not configured");
             return;
         }
 
@@ -64,7 +65,11 @@ namespace devices
         if (!startTask("BuzzerTask", 4096, 2, 1))
         {
             MLOG_ERROR("%s: Failed to start RTOS task", toString().c_str());
+            setError("SETUP_FAILED", "Failed to start RTOS task");
+            return;
         }
+
+        clearError();
     }
 
     void Buzzer::teardown()
@@ -88,6 +93,7 @@ namespace devices
             _state.tuneCommand.pending = false;
             xSemaphoreGive(_stateMutex);
         }
+        clearError();
     }
 
     void Buzzer::loop()

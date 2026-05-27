@@ -115,6 +115,7 @@ namespace devices
         {
             _state.songQueue.pop();
         }
+        clearError();
     }
 
     void Hv20tAudio::loop()
@@ -445,18 +446,21 @@ namespace devices
         if (_config.rxPin.pin < 0 || _config.txPin.pin < 0)
         {
             MLOG_WARN("%s: UART RX/TX pins not configured", toString().c_str());
+            setError("CONFIG_ERROR", "UART RX/TX pins not configured");
             return false;
         }
 
         if (_config.rxPin.pin == _config.txPin.pin)
         {
             MLOG_ERROR("%s: UART RX/TX pins must be different (%d)", toString().c_str(), _config.rxPin.pin);
+            setError("CONFIG_ERROR", "UART RX/TX pins must be different (" + String(_config.rxPin.pin) + ")");
             return false;
         }
 
         if (!_config.rxPin.expanderId.isEmpty() || !_config.txPin.expanderId.isEmpty())
         {
             MLOG_WARN("%s: UART pins must be GPIO (expander not supported)", toString().c_str());
+            setError("CONFIG_ERROR", "UART pins must be GPIO (expander not supported)");
             return false;
         }
 
@@ -476,6 +480,7 @@ namespace devices
         _player.begin();
 
         _playerReady = true;
+        clearError();
         MLOG_INFO("%s: DYPlayer configured (RX %d, TX %d)", toString().c_str(), _config.rxPin.pin, _config.txPin.pin);
 
         return true;

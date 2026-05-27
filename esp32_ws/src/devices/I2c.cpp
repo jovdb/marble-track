@@ -38,7 +38,7 @@ namespace devices
         }
         else
         {
-            setError("CONFIG_ERROR", "SDA/SCL pins not configured");
+            setError("CONFIG_ERROR", "Invalid pins SDA=" + String(config.sdaPin) + ", SCL=" + String(config.sclPin));
             _state.state = "Error";
             notifyStateChanged();
             MLOG_WARN("%s: I2C bus not initialized: invalid pins SDA=%d, SCL=%d", toString().c_str(), config.sdaPin, config.sclPin);
@@ -60,6 +60,7 @@ namespace devices
         {
             pinMode(config.sclPin, INPUT);
         }
+        clearError();
     }
 
     std::vector<String> I2c::getPins() const

@@ -41,6 +41,7 @@ namespace devices
         if (_config.pinConfig.pin == -1)
         {
             MLOG_WARN("%s: Pin not configured", toString().c_str());
+            setError("CONFIG_ERROR", "Pin not configured");
             return;
         }
 
@@ -49,6 +50,7 @@ namespace devices
         if (!_pin)
         {
             MLOG_ERROR("%s: Failed to create pin for expander '%s'", toString().c_str(), _config.pinConfig.expanderId.c_str());
+            setError("CONFIG_ERROR", "Failed to create pin for expander '" + _config.pinConfig.expanderId + "'");
             return;
         }
 
@@ -71,6 +73,7 @@ namespace devices
         if (!_pin->setup(_config.pinConfig.pin, pinSetupMode))
         {
             MLOG_ERROR("%s: Failed to setup pin %d", toString().c_str(), _config.pinConfig.pin);
+            setError("CONFIG_ERROR", "Failed to setup pin " + String(_config.pinConfig.pin));
             //  delete _pin;
             //    _pin = nullptr;
             return;
@@ -82,6 +85,7 @@ namespace devices
         _state.input = contactStateToPinState(_state.isPressed);
         _lastIsButtonPressed = _state.isPressed;
 
+        clearError();
         MLOG_INFO("%s: Setup on pin %s with pinMode %s", toString().c_str(), _pin->toString().c_str(), pinModeToString(_config.pinMode).c_str());
     }
 
@@ -107,6 +111,7 @@ namespace devices
         _state.isPressed = false;
         _state.isPressedChanged = false;
         _state.input = 0;
+        clearError();
     }
 
     void Button::loop()

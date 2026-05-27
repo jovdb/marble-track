@@ -103,31 +103,6 @@ export const WheelIcon = (props: IconProps) => (
   </svg>
 );
 
-export const LauncherIcon = (props: IconProps) => (
-  <svg
-    width={props.width || 24}
-    height={props.height || 24}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    class={props.class}
-    style={props.style}
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    {/* Base */}
-    <path d="M3 22 H21" />
-    {/* Pivot point */}
-    <circle cx="10" cy="22" r="1.5" fill="currentColor" stroke="none" />
-    {/* Arm pointing up-right */}
-    <line x1="10" y1="22" x2="20" y2="6" stroke-width="2.5" />
-    {/* Ball at end of arm */}
-    <circle cx="20" cy="6" r="2.5" fill="currentColor" stroke="none" />
-  </svg>
-);
-
 export const LiftIcon = (props: IconProps) => (
   <svg
     width={props.width || 24}
@@ -668,5 +643,26 @@ export const TowerIcon = (props: IconProps) => (
            M 24 38 L 24 48"
       />
     </g>
+  </svg>
+);
+
+export const LauncherIcon = (props: IconProps) => (
+  <svg
+    width={props.width || 24}
+    height={props.height || 24}
+    viewBox="0 0 48 48"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class={props.class}
+    style={props.style}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M 2 22 A 2 2 0 1 0 11 22 L 14 22 L 35 22 A 4 4 0 0 0 39 18 A 4 4 0 0 0 35 14 M 33.5 22 L 33.5 25 L 31
+    30 A 5 5 0 0 0 38.5 20"
+    />
   </svg>
 );

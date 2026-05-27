@@ -509,6 +509,50 @@
             "pinMode": "PullUp",
             "buttonType": "NormalOpen"
           }
+        },
+        {
+          "id": "launcher",
+          "type": "launcher",
+          "children": [
+            {
+              "id": "launcher-button",
+              "type": "button",
+              "children": [],
+              "config": {
+                "pin": {
+                  "pin": 45,
+                  "expanderId": ""
+                },
+                "name": "Launcher Ball Sensor",
+                "debounceTimeInMs": 50,
+                "pinMode": "PullDown",
+                "buttonType": "NormalOpen"
+              }
+            },
+            {
+              "id": "launcher-servo",
+              "type": "servo",
+              "children": [],
+              "config": {
+                "pin": {
+                  "pin": 46,
+                  "expanderId": ""
+                },
+                "name": "Launcher Arm Servo",
+                "mcpwmChannel": 3,
+                "frequency": 50,
+                "resolutionBits": 10,
+                "minDutyCycle": 9,
+                "maxDutyCycle": 4.7,
+                "defaultDurationInMs": 500
+              }
+            }
+          ],
+          "config": {
+            "name": "Launcher",
+            "loadTimeMs": 2000,
+            "launchTimeMs": 0
+          }
         }
       ]
     },

@@ -19,7 +19,9 @@ export interface IPwmExpanderConfig extends IDeviceConfig {
 }
 
 export function usePwmExpander(deviceId: string) {
-  const [device, { sendMessage, ...actions }] = useDevice<IPwmExpanderState, IPwmExpanderConfig>(deviceId);
+  const [device, { sendMessage, ...actions }] = useDevice<IPwmExpanderState, IPwmExpanderConfig>(
+    deviceId
+  );
 
   const init = () =>
     sendMessage({

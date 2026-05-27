@@ -19,7 +19,9 @@ export interface IIoExpanderConfig extends IDeviceConfig {
 }
 
 export function useIoExpander(deviceId: string) {
-  const [device, { sendMessage, ...actions }] = useDevice<IIoExpanderState, IIoExpanderConfig>(deviceId);
+  const [device, { sendMessage, ...actions }] = useDevice<IIoExpanderState, IIoExpanderConfig>(
+    deviceId
+  );
 
   const init = () =>
     sendMessage({

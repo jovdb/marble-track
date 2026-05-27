@@ -27,11 +27,25 @@ export function Launcher(props: { id: string; isPopup?: boolean; onClose?: () =>
     switch (launcherState()) {
       case "Up":
       case "MovingUp":
-        return -75;
+        return 95;
       case "Down":
       case "MovingDown":
       default:
-        return 10;
+        return -5;
+    }
+  });
+
+  // Arm angle in degrees: 0° = horizontal right, negative = tilted up
+  // DOWN: arm nearly horizontal (10°), UP: arm raised (~-75°)
+  const armDuration = createMemo(() => {
+    switch (launcherState()) {
+      case "Up":
+      case "MovingUp":
+        return 200;
+      case "Down":
+      case "MovingDown":
+      default:
+        return 2000; // TODO: use config
     }
   });
 
@@ -50,6 +64,34 @@ export function Launcher(props: { id: string; isPopup?: boolean; onClose?: () =>
       <div class={styles.launcher}>
         {/* Arm visualisation */}
         <div class={styles.launcher__visual}>
+          <svg
+            width={100}
+            height={100}
+            viewBox="0 0 48 48"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g style={{ transform: "translateY(10px)" }}>
+              <g
+                style={{
+                  transform: `rotate(${armAngle()}deg)`,
+                  "transform-origin": "33.5px 25px",
+                  "transition-duration": `${armDuration()}ms`,
+                  "transition-timing-function": "linear",
+                }}
+              >
+                <path
+                  d="M 2 22 A 2 2 0 1 0 11 22 L 14 22 L 35 22 A 4 4 0 0 0 39 18 A 4 4 0 0 0 35 14 M 33.5
+            22 L 33.5 25 L 31 30 A 5 5 0 0 0 38.5 20"
+                />
+              </g>
+            </g>
+          </svg>
+
           <svg width="120" height="110" viewBox="0 0 120 110" fill="none" stroke="currentColor">
             {/* Base line */}
             <line x1="10" y1="105" x2="110" y2="105" stroke-width="2" />

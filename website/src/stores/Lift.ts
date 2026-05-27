@@ -21,7 +21,6 @@ export interface ILiftState extends IDeviceState {
   onErrorChange: boolean;
   errorMessage?: string;
   errorCode?: "None" | "LiftConfigurationError" | "LiftStateError" | "LiftNoZero";
-  [key: string]: unknown;
 }
 
 export interface ILiftConfig extends IDeviceConfig {

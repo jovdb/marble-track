@@ -88,6 +88,7 @@ Emitted by `addStateToJson`. All fields are read-only from the outside.
 | `ballWaitingSince`  | `ulong`  | `millis()` timestamp when a marble first appeared at the ball sensor. `0` if no marble is waiting. |
 | `isLoaded`          | `bool`   | `true` when the lift cage currently holds a marble.                               |
 | `currentPosition`   | `long`   | Stepper step count (omitted from the JSON payload while the lift is moving).      |
+| `stepsPerSecond`    | `float`  | Effective stepper speed in steps/s during movement (`MovingUp`/`MovingDown` only; absent otherwise). |
 | `errorMessage`      | `string` | Human-readable description of the last error.                                     |
 | `errorCode`         | `string` | Error code string (see table below).                                              |
 

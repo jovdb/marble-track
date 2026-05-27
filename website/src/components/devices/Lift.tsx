@@ -17,10 +17,14 @@ export function Lift(props: { id: string; isPopup?: boolean; onClose?: () => voi
   const state = () => device()?.state;
   const config = () => device()?.config;
 
-  // Compute total move duration (ms) from stepper config using a trapezoidal motion profile.
-  // We assume full-range travel (minSteps → maxSteps) for both up and down.
+  // Compute total move duration (ms) from a trapezoidal motion profile.
+  // Uses stepsPerSecond from state (set by firmware during movement) for the actual speed,
+  // falling back to the stepper config defaultSpeed when not available.
   const transitionDurationMs = createMemo(() => {
-    const maxSpeed = (stepperDevice?.config as { defaultSpeed?: number })?.defaultSpeed ?? 150; // steps/s
+    const maxSpeed =
+      state()?.stepsPerSecond ??
+      (stepperDevice?.config as { defaultSpeed?: number })?.defaultSpeed ??
+      150; // steps/s
     const accel =
       (stepperDevice?.config as { defaultAcceleration?: number })?.defaultAcceleration ?? 50; // steps/s²
     const distance = (config()?.maxSteps ?? 2255) - (config()?.minSteps ?? 0);

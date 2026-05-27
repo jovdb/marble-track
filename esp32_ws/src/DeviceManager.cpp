@@ -613,23 +613,28 @@ DeviceManager::DeviceManager(NotifyClients callback) : devicesCount(0), notifyCl
 
 bool DeviceManager::addDevice(Device *device)
 {
-    if (devicesCount < MAX_DEVICES && device)
-    {
-        devices[devicesCount] = device;
-        devicesCount++;
-        MLOG_DEBUG("Added device: %s", device->toString().c_str());
-        return true;
-    }
-
     if (!device)
     {
         MLOG_ERROR("Error: Cannot add null device");
+        return false;
     }
-    else
+
+    if (devicesCount >= MAX_DEVICES)
     {
         MLOG_ERROR("Error: Device array is full, cannot add device: %s", device->getId().c_str());
+        return false;
     }
-    return false;
+
+    if (getDeviceById(device->getId()))
+    {
+        MLOG_ERROR("Error: Device with ID '%s' already exists, skipping duplicate", device->getId().c_str());
+        return false;
+    }
+
+    devices[devicesCount] = device;
+    devicesCount++;
+    MLOG_DEBUG("Added device: %s", device->toString().c_str());
+    return true;
 }
 
 bool DeviceManager::addDevice(const String &deviceType, const String &deviceId, JsonVariant config)

@@ -28,6 +28,7 @@ const COMPOSITION_DEVICE_TYPES = [
   "IoExpander",
   "PwmExpander",
   "Hv20t",
+  "Launcher",
   "Led",
   "Lift",
   "MarbleController",

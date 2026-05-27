@@ -48,6 +48,7 @@ namespace devices
             return _audio;
         }
         static constexpr unsigned long WHEEL_LONG_PRESS_DURATION_MS = 8000UL;
+        static constexpr int LAUNCHER_WHEEL_BREAKPOINT = 0; ///< Wheel breakpoint index that triggers launcher
         void loopManualLift();
         void loopManualWheel();
         void loopManualSpiral();
@@ -56,6 +57,7 @@ namespace devices
         void loopAutoSpiral();
         void loopSplitter();
         void loopManualLauncher();
+        void loopAutoLauncher();
         void blinkError(Led *ledDevice);
         void blinkBusy(Led *ledDevice);
         void blinkInit(Led *ledDevice);
@@ -121,6 +123,11 @@ namespace devices
         unsigned long _launcherPhaseStart = 0;
         static constexpr unsigned long LauncherPostLaunchDelayMs = 500UL;
         static constexpr unsigned long LauncherPostLoadDelayMs = 500UL;
+
+        // Launcher auto mode
+        uint8_t _autoLauncherBallsToLaunch = 0; ///< Number of remaining launches in current auto sequence
+        LauncherPhase _autoLauncherPhase = LauncherPhase::IDLE;
+        unsigned long _autoLauncherPhaseStart = 0;
 
         // 0 = not idle, >0 = idle start time
         unsigned long _wheelIdleStartTime = 0;

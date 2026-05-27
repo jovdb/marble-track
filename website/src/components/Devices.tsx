@@ -17,6 +17,7 @@ import { MarbleController } from "./devices/MarbleController";
 import { Hv20tAudio } from "./devices/Hv20tAudio";
 import { Touch } from "./devices/Touch";
 import { ServoGate } from "./devices/ServoGate";
+import { Launcher } from "./devices/Launcher";
 import { Device } from "./devices/Device";
 import { useSelectedDevices } from "../stores/SelectedDevices";
 
@@ -105,6 +106,8 @@ export function renderDeviceComponent(
       return <Touch id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "servogate":
       return <ServoGate id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
+    case "launcher":
+      return <Launcher id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     default:
       // For unknown device types with children, render them in a parent device block
       if (device.children && device.children.length > 0) {

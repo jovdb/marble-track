@@ -7,6 +7,7 @@ export type DeviceType =
   | "ioexpander"
   | "pwmexpander"
   | "i2c"
+  | "launcher"
   | "led"
   | "lift"
   | "marblecontroller"

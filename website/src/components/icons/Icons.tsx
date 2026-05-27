@@ -103,6 +103,31 @@ export const WheelIcon = (props: IconProps) => (
   </svg>
 );
 
+export const LauncherIcon = (props: IconProps) => (
+  <svg
+    width={props.width || 24}
+    height={props.height || 24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class={props.class}
+    style={props.style}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    {/* Base */}
+    <path d="M3 22 H21" />
+    {/* Pivot point */}
+    <circle cx="10" cy="22" r="1.5" fill="currentColor" stroke="none" />
+    {/* Arm pointing up-right */}
+    <line x1="10" y1="22" x2="20" y2="6" stroke-width="2.5" />
+    {/* Ball at end of arm */}
+    <circle cx="20" cy="6" r="2.5" fill="currentColor" stroke="none" />
+  </svg>
+);
+
 export const LiftIcon = (props: IconProps) => (
   <svg
     width={props.width || 24}
@@ -541,6 +566,8 @@ export const getDeviceIcon = (type: string, deviceId: string, props?: IconProps)
       return <WheelIcon {...props} />;
     case "LIFT":
       return <LiftIcon {...props} />;
+    case "LAUNCHER":
+      return <LauncherIcon {...props} />;
     case "MARBLECONTROLLER":
       return <ClipboardIcon {...props} />;
     case "IOEXPANDER":

@@ -183,6 +183,12 @@ namespace devices
         _launcher->setConfig(launcherConfig);
 
         addChild(_launcher);
+
+        _launcherLed = new devices::Led("launcher-led");
+        addChild(_launcherLed);
+
+        _launcherBtn = new devices::Button("launcher-btn");
+        addChild(_launcherBtn);
     }
 
     void MarbleController::setup()
@@ -251,6 +257,10 @@ namespace devices
         _idleSoundPlayed = false;
         isAutoMode = false;
 
+        // Reset launcher timing
+        _launcherPhase = LauncherPhase::IDLE;
+        _launcherPhaseStart = 0;
+
         // Reset splitter sensor variables
         _splitterCounter = 0;
         _splitterDelayStart = 0;
@@ -284,6 +294,7 @@ namespace devices
             loopManualLift();
             loopManualWheel();
             loopManualSpiral();
+            loopManualLauncher();
         }
 
         loopSplitter();
@@ -961,6 +972,79 @@ namespace devices
             // Reset idle timer
             _lastButtonPressTime = millis();
             _idleSoundPlayed = false;
+        }
+    }
+
+    void MarbleController::loopManualLauncher()
+    {
+        auto launcherState = _launcher->getState();
+        auto launcherBtnState = _launcherBtn->getState();
+        const bool btnPressedEdge = launcherBtnState.isPressed && launcherBtnState.isPressedChanged;
+
+        // Idle tracking
+        if (btnPressedEdge)
+        {
+            _lastButtonPressTime = millis();
+            _idleSoundPlayed = false;
+        }
+
+        // Phase state machine
+        switch (_launcherPhase)
+        {
+        case LauncherPhase::IDLE:
+        {
+            _launcherLed->set(true);
+
+            if (btnPressedEdge)
+            {
+                _launcher->control("launch");
+                _launcherPhase = LauncherPhase::POST_LAUNCH_DELAY;
+                _launcherPhaseStart = millis();
+            }
+            break;
+        }
+
+        case LauncherPhase::POST_LAUNCH_DELAY:
+        {
+            blinkBusy(_launcherLed);
+
+            if (millis() - _launcherPhaseStart >= LauncherPostLaunchDelayMs)
+            {
+                _launcher->control("load");
+                _launcherPhase = LauncherPhase::LOADING;
+                _launcherPhaseStart = millis();
+            }
+            break;
+        }
+
+        case LauncherPhase::LOADING:
+        {
+            blinkBusy(_launcherLed);
+
+            // Wait until the launcher FSM is no longer moving
+            const bool stillMoving =
+                launcherState.state == LauncherStateEnum::MOVING_UP ||
+                launcherState.state == LauncherStateEnum::MOVING_DOWN;
+
+            if (!stillMoving)
+            {
+                _launcherPhase = LauncherPhase::POST_LOAD_DELAY;
+                _launcherPhaseStart = millis();
+            }
+            break;
+        }
+
+        case LauncherPhase::POST_LOAD_DELAY:
+        {
+            blinkBusy(_launcherLed);
+
+            if (millis() - _launcherPhaseStart >= LauncherPostLoadDelayMs)
+            {
+                _launcherPhase = LauncherPhase::IDLE;
+                _launcherPhaseStart = 0;
+            }
+            break;
+        }
         }
     }
 

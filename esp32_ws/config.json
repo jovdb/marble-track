@@ -553,6 +553,34 @@
             "loadTimeMs": 2000,
             "launchTimeMs": 0
           }
+        },
+        {
+          "id": "launcher-led",
+          "type": "led",
+          "children": [],
+          "config": {
+            "pin": {
+              "pin": -1,
+              "expanderId": ""
+            },
+            "name": "Launcher Led",
+            "initialState": "OFF"
+          }
+        },
+        {
+          "id": "launcher-btn",
+          "type": "button",
+          "children": [],
+          "config": {
+            "pin": {
+              "pin": -1,
+              "expanderId": ""
+            },
+            "name": "Launcher Button",
+            "debounceTimeInMs": 50,
+            "pinMode": "PullUp",
+            "buttonType": "NormalOpen"
+          }
         }
       ]
     },

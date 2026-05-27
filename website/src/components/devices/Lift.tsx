@@ -119,13 +119,22 @@ export function Lift(props: { id: string; isPopup?: boolean; onClose?: () => voi
             state()?.state === "LiftUpUnloading" && state()?.isLoaded ? "#4444ff" : "transparent"
           }
         />
-        <circle cx={75} cy={188} r={8} fill={state()?.isBallWaiting ? "#4444ff" : "transparent"} />
+        <circle
+          cx={75}
+          cy={188}
+          r={8}
+          fill={
+            (state()?.ballWaitingSince ?? 0) > 0 && state()?.state !== "LiftDownLoading"
+              ? "#4444ff"
+              : "transparent"
+          }
+        />
 
         <g
           style={{
             transform: `translate(50px, ${188 - positionPercent() * 180}px)`,
             transition: isAnimating()
-              ? `transform ${transitionDurationMs() / 1000}s ease-in-out`
+              ? `transform ${transitionDurationMs() / 1000}s cubic-bezier(0.25, 0, 0.75, 1)`
               : "transform 0s",
           }}
         >

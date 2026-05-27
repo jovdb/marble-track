@@ -260,6 +260,9 @@ namespace devices
         // Reset launcher timing
         _launcherPhase = LauncherPhase::IDLE;
         _launcherPhaseStart = 0;
+        _autoLauncherPhase = LauncherPhase::IDLE;
+        _autoLauncherPhaseStart = 0;
+        _autoLauncherBallsToLaunch = 0;
 
         // Reset splitter sensor variables
         _splitterCounter = 0;
@@ -288,6 +291,7 @@ namespace devices
             loopAutoLift();
             loopAutoWheel();
             loopAutoSpiral();
+            loopAutoLauncher();
         }
         else
         {
@@ -862,6 +866,85 @@ namespace devices
         {
             _lastButtonPressTime = millis();
             _idleSoundPlayed = false;
+        }
+    }
+
+    void MarbleController::loopAutoLauncher()
+    {
+        auto launcherState = _launcher->getState();
+        auto wheelState = _wheel->getState();
+
+        // Trigger a new sequence when the wheel arrives at the launcher breakpoint
+        // and a sequence is not already running.
+        if (_autoLauncherPhase == LauncherPhase::IDLE &&
+            wheelState.state == devices::WheelStateEnum::IDLE &&
+            wheelState.currentBreakpointIndex == LAUNCHER_WHEEL_BREAKPOINT &&
+            wheelState.breakpointChanged &&
+            launcherState.isBallLoaded)
+        {
+            _autoLauncherBallsToLaunch = 2;
+        }
+
+        // Run the phase state machine whenever there are balls left to launch.
+        if (_autoLauncherBallsToLaunch == 0 && _autoLauncherPhase == LauncherPhase::IDLE)
+        {
+            return;
+        }
+
+        switch (_autoLauncherPhase)
+        {
+        case LauncherPhase::IDLE:
+        {
+            if (_autoLauncherBallsToLaunch > 0 && launcherState.isBallLoaded)
+            {
+                _launcher->control("launch");
+                _autoLauncherBallsToLaunch--;
+                _autoLauncherPhase = LauncherPhase::POST_LAUNCH_DELAY;
+                _autoLauncherPhaseStart = millis();
+            }
+            else
+            {
+                // No ball loaded or no more balls to launch — done.
+                _autoLauncherBallsToLaunch = 0;
+            }
+            break;
+        }
+
+        case LauncherPhase::POST_LAUNCH_DELAY:
+        {
+            if (millis() - _autoLauncherPhaseStart >= LauncherPostLaunchDelayMs)
+            {
+                _launcher->control("load");
+                _autoLauncherPhase = LauncherPhase::LOADING;
+                _autoLauncherPhaseStart = millis();
+            }
+            break;
+        }
+
+        case LauncherPhase::LOADING:
+        {
+            const bool stillMoving =
+                launcherState.state == LauncherStateEnum::MOVING_UP ||
+                launcherState.state == LauncherStateEnum::MOVING_DOWN;
+
+            if (!stillMoving)
+            {
+                _autoLauncherPhase = LauncherPhase::POST_LOAD_DELAY;
+                _autoLauncherPhaseStart = millis();
+            }
+            break;
+        }
+
+        case LauncherPhase::POST_LOAD_DELAY:
+        {
+            if (millis() - _autoLauncherPhaseStart >= LauncherPostLoadDelayMs)
+            {
+                _autoLauncherPhase = LauncherPhase::IDLE;
+                _autoLauncherPhaseStart = 0;
+                // Loop back immediately — if more balls remain, IDLE will fire launch again.
+            }
+            break;
+        }
         }
     }
 

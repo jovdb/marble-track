@@ -11,6 +11,7 @@
 #include "devices/Hv20tAudio.h"
 #include "devices/Led.h"
 #include "devices/Lift.h"
+#include "devices/Launcher.h"
 
 namespace devices
 {
@@ -73,6 +74,7 @@ namespace devices
         Led *_spiralLed;
         Button *_spiralBtn;
         Button *_splitterSensor;
+        Launcher *_launcher;
 
         // Splitter sensor pulse counter and delay logic
         uint8_t _splitterCounter = 0;

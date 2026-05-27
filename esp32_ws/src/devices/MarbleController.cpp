@@ -8,6 +8,7 @@
 #include "devices/Led.h"
 #include "devices/Stepper.h"
 #include "devices/ServoGate.h"
+#include "devices/Launcher.h"
 #include "SongConstants.h"
 
 extern DeviceManager deviceManager;
@@ -137,6 +138,51 @@ namespace devices
 
         _splitterSensor = new devices::Button("splitter-sensor");
         addChild(_splitterSensor);
+
+        // Create launcher with default config
+        _launcher = new devices::Launcher("launcher");
+
+        for (Device *child : _launcher->getChildren())
+        {
+            if (!child)
+                continue;
+
+            if (child->getId() == "launcher-button" && child->getType() == "button")
+            {
+                auto *button = static_cast<devices::Button *>(child);
+                auto buttonConfig = button->getConfig();
+                buttonConfig.pinConfig.pin = 45;
+                buttonConfig.pinConfig.expanderId = "";
+                buttonConfig.name = "Launcher Ball Sensor";
+                buttonConfig.debounceTimeInMs = 50;
+                buttonConfig.pinMode = devices::PinModeOption::PullDown;
+                buttonConfig.buttonType = devices::ButtonType::NormalOpen;
+                button->setConfig(buttonConfig);
+            }
+            else if (child->getId() == "launcher-servo" && child->getType() == "servo")
+            {
+                auto *servo = static_cast<devices::Servo *>(child);
+                auto servoConfig = servo->getConfig();
+                servoConfig.pinConfig.pin = 46;
+                servoConfig.pinConfig.expanderId = "";
+                servoConfig.name = "Launcher Arm Servo";
+                servoConfig.mcpwmChannel = 3;
+                servoConfig.frequency = 50;
+                servoConfig.resolutionBits = 10;
+                servoConfig.minDutyCycle = 9.0f;
+                servoConfig.maxDutyCycle = 4.7f;
+                servoConfig.defaultDurationInMs = 500;
+                servo->setConfig(servoConfig);
+            }
+        }
+
+        auto launcherConfig = _launcher->getConfig();
+        launcherConfig.name = "Launcher";
+        launcherConfig.loadTimeMs = 2000;
+        launcherConfig.launchTimeMs = 0;
+        _launcher->setConfig(launcherConfig);
+
+        addChild(_launcher);
     }
 
     void MarbleController::setup()

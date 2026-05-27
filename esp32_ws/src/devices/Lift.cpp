@@ -131,6 +131,7 @@ namespace devices
         _state.ballWaitingSince = 0;
         _state.isLoaded = false;
         _state.initStep = 0;
+        _state.stepsPerSecond = 0.0f;
         _initSpeedRatio = 1.0f;
 
         _loadStartTime = 0;
@@ -432,9 +433,14 @@ namespace devices
         doc["state"] = stateToString(_state.state);
         doc["ballWaitingSince"] = _state.ballWaitingSince;
         doc["isLoaded"] = _state.isLoaded;
-        // Only include currentPosition when stepper is not moving to avoid constant notifications
-        if (_state.state != LiftStateEnum::MOVING_UP && _state.state != LiftStateEnum::MOVING_DOWN)
+        if (_state.state == LiftStateEnum::MOVING_UP || _state.state == LiftStateEnum::MOVING_DOWN)
         {
+            // Include speed so the website can calculate animation duration
+            doc["stepsPerSecond"] = _state.stepsPerSecond;
+        }
+        else
+        {
+            // Only include currentPosition when stepper is not moving to avoid constant notifications
             doc["currentPosition"] = getCurrentPosition();
         }
     }
@@ -661,15 +667,19 @@ namespace devices
 
     bool Lift::moveStepper(long steps, float speedRatio)
     {
-        _stepper->move(steps, _stepper->getConfig().defaultSpeed * speedRatio);
+        float speed = _stepper->getConfig().defaultSpeed * speedRatio;
+        _stepper->move(steps, speed);
         _stepperStartTime = millis();
+        _state.stepsPerSecond = speed;
         return true;
     }
 
     bool Lift::moveStepperTo(long position, float speedRatio)
     {
-        _stepper->moveTo(position, _stepper->getConfig().defaultSpeed * speedRatio);
+        float speed = _stepper->getConfig().defaultSpeed * speedRatio;
+        _stepper->moveTo(position, speed);
         _stepperStartTime = millis();
+        _state.stepsPerSecond = speed;
         return true;
     }
 

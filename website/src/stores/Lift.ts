@@ -15,6 +15,7 @@ export interface ILiftState extends IDeviceState {
     | "MovingDown";
   currentPosition?: number;
   ballWaitingSince?: number;
+  stepsPerSecond?: number; // Effective speed during movement (steps/s), absent when not moving
   isLoaded: boolean;
   initStep: number;
   onErrorChange: boolean;

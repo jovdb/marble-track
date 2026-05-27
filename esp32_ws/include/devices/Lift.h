@@ -72,6 +72,7 @@ namespace devices
         bool isLoaded = false;                         // Whether lift has a ball loaded
         int initStep = 0;                              // Current initialization step
         bool onErrorChange = false;                    // Error flag
+        float stepsPerSecond = 0.0f;                  // Effective speed during movement (0 when not moving)
     };
 
     /**

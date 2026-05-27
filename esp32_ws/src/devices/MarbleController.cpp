@@ -1076,7 +1076,15 @@ namespace devices
         {
         case LauncherPhase::IDLE:
         {
-            _launcherLed->set(true);
+            auto wheelState = _wheel->getState();
+            const bool atLauncherBreakpoint =
+                wheelState.state == devices::WheelStateEnum::IDLE &&
+                wheelState.currentBreakpointIndex == LAUNCHER_WHEEL_BREAKPOINT;
+
+            if (launcherState.isBallLoaded && atLauncherBreakpoint)
+                blinkAttention(_launcherLed);
+            else
+                _launcherLed->set(true);
 
             if (btnPressedEdge)
             {

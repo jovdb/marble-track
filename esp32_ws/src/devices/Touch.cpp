@@ -65,12 +65,14 @@ namespace devices
         if (_config.pin < 0)
         {
             MLOG_WARN("%s: Pin not configured", toString().c_str());
+            setError("CONFIG_ERROR", "Pin not configured");
             return;
         }
 
         if (!isValidTouchPin(_config.pin))
         {
             MLOG_WARN("%s: Invalid touch pin %d for current ESP32 target", toString().c_str(), _config.pin);
+            setError("CONFIG_ERROR", "Invalid touch pin " + String(_config.pin) + " for current ESP32 target");
             return;
         }
 
@@ -80,6 +82,7 @@ namespace devices
         _state.value = value;
         _state.touched = touched;
 
+        clearError();
         MLOG_INFO("%s: Setup on touch pin %d (threshold=%d, durationMs=%lu)",
                   toString().c_str(),
                   _config.pin,
@@ -112,6 +115,7 @@ namespace devices
         _state.value = 0;
         _state.touched = false;
         _state.isTouchedChanged = false;
+        clearError();
     }
 
     void Touch::loop()
@@ -127,7 +131,6 @@ namespace devices
 
         if (!isValidTouchPin(_config.pin))
         {
-            MLOG_WARN("%s: Invalid touch pin %d for current ESP32 target", toString().c_str(), _config.pin);
             return;
         }
 

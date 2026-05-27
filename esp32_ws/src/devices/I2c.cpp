@@ -30,11 +30,13 @@ namespace devices
         if (config.sdaPin >= 0 && config.sclPin >= 0)
         {
             Wire.begin(config.sdaPin, config.sclPin);
+            clearError();
             MLOG_INFO("%s: I2C bus initialized on SDA=%d, SCL=%d", toString().c_str(), config.sdaPin, config.sclPin);
         }
         else
         {
             MLOG_WARN("%s: I2C bus not initialized: invalid pins SDA=%d, SCL=%d", toString().c_str(), config.sdaPin, config.sclPin);
+            setError("CONFIG_ERROR", "Invalid pins SDA=" + String(config.sdaPin) + ", SCL=" + String(config.sclPin));
         }
     }
 
@@ -53,6 +55,7 @@ namespace devices
         {
             pinMode(config.sclPin, INPUT);
         }
+        clearError();
     }
 
     std::vector<String> I2c::getPins() const

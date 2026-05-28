@@ -73,7 +73,7 @@ namespace devices
 
         if (_player.checkPlayState() == DY::PlayState::Fail)
         {
-            Serial.println("PlayerState = Fail: Restart port...");
+            MLOG_WARN("%s: PlayerState = Fail: Restart port...", toString().c_str());
             _serial.end();
             delay(100);
             initializePlayer();

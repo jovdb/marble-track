@@ -131,7 +131,7 @@ void setup(Network &network, AsyncWebServer &server) {
   setupHttpOtaEndpoint(server);
 
   ArduinoOTA.begin();
-  Serial.println("ArduinoOTA service started");
+  MLOG_INFO("ArduinoOTA service started");
 
   gConfigured = true;
 }

@@ -7,8 +7,6 @@
 namespace devices
 {
 
-    /* Move 2% extra down */
-    const float DOWN_FACTOR = 1.005f;                // Move 0.5% extra when going down to ensure full descent
     const float IMMEDIATE_DECELERATION = 1000000.0f; // Very high deceleration for immediate stop
 
     Lift::Lift(const String &id)
@@ -220,7 +218,9 @@ namespace devices
             }
             break;
         case LiftStateEnum::MOVING_DOWN:
-            if (!_stepper->getState().isMoving && (millis() > _stepperStartTime + 10))
+            // Only error if stepper stopped AND limit switch is still not pressed
+            // (mirrors the same guard used in initLoop steps 4 and 9)
+            if (!_stepper->getState().isMoving && (millis() > _stepperStartTime + 10) && !_limitSwitch->getState().isPressed)
             {
                 setError(LiftErrorCode::LIFT_NO_ZERO, "limit switch not triggered when moving down");
                 return;
@@ -322,14 +322,14 @@ namespace devices
                 long targetPos = _stepper->getState().targetPosition;
                 if (targetPos >= currentPos)
                 {
-                    long steps = (_config.minSteps - currentPos) * DOWN_FACTOR;
+                    long steps = (_config.minSteps - currentPos) * _config.downFactor;
                     targetPos = currentPos + steps;
                 }
                 isSuccess = moveStepperTo(targetPos, speedRatio);
             }
             else
             {
-                long steps = (_config.minSteps - currentPos) * DOWN_FACTOR;
+                long steps = (_config.minSteps - currentPos) * _config.downFactor;
                 isSuccess = moveStepper(steps, speedRatio);
             }
 
@@ -777,7 +777,7 @@ namespace devices
             MLOG_DEBUG("%s: Init step 3: Moving down to find limit switch", toString().c_str());
             // Move slowly down to find limit switch
             _state.initStep = 4;
-            long steps = (_config.minSteps - _config.maxSteps) * DOWN_FACTOR;
+            long steps = (_config.minSteps - _config.maxSteps) * _config.downFactor;
             moveStepper(steps, 0.3f * _initSpeedRatio);
             nextInitStepTime = millis() + 100;
             break;
@@ -849,7 +849,7 @@ namespace devices
             MLOG_DEBUG("%s: Init step 8: Moving back down until limit switch", toString().c_str());
             _state.initStep = 9;
             _unloader->disable();
-            long steps = (_config.minSteps - _config.maxSteps) * DOWN_FACTOR;
+            long steps = (_config.minSteps - _config.maxSteps) * _config.downFactor;
             moveStepper(steps, _initSpeedRatio);
             nextInitStepTime = millis() + 100;
             break;

@@ -218,7 +218,7 @@ namespace devices
                 const long currentPosition = _stepper->getState().currentPosition;
                 const long effectiveLastZero = _state.lastZeroPosition + _state.pendingZeroOffset;
                 const long stepsSinceZero = labs(currentPosition - effectiveLastZero);
-                if (_config.maxStepsPerRevolution > 0 && stepsSinceZero >= _config.maxStepsPerRevolution)
+                if (_config.maxStepsPerRevolution > 0 && stepsSinceZero >= (_config.maxStepsPerRevolution * 1.2))
                 {
                     setErrorState(WheelErrorCode::ZeroNotFound,
                                   "Zero sensor not triggered within maxStepsPerRevolution");

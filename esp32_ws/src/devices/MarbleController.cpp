@@ -1223,8 +1223,15 @@ namespace devices
             blinkBusy(_wheelLed);
             break;
         case devices::WheelStateEnum::IDLE:
-            _wheelLed->set(true); // LED on when idle
+        {
+            // Blink attention if no button press in the last WHEEL_IDLE_ATTENTION_MS
+            bool isIdle = _lastButtonPressTime > 0 && (millis() - _lastButtonPressTime >= WHEEL_IDLE_ATTENTION_MS);
+            if (isIdle)
+                blinkAttention(_wheelLed);
+            else
+                _wheelLed->set(true); // LED on when idle
             break;
+        }
         default:
             MLOG_ERROR("%s: Unknown wheel state: %d", toString().c_str(), static_cast<int>(wheelState.state));
             _wheelLed->set(false); // LED off for any other state

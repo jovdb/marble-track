@@ -896,12 +896,6 @@ namespace devices
             _autoLauncherBallsToLaunch = 2;
         }
 
-        // Run the phase state machine whenever there are balls left to launch or not yet initialized.
-        if (_autoLauncherBallsToLaunch == 0 && _autoLauncherPhase == LauncherPhase::IDLE)
-        {
-            return;
-        }
-
         switch (_autoLauncherPhase)
         {
         case LauncherPhase::WAITING_FOR_INIT:
@@ -919,6 +913,11 @@ namespace devices
 
         case LauncherPhase::IDLE:
         {
+            _launcherLed->set(true);
+
+            if (_autoLauncherBallsToLaunch == 0)
+                break; // Waiting for wheel trigger; nothing to do
+
             if (_autoLauncherBallsToLaunch > 0 && launcherState.isBallLoaded)
             {
                 _launcher->control("launch");
@@ -928,7 +927,7 @@ namespace devices
             }
             else
             {
-                // No ball loaded or no more balls to launch — done.
+                // No ball loaded — done.
                 _autoLauncherBallsToLaunch = 0;
             }
             break;
@@ -936,6 +935,8 @@ namespace devices
 
         case LauncherPhase::POST_LAUNCH_DELAY:
         {
+            blinkBusy(_launcherLed);
+
             if (millis() - _autoLauncherPhaseStart >= LauncherPostLaunchDelayMs)
             {
                 _launcher->control("load");
@@ -947,6 +948,8 @@ namespace devices
 
         case LauncherPhase::LOADING:
         {
+            blinkBusy(_launcherLed);
+
             const bool stillMoving =
                 launcherState.state == LauncherStateEnum::MOVING_UP ||
                 launcherState.state == LauncherStateEnum::MOVING_DOWN;
@@ -961,6 +964,8 @@ namespace devices
 
         case LauncherPhase::POST_LOAD_DELAY:
         {
+            blinkBusy(_launcherLed);
+
             if (millis() - _autoLauncherPhaseStart >= LauncherPostLoadDelayMs)
             {
                 _autoLauncherPhase = LauncherPhase::IDLE;

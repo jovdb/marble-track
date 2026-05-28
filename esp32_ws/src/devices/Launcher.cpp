@@ -87,6 +87,13 @@ namespace devices
             notifyStateChanged();
         }
 
+        // Auto-start load when a ball is waiting but none is loaded and arm is idle
+        if (_state.isBallWaiting && !_state.isBallLoaded &&
+            (_state.state == LauncherStateEnum::DOWN || _state.state == LauncherStateEnum::INIT))
+        {
+            doLoad();
+        }
+
         // FSM: advance state when current motion timer expires
         switch (_state.state)
         {

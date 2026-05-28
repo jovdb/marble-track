@@ -884,6 +884,8 @@ namespace devices
     {
         auto launcherState = _launcher->getState();
         auto wheelState = _wheel->getState();
+        auto launcherBtnState = _launcherBtn->getState();
+        const bool btnPressedEdge = launcherBtnState.isPressed && launcherBtnState.isPressedChanged;
 
         // Trigger a new sequence when the wheel arrives at the launcher breakpoint
         // and a sequence is not already running.
@@ -918,8 +920,26 @@ namespace devices
                 wheelState.currentAngle <= LauncherWheelMaxAngle;
             _launcherLed->set(wheelInLaunchRange);
 
+            // Handle manual button press in auto mode
+            if (btnPressedEdge)
+            {
+                if (wheelInLaunchRange && launcherState.isBallLoaded)
+                {
+                    playClickSound();
+                    _launcher->launch();
+                    _autoLauncherBallsToLaunch = 0; // cancel any pending auto sequence
+                    _autoLauncherPhase = LauncherPhase::POST_LAUNCH_DELAY;
+                    _autoLauncherPhaseStart = millis();
+                    break;
+                }
+                else
+                {
+                    playErrorSound();
+                }
+            }
+
             if (_autoLauncherBallsToLaunch == 0)
-                break;// Waiting for wheel trigger; nothing to do
+                break; // Waiting for wheel trigger; nothing to do
 
             if (_autoLauncherBallsToLaunch > 0 && launcherState.isBallLoaded)
             {

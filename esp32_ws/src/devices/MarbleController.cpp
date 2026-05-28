@@ -913,10 +913,13 @@ namespace devices
 
         case LauncherPhase::IDLE:
         {
-            _launcherLed->set(true);
+            const bool wheelInLaunchRange =
+                wheelState.currentAngle >= LauncherWheelMinAngle &&
+                wheelState.currentAngle <= LauncherWheelMaxAngle;
+            _launcherLed->set(wheelInLaunchRange);
 
             if (_autoLauncherBallsToLaunch == 0)
-                break; // Waiting for wheel trigger; nothing to do
+                break;// Waiting for wheel trigger; nothing to do
 
             if (_autoLauncherBallsToLaunch > 0 && launcherState.isBallLoaded)
             {

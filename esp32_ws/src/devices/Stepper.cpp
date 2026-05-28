@@ -628,6 +628,8 @@ namespace devices
             if (!_fastDriver)
             {
                 MLOG_WARN("%s: RMT driver unavailable for step pin %d, trying default FastAccelStepper backend", toString().c_str(), _config.stepPin.pin);
+                broadcastNotification("RmtDriverFallback",
+                    "RMT driver unavailable for step pin " + String(_config.stepPin.pin) + "; falling back to default backend");
                 _fastDriver = engine.stepperConnectToPin(_config.stepPin.pin, DRIVER_DONT_CARE);
             }
             #else

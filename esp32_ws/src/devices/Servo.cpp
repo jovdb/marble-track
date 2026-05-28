@@ -764,6 +764,8 @@ namespace devices
         if (!file)
         {
             MLOG_WARN("%s: Failed to persist position to %s", toString().c_str(), path.c_str());
+            broadcastNotification("PersistPositionFailed",
+                "Failed to save servo position to " + path + " — position will be lost on restart");
             return;
         }
         file.print(value, 6);

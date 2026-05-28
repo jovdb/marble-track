@@ -3,6 +3,7 @@ import styles from "./Header.module.css";
 import logo from "../assets/logo-64.png";
 import { useWebSocket2 } from "../hooks/useWebSocket";
 import {
+  BellIcon,
   BugIcon,
   ConnectedIcon,
   DisconnectedIcon,
@@ -14,12 +15,17 @@ import { NetworkConfig } from "./NetworkConfig";
 import { isSerialOpen, toggleSerialPanel } from "../stores/serial";
 import { useSystemInfo } from "../stores/SystemInfo";
 import { SystemInfoPopup } from "./SystemInfoPopup";
+import { useNotifications } from "../stores/Notifications";
+import { NotificationsPopup } from "./NotificationsPopup";
 
 const Header: Component = () => {
   const [webSocket, { sendMessage }] = useWebSocket2();
   const [systemInfo] = useSystemInfo();
+  const [notifications] = useNotifications();
   const [isNetworkPopupOpen, setIsNetworkPopupOpen] = createSignal(false);
   const [isSystemInfoOpen, setIsSystemInfoOpen] = createSignal(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = createSignal(false);
+  const [, { markAllRead }] = useNotifications();
 
   const titleText = createMemo(() => {
     const parts = [`Website build: ${__BUILD_DATE__}`];
@@ -43,12 +49,10 @@ const Header: Component = () => {
       : `Disconnected from ${webSocket.url}`;
   });
 
-  // Reset button handler
   const handleReset = () => {
     sendMessage({ type: "restart" });
   };
 
-  // Network button handler
   const handleNetworkClick = () => {
     setIsNetworkPopupOpen(true);
   };
@@ -58,6 +62,11 @@ const Header: Component = () => {
       sendMessage({ type: "system-info" });
     }
     setIsSystemInfoOpen(true);
+  };
+
+  const handleNotificationsClick = () => {
+    setIsNotificationsOpen(true);
+    markAllRead();
   };
 
   return (
@@ -123,6 +132,18 @@ const Header: Component = () => {
           >
             <BugIcon />
           </TransparentButton>
+
+          <TransparentButton
+            title="Notifications"
+            onClick={handleNotificationsClick}
+            class={`${styles.header__button} ${styles.header__notifButton} ${notifications.unreadCount > 0 ? styles["header__button--active"] : ""}`}
+            aria-label={`Notifications${notifications.unreadCount > 0 ? ` (${notifications.unreadCount} unread)` : ""}`}
+          >
+            <BellIcon width={20} height={20} />
+            {notifications.unreadCount > 0 && (
+              <span class={styles.header__badge}>{notifications.unreadCount}</span>
+            )}
+          </TransparentButton>
         </div>
       </header>
 
@@ -131,6 +152,10 @@ const Header: Component = () => {
         isOpen={isSystemInfoOpen()}
         onClose={() => setIsSystemInfoOpen(false)}
         systemInfo={systemInfo}
+      />
+      <NotificationsPopup
+        isOpen={isNotificationsOpen()}
+        onClose={() => setIsNotificationsOpen(false)}
       />
     </>
   );

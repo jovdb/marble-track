@@ -5,6 +5,7 @@
 
 #include "devices/Device.h"
 #include "Logging.h"
+#include "devices/mixins/ControllableMixin.h"
 
 Device::Device(const String &id, const String &type) : _id(id), _type(type), _name(id) {}
 
@@ -130,4 +131,36 @@ bool Device::hasMixin(const String &mixinName) const
         }
     }
     return false;
+}
+
+void Device::broadcastNotification(const String &code,
+                                   const String &message,
+                                   DeviceNotificationType type)
+{
+    NotifyClients callback = ControllableMixinBase::getNotifyClients();
+    if (!callback)
+    {
+        MLOG_WARN("%s: broadcastNotification called but no WebSocket callback set", toString().c_str());
+        return;
+    }
+
+    const char *typeStr = (type == DeviceNotificationType::Warning) ? "warning" : "info";
+
+    // Build a unique id from millis and device id to avoid collisions
+    String id = String(millis()) + "-" + _id;
+
+    JsonDocument doc;
+    doc["type"] = "device-notification";
+    doc["id"] = id;
+    doc["code"] = code;
+    doc["message"] = message;
+    doc["deviceId"] = _id;
+    doc["notificationType"] = typeStr;
+    doc["timestamp"] = (unsigned long)millis();
+
+    String payload;
+    serializeJson(doc, payload);
+    callback(payload);
+
+    MLOG_WARN("%s: Notification [%s]: %s", toString().c_str(), code.c_str(), message.c_str());
 }

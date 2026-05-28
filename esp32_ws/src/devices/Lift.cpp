@@ -268,6 +268,8 @@ namespace devices
             if (currentPos >= _config.maxSteps)
             {
                 MLOG_WARN("%s: Cannot move up - already at max position (current: %ld, max: %ld)", toString().c_str(), currentPos, _config.maxSteps);
+                broadcastNotification("LiftAtMaxPosition",
+                    "Lift already at maximum position (" + String(currentPos) + " steps)");
                 break;
             }
 
@@ -311,6 +313,8 @@ namespace devices
             if (currentPos <= _config.minSteps)
             {
                 MLOG_WARN("%s: Cannot move down - already at min position (current: %ld, min: %ld)", toString().c_str(), currentPos, _config.minSteps);
+                broadcastNotification("LiftAtMinPosition",
+                    "Lift already at minimum position (" + String(currentPos) + " steps)");
                 isSuccess = false;
                 break;
             }

@@ -230,6 +230,17 @@ export type IWsReceiveSystemInfoMessage =
   | (IWsMessageBase<"system-info"> & _IWsErrorResponse)
   | (IWsMessageBase<"system-info"> & SystemInfo);
 
+export type NotificationType = "info" | "warning";
+
+export type IWsReceiveNotificationMessage = IWsMessageBase<"device-notification"> & {
+  id: string;
+  code: string;
+  message: string;
+  deviceId: string;
+  notificationType: NotificationType;
+  timestamp: number;
+};
+
 // Individual message type (non-batch)
 export type IWsReceiveSingleMessage =
   | IWsReceiveDevicesListMessage
@@ -249,6 +260,7 @@ export type IWsReceiveSingleMessage =
   | IWsReceiveStepsPerRevolutionMessage
   | IWsReceiveExpanderAddressesMessage
   | IWsReceiveSystemInfoMessage
+  | IWsReceiveNotificationMessage
   | IWsReceivePongMessage;
 
 // Message is always an array of messages (batch)

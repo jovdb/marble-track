@@ -128,9 +128,12 @@ namespace devices
             unsigned long elapsed = millis() - _currentSongStartTime;
             if (elapsed >= _config.songTimeoutMs)
             {
-                MLOG_WARN("%s: Song %i timed out after %lu ms, stopping playback",
-                          toString().c_str(), _state.currentPlayingSong, elapsed);
-                _player.stop(); // Stop the player
+                char timeoutMsg[100];
+                snprintf(timeoutMsg, sizeof(timeoutMsg), "Song %d timed out after %lu ms",
+                         _state.currentPlayingSong, elapsed);
+                MLOG_WARN("%s: %s, stopping playback", toString().c_str(), timeoutMsg);
+                broadcastNotification("SongTimeout", timeoutMsg);
+                _player.stop();// Stop the player
                 // Reset software state - hardware state will be detected in busy check
                 _state.currentPlayingSong = -1;
                 _currentSongStartTime = 0;

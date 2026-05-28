@@ -17,6 +17,13 @@
 #include <ArduinoJson.h>
 #include <vector>
 
+// Notification types a device can broadcast to connected website clients
+enum class DeviceNotificationType
+{
+    Info,
+    Warning,
+};
+
 /**
  * @class Device
  * @brief Minimal base class for devices
@@ -98,6 +105,16 @@ protected:
 
     void setError(const String &errorCode, const String &errorMessage);
     void clearError();
+
+    /**
+     * @brief Broadcast a notification to all connected website clients.
+     * @param code   Short machine-readable code (e.g. "UnexpectedZeroTrigger")
+     * @param message Human-readable description
+     * @param type   Info or Warning (defaults to Warning)
+     */
+    void broadcastNotification(const String &code,
+                               const String &message,
+                               DeviceNotificationType type = DeviceNotificationType::Warning);
 
     // Walks the subtree of _children depth-first.
     // Returns the first descendant that has an error, or nullptr.

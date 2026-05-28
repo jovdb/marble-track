@@ -124,6 +124,21 @@ public:
      */
     void addDevicesToJsonArray(JsonArray &devicesArray);
 
+    /**
+     * @brief Re-initialise all root devices that have errors in their subtree.
+     *
+     * Called when an expander (IoExpander / PwmExpander) transitions from Error
+     * to Ready so that devices whose pin creation failed because the expander
+     * was unavailable can automatically recover.
+     *
+     * The expander itself (identified by @p expanderId) is skipped.
+     * After re-setup, notifyDevicesChanged() is fired once so the website
+     * refreshes its device state.
+     *
+     * @param expanderId  ID of the expander that just became ready.
+     */
+    void reSetupDevicesUsingExpander(const String &expanderId);
+
 private:
     /**
      * @brief Recursively apply config to devices from JSON

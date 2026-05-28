@@ -25,6 +25,8 @@ namespace devices
 
     void IoExpander::init()
     {
+        const String prevState = _state.state;
+
         // Get the I2C device
         devices::I2c *i2cDevice = nullptr;
         if (!_config.i2cDeviceId.isEmpty())
@@ -90,6 +92,9 @@ namespace devices
                       sdaPin,
                       sclPin,
                       getPinCount());
+
+            if (prevState == "Error")
+                deviceManager.reSetupDevicesUsingExpander(getId());
         }
         else
         {

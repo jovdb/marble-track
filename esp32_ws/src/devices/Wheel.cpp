@@ -159,11 +159,16 @@ namespace devices
                             char errorMessage[128];
                             snprintf(errorMessage, sizeof(errorMessage), "Steps per revolution mismatch - measured: %ld, configured: %ld (%.2f%% difference)", _state.stepsInLastRevolution, _config.stepsPerRevolution, percentDiff);
                             setErrorState(WheelErrorCode::UnexpectedZeroTrigger, errorMessage);
+                            broadcastNotification("UnexpectedZeroTrigger", errorMessage);
                         }
                         else if (percentDiff > 0.1f)
                         {
-                            MLOG_WARN("%s: Minor revolution drift: measured %ld, configured %ld (%.2f%%)",
-                                      toString().c_str(), _state.stepsInLastRevolution, _config.stepsPerRevolution, percentDiff);
+                            char driftMsg[128];
+                            snprintf(driftMsg, sizeof(driftMsg),
+                                     "Minor revolution drift: measured %ld steps, configured %ld (%.2f%%)",
+                                     _state.stepsInLastRevolution, _config.stepsPerRevolution, percentDiff);
+                            MLOG_WARN("%s: %s", toString().c_str(), driftMsg);
+                            broadcastNotification("MinorRevolutionDrift", driftMsg, DeviceNotificationType::Info);
                         }
                     }
 

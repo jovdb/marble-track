@@ -29,6 +29,8 @@ namespace devices
 
     void PwmExpander::init()
     {
+        const String prevState = _state.state;
+
         // Resolve I2C bus device
         devices::I2c *i2cDevice = nullptr;
         if (!_config.i2cDeviceId.isEmpty())
@@ -112,6 +114,9 @@ namespace devices
         notifyStateChanged();
         MLOG_INFO("%s: PCA9685 ready at 0x%02X, %.1f Hz, 16 channels",
                   toString().c_str(), _config.i2cAddress, freq);
+
+        if (prevState == "Error")
+            deviceManager.reSetupDevicesUsingExpander(getId());
     }
 
     void PwmExpander::setup()

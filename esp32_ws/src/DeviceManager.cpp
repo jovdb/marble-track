@@ -929,6 +929,41 @@ std::vector<Device *> DeviceManager::getAllDevices()
     return allDevices;
 }
 
+static bool hasSubtreeError(Device *device)
+{
+    if (!device)
+        return false;
+    if (device->hasError())
+        return true;
+    for (Device *child : device->getChildren())
+    {
+        if (hasSubtreeError(child))
+            return true;
+    }
+    return false;
+}
+
+void DeviceManager::reSetupDevicesUsingExpander(const String &expanderId)
+{
+    bool anyRecovered = false;
+    for (int i = 0; i < devicesCount; i++)
+    {
+        Device *root = devices[i];
+        if (!root || root->getId() == expanderId)
+            continue;
+        if (!hasSubtreeError(root))
+            continue;
+
+        MLOG_INFO("DeviceManager: Expander '%s' recovered; re-initialising '%s'",
+                  expanderId.c_str(), root->getId().c_str());
+        root->teardown();
+        root->setup();
+        anyRecovered = true;
+    }
+    if (anyRecovered)
+        notifyDevicesChanged();
+}
+
 void DeviceManager::deleteAllDevices()
 {
     for (int i = 0; i < devicesCount; i++)

@@ -68,6 +68,10 @@ namespace devices
         void teardown() override;
         void loop() override;
 
+        bool init();
+        bool load();
+        bool launch();
+
         // ControllableMixin implementation
         void addDeviceStateToJson(JsonDocument &doc) override;
         bool control(const String &action, JsonObject *args = nullptr) override;
@@ -88,10 +92,6 @@ namespace devices
 
         bool isTimerExpired() const;
         void startTimer(uint32_t durationMs);
-
-        bool doLoad();
-        bool doLaunch();
-        bool doInit();
 
         String stateToString(LauncherStateEnum state) const;
     };

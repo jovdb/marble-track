@@ -904,7 +904,7 @@ namespace devices
             if (millis() - _autoLauncherPhaseStart >= LauncherAutoInitDelayMs)
             {
                 MLOG_INFO("%s: Auto mode – starting launcher init after %lu ms delay", toString().c_str(), LauncherAutoInitDelayMs);
-                _launcher->control("init");
+                _launcher->init();
                 _autoLauncherPhase = LauncherPhase::LOADING;
                 _autoLauncherPhaseStart = millis();
             }
@@ -923,7 +923,7 @@ namespace devices
 
             if (_autoLauncherBallsToLaunch > 0 && launcherState.isBallLoaded)
             {
-                _launcher->control("launch");
+                _launcher->launch();
                 _autoLauncherBallsToLaunch--;
                 _autoLauncherPhase = LauncherPhase::POST_LAUNCH_DELAY;
                 _autoLauncherPhaseStart = millis();
@@ -942,7 +942,7 @@ namespace devices
 
             if (millis() - _autoLauncherPhaseStart >= LauncherPostLaunchDelayMs)
             {
-                _launcher->control("load");
+                _launcher->load();
                 _autoLauncherPhase = LauncherPhase::LOADING;
                 _autoLauncherPhaseStart = millis();
             }
@@ -1114,7 +1114,7 @@ namespace devices
                 MLOG_INFO("%s: Manual mode – starting launcher init", toString().c_str());
                 if (btnPressedEdge)
                     playClickSound();
-                _launcher->control("init");
+                _launcher->init();
                 _launcherPhase = LauncherPhase::LOADING;
                 _launcherPhaseStart = millis();
             }
@@ -1149,7 +1149,7 @@ namespace devices
             if (btnPressedEdge && wheelInLaunchRange)
             {
                 playButtonDown();
-                _launcher->control("launch");
+                _launcher->launch();
                 _launcherPhase = LauncherPhase::POST_LAUNCH_DELAY;
                 _launcherPhaseStart = millis();
             }
@@ -1166,7 +1166,7 @@ namespace devices
 
             if (millis() - _launcherPhaseStart >= LauncherPostLaunchDelayMs)
             {
-                _launcher->control("load");
+                _launcher->load();
                 _launcherPhase = LauncherPhase::LOADING;
                 _launcherPhaseStart = millis();
             }

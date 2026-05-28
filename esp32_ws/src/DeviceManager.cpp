@@ -810,7 +810,7 @@ bool DeviceManager::removeDevice(const String &deviceId)
     {
         if (devices[i] != nullptr && devices[i]->getId() == deviceId)
         {
-            MLOG_INFO("Removing device: %s (%s)", devices[i]->getId().c_str(), devices[i]->getType().c_str());
+            MLOG_INFO("Removing device: %s", devices[i]->toString().c_str());
             delete devices[i];
 
             // Shift remaining devices down

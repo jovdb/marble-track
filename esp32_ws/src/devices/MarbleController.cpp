@@ -888,12 +888,11 @@ namespace devices
         const bool btnPressedEdge = launcherBtnState.isPressed && launcherBtnState.isPressedChanged;
 
         // Trigger a new sequence when the wheel arrives at the launcher breakpoint
-        // and a sequence is not already running.
+        // and a sequence is not already running. Launch even if no ball is loaded.
         if (_autoLauncherPhase == LauncherPhase::IDLE &&
             wheelState.state == devices::WheelStateEnum::IDLE &&
             wheelState.currentBreakpointIndex == LAUNCHER_WHEEL_BREAKPOINT &&
-            wheelState.breakpointChanged &&
-            launcherState.isBallLoaded)
+            wheelState.breakpointChanged)
         {
             _autoLauncherBallsToLaunch = 2;
         }
@@ -941,17 +940,12 @@ namespace devices
             if (_autoLauncherBallsToLaunch == 0)
                 break; // Waiting for wheel trigger; nothing to do
 
-            if (_autoLauncherBallsToLaunch > 0 && launcherState.isBallLoaded)
+            if (_autoLauncherBallsToLaunch > 0)
             {
                 _launcher->launch();
                 _autoLauncherBallsToLaunch--;
                 _autoLauncherPhase = LauncherPhase::POST_LAUNCH_DELAY;
                 _autoLauncherPhaseStart = millis();
-            }
-            else
-            {
-                // No ball loaded — done.
-                _autoLauncherBallsToLaunch = 0;
             }
             break;
         }

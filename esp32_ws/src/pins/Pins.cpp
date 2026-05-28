@@ -94,7 +94,14 @@ pins::IPin *PinFactory::createPin(const PinConfig &config)
         return nullptr;
     }
     
-    return new pins::I2cExpanderPin(pinExpanderType, i2cAddress, &Wire, config.expanderId);
+    auto *pin = new pins::I2cExpanderPin(pinExpanderType, i2cAddress, &Wire, config.expanderId);
+
+    // Forward runtime I2C errors back to the IoExpander so the UI reflects them.
+    pin->setOnI2cError([expander](uint8_t err) {
+        expander->reportRuntimeI2cError(err);
+    });
+
+    return pin;
 }
 
 // Parse pin config from JSON - requires object format

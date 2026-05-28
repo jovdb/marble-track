@@ -59,7 +59,16 @@ namespace devices
         Wire.beginTransmission(_config.i2cAddress);
         uint8_t error = Wire.endTransmission(true); // true = send stop bit, release bus
 
-        if (error != 0)
+        if (error == 5)
+        {
+            String msg = "I\u00b2C timeout for PCA9685 at 0x" + String(_config.i2cAddress, HEX);
+            Device::setError("TIMEOUT", msg);
+            _state.state = "Error";
+            notifyStateChanged();
+            MLOG_WARN("%s: TIMEOUT: %s", toString().c_str(), msg.c_str());
+            return;
+        }
+        else if (error != 0)
         {
             String errorCode;
             String errorMsg;

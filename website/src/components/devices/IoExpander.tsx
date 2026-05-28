@@ -36,6 +36,7 @@ export function IoExpander(props: { id: string; isPopup?: boolean; onClose?: () 
     const s = expanderState();
     if (s === "Ready") return <span style={{ color: "green" }}>Connected</span>;
     if (s === "Init") return <span style={{ color: "cornflowerblue" }}>Initializing&hellip;</span>;
+    if (s === "Error") return <span style={{ color: "red" }}>Error</span>;
     return <span>Unknown</span>;
   };
 

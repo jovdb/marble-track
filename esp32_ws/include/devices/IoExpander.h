@@ -107,6 +107,13 @@ namespace devices
          */
         String getExpanderTypeString() const;
 
+        /**
+         * @brief Called by I2cExpanderPin when a runtime I2C error is detected.
+         *        Updates device state/error so the UI reflects the problem immediately.
+         * @param i2cError Wire.endTransmission() return code
+         */
+        void reportRuntimeI2cError(uint8_t i2cError);
+
         // ControllableMixin implementation
         void addDeviceStateToJson(JsonDocument &doc) override;
         bool control(const String &action, JsonObject *args = nullptr) override;
@@ -123,7 +130,7 @@ namespace devices
          */
         IoExpanderType stringToExpanderType(const String &typeStr) const;
 
-
+        unsigned long _lastHealthCheckMs = 0;
     };
 
 } // namespace devices

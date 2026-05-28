@@ -92,6 +92,9 @@ namespace devices
     {
         Device::loop();
 
+        // Always keep currentAngle up to date based on stepper position
+        updateCurrentAngle();
+
         if (_state.onError)
         {
             _state.onError = false;

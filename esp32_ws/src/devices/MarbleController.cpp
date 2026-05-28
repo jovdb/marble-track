@@ -179,7 +179,7 @@ namespace devices
         auto launcherConfig = _launcher->getConfig();
         launcherConfig.name = "Launcher";
         launcherConfig.loadTimeMs = 2000;
-        launcherConfig.launchTimeMs = 0;
+        launcherConfig.launchTimeMs = 100;
         _launcher->setConfig(launcherConfig);
 
         addChild(_launcher);

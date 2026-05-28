@@ -41,17 +41,13 @@ export function Launcher(props: { id: string; isPopup?: boolean; onClose?: () =>
     switch (launcherState()) {
       case "Up":
       case "MovingUp":
-        return 200;
+        return Math.max(device()?.config?.upDuration ?? 100, 100);
       case "Down":
       case "MovingDown":
       default:
-        return 2000; // TODO: use config
+        return device()?.config?.downDuration ?? 2000;
     }
   });
-
-  const isMoving = createMemo(
-    () => launcherState() === "MovingUp" || launcherState() === "MovingDown"
-  );
 
   return (
     <Device
@@ -65,12 +61,12 @@ export function Launcher(props: { id: string; isPopup?: boolean; onClose?: () =>
         {/* Arm visualisation */}
         <div class={styles.launcher__visual}>
           <svg
-            width={100}
-            height={100}
+            width={150}
+            height={150}
             viewBox="0 0 48 48"
             fill="none"
             stroke="currentColor"
-            stroke-width="2"
+            stroke-width="1"
             stroke-linecap="round"
             stroke-linejoin="round"
             xmlns="http://www.w3.org/2000/svg"
@@ -123,25 +119,6 @@ export function Launcher(props: { id: string; isPopup?: boolean; onClose?: () =>
               </g>
             </g>
           </svg>
-        </div>
-
-        {/* Status row */}
-        <div class={styles.launcher__status}>
-          <span class={styles["launcher__state-badge"]}>{launcherState()}</span>
-
-          <span class={styles.launcher__indicator}>
-            <span
-              class={`${styles.launcher__dot} ${isBallWaiting() ? styles["launcher__dot--active-waiting"] : ""}`}
-            />
-            Waiting
-          </span>
-
-          <span class={styles.launcher__indicator}>
-            <span
-              class={`${styles.launcher__dot} ${isBallLoaded() ? styles["launcher__dot--active-loaded"] : ""}`}
-            />
-            Loaded
-          </span>
         </div>
 
         {/* Controls */}

@@ -210,11 +210,11 @@ namespace devices
         }
 
         // Swing arm up fast – this throws the ball
-        _state.isBallLoaded = false;
         if (_servo)
             _servo->setValue(1.0f, static_cast<int>(_config.launchTimeMs));
         startTimer(_config.launchTimeMs);
         _state.state = LauncherStateEnum::MOVING_UP;
+        _state.isBallLoaded = false;        
         _pendingLoadDown = false;
         _isInitMove = false;
         notifyStateChanged();

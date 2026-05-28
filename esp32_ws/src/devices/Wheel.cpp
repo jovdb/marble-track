@@ -689,6 +689,8 @@ namespace devices
     {
         _state.state = WheelStateEnum::ERROR;
         _state.onError = true;
+        if (_stepper)
+            _stepper->stop();
         Device::setError(errorCodeToString(errorCode), errorMessage);
     }
 

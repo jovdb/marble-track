@@ -344,24 +344,6 @@ export function DevicesList() {
       );
     });
 
-  const allTopLevelSelected = createMemo(() => {
-    const devices = topLevelDevices();
-    return (
-      devices.length > 0 && devices.every((d) => selectedDevicesState.selectedDevices().has(d.id))
-    );
-  });
-
-  const someTopLevelSelected = createMemo(
-    () =>
-      !allTopLevelSelected() &&
-      topLevelDevices().some((d) => selectedDevicesState.selectedDevices().has(d.id))
-  );
-
-  let selectAllRef: HTMLInputElement | undefined;
-  createEffect(() => {
-    if (selectAllRef) selectAllRef.indeterminate = someTopLevelSelected();
-  });
-
   // Helper function to collect all pins from device and its children recursively
   const collectAllPins = (device: IDevice): string[] => {
     const pins: string[] = [...(device.pins || [])];
@@ -587,24 +569,7 @@ export function DevicesList() {
               <table class={styles["devices-list__table"]}>
                 <thead class={styles["devices-list__table-header"]}>
                   <tr>
-                    <th class={styles["devices-list__table-th"]}>
-                      <input
-                        ref={selectAllRef}
-                        type="checkbox"
-                        class={styles["devices-list__checkbox"]}
-                        checked={allTopLevelSelected()}
-                        aria-label="Select all devices"
-                        onChange={() => {
-                          if (allTopLevelSelected()) {
-                            selectedDevicesActions.clearSelectedDevices();
-                          } else {
-                            selectedDevicesActions.setSelectedDevices(
-                              new Set(topLevelDevices().map((d) => d.id))
-                            );
-                          }
-                        }}
-                      />
-                    </th>
+                    <th class={styles["devices-list__table-th"]}></th>
                     <th class={styles["devices-list__table-th"]}></th>
                     <th class={styles["devices-list__table-th"]}>Type</th>
                     <th class={styles["devices-list__table-th"]}>ID</th>

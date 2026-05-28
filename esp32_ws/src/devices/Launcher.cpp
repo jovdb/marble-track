@@ -91,7 +91,7 @@ namespace devices
         if (_state.isBallWaiting && !_state.isBallLoaded &&
             (_state.state == LauncherStateEnum::DOWN || _state.state == LauncherStateEnum::INIT))
         {
-            doLoad();
+            load();
         }
 
         // FSM: advance state when current motion timer expires
@@ -147,7 +147,7 @@ namespace devices
     // Device functions
     // ---------------------------------------------------------------------------
 
-    bool Launcher::doInit()
+    bool Launcher::init()
     {
         // Move arm slowly down and assume a ball is waiting to be launched
         clearError();
@@ -164,7 +164,7 @@ namespace devices
         return true;
     }
 
-    bool Launcher::doLoad()
+    bool Launcher::load()
     {
         if (_state.state == LauncherStateEnum::MOVING_UP ||
             _state.state == LauncherStateEnum::MOVING_DOWN)
@@ -201,7 +201,7 @@ namespace devices
         return true;
     }
 
-    bool Launcher::doLaunch()
+    bool Launcher::launch()
     {
         if (_state.state == LauncherStateEnum::MOVING_UP)
         {
@@ -237,11 +237,11 @@ namespace devices
     bool Launcher::control(const String &action, JsonObject * /*args*/)
     {
         if (action == "init")
-            return doInit();
+            return init();
         if (action == "load")
-            return doLoad();
+            return load();
         if (action == "launch")
-            return doLaunch();
+            return launch();
 
         MLOG_WARN("%s: Unknown action: %s", toString().c_str(), action.c_str());
         return false;

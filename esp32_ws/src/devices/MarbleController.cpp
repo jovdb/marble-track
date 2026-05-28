@@ -238,7 +238,7 @@ namespace devices
         else
         {
             _launcherPhase = LauncherPhase::WAITING_FOR_INIT;
-            _launcherPhaseStart = 0;
+            _launcherPhaseStart = millis();
             _autoLauncherPhase = LauncherPhase::IDLE;
             _autoLauncherPhaseStart = 0;
             _autoLauncherBallsToLaunch = 0;
@@ -904,7 +904,7 @@ namespace devices
             if (millis() - _autoLauncherPhaseStart >= LauncherAutoInitDelayMs)
             {
                 MLOG_INFO("%s: Auto mode – starting launcher init after %lu ms delay", toString().c_str(), LauncherAutoInitDelayMs);
-                _launcher->control("init");
+                _launcher->init();
                 _autoLauncherPhase = LauncherPhase::LOADING;
                 _autoLauncherPhaseStart = millis();
             }
@@ -923,7 +923,7 @@ namespace devices
 
             if (_autoLauncherBallsToLaunch > 0 && launcherState.isBallLoaded)
             {
-                _launcher->control("launch");
+                _launcher->launch();
                 _autoLauncherBallsToLaunch--;
                 _autoLauncherPhase = LauncherPhase::POST_LAUNCH_DELAY;
                 _autoLauncherPhaseStart = millis();
@@ -942,7 +942,7 @@ namespace devices
 
             if (millis() - _autoLauncherPhaseStart >= LauncherPostLaunchDelayMs)
             {
-                _launcher->control("load");
+                _launcher->load();
                 _autoLauncherPhase = LauncherPhase::LOADING;
                 _autoLauncherPhaseStart = millis();
             }
@@ -1109,11 +1109,12 @@ namespace devices
         case LauncherPhase::WAITING_FOR_INIT:
         {
             blinkInit(_launcherLed);
-            if (btnPressedEdge)
+            if (btnPressedEdge || millis() - _launcherPhaseStart >= LauncherAutoInitDelayMs)
             {
-                MLOG_INFO("%s: Manual mode – starting launcher init on button press", toString().c_str());
-                playClickSound();
-                _launcher->control("init");
+                MLOG_INFO("%s: Manual mode – starting launcher init", toString().c_str());
+                if (btnPressedEdge)
+                    playClickSound();
+                _launcher->init();
                 _launcherPhase = LauncherPhase::LOADING;
                 _launcherPhaseStart = millis();
             }
@@ -1133,6 +1134,8 @@ namespace devices
             if (!wheelInLaunchRange)
             {
                 _launcherLed->set(false);
+                if (btnPressedEdge)
+                    playErrorSound();
             }
             else if (launcherState.isBallLoaded && atLauncherBreakpoint)
             {
@@ -1145,9 +1148,14 @@ namespace devices
 
             if (btnPressedEdge && wheelInLaunchRange)
             {
-                _launcher->control("launch");
+                playButtonDown();
+                _launcher->launch();
                 _launcherPhase = LauncherPhase::POST_LAUNCH_DELAY;
                 _launcherPhaseStart = millis();
+            }
+            else if (!launcherBtnState.isPressed && launcherBtnState.isPressedChanged && wheelInLaunchRange)
+            {
+                playButtonUp();
             }
             break;
         }
@@ -1158,7 +1166,7 @@ namespace devices
 
             if (millis() - _launcherPhaseStart >= LauncherPostLaunchDelayMs)
             {
-                _launcher->control("load");
+                _launcher->load();
                 _launcherPhase = LauncherPhase::LOADING;
                 _launcherPhaseStart = millis();
             }

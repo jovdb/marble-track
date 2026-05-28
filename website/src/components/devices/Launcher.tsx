@@ -123,44 +123,6 @@ export function Launcher(props: { id: string; isPopup?: boolean; onClose?: () =>
               </g>
             </g>
           </svg>
-
-          <svg width="120" height="110" viewBox="0 0 120 110" fill="none" stroke="currentColor">
-            {/* Base line */}
-            <line x1="10" y1="105" x2="110" y2="105" stroke-width="2" />
-            {/* Pivot */}
-            <circle cx="40" cy="105" r="4" fill="currentColor" stroke="none" />
-            {/* Arm – rotates around pivot */}
-            <g
-              style={{
-                "transform-origin": "40px 105px",
-                transform: `rotate(${armAngle()}deg)`,
-                transition: isMoving() ? "transform 0.6s ease-in-out" : "transform 0.15s linear",
-              }}
-            >
-              {/* Arm rod */}
-              <line x1="40" y1="105" x2="105" y2="105" stroke-width="4" stroke-linecap="round" />
-              {/* Ball at tip (shown when loaded) */}
-              <circle
-                cx="105"
-                cy="105"
-                r="7"
-                fill={isBallLoaded() ? "#4488ff" : "none"}
-                stroke={isBallLoaded() ? "#226" : "currentColor"}
-                stroke-width="1.5"
-                opacity={isBallLoaded() ? 1 : 0.3}
-              />
-            </g>
-            {/* Waiting ball indicator above pivot */}
-            <circle
-              cx="40"
-              cy="82"
-              r="6"
-              fill={isBallWaiting() ? "orange" : "none"}
-              stroke={isBallWaiting() ? "#c80" : "currentColor"}
-              stroke-width="1.5"
-              opacity={isBallWaiting() ? 1 : 0.2}
-            />
-          </svg>
         </div>
 
         {/* Status row */}

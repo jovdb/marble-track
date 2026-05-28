@@ -919,7 +919,7 @@ namespace devices
             _launcherLed->set(wheelInLaunchRange);
 
             if (_autoLauncherBallsToLaunch == 0)
-                break;// Waiting for wheel trigger; nothing to do
+                break; // Waiting for wheel trigger; nothing to do
 
             if (_autoLauncherBallsToLaunch > 0 && launcherState.isBallLoaded)
             {
@@ -1148,14 +1148,10 @@ namespace devices
 
             if (btnPressedEdge && wheelInLaunchRange)
             {
-                playButtonDown();
+                playButtonClick();
                 _launcher->launch();
                 _launcherPhase = LauncherPhase::POST_LAUNCH_DELAY;
                 _launcherPhaseStart = millis();
-            }
-            else if (!launcherBtnState.isPressed && launcherBtnState.isPressedChanged && wheelInLaunchRange)
-            {
-                playButtonUp();
             }
             break;
         }

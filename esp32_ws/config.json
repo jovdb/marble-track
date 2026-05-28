@@ -264,7 +264,7 @@
               "children": [],
               "config": {
                 "pin": {
-                  "pin": 0,
+                  "pin": 9,
                   "expanderId": "pwm-ex-1"
                 },
                 "name": "ServoGate Servo",
@@ -273,7 +273,7 @@
                 "resolutionBits": 10,
                 "minDutyCycle": 11,
                 "maxDutyCycle": 4,
-                "defaultDurationInMs": 4000
+                "defaultDurationInMs": 3000
               }
             }
           ],
@@ -351,14 +351,16 @@
           ],
           "config": {
             "name": "Wheel",
-            "stepsPerRevolution": 6754,
+            "stepsPerRevolution": 6750,
             "maxStepsPerRevolution": 6800,
             "zeroPointDegree": 55,
             "direction": 1,
             "breakPoints": [
-              158,
-              202,
-              283.5
+              35,
+              100.7,
+              213.5,
+              255.5,
+              338
             ]
           }
         },
@@ -372,14 +374,14 @@
               "children": [],
               "config": {
                 "name": "Splitter Stepper",
-                "stepperType": "FULL4WIRE",
-                "usePwm": false,
-                "maxSpeed": 1000,
+                "stepperType": "DRIVER",
+                "usePwm": true,
+                "maxSpeed": 150,
                 "maxAcceleration": 1000,
-                "defaultSpeed": 300,
-                "defaultAcceleration": 100,
+                "defaultSpeed": 80,
+                "defaultAcceleration": 250,
                 "stepPin": {
-                  "pin": -1,
+                  "pin": 18,
                   "expanderId": ""
                 },
                 "dirPin": {
@@ -403,10 +405,10 @@
                   "expanderId": ""
                 },
                 "enablePin": {
-                  "pin": -1,
+                  "pin": 16,
                   "expanderId": ""
                 },
-                "invertEnable": true,
+                "invertEnable": false,
                 "invertDirection": false
               }
             },
@@ -428,14 +430,14 @@
           ],
           "config": {
             "name": "Splitter",
-            "stepsPerRevolution": 2048,
-            "maxStepsPerRevolution": 2100,
+            "stepsPerRevolution": 800,
+            "maxStepsPerRevolution": 1000,
             "zeroPointDegree": 0,
             "direction": 1,
             "breakPoints": [
-              95,
-              210,
-              315
+              45,
+              165,
+              274
             ]
           }
         },
@@ -473,8 +475,8 @@
           "children": [],
           "config": {
             "pin": {
-              "pin": -1,
-              "expanderId": ""
+              "pin": 3,
+              "expanderId": "ex1"
             },
             "name": "Spiral Led",
             "initialState": "OFF"
@@ -486,8 +488,8 @@
           "children": [],
           "config": {
             "pin": {
-              "pin": -1,
-              "expanderId": ""
+              "pin": 7,
+              "expanderId": "ex1"
             },
             "name": "Spiral Button",
             "debounceTimeInMs": 50,
@@ -551,7 +553,7 @@
           "config": {
             "name": "Launcher",
             "loadTimeMs": 2000,
-            "launchTimeMs": 0
+            "launchTimeMs": 100
           }
         },
         {
@@ -560,10 +562,10 @@
           "children": [],
           "config": {
             "pin": {
-              "pin": -1,
-              "expanderId": ""
+              "pin": 2,
+              "expanderId": "ex1"
             },
-            "name": "Launcher Led",
+            "name": "Led",
             "initialState": "OFF"
           }
         },
@@ -573,47 +575,16 @@
           "children": [],
           "config": {
             "pin": {
-              "pin": -1,
-              "expanderId": ""
+              "pin": 6,
+              "expanderId": "ex1"
             },
-            "name": "Launcher Button",
+            "name": "Button",
             "debounceTimeInMs": 50,
             "pinMode": "PullUp",
             "buttonType": "NormalOpen"
           }
         }
       ]
-    },
-    {
-      "id": "led-3",
-      "type": "led",
-      "children": [],
-      "config": {
-        "pin": {
-          "pin": -1,
-          "expanderId": ""
-        },
-        "name": "Led",
-        "initialState": "BLINKING"
-      }
-    },
-    {
-      "id": "test-servo",
-      "type": "servo",
-      "children": [],
-      "config": {
-        "pin": {
-          "pin": 0,
-          "expanderId": "pwm-ex-1"
-        },
-        "name": "Servo",
-        "mcpwmChannel": -1,
-        "frequency": 50,
-        "resolutionBits": 10,
-        "minDutyCycle": 3,
-        "maxDutyCycle": 12.5,
-        "defaultDurationInMs": 500
-      }
     }
   ]
 }

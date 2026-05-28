@@ -954,81 +954,65 @@ namespace devices
             // Reset idle timer
             _lastButtonPressTime = millis();
             _idleSoundPlayed = false;
-            // Button just pressed - start timing for long press detection
+            // Button just pressed - start timing to distinguish short vs long press
             _wheelButtonPressStartTime = millis();
             _wheelButtonLongPressTriggered = false;
 
-            // Button just pressed - start continuous movement only if wheel is idle
-            // Don't allow button usage when wheel is in error or init states
-            if (wheelState.state == devices::WheelStateEnum::IDLE || wheelState.state == devices::WheelStateEnum::UNKNOWN || wheelState.state == devices::WheelStateEnum::MOVING || wheelState.state == devices::WheelStateEnum::INIT)
+            if (wheelState.state == devices::WheelStateEnum::ERROR)
             {
-                MLOG_INFO("%s: Starting manual wheel movement as long button is pressed", toString().c_str());
-
-                // playClickSound();
-                playButtonDown();
-
-                // Reset current position to prevent overflow;
-                // if (wheelState.state != devices::WheelStateEnum::MOVING)
-                // {
-                // }
-                _wheel->move(100000); // Large positive number for continuous movement
-            }
-            else if (wheelState.state == devices::WheelStateEnum::ERROR)
-            {
-                // In error state: play error sound and let the long-press timer run
+                // In error state: play error sound and let the long-press timer run for init recovery
                 playWheelError(_wheel->getErrorCode());
+            }
+            else
+            {
+                playButtonDown();
             }
         }
         else if (wheelButtonState.isPressed && !_wheelButtonLongPressTriggered)
         {
-            // Button still pressed - check for long press (8 seconds)
+            // Button still held - check thresholds
             unsigned long pressDuration = millis() - _wheelButtonPressStartTime;
-            if (pressDuration >= WHEEL_LONG_PRESS_DURATION_MS)
+            if (wheelState.state == devices::WheelStateEnum::ERROR)
             {
-                if (wheelState.state == devices::WheelStateEnum::ERROR)
+                // Error recovery: 8-second long press starts init
+                if (pressDuration >= WHEEL_LONG_PRESS_DURATION_MS)
                 {
-                    // Error recovery: long press starts init
                     MLOG_INFO("%s: Error recovery long press detected, starting wheel init", toString().c_str());
                     _wheel->init();
                     playButtonClick();
+                    _wheelButtonLongPressTriggered = true;
                 }
-                else
-                {
-                    // Long press detected - trigger next breakpoint
-                    MLOG_INFO("%s: Long wheel press detected - triggering next breakpoint", toString().c_str());
-                    _wheel->stop(); // Stop continuous movement before triggering next breakpoint
-                    _wheel->nextBreakPoint();
-                    _audio->play(songs::WHEEL_GOTO_BREAKPOINT, devices::Hv20tPlayMode::SkipIfPlaying);
-                }
+            }
+            else if (pressDuration >= WHEEL_SPIN_LONG_PRESS_MS)
+            {
+                // Long press: start continuous spinning
+                MLOG_INFO("%s: Long wheel press - starting continuous spin", toString().c_str());
+                _wheel->move(100000); // Large number for continuous movement
                 _wheelButtonLongPressTriggered = true;
             }
         }
-        else if (!wheelButtonState.isPressed && wheelButtonState.isPressedChanged && wheelState.state == devices::WheelStateEnum::MOVING)
-        {
-
-            if (_wheelButtonLongPressTriggered)
-            {
-                // Reset long press tracking
-                _wheelButtonPressStartTime = 0;
-                _wheelButtonLongPressTriggered = false;
-                return;
-            }
-
-            // Button released while moving - stop the wheel
-            MLOG_INFO("%s: Stopping manual wheel movement", toString().c_str());
-
-            // Reset long press tracking
-            _wheelButtonPressStartTime = 0;
-            _wheelButtonLongPressTriggered = false;
-
-            // playClickOffSound();
-            playButtonUp();
-
-            _wheel->stop();
-        }
         else if (!wheelButtonState.isPressed && wheelButtonState.isPressedChanged)
         {
-            // Button released when not moving - just reset tracking
+            if (_wheelButtonLongPressTriggered)
+            {
+                // Long press released - stop the spinning wheel
+                if (wheelState.state == devices::WheelStateEnum::MOVING)
+                {
+                    MLOG_INFO("%s: Long press released - stopping wheel", toString().c_str());
+                    playButtonUp();
+                    _wheel->stop();
+                }
+            }
+            else
+            {
+                // Short press - go to next breakpoint
+                if (wheelState.state == devices::WheelStateEnum::IDLE || wheelState.state == devices::WheelStateEnum::UNKNOWN)
+                {
+                    MLOG_INFO("%s: Short press - moving to next breakpoint", toString().c_str());
+                    _wheel->nextBreakPoint();
+                }
+            }
+            // Reset tracking
             _wheelButtonPressStartTime = 0;
             _wheelButtonLongPressTriggered = false;
         }

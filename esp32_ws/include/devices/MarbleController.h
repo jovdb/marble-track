@@ -47,6 +47,7 @@ namespace devices
             return _audio;
         }
         static constexpr unsigned long WHEEL_LONG_PRESS_DURATION_MS = 8000UL;
+        static constexpr unsigned long WHEEL_SPIN_LONG_PRESS_MS = 500UL; // Threshold for continuous spin vs short-press breakpoint
         void loopManualLift();
         void loopManualWheel();
         void loopManualSpiral();

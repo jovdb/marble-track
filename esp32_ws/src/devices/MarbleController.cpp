@@ -225,12 +225,23 @@ namespace devices
         // Log the operating mode
         MLOG_INFO("%s Initialized in %s mode", toString().c_str(), isAutoMode ? "AUTO" : "MANUAL");
 
+        // Initialize launcher: auto mode starts init after a delay, manual mode waits for button press
         if (isAutoMode)
         {
+            _autoLauncherPhase = LauncherPhase::WAITING_FOR_INIT;
+            _autoLauncherPhaseStart = millis();
+            _autoLauncherBallsToLaunch = 0;
+            _launcherPhase = LauncherPhase::IDLE;
+            _launcherPhaseStart = 0;
             _audio->play(songs::AUTO_MODE, devices::Hv20tPlayMode::QueueIfPlaying);
         }
         else
         {
+            _launcherPhase = LauncherPhase::WAITING_FOR_INIT;
+            _launcherPhaseStart = 0;
+            _autoLauncherPhase = LauncherPhase::IDLE;
+            _autoLauncherPhaseStart = 0;
+            _autoLauncherBallsToLaunch = 0;
             _audio->play(songs::MAN_MODE, devices::Hv20tPlayMode::QueueIfPlaying);
         }
     }
@@ -885,7 +896,7 @@ namespace devices
             _autoLauncherBallsToLaunch = 2;
         }
 
-        // Run the phase state machine whenever there are balls left to launch.
+        // Run the phase state machine whenever there are balls left to launch or not yet initialized.
         if (_autoLauncherBallsToLaunch == 0 && _autoLauncherPhase == LauncherPhase::IDLE)
         {
             return;
@@ -893,6 +904,19 @@ namespace devices
 
         switch (_autoLauncherPhase)
         {
+        case LauncherPhase::WAITING_FOR_INIT:
+        {
+            blinkInit(_launcherLed);
+            if (millis() - _autoLauncherPhaseStart >= LauncherAutoInitDelayMs)
+            {
+                MLOG_INFO("%s: Auto mode – starting launcher init after %lu ms delay", toString().c_str(), LauncherAutoInitDelayMs);
+                _launcher->control("init");
+                _autoLauncherPhase = LauncherPhase::LOADING;
+                _autoLauncherPhaseStart = millis();
+            }
+            break;
+        }
+
         case LauncherPhase::IDLE:
         {
             if (_autoLauncherBallsToLaunch > 0 && launcherState.isBallLoaded)
@@ -1074,6 +1098,20 @@ namespace devices
         // Phase state machine
         switch (_launcherPhase)
         {
+        case LauncherPhase::WAITING_FOR_INIT:
+        {
+            blinkInit(_launcherLed);
+            if (btnPressedEdge)
+            {
+                MLOG_INFO("%s: Manual mode – starting launcher init on button press", toString().c_str());
+                playClickSound();
+                _launcher->control("init");
+                _launcherPhase = LauncherPhase::LOADING;
+                _launcherPhaseStart = millis();
+            }
+            break;
+        }
+
         case LauncherPhase::IDLE:
         {
             auto wheelState = _wheel->getState();

@@ -115,14 +115,16 @@ namespace devices
         enum class LauncherPhase
         {
             IDLE,
+            WAITING_FOR_INIT,  ///< Waiting before triggering launcher init (auto: timer, manual: button press)
             POST_LAUNCH_DELAY, ///< Waiting 500 ms after launch before calling load()
-            LOADING,           ///< load() called; waiting for arm to finish moving
+            LOADING,           ///< load() or init() called; waiting for arm to finish moving
             POST_LOAD_DELAY    ///< Waiting 500 ms after load before accepting next press
         };
         LauncherPhase _launcherPhase = LauncherPhase::IDLE;
         unsigned long _launcherPhaseStart = 0;
         static constexpr unsigned long LauncherPostLaunchDelayMs = 500UL;
         static constexpr unsigned long LauncherPostLoadDelayMs = 500UL;
+        static constexpr unsigned long LauncherAutoInitDelayMs = 2000UL; ///< Delay before auto init starts
 
         // Launcher auto mode
         uint8_t _autoLauncherBallsToLaunch = 0; ///< Number of remaining launches in current auto sequence

@@ -11,6 +11,7 @@
 
 #include "pins/IPin.h"
 #include <Wire.h>
+#include <functional>
 
 namespace pins
 {
@@ -23,6 +24,24 @@ namespace pins
         PCF8575,   // 16-bit I/O expander (pins 0-15)
         MCP23017   // 16-bit I/O expander with more features (pins 0-15)
     };
+
+    /**
+     * @brief Human-readable string for an endTransmission() error code.
+     * @param error Return value from Wire.endTransmission()
+     * @return Description string
+     */
+    inline const char *i2cErrorString(uint8_t error)
+    {
+        switch (error)
+        {
+        case 0: return "OK";
+        case 1: return "data too long";
+        case 2: return "NACK on address";
+        case 3: return "NACK on data";
+        case 5: return "timeout";
+        default: return "unknown error";
+        }
+    }
 
     /**
      * @class I2cExpanderPin
@@ -87,6 +106,18 @@ namespace pins
          */
         bool isDevicePresent();
 
+        /**
+         * @brief Get the last I2C error code (0 = no error, 5 = timeout, etc.)
+         */
+        uint8_t getLastI2cError() const { return _lastI2cError; }
+
+        /**
+         * @brief Register a callback invoked on every non-zero I2C error during
+         *        read/write operations.  The callback receives the Wire error code.
+         *        Pass nullptr to clear.
+         */
+        void setOnI2cError(std::function<void(uint8_t)> cb) { _onI2cError = cb; }
+
     private:
         I2cExpanderType _expanderType;
         uint8_t _i2cAddress;
@@ -95,6 +126,8 @@ namespace pins
         int _pinNumber;
         bool _isSetup;
         PinMode _mode;
+        uint8_t _lastI2cError = 0;
+        std::function<void(uint8_t)> _onI2cError;
         
         // Static port state cache per I2C address (shared across all pins on same expander)
         // Key: (expanderType << 8) | i2cAddress, Value: port state

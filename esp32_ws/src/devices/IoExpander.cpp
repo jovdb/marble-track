@@ -91,6 +91,14 @@ namespace devices
                       sclPin,
                       getPinCount());
         }
+        else if (error == 5)
+        {
+            String msg = "I\u00b2C timeout for " + getExpanderTypeString() + " at 0x" + String(_config.i2cAddress, HEX);
+            Device::setError("TIMEOUT", msg);
+            _state.state = "Error";
+            notifyStateChanged();
+            MLOG_WARN("%s: TIMEOUT: %s", toString().c_str(), msg.c_str());
+        }
         else
         {
             Device::setError("NOT_FOUND", getExpanderTypeString() + " not found at 0x" + String(_config.i2cAddress, HEX));
@@ -120,7 +128,19 @@ namespace devices
     void IoExpander::loop()
     {
         Device::loop();
-        // No periodic work needed - pins are managed individually
+
+        // Periodically re-probe the I2C bus to detect recovery from transient errors
+        // (e.g. the bus was locked up at startup but the device is now responding).
+        constexpr unsigned long HEALTH_CHECK_INTERVAL_MS = 5000;
+        unsigned long now = millis();
+        if (now - _lastHealthCheckMs >= HEALTH_CHECK_INTERVAL_MS)
+        {
+            _lastHealthCheckMs = now;
+            if (_state.state != "Ready")
+            {
+                init();
+            }
+        }
     }
 
     std::vector<String> IoExpander::getPins() const
@@ -219,6 +239,20 @@ namespace devices
             return true;
         }
         return false;
+    }
+
+    void IoExpander::reportRuntimeI2cError(uint8_t i2cError)
+    {
+        if (_state.state == "Ready")
+        {
+            String errorCode = (i2cError == 5) ? "TIMEOUT" : "I2C_ERROR";
+            String msg = (i2cError == 5)
+                             ? "I\u00b2C timeout for " + getExpanderTypeString() + " at 0x" + String(_config.i2cAddress, HEX)
+                             : "I\u00b2C error " + String(i2cError) + " for " + getExpanderTypeString() + " at 0x" + String(_config.i2cAddress, HEX);
+            Device::setError(errorCode, msg);
+            _state.state = "Error";
+            notifyStateChanged();
+        }
     }
 
 } // namespace devices

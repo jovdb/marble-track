@@ -170,8 +170,14 @@ namespace pins
         _wire->beginTransmission(_i2cAddress);
         _wire->write(0x00); // IODIRA register
         _wire->write(iodirA);
-        if (_wire->endTransmission() != 0)
+        uint8_t result = _wire->endTransmission();
+        if (result != 0)
         {
+            _lastI2cError = result;
+            MLOG_ERROR("I2cExpander: Direction config failed for MCP23017 at 0x%02X – %s",
+                       _i2cAddress, i2cErrorString(result));
+            if (_onI2cError)
+                _onI2cError(result);
             return false;
         }
 
@@ -179,7 +185,16 @@ namespace pins
         _wire->beginTransmission(_i2cAddress);
         _wire->write(0x01); // IODIRB register
         _wire->write(iodirB);
-        return (_wire->endTransmission() == 0);
+        result = _wire->endTransmission();
+        _lastI2cError = result;
+        if (result != 0)
+        {
+            MLOG_ERROR("I2cExpander: Direction config failed for MCP23017 at 0x%02X – %s",
+                       _i2cAddress, i2cErrorString(result));
+            if (_onI2cError)
+                _onI2cError(result);
+        }
+        return (result == 0);
     }
 
     uint16_t I2cExpanderPin::readPort()
@@ -251,6 +266,14 @@ namespace pins
             break;
         }
 
+        _lastI2cError = result;
+        if (result != 0)
+        {
+            MLOG_ERROR("I2cExpander: Write failed for %s at 0x%02X – %s",
+                       getExpanderTypeName().c_str(), _i2cAddress, i2cErrorString(result));
+            if (_onI2cError)
+                _onI2cError(result);
+        }
         return (result == 0);
     }
 

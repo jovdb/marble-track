@@ -238,7 +238,7 @@ namespace devices
         else
         {
             _launcherPhase = LauncherPhase::WAITING_FOR_INIT;
-            _launcherPhaseStart = 0;
+            _launcherPhaseStart = millis();
             _autoLauncherPhase = LauncherPhase::IDLE;
             _autoLauncherPhaseStart = 0;
             _autoLauncherBallsToLaunch = 0;
@@ -1109,10 +1109,11 @@ namespace devices
         case LauncherPhase::WAITING_FOR_INIT:
         {
             blinkInit(_launcherLed);
-            if (btnPressedEdge)
+            if (btnPressedEdge || millis() - _launcherPhaseStart >= LauncherAutoInitDelayMs)
             {
-                MLOG_INFO("%s: Manual mode – starting launcher init on button press", toString().c_str());
-                playClickSound();
+                MLOG_INFO("%s: Manual mode – starting launcher init", toString().c_str());
+                if (btnPressedEdge)
+                    playClickSound();
                 _launcher->control("init");
                 _launcherPhase = LauncherPhase::LOADING;
                 _launcherPhaseStart = millis();

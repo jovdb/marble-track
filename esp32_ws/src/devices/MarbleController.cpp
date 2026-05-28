@@ -884,6 +884,8 @@ namespace devices
     {
         auto launcherState = _launcher->getState();
         auto wheelState = _wheel->getState();
+        auto launcherBtnState = _launcherBtn->getState();
+        const bool btnPressedEdge = launcherBtnState.isPressed && launcherBtnState.isPressedChanged;
 
         // Trigger a new sequence when the wheel arrives at the launcher breakpoint
         // and a sequence is not already running.
@@ -917,6 +919,24 @@ namespace devices
                 wheelState.currentAngle >= LauncherWheelMinAngle &&
                 wheelState.currentAngle <= LauncherWheelMaxAngle;
             _launcherLed->set(wheelInLaunchRange);
+
+            // Handle manual button press in auto mode
+            if (btnPressedEdge)
+            {
+                if (wheelInLaunchRange && launcherState.isBallLoaded)
+                {
+                    playClickSound();
+                    _launcher->launch();
+                    _autoLauncherBallsToLaunch = 0; // cancel any pending auto sequence
+                    _autoLauncherPhase = LauncherPhase::POST_LAUNCH_DELAY;
+                    _autoLauncherPhaseStart = millis();
+                    break;
+                }
+                else
+                {
+                    playErrorSound();
+                }
+            }
 
             if (_autoLauncherBallsToLaunch == 0)
                 break; // Waiting for wheel trigger; nothing to do
@@ -1131,7 +1151,16 @@ namespace devices
                 wheelState.state == devices::WheelStateEnum::IDLE &&
                 wheelState.currentBreakpointIndex == LAUNCHER_WHEEL_BREAKPOINT;
 
-            if (!wheelInLaunchRange)
+            // Reset launch count when wheel leaves and re-enters the allowed range
+            if (!wheelInLaunchRange && _manualWheelWasInRange)
+            {
+                _manualLauncherLaunchCount = 0;
+            }
+            _manualWheelWasInRange = wheelInLaunchRange;
+
+            const bool launchLimitReached = _manualLauncherLaunchCount >= LauncherMaxLaunchesPerRangeEntry;
+
+            if (!wheelInLaunchRange || launchLimitReached)
             {
                 _launcherLed->set(false);
                 if (btnPressedEdge)
@@ -1146,9 +1175,10 @@ namespace devices
                 _launcherLed->set(true);
             }
 
-            if (btnPressedEdge && wheelInLaunchRange)
+            if (btnPressedEdge && wheelInLaunchRange && !launchLimitReached)
             {
                 playButtonClick();
+                _manualLauncherLaunchCount++;
                 _launcher->launch();
                 _launcherPhase = LauncherPhase::POST_LAUNCH_DELAY;
                 _launcherPhaseStart = millis();
@@ -1247,9 +1277,24 @@ namespace devices
             _wheelButtonPressStartTime = millis();
             _wheelButtonLongPressTriggered = false;
 
-            if (wheelState.state == devices::WheelStateEnum::ERROR)
+            // Button just pressed - start continuous movement only if wheel is idle
+            // Don't allow button usage when wheel is in error or init states
+            if (wheelState.state == devices::WheelStateEnum::IDLE || wheelState.state == devices::WheelStateEnum::UNKNOWN || wheelState.state == devices::WheelStateEnum::MOVING || wheelState.state == devices::WheelStateEnum::INIT)
             {
-                // In error state: play error sound and let the long-press timer run for init recovery
+                MLOG_INFO("%s: Starting manual wheel movement as long button is pressed", toString().c_str());
+
+                playClickSound(); // Use clickSound for short press in manual mode
+                // playButtonDown();
+
+                // Reset current position to prevent overflow;
+                // if (wheelState.state != devices::WheelStateEnum::MOVING)
+                // {
+                // }
+                _wheel->move(100000); // Large positive number for continuous movement
+            }
+            else if (wheelState.state == devices::WheelStateEnum::ERROR)
+            {
+                // In error state: play error sound and let the long-press timer run
                 playWheelError(_wheel->getErrorCode());
             }
             else

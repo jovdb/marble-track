@@ -125,6 +125,8 @@ namespace devices
         static constexpr unsigned long LauncherPostLaunchDelayMs = 500UL;
         static constexpr unsigned long LauncherPostLoadDelayMs = 500UL;
         static constexpr unsigned long LauncherAutoInitDelayMs = 2000UL; ///< Delay before auto init starts
+        static constexpr float LauncherWheelMinAngle = 30.0f;           ///< Min wheel angle for launch (manual mode)
+        static constexpr float LauncherWheelMaxAngle = 60.0f;           ///< Max wheel angle for launch (manual mode)
 
         // Launcher auto mode
         uint8_t _autoLauncherBallsToLaunch = 0; ///< Number of remaining launches in current auto sequence

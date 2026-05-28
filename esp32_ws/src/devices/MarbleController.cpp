@@ -1115,16 +1115,27 @@ namespace devices
         case LauncherPhase::IDLE:
         {
             auto wheelState = _wheel->getState();
+            const bool wheelInLaunchRange =
+                wheelState.currentAngle >= LauncherWheelMinAngle &&
+                wheelState.currentAngle <= LauncherWheelMaxAngle;
             const bool atLauncherBreakpoint =
                 wheelState.state == devices::WheelStateEnum::IDLE &&
                 wheelState.currentBreakpointIndex == LAUNCHER_WHEEL_BREAKPOINT;
 
-            if (launcherState.isBallLoaded && atLauncherBreakpoint)
+            if (!wheelInLaunchRange)
+            {
+                _launcherLed->set(false);
+            }
+            else if (launcherState.isBallLoaded && atLauncherBreakpoint)
+            {
                 blinkAttention(_launcherLed);
+            }
             else
+            {
                 _launcherLed->set(true);
+            }
 
-            if (btnPressedEdge)
+            if (btnPressedEdge && wheelInLaunchRange)
             {
                 _launcher->control("launch");
                 _launcherPhase = LauncherPhase::POST_LAUNCH_DELAY;

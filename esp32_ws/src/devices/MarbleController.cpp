@@ -1134,6 +1134,8 @@ namespace devices
             if (!wheelInLaunchRange)
             {
                 _launcherLed->set(false);
+                if (btnPressedEdge)
+                    playErrorSound();
             }
             else if (launcherState.isBallLoaded && atLauncherBreakpoint)
             {
@@ -1146,9 +1148,14 @@ namespace devices
 
             if (btnPressedEdge && wheelInLaunchRange)
             {
+                playButtonDown();
                 _launcher->control("launch");
                 _launcherPhase = LauncherPhase::POST_LAUNCH_DELAY;
                 _launcherPhaseStart = millis();
+            }
+            else if (!launcherBtnState.isPressed && launcherBtnState.isPressedChanged && wheelInLaunchRange)
+            {
+                playButtonUp();
             }
             break;
         }

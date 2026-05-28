@@ -79,13 +79,21 @@ namespace devices
         // Update children (button reads pin, servo animates position)
         Device::loop();
 
-        // Sync isBallWaiting from button
+        // Sync isBallWaiting from button; also set isBallLoaded when sensor is pressed
         const bool newBallWaiting = _button ? _button->isPressed() : false;
+        bool stateChanged = false;
         if (newBallWaiting != _state.isBallWaiting)
         {
             _state.isBallWaiting = newBallWaiting;
-            notifyStateChanged();
+            stateChanged = true;
         }
+        if (newBallWaiting && !_state.isBallLoaded)
+        {
+            _state.isBallLoaded = true;
+            stateChanged = true;
+        }
+        if (stateChanged)
+            notifyStateChanged();
 
         // FSM: advance state when current motion timer expires
         switch (_state.state)

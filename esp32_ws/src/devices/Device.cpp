@@ -70,11 +70,12 @@ Device *Device::getChildById(const String &id) const
     return nullptr;
 }
 
-String Device::toString() const
+String Device::
+toString() const
 {
     String upperType = _type;
     upperType.toUpperCase();
-    return upperType + "[" + _id + "]";
+    return _id + "[" + upperType + "]";
 }
 
 void Device::setError(const String &errorCode, const String &errorMessage)

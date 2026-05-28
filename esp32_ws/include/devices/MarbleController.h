@@ -133,6 +133,11 @@ namespace devices
         LauncherPhase _autoLauncherPhase = LauncherPhase::IDLE;
         unsigned long _autoLauncherPhaseStart = 0;
 
+        // Launcher manual mode – launch count limit per wheel range entry
+        static constexpr uint8_t LauncherMaxLaunchesPerRangeEntry = 2;
+        uint8_t _manualLauncherLaunchCount = 0; ///< Launches fired since wheel entered allowed range
+        bool _manualWheelWasInRange = false;     ///< Whether wheel was in range last loop
+
         // 0 = not idle, >0 = idle start time
         unsigned long _wheelIdleStartTime = 0;
         // Random delay before next wheel trigger

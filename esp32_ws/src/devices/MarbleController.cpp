@@ -1131,7 +1131,16 @@ namespace devices
                 wheelState.state == devices::WheelStateEnum::IDLE &&
                 wheelState.currentBreakpointIndex == LAUNCHER_WHEEL_BREAKPOINT;
 
-            if (!wheelInLaunchRange)
+            // Reset launch count when wheel leaves and re-enters the allowed range
+            if (!wheelInLaunchRange && _manualWheelWasInRange)
+            {
+                _manualLauncherLaunchCount = 0;
+            }
+            _manualWheelWasInRange = wheelInLaunchRange;
+
+            const bool launchLimitReached = _manualLauncherLaunchCount >= LauncherMaxLaunchesPerRangeEntry;
+
+            if (!wheelInLaunchRange || launchLimitReached)
             {
                 _launcherLed->set(false);
                 if (btnPressedEdge)
@@ -1146,14 +1155,15 @@ namespace devices
                 _launcherLed->set(true);
             }
 
-            if (btnPressedEdge && wheelInLaunchRange)
+            if (btnPressedEdge && wheelInLaunchRange && !launchLimitReached)
             {
                 playButtonDown();
+                _manualLauncherLaunchCount++;
                 _launcher->launch();
                 _launcherPhase = LauncherPhase::POST_LAUNCH_DELAY;
                 _launcherPhaseStart = millis();
             }
-            else if (!launcherBtnState.isPressed && launcherBtnState.isPressedChanged && wheelInLaunchRange)
+            else if (!launcherBtnState.isPressed && launcherBtnState.isPressedChanged && wheelInLaunchRange && !launchLimitReached)
             {
                 playButtonUp();
             }
@@ -1250,8 +1260,8 @@ namespace devices
             {
                 MLOG_INFO("%s: Starting manual wheel movement as long button is pressed", toString().c_str());
 
-                // playClickSound();
-                playButtonDown();
+                playClickSound(); // Use clickSound for short press in manual mode
+                // playButtonDown();
 
                 // Reset current position to prevent overflow;
                 // if (wheelState.state != devices::WheelStateEnum::MOVING)

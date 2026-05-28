@@ -333,6 +333,10 @@ namespace devices
                     notifyStepsPerRevolution(steps);
 
                     MLOG_INFO("%s: Calibration complete, steps per revolution: %ld", toString().c_str(), steps);
+                    broadcastNotification(
+                        "CalibrationComplete",
+                        "Calibration complete: " + String(steps) + " steps per revolution",
+                        DeviceNotificationType::Info);
                 }
             }
             _state.zeroSensorWasPressed = zeroPressed;

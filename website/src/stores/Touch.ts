@@ -7,7 +7,6 @@ interface ITouchState extends IDeviceState {
   touched: boolean;
   value: number;
   isTouchedChanged: boolean;
-  [key: string]: unknown;
 }
 
 export interface ITouchConfig extends IDeviceConfig {
@@ -15,7 +14,6 @@ export interface ITouchConfig extends IDeviceConfig {
   pin?: number;
   threshold?: number;
   durationMs?: number;
-  [key: string]: unknown;
 }
 
 export function useTouch(deviceId: string) {

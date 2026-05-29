@@ -3,9 +3,9 @@ import { createContext, onCleanup, onMount, useContext } from "solid-js";
 import { IWebSocketActions, useWebSocket2 } from "../hooks/useWebSocket";
 import { DeviceInfo } from "../interfaces/WebSockets";
 
-export type IDeviceConfig = Record<string, unknown>;
+export type IDeviceConfig = object;
 
-export type IDeviceState = Record<string, unknown>;
+export type IDeviceState = object;
 
 export interface IDevice<
   TState extends IDeviceState = IDeviceState,

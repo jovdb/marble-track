@@ -7,7 +7,6 @@ export interface IServoGateState extends IDeviceState {
   gateState: "Idle" | "WaitOpen" | "Opening" | "WaitClose" | "Closing" | "Between";
   queueCount: number;
   pulseCount: number;
-  [key: string]: unknown;
 }
 
 export interface IServoGateConfig extends IDeviceConfig {
@@ -17,7 +16,6 @@ export interface IServoGateConfig extends IDeviceConfig {
   betweenDelayMs?: number;
   fullQueueCount?: number;
   initialQueueCount?: number;
-  [key: string]: unknown;
 }
 
 export function useServoGate(deviceId: string) {

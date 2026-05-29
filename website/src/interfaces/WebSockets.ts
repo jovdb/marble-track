@@ -165,7 +165,7 @@ export type IWsReceiveDeviceSaveConfigMessage =
       })
   | (IWsMessageBase<"device-save-config"> & {
       deviceId: string;
-      config: Record<string, unknown>;
+      config: object;
     });
 
 export type IWsReceiveDeviceErrorMessage = IWsMessageBase<"device-error"> & {
@@ -288,7 +288,7 @@ export type IWsSendDeviceReadConfigMessage = IWsMessageBase<"device-read-config"
 
 export type IWsSendDeviceSaveConfigMessage = IWsMessageBase<"device-save-config"> & {
   deviceId: string;
-  config: Record<string, unknown>;
+  config: object;
 };
 
 // Heartbeat message

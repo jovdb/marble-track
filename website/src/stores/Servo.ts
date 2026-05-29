@@ -14,7 +14,6 @@ interface IServoState extends IDeviceState {
   running?: boolean;
   errorCode?: ServoErrorCode;
   errorMessage?: string;
-  [key: string]: unknown;
 }
 
 export interface IServoConfig extends IDeviceConfig {
@@ -26,7 +25,6 @@ export interface IServoConfig extends IDeviceConfig {
   minDutyCycle?: number;
   maxDutyCycle?: number;
   defaultDurationInMs?: number;
-  [key: string]: unknown;
 }
 
 export function useServo(deviceId: string) {

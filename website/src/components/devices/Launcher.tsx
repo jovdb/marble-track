@@ -41,11 +41,11 @@ export function Launcher(props: { id: string; isPopup?: boolean; onClose?: () =>
     switch (launcherState()) {
       case "Up":
       case "MovingUp":
-        return Math.max(device()?.config?.upDuration ?? 100, 100);
+        return Math.max(device()?.config?.launchTimeMs ?? 100, 100);
       case "Down":
       case "MovingDown":
       default:
-        return device()?.config?.downDuration ?? 2000;
+        return device()?.config?.loadTimeMs ?? 2000;
     }
   });
 

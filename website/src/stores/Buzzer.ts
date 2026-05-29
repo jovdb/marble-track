@@ -7,13 +7,11 @@ interface IBuzzerState extends IDeviceState {
   playing?: boolean;
   currentTune?: string;
   mode?: string;
-  [key: string]: unknown;
 }
 
 export interface IBuzzerConfig extends IDeviceConfig {
   name?: string;
   pin?: number;
-  [key: string]: unknown;
 }
 
 export function useBuzzer(deviceId: string) {

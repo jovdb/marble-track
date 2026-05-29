@@ -2,6 +2,8 @@ import { For, createEffect, createMemo } from "solid-js";
 import { ESP32_AVAILABLE_PINS, getUsedPins } from "../utils/esp32Pins";
 import { useDevices } from "../stores/Devices";
 import { PinConfig } from "../interfaces/WebSockets";
+import { IIoExpanderConfig } from "../stores/IoExpander";
+import { IPwmExpanderConfig } from "../stores/PwmExpander";
 
 interface PinSelectProps {
   value: PinConfig;
@@ -59,8 +61,8 @@ export default function PinSelect(props: PinSelectProps) {
     Object.values(devicesStore.devices).forEach((device) => {
       if (device.type === "ioexpander" && props.showExpanderPins) {
         if (device.config) {
-          const config = device.config as any;
-          const expanderType = config.expanderType || "PCF8574";
+          const config = device.config as IIoExpanderConfig | undefined;
+          const expanderType = config?.expanderType || "PCF8574";
           let pinCount = 8;
           if (expanderType === "PCF8575" || expanderType === "MCP23017") {
             pinCount = 16;
@@ -68,7 +70,7 @@ export default function PinSelect(props: PinSelectProps) {
 
           // Log expander pins when available
           for (let pin = 0; pin < pinCount; pin++) {
-            const deviceName = (device.config?.name as string) || device.id;
+            const deviceName = config?.name || device.id;
             const pinString = `${deviceName}:${pin}`;
             const usedBy = getPinUsage(`${device.id}:${pin}`);
             options.push({
@@ -81,9 +83,10 @@ export default function PinSelect(props: PinSelectProps) {
           }
         }
       } else if (device.type === "pwmexpander" && props.showPwmExpanderPins) {
+        const config = device.config as IPwmExpanderConfig | undefined;
         // PCA9685 always has 16 channels (0-15)
         for (let ch = 0; ch < 16; ch++) {
-          const deviceName = (device.config?.name as string) || device.id;
+          const deviceName = config?.name || device.id;
           const pinString = `${deviceName}:${ch}`;
           const usedBy = getPinUsage(`${device.id}:${ch}`);
           options.push({

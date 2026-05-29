@@ -1,8 +1,10 @@
 import { For, createEffect, createSignal, createMemo } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
-import { useDevice, useDevices } from "../../stores/Devices";
+import { IDevice, useDevices } from "../../stores/Devices";
 import { useWebSocket2 } from "../../hooks/useWebSocket";
 import type { IWsReceiveExpanderAddressesMessage } from "../../interfaces/WebSockets";
+import { usePwmExpander } from "../../stores/PwmExpander";
+import { II2cState, II2cConfig } from "../../stores/I2c";
 
 interface PwmExpanderConfigProps {
   id: string;
@@ -10,27 +12,25 @@ interface PwmExpanderConfigProps {
 }
 
 export default function PwmExpanderConfig(props: PwmExpanderConfigProps) {
-  const [device] = useDevice(props.id);
+  const [device] = usePwmExpander(props.id);
   const [devicesStore] = useDevices();
   const [, { sendMessage, subscribe }] = useWebSocket2();
 
-  const [name, setName] = createSignal<string>((device?.config?.name as string) ?? "PWM Expander");
-  const [i2cAddress, setI2cAddress] = createSignal<number>(
-    (device?.config?.i2cAddress as number) ?? 0x40
-  );
-  const [i2cDeviceId, setI2cDeviceId] = createSignal<string>(
-    (device?.config?.i2cDeviceId as string) ?? ""
-  );
-  const [frequency, setFrequency] = createSignal<number>(
-    (device?.config?.frequency as number) ?? 50
-  );
+  const [name, setName] = createSignal<string>(device?.config?.name ?? "PWM Expander");
+  const [i2cAddress, setI2cAddress] = createSignal<number>(device?.config?.i2cAddress ?? 0x40);
+  const [i2cDeviceId, setI2cDeviceId] = createSignal<string>(device?.config?.i2cDeviceId ?? "");
+  const [frequency, setFrequency] = createSignal<number>(device?.config?.frequency ?? 50);
 
   const [availableAddresses, setAvailableAddresses] = createSignal<number[]>([]);
   const [isScanning, setIsScanning] = createSignal<boolean>(false);
   const [scanError, setScanError] = createSignal<string>("");
 
-  const i2cDevices = createMemo(() =>
-    Object.values(devicesStore.devices).filter((d) => d.type === "i2c")
+  const i2cDevices = createMemo(
+    () =>
+      Object.values(devicesStore.devices).filter((d) => d.type === "i2c") as IDevice<
+        II2cState,
+        II2cConfig
+      >[]
   );
 
   createEffect(() => {
@@ -107,9 +107,7 @@ export default function PwmExpanderConfig(props: PwmExpanderConfigProps) {
               <option value="">Select I²C Bus...</option>
               <For each={i2cDevices()}>
                 {(i2cDevice) => (
-                  <option value={i2cDevice.id}>
-                    {(i2cDevice.config?.name as string) || i2cDevice.id}
-                  </option>
+                  <option value={i2cDevice.id}>{i2cDevice.config?.name || i2cDevice.id}</option>
                 )}
               </For>
             </select>

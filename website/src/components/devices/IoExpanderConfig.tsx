@@ -1,8 +1,10 @@
 import { For, createEffect, createSignal, createMemo } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
-import { useDevice, useDevices } from "../../stores/Devices";
+import { useDevices } from "../../stores/Devices";
 import { useWebSocket2 } from "../../hooks/useWebSocket";
 import type { IWsReceiveExpanderAddressesMessage } from "../../interfaces/WebSockets";
+import { II2cConfig } from "../../stores/I2c";
+import { useIoExpander } from "../../stores/IoExpander";
 
 const EXPANDER_TYPES = ["PCF8574", "PCF8575", "MCP23017"] as const;
 type ExpanderType = (typeof EXPANDER_TYPES)[number];
@@ -13,7 +15,7 @@ interface IoExpanderConfigProps {
 }
 
 export default function IoExpanderConfig(props: IoExpanderConfigProps) {
-  const [device] = useDevice(props.id);
+  const [device] = useIoExpander(props.id);
   const [devicesStore] = useDevices();
   const [, { sendMessage, subscribe }] = useWebSocket2();
 
@@ -143,7 +145,7 @@ export default function IoExpanderConfig(props: IoExpanderConfigProps) {
               <For each={i2cDevices()}>
                 {(i2cDevice) => (
                   <option value={i2cDevice.id}>
-                    {(i2cDevice.config?.name as string) || i2cDevice.id}
+                    {(i2cDevice.config as II2cConfig)?.name || i2cDevice.id}
                   </option>
                 )}
               </For>

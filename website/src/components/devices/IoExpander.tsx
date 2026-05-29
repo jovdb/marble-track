@@ -1,9 +1,10 @@
 ﻿import { Device } from "./Device";
 import { getDeviceIcon } from "../icons/Icons";
-import { useDevices } from "../../stores/Devices";
+import { IDevice, useDevices } from "../../stores/Devices";
 import { useIoExpander } from "../../stores/IoExpander";
 import IoExpanderConfig from "./IoExpanderConfig";
 import styles from "./Device.module.css";
+import { II2cConfig, II2cState } from "../../stores/I2c";
 
 export function IoExpander(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device, actions] = useIoExpander(props.id);
@@ -13,17 +14,19 @@ export function IoExpander(props: { id: string; isPopup?: boolean; onClose?: () 
   const config = () => device?.config;
   const state = () => device?.state;
 
-  const expanderState = () => state()?.state as string | undefined;
-  const expanderType = () => (config()?.expanderType as string) ?? "Unknown";
+  const expanderState = () => state()?.state;
+  const expanderType = () => config()?.expanderType ?? "Unknown";
   const i2cAddress = () => {
-    const addr = config()?.i2cAddress as number | undefined;
+    const addr = config()?.i2cAddress;
     return addr !== undefined ? `0x${addr.toString(16).toUpperCase().padStart(2, "0")}` : "Unknown";
   };
   const i2cDeviceName = () => {
-    const i2cDeviceId = config()?.i2cDeviceId as string;
+    const i2cDeviceId = config()?.i2cDeviceId;
     if (!i2cDeviceId) return "No I²C bus selected";
-    const i2cDevice = devicesStore.devices[i2cDeviceId];
-    return (i2cDevice?.config?.name as string) || i2cDevice?.id || "Unknown I²C bus";
+    const i2cDevice = devicesStore.devices[i2cDeviceId] as
+      | IDevice<II2cState, II2cConfig>
+      | undefined;
+    return i2cDevice?.config?.name || i2cDevice?.id || "Unknown I²C bus";
   };
   const pinCount = () => {
     const type = expanderType();

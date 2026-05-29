@@ -8,7 +8,6 @@ export interface IHv20tAudioState extends IDeviceState {
   volumePercent?: number;
   currentPlayingSong?: number;
   songQueue?: number[];
-  [key: string]: unknown;
 }
 
 export interface IHv20tAudioConfig extends IDeviceConfig {
@@ -16,7 +15,6 @@ export interface IHv20tAudioConfig extends IDeviceConfig {
   rxPin?: PinConfig | number;
   txPin?: PinConfig | number;
   defaultVolumePercent?: number;
-  [key: string]: unknown;
 }
 
 export type Hv20tPlayMode = "skip" | "stop" | "queue";

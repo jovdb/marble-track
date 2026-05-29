@@ -1,9 +1,9 @@
 import { createEffect, createSignal } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
-import { useDevice } from "../../stores/Devices";
 import PinSelect from "../PinSelect";
 import { useWebSocket2 } from "../../hooks/useWebSocket";
 import { PinConfig, deserializePinConfig } from "../../interfaces/WebSockets";
+import { useI2c } from "../../stores/I2c";
 
 interface I2cConfigProps {
   id: string;
@@ -11,15 +11,15 @@ interface I2cConfigProps {
 }
 
 export default function I2cConfig(props: I2cConfigProps) {
-  const [device] = useDevice(props.id);
+  const [device] = useI2c(props.id);
   const [, { sendMessage }] = useWebSocket2();
 
-  const [name, setName] = createSignal<string>((device?.config?.name as string) ?? "I2C");
+  const [name, setName] = createSignal<string>(device?.config?.name ?? "I2C");
   const [sdaPin, setSdaPin] = createSignal<PinConfig>(
-    deserializePinConfig((device?.config?.sdaPin as number | Record<string, any>) ?? 21)
+    deserializePinConfig(device?.config?.sdaPin ?? 21)
   );
   const [sclPin, setSclPin] = createSignal<PinConfig>(
-    deserializePinConfig((device?.config?.sclPin as number | Record<string, any>) ?? 22)
+    deserializePinConfig(device?.config?.sclPin ?? 22)
   );
 
   createEffect(() => {
@@ -32,10 +32,10 @@ export default function I2cConfig(props: I2cConfigProps) {
       setName(config.name);
     }
     if (config.sdaPin !== undefined) {
-      setSdaPin(deserializePinConfig(config.sdaPin as number | Record<string, any>));
+      setSdaPin(deserializePinConfig(config.sdaPin));
     }
     if (config.sclPin !== undefined) {
-      setSclPin(deserializePinConfig(config.sclPin as number | Record<string, any>));
+      setSclPin(deserializePinConfig(config.sclPin));
     }
   });
 

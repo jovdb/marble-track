@@ -1,9 +1,10 @@
 import { createEffect, createMemo, createSignal, Show } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { useServo } from "../../stores/Servo";
-import { useDevices } from "../../stores/Devices";
+import { IDevice, useDevices } from "../../stores/Devices";
 import PinSelect from "../PinSelect";
 import { PinConfig, deserializePinConfig } from "../../interfaces/WebSockets";
+import { IPwmExpanderState, IPwmExpanderConfig } from "../../stores/PwmExpander";
 
 interface ServoConfigProps {
   id: string;
@@ -49,8 +50,10 @@ export default function ServoConfig(props: ServoConfigProps) {
     // For PwmExpander pins, use the expander device's configured frequency
     let freq: number;
     if (isPwmExpanderPin()) {
-      const expanderDevice = devicesState.devices[pin().expanderId];
-      freq = (expanderDevice?.config?.frequency as number | undefined) ?? 50;
+      const expanderDevice = devicesState.devices[pin().expanderId] as
+        | IDevice<IPwmExpanderState, IPwmExpanderConfig>
+        | undefined;
+      freq = expanderDevice?.config?.frequency ?? 50;
     } else {
       freq = toNumber(frequency(), 50);
     }
@@ -163,9 +166,8 @@ export default function ServoConfig(props: ServoConfigProps) {
               type="number"
               value={
                 isPwmExpanderPin()
-                  ? ((devicesState.devices[pin().expanderId]?.config?.frequency as
-                      | number
-                      | undefined) ?? 50)
+                  ? (((devicesState.devices[pin().expanderId]?.config as IPwmExpanderConfig)
+                      ?.frequency as number | undefined) ?? 50)
                   : frequency()
               }
               min={1}

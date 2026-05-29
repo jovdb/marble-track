@@ -5,7 +5,9 @@ const deviceType = "led";
 
 interface ILedState extends IDeviceState {
   mode: "ON" | "OFF" | "BLINKING";
-  [key: string]: unknown;
+  blinkOnTime: number;
+  blinkOffTime: number;
+  blinkDelay: number;
 }
 
 export const LED_INITIAL_STATES = ["OFF", "ON", "BLINKING"] as const;
@@ -17,7 +19,6 @@ interface ILedConfig extends IDeviceConfig {
   name: string;
   pin: PinConfig;
   initialState?: LedInitialState;
-  [key: string]: unknown;
 }
 
 export function useLed(deviceId: string) {

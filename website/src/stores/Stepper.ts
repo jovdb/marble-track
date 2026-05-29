@@ -11,7 +11,6 @@ export interface IStepperState extends IDeviceState {
   currentPosition?: number;
   targetPosition?: number;
   isMoving?: boolean;
-  [key: string]: unknown;
 }
 
 export interface IStepperConfig extends IDeviceConfig {
@@ -35,7 +34,6 @@ export interface IStepperConfig extends IDeviceConfig {
   enablePin?: PinConfig | number;
   invertEnable?: boolean;
   invertDirection?: boolean;
-  [key: string]: unknown;
 }
 
 export interface IStepperMoveArgs {

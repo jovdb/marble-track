@@ -26,7 +26,6 @@ export interface ILiftState extends IDeviceState {
 export interface ILiftConfig extends IDeviceConfig {
   minSteps?: number;
   maxSteps?: number;
-  [key: string]: unknown;
 }
 
 export function useLift(deviceId: string) {

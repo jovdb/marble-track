@@ -14,7 +14,6 @@ export interface IWheelState extends IDeviceState {
   targetBreakpointIndex?: number;
   errorCode?: string;
   errorMessage?: string;
-  [key: string]: unknown;
 }
 
 export interface IWheelConfig extends IDeviceConfig {
@@ -22,7 +21,6 @@ export interface IWheelConfig extends IDeviceConfig {
   stepsPerRevolution?: number;
   maxStepsPerRevolution?: number;
   zeroPointDegree?: number;
-  [key: string]: unknown;
 }
 
 export function useWheel(deviceId: string) {

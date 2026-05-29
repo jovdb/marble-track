@@ -7,7 +7,6 @@ export type IoExpanderStateEnum = "Ready" | "Init" | "Error";
 
 export interface IIoExpanderState extends IDeviceState {
   state?: IoExpanderStateEnum;
-  [key: string]: unknown;
 }
 
 export interface IIoExpanderConfig extends IDeviceConfig {
@@ -15,7 +14,6 @@ export interface IIoExpanderConfig extends IDeviceConfig {
   expanderType?: string;
   i2cAddress?: number;
   i2cDeviceId?: string;
-  [key: string]: unknown;
 }
 
 export function useIoExpander(deviceId: string) {

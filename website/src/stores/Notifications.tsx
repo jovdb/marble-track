@@ -21,9 +21,7 @@ export interface INotificationsStore {
 
 const MAX_NOTIFICATIONS = 100;
 
-export function createNotificationsStore({
-  subscribe,
-}: Pick<IWebSocketActions, "subscribe">) {
+export function createNotificationsStore({ subscribe }: Pick<IWebSocketActions, "subscribe">) {
   const [store, setStore] = createStore<INotificationsStore>({
     notifications: [],
     unreadCount: 0,
@@ -92,9 +90,7 @@ type NotificationsActions = {
   clearAll: () => void;
 };
 
-const NotificationsContext = createContext<
-  readonly [INotificationsStore, NotificationsActions]
->([
+const NotificationsContext = createContext<readonly [INotificationsStore, NotificationsActions]>([
   { notifications: [], unreadCount: 0 },
   {
     markAllRead: () => {},

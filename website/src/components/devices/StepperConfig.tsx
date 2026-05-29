@@ -14,7 +14,7 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
   const stepperStore = useStepper(props.id);
   const device = () => stepperStore[0];
   const { setDeviceConfig } = stepperStore[1];
-  const config = createMemo(() => device()?.config as IStepperConfig | undefined);
+  const config = createMemo(() => device()?.config);
 
   const [name, setName] = createSignal("Stepper");
   const [stepperType, setStepperType] = createSignal<StepperType>("DRIVER");

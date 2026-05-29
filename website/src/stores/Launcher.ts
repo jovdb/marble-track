@@ -7,14 +7,12 @@ export interface ILauncherState extends IDeviceState {
   state: "Init" | "Up" | "MovingUp" | "Down" | "MovingDown";
   isBallLoaded: boolean;
   isBallWaiting: boolean;
-  [key: string]: unknown;
 }
 
 export interface ILauncherConfig extends IDeviceConfig {
   name?: string;
   loadTimeMs?: number;
   launchTimeMs?: number;
-  [key: string]: unknown;
 }
 
 export function useLauncher(deviceId: string) {

@@ -7,7 +7,6 @@ export type PwmExpanderStateEnum = "Ready" | "Init" | "Error";
 
 export interface IPwmExpanderState extends IDeviceState {
   state?: PwmExpanderStateEnum;
-  [key: string]: unknown;
 }
 
 export interface IPwmExpanderConfig extends IDeviceConfig {
@@ -15,7 +14,6 @@ export interface IPwmExpanderConfig extends IDeviceConfig {
   i2cDeviceId?: string;
   i2cAddress?: number;
   frequency?: number;
-  [key: string]: unknown;
 }
 
 export function usePwmExpander(deviceId: string) {

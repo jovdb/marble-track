@@ -1,9 +1,10 @@
 ﻿import { Device } from "./Device";
 import { getDeviceIcon } from "../icons/Icons";
-import { useDevices } from "../../stores/Devices";
+import { IDevice, useDevices } from "../../stores/Devices";
 import { usePwmExpander } from "../../stores/PwmExpander";
 import PwmExpanderConfig from "./PwmExpanderConfig";
 import styles from "./Device.module.css";
+import { II2cConfig, II2cState } from "../../stores/I2c";
 
 export function PwmExpander(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device, actions] = usePwmExpander(props.id);
@@ -13,22 +14,24 @@ export function PwmExpander(props: { id: string; isPopup?: boolean; onClose?: ()
   const config = () => device?.config;
   const state = () => device?.state;
 
-  const expanderState = () => state()?.state as string | undefined;
+  const expanderState = () => state()?.state;
 
   const i2cAddress = () => {
-    const addr = config()?.i2cAddress as number | undefined;
+    const addr = config()?.i2cAddress;
     return addr !== undefined ? `0x${addr.toString(16).toUpperCase().padStart(2, "0")}` : "Unknown";
   };
 
   const i2cDeviceName = () => {
-    const i2cDeviceId = config()?.i2cDeviceId as string;
+    const i2cDeviceId = config()?.i2cDeviceId;
     if (!i2cDeviceId) return "No I²C bus selected";
-    const i2cDevice = devicesStore.devices[i2cDeviceId];
-    return (i2cDevice?.config?.name as string) || i2cDevice?.id || "Unknown I²C bus";
+    const i2cDevice = devicesStore.devices[i2cDeviceId] as
+      | IDevice<II2cState, II2cConfig>
+      | undefined;
+    return i2cDevice?.config?.name || i2cDevice?.id || "Unknown I²C bus";
   };
 
   const frequency = () => {
-    const freq = config()?.frequency as number | undefined;
+    const freq = config()?.frequency;
     return freq !== undefined ? `${freq} Hz` : "Unknown";
   };
 
@@ -72,7 +75,7 @@ export function PwmExpander(props: { id: string; isPopup?: boolean; onClose?: ()
           class={styles.device__button}
           onClick={() => actions.init()}
           disabled={expanderState() === "Ready" || expanderState() === "Init"}
-          title="Re-probe the I²C bus and re-initialise the PCA9685"
+          title="Re-probe the I²C bus and re-initialize the PCA9685"
         >
           Init
         </button>

@@ -3,15 +3,13 @@ import { useDevice } from "./Devices";
 
 const deviceType = "i2c";
 
-interface II2cState extends IDeviceState {
-  [key: string]: unknown;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface II2cState extends IDeviceState {}
 
-interface II2cConfig extends IDeviceConfig {
+export interface II2cConfig extends IDeviceConfig {
   name: string;
   sdaPin: number;
   sclPin: number;
-  [key: string]: unknown;
 }
 
 export function useI2c(deviceId: string) {

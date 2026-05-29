@@ -1,21 +1,6 @@
-ESP32:
-
-- Use Async API for describing WS possibilities
-- Allow a name /description per GPIO port
-- Use FastAccellStepper that used PWM instead of loop
-- Collect WS messages and send at end of loop as one
-  - Optionally throttle the messages every Xms
-
-Website:
-
-- WebSocket messages types and Device.tsx
-- use zod to validate state
-- heartbeat - pong
-- Remove  useWebsocket.ts
-
-Both:
-- ✅ Batch ws messages, allow to send an array of messages
-
-Ideas:
-
-- Add MCP server so an AI can be connected
+- Start AP and mDNS
+for a user not on the network
+- Make it possible to configure network via website (AP)
+- In website when connected uses a 3G, give a notification that it will not be able to connect
+- Implement WebMcp for all WS message the website can send or receive
+  

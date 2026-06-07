@@ -70,18 +70,18 @@ namespace songs
     // Mogelijks is de 'Max steps per revolutions' configuratie te laag of heeft het reuzenwiel door geslipt.
     const int WHEEL_CALIBRATION_SECOND_ZERO_NOT_FOUND = 14;
     // Reuzenwiel eikpunt is op een onverwacht punt geactiveerd. (Fout code 15)
-    // Mogelijks heeft het reuzenwiel doorgeslipt of is een hercalibratie nodig.
+    // Druk 8 seconden op de knop om een hercalibratie te starten.
     const int WHEEL_UNEXPECTED_ZERO_TRIGGER = 15;
     // Sound effect at long press
     const int WHEEL_GOTO_BREAKPOINT = 16;
 
     // Lift initialisatie mislukt. (Fout code 17)
-    // Lift wordt uitgeschakeld tot er herstart wordt
+    // Druk 8 seconden op de knop om een hercalibratie te starten.
     const int LIFT_INIT_ERROR = 17;
 
     // Lift zero sensor niet gevonden (Fout code 18)
     // Controleer of er een bal onder zit.
-    // Lift wordt uitgeschakeld tot er herstart wordt
+    // Druk 8 seconden op de knop om een hercalibratie te starten.
     const int LIFT_NO_ZERO = 18;
 
     // Elevator bell

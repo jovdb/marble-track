@@ -23,7 +23,7 @@ namespace devices
         static constexpr unsigned long AutoPowerSongStartDelayMs = 1000UL;
         static constexpr unsigned long AutoNoBallRandomMinDelayMs = 120000UL;
         static constexpr unsigned long AutoNoBallRandomMaxDelayMs = 300000UL;
-        static constexpr unsigned long ErrorLongPressDurationMs = 8000UL; // 10 seconds for error recovery
+        static constexpr unsigned long ErrorLongPressDurationMs = 8000UL; // 8 seconds for error recovery
         static constexpr float AutoDownNoBallSpeedRatio = 0.2f;
         static constexpr float AutoDownNormalSpeedRatio = 1.0f;
         static constexpr float LiftAutoSpeedRatio = 0.25f;

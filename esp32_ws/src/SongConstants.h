@@ -94,7 +94,7 @@ namespace songs
     // Reuzenwiel wordt opnieuw gestart
     const int WHEEL_RESTART = 26;
     const int LAUNCH = 27;
-
+    const int LAUNDER_MAX_2_BALLS = 28;
 }
 
 #endif // MARBLE_TRACK_SONG_CONSTANTS_H

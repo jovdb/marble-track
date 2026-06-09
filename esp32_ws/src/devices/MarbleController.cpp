@@ -411,7 +411,7 @@ namespace devices
             {
                 MLOG_INFO("%s: Error recovery long press detected, starting lift init", toString().c_str());
                 _lift->init(lift_timing::LiftManualSpeedRatio);
-                _audio->play(songs::LIFT_RESTART, devices::Hv20tPlayMode::QueueIfPlaying);
+                _audio->play(songs::LIFT_RESTART, devices::Hv20tPlayMode::StopThenPlay);
                 _liftButtonPressStartTime = 0; // Reset to prevent retriggering
             }
             break;
@@ -656,7 +656,7 @@ namespace devices
             {
                 MLOG_INFO("%s: Error recovery long press detected in auto mode, starting lift init", toString().c_str());
                 _lift->init(lift_timing::LiftAutoSpeedRatio);
-                _audio->play(songs::LIFT_RESTART, devices::Hv20tPlayMode::QueueIfPlaying);
+                _audio->play(songs::LIFT_RESTART, devices::Hv20tPlayMode::StopThenPlay);
                 _liftButtonPressStartTime = 0; // Reset to prevent retriggering
             }
             break;
@@ -926,12 +926,20 @@ namespace devices
             if (_autoLauncherBallsToLaunch == 0)
                 break; // Waiting for wheel trigger; nothing to do
 
-            if (_autoLauncherBallsToLaunch > 0 && launcherState.isBallLoaded)
+            if (launcherState.isBallLoaded)
             {
-                _launcher->launch();
-                _autoLauncherBallsToLaunch--;
-                _autoLauncherPhase = LauncherPhase::POST_LAUNCH_DELAY;
-                _autoLauncherPhaseStart = millis();
+                if (_autoLauncherBallsToLaunch > 0)
+                {
+                    _launcher->launch();
+                    _autoLauncherBallsToLaunch--;
+                    _autoLauncherPhase = LauncherPhase::POST_LAUNCH_DELAY;
+                    _autoLauncherPhaseStart = millis();
+                }
+                else
+                {
+                    playErrorSound();
+                    _audio->play(songs::LAUNDER_MAX_2_BALLS, devices::Hv20tPlayMode::QueueIfPlaying);
+                }
             }
             else
             {
@@ -1034,7 +1042,7 @@ namespace devices
             {
                 MLOG_INFO("%s: Error recovery long press detected in auto mode, starting wheel init", toString().c_str());
                 _wheel->init(-1, wheel_timing::AutoSpeedRatio);
-                _audio->play(songs::WHEEL_RESTART, devices::Hv20tPlayMode::QueueIfPlaying);
+                _audio->play(songs::WHEEL_RESTART, devices::Hv20tPlayMode::StopThenPlay);
             }
             break;
 
@@ -1273,7 +1281,7 @@ namespace devices
             {
                 MLOG_INFO("%s: Error recovery long press detected, starting wheel init", toString().c_str());
                 _wheel->init();
-                _audio->play(songs::WHEEL_RESTART, devices::Hv20tPlayMode::QueueIfPlaying);
+                _audio->play(songs::WHEEL_RESTART, devices::Hv20tPlayMode::StopThenPlay);
             }
             break;
         case devices::WheelStateEnum::CALIBRATING:

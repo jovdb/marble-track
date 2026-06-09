@@ -910,7 +910,7 @@ namespace devices
             {
                 if (wheelInLaunchRange && launcherState.isBallLoaded)
                 {
-                    playClickSound();
+                    _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
                     _launcher->launch();
                     _autoLauncherBallsToLaunch = 0; // cancel any pending auto sequence
                     _autoLauncherPhase = LauncherPhase::POST_LAUNCH_DELAY;

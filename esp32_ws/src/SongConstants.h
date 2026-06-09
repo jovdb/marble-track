@@ -93,6 +93,7 @@ namespace songs
     const int LIFT_RESTART = 25;
     // Reuzenwiel wordt opnieuw gestart
     const int WHEEL_RESTART = 26;
+    const int LAUNCH = 27;
 
 }
 

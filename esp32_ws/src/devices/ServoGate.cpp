@@ -38,7 +38,6 @@ namespace devices
         setName(_config.name);
 
         _fsm = ServoGateFsmState::IDLE;
-        _buttonPressStartMs = 0;
         _holdQueueFillApplied = false;
         _timerStart = 0;
         _timerDuration = 0;
@@ -59,7 +58,6 @@ namespace devices
         if (_servo)
             _servo->disable();
 
-        _buttonPressStartMs = 0;
         _holdQueueFillApplied = false;
     }
 
@@ -97,38 +95,31 @@ namespace devices
         if (_button != nullptr)
         {
             const auto &btnState = _button->getState();
-            if (btnState.isPressed)
+            if (_button->onPressed())
             {
-                if (btnState.isPressedChanged)
-                {
-                    _buttonPressStartMs = millis();
-                    _holdQueueFillApplied = false;
+                _holdQueueFillApplied = false;
 
-                    // New click: add one to queue
-                    if (_state.queueCount < _config.fullQueueCount)
-                    {
-                        _state.queueCount++;
-                        // MLOG_INFO("%s: Button clicked, queue=%d", toString().c_str(), _state.queueCount);
-                        notifyStateChanged();
-                    }
-                }
-                else
+                // New click: add one to queue
+                if (_state.queueCount < _config.fullQueueCount)
                 {
-                    // Still held: after 2s continuous hold, fill queue once.
-                    if (!_holdQueueFillApplied &&
-                        _state.queueCount < _config.fullQueueCount &&
-                        (millis() - _buttonPressStartMs) >= servo_gate_timing::HoldToFillQueueMs)
-                    {
-                        _state.queueCount = _config.fullQueueCount;
-                        _holdQueueFillApplied = true;
-                        MLOG_INFO("%s: Button held, queue filled to %d", toString().c_str(), _state.queueCount);
-                        notifyStateChanged();
-                    }
+                    _state.queueCount++;
+                    // MLOG_INFO("%s: Button clicked, queue=%d", toString().c_str(), _state.queueCount);
+                    notifyStateChanged();
+                }
+            }
+            else if (_button->isPressed() && _button->onLastPressedDuration(servo_gate_timing::HoldToFillQueueMs))
+            {
+                if (!_holdQueueFillApplied &&
+                    _state.queueCount < _config.fullQueueCount)
+                {
+                    _state.queueCount = _config.fullQueueCount;
+                    _holdQueueFillApplied = true;
+                    MLOG_INFO("%s: Button held, queue filled to %d", toString().c_str(), _state.queueCount);
+                    notifyStateChanged();
                 }
             }
             else if (btnState.isPressedChanged)
             {
-                _buttonPressStartMs = 0;
                 _holdQueueFillApplied = false;
             }
         }

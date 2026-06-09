@@ -221,7 +221,7 @@ namespace devices
         _autoLiftMovingDownSlow = false;
 
         // Set auto mode based on manual button state during setup
-        isAutoMode = !_manualButton->getState().isPressed;
+        isAutoMode = !_manualButton->isPressed();
 
         // Log the operating mode
         MLOG_INFO("%s Initialized in %s mode", toString().c_str(), isAutoMode ? "AUTO" : "MANUAL");
@@ -326,9 +326,8 @@ namespace devices
     void MarbleController::loopManualLift()
     {
         auto liftState = _lift->getState();
-        auto liftButtonState = _liftBtn->getState();
-        const bool liftButtonPressedEdge = liftButtonState.isPressed && liftButtonState.isPressedChanged;
-        const bool liftButtonReleasedEdge = !liftButtonState.isPressed && liftButtonState.isPressedChanged;
+        const bool liftButtonPressedEdge = _liftBtn->onPressed();
+        const bool liftButtonReleasedEdge = _liftBtn->onReleased();
 
         // LED
         switch (liftState.state)
@@ -410,7 +409,7 @@ namespace devices
             unsigned long pressDuration = _liftButtonPressStartTime > 0 ? millis() - _liftButtonPressStartTime : 0;
 
             // Check for long press while button is held
-            if (liftButtonState.isPressed && (pressDuration >= lift_timing::ErrorLongPressDurationMs))
+            if (_liftBtn->onLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
             {
                 MLOG_INFO("%s: Error recovery long press detected, starting lift init", toString().c_str());
                 _lift->init(lift_timing::LiftManualSpeedRatio);
@@ -543,7 +542,7 @@ namespace devices
                     playButtonClick({songs::LIFT_STOP});
                 }
             }
-            else if (_isBallStillLoaded && liftButtonState.isPressed)
+            else if (_isBallStillLoaded && _liftBtn->isPressed())
             {
                 // Button still pressed - play power unload song from 500ms
                 unsigned long pressDuration = millis() - _liftButtonPressStartTime;
@@ -562,7 +561,7 @@ namespace devices
                     _isBallStillLoaded = false;
                 }
             }
-            else if (_isBallStillLoaded && !liftButtonState.isPressed)
+            else if (_isBallStillLoaded && _liftBtn->isReleased())
             {
                 unsigned long pressDuration = millis() - _liftButtonPressStartTime;
                 if (pressDuration < lift_timing::PowerSongDurationMs && _isLiftPowerUnloadSongPlaying)
@@ -586,9 +585,8 @@ namespace devices
     {
         // Auto lift control logic - automatic cycling through lift operations
         auto liftState = _lift->getState();
-        auto liftButtonState = _liftBtn->getState();
-        const bool liftButtonPressedEdge = liftButtonState.isPressed && liftButtonState.isPressedChanged;
-        const bool liftButtonReleasedEdge = !liftButtonState.isPressed && liftButtonState.isPressedChanged;
+        const bool liftButtonPressedEdge = _liftBtn->onPressed();
+        const bool liftButtonReleasedEdge = _liftBtn->onReleased();
 
         if (liftState.state != devices::LiftStateEnum::LIFT_UP || !liftState.isLoaded)
         {
@@ -658,8 +656,7 @@ namespace devices
             }
 
             // Check for long press while button is held
-            if (liftButtonState.isPressed && _liftButtonPressStartTime > 0 &&
-                ((millis() - _liftButtonPressStartTime) >= lift_timing::ErrorLongPressDurationMs))
+            if (_liftBtn->onLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
             {
                 MLOG_INFO("%s: Error recovery long press detected in auto mode, starting lift init", toString().c_str());
                 _lift->init(lift_timing::LiftAutoSpeedRatio);
@@ -878,8 +875,7 @@ namespace devices
     {
         auto launcherState = _launcher->getState();
         auto wheelState = _wheel->getState();
-        auto launcherBtnState = _launcherBtn->getState();
-        const bool btnPressedEdge = launcherBtnState.isPressed && launcherBtnState.isPressedChanged;
+        const bool btnPressedEdge = _launcherBtn->onPressed();
 
         // Trigger a new sequence when the wheel arrives at the launcher breakpoint
         // and a sequence is not already running.
@@ -1085,8 +1081,7 @@ namespace devices
     void MarbleController::loopManualLauncher()
     {
         auto launcherState = _launcher->getState();
-        auto launcherBtnState = _launcherBtn->getState();
-        const bool btnPressedEdge = launcherBtnState.isPressed && launcherBtnState.isPressedChanged;
+        const bool btnPressedEdge = _launcherBtn->onPressed();
 
         // Phase state machine
         switch (_launcherPhase)
@@ -1300,9 +1295,7 @@ namespace devices
 
     void MarbleController::loopManualSpiral()
     {
-        auto spiralButtonState = _spiralBtn->getState();
-
-        if (spiralButtonState.isPressed && spiralButtonState.isPressedChanged)
+        if (_spiralBtn->onPressed())
         {
             playClickSound();
 

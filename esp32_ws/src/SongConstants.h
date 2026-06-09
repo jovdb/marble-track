@@ -89,6 +89,11 @@ namespace songs
     const int LIFT_POWER_UNLOAD = 20;
     const int LIFT_INIT_BUSY = 24;
 
+    // Lift wordt opnieuw gestart
+    const int LIFT_RESTART = 25;
+    // Reuzenwiel wordt opnieuw gestart
+    const int WHEEL_RESTART = 26;
+
 }
 
 #endif // MARBLE_TRACK_SONG_CONSTANTS_H

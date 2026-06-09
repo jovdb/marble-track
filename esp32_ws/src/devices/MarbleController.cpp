@@ -200,6 +200,7 @@ namespace devices
         // Initialize idle tracking
         _lastButtonPressTime = millis();
         _idleSoundPlayed = false;
+
         _liftQueuedPresses = 0;
         _autoPowerUnloadPending = false;
         _autoPowerUnloadSongStarted = false;
@@ -290,11 +291,23 @@ namespace devices
         Device::loop();
 
         // Check for idle timeout (5 minutes = 300000 ms)
-        if (!isAutoMode && millis() - _lastButtonPressTime > 300000UL && !_idleSoundPlayed)
+        if (!isAutoMode && _lastButtonPressTime && (millis() - _lastButtonPressTime) > 300000UL && !_idleSoundPlayed)
         {
             _audio->play(songs::NOTIFICATION, devices::Hv20tPlayMode::QueueIfPlaying);
             _audio->play(songs::IDLE, devices::Hv20tPlayMode::QueueIfPlaying);
             _idleSoundPlayed = true;
+        }
+
+        // Idle tracking: Any button pressed?
+        auto liftButtonState = _liftBtn->getState();
+        auto wheelButtonState = _wheelBtn->getState();
+        auto launcherButtonState = _launcherBtn->getState();
+        auto spiralButtonState = _spiralBtn->getState();
+
+        if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
+        {
+            _lastButtonPressTime = millis();
+            _idleSoundPlayed = false;
         }
 
         if (isAutoMode)
@@ -321,13 +334,6 @@ namespace devices
         auto liftButtonState = _liftBtn->getState();
         const bool liftButtonPressedEdge = liftButtonState.isPressed && liftButtonState.isPressedChanged;
         const bool liftButtonReleasedEdge = !liftButtonState.isPressed && liftButtonState.isPressedChanged;
-
-        // Idle tracking
-        if (liftButtonPressedEdge)
-        {
-            _lastButtonPressTime = millis();
-            _idleSoundPlayed = false;
-        }
 
         // LED
         switch (liftState.state)
@@ -871,13 +877,6 @@ namespace devices
             break;
         }
         }
-
-        // Idle tracking
-        if (liftButtonPressedEdge)
-        {
-            _lastButtonPressTime = millis();
-            _idleSoundPlayed = false;
-        }
     }
 
     void MarbleController::loopAutoLauncher()
@@ -1100,14 +1099,6 @@ namespace devices
             MLOG_WARN("%s: Unknown wheel state", toString().c_str());
             break;
         }
-
-        // Control wheel movement based on button state
-        if (isWheelButtonPressedEdge)
-        {
-            // Reset idle timer
-            _lastButtonPressTime = millis();
-            _idleSoundPlayed = false;
-        }
     }
 
     void MarbleController::loopManualLauncher()
@@ -1115,13 +1106,6 @@ namespace devices
         auto launcherState = _launcher->getState();
         auto launcherBtnState = _launcherBtn->getState();
         const bool btnPressedEdge = launcherBtnState.isPressed && launcherBtnState.isPressedChanged;
-
-        // Idle tracking
-        if (btnPressedEdge)
-        {
-            _lastButtonPressTime = millis();
-            _idleSoundPlayed = false;
-        }
 
         // Phase state machine
         switch (_launcherPhase)
@@ -1133,7 +1117,7 @@ namespace devices
             {
                 MLOG_INFO("%s: Manual mode – starting launcher init", toString().c_str());
                 if (btnPressedEdge)
-                    playClickSound();
+                    playButtonClick();
                 _launcher->init();
                 _launcherPhase = LauncherPhase::LOADING;
                 _launcherPhaseStart = millis();
@@ -1270,9 +1254,6 @@ namespace devices
         // Control wheel movement based on button state
         if (wheelButtonState.isPressed && wheelButtonState.isPressedChanged)
         {
-            // Reset idle timer
-            _lastButtonPressTime = millis();
-            _idleSoundPlayed = false;
             // Button just pressed - start timing to distinguish short vs long press
             _wheelButtonPressStartTime = millis();
             _wheelButtonLongPressTriggered = false;

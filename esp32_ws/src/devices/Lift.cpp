@@ -269,7 +269,7 @@ namespace devices
             {
                 MLOG_WARN("%s: Cannot move up - already at max position (current: %ld, max: %ld)", toString().c_str(), currentPos, _config.maxSteps);
                 broadcastNotification("LiftAtMaxPosition",
-                    "Lift already at maximum position (" + String(currentPos) + " steps)");
+                                      "Lift already at maximum position (" + String(currentPos) + " steps)");
                 break;
             }
 
@@ -314,7 +314,7 @@ namespace devices
             {
                 MLOG_WARN("%s: Cannot move down - already at min position (current: %ld, min: %ld)", toString().c_str(), currentPos, _config.minSteps);
                 broadcastNotification("LiftAtMinPosition",
-                    "Lift already at minimum position (" + String(currentPos) + " steps)");
+                                      "Lift already at minimum position (" + String(currentPos) + " steps)");
                 isSuccess = false;
                 break;
             }
@@ -597,11 +597,11 @@ namespace devices
         // Phase 2: wait until the close animation has completed before reporting LIFT_DOWN
         if (millis() - _loadEndTime < _loader->getConfig().defaultDurationInMs)
         {
+            // Disable the load servo after the closing motion finishes
+            //             _loader->disable();
+
             return true;
         }
-
-        // Disable the load servo after the closing motion finishes
-        _loader->disable();
 
         _state.state = LiftStateEnum::LIFT_DOWN;
         _loadStartTime = 0;
@@ -882,7 +882,7 @@ namespace devices
         }
         case 10:
         {
-            
+
             MLOG_DEBUG("%s: Init step 10: Init loader", toString().c_str());
             _loader->setValue(0); // Move loader down
 

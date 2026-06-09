@@ -26,3 +26,5 @@ The ESP should have an action so the website can update the network credentials.
 - Lift still sometimes keeps going down when zero is reached.
 
 - Ball on back of wheel sometimes got stuck on exit.
+
+- Servo show disabled state in website

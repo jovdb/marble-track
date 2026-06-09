@@ -299,12 +299,7 @@ namespace devices
         }
 
         // Idle tracking: Any button pressed?
-        auto liftButtonState = _liftBtn->getState();
-        auto wheelButtonState = _wheelBtn->getState();
-        auto launcherButtonState = _launcherBtn->getState();
-        auto spiralButtonState = _spiralBtn->getState();
-
-        if (liftButtonState.isPressed && liftButtonState.isPressedChanged)
+        if (_liftBtn->onPressed() || _wheelBtn->onPressed() || _launcherBtn->onPressed() || _spiralBtn->onPressed())
         {
             _lastButtonPressTime = millis();
             _idleSoundPlayed = false;
@@ -1003,8 +998,6 @@ namespace devices
     {
         // Auto wheel control logic - similar to AutoMode.cpp
         auto wheelState = _wheel->getState();
-        auto wheelButtonState = _wheelBtn->getState();
-        auto isWheelButtonPressedEdge = wheelButtonState.isPressed && wheelButtonState.isPressedChanged;
 
         // Wheel led
         switch (wheelState.state)
@@ -1041,33 +1034,22 @@ namespace devices
             break;
 
         case devices::WheelStateEnum::ERROR:
-            if (isWheelButtonPressedEdge)
+            if (_wheelBtn->onPressed())
             {
                 playWheelError(_wheel->getErrorCode());
-                _wheelButtonPressStartTime = millis();
-                _wheelButtonLongPressTriggered = false;
             }
             // Check for long press while button is held (8s → init)
-            if (wheelButtonState.isPressed && _wheelButtonPressStartTime > 0 && !_wheelButtonLongPressTriggered &&
-                ((millis() - _wheelButtonPressStartTime) >= WHEEL_LONG_PRESS_DURATION_MS))
+            else if (_wheelBtn->onLastPressedDuration(WHEEL_LONG_PRESS_DURATION_MS))
             {
                 MLOG_INFO("%s: Error recovery long press detected in auto mode, starting wheel init", toString().c_str());
                 _wheel->init(-1, wheel_timing::AutoSpeedRatio);
-                playButtonClick();
-                _wheelButtonPressStartTime = 0;
-                _wheelButtonLongPressTriggered = true;
-            }
-            if (!wheelButtonState.isPressed)
-            {
-                _wheelButtonPressStartTime = 0;
-                _wheelButtonLongPressTriggered = false;
             }
             break;
 
         case devices::WheelStateEnum::CALIBRATING:
         case devices::WheelStateEnum::INIT:
         case devices::WheelStateEnum::MOVING:
-            if (isWheelButtonPressedEdge)
+            if (_wheelBtn->onPressed())
             {
                 playErrorSound();
             }
@@ -1087,12 +1069,11 @@ namespace devices
                 _wheel->nextBreakPoint(wheel_timing::AutoSpeedRatio);
                 _wheelIdleStartTime = 0;
             }
-            else if (isWheelButtonPressedEdge)
+            else if (_wheelBtn->onPressed())
             {
                 _wheel->nextBreakPoint(wheel_timing::AutoSpeedRatio);
                 playButtonClick();
             }
-
             break;
 
         default:
@@ -1218,12 +1199,6 @@ namespace devices
     {
         // Manual wheel control logic
         auto wheelState = _wheel->getState();
-        auto wheelButtonState = _wheelBtn->getState();
-
-        if (_wheelBtn->onPressed())
-        {
-            _wheelButtonLongPressTriggered = false;
-        }
 
         // Control wheel LED based on error state and movement
         switch (wheelState.state)
@@ -1289,6 +1264,12 @@ namespace devices
                     _wheel->nextBreakPoint();
                 }
             }
+            else if (_wheelBtn->onPressed())
+            {
+                // Pressed during deceleration
+                playButtonDown();
+                _wheel->move(100000);
+            }
             break;
         case devices::WheelStateEnum::ERROR:
             // In error state: play error sound and let the long-press timer run
@@ -1298,16 +1279,15 @@ namespace devices
             }
 
             // Error recovery: 8-second long press starts init
-            if (!_wheelButtonLongPressTriggered && _wheelBtn->onLastPressedDuration(WHEEL_LONG_PRESS_DURATION_MS))
+            else if (_wheelBtn->onLastPressedDuration(WHEEL_LONG_PRESS_DURATION_MS))
             {
-                _wheelButtonLongPressTriggered = true;
                 MLOG_INFO("%s: Error recovery long press detected, starting wheel init", toString().c_str());
                 _wheel->init();
-                playButtonClick();
             }
             break;
         case devices::WheelStateEnum::CALIBRATING:
         case devices::WheelStateEnum::INIT:
+            playErrorSound();
             break;
         default:
             break;

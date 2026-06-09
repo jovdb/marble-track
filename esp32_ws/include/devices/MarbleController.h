@@ -50,7 +50,7 @@ namespace devices
         static constexpr unsigned long WHEEL_LONG_PRESS_DURATION_MS = 8000UL;
         static constexpr unsigned long WHEEL_SPIN_LONG_PRESS_MS = 500UL;              // Threshold for continuous spin vs short-press breakpoint
         static constexpr unsigned long WHEEL_IDLE_ATTENTION_MS = 3UL * 60UL * 1000UL; // Blink attention after 3 minutes without a button press
-        static constexpr int LAUNCHER_WHEEL_BREAKPOINT = 0; ///< Wheel breakpoint index that triggers launcher
+        static constexpr int LAUNCHER_WHEEL_BREAKPOINT = 1; ///< Wheel breakpoint index that triggers launcher
         void loopManualLift();
         void loopManualWheel();
         void loopManualSpiral();
@@ -97,10 +97,6 @@ namespace devices
         bool _isBallStillLoaded = false;
         bool _isLiftPowerUnloadSongPlaying = false;
         uint8_t _liftQueuedPresses = 0;
-
-        // Wheel button long press tracking
-        inline static unsigned long _wheelButtonPressStartTime = 0;
-        inline static bool _wheelButtonLongPressTriggered = false;
 
         // Auto lift timing control
         unsigned long _autoLiftDelayStart = 0;

@@ -185,14 +185,14 @@ namespace devices
         return !_state.isPressed && _state.isPressedChanged;
     }
 
-    bool Button::onLastPressedDuration(unsigned long longPressTimeInMs) const
+    bool Button::onLastPressedDuration(unsigned long duration) const
     {
-        return (_state.lastPressedMillis > 0) && (millis() - _state.lastPressedMillis >= longPressTimeInMs);
+        return (_state.lastPressedMillis > 0) && (millis() - _state.lastPressedMillis >= duration);
     }
 
-    bool Button::onLastReleasedDuration(unsigned long longPressTimeInMs) const
+    bool Button::onLastReleasedDuration(unsigned long duration) const
     {
-        return (_state.lastReleasedMillis > 0) && (millis() - _state.lastReleasedMillis >= longPressTimeInMs);
+        return (_state.lastReleasedMillis > 0) && (millis() - _state.lastReleasedMillis >= duration);
     }
 
     void Button::addDeviceStateToJson(JsonDocument &doc)

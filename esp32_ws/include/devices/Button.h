@@ -111,10 +111,10 @@ namespace devices
         bool onReleased() const;
 
         /** true when the last press was at least the specified duration ago */
-        bool onLastPressedDuration(unsigned long longPressTimeInMs) const;
+        bool onLastPressedDuration(unsigned long duration) const;
 
         /** true when the last release was at least the specified duration ago */
-        bool onLastReleasedDuration(unsigned long longPressTimeInMs) const;
+        bool onLastReleasedDuration(unsigned long duration) const;
 
         // ControllableMixin implementation
         void addDeviceStateToJson(JsonDocument &doc) override;

@@ -8,7 +8,6 @@ import { useDevice } from "../../stores/Devices";
 
 interface IGateState extends IDeviceState {
   gateState: "Closed" | "IsOpening" | "Opened" | "Closing";
-  [key: string]: unknown;
 }
 
 export function Gate(props: { id: string; isPopup?: boolean; onClose?: () => void }) {

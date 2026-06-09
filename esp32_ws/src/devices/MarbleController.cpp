@@ -1220,17 +1220,9 @@ namespace devices
         auto wheelState = _wheel->getState();
         auto wheelButtonState = _wheelBtn->getState();
 
-        auto onPressed = wheelButtonState.isPressed && wheelButtonState.isPressedChanged;
-        auto onReleased = !wheelButtonState.isPressed && wheelButtonState.isPressedChanged;
-        if (onPressed)
+        if (_wheelBtn->onPressed())
         {
-            _wheelButtonPressStartTime = millis();
             _wheelButtonLongPressTriggered = false;
-        }
-        auto onLongPressed = !_wheelButtonLongPressTriggered && wheelButtonState.isPressed && !wheelButtonState.isPressedChanged && (millis() - _wheelButtonPressStartTime >= WHEEL_SPIN_LONG_PRESS_MS);
-        if (onLongPressed)
-        {
-            _wheelButtonLongPressTriggered = true;
         }
 
         // Control wheel LED based on error state and movement
@@ -1269,7 +1261,7 @@ namespace devices
         case devices::WheelStateEnum::UNKNOWN:
         case devices::WheelStateEnum::IDLE:
             // Control wheel movement based on button state
-            if (onPressed)
+            if (_wheelBtn->onPressed())
             {
                 // Button just pressed - start continuous movement until button is released
                 MLOG_INFO("%s: Starting manual wheel movement as long button is pressed", toString().c_str());
@@ -1279,44 +1271,46 @@ namespace devices
             }
             break;
         case devices::WheelStateEnum::MOVING:
-            if (onReleased)
+            if (_wheelBtn->onReleased())
             {
                 playButtonUp();
 
-                if (onLongPressed)
+                // Longpress?
+                if (_wheelBtn->onLastPressedDuration(WHEEL_SPIN_LONG_PRESS_MS))
                 {
                     // Button released - stop the wheel if it was a short press
-                    MLOG_INFO("%s: Button released - stopping wheel", toString().c_str());
+                    MLOG_INFO("%s: Long press released - stopping wheel", toString().c_str());
                     _wheel->stop();
                 }
                 else
                 {
                     // next breakpoint on long press release
-                    MLOG_INFO("%s: Long press released - moving to next breakpoint", toString().c_str());
+                    MLOG_INFO("%s: short press released - moving to next breakpoint", toString().c_str());
                     _wheel->nextBreakPoint();
                 }
             }
             break;
         case devices::WheelStateEnum::ERROR:
             // In error state: play error sound and let the long-press timer run
-            if (onPressed)
+            if (_wheelBtn->onPressed())
             {
                 playWheelError(_wheel->getErrorCode());
             }
 
             // Error recovery: 8-second long press starts init
-            if (onLongPressed)
+            if (!_wheelButtonLongPressTriggered && _wheelBtn->onLastPressedDuration(WHEEL_LONG_PRESS_DURATION_MS))
             {
+                _wheelButtonLongPressTriggered = true;
                 MLOG_INFO("%s: Error recovery long press detected, starting wheel init", toString().c_str());
                 _wheel->init();
                 playButtonClick();
-                _wheelButtonLongPressTriggered = true;
             }
             break;
         case devices::WheelStateEnum::CALIBRATING:
         case devices::WheelStateEnum::INIT:
             break;
         default:
+            break;
         }
     }
 

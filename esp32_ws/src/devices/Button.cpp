@@ -110,6 +110,8 @@ namespace devices
         _simulatedIsPressed = false;
         _state.isPressed = false;
         _state.isPressedChanged = false;
+        _state.lastPressedMillis = 0;
+        _state.lastReleasedMillis = 0;
         _state.input = 0;
         clearError();
     }
@@ -138,6 +140,14 @@ namespace devices
             {
                 _state.isPressed = isButtonPressed;
                 _state.isPressedChanged = true;
+                if (isButtonPressed)
+                {
+                    _state.lastPressedMillis = millis();
+                }
+                else
+                {
+                    _state.lastReleasedMillis = millis();
+                }
                 MLOG_INFO("%s: New button data read: %s", toString().c_str(), _state.input ? "HIGH" : "LOW");
                 notifyStateChanged();
             }
@@ -165,10 +175,32 @@ namespace devices
         return !_state.isPressed;
     }
 
+    bool Button::onPressed() const
+    {
+        return _state.isPressed && _state.isPressedChanged;
+    }
+
+    bool Button::onReleased() const
+    {
+        return !_state.isPressed && _state.isPressedChanged;
+    }
+
+    bool Button::onLastPressedDuration(unsigned long longPressTimeInMs) const
+    {
+        return (_state.lastPressedMillis > 0) && (millis() - _state.lastPressedMillis >= longPressTimeInMs);
+    }
+
+    bool Button::onLastReleasedDuration(unsigned long longPressTimeInMs) const
+    {
+        return (_state.lastReleasedMillis > 0) && (millis() - _state.lastReleasedMillis >= longPressTimeInMs);
+    }
+
     void Button::addDeviceStateToJson(JsonDocument &doc)
     {
         doc["value"] = _state.input;
         doc["isPressed"] = _state.isPressed;
+        doc["lastPressedMillis"] = _state.lastPressedMillis;
+        doc["lastReleasedMillis"] = _state.lastReleasedMillis;
     }
 
     bool Button::control(const String &action, JsonObject *args)
@@ -184,10 +216,12 @@ namespace devices
             if (isPress)
             {
                 _simulatedIsPressed = (_config.buttonType == ButtonType::NormalOpen);
+                _state.lastPressedMillis = millis();
             }
             else
             {
                 _simulatedIsPressed = (_config.buttonType == ButtonType::NormalClosed);
+                _state.lastReleasedMillis = millis();
             }
             return true;
         }

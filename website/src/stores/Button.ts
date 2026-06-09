@@ -8,6 +8,8 @@ interface IButtonState extends IDeviceState {
   isPressed: boolean;
   value: number;
   isPressedChanged: boolean;
+  lastPressedMillis: number;
+  lastReleasedMillis: number;
 }
 
 export interface IButtonConfig extends IDeviceConfig {

@@ -58,10 +58,17 @@ namespace devices
         /** Indicates it is currently not in its default state */
         bool isPressed = false;
 
+        /** Last time the button was down */
+        unsigned long lastPressedMillis = 0;
+
+        /** Last time the button was released */
+        unsigned long lastReleasedMillis = 0;
+
         /** pin input state: 0=LOW, 1=HIGH */
         int input = 0;
 
         /** Indicates if the button state changed in the last loop */
+        // Expose?
         bool isPressedChanged = false;
     };
 
@@ -97,6 +104,18 @@ namespace devices
          */
         bool isReleased() const;
 
+        /** true in the loop the button is pressed */
+        bool onPressed() const;
+
+        /** true in the loop the button is released */
+        bool onReleased() const;
+
+        /** true when the last press was at least the specified duration ago */
+        bool onLastPressedDuration(unsigned long longPressTimeInMs) const;
+
+        /** true when the last release was at least the specified duration ago */
+        bool onLastReleasedDuration(unsigned long longPressTimeInMs) const;
+
         // ControllableMixin implementation
         void addDeviceStateToJson(JsonDocument &doc) override;
         bool control(const String &action, JsonObject *args = nullptr) override;
@@ -122,7 +141,7 @@ namespace devices
         bool _simulatedIsPressed = false;
 
         // Pin abstraction for button input
-        pins::IPin* _pin;
+        pins::IPin *_pin;
     };
 
 } // namespace devices

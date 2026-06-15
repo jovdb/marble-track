@@ -20,6 +20,7 @@
 #include "devices/PwmExpander.h"
 #include "devices/ServoGate.h"
 #include "devices/Launcher.h"
+#include "devices/PowerMonitor.h"
 #include "devices/mixins/SerializableMixin.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
@@ -92,6 +93,10 @@ Device *DeviceManager::createDevice(const String &deviceId, const String &device
     else if (upperType == "LAUNCHER")
     {
         return new devices::Launcher(deviceId);
+    }
+    else if (upperType == "POWERMONITOR")
+    {
+        return new devices::PowerMonitor(deviceId);
     }
 
     MLOG_WARN("Unknown device type: %s", upperType.c_str());

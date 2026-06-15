@@ -94,7 +94,12 @@ namespace songs
     // Reuzenwiel wordt opnieuw gestart
     const int WHEEL_RESTART = 26;
     const int LAUNCH = 27;
+    // Maximum van 2 ballen bereikt
     const int LAUNDER_MAX_2_BALLS = 28;
+    // Configuratie error.
+    // Ga naar de website om het op te lossen:
+    // marble, streepje, track, punt, local
+    const int CONFIG_ERROR = 29;
 }
 
 #endif // MARBLE_TRACK_SONG_CONSTANTS_H

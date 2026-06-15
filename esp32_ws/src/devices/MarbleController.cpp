@@ -883,6 +883,42 @@ namespace devices
             _autoLauncherBallsToLaunch = 2;
         }
 
+        auto canLaunch = launcherState.isBallLoaded &&
+                         wheelState.currentAngle >= LauncherWheelMinAngle &&
+                         wheelState.currentAngle <= LauncherWheelMaxAngle;
+
+        // Led
+        switch (launcherState.state)
+        {
+        case LauncherStateEnum::INIT:
+            blinkInit(_launcherLed);
+            break;
+        case LauncherStateEnum::MOVING_UP:
+        case LauncherStateEnum::UP:
+        case LauncherStateEnum::MOVING_DOWN:
+            blinkBusy(_launcherLed);
+            break;
+        case LauncherStateEnum::DOWN:
+            _launcherLed->set(canLaunch);
+            break;
+        }
+
+        // Led
+        switch (launcherState.state)
+        {
+        case LauncherStateEnum::INIT:
+        case LauncherStateEnum::MOVING_UP:
+        case LauncherStateEnum::UP:
+        case LauncherStateEnum::MOVING_DOWN:
+            break;
+        case LauncherStateEnum::DOWN:
+            if (canLaunch)
+            {
+            }
+            break;
+        }
+
+        /*
         switch (_autoLauncherPhase)
         {
         case LauncherPhase::WAITING_FOR_INIT:
@@ -991,6 +1027,7 @@ namespace devices
             break;
         }
         }
+        */
     }
 
     void MarbleController::loopAutoWheel()

@@ -2,9 +2,9 @@ import { For, createEffect, createSignal, createMemo } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { useDevices } from "../../stores/Devices";
 import { useWebSocket2 } from "../../hooks/useWebSocket";
-import type { IWsReceiveExpanderAddressesMessage } from "../../interfaces/WebSockets";
 import { II2cConfig } from "../../stores/I2c";
 import { useIoExpander } from "../../stores/IoExpander";
+import { I2cAddressPicker } from "./shared/I2cAddressPicker";
 
 const EXPANDER_TYPES = ["PCF8574", "PCF8575", "MCP23017"] as const;
 type ExpanderType = (typeof EXPANDER_TYPES)[number];
@@ -17,7 +17,7 @@ interface IoExpanderConfigProps {
 export default function IoExpanderConfig(props: IoExpanderConfigProps) {
   const [device] = useIoExpander(props.id);
   const [devicesStore] = useDevices();
-  const [, { sendMessage, subscribe }] = useWebSocket2();
+  const [, { sendMessage }] = useWebSocket2();
 
   const [name, setName] = createSignal<string>((device?.config?.name as string) ?? "IO Expander");
   const [expanderType, setExpanderType] = createSignal<ExpanderType>(
@@ -30,49 +30,10 @@ export default function IoExpanderConfig(props: IoExpanderConfigProps) {
     (device?.config?.i2cDeviceId as string) ?? ""
   );
 
-  // State for available I2C addresses
-  const [availableAddresses, setAvailableAddresses] = createSignal<number[]>([]);
-  const [isScanning, setIsScanning] = createSignal<boolean>(false);
-  const [scanError, setScanError] = createSignal<string>("");
-
   // Get available I2C devices
   const i2cDevices = createMemo(() => {
     return Object.values(devicesStore.devices).filter((d) => d.type === "i2c");
   });
-
-  // Subscribe to expander-addresses messages
-  createEffect(() => {
-    const unsubscribe = subscribe((msg) => {
-      if (msg.type === "expander-addresses") {
-        const expanderMsg = msg as IWsReceiveExpanderAddressesMessage;
-        setIsScanning(false);
-
-        if ("error" in expanderMsg) {
-          setScanError(expanderMsg.error);
-          setAvailableAddresses([]);
-        } else {
-          setScanError("");
-          setAvailableAddresses(expanderMsg.addresses);
-        }
-      }
-    });
-
-    // Request addresses on mount
-    requestAddresses();
-
-    return unsubscribe;
-  });
-
-  const requestAddresses = () => {
-    const busId = i2cDeviceId();
-    if (!busId) {
-      setScanError("Please select an I²C bus first");
-      return;
-    }
-    setIsScanning(true);
-    setScanError("");
-    sendMessage({ type: "expander-addresses", i2cDeviceId: busId });
-  };
 
   createEffect(() => {
     const config = device?.config;
@@ -154,40 +115,14 @@ export default function IoExpanderConfig(props: IoExpanderConfigProps) {
         </DeviceConfigRow>
         <DeviceConfigRow>
           <DeviceConfigItem name="I²C Address:">
-            <select
+            <I2cAddressPicker
+              i2cDeviceId={i2cDeviceId()}
               value={i2cAddress()}
-              onChange={(event) => setI2cAddress(Number(event.currentTarget.value))}
-              style={{ "margin-left": "0.5rem" }}
-            >
-              <For
-                each={
-                  availableAddresses().length > 0
-                    ? availableAddresses()
-                    : [0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27]
-                }
-              >
-                {(addr) => (
-                  <option value={addr}>0x{addr.toString(16).toUpperCase().padStart(2, "0")}</option>
-                )}
-              </For>
-            </select>
-            <button
-              type="button"
-              onClick={requestAddresses}
-              disabled={isScanning()}
-              style={{ "margin-left": "0.5rem" }}
-            >
-              {isScanning() ? "Scanning..." : "Scan"}
-            </button>
+              onChange={setI2cAddress}
+              defaultAddresses={[0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27]}
+            />
           </DeviceConfigItem>
         </DeviceConfigRow>
-        {scanError() && (
-          <DeviceConfigRow>
-            <DeviceConfigItem name="">
-              <div style={{ color: "red", "margin-left": "0.5rem" }}>{scanError()}</div>
-            </DeviceConfigItem>
-          </DeviceConfigRow>
-        )}
       </DeviceConfigTable>
     </DeviceConfig>
   );

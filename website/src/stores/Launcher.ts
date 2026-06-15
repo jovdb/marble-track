@@ -4,7 +4,7 @@ import { useDevice } from "./Devices";
 const deviceType = "launcher";
 
 export interface ILauncherState extends IDeviceState {
-  state: "Init" | "Up" | "MovingUp" | "Down" | "MovingDown";
+  state: "Unknown" | "Error" | "Up" | "MovingUp" | "Down" | "MovingDown";
   isBallLoaded: boolean;
   isBallWaiting: boolean;
 }

@@ -30,3 +30,5 @@ The ESP should have an action so the website can update the network credentials.
 - Servo show disabled state in website
 
 - state wheel ( current breakpoint to -1: when moving to target)
+
+- Launcher error when a child has an error

@@ -15,7 +15,8 @@ export type DeviceType =
   | "servogate"
   | "stepper"
   | "touch"
-  | "wheel";
+  | "wheel"
+  | "powermonitor";
 export type NetworkMode = "ap" | "sta" | "apsta";
 export type EncryptionType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 

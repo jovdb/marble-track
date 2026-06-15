@@ -36,17 +36,19 @@ namespace devices
 
         setName(_config.name);
 
-        _state.state = LauncherStateEnum::INIT;
+        _state.state = LauncherStateEnum::UNKNOWN;
         _state.isBallLoaded = false;
         _state.isBallWaiting = false;
+        _state.isLoadingStep = 0;
+        _state.isLaunchingStep = 0;
+
+        // Delay
         _timerStart = 0;
         _timerDuration = 0;
-        _isBallLoadedAtMoveStart = false;
-        _pendingLoadDown = false;
-        _isInitMove = false;
 
         if (_servo && _servo->getPins().empty())
         {
+            _state.state = LauncherStateEnum::ERROR;
             setError("LAUNCHER_CONFIG_ERROR", "No pins configured for servo");
             MLOG_WARN("%s: No pins configured for servo", toString().c_str());
         }
@@ -58,9 +60,9 @@ namespace devices
     void Launcher::teardown()
     {
         Device::teardown();
-        _state.state = LauncherStateEnum::INIT;
-        _pendingLoadDown = false;
-        _isInitMove = false;
+        _state.state = LauncherStateEnum::UNKNOWN;
+        _state.isLoadingStep = 0;
+        _state.isLaunchingStep = 0;
     }
 
     bool Launcher::isTimerExpired() const
@@ -87,60 +89,8 @@ namespace devices
             notifyStateChanged();
         }
 
-        // Auto-start load when a ball is waiting but none is loaded and arm is idle
-        if (_state.isBallWaiting && !_state.isBallLoaded &&
-            (_state.state == LauncherStateEnum::DOWN || _state.state == LauncherStateEnum::INIT))
-        {
-            load();
-        }
-
-        // FSM: advance state when current motion timer expires
-        switch (_state.state)
-        {
-        case LauncherStateEnum::MOVING_UP:
-            if (isTimerExpired())
-            {
-                _state.state = LauncherStateEnum::UP;
-
-                if (_pendingLoadDown)
-                {
-                    // Load cycle: ball (if waiting) is now on the arm; move arm down slowly
-                    _pendingLoadDown = false;
-                    _isBallLoadedAtMoveStart = _state.isBallWaiting;
-                    if (_servo)
-                        _servo->setValue(0.0f, static_cast<int>(_config.loadTimeMs));
-                    startTimer(_config.loadTimeMs);
-                    _state.state = LauncherStateEnum::MOVING_DOWN;
-                }
-
-                notifyStateChanged();
-            }
-            break;
-
-        case LauncherStateEnum::MOVING_DOWN:
-            if (isTimerExpired())
-            {
-                _state.state = LauncherStateEnum::DOWN;
-
-                if (_isInitMove)
-                {
-                    // init() assumes a ball is already loaded
-                    _state.isBallLoaded = true;
-                    _isInitMove = false;
-                }
-                else
-                {
-                    // Ball is loaded if it was waiting when arm reached the UP position
-                    _state.isBallLoaded = _isBallLoadedAtMoveStart;
-                }
-
-                notifyStateChanged();
-            }
-            break;
-
-        default:
-            break;
-        }
+        loadLoop();
+        launchLoop();
     }
 
     // ---------------------------------------------------------------------------
@@ -151,76 +101,208 @@ namespace devices
     {
         // Move arm slowly down and assume a ball is waiting to be launched
         clearError();
-        if (_servo)
-            _servo->setValue(0.0f, static_cast<int>(_config.loadTimeMs));
-        startTimer(_config.loadTimeMs);
-        _state.state = LauncherStateEnum::MOVING_DOWN;
-        _state.isBallLoaded = false;
-        _pendingLoadDown = false;
-        _isInitMove = true;
-        notifyStateChanged();
-        MLOG_INFO("%s: init – moving arm down over %lu ms", toString().c_str(),
-                  static_cast<unsigned long>(_config.loadTimeMs));
+
+        load();
+
+        MLOG_INFO("%s: init – Start loading", toString().c_str());
+        return true;
+    }
+
+    bool Launcher::moveDown()
+    {
+        if (!_servo)
+            return false;
+
+        if (_servo->setValue(0.0f, static_cast<int>(_config.loadTimeMs)))
+        {
+            startTimer(_config.loadTimeMs);
+            _state.state = LauncherStateEnum::MOVING_DOWN;
+            notifyStateChanged();
+            return true;
+        }
+        else
+        {
+            MLOG_ERROR("%s: Failed to move servo down – check servo", toString().c_str());
+            return false;
+        }
+    }
+
+    bool Launcher::moveUp(int duration)
+    {
+        if (!_servo)
+            return false;
+
+        if (_servo->setValue(1.0f, static_cast<int>(duration)))
+        {
+            startTimer(duration);
+            _state.state = LauncherStateEnum::MOVING_UP;
+            notifyStateChanged();
+            return true;
+        }
+        else
+        {
+            MLOG_ERROR("%s: Failed to move servo up – check servo", toString().c_str());
+            return false;
+        }
+    }
+
+    bool Launcher::launch()
+    {
+        if (_state.isLoadingStep != 0)
+        {
+            MLOG_WARN("%s: launch ignored – currently in loading process", toString().c_str());
+            return false;
+        }
+        if (_state.isLaunchingStep != 0)
+        {
+            MLOG_WARN("%s: launch ignored – already in launching process", toString().c_str());
+            return false;
+        }
+
+        _state.isLaunchingStep = 1;
+        return true;
+    }
+
+    bool Launcher::launchLoop()
+    {
+        if (_state.isLaunchingStep == 0)
+            return false;
+
+        // Move Up
+        if (_state.isLaunchingStep == 1)
+        {
+            if (moveUp(static_cast<int>(_config.launchTimeMs)))
+            {
+                _state.isLaunchingStep = 2;
+            }
+            else
+            {
+                MLOG_ERROR("%s: Launch failed", toString().c_str());
+                _state.isLaunchingStep = 0;
+                _state.state = LauncherStateEnum::ERROR;
+                setError("LAUNCH_FAILED", "Launch failed");
+            }
+        }
+        // Wait at top
+        else if (_state.isLaunchingStep == 2 && _state.state == LauncherStateEnum::UP)
+        {
+            startTimer(200);
+            _state.isLaunchingStep = 3;
+        }
+        // Move Down
+        else if (_state.isLaunchingStep == 3 && isTimerExpired())
+        {
+            if (moveDown())
+            {
+                _state.isLaunchingStep = 4;
+            }
+            else
+            {
+                MLOG_ERROR("%s: Launch failed", toString().c_str());
+                _state.isLaunchingStep = 0;
+                _state.state = LauncherStateEnum::ERROR;
+                setError("LAUNCH_FAILED", "Launch failed");
+            }
+        }
+        // Wait until down
+        else if (_state.isLaunchingStep == 4 && _state.state == LauncherStateEnum::DOWN)
+        {
+            // End
+            _state.isLaunchingStep = 0;
+        }
         return true;
     }
 
     bool Launcher::load()
     {
-        if (_state.state == LauncherStateEnum::MOVING_UP ||
-            _state.state == LauncherStateEnum::MOVING_DOWN)
+
+        if (_state.isLoadingStep != 0)
         {
-            MLOG_WARN("%s: load ignored – arm is already moving", toString().c_str());
+            MLOG_WARN("%s: load ignored – already in loading process", toString().c_str());
             return false;
         }
 
-        if (_state.state == LauncherStateEnum::UP)
+        if (_state.isLaunchingStep != 0)
         {
-            // Arm is already up; move down so the ball rolls to the launch end
-            _isBallLoadedAtMoveStart = _state.isBallWaiting;
-            if (_servo)
-                _servo->setValue(0.0f, static_cast<int>(_config.loadTimeMs));
-            startTimer(_config.loadTimeMs);
-            _state.state = LauncherStateEnum::MOVING_DOWN;
-            _pendingLoadDown = false;
-            notifyStateChanged();
-            MLOG_INFO("%s: load (already up) – moving arm down over %lu ms", toString().c_str(),
-                      static_cast<unsigned long>(_config.loadTimeMs));
-            return true;
+            MLOG_WARN("%s: load ignored – currently in launching process", toString().c_str());
+            return false;
         }
 
-        // Arm is DOWN or INIT: move up slowly, then automatically move down
-        if (_servo)
-            _servo->setValue(1.0f, static_cast<int>(_config.loadTimeMs));
-        startTimer(_config.loadTimeMs);
-        _state.state = LauncherStateEnum::MOVING_UP;
-        _pendingLoadDown = true;
-        _isInitMove = false;
-        notifyStateChanged();
-        MLOG_INFO("%s: load – moving arm up over %lu ms then down", toString().c_str(),
-                  static_cast<unsigned long>(_config.loadTimeMs));
+        _state.isLoadingStep = 1;
         return true;
     }
 
-    bool Launcher::launch()
+    bool Launcher::loadLoop()
     {
-        if (_state.state == LauncherStateEnum::MOVING_UP)
-        {
-            MLOG_WARN("%s: launch ignored – arm is already moving up", toString().c_str());
+        if (_state.isLoadingStep == 0)
             return false;
-        }
 
-        // Swing arm up fast – this throws the ball
-        if (_servo)
-            _servo->setValue(1.0f, static_cast<int>(_config.launchTimeMs));
-        startTimer(_config.launchTimeMs);
-        _state.state = LauncherStateEnum::MOVING_UP;
-        _state.isBallLoaded = false;        
-        _pendingLoadDown = false;
-        _isInitMove = false;
-        notifyStateChanged();
-        MLOG_INFO("%s: launch – swinging arm up over %lu ms", toString().c_str(),
-                  static_cast<unsigned long>(_config.launchTimeMs));
+        // Move Up
+        if (_state.isLoadingStep == 1)
+        {
+            if (moveUp(static_cast<int>(_config.loadTimeMs)))
+            {
+                _state.isLoadingStep = 2;
+            }
+            else
+            {
+                MLOG_ERROR("%s: Load failed", toString().c_str());
+                _state.isLoadingStep = 0;
+                _state.state = LauncherStateEnum::ERROR;
+                setError("LOAD_FAILED", "Load failed");
+            }
+        }
+        // Wait at top
+        if (_state.isLoadingStep == 2 && _state.state == LauncherStateEnum::UP)
+        {
+            startTimer(500);
+            _state.isLoadingStep = 3;
+        }
+        // Move Down
+        else if (_state.isLoadingStep == 3 && isTimerExpired())
+        {
+            _state.isBallLoaded = _state.isBallWaiting;
+            if (moveDown())
+            {
+                _state.isLoadingStep = 4;
+            }
+            else
+            {
+                MLOG_ERROR("%s: Load failed", toString().c_str());
+                _state.isLoadingStep = 0;
+                _state.state = LauncherStateEnum::ERROR;
+                setError("LOAD_FAILED", "Load failed");
+            }
+        }
+        // Wait until down
+        else if (_state.isLoadingStep == 4 && _state.state == LauncherStateEnum::DOWN)
+        {
+            // End
+            _state.isLoadingStep = 0;
+        }
         return true;
+    }
+
+    void Launcher::setErrorState(LauncherErrorCode errorCode, const String &errorMessage)
+    {
+        _state.state = LauncherStateEnum::ERROR;
+        if (_servo)
+            _servo->disable();
+        Device::setError(errorCodeToString(errorCode), errorMessage);
+    }
+
+    String Launcher::errorCodeToString(LauncherErrorCode errorCode) const
+    {
+        switch (errorCode)
+        {
+        case LauncherErrorCode::None:
+            return "None";
+        case LauncherErrorCode::CalibrationZeroNotFound:
+            return "CalibrationZeroNotFound";
+        case LauncherErrorCode::CalibrationSecondZeroNotFound:
+        default:
+            return "Unknown";
+        }
     }
 
     // ---------------------------------------------------------------------------
@@ -280,8 +362,10 @@ namespace devices
     {
         switch (state)
         {
-        case LauncherStateEnum::INIT:
-            return "Init";
+        case LauncherStateEnum::UNKNOWN:
+            return "Unknown";
+        case LauncherStateEnum::ERROR:
+            return "Error";
         case LauncherStateEnum::UP:
             return "Up";
         case LauncherStateEnum::MOVING_UP:

@@ -5,7 +5,7 @@
  * The launcher arm swings up to catch a ball and down to position it for launch.
  * At launch the arm swings up quickly, throwing the ball.
  *
- * States: INIT → MOVING_DOWN / MOVING_UP → DOWN / UP
+ * States: UNKNOWN → INIT → MOVING_DOWN / MOVING_UP → DOWN / UP
  * Functions: init(), load(), launch()
  */
 
@@ -25,6 +25,8 @@ namespace devices
 
     enum class LauncherStateEnum
     {
+        UNKNOWN,
+        ERROR,
         INIT,
         UP,
         MOVING_UP,
@@ -35,15 +37,32 @@ namespace devices
     struct LauncherConfig
     {
         String name = "Launcher";
-        uint32_t loadTimeMs = 2000;   ///< Duration for slow arm movement (load/init)
-        uint32_t launchTimeMs = 0;    ///< Duration for fast arm movement (launch)
+        uint32_t loadTimeMs = 2000; ///< Duration for slow arm movement (load/init)
+        uint32_t launchTimeMs = 0;  ///< Duration for fast arm movement (launch)
+    };
+
+    /**
+     * @enum WheelErrorCode
+     * @brief Enumeration of wheel error codes
+     */
+    enum class LauncherErrorCode
+    {
+        None,
+        ServoError,
+        ButtonError,
+        CalibrationZeroNotFound,
+        CalibrationSecondZeroNotFound,
     };
 
     struct LauncherState
     {
-        LauncherStateEnum state = LauncherStateEnum::INIT;
-        bool isBallLoaded = false;    ///< Ball is on the arm and ready for launch
-        bool isBallWaiting = false;   ///< A ball is waiting in the queue (button pressed)
+        LauncherStateEnum state = LauncherStateEnum::UNKNOWN;
+        /** Loading phase */
+        uint isLoadingStep = 0;
+        /** Launching phase */
+        uint isLaunchingStep = 0;
+        bool isBallLoaded = false;  ///< Ball is on the arm and ready for launch
+        bool isBallWaiting = false; ///< A ball is waiting in the queue (button pressed)
     };
 
     /**
@@ -86,14 +105,18 @@ namespace devices
 
         unsigned long _timerStart = 0;
         uint32_t _timerDuration = 0;
-        bool _isBallLoadedAtMoveStart = false; ///< Snapshot of isBallLoaded when MOVING_DOWN begins
-        bool _pendingLoadDown = false;          ///< After reaching UP during load(), move back DOWN
-        bool _isInitMove = false;               ///< Current MOVING_DOWN was triggered by init()
 
         bool isTimerExpired() const;
         void startTimer(uint32_t durationMs);
+        void setErrorState(LauncherErrorCode errorCode, const String &errorMessage);
+        String errorCodeToString(LauncherErrorCode errorCode) const;
 
         String stateToString(LauncherStateEnum state) const;
+
+        bool loadLoop();
+        bool launchLoop();
+        bool moveUp(int duration);
+        bool moveDown();
     };
 
 } // namespace devices

@@ -4,6 +4,7 @@ import { BatteryIcon } from "../icons/Icons";
 import { useBattery } from "../../stores/Battery";
 import BatteryConfig from "./BatteryConfig";
 import { useWebSocket2 } from "../../hooks/useWebSocket";
+import styles from "./Device.module.css";
 
 const POLL_INTERVAL_MS = 60_000; // header-driven polls every 60 s
 
@@ -20,8 +21,7 @@ export function Battery(props: { id: string; isPopup?: boolean; onClose?: () => 
   const voltage = () => state()?.voltage;
   const status = () => state()?.status;
 
-  const requestState = () =>
-    sendMessage({ type: "device-get-state", deviceId: props.id } as any);
+  const requestState = () => sendMessage({ type: "device-get-state", deviceId: props.id } as any);
 
   // Poll every 60 s for fresh state
   onMount(() => {
@@ -45,7 +45,11 @@ export function Battery(props: { id: string; isPopup?: boolean; onClose?: () => 
       isCollapsible={!props.isPopup}
       onClose={props.onClose}
     >
-      <div style={{ padding: "0.5rem", "font-size": "0.9rem" }}>
+      <div style={{ padding: "0 0.5rem 0.5rem 0.5rem", "font-size": "0.9rem" }}>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <BatteryIcon level={batteryLevel(pct())} width="100%" height={80} />
+        </div>
+
         <div>
           <strong>Status:</strong> {statusText()}
         </div>
@@ -79,10 +83,11 @@ export function Battery(props: { id: string; isPopup?: boolean; onClose?: () => 
             }}
           />
         </div>
-
-        <div style={{ "margin-top": "0.75rem", display: "flex", gap: "0.5rem" }}>
-          <BatteryIcon level={batteryLevel(pct())} width={40} height={40} />
-        </div>
+      </div>
+      <div class={styles.device__controls}>
+        <button class={styles.device__button} onClick={requestState} title="Request updated value">
+          Update
+        </button>
       </div>
     </Device>
   );

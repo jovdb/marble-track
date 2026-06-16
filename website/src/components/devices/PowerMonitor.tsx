@@ -3,14 +3,12 @@ import { Device } from "./Device";
 import { PowerMonitorIcon } from "../icons/Icons";
 import { usePowerMonitor } from "../../stores/PowerMonitor";
 import PowerMonitorConfig from "./PowerMonitorConfig";
-import { useWebSocket2 } from "../../hooks/useWebSocket";
 import styles from "./Device.module.css";
 
 const POLL_INTERVAL_MS = 10_000;
 
 export function PowerMonitor(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device, actions] = usePowerMonitor(props.id);
-  const [, { sendMessage }] = useWebSocket2();
 
   const state = () => device?.state;
   const status = () => state()?.status;
@@ -19,8 +17,7 @@ export function PowerMonitor(props: { id: string; isPopup?: boolean; onClose?: (
   const watt = () => state()?.watt;
   const timestamp = () => state()?.timestamp;
 
-  const requestState = () =>
-    sendMessage({ type: "device-get-state", deviceId: props.id } as any);
+  const requestState = () => actions.getDeviceState();
 
   // Poll every 10 s while the component is mounted
   onMount(() => {
@@ -58,16 +55,13 @@ export function PowerMonitor(props: { id: string; isPopup?: boolean; onClose?: (
           <strong>Status:</strong> {statusText()}
         </div>
         <div>
-          <strong>Voltage:</strong>{" "}
-          {voltage() !== undefined ? `${voltage()!.toFixed(2)} V` : "—"}
+          <strong>Voltage:</strong> {voltage() !== undefined ? `${voltage()!.toFixed(2)} V` : "—"}
         </div>
         <div>
-          <strong>Current:</strong>{" "}
-          {current() !== undefined ? `${current()!.toFixed(3)} A` : "—"}
+          <strong>Current:</strong> {current() !== undefined ? `${current()!.toFixed(3)} A` : "—"}
         </div>
         <div>
-          <strong>Power:</strong>{" "}
-          {watt() !== undefined ? `${watt()!.toFixed(2)} W` : "—"}
+          <strong>Power:</strong> {watt() !== undefined ? `${watt()!.toFixed(2)} W` : "—"}
         </div>
         <div style={{ "margin-top": "0.4rem", "font-size": "0.78rem", color: "#888" }}>
           <strong>Last read:</strong> {lastUpdated()} uptime
@@ -81,14 +75,6 @@ export function PowerMonitor(props: { id: string; isPopup?: boolean; onClose?: (
           title="Request a fresh measurement now"
         >
           Update
-        </button>
-        <button
-          class={styles.device__button}
-          onClick={() => actions.init()}
-          disabled={status() === "Ready"}
-          title="Re-initialise the INA226 sensor"
-        >
-          Init
         </button>
       </div>
     </Device>

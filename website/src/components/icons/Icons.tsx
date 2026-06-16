@@ -1,5 +1,5 @@
 // Device PNG Icons
-import { JSX } from "solid-js";
+import { For, JSX } from "solid-js";
 
 // Import PNG icons
 import servoIcon from "../../assets/icons/servo.png";
@@ -13,6 +13,7 @@ import { LedStateIcon } from "../devices/LedStateIcon";
 import { Hv20tStateIcon } from "../devices/Hv20tStateIcon";
 import { ButtonStateIcon } from "../devices/ButtonStateIcon";
 import { TouchStateIcon } from "../devices/TouchStateIcon";
+import { BatteryStateIcon } from "../devices/BatteryStateIcon";
 
 // Icon component props
 export interface IconProps {
@@ -53,15 +54,19 @@ export const BatteryIcon = (props: BatteryIconProps) => {
       {/* body */}
       <rect x="1" y="6" width="20" height="12" rx="2" />
       {/* nub */}
-      <path d="M21 10v4" stroke-width="3" stroke-linecap="round" />
+      <path d="M21.8 10v4" stroke-width="3" stroke-linecap="round" />
       {/* filled segments */}
-      {segments.slice(0, bars).map((x) => (
-        <rect x={x} y={segY} width={segW} height={segH} rx="0.5" fill={color} stroke="none" />
-      ))}
+      <For each={segments.slice(0, bars)}>
+        {(x) => (
+          <rect x={x} y={segY} width={segW} height={segH} rx="0.5" fill={color} stroke="none" />
+        )}
+      </For>
       {/* empty segments */}
-      {segments.slice(bars).map((x) => (
-        <rect x={x} y={segY} width={segW} height={segH} rx="0.5" fill="#ddd" stroke="none" />
-      ))}
+      <For each={segments.slice(bars)}>
+        {(x) => (
+          <rect x={x} y={segY} width={segW} height={segH} rx="0.5" fill="#ddd" stroke="none" />
+        )}
+      </For>
     </svg>
   );
 };
@@ -70,9 +75,9 @@ export const PowerMonitorIcon = (props: IconProps) => (
   <svg
     width={props.width || 24}
     height={props.height || 24}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
+    viewBox="0 0 512 512"
+    fill="currentColor"
+    stroke="none"
     stroke-width="1.5"
     stroke-linecap="round"
     stroke-linejoin="round"
@@ -80,9 +85,12 @@ export const PowerMonitorIcon = (props: IconProps) => (
     style={props.style}
     xmlns="http://www.w3.org/2000/svg"
   >
-    <circle cx="12" cy="12" r="9" />
-    <path d="M12 7v5l3 3" />
-    <path d="M9 3.6a9 9 0 0 1 6 0" stroke-width="2" />
+    <g>
+      <polygon
+        class="st0"
+        points="386.415,193.208 287.481,193.208 359.434,0 161.566,0 125.585,280.151 206.528,280.151 170.557,512     "
+      />
+    </g>
   </svg>
 );
 
@@ -637,7 +645,7 @@ export const getDeviceIcon = (type: string, deviceId: string, props?: IconProps)
     case "POWERMONITOR":
       return <PowerMonitorIcon {...props} />;
     case "BATTERY":
-      return <BatteryIcon level={0} {...props} />;
+      return <BatteryStateIcon deviceId={deviceId} {...props} />;
     default:
       return null;
   }

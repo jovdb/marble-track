@@ -284,6 +284,19 @@ export function useDevice<TState extends IDeviceState, TConfig extends IDeviceCo
   deviceId: string
 ) {
   const [store, { getDeviceConfig, setDeviceConfig, getDeviceState, execDeviceFn }] = useDevices();
+  const getCurrentDevice = () =>
+    store.devices[deviceId] as IDevice<TState, TConfig> | undefined;
+  
+  // ToDo: return as accesor function
+  const device = new Proxy({} as IDevice<TState, TConfig>, {
+    get(_target, property) {
+      if (typeof property === "symbol") {
+        return undefined;
+      }
+
+      return getCurrentDevice()?.[property as keyof IDevice<TState, TConfig>];
+    },
+  });
 
   // tracking only needed once
   onMount(() => {
@@ -292,13 +305,13 @@ export function useDevice<TState extends IDeviceState, TConfig extends IDeviceCo
   });
 
   return [
-    store.devices[deviceId] as IDevice<TState, TConfig> | undefined,
+    device,
     {
       getDeviceConfig: () => getDeviceConfig(deviceId),
       getDeviceState: () => getDeviceState(deviceId),
       setDeviceConfig: (config: TConfig) => setDeviceConfig(deviceId, config),
       execDeviceFn: (fn: string, args: Record<string, unknown> | undefined) =>
-        execDeviceFn(deviceId, (store.devices[deviceId]?.type ?? "") as DeviceType, fn, args),
+        execDeviceFn(deviceId, (getCurrentDevice()?.type ?? "") as DeviceType, fn, args),
     },
   ] as const;
 }

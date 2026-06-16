@@ -1,5 +1,5 @@
 // Device PNG Icons
-import { For, JSX } from "solid-js";
+import { Accessor, createMemo, For, JSX } from "solid-js";
 
 // Import PNG icons
 import servoIcon from "../../assets/icons/servo.png";
@@ -26,48 +26,51 @@ export interface IconProps {
 
 /** Battery icon with 5 fill segments. level = 0–5 filled bars. */
 export interface BatteryIconProps extends IconProps {
-  level?: number; // 0–5
+  level?: Accessor<number>; // 0–5
 }
 
 export const BatteryIcon = (props: BatteryIconProps) => {
-  const bars = Math.min(5, Math.max(0, Math.round(props.level ?? 0)));
-  const color = bars >= 4 ? "#4caf50" : bars >= 2 ? "#ff9800" : "#f44336";
+  const bars = createMemo(() => Math.min(5, Math.max(0, Math.round(props.level?.() ?? 0))));
+  const color = createMemo(() => (bars() >= 4 ? "#4caf50" : bars() >= 2 ? "#ff9800" : "#f44336"));
   // 5 segments inside the battery body (x: 2.5 to 18.5, width per seg = 3, gap = 0.2)
   const segW = 3.0;
   const segH = 8;
   const segY = 8;
   const segments = [2.5, 5.9, 9.3, 12.7, 16.1];
   return (
-    <svg
-      width={props.width || 24}
-      height={props.height || 24}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      class={props.class}
-      style={props.style}
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      {/* body */}
-      <rect x="1" y="6" width="20" height="12" rx="2" />
-      {/* nub */}
-      <path d="M21.8 10v4" stroke-width="3" stroke-linecap="round" />
-      {/* filled segments */}
-      <For each={segments.slice(0, bars)}>
-        {(x) => (
-          <rect x={x} y={segY} width={segW} height={segH} rx="0.5" fill={color} stroke="none" />
-        )}
-      </For>
-      {/* empty segments */}
-      <For each={segments.slice(bars)}>
-        {(x) => (
-          <rect x={x} y={segY} width={segW} height={segH} rx="0.5" fill="#ddd" stroke="none" />
-        )}
-      </For>
-    </svg>
+    <>
+      <svg
+        width={props.width || 24}
+        height={props.height || 24}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class={props.class}
+        style={props.style}
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* body */}
+        <rect x="1" y="6" width="20" height="12" rx="2" />
+        {/* nub */}
+        <path d="M21.8 10v4" stroke-width="3" stroke-linecap="round" />
+        {/* filled segments */}
+        <For each={segments.slice(0, bars())}>
+          {(x) => (
+            <rect x={x} y={segY} width={segW} height={segH} rx="0.5" fill={color()} stroke="none" />
+          )}
+        </For>
+        {/* empty segments */}
+        <For each={segments.slice(bars())}>
+          {(x) => (
+            <rect x={x} y={segY} width={segW} height={segH} rx="0.5" fill="#ddd" stroke="none" />
+          )}
+        </For>
+      </svg>
+      {props.level?.()}
+    </>
   );
 };
 

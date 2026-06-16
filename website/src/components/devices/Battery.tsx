@@ -7,10 +7,6 @@ import styles from "./Device.module.css";
 
 const POLL_INTERVAL_MS = 60_000; // header-driven polls every 60 s
 
-function batteryLevel(pct: number): number {
-  return Math.min(5, Math.max(0, Math.round(pct / 20)));
-}
-
 export function Battery(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device, { getDeviceState }] = useBattery(props.id);
 
@@ -18,7 +14,7 @@ export function Battery(props: { id: string; isPopup?: boolean; onClose?: () => 
   const pct = () => state()?.batteryPercent ?? 0;
   const voltage = () => state()?.voltage;
   const status = () => state()?.status;
-
+  const batteryLevel = () => Math.min(5, Math.max(0, Math.round(pct() / 20)));
   const requestState = getDeviceState;
 
   // Poll every 60 s for fresh state
@@ -39,13 +35,13 @@ export function Battery(props: { id: string; isPopup?: boolean; onClose?: () => 
     <Device
       id={props.id}
       configComponent={(onClose) => <BatteryConfig id={props.id} onClose={onClose} />}
-      icon={<BatteryIcon level={batteryLevel(pct())} width={24} height={24} />}
+      icon={<BatteryIcon level={batteryLevel} width={24} height={24} />}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}
     >
       <div style={{ padding: "0 0.5rem 0.5rem 0.5rem", "font-size": "0.9rem" }}>
         <div style={{ display: "flex", gap: "0.5rem" }}>
-          <BatteryIcon level={batteryLevel(pct())} width="100%" height={80} />
+          <BatteryIcon level={batteryLevel} width="100%" height={80} />
         </div>
 
         <div>

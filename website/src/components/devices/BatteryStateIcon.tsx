@@ -26,7 +26,7 @@ export function BatteryStateIcon(props: { deviceId: string; poll?: boolean } & I
 
   return (
     <span title={batteryTitle()}>
-      <BatteryIcon level={batteryLevel()} width={props.width} height={props.height} />
+      <BatteryIcon level={batteryLevel} width={props.width} height={props.height} />
     </span>
   );
 }

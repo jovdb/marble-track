@@ -23,6 +23,69 @@ export interface IconProps {
   alt?: string;
 }
 
+/** Battery icon with 5 fill segments. level = 0–5 filled bars. */
+export interface BatteryIconProps extends IconProps {
+  level?: number; // 0–5
+}
+
+export const BatteryIcon = (props: BatteryIconProps) => {
+  const bars = Math.min(5, Math.max(0, Math.round(props.level ?? 0)));
+  const color = bars >= 4 ? "#4caf50" : bars >= 2 ? "#ff9800" : "#f44336";
+  // 5 segments inside the battery body (x: 2.5 to 18.5, width per seg = 3, gap = 0.2)
+  const segW = 3.0;
+  const segH = 8;
+  const segY = 8;
+  const segments = [2.5, 5.9, 9.3, 12.7, 16.1];
+  return (
+    <svg
+      width={props.width || 24}
+      height={props.height || 24}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class={props.class}
+      style={props.style}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* body */}
+      <rect x="1" y="6" width="20" height="12" rx="2" />
+      {/* nub */}
+      <path d="M21 10v4" stroke-width="3" stroke-linecap="round" />
+      {/* filled segments */}
+      {segments.slice(0, bars).map((x) => (
+        <rect x={x} y={segY} width={segW} height={segH} rx="0.5" fill={color} stroke="none" />
+      ))}
+      {/* empty segments */}
+      {segments.slice(bars).map((x) => (
+        <rect x={x} y={segY} width={segW} height={segH} rx="0.5" fill="#ddd" stroke="none" />
+      ))}
+    </svg>
+  );
+};
+
+export const PowerMonitorIcon = (props: IconProps) => (
+  <svg
+    width={props.width || 24}
+    height={props.height || 24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class={props.class}
+    style={props.style}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7v5l3 3" />
+    <path d="M9 3.6a9 9 0 0 1 6 0" stroke-width="2" />
+  </svg>
+);
+
 export const ServoIcon = (props: IconProps) => (
   <img
     src={servoIcon}
@@ -571,8 +634,12 @@ export const getDeviceIcon = (type: string, deviceId: string, props?: IconProps)
       return <PwmExpanderIcon {...props} />;
     case "SERVOGATE":
       return <TowerIcon {...props} />;
+    case "POWERMONITOR":
+      return <PowerMonitorIcon {...props} />;
+    case "BATTERY":
+      return <BatteryIcon level={0} {...props} />;
     default:
-      return null; // Default fallback
+      return null;
   }
 };
 // Add a icon for wifi_connected and wifi_disconnected

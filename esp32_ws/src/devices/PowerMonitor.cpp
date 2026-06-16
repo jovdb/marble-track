@@ -87,7 +87,6 @@ namespace devices
 
         Device::clearError();
         _state.status = "Ready";
-        _voltageAlertActive = false;
         notifyStateChanged();
 
         MLOG_INFO("%s: INA226 ready at 0x%02X on I2C bus '%s' (shunt=%.4f\u03a9, maxI=%.2fA)",
@@ -144,51 +143,30 @@ namespace devices
 
         _state.voltage = voltage;
         _state.current = current;
-        _state.watt    = voltage * current; // compute from measured values; avoids calibration register errors
+        _state.watt    = voltage * current;
         _state.timestamp = millis();
-
-        // Low-voltage alert: fire once on transition, clear once voltage recovers
-        if (_state.voltage < _config.minVoltage && !_voltageAlertActive)
-        {
-            _voltageAlertActive = true;
-            String msg = "Voltage " + String(_state.voltage, 2) + "V is below minimum " + String(_config.minVoltage, 2) + "V";
-            broadcastNotification("LOW_VOLTAGE", msg, DeviceNotificationType::Warning);
-            MLOG_WARN("%s: %s", toString().c_str(), msg.c_str());
-        }
-        else if (_state.voltage >= _config.minVoltage && _voltageAlertActive)
-        {
-            _voltageAlertActive = false;
-            MLOG_INFO("%s: Voltage recovered to %.2fV", toString().c_str(), _state.voltage);
-        }
     }
 
     void PowerMonitor::loop()
     {
         Device::loop();
 
+        // Health check: re-initialise every 5 s while in error state
         unsigned long now = millis();
-
-        // Auto-recover: re-probe every 5 s while in error state
-        if (_state.status != "Ready" || !_ina226)
+        if (now - _lastHealthCheckMs >= 5000)
         {
-            if (now - _lastReadMs >= 5000)
-            {
-                _lastReadMs = now;
+            _lastHealthCheckMs = now;
+            if (_state.status != "Ready" || !_ina226)
                 init();
-            }
-            return;
-        }
-
-        if (now - _lastReadMs >= _config.notifyIntervalMs)
-        {
-            _lastReadMs = now;
-            readMeasurements();
-            notifyStateChanged();
         }
     }
 
     void PowerMonitor::addDeviceStateToJson(JsonDocument &doc)
     {
+        // Always do a fresh read so the website gets up-to-date values on every request
+        if (_state.status == "Ready" && _ina226)
+            readMeasurements();
+
         doc["status"] = _state.status;
         doc["voltage"] = _state.voltage;
         doc["current"] = _state.current;
@@ -218,12 +196,6 @@ namespace devices
             _config.shuntResistance = doc["shuntResistance"].as<float>();
         if (doc["maxCurrent"].is<float>())
             _config.maxCurrent = doc["maxCurrent"].as<float>();
-        if (doc["minVoltage"].is<float>())
-            _config.minVoltage = doc["minVoltage"].as<float>();
-        if (doc["maxVoltage"].is<float>())
-            _config.maxVoltage = doc["maxVoltage"].as<float>();
-        if (doc["notifyIntervalMs"].is<unsigned long>())
-            _config.notifyIntervalMs = doc["notifyIntervalMs"].as<unsigned long>();
     }
 
     void PowerMonitor::configToJson(JsonDocument &doc)
@@ -233,9 +205,6 @@ namespace devices
         doc["i2cAddress"] = _config.i2cAddress;
         doc["shuntResistance"] = _config.shuntResistance;
         doc["maxCurrent"] = _config.maxCurrent;
-        doc["minVoltage"] = _config.minVoltage;
-        doc["maxVoltage"] = _config.maxVoltage;
-        doc["notifyIntervalMs"] = _config.notifyIntervalMs;
     }
 
 } // namespace devices

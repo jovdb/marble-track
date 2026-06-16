@@ -24,9 +24,6 @@ namespace devices
         uint8_t i2cAddress = 0x40;           // INA226 I2C address (0x40–0x4F)
         float shuntResistance = 0.1f;        // Shunt resistor value in ohms
         float maxCurrent = 3.2f;             // Expected max current in amps (for calibration)
-        float minVoltage = 15.0f;            // 0% battery / low-voltage alert threshold (V)
-        float maxVoltage = 21.0f;            // 100% battery reference voltage (V)
-        unsigned long notifyIntervalMs = 10000; // How often to read and push state (ms)
     };
 
     struct PowerMonitorState
@@ -60,22 +57,18 @@ namespace devices
         void jsonToConfig(const JsonDocument &doc) override;
         void configToJson(JsonDocument &doc) override;
 
+        // Read fresh values from INA226 into _state. Called on every state request
+        // and by Battery devices that reference this monitor.
+        void readMeasurements();
+
+        float getVoltage() const { return _state.voltage; }
+        bool isReady() const { return _state.status == "Ready" && _ina226 != nullptr; }
+
     private:
         INA226_WE *_ina226 = nullptr;
+        unsigned long _lastHealthCheckMs = 0;
 
-        unsigned long _lastReadMs = 0;
-        bool _voltageAlertActive = false;   // Tracks alert state to avoid repeated notifications
-
-        /**
-         * @brief Locate the I2C device, initialize the INA226 and update state.
-         * Called from setup() and from control("init").
-         */
         void init();
-
-        /**
-         * @brief Read voltage, current and power from INA226 and update _state.
-         */
-        void readMeasurements();
     };
 
 } // namespace devices

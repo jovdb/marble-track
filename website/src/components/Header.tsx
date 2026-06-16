@@ -1,8 +1,9 @@
-import { type Component, createMemo, createSignal } from "solid-js";
+import { type Component, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import styles from "./Header.module.css";
 import logo from "../assets/logo-64.png";
 import { useWebSocket2 } from "../hooks/useWebSocket";
 import {
+  BatteryIcon,
   BellIcon,
   BugIcon,
   ConnectedIcon,
@@ -17,15 +18,53 @@ import { useSystemInfo } from "../stores/SystemInfo";
 import { SystemInfoPopup } from "./SystemInfoPopup";
 import { useNotifications } from "../stores/Notifications";
 import { NotificationsPopup } from "./NotificationsPopup";
+import { useDevices } from "../stores/Devices";
+import { IBatteryState } from "../stores/Battery";
+
+const BATTERY_POLL_MS = 60_000;
 
 const Header: Component = () => {
   const [webSocket, { sendMessage }] = useWebSocket2();
   const [systemInfo] = useSystemInfo();
   const [notifications] = useNotifications();
+  const [devicesStore] = useDevices();
   const [isNetworkPopupOpen, setIsNetworkPopupOpen] = createSignal(false);
   const [isSystemInfoOpen, setIsSystemInfoOpen] = createSignal(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = createSignal(false);
   const [, { markAllRead }] = useNotifications();
+
+  // Find first battery device
+  const batteryDevice = createMemo(() =>
+    Object.values(devicesStore.devices).find((d) => d.type === "battery")
+  );
+  const batteryState = createMemo(() => batteryDevice()?.state as IBatteryState | undefined);
+  const batteryPct = createMemo(() => batteryState()?.batteryPercent ?? 0);
+  const batteryLevel = createMemo(() => Math.min(5, Math.max(0, Math.round(batteryPct() / 20))));
+  const batteryTitle = createMemo(() => {
+    const d = batteryDevice();
+    if (!d) return "No battery device";
+    const pct = batteryPct();
+    const v = (batteryState()?.voltage ?? 0).toFixed(2);
+    return `Battery: ${pct.toFixed(0)}% (${v} V)`;
+  });
+
+  // Poll battery every 60 s
+  const pollBattery = () => {
+    const d = batteryDevice();
+    if (d && webSocket.isConnected) {
+      sendMessage({ type: "device-get-state", deviceId: d.id } as any);
+    }
+  };
+
+  onMount(() => {
+    const id = setInterval(pollBattery, BATTERY_POLL_MS);
+    onCleanup(() => clearInterval(id));
+  });
+
+  // Poll immediately when battery device becomes available
+  createEffect(() => {
+    if (batteryDevice() && webSocket.isConnected) pollBattery();
+  });
 
   const titleText = createMemo(() => {
     const parts = [`Website build: ${__BUILD_DATE__}`];
@@ -83,6 +122,12 @@ const Header: Component = () => {
           </h1>
         </div>
         <div class={styles.header__right}>
+          {/* Battery icon (shown when battery device exists) */}
+          {batteryDevice() && (
+            <span title={batteryTitle()} style={{ cursor: "default", display: "flex", "align-items": "center" }}>
+              <BatteryIcon level={batteryLevel()} width={28} height={20} />
+            </span>
+          )}
           <span title={connectionTitle()} class={styles.header__statusIcon}>
             {webSocket.isConnected ? <ConnectedIcon /> : <DisconnectedIcon />}
           </span>

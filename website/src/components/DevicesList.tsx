@@ -22,6 +22,7 @@ import {
 
 // Available composition device types (from esp32_ws/include/devices/composition/)
 const COMPOSITION_DEVICE_TYPES = [
+  "Battery",
   "Button",
   "Buzzer",
   "I2c",

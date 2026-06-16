@@ -1,35 +1,33 @@
-import { Show } from "solid-js";
+import { onCleanup, onMount } from "solid-js";
 import { Device } from "./Device";
-import { getDeviceIcon } from "../icons/Icons";
+import { PowerMonitorIcon } from "../icons/Icons";
 import { usePowerMonitor } from "../../stores/PowerMonitor";
 import PowerMonitorConfig from "./PowerMonitorConfig";
+import { useWebSocket2 } from "../../hooks/useWebSocket";
 import styles from "./Device.module.css";
 
-function batteryColor(pct: number): string {
-  if (pct >= 60) return "#4caf50"; // green
-  if (pct >= 20) return "#ff9800"; // orange
-  return "#f44336";                // red
-}
+const POLL_INTERVAL_MS = 10_000;
 
 export function PowerMonitor(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device, actions] = usePowerMonitor(props.id);
+  const [, { sendMessage }] = useWebSocket2();
 
-  const config = () => device?.config;
   const state = () => device?.state;
-
   const status = () => state()?.status;
   const voltage = () => state()?.voltage;
   const current = () => state()?.current;
   const watt = () => state()?.watt;
   const timestamp = () => state()?.timestamp;
 
-  const batteryPercent = () => {
-    const v = voltage();
-    const minV = config()?.minVoltage ?? 15.0;
-    const maxV = config()?.maxVoltage ?? 21.0;
-    if (v === undefined || maxV <= minV) return null;
-    return Math.max(0, Math.min(100, ((v - minV) / (maxV - minV)) * 100));
-  };
+  const requestState = () =>
+    sendMessage({ type: "device-get-state", deviceId: props.id } as any);
+
+  // Poll every 10 s while the component is mounted
+  onMount(() => {
+    requestState();
+    const id = setInterval(requestState, POLL_INTERVAL_MS);
+    onCleanup(() => clearInterval(id));
+  });
 
   const lastUpdated = () => {
     const ts = timestamp();
@@ -47,13 +45,11 @@ export function PowerMonitor(props: { id: string; isPopup?: boolean; onClose?: (
     return <span>—</span>;
   };
 
-  const pct = () => batteryPercent();
-
   return (
     <Device
       id={props.id}
       configComponent={(onClose) => <PowerMonitorConfig id={props.id} onClose={onClose} />}
-      icon={device?.type ? getDeviceIcon(device.type, props.id) : null}
+      icon={<PowerMonitorIcon width={24} height={24} />}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}
     >
@@ -73,40 +69,19 @@ export function PowerMonitor(props: { id: string; isPopup?: boolean; onClose?: (
           <strong>Power:</strong>{" "}
           {watt() !== undefined ? `${watt()!.toFixed(2)} W` : "—"}
         </div>
-
-        {/* Battery percentage bar */}
-        <Show when={pct() !== null}>
-          <div style={{ "margin-top": "0.5rem" }}>
-            <strong>Battery:</strong> {pct()!.toFixed(0)}%
-            <div
-              style={{
-                "margin-top": "0.25rem",
-                background: "#ddd",
-                "border-radius": "4px",
-                height: "10px",
-                width: "100%",
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  width: `${pct()!}%`,
-                  height: "100%",
-                  background: batteryColor(pct()!),
-                  "border-radius": "4px",
-                  transition: "width 0.4s ease, background 0.4s ease",
-                }}
-              />
-            </div>
-          </div>
-        </Show>
-
         <div style={{ "margin-top": "0.4rem", "font-size": "0.78rem", color: "#888" }}>
           <strong>Last read:</strong> {lastUpdated()} uptime
         </div>
       </div>
 
       <div class={styles.device__controls}>
+        <button
+          class={styles.device__button}
+          onClick={requestState}
+          title="Request a fresh measurement now"
+        >
+          Update
+        </button>
         <button
           class={styles.device__button}
           onClick={() => actions.init()}

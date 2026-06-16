@@ -21,6 +21,7 @@
 #include "devices/ServoGate.h"
 #include "devices/Launcher.h"
 #include "devices/PowerMonitor.h"
+#include "devices/Battery.h"
 #include "devices/mixins/SerializableMixin.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
@@ -97,6 +98,10 @@ Device *DeviceManager::createDevice(const String &deviceId, const String &device
     else if (upperType == "POWERMONITOR")
     {
         return new devices::PowerMonitor(deviceId);
+    }
+    else if (upperType == "BATTERY")
+    {
+        return new devices::Battery(deviceId);
     }
 
     MLOG_WARN("Unknown device type: %s", upperType.c_str());

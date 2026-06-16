@@ -26,9 +26,6 @@ export default function PowerMonitorConfig(props: PowerMonitorConfigProps) {
   const [i2cAddress, setI2cAddress] = createSignal(cfg()?.i2cAddress ?? 0x40);
   const [shuntResistance, setShuntResistance] = createSignal(cfg()?.shuntResistance ?? 0.1);
   const [maxCurrent, setMaxCurrent] = createSignal(cfg()?.maxCurrent ?? 3.2);
-  const [minVoltage, setMinVoltage] = createSignal(cfg()?.minVoltage ?? 15.0);
-  const [maxVoltage, setMaxVoltage] = createSignal(cfg()?.maxVoltage ?? 21.0);
-  const [notifyIntervalMs, setNotifyIntervalMs] = createSignal(cfg()?.notifyIntervalMs ?? 10000);
 
   const i2cDevices = createMemo(() =>
     Object.values(devicesStore.devices).filter((d) => d.type === "i2c")
@@ -43,9 +40,6 @@ export default function PowerMonitorConfig(props: PowerMonitorConfigProps) {
     if (typeof c.i2cAddress === "number") setI2cAddress(c.i2cAddress);
     if (typeof c.shuntResistance === "number") setShuntResistance(c.shuntResistance);
     if (typeof c.maxCurrent === "number") setMaxCurrent(c.maxCurrent);
-    if (typeof c.minVoltage === "number") setMinVoltage(c.minVoltage);
-    if (typeof c.maxVoltage === "number") setMaxVoltage(c.maxVoltage);
-    if (typeof c.notifyIntervalMs === "number") setNotifyIntervalMs(c.notifyIntervalMs);
   });
 
   const handleSave = () => {
@@ -58,9 +52,6 @@ export default function PowerMonitorConfig(props: PowerMonitorConfigProps) {
         i2cAddress: i2cAddress(),
         shuntResistance: shuntResistance(),
         maxCurrent: maxCurrent(),
-        minVoltage: minVoltage(),
-        maxVoltage: maxVoltage(),
-        notifyIntervalMs: notifyIntervalMs(),
       },
     });
   };
@@ -139,54 +130,6 @@ export default function PowerMonitorConfig(props: PowerMonitorConfigProps) {
             />
             <span style={{ "margin-left": "0.5rem", "font-size": "0.8rem", color: "#666" }}>
               Used for INA226 calibration
-            </span>
-          </DeviceConfigItem>
-        </DeviceConfigRow>
-
-        <DeviceConfigRow>
-          <DeviceConfigItem name="Min Voltage (V):">
-            <input
-              type="number"
-              min={0}
-              step={0.1}
-              value={minVoltage()}
-              onInput={(e) => setMinVoltage(Number(e.currentTarget.value))}
-              style={{ "margin-left": "0.5rem", width: "6rem" }}
-            />
-            <span style={{ "margin-left": "0.5rem", "font-size": "0.8rem", color: "#666" }}>
-              0% battery / low-voltage alert
-            </span>
-          </DeviceConfigItem>
-        </DeviceConfigRow>
-
-        <DeviceConfigRow>
-          <DeviceConfigItem name="Max Voltage (V):">
-            <input
-              type="number"
-              min={0}
-              step={0.1}
-              value={maxVoltage()}
-              onInput={(e) => setMaxVoltage(Number(e.currentTarget.value))}
-              style={{ "margin-left": "0.5rem", width: "6rem" }}
-            />
-            <span style={{ "margin-left": "0.5rem", "font-size": "0.8rem", color: "#666" }}>
-              100% battery reference
-            </span>
-          </DeviceConfigItem>
-        </DeviceConfigRow>
-
-        <DeviceConfigRow>
-          <DeviceConfigItem name="Update Interval (ms):">
-            <input
-              type="number"
-              min={1000}
-              step={1000}
-              value={notifyIntervalMs()}
-              onInput={(e) => setNotifyIntervalMs(Number(e.currentTarget.value))}
-              style={{ "margin-left": "0.5rem", width: "7rem" }}
-            />
-            <span style={{ "margin-left": "0.5rem", "font-size": "0.8rem", color: "#666" }}>
-              default: 10000 ms
             </span>
           </DeviceConfigItem>
         </DeviceConfigRow>

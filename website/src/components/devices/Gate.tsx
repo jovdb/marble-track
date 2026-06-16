@@ -3,7 +3,6 @@ import { createSignal, onCleanup } from "solid-js";
 import deviceStyles from "./Device.module.css";
 import gateStyles from "./Gate.module.css";
 import { IDeviceState, IDeviceConfig } from "../../stores/Devices";
-import { IWsSendMessage } from "../../interfaces/WebSockets";
 import { useDevice } from "../../stores/Devices";
 
 interface IGateState extends IDeviceState {
@@ -11,19 +10,14 @@ interface IGateState extends IDeviceState {
 }
 
 export function Gate(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
-  const [device, { sendMessage }] = useDevice<IGateState, IDeviceConfig>(props.id);
+  const [device, { execDeviceFn }] = useDevice<IGateState, IDeviceConfig>(props.id);
   const closedAngle = 0;
   const openedAngle = -110;
   const [angle, setAngle] = createSignal(closedAngle);
   const [gateState] = createSignal<"Closed" | "IsOpening" | "Opened" | "Closing">("Closed");
 
   const openGate = () => {
-    sendMessage({
-      type: "device-fn",
-      deviceType: "gate",
-      deviceId: props.id,
-      fn: "open",
-    } as IWsSendMessage);
+    execDeviceFn("open", undefined);
   };
 
   // Animation logic (can be improved)

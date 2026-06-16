@@ -17,17 +17,11 @@ export interface IIoExpanderConfig extends IDeviceConfig {
 }
 
 export function useIoExpander(deviceId: string) {
-  const [device, { sendMessage, ...actions }] = useDevice<IIoExpanderState, IIoExpanderConfig>(
+  const [device, { execDeviceFn, ...actions }] = useDevice<IIoExpanderState, IIoExpanderConfig>(
     deviceId
   );
 
-  const init = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "init",
-    });
+  const init = () => execDeviceFn("init", undefined);
 
   return [
     device,

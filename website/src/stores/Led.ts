@@ -22,26 +22,14 @@ interface ILedConfig extends IDeviceConfig {
 }
 
 export function useLed(deviceId: string) {
-  const [device, { sendMessage, ...actions }] = useDevice<ILedState, ILedConfig>(deviceId);
+  const [device, { execDeviceFn, ...actions }] = useDevice<ILedState, ILedConfig>(deviceId);
 
-  function setLed(deviceId: string, value: any) {
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "set",
-      args: { value },
-    });
+  function setLed(_deviceId: string, value: any) {
+    execDeviceFn("set", { value });
   }
 
-  function blink(deviceId: string, onTime?: number, offTime?: number) {
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "blink",
-      args: { onTime, offTime },
-    });
+  function blink(_deviceId: string, onTime?: number, offTime?: number) {
+    execDeviceFn("blink", { onTime, offTime });
   }
 
   return [

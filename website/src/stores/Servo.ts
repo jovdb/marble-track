@@ -28,7 +28,7 @@ export interface IServoConfig extends IDeviceConfig {
 }
 
 export function useServo(deviceId: string) {
-  const [device, { sendMessage, ...actions }] = useDevice<IServoState, IServoConfig>(deviceId);
+  const [device, { execDeviceFn, ...actions }] = useDevice<IServoState, IServoConfig>(deviceId);
 
   const setValue = (value: number, durationMs?: number) => {
     const args: { value: number; durationMs?: number } = { value };
@@ -36,32 +36,12 @@ export function useServo(deviceId: string) {
       args.durationMs = durationMs;
     }
 
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "setValue",
-      args,
-    });
+    execDeviceFn("setValue", args);
   };
 
-  const stop = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "stop",
-      args: {},
-    });
+  const stop = () => execDeviceFn("stop", {});
 
-  const disable = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "disable",
-      args: {},
-    });
+  const disable = () => execDeviceFn("disable", {});
 
   return [
     device,

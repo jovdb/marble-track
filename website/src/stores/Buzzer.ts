@@ -15,34 +15,13 @@ export interface IBuzzerConfig extends IDeviceConfig {
 }
 
 export function useBuzzer(deviceId: string) {
-  const [device, { sendMessage, ...actions }] = useDevice<IBuzzerState, IBuzzerConfig>(deviceId);
+  const [device, { execDeviceFn, ...actions }] = useDevice<IBuzzerState, IBuzzerConfig>(deviceId);
 
-  const tone = (args: { frequency: number; duration: number }) =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "tone",
-      args,
-    });
+  const tone = (args: { frequency: number; duration: number }) => execDeviceFn("tone", args);
 
-  const tune = (rtttl: string) =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "tune",
-      args: { rtttl },
-    });
+  const tune = (rtttl: string) => execDeviceFn("tune", { rtttl });
 
-  const stop = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "stop",
-      args: {},
-    });
+  const stop = () => execDeviceFn("stop", {});
 
   return [
     device,

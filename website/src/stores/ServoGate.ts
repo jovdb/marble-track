@@ -19,25 +19,13 @@ export interface IServoGateConfig extends IDeviceConfig {
 }
 
 export function useServoGate(deviceId: string) {
-  const [device, { sendMessage, ...actions }] = useDevice<IServoGateState, IServoGateConfig>(
+  const [device, { execDeviceFn, ...actions }] = useDevice<IServoGateState, IServoGateConfig>(
     deviceId
   );
 
-  const trigger = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "trigger",
-    });
+  const trigger = () => execDeviceFn("trigger", undefined);
 
-  const reset = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "reset",
-    });
+  const reset = () => execDeviceFn("reset", undefined);
 
   return [
     device,

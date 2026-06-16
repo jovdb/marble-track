@@ -283,8 +283,7 @@ export function useDevices() {
 export function useDevice<TState extends IDeviceState, TConfig extends IDeviceConfig>(
   deviceId: string
 ) {
-  const [store, { getDeviceConfig, setDeviceConfig, getDeviceState, sendMessage, execDeviceFn }] =
-    useDevices();
+  const [store, { getDeviceConfig, setDeviceConfig, getDeviceState, execDeviceFn }] = useDevices();
 
   // tracking only needed once
   onMount(() => {
@@ -300,7 +299,6 @@ export function useDevice<TState extends IDeviceState, TConfig extends IDeviceCo
       setDeviceConfig: (config: TConfig) => setDeviceConfig(deviceId, config),
       execDeviceFn: (fn: string, args: Record<string, unknown> | undefined) =>
         execDeviceFn(deviceId, (store.devices[deviceId]?.type ?? "") as DeviceType, fn, args),
-      sendMessage,
     },
   ] as const;
 }

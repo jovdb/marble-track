@@ -13,7 +13,7 @@ export interface II2cConfig extends IDeviceConfig {
 }
 
 export function useI2c(deviceId: string) {
-  const [device, { sendMessage, ...actions }] = useDevice<II2cState, II2cConfig>(deviceId);
+  const [device, { ...actions }] = useDevice<II2cState, II2cConfig>(deviceId);
 
   return [
     device,

@@ -17,17 +17,11 @@ export interface IPwmExpanderConfig extends IDeviceConfig {
 }
 
 export function usePwmExpander(deviceId: string) {
-  const [device, { sendMessage, ...actions }] = useDevice<IPwmExpanderState, IPwmExpanderConfig>(
+  const [device, { execDeviceFn, ...actions }] = useDevice<IPwmExpanderState, IPwmExpanderConfig>(
     deviceId
   );
 
-  const init = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "init",
-    });
+  const init = () => execDeviceFn("init", undefined);
 
   return [
     device,

@@ -24,62 +24,25 @@ export interface IWheelConfig extends IDeviceConfig {
 }
 
 export function useWheel(deviceId: string) {
-  const [device, { sendMessage, ...actions }] = useDevice<IWheelState, IWheelConfig>(deviceId);
+  const [device, { execDeviceFn, ...actions }] = useDevice<IWheelState, IWheelConfig>(deviceId);
 
   const calibrate = (maxStepsPerRevolution?: number) =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "calibrate",
-      args:
-        maxStepsPerRevolution !== undefined
-          ? {
-              maxStepsPerRevolution,
-            }
-          : undefined,
-    });
+    execDeviceFn(
+      "calibrate",
+      maxStepsPerRevolution !== undefined ? { maxStepsPerRevolution } : undefined
+    );
 
   const init = (maxStepsPerRevolution?: number) =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "init",
-      args:
-        maxStepsPerRevolution !== undefined
-          ? {
-              maxStepsPerRevolution,
-            }
-          : undefined,
-    });
+    execDeviceFn(
+      "init",
+      maxStepsPerRevolution !== undefined ? { maxStepsPerRevolution } : undefined
+    );
 
-  const nextBreakpoint = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "next-breakpoint",
-    });
+  const nextBreakpoint = () => execDeviceFn("next-breakpoint", {});
 
-  const moveToAngle = (angle: number) =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "move-to-angle",
-      args: {
-        angle,
-      },
-    });
+  const moveToAngle = (angle: number) => execDeviceFn("move-to-angle", { angle });
 
-  const stop = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "stop",
-    });
+  const stop = () => execDeviceFn("stop", {});
 
   return [
     device,

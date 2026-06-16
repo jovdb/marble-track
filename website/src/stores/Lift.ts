@@ -29,47 +29,17 @@ export interface ILiftConfig extends IDeviceConfig {
 }
 
 export function useLift(deviceId: string) {
-  const [device, { sendMessage, ...actions }] = useDevice<ILiftState, ILiftConfig>(deviceId);
+  const [device, { execDeviceFn, ...actions }] = useDevice<ILiftState, ILiftConfig>(deviceId);
 
-  const up = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "up",
-    });
+  const up = () => execDeviceFn("up", undefined);
 
-  const down = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "down",
-    });
+  const down = () => execDeviceFn("down", undefined);
 
-  const init = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "init",
-    });
+  const init = () => execDeviceFn("init", undefined);
 
-  const loadBall = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "loadBall",
-    });
+  const loadBall = () => execDeviceFn("loadBall", undefined);
 
-  const unloadBall = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "unloadBall",
-    });
+  const unloadBall = () => execDeviceFn("unloadBall", undefined);
 
   return [
     device,

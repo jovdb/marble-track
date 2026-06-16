@@ -16,33 +16,15 @@ export interface ILauncherConfig extends IDeviceConfig {
 }
 
 export function useLauncher(deviceId: string) {
-  const [device, { sendMessage, ...actions }] = useDevice<ILauncherState, ILauncherConfig>(
+  const [device, { execDeviceFn, ...actions }] = useDevice<ILauncherState, ILauncherConfig>(
     deviceId
   );
 
-  const init = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "init",
-    });
+  const init = () => execDeviceFn("init", undefined);
 
-  const load = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "load",
-    });
+  const load = () => execDeviceFn("load", undefined);
 
-  const launch = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "launch",
-    });
+  const launch = () => execDeviceFn("launch", undefined);
 
   return [
     device,

@@ -53,7 +53,7 @@ export interface IStepperSetPositionArgs {
 }
 
 export function useStepper(deviceId: string) {
-  const [device, { sendMessage, ...actions }] = useDevice<IStepperState, IStepperConfig>(deviceId);
+  const [device, { execDeviceFn, ...actions }] = useDevice<IStepperState, IStepperConfig>(deviceId);
 
   const move = (args: IStepperMoveArgs) => {
     const config = device?.config;
@@ -67,13 +67,7 @@ export function useStepper(deviceId: string) {
       moveArgs.acceleration = config.defaultAcceleration;
     }
 
-    return sendMessage({
-      type: "device-fn",
-      deviceType,
-      deviceId,
-      fn: "move",
-      args: moveArgs as unknown as Record<string, unknown>,
-    });
+    return execDeviceFn("move", moveArgs as unknown as Record<string, unknown>);
   };
 
   const stop = (acceleration?: number) => {
@@ -84,13 +78,7 @@ export function useStepper(deviceId: string) {
       stopArgs.acceleration = acceleration;
     }
 
-    return sendMessage({
-      type: "device-fn",
-      deviceType,
-      deviceId,
-      fn: "stop",
-      args: stopArgs,
-    });
+    return execDeviceFn("stop", stopArgs);
   };
 
   const moveTo = (args: IStepperMoveToArgs) => {
@@ -105,23 +93,11 @@ export function useStepper(deviceId: string) {
       moveArgs.acceleration = config.defaultAcceleration;
     }
 
-    return sendMessage({
-      type: "device-fn",
-      deviceType,
-      deviceId,
-      fn: "moveTo",
-      args: moveArgs as unknown as Record<string, unknown>,
-    });
+    return execDeviceFn("moveTo", moveArgs as unknown as Record<string, unknown>);
   };
 
   const setCurrentPosition = (args: IStepperSetPositionArgs) => {
-    return sendMessage({
-      type: "device-fn",
-      deviceType,
-      deviceId,
-      fn: "setCurrentPosition",
-      args: args as unknown as Record<string, unknown>,
-    });
+    return execDeviceFn("setCurrentPosition", args as unknown as Record<string, unknown>);
   };
 
   const resetPosition = () => {

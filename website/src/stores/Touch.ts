@@ -17,34 +17,14 @@ export interface ITouchConfig extends IDeviceConfig {
 }
 
 export function useTouch(deviceId: string) {
-  const [device, { sendMessage, ...actions }] = useDevice<ITouchState, ITouchConfig>(deviceId);
+  const [device, { execDeviceFn, ...actions }] = useDevice<ITouchState, ITouchConfig>(deviceId);
 
-  const touch = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "touch",
-      args: {},
-    });
+  const touch = () => execDeviceFn("touch", {});
 
-  const untouch = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "untouch",
-      args: {},
-    });
+  const untouch = () => execDeviceFn("untouch", {});
 
   const setStreaming = (enabled: boolean, intervalMs = 500) =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "setStreaming",
-      args: { enabled, intervalMs },
-    });
+    execDeviceFn("setStreaming", { enabled, intervalMs });
 
   const readValue = () => actions.getDeviceState();
 

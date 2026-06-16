@@ -14,7 +14,7 @@ interface PowerMonitorConfigProps {
 }
 
 export default function PowerMonitorConfig(props: PowerMonitorConfigProps) {
-  const [device, { sendMessage }] = usePowerMonitor(props.id);
+  const [device, { setDeviceConfig }] = usePowerMonitor(props.id);
   const [devicesStore] = useDevices();
 
   const cfg = () => device?.config;
@@ -41,16 +41,12 @@ export default function PowerMonitorConfig(props: PowerMonitorConfigProps) {
   });
 
   const handleSave = () => {
-    sendMessage({
-      type: "device-save-config",
-      deviceId: props.id,
-      config: {
-        name: name(),
-        i2cDeviceId: i2cDeviceId(),
-        i2cAddress: i2cAddress(),
-        shuntResistance: shuntResistance(),
-        maxCurrent: maxCurrent(),
-      },
+    setDeviceConfig({
+      name: name(),
+      i2cDeviceId: i2cDeviceId(),
+      i2cAddress: i2cAddress(),
+      shuntResistance: shuntResistance(),
+      maxCurrent: maxCurrent(),
     });
   };
 

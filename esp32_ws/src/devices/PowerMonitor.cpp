@@ -120,9 +120,31 @@ namespace devices
         if (!_ina226)
             return;
 
-        _state.voltage = _ina226->getBusVoltage_V();
-        _state.current = _ina226->getCurrent_A();
-        _state.watt = _ina226->getBusPower();
+        float voltage = _ina226->getBusVoltage_V();
+        float current = _ina226->getCurrent_A();
+        uint8_t i2cErr = _ina226->getI2cErrorCode();
+
+        // INA226 bus voltage is capped at 36 V by hardware.
+        // Values above that indicate a wrong I2C address (e.g. address conflict
+        // with a PCA9685 PWM expander, which also defaults to 0x40).
+        if (i2cErr != 0 || voltage > 40.0f)
+        {
+            String msg;
+            if (i2cErr != 0)
+                msg = "I\u00b2C error " + String(i2cErr) + " reading INA226 at 0x" + String(_config.i2cAddress, HEX);
+            else
+                msg = "Implausible voltage " + String(voltage, 2) + "V — check I\u00b2C address (conflict with another 0x" + String(_config.i2cAddress, HEX) + " device?)";
+
+            MLOG_ERROR("%s: %s", toString().c_str(), msg.c_str());
+            Device::setError("BAD_READ", msg);
+            _state.status = "Error";
+            notifyStateChanged();
+            return;
+        }
+
+        _state.voltage = voltage;
+        _state.current = current;
+        _state.watt    = voltage * current; // compute from measured values; avoids calibration register errors
         _state.timestamp = millis();
 
         // Low-voltage alert: fire once on transition, clear once voltage recovers
@@ -144,10 +166,19 @@ namespace devices
     {
         Device::loop();
 
-        if (_state.status != "Ready" || !_ina226)
-            return;
-
         unsigned long now = millis();
+
+        // Auto-recover: re-probe every 5 s while in error state
+        if (_state.status != "Ready" || !_ina226)
+        {
+            if (now - _lastReadMs >= 5000)
+            {
+                _lastReadMs = now;
+                init();
+            }
+            return;
+        }
+
         if (now - _lastReadMs >= _config.notifyIntervalMs)
         {
             _lastReadMs = now;

@@ -17,8 +17,8 @@ import { BatteryStateIcon } from "../devices/BatteryStateIcon";
 
 // Icon component props
 export interface IconProps {
-  width?: number;
-  height?: number;
+  width?: number | string;
+  height?: number | string;
   class?: string;
   style?: JSX.CSSProperties;
   alt?: string;

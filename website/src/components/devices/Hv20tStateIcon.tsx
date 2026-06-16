@@ -1,7 +1,12 @@
 import { createSignal, createEffect } from "solid-js";
 import { useHv20tAudio } from "../../stores/Hv20tAudio";
 
-function SpeakerIcon(props: { width?: number; height?: number; class?: string; style?: any }) {
+function SpeakerIcon(props: {
+  width?: number | string;
+  height?: number | string;
+  class?: string;
+  style?: any;
+}) {
   return (
     <svg
       width={props.width || 24}
@@ -19,7 +24,12 @@ function SpeakerIcon(props: { width?: number; height?: number; class?: string; s
   );
 }
 
-function SpeakerOnIcon(props: { width?: number; height?: number; class?: string; style?: any }) {
+function SpeakerOnIcon(props: {
+  width?: number | string;
+  height?: number | string;
+  class?: string;
+  style?: any;
+}) {
   return (
     <svg
       width={props.width || 24}
@@ -41,8 +51,8 @@ function SpeakerOnIcon(props: { width?: number; height?: number; class?: string;
 
 export function Hv20tStateIcon(props: {
   deviceId: string;
-  width?: number;
-  height?: number;
+  width?: number | string;
+  height?: number | string;
   class?: string;
   style?: any;
 }) {

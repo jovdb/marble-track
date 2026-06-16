@@ -1,7 +1,7 @@
 import { createStore, produce } from "solid-js/store";
 import { createContext, onCleanup, onMount, useContext } from "solid-js";
 import { IWebSocketActions, useWebSocket2 } from "../hooks/useWebSocket";
-import { DeviceInfo } from "../interfaces/WebSockets";
+import { DeviceInfo, DeviceType } from "../interfaces/WebSockets";
 
 export type IDeviceConfig = object;
 
@@ -261,7 +261,7 @@ export function useDevices() {
 
   const execDeviceFn = (
     deviceId: string,
-    deviceType: string,
+    deviceType: DeviceType,
     fn: string,
     args: Record<string, unknown> | undefined
   ) => sendMessage({ type: "device-fn", deviceId, deviceType, fn, args });
@@ -299,7 +299,7 @@ export function useDevice<TState extends IDeviceState, TConfig extends IDeviceCo
       getDeviceState: () => getDeviceState(deviceId),
       setDeviceConfig: (config: TConfig) => setDeviceConfig(deviceId, config),
       execDeviceFn: (fn: string, args: Record<string, unknown> | undefined) =>
-        execDeviceFn(deviceId, store.devices[deviceId]?.type ?? "", fn, args),
+        execDeviceFn(deviceId, (store.devices[deviceId]?.type ?? "") as DeviceType, fn, args),
       sendMessage,
     },
   ] as const;

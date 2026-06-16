@@ -143,7 +143,7 @@ namespace devices
 
         _state.voltage = voltage;
         _state.current = current;
-        _state.watt    = voltage * current;
+        _state.watt = voltage * current;
         _state.timestamp = millis();
     }
 
@@ -163,6 +163,8 @@ namespace devices
 
     void PowerMonitor::addDeviceStateToJson(JsonDocument &doc)
     {
+        if (_state.status == "Error" && _ina226)
+            init();
         // Always do a fresh read so the website gets up-to-date values on every request
         if (_state.status == "Ready" && _ina226)
             readMeasurements();

@@ -1,7 +1,6 @@
 import { For, createEffect, createSignal, createMemo } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { useDevices } from "../../stores/Devices";
-import { useWebSocket2 } from "../../hooks/useWebSocket";
 import { II2cConfig } from "../../stores/I2c";
 import { useIoExpander } from "../../stores/IoExpander";
 import { I2cAddressPicker } from "./shared/I2cAddressPicker";
@@ -15,9 +14,8 @@ interface IoExpanderConfigProps {
 }
 
 export default function IoExpanderConfig(props: IoExpanderConfigProps) {
-  const [device] = useIoExpander(props.id);
+  const [device, { setDeviceConfig }] = useIoExpander(props.id);
   const [devicesStore] = useDevices();
-  const [, { sendMessage }] = useWebSocket2();
 
   const [name, setName] = createSignal<string>((device?.config?.name as string) ?? "IO Expander");
   const [expanderType, setExpanderType] = createSignal<ExpanderType>(
@@ -59,15 +57,11 @@ export default function IoExpanderConfig(props: IoExpanderConfigProps) {
   });
 
   const handleSave = () => {
-    sendMessage({
-      type: "device-save-config",
-      deviceId: props.id,
-      config: {
-        name: name(),
-        expanderType: expanderType(),
-        i2cAddress: i2cAddress(),
-        i2cDeviceId: i2cDeviceId(),
-      },
+    setDeviceConfig({
+      name: name(),
+      expanderType: expanderType(),
+      i2cAddress: i2cAddress(),
+      i2cDeviceId: i2cDeviceId(),
     });
   };
 

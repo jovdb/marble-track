@@ -77,9 +77,7 @@ export function I2cAddressPicker(props: I2cAddressPickerProps) {
       >
         <For each={addresses()}>
           {(addr) => (
-            <option value={addr}>
-              0x{addr.toString(16).toUpperCase().padStart(2, "0")}
-            </option>
+            <option value={addr}>0x{addr.toString(16).toUpperCase().padStart(2, "0")}</option>
           )}
         </For>
       </select>

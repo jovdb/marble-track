@@ -1,7 +1,6 @@
 import { For, createEffect, createSignal, createMemo } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { useDevices } from "../../stores/Devices";
-import { useWebSocket2 } from "../../hooks/useWebSocket";
 import { usePowerMonitor } from "../../stores/PowerMonitor";
 import { II2cConfig } from "../../stores/I2c";
 import { I2cAddressPicker } from "./shared/I2cAddressPicker";
@@ -15,9 +14,8 @@ interface PowerMonitorConfigProps {
 }
 
 export default function PowerMonitorConfig(props: PowerMonitorConfigProps) {
-  const [device] = usePowerMonitor(props.id);
+  const [device, { sendMessage }] = usePowerMonitor(props.id);
   const [devicesStore] = useDevices();
-  const [, { sendMessage }] = useWebSocket2();
 
   const cfg = () => device?.config;
 

@@ -3,7 +3,6 @@ import { Device } from "./Device";
 import { BatteryIcon } from "../icons/Icons";
 import { useBattery } from "../../stores/Battery";
 import BatteryConfig from "./BatteryConfig";
-import { useWebSocket2 } from "../../hooks/useWebSocket";
 import styles from "./Device.module.css";
 
 const POLL_INTERVAL_MS = 60_000; // header-driven polls every 60 s
@@ -13,15 +12,14 @@ function batteryLevel(pct: number): number {
 }
 
 export function Battery(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
-  const [device] = useBattery(props.id);
-  const [, { sendMessage }] = useWebSocket2();
+  const [device, { getDeviceState }] = useBattery(props.id);
 
   const state = () => device?.state;
   const pct = () => state()?.batteryPercent ?? 0;
   const voltage = () => state()?.voltage;
   const status = () => state()?.status;
 
-  const requestState = () => sendMessage({ type: "device-get-state", deviceId: props.id } as any);
+  const requestState = getDeviceState;
 
   // Poll every 60 s for fresh state
   onMount(() => {

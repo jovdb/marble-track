@@ -1,4 +1,3 @@
-import { createMemo } from "solid-js";
 import { IDeviceConfig, IDeviceState } from "./Device";
 import { useDevice } from "./Devices";
 

@@ -21,25 +21,11 @@ export interface IButtonConfig extends IDeviceConfig {
 }
 
 export function useButton(deviceId: string) {
-  const [device, { sendMessage, ...actions }] = useDevice<IButtonState, IButtonConfig>(deviceId);
+  const [device, { execDeviceFn, ...actions }] = useDevice<IButtonState, IButtonConfig>(deviceId);
 
-  const press = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "press",
-      args: {},
-    });
+  const press = () => execDeviceFn("press", {});
 
-  const release = () =>
-    sendMessage({
-      type: "device-fn",
-      deviceId,
-      deviceType,
-      fn: "release",
-      args: {},
-    });
+  const release = () => execDeviceFn("release", {});
 
   return [
     device,

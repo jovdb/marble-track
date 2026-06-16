@@ -1,11 +1,4 @@
-import {
-  type Component,
-  createEffect,
-  createMemo,
-  createSignal,
-  onCleanup,
-  onMount,
-} from "solid-js";
+import { type Component, createMemo, createSignal } from "solid-js";
 import styles from "./Header.module.css";
 import logo from "../assets/logo-64.png";
 import { useWebSocket2 } from "../hooks/useWebSocket";

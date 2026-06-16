@@ -1,7 +1,6 @@
 import { createEffect, createSignal } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import PinSelect from "../PinSelect";
-import { useWebSocket2 } from "../../hooks/useWebSocket";
 import { PinConfig, deserializePinConfig } from "../../interfaces/WebSockets";
 import { useI2c } from "../../stores/I2c";
 
@@ -11,8 +10,7 @@ interface I2cConfigProps {
 }
 
 export default function I2cConfig(props: I2cConfigProps) {
-  const [device] = useI2c(props.id);
-  const [, { sendMessage }] = useWebSocket2();
+  const [device, { setDeviceConfig }] = useI2c(props.id);
 
   const [name, setName] = createSignal<string>(device?.config?.name ?? "I2C");
   const [sdaPin, setSdaPin] = createSignal<PinConfig>(
@@ -40,14 +38,10 @@ export default function I2cConfig(props: I2cConfigProps) {
   });
 
   const handleSave = () => {
-    sendMessage({
-      type: "device-save-config",
-      deviceId: props.id,
-      config: {
-        name: name(),
-        sdaPin: sdaPin().pin,
-        sclPin: sclPin().pin,
-      },
+    setDeviceConfig({
+      name: name(),
+      sdaPin: sdaPin().pin,
+      sclPin: sclPin().pin,
     });
   };
 

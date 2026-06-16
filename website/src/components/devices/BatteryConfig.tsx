@@ -1,7 +1,6 @@
 import { For, createEffect, createSignal, createMemo } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { useDevices } from "../../stores/Devices";
-import { useWebSocket2 } from "../../hooks/useWebSocket";
 import { useBattery } from "../../stores/Battery";
 
 interface BatteryConfigProps {
@@ -10,14 +9,15 @@ interface BatteryConfigProps {
 }
 
 export default function BatteryConfig(props: BatteryConfigProps) {
-  const [device] = useBattery(props.id);
+  const [device, { setDeviceConfig }] = useBattery(props.id);
   const [devicesStore] = useDevices();
-  const [, { sendMessage }] = useWebSocket2();
 
   const cfg = () => device?.config;
 
   const [name, setName] = createSignal(cfg()?.name ?? "Battery");
-  const [powerMonitorDeviceId, setPowerMonitorDeviceId] = createSignal(cfg()?.powerMonitorDeviceId ?? "");
+  const [powerMonitorDeviceId, setPowerMonitorDeviceId] = createSignal(
+    cfg()?.powerMonitorDeviceId ?? ""
+  );
   const [minVoltage, setMinVoltage] = createSignal(cfg()?.minVoltage ?? 15.0);
   const [maxVoltage, setMaxVoltage] = createSignal(cfg()?.maxVoltage ?? 21.0);
 
@@ -36,15 +36,11 @@ export default function BatteryConfig(props: BatteryConfigProps) {
   });
 
   const handleSave = () => {
-    sendMessage({
-      type: "device-save-config",
-      deviceId: props.id,
-      config: {
-        name: name(),
-        powerMonitorDeviceId: powerMonitorDeviceId(),
-        minVoltage: minVoltage(),
-        maxVoltage: maxVoltage(),
-      },
+    setDeviceConfig({
+      name: name(),
+      powerMonitorDeviceId: powerMonitorDeviceId(),
+      minVoltage: minVoltage(),
+      maxVoltage: maxVoltage(),
     });
   };
 
@@ -72,9 +68,7 @@ export default function BatteryConfig(props: BatteryConfigProps) {
               <option value="">Select Power Monitor…</option>
               <For each={powerMonitorDevices()}>
                 {(pm) => (
-                  <option value={pm.id}>
-                    {(pm.config as { name?: string })?.name || pm.id}
-                  </option>
+                  <option value={pm.id}>{(pm.config as { name?: string })?.name || pm.id}</option>
                 )}
               </For>
             </select>

@@ -259,6 +259,13 @@ export function useDevices() {
     sendMessage({ type: "device-save-config", deviceId, config });
   const getDeviceState = (deviceId: string) => sendMessage({ type: "device-state", deviceId });
 
+  const execDeviceFn = (
+    deviceId: string,
+    deviceType: string,
+    fn: string,
+    args: Record<string, unknown> | undefined
+  ) => sendMessage({ type: "device-fn", deviceId, deviceType, fn, args });
+
   return [
     /** Don't destructure! */
     store,
@@ -267,6 +274,7 @@ export function useDevices() {
       getDeviceConfig,
       setDeviceConfig,
       getDeviceState,
+      execDeviceFn,
       sendMessage,
     },
   ] as const;
@@ -275,9 +283,8 @@ export function useDevices() {
 export function useDevice<TState extends IDeviceState, TConfig extends IDeviceConfig>(
   deviceId: string
 ) {
-  const store = useContext(DevicesContext);
-
-  const [, { getDeviceConfig, setDeviceConfig, getDeviceState, sendMessage }] = useDevices();
+  const [store, { getDeviceConfig, setDeviceConfig, getDeviceState, sendMessage, execDeviceFn }] =
+    useDevices();
 
   // tracking only needed once
   onMount(() => {
@@ -291,6 +298,8 @@ export function useDevice<TState extends IDeviceState, TConfig extends IDeviceCo
       getDeviceConfig: () => getDeviceConfig(deviceId),
       getDeviceState: () => getDeviceState(deviceId),
       setDeviceConfig: (config: TConfig) => setDeviceConfig(deviceId, config),
+      execDeviceFn: (fn: string, args: Record<string, unknown> | undefined) =>
+        execDeviceFn(deviceId, store.devices[deviceId]?.type ?? "", fn, args),
       sendMessage,
     },
   ] as const;

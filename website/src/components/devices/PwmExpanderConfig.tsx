@@ -1,7 +1,6 @@
 import { For, createEffect, createSignal, createMemo } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { IDevice, useDevices } from "../../stores/Devices";
-import { useWebSocket2 } from "../../hooks/useWebSocket";
 import { usePwmExpander } from "../../stores/PwmExpander";
 import { II2cState, II2cConfig } from "../../stores/I2c";
 import { I2cAddressPicker } from "./shared/I2cAddressPicker";
@@ -12,9 +11,8 @@ interface PwmExpanderConfigProps {
 }
 
 export default function PwmExpanderConfig(props: PwmExpanderConfigProps) {
-  const [device] = usePwmExpander(props.id);
+  const [device, { setDeviceConfig }] = usePwmExpander(props.id);
   const [devicesStore] = useDevices();
-  const [, { sendMessage }] = useWebSocket2();
 
   const [name, setName] = createSignal<string>(device?.config?.name ?? "PWM Expander");
   const [i2cAddress, setI2cAddress] = createSignal<number>(device?.config?.i2cAddress ?? 0x40);
@@ -40,15 +38,11 @@ export default function PwmExpanderConfig(props: PwmExpanderConfigProps) {
   });
 
   const handleSave = () => {
-    sendMessage({
-      type: "device-save-config",
-      deviceId: props.id,
-      config: {
-        name: name(),
-        i2cDeviceId: i2cDeviceId(),
-        i2cAddress: i2cAddress(),
-        frequency: frequency(),
-      },
+    setDeviceConfig({
+      name: name(),
+      i2cDeviceId: i2cDeviceId(),
+      i2cAddress: i2cAddress(),
+      frequency: frequency(),
     });
   };
 

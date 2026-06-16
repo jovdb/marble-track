@@ -20,7 +20,19 @@ export interface IPowerMonitorConfig extends IDeviceConfig {
 }
 
 export function usePowerMonitor(deviceId: string) {
-  return useDevice<IPowerMonitorState, IPowerMonitorConfig>(deviceId);
+  const [device, { execDeviceFn, ...actions }] = useDevice<IPowerMonitorState, IPowerMonitorConfig>(
+    deviceId
+  );
+
+  const init = () => execDeviceFn("init", {});
+
+  return [
+    device,
+    {
+      ...actions,
+      init,
+    },
+  ] as const;
 }
 
 declare global {

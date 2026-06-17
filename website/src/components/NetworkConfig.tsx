@@ -1,4 +1,12 @@
-import { type Component, createSignal, onMount, onCleanup, createEffect, For } from "solid-js";
+import {
+  type Component,
+  createSignal,
+  onMount,
+  onCleanup,
+  createEffect,
+  For,
+  createMemo,
+} from "solid-js";
 import { useWebSocket2 } from "../hooks/useWebSocket";
 import { Popup } from "./Popup";
 import PopupHeader from "./PopupHeader";
@@ -41,9 +49,9 @@ export const NetworkConfig: Component<NetworkConfigProps> = (props) => {
   const [loadingSSIDs, setLoadingSSIDs] = createSignal(false);
 
   // Computed signal for sorted networks (best signal first)
-  const sortedNetworks = () => {
+  const sortedNetworks = createMemo(() => {
     return [...availableNetworks()].sort((a, b) => b.rssi - a.rssi);
-  };
+  });
 
   // Function to convert RSSI to signal strength bars
   const getSignalStrength = (rssi: number) => {

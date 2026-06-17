@@ -1,4 +1,4 @@
-import { For, createEffect, createSignal } from "solid-js";
+import { For, createEffect, createMemo, createSignal } from "solid-js";
 import { useWebSocket2 } from "../../../hooks/useWebSocket";
 import type { IWsReceiveExpanderAddressesMessage } from "../../../interfaces/WebSockets";
 
@@ -63,10 +63,10 @@ export function I2cAddressPicker(props: I2cAddressPickerProps) {
     sendMessage({ type: "expander-addresses", i2cDeviceId: busId });
   };
 
-  const addresses = () => {
+  const addresses = createMemo(() => {
     const scanned = availableAddresses();
     return scanned.length > 0 ? scanned : (props.defaultAddresses ?? []);
-  };
+  });
 
   return (
     <>

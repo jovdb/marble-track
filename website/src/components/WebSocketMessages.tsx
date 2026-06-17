@@ -6,7 +6,7 @@ import styles from "./WebSocketMessages.module.css";
 
 // JSON Tree Component
 const JsonTree: Component<{ data: any; level?: number }> = (props) => {
-  const level = () => props.level || 0;
+  const level = createMemo(() => props.level || 0);
 
   if (
     typeof props.data === "string" ||

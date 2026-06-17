@@ -3,6 +3,7 @@ import { useWebSocket2 } from "../hooks/useWebSocket";
 
 type Props = {
   deviceId: string;
+  // TODO: Accessor?
   config?: unknown;
   onClose: () => void;
 };
@@ -12,13 +13,13 @@ const DeviceJsonConfig: Component<Props> = (props) => {
   const [jsonText, setJsonText] = createSignal("");
   const [error, setError] = createSignal("");
 
-  const formatted = () => {
+  const formatted = createMemo(() => {
     try {
       return JSON.stringify(props.config ?? {}, null, 2);
     } catch {
       return String(props.config);
     }
-  };
+  });
 
   // Initialize jsonText when config changes
   createMemo(() => {

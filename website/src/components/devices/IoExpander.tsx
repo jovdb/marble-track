@@ -5,7 +5,7 @@ import { useIoExpander } from "../../stores/IoExpander";
 import IoExpanderConfig from "./IoExpanderConfig";
 import styles from "./Device.module.css";
 import { II2cConfig, II2cState } from "../../stores/I2c";
-import { createMemo } from "solid-js/types/reactive/signal";
+import { createMemo } from "solid-js";
 
 export function IoExpander(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device, actions] = useIoExpander(props.id);
@@ -15,8 +15,8 @@ export function IoExpander(props: { id: string; isPopup?: boolean; onClose?: () 
   const config = createMemo(() => device()?.config);
   const state = createMemo(() => device()?.state);
 
-  const expanderState = () => state()?.state;
-  const expanderType = () => config()?.expanderType ?? "Unknown";
+  const expanderState = createMemo(() => state()?.state);
+  const expanderType = createMemo(() => config()?.expanderType ?? "Unknown");
   const i2cAddress = createMemo(() => {
     const addr = config()?.i2cAddress;
     return addr !== undefined ? `0x${addr.toString(16).toUpperCase().padStart(2, "0")}` : "Unknown";

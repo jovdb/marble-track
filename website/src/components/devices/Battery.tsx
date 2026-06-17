@@ -24,12 +24,12 @@ export function Battery(props: { id: string; isPopup?: boolean; onClose?: () => 
     onCleanup(() => clearInterval(id));
   });
 
-  const statusText = () => {
+  const statusText = createMemo(() => {
     const s = status();
     if (s === "Ready") return <span style={{ color: "green" }}>Ready</span>;
     if (s === "Error") return <span style={{ color: "red" }}>Error</span>;
     return <span>—</span>;
-  };
+  });
 
   return (
     <Device

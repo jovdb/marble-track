@@ -40,12 +40,12 @@ export function PwmExpander(props: { id: string; isPopup?: boolean; onClose?: ()
     return type ? getDeviceIcon(type, props.id) : null;
   });
 
-  const statusText = () => {
+  const statusText = createMemo(() => {
     const s = expanderState();
     if (s === "Ready") return <span style={{ color: "green" }}>Connected</span>;
     if (s === "Init") return <span style={{ color: "cornflowerblue" }}>Initializing&hellip;</span>;
     return <span>Unknown</span>;
-  };
+  });
 
   return (
     <Device

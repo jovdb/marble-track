@@ -365,25 +365,27 @@ export function DevicesList() {
   const DeviceRow = (props: { device: IDevice; depth?: number }) => {
     const depth = props.depth ?? 0;
     const hasChildren = props.device.children && props.device.children.length > 0;
-    const isCollapsed = () => collapsedDevices().has(props.device.id);
+    const isCollapsed = createMemo(() => collapsedDevices().has(props.device.id));
     const isTopLevel = depth === 0;
-    const isDragging = () => draggedDeviceId() === props.device.id;
-    const isDragOver = () => dragOverDeviceId() === props.device.id && !isDragging();
-    const dragDirectionClass = () => {
+    const isDragging = createMemo(() => draggedDeviceId() === props.device.id);
+    const isDragOver = createMemo(() => dragOverDeviceId() === props.device.id && !isDragging());
+    const dragDirectionClass = createMemo(() => {
       if (!isDragOver()) return "";
       const direction = dragDirection();
       return direction === "up"
         ? styles["devices-list__table-row--drag-over-up"]
         : styles["devices-list__table-row--drag-over-down"];
-    };
+    });
 
     const indentStyle = {
       "padding-left": `${depth * 24}px`,
     };
 
     // Error label: own error always; child errors only when row is collapsed.
-    const errorLabel = () =>
-      deviceErrorLabel(props.device) || (isCollapsed() ? findChildError(props.device) : undefined);
+    const errorLabel = createMemo(
+      () =>
+        deviceErrorLabel(props.device) || (isCollapsed() ? findChildError(props.device) : undefined)
+    );
     const rowErrorLabel = () => errorLabel();
 
     // Determine which pins to display

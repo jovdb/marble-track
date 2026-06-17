@@ -1,4 +1,4 @@
-import { createEffect, createSignal, onCleanup } from "solid-js";
+import { createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import PinSelect from "../PinSelect";
 import { PinConfig, deserializePinConfig } from "../../interfaces/WebSockets";
@@ -71,19 +71,20 @@ export default function TouchConfig(props: TouchConfigProps) {
     setStreaming(enabled, LIVE_STREAM_INTERVAL_MS);
   };
 
-  const getCurrentValue = () =>
-    typeof device()?.state?.value === "number" ? (device()?.state?.value as number) : undefined;
+  const getCurrentValue = createMemo(() =>
+    typeof device()?.state?.value === "number" ? (device()?.state?.value as number) : undefined
+  );
 
-  const getThresholdValue = () => Math.max(0, Math.floor(toNumber(threshold(), 30000)));
+  const getThresholdValue = createMemo(() => Math.max(0, Math.floor(toNumber(threshold(), 30000))));
 
-  const isAboveThreshold = () => {
+  const isAboveThreshold = createMemo(() => {
     const currentValue = getCurrentValue();
     if (currentValue === undefined) {
       return false;
     }
 
     return currentValue > getThresholdValue();
-  };
+  });
 
   createEffect(() => {
     const config = device()?.config;

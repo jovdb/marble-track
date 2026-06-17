@@ -1,16 +1,15 @@
 import styles from "./Device.module.css";
 import wheelStyles from "./WheelConfig.module.css";
-import { createMemo, For, onMount, createSignal, onCleanup } from "solid-js";
+import { createMemo, For, onMount, createSignal, onCleanup, Accessor } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { useWheel } from "../../stores/Wheel";
 import { WheelGraphic } from "./WheelGraphic";
 import { useWebSocket2 } from "../../hooks/useWebSocket";
 
-export function WheelConfig(props: { device: any; actions: any; onClose: () => void }) {
-  const device = () => props.device;
+export function WheelConfig(props: { device: Accessor<any>; actions: any; onClose: () => void }) {
   const actions = props.actions;
 
-  const config = createMemo(() => device()?.config);
+  const config = createMemo(() => props.device()?.config);
 
   const [deviceName, setDeviceName] = createSignal("");
   const [isNameDirty, setIsNameDirty] = createSignal(false);
@@ -38,14 +37,14 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
   };
 
   const [, { subscribe }] = useWebSocket2();
-  const [, wheelActions] = useWheel(device()?.id);
+  const [, wheelActions] = useWheel(props.device()?.id);
 
   onMount(() => {
     actions.getDeviceConfig();
 
     // Subscribe to WebSocket messages for steps-per-revolution updates
     const unsubscribe = subscribe((message: any) => {
-      if (message.type === "steps-per-revolution" && message.deviceId === device()?.id) {
+      if (message.type === "steps-per-revolution" && message.deviceId === props.device()?.id) {
         const oldValue = toNumber(stepsPerRevolution());
         const newValue = message.steps;
         setStepsPerRevolution(String(newValue));
@@ -68,7 +67,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
     if (currentConfig) {
       const updatedConfig = {
         ...currentConfig,
-        name: deviceName() || currentConfig.name || device()?.id,
+        name: deviceName() || currentConfig.name || props.device()?.id,
         stepsPerRevolution: toNumber(stepsPerRevolution()),
         maxStepsPerRevolution: toNumber(maxStepsPerRevolution()),
         breakPoints: breakpoints(),
@@ -107,7 +106,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
   });
 
   return (
-    <DeviceConfig device={device} onSave={handleSave} onClose={props.onClose}>
+    <DeviceConfig device={props.device} onSave={handleSave} onClose={props.onClose}>
       <DeviceConfigTable>
         <DeviceConfigRow>
           <DeviceConfigItem name="Name:">
@@ -139,7 +138,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
               onClick={(e) => {
                 e.preventDefault(); // prevent post
 
-                if (device()?.state?.state === "CALIBRATING") {
+                if (props.device()?.state?.state === "CALIBRATING") {
                   wheelActions.stop();
                   console.log("Stopping calibration");
                 } else {
@@ -148,7 +147,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
               }}
               style={{ "flex-shrink": "0" }}
             >
-              {device()?.state?.state === "CALIBRATING" ? "Stop" : "Calibrate"}
+              {props.device()?.state?.state === "CALIBRATING" ? "Stop" : "Calibrate"}
             </button>
           </DeviceConfigItem>
         </DeviceConfigRow>
@@ -173,9 +172,10 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
               angle={toNumber(angle())}
               breakpoints={breakpoints()}
               zeroPointDegree={toNumber(zeroPointDegree())}
-              isCalibrated={!!device()?.state?.lastZeroPosition}
+              isCalibrated={!!props.device()?.state?.lastZeroPosition}
               isSearchingZero={
-                device()?.state?.state === "CALIBRATING" && !device()?.state?.lastZeroPosition
+                props.device()?.state?.state === "CALIBRATING" &&
+                !props.device()?.state?.lastZeroPosition
               }
             />
           </DeviceConfigItem>
@@ -216,12 +216,12 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                 if (e.key === "Enter") {
                   e.preventDefault();
                   // Trigger move to button if enabled
-                  const isMoving = device()?.state?.state === "MOVING";
+                  const isMoving = props.device()?.state?.state === "MOVING";
                   const isDisabled =
                     !isMoving &&
                     (!toNumber(stepsPerRevolution()) ||
                       toNumber(stepsPerRevolution()) <= 0 ||
-                      device()?.state?.lastZeroPosition === 0);
+                      props.device()?.state?.lastZeroPosition === 0);
 
                   if (!isDisabled) {
                     if (isMoving) {
@@ -245,7 +245,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
               onClick={(e) => {
                 e.preventDefault(); // prevent post
 
-                if (device()?.state?.state === "INIT") {
+                if (props.device()?.state?.state === "INIT") {
                   wheelActions.stop();
                   console.log("Stopping init");
                 } else {
@@ -253,16 +253,16 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
                 }
               }}
               style={{ "flex-shrink": "0" }}
-              disabled={device()?.state?.state === "RESET"}
+              disabled={props.device()?.state?.state === "RESET"}
             >
-              {device()?.state?.state === "INIT" ? "Stop" : "Init"}
+              {props.device()?.state?.state === "INIT" ? "Stop" : "Init"}
             </button>
             <button
               class={styles.device__button}
               onClick={(e) => {
                 e.preventDefault(); // prevent post
 
-                if (device()?.state?.state === "MOVING") {
+                if (props.device()?.state?.state === "MOVING") {
                   wheelActions.stop();
                   console.log("Stopping wheel");
                 } else {
@@ -273,13 +273,13 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
               }}
               style={{ "flex-shrink": "0" }}
               disabled={
-                device()?.state?.state !== "MOVING" &&
+                props.device()?.state?.state !== "MOVING" &&
                 (!toNumber(stepsPerRevolution()) ||
                   toNumber(stepsPerRevolution()) <= 0 ||
-                  device()?.state?.lastZeroPosition === 0)
+                  props.device()?.state?.lastZeroPosition === 0)
               }
             >
-              {device()?.state?.state === "MOVING" ? "Stop" : "Move to"}
+              {props.device()?.state?.state === "MOVING" ? "Stop" : "Move to"}
             </button>
           </DeviceConfigItem>
         </DeviceConfigRow>

@@ -1,11 +1,10 @@
-import { createMemo, onMount, createSignal } from "solid-js";
+import { createMemo, onMount, createSignal, Accessor } from "solid-js";
 import DeviceConfig from "./DeviceConfig";
 
-export function LiftConfig(props: { device: any; actions: any; onClose: () => void }) {
-  const device = () => props.device;
+export function LiftConfig(props: { device: Accessor<any>; actions: any; onClose: () => void }) {
   const actions = props.actions;
 
-  const config = createMemo(() => device()?.config);
+  const config = createMemo(() => props.device()?.config);
 
   const [deviceName, setDeviceName] = createSignal("");
   const [isNameDirty, setIsNameDirty] = createSignal(false);
@@ -28,7 +27,7 @@ export function LiftConfig(props: { device: any; actions: any; onClose: () => vo
     if (currentConfig) {
       const updatedConfig = {
         ...currentConfig,
-        name: deviceName() || currentConfig.name || device()?.id,
+        name: deviceName() || currentConfig.name || props.device()?.id,
         minSteps: toNumber(minSteps()),
         maxSteps: Math.max(1, toNumber(maxSteps(), 1)),
       };
@@ -52,7 +51,7 @@ export function LiftConfig(props: { device: any; actions: any; onClose: () => vo
   });
 
   return (
-    <DeviceConfig device={device} onSave={handleSave} onClose={props.onClose}>
+    <DeviceConfig device={props.device} onSave={handleSave} onClose={props.onClose}>
       <div style={{ "margin-bottom": "1em" }}>
         <label style={{ display: "block", "margin-bottom": "0.5em" }}>Name:</label>
         <input

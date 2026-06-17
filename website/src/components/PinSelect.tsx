@@ -103,7 +103,7 @@ export default function PinSelect(props: PinSelectProps) {
     return options;
   });
 
-  const getSelectedValue = () => {
+  const getSelectedValue = createMemo(() => {
     if (props.value.expanderId === "") {
       if (props.value.pin === -1) {
         return "-1";
@@ -111,7 +111,7 @@ export default function PinSelect(props: PinSelectProps) {
       return props.value.pin.toString();
     }
     return JSON.stringify(props.value);
-  };
+  });
 
   const handleChange = (event: Event) => {
     const target = event.currentTarget as HTMLSelectElement;

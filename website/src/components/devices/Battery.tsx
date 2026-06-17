@@ -10,7 +10,7 @@ const POLL_INTERVAL_MS = 60_000; // header-driven polls every 60 s
 export function Battery(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device, { getDeviceState }] = useBattery(props.id);
 
-  const state = () => device?.state;
+  const state = () => device()?.state;
   const pct = () => state()?.batteryPercent ?? 0;
   const voltage = () => state()?.voltage;
   const status = () => state()?.status;

@@ -34,7 +34,7 @@ export function TouchStateIcon(props: { deviceId: string } & IconProps) {
   const [touched, setTouched] = createSignal(false);
 
   createEffect(() => {
-    const state = device?.state;
+    const state = device()?.state;
     if (!state) return;
 
     setTouched(Boolean(state.touched));

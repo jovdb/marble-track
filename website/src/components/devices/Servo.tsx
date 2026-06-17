@@ -8,9 +8,7 @@ import { ServoIcon } from "../icons/Icons";
 import ServoConfig from "./ServoConfig";
 
 export function Servo(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
-  const servoStore = useServo(props.id);
-  const device = () => servoStore[0];
-  const actions = servoStore[1];
+  const [device, actions] = useServo(props.id);
 
   const deviceState = createMemo(() => device()?.state);
   const [currentValue, setCurrentValue] = createSignal<number | undefined>(undefined);

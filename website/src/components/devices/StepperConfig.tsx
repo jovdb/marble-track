@@ -11,9 +11,8 @@ const STEPPER_TYPE_OPTIONS: { value: StepperType; label: string }[] = [
 ];
 
 export default function StepperConfig(props: { id: string; onClose: () => void }) {
-  const stepperStore = useStepper(props.id);
-  const device = () => stepperStore[0];
-  const { setDeviceConfig } = stepperStore[1];
+  const [device, { setDeviceConfig }] = useStepper(props.id);
+
   const config = createMemo(() => device()?.config);
 
   const [name, setName] = createSignal("Stepper");

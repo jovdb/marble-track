@@ -2,7 +2,7 @@
 At this way it should be possible that user on the network and users not on the network can connect.
 
 - Make it possible to configure network via website (AP)
-  The esp could hav a websockects action to return a list of networks (SSID) seen by the  esp with some information ( return sorted by strength) 
+  The esp could have a websockets action to return a list of networks (SSID) seen by the  esp with some information ( return sorted by strength) 
 The uses can select the SSID he want to connect with and enter a password.
 The ESP should have an action so the website can update the network credentials.
 
@@ -32,3 +32,5 @@ The ESP should have an action so the website can update the network credentials.
 - state wheel ( current breakpoint to -1: when moving to target)
 
 - Launcher error when a child has an error
+
+- DeviceConfig component: use Accessor<> for device arg

@@ -9,9 +9,7 @@ import { getDeviceIcon } from "../icons/Icons";
 type GateState = "Idle" | "WaitOpen" | "Opening" | "WaitClose" | "Closing" | "Between";
 
 export function ServoGate(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
-  const servoGateStore = useServoGate(props.id);
-  const device = () => servoGateStore[0];
-  const actions = servoGateStore[1];
+  const [device, actions] = useServoGate(props.id);
 
   const deviceType = device()?.type;
   const state = () => device()?.state;
@@ -24,7 +22,7 @@ export function ServoGate(props: { id: string; isPopup?: boolean; onClose?: () =
   const servoDeviceId = `${props.id}-servo`;
   // Get config of child servo
   const [servoState] = useServo(servoDeviceId);
-  const servoDuration = createMemo(() => servoState?.config?.defaultDurationInMs ?? 500);
+  const servoDuration = createMemo(() => servoState()?.config?.defaultDurationInMs ?? 500);
 
   // Servo open fraction (0-1) for visual
   const openFraction = createMemo(() => {

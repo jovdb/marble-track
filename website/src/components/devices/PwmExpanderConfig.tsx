@@ -15,10 +15,10 @@ export default function PwmExpanderConfig(props: PwmExpanderConfigProps) {
   const [devicesStore] = useDevices();
   const devicesState = () => devicesStore; // Wrap in a function to avoid stale closure issues
 
-  const [name, setName] = createSignal<string>(device?.config?.name ?? "PWM Expander");
-  const [i2cAddress, setI2cAddress] = createSignal<number>(device?.config?.i2cAddress ?? 0x40);
-  const [i2cDeviceId, setI2cDeviceId] = createSignal<string>(device?.config?.i2cDeviceId ?? "");
-  const [frequency, setFrequency] = createSignal<number>(device?.config?.frequency ?? 50);
+  const [name, setName] = createSignal<string>(device()?.config?.name ?? "PWM Expander");
+  const [i2cAddress, setI2cAddress] = createSignal<number>(device()?.config?.i2cAddress ?? 0x40);
+  const [i2cDeviceId, setI2cDeviceId] = createSignal<string>(device()?.config?.i2cDeviceId ?? "");
+  const [frequency, setFrequency] = createSignal<number>(device()?.config?.frequency ?? 50);
 
   const i2cDevices = createMemo(
     () =>
@@ -29,7 +29,7 @@ export default function PwmExpanderConfig(props: PwmExpanderConfigProps) {
   );
 
   createEffect(() => {
-    const cfg = device?.config;
+    const cfg = device()?.config;
     if (!cfg) return;
 
     if (typeof cfg.name === "string") setName(cfg.name);
@@ -48,7 +48,7 @@ export default function PwmExpanderConfig(props: PwmExpanderConfigProps) {
   };
 
   return (
-    <DeviceConfig device={device} onSave={handleSave} onClose={props.onClose}>
+    <DeviceConfig device={device()} onSave={handleSave} onClose={props.onClose}>
       <DeviceConfigTable>
         <DeviceConfigRow>
           <DeviceConfigItem name="Name">

@@ -17,8 +17,7 @@ interface DeviceProps {
 }
 
 export function Device(props: DeviceProps) {
-  const deviceStore = useDevice(props.id);
-  const device = () => deviceStore[0];
+  const [device] = useDevice(props.id);
 
   const hasConfigComponent = createMemo(() => Boolean(props.configComponent));
   const hasConfigFeature = createMemo(() => device()?.features?.includes("config") ?? false);

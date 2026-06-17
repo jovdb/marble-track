@@ -8,9 +8,7 @@ interface ServoGateConfigProps {
 }
 
 export default function ServoGateConfig(props: ServoGateConfigProps) {
-  const servoGateStore = useServoGate(props.id);
-  const device = () => servoGateStore[0];
-  const actions = servoGateStore[1];
+  const [device, actions] = useServoGate(props.id);
 
   const [name, setName] = createSignal(device()?.config?.name ?? device()?.id ?? "ServoGate");
   const [openDelayMs, setOpenDelayMs] = createSignal(String(device()?.config?.openDelayMs ?? 500));

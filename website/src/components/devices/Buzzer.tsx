@@ -6,9 +6,7 @@ import { Device } from "./Device";
 import BuzzerConfig from "./BuzzerConfig";
 
 export function Buzzer(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
-  const buzzerStore = useBuzzer(props.id);
-  const device = () => buzzerStore[0];
-  const actions = buzzerStore[1];
+  const [device, actions] = useBuzzer(props.id);
 
   const deviceState = createMemo(() => device()?.state);
   const isPlaying = createMemo(

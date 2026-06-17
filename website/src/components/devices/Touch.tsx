@@ -6,9 +6,7 @@ import { TouchStateIcon } from "./TouchStateIcon";
 import { useTouch } from "../../stores/Touch";
 
 export function Touch(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
-  const touchStore = useTouch(props.id);
-  const device = () => touchStore[0];
-  const actions = touchStore[1];
+  const [device, actions] = useTouch(props.id);
 
   const touched = createMemo(() => Boolean(device()?.state?.touched));
   const [isPressing, setIsPressing] = createSignal(false);

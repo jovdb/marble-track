@@ -6,9 +6,7 @@ import ButtonConfig from "./ButtonConfig";
 import { ButtonStateIcon } from "./ButtonStateIcon";
 
 export function Button(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
-  const buttonStore = useButton(props.id);
-  const device = () => buttonStore[0];
-  const actions = buttonStore[1];
+  const [device, actions] = useButton(props.id);
 
   const isPressed = createMemo(() => Boolean(device()?.state?.isPressed));
 

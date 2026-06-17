@@ -17,15 +17,15 @@ export default function IoExpanderConfig(props: IoExpanderConfigProps) {
   const [device, { setDeviceConfig }] = useIoExpander(props.id);
   const [devicesStore] = useDevices();
   const devicesState = () => devicesStore; // Wrap in a function to avoid stale closure issues
-  const [name, setName] = createSignal<string>((device?.config?.name as string) ?? "IO Expander");
+  const [name, setName] = createSignal<string>((device()?.config?.name as string) ?? "IO Expander");
   const [expanderType, setExpanderType] = createSignal<ExpanderType>(
-    (device?.config?.expanderType as ExpanderType) ?? "PCF8574"
+    (device()?.config?.expanderType as ExpanderType) ?? "PCF8574"
   );
   const [i2cAddress, setI2cAddress] = createSignal<number>(
-    (device?.config?.i2cAddress as number) ?? 0x20
+    (device()?.config?.i2cAddress as number) ?? 0x20
   );
   const [i2cDeviceId, setI2cDeviceId] = createSignal<string>(
-    (device?.config?.i2cDeviceId as string) ?? ""
+    (device()?.config?.i2cDeviceId as string) ?? ""
   );
 
   // Get available I2C devices
@@ -34,7 +34,7 @@ export default function IoExpanderConfig(props: IoExpanderConfigProps) {
   });
 
   createEffect(() => {
-    const config = device?.config;
+    const config = device()?.config;
     if (!config) {
       return;
     }
@@ -66,7 +66,7 @@ export default function IoExpanderConfig(props: IoExpanderConfigProps) {
   };
 
   return (
-    <DeviceConfig device={device} onSave={handleSave} onClose={props.onClose}>
+    <DeviceConfig device={device()} onSave={handleSave} onClose={props.onClose}>
       <DeviceConfigTable>
         <DeviceConfigRow>
           <DeviceConfigItem name="Name:">

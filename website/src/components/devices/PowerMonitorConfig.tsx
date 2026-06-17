@@ -18,7 +18,7 @@ export default function PowerMonitorConfig(props: PowerMonitorConfigProps) {
   const [devicesStore] = useDevices();
   const devicesState = () => devicesStore; // Wrap in a function to avoid stale closure issues
 
-  const cfg = () => device?.config;
+  const cfg = () => device()?.config;
 
   const [name, setName] = createSignal(cfg()?.name ?? "Power Monitor");
   const [i2cDeviceId, setI2cDeviceId] = createSignal(cfg()?.i2cDeviceId ?? "");
@@ -32,7 +32,7 @@ export default function PowerMonitorConfig(props: PowerMonitorConfigProps) {
 
   // Sync signals when device config arrives
   createEffect(() => {
-    const c = device?.config;
+    const c = device()?.config;
     if (!c) return;
     if (typeof c.name === "string") setName(c.name);
     if (typeof c.i2cDeviceId === "string") setI2cDeviceId(c.i2cDeviceId);
@@ -52,7 +52,7 @@ export default function PowerMonitorConfig(props: PowerMonitorConfigProps) {
   };
 
   return (
-    <DeviceConfig device={device} onSave={handleSave} onClose={props.onClose}>
+    <DeviceConfig device={device()} onSave={handleSave} onClose={props.onClose}>
       <DeviceConfigTable>
         <DeviceConfigRow>
           <DeviceConfigItem name="Name:">

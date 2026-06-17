@@ -12,16 +12,16 @@ interface I2cConfigProps {
 export default function I2cConfig(props: I2cConfigProps) {
   const [device, { setDeviceConfig }] = useI2c(props.id);
 
-  const [name, setName] = createSignal<string>(device?.config?.name ?? "I2C");
+  const [name, setName] = createSignal<string>(device()?.config?.name ?? "I2C");
   const [sdaPin, setSdaPin] = createSignal<PinConfig>(
-    deserializePinConfig(device?.config?.sdaPin ?? 21)
+    deserializePinConfig(device()?.config?.sdaPin ?? 21)
   );
   const [sclPin, setSclPin] = createSignal<PinConfig>(
-    deserializePinConfig(device?.config?.sclPin ?? 22)
+    deserializePinConfig(device()?.config?.sclPin ?? 22)
   );
 
   createEffect(() => {
-    const config = device?.config;
+    const config = device()?.config;
     if (!config) {
       return;
     }
@@ -46,7 +46,7 @@ export default function I2cConfig(props: I2cConfigProps) {
   };
 
   return (
-    <DeviceConfig device={device} onSave={handleSave} onClose={props.onClose}>
+    <DeviceConfig device={device()} onSave={handleSave} onClose={props.onClose}>
       <DeviceConfigTable>
         <DeviceConfigRow>
           <DeviceConfigItem name="Name:">

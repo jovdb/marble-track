@@ -11,11 +11,11 @@ interface BuzzerConfigProps {
 
 export default function BuzzerConfig(props: BuzzerConfigProps) {
   const [device, { setDeviceConfig }] = useBuzzer(props.id);
-  const [name, setName] = createSignal(device?.config?.name ?? "Buzzer");
-  const [pin, setPin] = createSignal<PinConfig>(deserializePinConfig(device?.config?.pin ?? -1));
+  const [name, setName] = createSignal(device()?.config?.name ?? "Buzzer");
+  const [pin, setPin] = createSignal<PinConfig>(deserializePinConfig(device()?.config?.pin ?? -1));
 
   createEffect(() => {
-    const config = device?.config;
+    const config = device()?.config;
     if (!config) {
       return;
     }
@@ -31,7 +31,7 @@ export default function BuzzerConfig(props: BuzzerConfigProps) {
 
   return (
     <DeviceConfig
-      device={device}
+      device={device()}
       onSave={() =>
         setDeviceConfig({
           name: name(),

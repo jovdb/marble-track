@@ -2,6 +2,7 @@ import { JSX, onMount, Show } from "solid-js";
 import styles from "./DeviceConfig.module.css";
 
 interface DeviceConfigProps {
+  // TODO: use Accessor<>
   device?: { id: string; config?: object; configErrorMessage?: string };
   onSave: () => void;
   onClose?: () => void;

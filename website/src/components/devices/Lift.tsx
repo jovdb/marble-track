@@ -7,9 +7,7 @@ import { useLift } from "../../stores/Lift";
 import { useStepper } from "../../stores/Stepper";
 
 export function Lift(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
-  const liftStore = useLift(props.id);
-  const device = () => liftStore[0];
-  const actions = liftStore[1];
+  const [device, actions] = useLift(props.id);
 
   const stepperId = `${props.id}-stepper`;
   const [stepperDevice] = useStepper(stepperId);
@@ -23,10 +21,10 @@ export function Lift(props: { id: string; isPopup?: boolean; onClose?: () => voi
   const transitionDurationMs = createMemo(() => {
     const maxSpeed =
       state()?.stepsPerSecond ??
-      (stepperDevice?.config as { defaultSpeed?: number })?.defaultSpeed ??
+      (stepperDevice()?.config as { defaultSpeed?: number })?.defaultSpeed ??
       150; // steps/s
     const accel =
-      (stepperDevice?.config as { defaultAcceleration?: number })?.defaultAcceleration ?? 50; // steps/s²
+      (stepperDevice()?.config as { defaultAcceleration?: number })?.defaultAcceleration ?? 50; // steps/s²
     const distance = (config()?.maxSteps ?? 2255) - (config()?.minSteps ?? 0);
 
     const t_accel = maxSpeed / accel;

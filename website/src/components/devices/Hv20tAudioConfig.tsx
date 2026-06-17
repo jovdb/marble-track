@@ -11,15 +11,15 @@ interface Hv20tAudioConfigProps {
 
 export default function Hv20tAudioConfig(props: Hv20tAudioConfigProps) {
   const [device, { setDeviceConfig }] = useHv20tAudio(props.id);
-  const [name, setName] = createSignal(device?.config?.name ?? "HV20T");
+  const [name, setName] = createSignal(device()?.config?.name ?? "HV20T");
   const [rxPin, setRxPin] = createSignal<PinConfig>(
-    deserializePinConfig(device?.config?.rxPin ?? -1)
+    deserializePinConfig(device()?.config?.rxPin ?? -1)
   );
   const [txPin, setTxPin] = createSignal<PinConfig>(
-    deserializePinConfig(device?.config?.txPin ?? -1)
+    deserializePinConfig(device()?.config?.txPin ?? -1)
   );
   const [defaultVolumePercent, setDefaultVolumePercent] = createSignal(
-    String(device?.config?.defaultVolumePercent ?? 50)
+    String(device()?.config?.defaultVolumePercent ?? 50)
   );
 
   const toNumber = (value: string, fallback = 0) => {
@@ -28,7 +28,7 @@ export default function Hv20tAudioConfig(props: Hv20tAudioConfigProps) {
   };
 
   createEffect(() => {
-    const config = device?.config;
+    const config = device()?.config;
     if (!config) {
       return;
     }
@@ -49,7 +49,7 @@ export default function Hv20tAudioConfig(props: Hv20tAudioConfigProps) {
 
   return (
     <DeviceConfig
-      device={device}
+      device={device()}
       onSave={() =>
         setDeviceConfig({
           name: name(),

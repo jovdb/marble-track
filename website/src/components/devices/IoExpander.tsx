@@ -11,9 +11,9 @@ export function IoExpander(props: { id: string; isPopup?: boolean; onClose?: () 
   const [devicesStore] = useDevices();
   const devicesState = () => devicesStore; // Wrap in a function to avoid stale closure issues
 
-  const deviceType = device?.type;
-  const config = () => device?.config;
-  const state = () => device?.state;
+  const deviceType = device()?.type;
+  const config = () => device()?.config;
+  const state = () => device()?.state;
 
   const expanderState = () => state()?.state;
   const expanderType = () => config()?.expanderType ?? "Unknown";

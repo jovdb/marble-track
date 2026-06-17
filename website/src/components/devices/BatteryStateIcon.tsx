@@ -7,7 +7,7 @@ const BATTERY_POLL_MS = 60_000;
 export function BatteryStateIcon(props: { deviceId: string; poll?: boolean } & IconProps) {
   const [device, { getDeviceState }] = useBattery(props.deviceId);
 
-  const batteryPct = createMemo(() => device?.state?.batteryPercent ?? 0);
+  const batteryPct = createMemo(() => device()?.state?.batteryPercent ?? 0);
   const batteryLevel = createMemo(() => Math.min(5, Math.max(0, Math.round(batteryPct() / 20))));
 
   // Do only once via prop?

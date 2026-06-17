@@ -8,9 +8,7 @@ import styles from "./Launcher.module.css";
 type LauncherStateLabel = ILauncherState["state"];
 
 export function Launcher(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
-  const launcherStore = useLauncher(props.id);
-  const device = () => launcherStore[0];
-  const actions = launcherStore[1];
+  const [device, actions] = useLauncher(props.id);
 
   const deviceType = () => device()?.type;
   const state = () => device()?.state;

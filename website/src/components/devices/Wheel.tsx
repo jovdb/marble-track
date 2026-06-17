@@ -10,9 +10,7 @@ import { useWheelAnimation } from "../../hooks/useWheelAnimation";
 import { getDeviceIcon } from "../icons/Icons";
 
 export function Wheel(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
-  const wheelStore = useWheel(props.id);
-  const device = () => wheelStore[0];
-  const actions = wheelStore[1];
+  const [device, actions] = useWheel(props.id);
 
   const state = () => device()?.state;
 

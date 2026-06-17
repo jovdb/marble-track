@@ -10,7 +10,7 @@ const POLL_INTERVAL_MS = 10_000;
 export function PowerMonitor(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device, actions] = usePowerMonitor(props.id);
 
-  const state = () => device?.state;
+  const state = () => device()?.state;
   const status = () => state()?.status;
   const voltage = () => state()?.voltage;
   const current = () => state()?.current;

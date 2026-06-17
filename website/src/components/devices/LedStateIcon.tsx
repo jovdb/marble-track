@@ -54,7 +54,7 @@ export function LedStateIcon(props: { deviceId: string } & IconProps) {
   const [isOn, setIsOn] = createSignal(false);
 
   createEffect(() => {
-    const state = device?.state;
+    const state = device()?.state;
     if (!state) return;
 
     if (state.mode === "ON") {

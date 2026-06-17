@@ -13,14 +13,12 @@ export default function BatteryConfig(props: BatteryConfigProps) {
   const [devicesStore] = useDevices();
   const devicesState = () => devicesStore; // Wrap in a function to avoid stale closure issues
 
-  const cfg = () => device?.config;
-
-  const [name, setName] = createSignal(cfg()?.name ?? "Battery");
+  const [name, setName] = createSignal(device()?.config?.name ?? "Battery");
   const [powerMonitorDeviceId, setPowerMonitorDeviceId] = createSignal(
-    cfg()?.powerMonitorDeviceId ?? ""
+    device()?.config?.powerMonitorDeviceId ?? ""
   );
-  const [minVoltage, setMinVoltage] = createSignal(cfg()?.minVoltage ?? 15.0);
-  const [maxVoltage, setMaxVoltage] = createSignal(cfg()?.maxVoltage ?? 21.0);
+  const [minVoltage, setMinVoltage] = createSignal(device()?.config?.minVoltage ?? 15.0);
+  const [maxVoltage, setMaxVoltage] = createSignal(device()?.config?.maxVoltage ?? 21.0);
 
   // All PowerMonitor devices to choose from
   const powerMonitorDevices = createMemo(() =>
@@ -28,7 +26,7 @@ export default function BatteryConfig(props: BatteryConfigProps) {
   );
 
   createEffect(() => {
-    const c = device?.config;
+    const c = device()?.config;
     if (!c) return;
     if (typeof c.name === "string") setName(c.name);
     if (typeof c.powerMonitorDeviceId === "string") setPowerMonitorDeviceId(c.powerMonitorDeviceId);
@@ -46,7 +44,7 @@ export default function BatteryConfig(props: BatteryConfigProps) {
   };
 
   return (
-    <DeviceConfig device={device} onSave={handleSave} onClose={props.onClose}>
+    <DeviceConfig device={device()} onSave={handleSave} onClose={props.onClose}>
       <DeviceConfigTable>
         <DeviceConfigRow>
           <DeviceConfigItem name="Name:">

@@ -7,9 +7,7 @@ import { useLed } from "../../stores/Led";
 import { LedStateIcon } from "./LedStateIcon";
 
 export function Led(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
-  const ledStore = useLed(props.id);
-  const device = () => ledStore[0];
-  const actions = ledStore[1];
+  const [device, actions] = useLed(props.id);
 
   const deviceType = device()?.type;
   const mode = createMemo(() => device()?.state?.mode ?? "");

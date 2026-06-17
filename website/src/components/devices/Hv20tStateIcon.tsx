@@ -65,7 +65,7 @@ export function Hv20tStateIcon(props: {
       return;
     }
 
-    const state = device.state;
+    const state = device()?.state;
     if (!state) return;
 
     if ((state.currentPlayingSong ?? -1) >= 0) {

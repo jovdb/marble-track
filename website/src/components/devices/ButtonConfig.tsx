@@ -56,16 +56,16 @@ function normalizeButtonType(buttonTypeValue: unknown): ButtonType {
 export default function ButtonConfig(props: ButtonConfigProps) {
   const [device, { setDeviceConfig }] = useButton(props.id);
 
-  const [name, setName] = createSignal(normalizeName(device?.config?.name));
-  const [pin, setPin] = createSignal<PinConfig>(deserializePinConfig(device?.config?.pin ?? -1));
+  const [name, setName] = createSignal(normalizeName(device()?.config?.name));
+  const [pin, setPin] = createSignal<PinConfig>(deserializePinConfig(device()?.config?.pin ?? -1));
   const [pinMode, setPinMode] = createSignal<ButtonPinMode>(
-    normalizePinMode(device?.config?.pinMode)
+    normalizePinMode(device()?.config?.pinMode)
   );
   const [buttonType, setButtonType] = createSignal<ButtonType>(
-    normalizeButtonType(device?.config?.buttonType)
+    normalizeButtonType(device()?.config?.buttonType)
   );
   const [debounce, setDebounce] = createSignal(
-    String(normalizeDebounce(device?.config?.debounceTimeInMs))
+    String(normalizeDebounce(device()?.config?.debounceTimeInMs))
   );
 
   const toNumber = (value: string, fallback = 0) => {
@@ -74,7 +74,7 @@ export default function ButtonConfig(props: ButtonConfigProps) {
   };
 
   createEffect(() => {
-    const config = device?.config;
+    const config = device()?.config;
     if (!config) {
       return;
     }
@@ -100,7 +100,7 @@ export default function ButtonConfig(props: ButtonConfigProps) {
   };
 
   return (
-    <DeviceConfig device={device} onSave={handleSave} onClose={props.onClose}>
+    <DeviceConfig device={device()} onSave={handleSave} onClose={props.onClose}>
       <DeviceConfigTable>
         <DeviceConfigRow>
           <DeviceConfigItem name="Name:">

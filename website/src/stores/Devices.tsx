@@ -1,5 +1,5 @@
 import { createStore, produce } from "solid-js/store";
-import { createContext, onCleanup, onMount, useContext } from "solid-js";
+import { createContext, createMemo, onCleanup, onMount, useContext } from "solid-js";
 import { IWebSocketActions, useWebSocket2 } from "../hooks/useWebSocket";
 import { DeviceInfo, DeviceType } from "../interfaces/WebSockets";
 
@@ -285,20 +285,9 @@ export function useDevice<TState extends IDeviceState, TConfig extends IDeviceCo
 ) {
   const [store, { getDeviceConfig, setDeviceConfig, getDeviceState, execDeviceFn }] = useDevices();
   const devicesState = () => store; // Wrap in a function to avoid stale closure issues
-  const getCurrentDevice = () =>
-    devicesState().devices[deviceId] as IDevice<TState, TConfig> | undefined;
-
-  // ToDo: return as accessor function
-  const device = new Proxy({} as IDevice<TState, TConfig>, {
-    get(_target, property) {
-      if (typeof property === "symbol") {
-        return undefined;
-      }
-
-      return getCurrentDevice()?.[property as keyof IDevice<TState, TConfig>];
-    },
-  });
-
+  const device = createMemo(
+    () => devicesState().devices[deviceId] as IDevice<TState, TConfig> | undefined
+  );
   // tracking only needed once
   onMount(() => {
     getDeviceConfig(deviceId);
@@ -312,7 +301,7 @@ export function useDevice<TState extends IDeviceState, TConfig extends IDeviceCo
       getDeviceState: () => getDeviceState(deviceId),
       setDeviceConfig: (config: TConfig) => setDeviceConfig(deviceId, config),
       execDeviceFn: (fn: string, args: Record<string, unknown> | undefined) =>
-        execDeviceFn(deviceId, (getCurrentDevice()?.type ?? "") as DeviceType, fn, args),
+        execDeviceFn(deviceId, (device()?.type ?? "") as DeviceType, fn, args),
     },
   ] as const;
 }

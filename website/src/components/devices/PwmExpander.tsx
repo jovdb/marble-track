@@ -10,9 +10,9 @@ export function PwmExpander(props: { id: string; isPopup?: boolean; onClose?: ()
   const [device, actions] = usePwmExpander(props.id);
   const [devicesStore] = useDevices();
   const devicesState = () => devicesStore; // Wrap in a function to avoid stale closure issues
-  const deviceType = device?.type;
-  const config = () => device?.config;
-  const state = () => device?.state;
+  const deviceType = device()?.type;
+  const config = () => device()?.config;
+  const state = () => device()?.state;
 
   const expanderState = () => state()?.state;
 

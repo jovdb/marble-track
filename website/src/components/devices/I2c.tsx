@@ -6,8 +6,8 @@ import I2cConfig from "./I2cConfig";
 export function I2c(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device] = useI2c(props.id);
 
-  const deviceType = device?.type;
-  const config = () => device?.config;
+  const deviceType = device()?.type;
+  const config = () => device()?.config;
 
   const sdaPin = () => (config()?.sdaPin as number) ?? 21;
   const sclPin = () => (config()?.sclPin as number) ?? 22;

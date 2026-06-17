@@ -12,9 +12,7 @@ interface ServoConfigProps {
 }
 
 export default function ServoConfig(props: ServoConfigProps) {
-  const servoStore = useServo(props.id);
-  const device = () => servoStore[0];
-  const actions = servoStore[1];
+  const [device, actions] = useServo(props.id);
   const [devicesStore] = useDevices();
   const devicesState = () => devicesStore; // Wrap in a function to avoid stale closure issues
 

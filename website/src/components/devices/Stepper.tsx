@@ -7,9 +7,7 @@ import StepperConfig from "./StepperConfig";
 import { StepperIcon } from "../icons/Icons";
 
 export function Stepper(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
-  const stepperStore = useStepper(props.id);
-  const device = () => stepperStore[0];
-  const actions = stepperStore[1];
+  const [device, actions] = useStepper(props.id);
 
   const state = createMemo(() => device()?.state);
   const config = createMemo(() => device()?.config);

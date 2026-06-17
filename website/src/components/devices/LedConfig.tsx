@@ -16,14 +16,14 @@ export default function LedConfig(props: LedConfigProps) {
     return LED_INITIAL_STATES.includes(candidate) ? candidate : "OFF";
   };
 
-  const [name, setName] = createSignal(device?.config?.name ?? "Led");
-  const [pin, setPin] = createSignal<PinConfig>(deserializePinConfig(device?.config?.pin ?? -1));
+  const [name, setName] = createSignal(device()?.config?.name ?? "Led");
+  const [pin, setPin] = createSignal<PinConfig>(deserializePinConfig(device()?.config?.pin ?? -1));
   const [initialState, setInitialState] = createSignal<LedInitialState>(
-    normalizeInitialState(device?.config?.initialState)
+    normalizeInitialState(device()?.config?.initialState)
   );
 
   createEffect(() => {
-    const config = device?.config;
+    const config = device()?.config;
     if (!config) {
       return;
     }
@@ -40,7 +40,7 @@ export default function LedConfig(props: LedConfigProps) {
 
   return (
     <DeviceConfig
-      device={device}
+      device={device()}
       onSave={() => {
         setDeviceConfig({
           name: name(),

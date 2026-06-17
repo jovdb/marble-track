@@ -75,7 +75,7 @@ export function ButtonStateIcon(props: { deviceId: string } & IconProps) {
   const [isPressed, setIsPressed] = createSignal(false);
 
   createEffect(() => {
-    const state = device?.state;
+    const state = device()?.state;
     if (!state) return;
 
     setIsPressed(state.isPressed);

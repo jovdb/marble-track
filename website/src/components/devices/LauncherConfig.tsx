@@ -8,9 +8,7 @@ interface LauncherConfigProps {
 }
 
 export default function LauncherConfig(props: LauncherConfigProps) {
-  const launcherStore = useLauncher(props.id);
-  const device = () => launcherStore[0];
-  const actions = launcherStore[1];
+  const [device, actions] = useLauncher(props.id);
 
   const [name, setName] = createSignal(device()?.config?.name ?? device()?.id ?? "Launcher");
   const [loadTimeMs, setLoadTimeMs] = createSignal(String(device()?.config?.loadTimeMs ?? 2000));

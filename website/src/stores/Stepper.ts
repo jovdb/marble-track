@@ -56,7 +56,7 @@ export function useStepper(deviceId: string) {
   const [device, { execDeviceFn, ...actions }] = useDevice<IStepperState, IStepperConfig>(deviceId);
 
   const move = (args: IStepperMoveArgs) => {
-    const config = device?.config;
+    const config = device()?.config;
     const moveArgs = { ...args };
 
     // Use default values from config if not provided
@@ -82,7 +82,7 @@ export function useStepper(deviceId: string) {
   };
 
   const moveTo = (args: IStepperMoveToArgs) => {
-    const config = device?.config;
+    const config = device()?.config;
     const moveArgs = { ...args };
 
     // Use default values from config if not provided

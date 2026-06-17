@@ -48,13 +48,13 @@ export default function TouchConfig(props: TouchConfigProps) {
   const [device, { setDeviceConfig, setStreaming, readValue }] = useTouch(props.id);
   const touchPins = getTouchPinsForEsp32Type(CURRENT_ESP32_TYPE);
 
-  const [name, setName] = createSignal(normalizeName(device?.config?.name));
-  const [pin, setPin] = createSignal<PinConfig>(normalizePinConfig(device?.config?.pin));
+  const [name, setName] = createSignal(normalizeName(device()?.config?.name));
+  const [pin, setPin] = createSignal<PinConfig>(normalizePinConfig(device()?.config?.pin));
   const [threshold, setThreshold] = createSignal(
-    String(normalizeThreshold(device?.config?.threshold))
+    String(normalizeThreshold(device()?.config?.threshold))
   );
   const [durationMs, setDurationMs] = createSignal(
-    String(normalizeDuration(device?.config?.durationMs))
+    String(normalizeDuration(device()?.config?.durationMs))
   );
   const [liveValues, setLiveValues] = createSignal(false);
 
@@ -72,7 +72,7 @@ export default function TouchConfig(props: TouchConfigProps) {
   };
 
   const getCurrentValue = () =>
-    typeof device?.state?.value === "number" ? (device.state.value as number) : undefined;
+    typeof device()?.state?.value === "number" ? (device()?.state?.value as number) : undefined;
 
   const getThresholdValue = () => Math.max(0, Math.floor(toNumber(threshold(), 30000)));
 
@@ -86,7 +86,7 @@ export default function TouchConfig(props: TouchConfigProps) {
   };
 
   createEffect(() => {
-    const config = device?.config;
+    const config = device()?.config;
     if (!config) {
       return;
     }
@@ -113,7 +113,7 @@ export default function TouchConfig(props: TouchConfigProps) {
   };
 
   return (
-    <DeviceConfig device={device} onSave={handleSave} onClose={props.onClose}>
+    <DeviceConfig device={device()} onSave={handleSave} onClose={props.onClose}>
       <DeviceConfigTable>
         <DeviceConfigRow>
           <DeviceConfigItem name="Name:">
@@ -151,7 +151,7 @@ export default function TouchConfig(props: TouchConfigProps) {
         <DeviceConfigRow>
           <DeviceConfigItem name="Current value:">
             <span style={{ "margin-left": "0.5rem" }}>
-              {typeof device?.state?.value === "number" ? device.state.value : "-"}
+              {typeof device()?.state?.value === "number" ? device()?.state?.value : "-"}
             </span>
             <button
               type="button"

@@ -8,9 +8,7 @@ import Hv20tAudioConfig from "./Hv20tAudioConfig";
 import { Hv20tStateIcon } from "./Hv20tStateIcon";
 
 export function Hv20tAudio(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
-  const hv20tStore = useHv20tAudio(props.id);
-  const device = () => hv20tStore[0];
-  const actions = hv20tStore[1];
+  const [device, actions] = useHv20tAudio(props.id);
 
   const state = createMemo(() => device()?.state);
   const volumePercent = createMemo(() => state()?.volumePercent ?? 50);

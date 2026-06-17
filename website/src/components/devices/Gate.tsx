@@ -102,19 +102,19 @@ export function Gate(props: { id: string; isPopup?: boolean; onClose?: () => voi
         <div
           classList={{
             [gateStyles["gate__status-indicator"]]: true,
-            [gateStyles["gate__status-indicator--open"]]: device?.state?.gateState === "Opened",
-            [gateStyles["gate__status-indicator--closed"]]: device?.state?.gateState !== "Opened",
+            [gateStyles["gate__status-indicator--open"]]: device()?.state?.gateState === "Opened",
+            [gateStyles["gate__status-indicator--closed"]]: device()?.state?.gateState !== "Opened",
           }}
         ></div>
         <span class={deviceStyles["device__status-text"]}>
-          Status: {device?.state?.gateState || "Unknown"}
+          Status: {device()?.state?.gateState || "Unknown"}
         </span>
       </div>
       <div class={deviceStyles.device__controls}>
         <button
           class={deviceStyles.device__button}
           onClick={openGate}
-          disabled={!device || device?.state?.gateState !== "Closed"}
+          disabled={!device() || device()?.state?.gateState !== "Closed"}
         >
           Open
         </button>

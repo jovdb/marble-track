@@ -69,18 +69,28 @@ namespace devices
         _state.status = "Ready";
         Device::clearError();
 
-        // Low-voltage alert — fires once on transition, clears on recovery
-        if (voltage < _config.minVoltage && !_lowVoltageAlertActive)
+        auto lowAlertVoltage = _config.minVoltage + (_config.maxVoltage - _config.minVoltage) * .1;
+        auto criticalVoltage = _config.minVoltage + (_config.maxVoltage - _config.minVoltage) * .05;
+        auto clearAlertVoltage = _config.minVoltage + (_config.maxVoltage - _config.minVoltage) * .3;
+
+        if (voltage >= clearAlertVoltage)
         {
-            _lowVoltageAlertActive = true;
-            String msg = "Battery voltage " + String(voltage, 2) + "V is below " + String(_config.minVoltage, 2) + "V (0%)";
-            broadcastNotification("LOW_VOLTAGE", msg, DeviceNotificationType::Warning);
-            MLOG_WARN("%s: %s", toString().c_str(), msg.c_str());
+            _lowVoltageAlerted = false;
+            _criticalVoltageAlerted = false;
         }
-        else if (voltage >= _config.minVoltage && _lowVoltageAlertActive)
+        else if (!_criticalVoltageAlerted && voltage <= criticalVoltage)
         {
-            _lowVoltageAlertActive = false;
-            MLOG_INFO("%s: Battery voltage recovered to %.2fV", toString().c_str(), voltage);
+            _criticalVoltageAlerted = true;
+            _lowVoltageAlerted = true;
+            broadcastNotification("CRITICAL_BATTERY_LEVEL", "Battery is minder dan 5%! Zet systeem uit en vervang batterij", DeviceNotificationType::Warning);
+            MLOG_ERROR("%s: Battery level is below 5%%", toString().c_str());
+        }
+        else if (!_lowVoltageAlerted && voltage <= lowAlertVoltage)
+        {
+            _criticalVoltageAlerted = false;
+            _lowVoltageAlerted = true;
+            broadcastNotification("LOW_BATTERY_LEVEL", "Battery is minder dan 10%!", DeviceNotificationType::Warning);
+            MLOG_WARN("%s: Battery level is below 10%%", toString().c_str());
         }
 
         return true;

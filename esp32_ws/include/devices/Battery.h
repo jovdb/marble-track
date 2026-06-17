@@ -51,7 +51,8 @@ namespace devices
         void configToJson(JsonDocument &doc) override;
 
     private:
-        bool _lowVoltageAlertActive = false;
+        bool _lowVoltageAlerted = false;
+        bool _criticalVoltageAlerted = false;
 
         // Looks up the PowerMonitor, triggers a fresh read, updates _state, and
         // returns true when the PowerMonitor is healthy.

@@ -49,7 +49,7 @@ export default function Hv20tAudioConfig(props: Hv20tAudioConfigProps) {
 
   return (
     <DeviceConfig
-      device={device()}
+      device={device}
       onSave={() =>
         setDeviceConfig({
           name: name(),

@@ -102,7 +102,7 @@ export function Lift(props: { id: string; isPopup?: boolean; onClose?: () => voi
     <Device
       id={props.id}
       configComponent={(onClose) => (
-        <LiftConfig device={device()} actions={actions} onClose={onClose} />
+        <LiftConfig device={device} actions={actions} onClose={onClose} />
       )}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}

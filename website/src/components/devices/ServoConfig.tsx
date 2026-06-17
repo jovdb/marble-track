@@ -101,7 +101,7 @@ export default function ServoConfig(props: ServoConfigProps) {
 
   return (
     <DeviceConfig
-      device={device()}
+      device={device}
       onSave={() =>
         actions.setDeviceConfig({
           name: name()?.trim() || device()?.id,

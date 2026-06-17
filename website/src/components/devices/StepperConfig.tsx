@@ -147,7 +147,7 @@ export default function StepperConfig(props: { id: string; onClose: () => void }
   };
 
   return (
-    <DeviceConfig device={device()} onSave={handleSave} onClose={props.onClose}>
+    <DeviceConfig device={device} onSave={handleSave} onClose={props.onClose}>
       <DeviceConfigTable>
         <DeviceConfigRow>
           <DeviceConfigItem name="Name">

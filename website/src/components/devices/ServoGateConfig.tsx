@@ -44,7 +44,7 @@ export default function ServoGateConfig(props: ServoGateConfigProps) {
 
   return (
     <DeviceConfig
-      device={device()}
+      device={device}
       onSave={() =>
         actions.setDeviceConfig({
           name: name()?.trim() || device()?.id,

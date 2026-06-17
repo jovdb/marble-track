@@ -1,9 +1,8 @@
-import { JSX, onMount, Show } from "solid-js";
+import { Accessor, JSX, onMount, Show } from "solid-js";
 import styles from "./DeviceConfig.module.css";
 
 interface DeviceConfigProps {
-  // TODO: use Accessor<>
-  device?: { id: string; config?: object; configErrorMessage?: string };
+  device: Accessor<{ id: string; config?: object; configErrorMessage?: string } | undefined>;
   onSave: () => void;
   onClose?: () => void;
   children?: JSX.Element | JSX.Element[];
@@ -11,9 +10,9 @@ interface DeviceConfigProps {
 }
 
 export default function DeviceConfig(props: DeviceConfigProps) {
-  const hasConfigError = () => !!props.device?.configErrorMessage;
+  const hasConfigError = () => !!props.device()?.configErrorMessage;
 
-  const deviceData = () => props.device;
+  const deviceData = () => props.device();
   const isLoading = () => deviceData()?.config === undefined;
   const deviceName = () =>
     ((deviceData()?.config as Record<string, unknown>)?.name as string) ||
@@ -46,7 +45,7 @@ export default function DeviceConfig(props: DeviceConfigProps) {
 
       <Show when={hasConfigError()}>
         <div class={styles["device-config__error"]} role="alert">
-          {props.device?.configErrorMessage}
+          {props.device()?.configErrorMessage}
         </div>
         <div class={styles["device-config__actions"]}>
           {props.onClose && (

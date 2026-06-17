@@ -52,7 +52,7 @@ export function LiftConfig(props: { device: any; actions: any; onClose: () => vo
   });
 
   return (
-    <DeviceConfig device={device()} onSave={handleSave} onClose={props.onClose}>
+    <DeviceConfig device={device} onSave={handleSave} onClose={props.onClose}>
       <div style={{ "margin-bottom": "1em" }}>
         <label style={{ display: "block", "margin-bottom": "0.5em" }}>Name:</label>
         <input

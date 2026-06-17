@@ -107,7 +107,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
   });
 
   return (
-    <DeviceConfig device={device()} onSave={handleSave} onClose={props.onClose}>
+    <DeviceConfig device={device} onSave={handleSave} onClose={props.onClose}>
       <DeviceConfigTable>
         <DeviceConfigRow>
           <DeviceConfigItem name="Name:">

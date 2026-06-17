@@ -36,7 +36,7 @@ export function Wheel(props: { id: string; isPopup?: boolean; onClose?: () => vo
     <Device
       id={props.id}
       configComponent={(onClose) => (
-        <WheelConfig device={device()} actions={actions} onClose={onClose} />
+        <WheelConfig device={device} actions={actions} onClose={onClose} />
       )}
       icon={deviceType ? getDeviceIcon(deviceType, props.id) : null}
       isCollapsible={!props.isPopup}

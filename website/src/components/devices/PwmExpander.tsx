@@ -9,7 +9,7 @@ import { II2cConfig, II2cState } from "../../stores/I2c";
 export function PwmExpander(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device, actions] = usePwmExpander(props.id);
   const [devicesStore] = useDevices();
-
+  const devicesState = () => devicesStore; // Wrap in a function to avoid stale closure issues
   const deviceType = device?.type;
   const config = () => device?.config;
   const state = () => device?.state;
@@ -24,7 +24,7 @@ export function PwmExpander(props: { id: string; isPopup?: boolean; onClose?: ()
   const i2cDeviceName = () => {
     const i2cDeviceId = config()?.i2cDeviceId;
     if (!i2cDeviceId) return "No I²C bus selected";
-    const i2cDevice = devicesStore.devices[i2cDeviceId] as
+    const i2cDevice = devicesState().devices[i2cDeviceId] as
       | IDevice<II2cState, II2cConfig>
       | undefined;
     return i2cDevice?.config?.name || i2cDevice?.id || "Unknown I²C bus";

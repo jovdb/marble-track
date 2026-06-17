@@ -143,7 +143,8 @@ const ExpandableMessage: Component<{
 };
 
 const WebSocketMessages: Component = () => {
-  const [devicesState] = useDevices();
+  const [devicesStore] = useDevices();
+  const devicesState = () => devicesStore; // Wrap in a function to avoid stale closure issues
   const [wsStore, wsActions] = useWebSocket2();
 
   const [messageTypeFilter, setMessageTypeFilter] = createSignal("");
@@ -229,7 +230,7 @@ const WebSocketMessages: Component = () => {
 
   // Get unique device IDs from available devices
   const deviceOptions = createMemo(() => {
-    return Object.keys(devicesState.devices).sort();
+    return Object.keys(devicesState().devices).sort();
   });
   return (
     <div class={styles["websocket-messages"]}>

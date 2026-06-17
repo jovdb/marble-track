@@ -38,39 +38,36 @@ export const BatteryIcon = (props: BatteryIconProps) => {
   const segY = 8;
   const segments = [2.5, 5.9, 9.3, 12.7, 16.1];
   return (
-    <>
-      <svg
-        width={props.width || 24}
-        height={props.height || 24}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        class={props.class}
-        style={props.style}
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        {/* body */}
-        <rect x="1" y="6" width="20" height="12" rx="2" />
-        {/* nub */}
-        <path d="M21.8 10v4" stroke-width="3" stroke-linecap="round" />
-        {/* filled segments */}
-        <For each={segments.slice(0, bars())}>
-          {(x) => (
-            <rect x={x} y={segY} width={segW} height={segH} rx="0.5" fill={color()} stroke="none" />
-          )}
-        </For>
-        {/* empty segments */}
-        <For each={segments.slice(bars())}>
-          {(x) => (
-            <rect x={x} y={segY} width={segW} height={segH} rx="0.5" fill="#ddd" stroke="none" />
-          )}
-        </For>
-      </svg>
-      {props.level?.()}
-    </>
+    <svg
+      width={props.width || 24}
+      height={props.height || 24}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class={props.class}
+      style={props.style}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* body */}
+      <rect x="1" y="6" width="20" height="12" rx="2" />
+      {/* nub */}
+      <path d="M21.8 10v4" stroke-width="3" stroke-linecap="round" />
+      {/* filled segments */}
+      <For each={segments.slice(0, bars())}>
+        {(x) => (
+          <rect x={x} y={segY} width={segW} height={segH} rx="0.5" fill={color()} stroke="none" />
+        )}
+      </For>
+      {/* empty segments */}
+      <For each={segments.slice(bars())}>
+        {(x) => (
+          <rect x={x} y={segY} width={segW} height={segH} rx="0.5" fill="#ddd" stroke="none" />
+        )}
+      </For>
+    </svg>
   );
 };
 

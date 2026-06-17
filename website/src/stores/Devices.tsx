@@ -284,10 +284,11 @@ export function useDevice<TState extends IDeviceState, TConfig extends IDeviceCo
   deviceId: string
 ) {
   const [store, { getDeviceConfig, setDeviceConfig, getDeviceState, execDeviceFn }] = useDevices();
+  const devicesState = () => store; // Wrap in a function to avoid stale closure issues
   const getCurrentDevice = () =>
-    store.devices[deviceId] as IDevice<TState, TConfig> | undefined;
-  
-  // ToDo: return as accesor function
+    devicesState().devices[deviceId] as IDevice<TState, TConfig> | undefined;
+
+  // ToDo: return as accessor function
   const device = new Proxy({} as IDevice<TState, TConfig>, {
     get(_target, property) {
       if (typeof property === "symbol") {

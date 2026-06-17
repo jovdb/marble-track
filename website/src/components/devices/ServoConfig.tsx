@@ -15,7 +15,8 @@ export default function ServoConfig(props: ServoConfigProps) {
   const servoStore = useServo(props.id);
   const device = () => servoStore[0];
   const actions = servoStore[1];
-  const [devicesState] = useDevices();
+  const [devicesStore] = useDevices();
+  const devicesState = () => devicesStore; // Wrap in a function to avoid stale closure issues
 
   const [name, setName] = createSignal(device()?.config?.name ?? device()?.id ?? "Servo");
   const [pin, setPin] = createSignal<PinConfig>(deserializePinConfig(device()?.config?.pin ?? -1));
@@ -50,7 +51,7 @@ export default function ServoConfig(props: ServoConfigProps) {
     // For PwmExpander pins, use the expander device's configured frequency
     let freq: number;
     if (isPwmExpanderPin()) {
-      const expanderDevice = devicesState.devices[pin().expanderId] as
+      const expanderDevice = devicesState().devices[pin().expanderId] as
         | IDevice<IPwmExpanderState, IPwmExpanderConfig>
         | undefined;
       freq = expanderDevice?.config?.frequency ?? 50;
@@ -166,7 +167,7 @@ export default function ServoConfig(props: ServoConfigProps) {
               type="number"
               value={
                 isPwmExpanderPin()
-                  ? (((devicesState.devices[pin().expanderId]?.config as IPwmExpanderConfig)
+                  ? (((devicesState().devices[pin().expanderId]?.config as IPwmExpanderConfig)
                       ?.frequency as number | undefined) ?? 50)
                   : frequency()
               }

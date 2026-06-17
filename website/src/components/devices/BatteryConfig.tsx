@@ -11,6 +11,7 @@ interface BatteryConfigProps {
 export default function BatteryConfig(props: BatteryConfigProps) {
   const [device, { setDeviceConfig }] = useBattery(props.id);
   const [devicesStore] = useDevices();
+  const devicesState = () => devicesStore; // Wrap in a function to avoid stale closure issues
 
   const cfg = () => device?.config;
 
@@ -23,7 +24,7 @@ export default function BatteryConfig(props: BatteryConfigProps) {
 
   // All PowerMonitor devices to choose from
   const powerMonitorDevices = createMemo(() =>
-    Object.values(devicesStore.devices).filter((d) => d.type === "powermonitor")
+    Object.values(devicesState().devices).filter((d) => d.type === "powermonitor")
   );
 
   createEffect(() => {

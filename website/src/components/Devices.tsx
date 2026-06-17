@@ -27,7 +27,8 @@ import styles from "./Devices.module.css";
 
 export function Devices() {
   const [webSocket] = useWebSocket2();
-  const [devicesState, { loadDevices }] = useDevices();
+  const [devicesStore, { loadDevices }] = useDevices();
+  const devicesState = () => devicesStore;
   const [selectedDevicesState] = useSelectedDevices();
 
   const selectedDevices = createMemo(() => {
@@ -37,11 +38,11 @@ export function Devices() {
     }
 
     return Array.from(selectedIds)
-      .map((id) => devicesState.devices[id])
+      .map((id) => devicesState().devices[id])
       .filter((device) => device !== undefined);
   });
 
-  const hasAnyDevices = createMemo(() => Object.values(devicesState.devices).length > 0);
+  const hasAnyDevices = createMemo(() => Object.values(devicesState().devices).length > 0);
 
   onMount(() => {
     // Request devices on mount

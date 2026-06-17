@@ -16,7 +16,7 @@ interface IoExpanderConfigProps {
 export default function IoExpanderConfig(props: IoExpanderConfigProps) {
   const [device, { setDeviceConfig }] = useIoExpander(props.id);
   const [devicesStore] = useDevices();
-
+  const devicesState = () => devicesStore; // Wrap in a function to avoid stale closure issues
   const [name, setName] = createSignal<string>((device?.config?.name as string) ?? "IO Expander");
   const [expanderType, setExpanderType] = createSignal<ExpanderType>(
     (device?.config?.expanderType as ExpanderType) ?? "PCF8574"
@@ -30,7 +30,7 @@ export default function IoExpanderConfig(props: IoExpanderConfigProps) {
 
   // Get available I2C devices
   const i2cDevices = createMemo(() => {
-    return Object.values(devicesStore.devices).filter((d) => d.type === "i2c");
+    return Object.values(devicesState().devices).filter((d) => d.type === "i2c");
   });
 
   createEffect(() => {

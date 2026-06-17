@@ -16,6 +16,7 @@ interface PowerMonitorConfigProps {
 export default function PowerMonitorConfig(props: PowerMonitorConfigProps) {
   const [device, { setDeviceConfig }] = usePowerMonitor(props.id);
   const [devicesStore] = useDevices();
+  const devicesState = () => devicesStore; // Wrap in a function to avoid stale closure issues
 
   const cfg = () => device?.config;
 
@@ -26,7 +27,7 @@ export default function PowerMonitorConfig(props: PowerMonitorConfigProps) {
   const [maxCurrent, setMaxCurrent] = createSignal(cfg()?.maxCurrent ?? 3.2);
 
   const i2cDevices = createMemo(() =>
-    Object.values(devicesStore.devices).filter((d) => d.type === "i2c")
+    Object.values(devicesState().devices).filter((d) => d.type === "i2c")
   );
 
   // Sync signals when device config arrives

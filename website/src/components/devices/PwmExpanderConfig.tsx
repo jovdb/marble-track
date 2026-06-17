@@ -13,6 +13,7 @@ interface PwmExpanderConfigProps {
 export default function PwmExpanderConfig(props: PwmExpanderConfigProps) {
   const [device, { setDeviceConfig }] = usePwmExpander(props.id);
   const [devicesStore] = useDevices();
+  const devicesState = () => devicesStore; // Wrap in a function to avoid stale closure issues
 
   const [name, setName] = createSignal<string>(device?.config?.name ?? "PWM Expander");
   const [i2cAddress, setI2cAddress] = createSignal<number>(device?.config?.i2cAddress ?? 0x40);
@@ -21,7 +22,7 @@ export default function PwmExpanderConfig(props: PwmExpanderConfigProps) {
 
   const i2cDevices = createMemo(
     () =>
-      Object.values(devicesStore.devices).filter((d) => d.type === "i2c") as IDevice<
+      Object.values(devicesState().devices).filter((d) => d.type === "i2c") as IDevice<
         II2cState,
         II2cConfig
       >[]

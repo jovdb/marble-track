@@ -45,7 +45,8 @@ const DRAG_AUTOSCROLL_EDGE_PX = 80;
 const DRAG_AUTOSCROLL_STEP_PX = 18;
 
 export function DevicesList() {
-  const [devicesState, { loadDevices }] = useDevices();
+  const [devicesStore, { loadDevices }] = useDevices();
+  const devicesState = () => devicesStore;
   const [socketState, socketActions] = useWebSocket2();
 
   // Signals for add device modal
@@ -80,7 +81,7 @@ export function DevicesList() {
 
   // Initialize collapsed devices - expand root devices one level
   createEffect(() => {
-    const devices = Object.values(devicesState.devices);
+    const devices = Object.values(devicesState().devices);
     const rootDevices = devices.filter((device) => {
       return !devices.some((other) => other.children?.some((child) => child.id === device.id));
     });
@@ -88,7 +89,7 @@ export function DevicesList() {
     const nextCollapsed = new Set<string>();
     rootDevices.forEach((root) => {
       root.children?.forEach((child) => {
-        const childDevice = devicesState.devices[child.id];
+        const childDevice = devicesState().devices[child.id];
         if (childDevice && childDevice.children && childDevice.children.length > 0) {
           nextCollapsed.add(childDevice.id);
         }
@@ -112,7 +113,7 @@ export function DevicesList() {
 
   const activeDevice = createMemo(() => {
     const id = activeDeviceId();
-    return id ? devicesState.devices[id] : undefined;
+    return id ? devicesState().devices[id] : undefined;
   });
 
   // Download devices config handler
@@ -328,7 +329,7 @@ export function DevicesList() {
   // Used to surface child errors on a collapsed parent row.
   const findChildError = (device: IDevice): string | undefined => {
     for (const child of device.children ?? []) {
-      const childDevice = devicesState.devices[child.id];
+      const childDevice = devicesState().devices[child.id];
       if (!childDevice) continue;
       const label = deviceErrorLabel(childDevice);
       if (label) return label;
@@ -340,8 +341,8 @@ export function DevicesList() {
 
   // Compute top-level devices (exclude devices that are children of other devices)
   const topLevelDevices = () =>
-    Object.values(devicesState.devices).filter((device) => {
-      return !Object.values(devicesState.devices).some((other) =>
+    Object.values(devicesState().devices).filter((device) => {
+      return !Object.values(devicesState().devices).some((other) =>
         other.children?.some((child) => child.id === device.id)
       );
     });
@@ -351,7 +352,7 @@ export function DevicesList() {
     const pins: string[] = [...(device.pins || [])];
 
     device.children?.forEach((child) => {
-      const childDevice = devicesState.devices[child.id];
+      const childDevice = devicesState().devices[child.id];
       if (childDevice) {
         pins.push(...collectAllPins(childDevice));
       }
@@ -522,7 +523,7 @@ export function DevicesList() {
         {!isCollapsed() && (
           <For each={props.device.children}>
             {(child) => {
-              const childDevice = devicesState.devices[child.id];
+              const childDevice = devicesState().devices[child.id];
               return childDevice ? <DeviceRow device={childDevice} depth={depth + 1} /> : null;
             }}
           </For>
@@ -562,11 +563,11 @@ export function DevicesList() {
     <>
       <div class={styles["devices-list"]}>
         <div>
-          {Object.values(devicesState.devices).length === 0 && (
+          {Object.values(devicesState().devices).length === 0 && (
             <div class={styles["devices-list__status"]}>No devices found</div>
           )}
 
-          {Object.values(devicesState.devices).length > 0 && (
+          {Object.values(devicesState().devices).length > 0 && (
             <div class={styles["devices-list__table-container"]}>
               <table class={styles["devices-list__table"]}>
                 <thead class={styles["devices-list__table-header"]}>

@@ -22,7 +22,8 @@ interface PinSelectProps {
 
 export default function PinSelect(props: PinSelectProps) {
   const [devicesStore, { getDeviceConfig }] = useDevices();
-  const usedPins = createMemo(() => getUsedPins(devicesStore.devices, props.excludeDeviceId));
+  const devicesState = () => devicesStore;
+  const usedPins = createMemo(() => getUsedPins(devicesState().devices, props.excludeDeviceId));
   const availablePins = createMemo(() => props.availableGpioPins ?? ESP32_AVAILABLE_PINS);
   const getPinUsage = (pinKey: string) => usedPins().get(pinKey);
 
@@ -30,7 +31,7 @@ export default function PinSelect(props: PinSelectProps) {
   // recompute this when devices are added/removed, so requesting their
   // configs below cannot create a feedback loop with the device store.
   const expanderDeviceIds = createMemo(() =>
-    Object.values(devicesStore.devices)
+    Object.values(devicesState().devices)
       .filter((device) => {
         if (device.type === "ioexpander") return props.showExpanderPins;
         if (device.type === "pwmexpander") return props.showPwmExpanderPins;
@@ -58,7 +59,7 @@ export default function PinSelect(props: PinSelectProps) {
     if (!props.showExpanderPins && !props.showPwmExpanderPins) return [];
 
     const options: { value: PinConfig; label: string }[] = [];
-    Object.values(devicesStore.devices).forEach((device) => {
+    Object.values(devicesState().devices).forEach((device) => {
       if (device.type === "ioexpander" && props.showExpanderPins) {
         if (device.config) {
           const config = device.config as IIoExpanderConfig | undefined;

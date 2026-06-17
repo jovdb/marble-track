@@ -27,7 +27,6 @@ namespace devices
     {
         UNKNOWN,
         ERROR,
-        INIT,
         UP,
         MOVING_UP,
         DOWN,

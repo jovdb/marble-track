@@ -58,7 +58,7 @@ namespace devices
         void loopAutoWheel();
         void loopAutoSpiral();
         void loopSplitter();
-        void loopManualLauncher();
+        void loopManualLauncher(bool autoLaunch = false);
         void loopAutoLauncher();
         void blinkError(Led *ledDevice);
         void blinkBusy(Led *ledDevice);
@@ -109,32 +109,12 @@ namespace devices
         unsigned long _autoNoBallLiftDelayMs = 0;
         bool _autoLiftMovingDownSlow = false;
 
-        // Launcher manual mode timing
-        enum class LauncherPhase
-        {
-            IDLE,
-            WAITING_FOR_INIT,  ///< Waiting before triggering launcher init (auto: timer, manual: button press)
-            POST_LAUNCH_DELAY, ///< Waiting 500 ms after launch before calling load()
-            LOADING,           ///< load() or init() called; waiting for arm to finish moving
-            POST_LOAD_DELAY    ///< Waiting 500 ms after load before accepting next press
-        };
-        LauncherPhase _launcherPhase = LauncherPhase::IDLE;
-        unsigned long _launcherPhaseStart = 0;
+        // Launcher
         static constexpr unsigned long LauncherPostLaunchDelayMs = 500UL;
         static constexpr unsigned long LauncherPostLoadDelayMs = 500UL;
         static constexpr unsigned long LauncherAutoInitDelayMs = 2000UL; ///< Delay before auto init starts
-        static constexpr float LauncherWheelMinAngle = 30.0f;           ///< Min wheel angle for launch (manual mode)
-        static constexpr float LauncherWheelMaxAngle = 60.0f;           ///< Max wheel angle for launch (manual mode)
-
-        // Launcher auto mode
-        uint8_t _autoLauncherBallsToLaunch = 0; ///< Number of remaining launches in current auto sequence
-        LauncherPhase _autoLauncherPhase = LauncherPhase::IDLE;
-        unsigned long _autoLauncherPhaseStart = 0;
-
-        // Launcher manual mode – launch count limit per wheel range entry
-        static constexpr uint8_t LauncherMaxLaunchesPerRangeEntry = 2;
-        uint8_t _manualLauncherLaunchCount = 0; ///< Launches fired since wheel entered allowed range
-        bool _manualWheelWasInRange = false;     ///< Whether wheel was in range last loop
+        static constexpr float LauncherWheelMinAngle = 32.0f;           ///< Min wheel angle for launch (manual mode)
+        static constexpr float LauncherWheelMaxAngle = 58.0f;           ///< Max wheel angle for launch (manual mode)
 
         // 0 = not idle, >0 = idle start time
         unsigned long _wheelIdleStartTime = 0;

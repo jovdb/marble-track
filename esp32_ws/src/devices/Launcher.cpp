@@ -37,7 +37,7 @@ namespace devices
         setName(_config.name);
 
         _state.state = LauncherStateEnum::UNKNOWN;
-        _state.isBallLoaded = false;
+        _state.isBallLoaded = true;
         _state.isBallWaiting = false;
         _state.isLoadingStep = 0;
         _state.isLaunchingStep = 0;
@@ -63,6 +63,7 @@ namespace devices
         _state.state = LauncherStateEnum::UNKNOWN;
         _state.isLoadingStep = 0;
         _state.isLaunchingStep = 0;
+        _state.isBallLoaded = true;
     }
 
     bool Launcher::isTimerExpired() const
@@ -81,7 +82,7 @@ namespace devices
         // Update children (button reads pin, servo animates position)
         Device::loop();
 
-        // Sync isBallWaiting from button
+        // Sync isBallWaiting
         const bool newBallWaiting = _button ? _button->isPressed() : false;
         if (newBallWaiting != _state.isBallWaiting)
         {
@@ -91,6 +92,20 @@ namespace devices
 
         loadLoop();
         launchLoop();
+
+        if (isTimerExpired())
+        {
+            if (_state.state == LauncherStateEnum::MOVING_UP)
+            {
+                _state.state = LauncherStateEnum::UP;
+                notifyStateChanged();
+            }
+            else if (_state.state == LauncherStateEnum::MOVING_DOWN)
+            {
+                _state.state = LauncherStateEnum::DOWN;
+                notifyStateChanged();
+            }
+        }
     }
 
     // ---------------------------------------------------------------------------
@@ -102,9 +117,15 @@ namespace devices
         // Move arm slowly down and assume a ball is waiting to be launched
         clearError();
 
-        load();
-
         MLOG_INFO("%s: init – Start loading", toString().c_str());
+
+        // Just move arm down
+        moveDown();
+
+        // Assume loaded
+        _state.isBallLoaded = true;
+        notifyStateChanged();
+
         return true;
     }
 
@@ -150,12 +171,12 @@ namespace devices
     {
         if (_state.isLoadingStep != 0)
         {
-            MLOG_WARN("%s: launch ignored – currently in loading process", toString().c_str());
+            MLOG_WARN("%s: launch ignored – currently in loading process (step: %i)", toString().c_str(), _state.isLoadingStep);
             return false;
         }
         if (_state.isLaunchingStep != 0)
         {
-            MLOG_WARN("%s: launch ignored – already in launching process", toString().c_str());
+            MLOG_WARN("%s: launch ignored – already in launching process (step: %i)", toString().c_str(), _state.isLaunchingStep);
             return false;
         }
 
@@ -171,9 +192,11 @@ namespace devices
         // Move Up
         if (_state.isLaunchingStep == 1)
         {
+            MLOG_INFO("%s: Launching started!", toString().c_str());
             if (moveUp(static_cast<int>(_config.launchTimeMs)))
             {
                 _state.isLaunchingStep = 2;
+                _state.isBallLoaded = _state.isBallWaiting;
             }
             else
             {
@@ -208,6 +231,7 @@ namespace devices
         else if (_state.isLaunchingStep == 4 && _state.state == LauncherStateEnum::DOWN)
         {
             // End
+            MLOG_INFO("%s: Launching ended", toString().c_str());
             _state.isLaunchingStep = 0;
         }
         return true;
@@ -218,13 +242,13 @@ namespace devices
 
         if (_state.isLoadingStep != 0)
         {
-            MLOG_WARN("%s: load ignored – already in loading process", toString().c_str());
+            MLOG_WARN("%s: load ignored – already in loading process (step: %i)", toString().c_str(), _state.isLoadingStep);
             return false;
         }
 
         if (_state.isLaunchingStep != 0)
         {
-            MLOG_WARN("%s: load ignored – currently in launching process", toString().c_str());
+            MLOG_WARN("%s: load ignored – currently in launching process (step: %i)", toString().c_str(), _state.isLaunchingStep);
             return false;
         }
 
@@ -240,9 +264,11 @@ namespace devices
         // Move Up
         if (_state.isLoadingStep == 1)
         {
+            MLOG_INFO("%s: Loading started!", toString().c_str());
             if (moveUp(static_cast<int>(_config.loadTimeMs)))
             {
                 _state.isLoadingStep = 2;
+                _state.isBallLoaded = _state.isBallWaiting;
             }
             else
             {
@@ -261,7 +287,6 @@ namespace devices
         // Move Down
         else if (_state.isLoadingStep == 3 && isTimerExpired())
         {
-            _state.isBallLoaded = _state.isBallWaiting;
             if (moveDown())
             {
                 _state.isLoadingStep = 4;
@@ -278,6 +303,7 @@ namespace devices
         else if (_state.isLoadingStep == 4 && _state.state == LauncherStateEnum::DOWN)
         {
             // End
+            MLOG_INFO("%s: Loading ended", toString().c_str());
             _state.isLoadingStep = 0;
         }
         return true;
@@ -286,8 +312,8 @@ namespace devices
     void Launcher::setErrorState(LauncherErrorCode errorCode, const String &errorMessage)
     {
         _state.state = LauncherStateEnum::ERROR;
-        if (_servo)
-            _servo->disable();
+        // if (_servo)
+        // _servo->disable();
         Device::setError(errorCodeToString(errorCode), errorMessage);
     }
 

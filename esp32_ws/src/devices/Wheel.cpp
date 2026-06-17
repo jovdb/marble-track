@@ -168,8 +168,8 @@ namespace devices
                         {
                             char driftMsg[128];
                             snprintf(driftMsg, sizeof(driftMsg),
-                                     "Minor revolution drift: measured %ld steps, configured %ld (%.2f%%)",
-                                     _state.stepsInLastRevolution, _config.stepsPerRevolution, percentDiff);
+                                     "Minor revolution drift for device %s: measured %ld steps, configured %ld (%.2f%%)",
+                                     toString().c_str(), _state.stepsInLastRevolution, _config.stepsPerRevolution, percentDiff);
                             MLOG_WARN("%s: %s", toString().c_str(), driftMsg);
                             broadcastNotification("MinorRevolutionDrift", driftMsg, DeviceNotificationType::Info);
                         }
@@ -206,8 +206,8 @@ namespace devices
                 if (_state.targetAngle >= 0.0f && _config.stepsPerRevolution > 0)
                 {
                     long zeroOffsetSteps = lroundf((_config.zeroPointDegree / 360.0f) * _config.stepsPerRevolution);
-                    long stepsToTarget   = lroundf((_state.targetAngle            / 360.0f) * _config.stepsPerRevolution);
-                    long absoluteTarget  = currentPosition - zeroOffsetSteps + stepsToTarget;
+                    long stepsToTarget = lroundf((_state.targetAngle / 360.0f) * _config.stepsPerRevolution);
+                    long absoluteTarget = currentPosition - zeroOffsetSteps + stepsToTarget;
                     // Always move forward
                     if (absoluteTarget <= currentPosition)
                         absoluteTarget += _config.stepsPerRevolution;
@@ -259,9 +259,9 @@ namespace devices
                     // Compute absolute stepper target for breakPoints[0].
                     // zeroPointDegree: sensor fires this many degrees past physical zero,
                     // so subtract that offset so breakpoints are measured from physical zero.
-                    long zeroOffsetSteps   = lroundf((_config.zeroPointDegree / 360.0f) * _config.stepsPerRevolution);
-                    long stepsToBreakpoint = lroundf((_config.breakPoints[0]  / 360.0f) * _config.stepsPerRevolution);
-                    long absoluteTarget    = currentPosition - zeroOffsetSteps + stepsToBreakpoint;
+                    long zeroOffsetSteps = lroundf((_config.zeroPointDegree / 360.0f) * _config.stepsPerRevolution);
+                    long stepsToBreakpoint = lroundf((_config.breakPoints[0] / 360.0f) * _config.stepsPerRevolution);
+                    long absoluteTarget = currentPosition - zeroOffsetSteps + stepsToBreakpoint;
                     // Always move forward; if the target falls behind current position
                     // (e.g. breakPoints[0] < zeroPointDegree), advance one full revolution.
                     if (absoluteTarget <= currentPosition)
@@ -271,12 +271,12 @@ namespace devices
                               toString().c_str(), currentPosition, absoluteTarget);
 
                     _state.currentBreakpointIndex = -1;
-                    _state.targetBreakpointIndex  = 0;
-                    _state.state                  = WheelStateEnum::MOVING;
-                    _state.targetAngle            = _config.breakPoints[0];
-                    _waitingForMoveStart          = true;
-                    _moveHasStarted               = false;
-                    _state.pendingZeroOffset      = 0;
+                    _state.targetBreakpointIndex = 0;
+                    _state.state = WheelStateEnum::MOVING;
+                    _state.targetAngle = _config.breakPoints[0];
+                    _waitingForMoveStart = true;
+                    _moveHasStarted = false;
+                    _state.pendingZeroOffset = 0;
                     updateCurrentAngle();
                     notifyStateChanged();
 
@@ -469,8 +469,8 @@ namespace devices
         // zeroPointDegree shifts the reference so the sensor position = zeroPointDegree°
         // and breakpoints are measured from physical zero.
         long zeroOffsetSteps = (_config.stepsPerRevolution > 0)
-            ? lroundf((_config.zeroPointDegree / 360.0f) * _config.stepsPerRevolution)
-            : 0L;
+                                   ? lroundf((_config.zeroPointDegree / 360.0f) * _config.stepsPerRevolution)
+                                   : 0L;
         float currentAngle = 0.0f;
         long relSteps = currentPosition - _state.lastZeroPosition + zeroOffsetSteps;
         long relStepsNorm = relSteps % _config.stepsPerRevolution;
@@ -633,7 +633,8 @@ namespace devices
         // sender is JavaScript, integers arrive as int/long while floats
         // arrive as double. isNumeric() accepts all arithmetic variants so
         // we don't need four separate is<T>() checks per field.
-        auto isNumeric = [](JsonVariantConst v) {
+        auto isNumeric = [](JsonVariantConst v)
+        {
             return v.is<long>() || v.is<int>() || v.is<float>() || v.is<double>();
         };
 

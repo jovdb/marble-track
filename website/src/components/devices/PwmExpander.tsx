@@ -5,35 +5,40 @@ import { usePwmExpander } from "../../stores/PwmExpander";
 import PwmExpanderConfig from "./PwmExpanderConfig";
 import styles from "./Device.module.css";
 import { II2cConfig, II2cState } from "../../stores/I2c";
+import { createMemo } from "solid-js";
 
 export function PwmExpander(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device, actions] = usePwmExpander(props.id);
   const [devicesStore] = useDevices();
   const devicesState = () => devicesStore; // Wrap in a function to avoid stale closure issues
-  const deviceType = device()?.type;
-  const config = () => device()?.config;
-  const state = () => device()?.state;
+  const config = createMemo(() => device()?.config);
+  const state = createMemo(() => device()?.state);
 
-  const expanderState = () => state()?.state;
+  const expanderState = createMemo(() => state()?.state);
 
-  const i2cAddress = () => {
+  const i2cAddress = createMemo(() => {
     const addr = config()?.i2cAddress;
     return addr !== undefined ? `0x${addr.toString(16).toUpperCase().padStart(2, "0")}` : "Unknown";
-  };
+  });
 
-  const i2cDeviceName = () => {
+  const i2cDeviceName = createMemo(() => {
     const i2cDeviceId = config()?.i2cDeviceId;
     if (!i2cDeviceId) return "No I²C bus selected";
     const i2cDevice = devicesState().devices[i2cDeviceId] as
       | IDevice<II2cState, II2cConfig>
       | undefined;
     return i2cDevice?.config?.name || i2cDevice?.id || "Unknown I²C bus";
-  };
+  });
 
-  const frequency = () => {
+  const frequency = createMemo(() => {
     const freq = config()?.frequency;
     return freq !== undefined ? `${freq} Hz` : "Unknown";
-  };
+  });
+
+  const icon = createMemo(() => {
+    const type = device()?.type;
+    return type ? getDeviceIcon(type, props.id) : null;
+  });
 
   const statusText = () => {
     const s = expanderState();
@@ -46,7 +51,7 @@ export function PwmExpander(props: { id: string; isPopup?: boolean; onClose?: ()
     <Device
       id={props.id}
       configComponent={(onClose) => <PwmExpanderConfig id={props.id} onClose={onClose} />}
-      icon={deviceType ? getDeviceIcon(deviceType, props.id) : null}
+      icon={icon()}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}
     >

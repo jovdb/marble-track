@@ -18,13 +18,13 @@ export default function PowerMonitorConfig(props: PowerMonitorConfigProps) {
   const [devicesStore] = useDevices();
   const devicesState = () => devicesStore; // Wrap in a function to avoid stale closure issues
 
-  const cfg = () => device()?.config;
+  const config = createMemo(() => device()?.config);
 
-  const [name, setName] = createSignal(cfg()?.name ?? "Power Monitor");
-  const [i2cDeviceId, setI2cDeviceId] = createSignal(cfg()?.i2cDeviceId ?? "");
-  const [i2cAddress, setI2cAddress] = createSignal(cfg()?.i2cAddress ?? 0x40);
-  const [shuntResistance, setShuntResistance] = createSignal(cfg()?.shuntResistance ?? 0.1);
-  const [maxCurrent, setMaxCurrent] = createSignal(cfg()?.maxCurrent ?? 3.2);
+  const [name, setName] = createSignal(config()?.name ?? "Power Monitor");
+  const [i2cDeviceId, setI2cDeviceId] = createSignal(config()?.i2cDeviceId ?? "");
+  const [i2cAddress, setI2cAddress] = createSignal(config()?.i2cAddress ?? 0x40);
+  const [shuntResistance, setShuntResistance] = createSignal(config()?.shuntResistance ?? 0.1);
+  const [maxCurrent, setMaxCurrent] = createSignal(config()?.maxCurrent ?? 3.2);
 
   const i2cDevices = createMemo(() =>
     Object.values(devicesState().devices).filter((d) => d.type === "i2c")

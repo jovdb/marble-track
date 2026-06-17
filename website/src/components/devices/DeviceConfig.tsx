@@ -1,4 +1,4 @@
-import { Accessor, JSX, onMount, Show } from "solid-js";
+import { Accessor, createMemo, JSX, onMount, Show } from "solid-js";
 import styles from "./DeviceConfig.module.css";
 
 interface DeviceConfigProps {
@@ -10,14 +10,15 @@ interface DeviceConfigProps {
 }
 
 export default function DeviceConfig(props: DeviceConfigProps) {
-  const hasConfigError = () => !!props.device()?.configErrorMessage;
+  const hasConfigError = createMemo(() => !!props.device()?.configErrorMessage);
 
-  const deviceData = () => props.device();
-  const isLoading = () => deviceData()?.config === undefined;
-  const deviceName = () =>
-    ((deviceData()?.config as Record<string, unknown>)?.name as string) ||
-    deviceData()?.id ||
-    "Device";
+  const isLoading = createMemo(() => props.device()?.config === undefined);
+  const deviceName = createMemo(
+    () =>
+      ((props.device()?.config as Record<string, unknown>)?.name as string) ||
+      props.device()?.id ||
+      "Device"
+  );
 
   onMount(() => {
     // Config is fetched by the parent component

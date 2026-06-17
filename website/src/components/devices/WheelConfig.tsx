@@ -10,7 +10,7 @@ export function WheelConfig(props: { device: any; actions: any; onClose: () => v
   const device = () => props.device;
   const actions = props.actions;
 
-  const config = () => device()?.config;
+  const config = createMemo(() => device()?.config);
 
   const [deviceName, setDeviceName] = createSignal("");
   const [isNameDirty, setIsNameDirty] = createSignal(false);

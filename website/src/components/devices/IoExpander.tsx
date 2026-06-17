@@ -5,50 +5,57 @@ import { useIoExpander } from "../../stores/IoExpander";
 import IoExpanderConfig from "./IoExpanderConfig";
 import styles from "./Device.module.css";
 import { II2cConfig, II2cState } from "../../stores/I2c";
+import { createMemo } from "solid-js/types/reactive/signal";
 
 export function IoExpander(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device, actions] = useIoExpander(props.id);
   const [devicesStore] = useDevices();
   const devicesState = () => devicesStore; // Wrap in a function to avoid stale closure issues
 
-  const deviceType = device()?.type;
-  const config = () => device()?.config;
-  const state = () => device()?.state;
+  const config = createMemo(() => device()?.config);
+  const state = createMemo(() => device()?.state);
 
   const expanderState = () => state()?.state;
   const expanderType = () => config()?.expanderType ?? "Unknown";
-  const i2cAddress = () => {
+  const i2cAddress = createMemo(() => {
     const addr = config()?.i2cAddress;
     return addr !== undefined ? `0x${addr.toString(16).toUpperCase().padStart(2, "0")}` : "Unknown";
-  };
-  const i2cDeviceName = () => {
+  });
+
+  const i2cDeviceName = createMemo(() => {
     const i2cDeviceId = config()?.i2cDeviceId;
     if (!i2cDeviceId) return "No I²C bus selected";
     const i2cDevice = devicesState().devices[i2cDeviceId] as
       | IDevice<II2cState, II2cConfig>
       | undefined;
     return i2cDevice?.config?.name || i2cDevice?.id || "Unknown I²C bus";
-  };
-  const pinCount = () => {
+  });
+
+  const pinCount = createMemo(() => {
     const type = expanderType();
     if (type === "PCF8574") return 8;
     if (type === "PCF8575" || type === "MCP23017") return 16;
     return 0;
-  };
+  });
 
-  const statusText = () => {
+  const statusText = createMemo(() => {
     const s = expanderState();
     if (s === "Ready") return <span style={{ color: "green" }}>Connected</span>;
     if (s === "Init") return <span style={{ color: "cornflowerblue" }}>Initializing&hellip;</span>;
     if (s === "Error") return <span style={{ color: "red" }}>Error</span>;
     return <span>Unknown</span>;
-  };
+  });
+
+  const icon = createMemo(() => {
+    const type = device()?.type;
+    return type ? getDeviceIcon(type, props.id) : null;
+  });
 
   return (
     <Device
       id={props.id}
       configComponent={(onClose) => <IoExpanderConfig id={props.id} onClose={onClose} />}
-      icon={deviceType ? getDeviceIcon(deviceType, props.id) : null}
+      icon={icon()}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}
     >

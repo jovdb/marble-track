@@ -5,7 +5,7 @@ export function LiftConfig(props: { device: any; actions: any; onClose: () => vo
   const device = () => props.device;
   const actions = props.actions;
 
-  const config = () => device()?.config;
+  const config = createMemo(() => device()?.config);
 
   const [deviceName, setDeviceName] = createSignal("");
   const [isNameDirty, setIsNameDirty] = createSignal(false);

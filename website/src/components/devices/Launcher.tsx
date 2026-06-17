@@ -10,8 +10,7 @@ type LauncherStateLabel = ILauncherState["state"];
 export function Launcher(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device, actions] = useLauncher(props.id);
 
-  const deviceType = () => device()?.type;
-  const state = () => device()?.state;
+  const state = createMemo(() => device()?.state);
 
   const launcherState = createMemo<LauncherStateLabel>(
     () => (state()?.state as LauncherStateLabel) ?? "Init"
@@ -47,12 +46,17 @@ export function Launcher(props: { id: string; isPopup?: boolean; onClose?: () =>
     }
   });
 
+  const icon = createMemo(() => {
+    const type = device()?.type;
+    return type ? getDeviceIcon(type, props.id) : null;
+  });
+
   return (
     <Device
       id={props.id}
       configComponent={(onClose) => <LauncherConfig id={props.id} onClose={onClose} />}
       isCollapsible={!props.isPopup}
-      icon={deviceType() ? getDeviceIcon(deviceType()!, props.id) : null}
+      icon={icon()}
       onClose={props.onClose}
     >
       <div class={styles.launcher}>

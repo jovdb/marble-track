@@ -12,8 +12,8 @@ export function Lift(props: { id: string; isPopup?: boolean; onClose?: () => voi
   const stepperId = `${props.id}-stepper`;
   const [stepperDevice] = useStepper(stepperId);
 
-  const state = () => device()?.state;
-  const config = () => device()?.config;
+  const state = createMemo(() => device()?.state);
+  const config = createMemo(() => device()?.config);
 
   // Compute total move duration (ms) from a trapezoidal motion profile.
   // Uses stepsPerSecond from state (set by firmware during movement) for the actual speed,

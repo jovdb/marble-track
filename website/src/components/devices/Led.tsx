@@ -9,7 +9,6 @@ import { LedStateIcon } from "./LedStateIcon";
 export function Led(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device, actions] = useLed(props.id);
 
-  const deviceType = device()?.type;
   const mode = createMemo(() => device()?.state?.mode ?? "");
   // Status visualization removed; use DeviceJsonState below
   const isMode = (value: string) => mode() === value;
@@ -18,11 +17,16 @@ export function Led(props: { id: string; isPopup?: boolean; onClose?: () => void
   const handleTurnOff = () => actions.setLed(false);
   const handleBlink = () => actions.blink();
 
+  const icon = createMemo(() => {
+    const type = device()?.type;
+    return type ? getDeviceIcon(type, props.id) : null;
+  });
+
   return (
     <Device
       id={props.id}
       configComponent={(onClose) => <LedConfig id={props.id} onClose={onClose} />}
-      icon={deviceType ? getDeviceIcon(deviceType, props.id) : null}
+      icon={icon()}
       stateComponent={() => (
         <div
           style={{

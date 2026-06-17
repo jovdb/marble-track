@@ -12,9 +12,11 @@ import { getDeviceIcon } from "../icons/Icons";
 export function Wheel(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device, actions] = useWheel(props.id);
 
-  const state = () => device()?.state;
-
-  const deviceType = device()?.type;
+  const state = createMemo(() => device()?.state);
+  const icon = createMemo(() => {
+    const type = device()?.type;
+    return type ? getDeviceIcon(type, props.id) : null;
+  });
   const uiAngle = useWheelAnimation(state);
 
   const onNextClicked = () => {
@@ -29,8 +31,8 @@ export function Wheel(props: { id: string; isPopup?: boolean; onClose?: () => vo
   // Radius handled internally by WheelGraphic now
 
   // Get breakpoints from device config
-  const breakpoints = () => device()?.config?.breakPoints || [];
-  const zeroPointDegree = () => device()?.config?.zeroPointDegree || 0;
+  const breakpoints = createMemo(() => device()?.config?.breakPoints || []);
+  const zeroPointDegree = createMemo(() => device()?.config?.zeroPointDegree || 0);
 
   return (
     <Device
@@ -38,7 +40,7 @@ export function Wheel(props: { id: string; isPopup?: boolean; onClose?: () => vo
       configComponent={(onClose) => (
         <WheelConfig device={device} actions={actions} onClose={onClose} />
       )}
-      icon={deviceType ? getDeviceIcon(deviceType, props.id) : null}
+      icon={icon()}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}
     >

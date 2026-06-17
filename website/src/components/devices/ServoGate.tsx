@@ -11,9 +11,8 @@ type GateState = "Idle" | "WaitOpen" | "Opening" | "WaitClose" | "Closing" | "Be
 export function ServoGate(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device, actions] = useServoGate(props.id);
 
-  const deviceType = device()?.type;
-  const state = () => device()?.state;
-  const config = () => device()?.config;
+  const state = createMemo(() => device()?.state);
+  const config = createMemo(() => device()?.config);
 
   const gateState = createMemo<GateState>(() => (state()?.gateState as GateState) ?? "Idle");
   const queueCount = createMemo(() => state()?.queueCount ?? 0);
@@ -51,12 +50,17 @@ export function ServoGate(props: { id: string; isPopup?: boolean; onClose?: () =
     }
   });
 
+  const icon = createMemo(() => {
+    const type = device()?.type;
+    return type ? getDeviceIcon(type, props.id) : null;
+  });
+
   return (
     <Device
       id={props.id}
       configComponent={(onClose) => <ServoGateConfig id={props.id} onClose={onClose} />}
       isCollapsible={!props.isPopup}
-      icon={deviceType ? getDeviceIcon(deviceType, props.id) : null}
+      icon={icon()}
       onClose={props.onClose}
     >
       {/* Gate SVG visualisation */}

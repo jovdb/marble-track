@@ -1,4 +1,4 @@
-import { onCleanup, onMount } from "solid-js";
+import { createMemo, onCleanup, onMount } from "solid-js";
 import { Device } from "./Device";
 import { PowerMonitorIcon } from "../icons/Icons";
 import { usePowerMonitor } from "../../stores/PowerMonitor";
@@ -10,12 +10,12 @@ const POLL_INTERVAL_MS = 10_000;
 export function PowerMonitor(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device, actions] = usePowerMonitor(props.id);
 
-  const state = () => device()?.state;
-  const status = () => state()?.status;
-  const voltage = () => state()?.voltage;
-  const current = () => state()?.current;
-  const watt = () => state()?.watt;
-  const timestamp = () => state()?.timestamp;
+  const state = createMemo(() => device()?.state);
+  const status = createMemo(() => state()?.status);
+  const voltage = createMemo(() => state()?.voltage);
+  const current = createMemo(() => state()?.current);
+  const watt = createMemo(() => state()?.watt);
+  const timestamp = createMemo(() => state()?.timestamp);
 
   const requestState = () => actions.getDeviceState();
 
@@ -26,21 +26,21 @@ export function PowerMonitor(props: { id: string; isPopup?: boolean; onClose?: (
     onCleanup(() => clearInterval(id));
   });
 
-  const lastUpdated = () => {
+  const lastUpdated = createMemo(() => {
     const ts = timestamp();
     if (!ts) return "—";
     const secs = Math.round(ts / 1000);
     const m = Math.floor(secs / 60);
     const s = secs % 60;
     return m > 0 ? `${m}m ${s}s` : `${s}s`;
-  };
+  });
 
-  const statusText = () => {
+  const statusText = createMemo(() => {
     const s = status();
     if (s === "Ready") return <span style={{ color: "green" }}>Ready</span>;
     if (s === "Error") return <span style={{ color: "red" }}>Error</span>;
     return <span>—</span>;
-  };
+  });
 
   return (
     <Device

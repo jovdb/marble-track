@@ -44,7 +44,6 @@ namespace devices
     {
         String gateState = "Idle";
         int queueCount = 0;
-        int pulseCount = 0;
     };
 
     class ServoGate : public Device,

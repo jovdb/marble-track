@@ -43,7 +43,6 @@ namespace devices
         _timerDuration = 0;
         _state.gateState = "Idle";
         _state.queueCount = 0;
-        _state.pulseCount = 0;
         notifyStateChanged();
 
         MLOG_INFO("%s: Setup complete", toString().c_str());
@@ -176,8 +175,7 @@ namespace devices
             if (isTimerExpired())
             {
                 _state.queueCount--;
-                _state.pulseCount++;
-                // MLOG_INFO("%s: Cycle complete (total pulses=%d), queue=%d", toString().c_str(), _state.pulseCount, _state.queueCount);
+                // MLOG_INFO("%s: Cycle complete, queue=%d", toString().c_str(), _state.queueCount);
 
                 if (_state.queueCount > 0)
                 {
@@ -210,7 +208,6 @@ namespace devices
     {
         doc["gateState"] = _state.gateState;
         doc["queueCount"] = _state.queueCount;
-        doc["pulseCount"] = _state.pulseCount;
     }
 
     bool ServoGate::control(const String &action, JsonObject *args)

@@ -6,7 +6,6 @@ const deviceType = "servogate";
 export interface IServoGateState extends IDeviceState {
   gateState: "Idle" | "WaitOpen" | "Opening" | "WaitClose" | "Closing" | "Between";
   queueCount: number;
-  pulseCount: number;
 }
 
 export interface IServoGateConfig extends IDeviceConfig {

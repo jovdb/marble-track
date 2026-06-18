@@ -5,6 +5,7 @@
 
 #include "devices/Hv20tAudio.h"
 #include "Logging.h"
+#include "SongConstants.h"
 #include <ArduinoJson.h>
 
 namespace devices
@@ -128,12 +129,14 @@ namespace devices
             unsigned long elapsed = millis() - _currentSongStartTime;
             if (elapsed >= _config.songTimeoutMs)
             {
-                char timeoutMsg[100];
-                snprintf(timeoutMsg, sizeof(timeoutMsg), "Song %d timed out after %lu ms",
-                         _state.currentPlayingSong, elapsed);
+                char timeoutMsg[128];
+                snprintf(timeoutMsg, sizeof(timeoutMsg), "Song %s (%d) timed out after %lu ms",
+                         songs::getName(_state.currentPlayingSong),
+                         _state.currentPlayingSong,
+                         elapsed);
                 MLOG_WARN("%s: %s, stopping playback", toString().c_str(), timeoutMsg);
                 broadcastNotification("SongTimeout", timeoutMsg);
-                _player.stop();// Stop the player
+                _player.stop(); // Stop the player
                 // Reset software state - hardware state will be detected in busy check
                 _state.currentPlayingSong = -1;
                 _currentSongStartTime = 0;
@@ -178,7 +181,10 @@ namespace devices
                         const bool stillPlaying = (buffer[3] == 1);
                         if (!stillPlaying)
                         {
-                            MLOG_INFO("%s: Song %i finished playing", toString().c_str(), _state.currentPlayingSong);
+                            MLOG_INFO("%s: Song %s (%i) finished playing",
+                                      toString().c_str(),
+                                      songs::getName(_state.currentPlayingSong),
+                                      _state.currentPlayingSong);
                             _state.currentPlayingSong = -1;
                             _currentSongStartTime = 0;
                             processQueue();
@@ -233,19 +239,19 @@ namespace devices
         {
             if (mode == Hv20tPlayMode::StopThenPlay)
             {
-                MLOG_INFO("%s: Replace current song with song %i", toString().c_str(), songIndex);
+                MLOG_INFO("%s: Replace current song with song %s (%i)", toString().c_str(), songs::getName(songIndex), songIndex);
                 stop(); // also resets poll state and flushes RX
             }
             if (mode == Hv20tPlayMode::SkipIfPlaying)
             {
-                MLOG_INFO("%s: Skipping play song %i - currently playing song %i", toString().c_str(), songIndex, _state.currentPlayingSong);
+                MLOG_INFO("%s: Skipping play song %s (%i) - currently playing song %s (%i)", toString().c_str(), songs::getName(songIndex), songIndex, songs::getName(_state.currentPlayingSong), _state.currentPlayingSong);
                 return true;
             }
 
             if (mode == Hv20tPlayMode::QueueIfPlaying)
             {
                 _state.songQueue.push(songIndex);
-                MLOG_INFO("%s: Queuing song %i (currently playing: %i, queue: %s)", toString().c_str(), songIndex, _state.currentPlayingSong, getQueueString().c_str());
+                MLOG_INFO("%s: Queuing song %s (%i) (currently playing: %s (%i), queue: %s)", toString().c_str(), songs::getName(songIndex), songIndex, songs::getName(_state.currentPlayingSong), _state.currentPlayingSong, getQueueString().c_str());
                 notifyStateChanged();
                 return true;
             }
@@ -255,7 +261,12 @@ namespace devices
         {
             if (songIndex > 65535)
                 songIndex = 65535;
-            MLOG_INFO("%s: Playing song %i (queue: %s)", toString().c_str(), songIndex, getQueueString().c_str());
+            MLOG_INFO("%s: Playing song %s (%i: %s) (queue: %s)",
+                      toString().c_str(),
+                      songs::getName(songIndex),
+                      songIndex,
+                      songs::getDescription(songIndex),
+                      getQueueString().c_str());
             // Reset poll state and flush RX so we don't read a stale poll response
             // after this new song starts.
             _pollState = PollState::Idle;
@@ -339,7 +350,7 @@ namespace devices
 
         _state.songQueue = std::move(tempQueue);
 
-        MLOG_INFO("%s: Removed song %i from queue (currently playing: %i, queue: %s)", toString().c_str(), songIndex, _state.currentPlayingSong, getQueueString().c_str());
+        MLOG_INFO("%s: Removed song %s (%i) from queue (currently playing: %s (%i), queue: %s)", toString().c_str(), songs::getName(songIndex), songIndex, songs::getName(_state.currentPlayingSong), _state.currentPlayingSong, getQueueString().c_str());
 
         if (removed)
         {
@@ -393,7 +404,7 @@ namespace devices
                     mode = Hv20tPlayMode::StopThenPlay;
                 }
             }
-            MLOG_INFO("%s: Play action started with index %d", toString().c_str(), index);
+            MLOG_INFO("%s: Play action started with index %s (%d)", toString().c_str(), songs::getName(index), index);
             return play(index, mode);
         }
         if (action == "stop")
@@ -526,8 +537,8 @@ namespace devices
         {
             const int nextSong = _state.songQueue.front();
             _state.songQueue.pop();
-            MLOG_INFO("%s: Playing next queued song %i (remaining queue: %s)",
-                      toString().c_str(), nextSong, getQueueString().c_str());
+            MLOG_INFO("%s: Playing next queued song %s (%i: %s) (remaining queue: %s)",
+                      toString().c_str(), songs::getName(nextSong), nextSong, songs::getDescription(nextSong), getQueueString().c_str());
 
             // Directly start the next song without going through busy logic
             // since we know the previous song has finished

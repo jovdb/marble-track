@@ -18,26 +18,82 @@
 
 namespace songs
 {
+// List of all songs: Name, ID, Description
+#define SONG_DEFS(X)                                                                                                                                                                            \
+    X(AUTO_MODE, 1, "Automatische modus actief")                                                                                                                                                \
+    X(MAN_MODE, 2, "Manuele modus actief")                                                                                                                                                      \
+    X(IDLE, 3, "Ik ben al 5 minuten niet gebruikt! Vergeet mij niet uit te schakelen")                                                                                                          \
+    X(BUTTON_CLICK, 4, "")                                                                                                                                                                      \
+    X(BUTTON_DOWN, 5, "")                                                                                                                                                                       \
+    X(BUTTON_UP, 6, "")                                                                                                                                                                         \
+    X(STARTUP_SOUND, 7, "")                                                                                                                                                                     \
+    X(FART, 8, "")                                                                                                                                                                              \
+    X(WHEEL_ZERO_NOT_FOUND, 10, "Reuzenwiel eikpunt niet gevonden. (Fout code 10)")                                                                                                             \
+    X(WHEEL_CALIBRATION_START, 11, "Reuzenwiel calibratie wordt gestart, dit kan even duren...")                                                                                                \
+    X(WHEEL_CALIBRATION_END, 12, "Reuzenwiel calibratie beëindigd...")                                                                                                                          \
+    X(WHEEL_CALIBRATION_FIRST_ZERO_NOT_FOUND, 13, "Reuzenwiel eikpunt gevonden op een onverwachte plaatst, mogelijks was het reuzenwiel geblokkeerd of is hercalibratie nodig. (Fout code 13)") \
+    X(WHEEL_CALIBRATION_SECOND_ZERO_NOT_FOUND, 14, "Reuzenwiel calibratie mislukt. (Foutcode 14) Het eikpunt is geen 2de keer gevonden.")                                                       \
+    X(WHEEL_UNEXPECTED_ZERO_TRIGGER, 15, "Reuzenwiel eikpunt is op een onverwacht punt geactiveerd. (Fout code 15) Druk 8 seconden op de knop om een hercalibratie te starten.")                \
+    X(WHEEL_GOTO_BREAKPOINT, 16, "Sound effect at long press")                                                                                                                                  \
+    X(LIFT_INIT_ERROR, 17, "Lift initialisatie mislukt. (Fout code 17) Druk 8 seconden op de knop om een hercalibratie te starten.")                                                            \
+    X(LIFT_NO_ZERO, 18, "Lift zero sensor niet gevonden (Fout code 18) Controleer of er een bal onder zit.")                                                                                    \
+    X(LIFT_STOP, 19, "Elevator bell")                                                                                                                                                           \
+    X(LIFT_POWER_UNLOAD, 20, "")                                                                                                                                                                \
+    X(NOTIFICATION, 21, "")                                                                                                                                                                     \
+    X(ERROR, 22, "")                                                                                                                                                                            \
+    X(NO_NETWORK, 23, "Geen netwerk")                                                                                                                                                           \
+    X(LIFT_INIT_BUSY, 24, "Lift initialisatie is bezig")                                                                                                                                       \
+    X(LIFT_RESTART, 25, "Lift wordt opnieuw gestart")                                                                                                                                           \
+    X(WHEEL_RESTART, 26, "Reuzenwiel wordt opnieuw gestart")                                                                                                                                    \
+    X(LAUNCH, 27, "Bal lancering")                                                                                                                                                              \
+    X(LAUNDER_MAX_2_BALLS, 28, "Maximum van 2 ballen bereikt")                                                                                                                                  \
+    X(CONFIG_ERROR, 29, "Configuratie fout. Ga naar de website om het op te lossen: marble, streepje, track, punt, local")                                                                      \
+    X(BATTERY_CRITICAL, 30, "Batterij is leeg. Zet het systeem uit en vervang de batterij")                                                                                                     \
+    X(BATTERY_LOW, 31, "Batterij is bijna leeg, vervang de batterij")
 
-    // GENERAL
-    //---------
-    // Automatische modus actief
-    const int AUTO_MODE = 1;
-    // Manuele modus actief
-    const int MAN_MODE = 2;
-    // Ik ben al 5 minuten niet gebruikt!
-    // Vergeet mij niet uit te schakelen
-    const int IDLE = 3;
-    const int STARTUP_SOUND = 7;
+    /**
+     * @brief Song ID Enum
+     */
+    enum Song : int
+    {
+#define X(name, val, desc) name = val,
+        SONG_DEFS(X)
+#undef X
+    };
 
-    const int BUTTON_CLICK = 4;
-    const int BUTTON_DOWN = 5;
-    const int BUTTON_UP = 6;
+    /**
+     * @brief Returns the name of the song constant
+     */
+    inline const char *getName(int songId)
+    {
+        switch (songId)
+        {
+#define X(name, val, desc) \
+    case name:             \
+        return #name;
+            SONG_DEFS(X)
+#undef X
+        default:
+            return "UNKNOWN";
+        }
+    }
 
-    const int FART = 8;
-    const int NOTIFICATION = 21;
-    const int ERROR = 22;
-    const int NO_NETWORK = 23;
+    /**
+     * @brief Returns the description of the song constant
+     */
+    inline const char *getDescription(int songId)
+    {
+        switch (songId)
+        {
+#define X(name, val, desc) \
+    case name:             \
+        return desc;
+            SONG_DEFS(X)
+#undef X
+        default:
+            return "";
+        }
+    }
 
     // Button sound functions (theme-aware in future)
     inline int getButtonClickSound()
@@ -54,57 +110,6 @@ namespace songs
     {
         return BUTTON_UP;
     }
-
-    // WHEEL
-    //------
-    // Reuzenwiel eikpunt niet gevonden. (Fout code 10)
-    const int WHEEL_ZERO_NOT_FOUND = 10;
-    // Reuzenwiel calibratie wordt gestart, dit kan even duren...
-    const int WHEEL_CALIBRATION_START = 11;
-    // Reuzenwiel calibratie beëindigd...
-    const int WHEEL_CALIBRATION_END = 12;
-    // Reuzenwiel eikpunt gevonden op een onverwachte plaatst, mogelijks was het reuzenwiel geblokkeerd of is hercalibratie nodig. (Fout code 13)
-    const int WHEEL_CALIBRATION_FIRST_ZERO_NOT_FOUND = 13;
-    // Reuzenwiel calibratie mislukt. (Foutcode 14)
-    // Het eikpunt is geen 2de keer gevonden.
-    // Mogelijks is de 'Max steps per revolutions' configuratie te laag of heeft het reuzenwiel door geslipt.
-    const int WHEEL_CALIBRATION_SECOND_ZERO_NOT_FOUND = 14;
-    // Reuzenwiel eikpunt is op een onverwacht punt geactiveerd. (Fout code 15)
-    // Druk 8 seconden op de knop om een hercalibratie te starten.
-    const int WHEEL_UNEXPECTED_ZERO_TRIGGER = 15;
-    // Sound effect at long press
-    const int WHEEL_GOTO_BREAKPOINT = 16;
-
-    // Lift initialisatie mislukt. (Fout code 17)
-    // Druk 8 seconden op de knop om een hercalibratie te starten.
-    const int LIFT_INIT_ERROR = 17;
-
-    // Lift zero sensor niet gevonden (Fout code 18)
-    // Controleer of er een bal onder zit.
-    // Druk 8 seconden op de knop om een hercalibratie te starten.
-    const int LIFT_NO_ZERO = 18;
-
-    // Elevator bell
-    const int LIFT_STOP = 19;
-    const int LIFT_POWER_UNLOAD = 20;
-    const int LIFT_INIT_BUSY = 24;
-
-    // Lift wordt opnieuw gestart
-    const int LIFT_RESTART = 25;
-    // Reuzenwiel wordt opnieuw gestart
-    const int WHEEL_RESTART = 26;
-    const int LAUNCH = 27;
-    // Maximum van 2 ballen bereikt
-    const int LAUNDER_MAX_2_BALLS = 28;
-    // Configuratie fout.
-    // Ga naar de website om het op te lossen:
-    // marble, streepje, track, punt, local
-    const int CONFIG_ERROR = 29;
-
-    // Batterij is leeg. Zet het systeem uit en vervang de batterij
-    const int BATTERY_CRITICAL = 30;
-    // Batterij is bijna leeg, vervang de batterij
-    const int BATTERY_LOW = 31;
 }
 
 #endif // MARBLE_TRACK_SONG_CONSTANTS_H

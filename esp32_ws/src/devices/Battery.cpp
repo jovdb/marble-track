@@ -78,14 +78,14 @@ namespace devices
             _lowVoltageAlerted = false;
             _criticalVoltageAlerted = false;
         }
-        else if (!_criticalVoltageAlerted && voltage <= criticalVoltage)
+        else if (!_criticalVoltageAlerted && voltage > 0 && voltage <= criticalVoltage)
         {
             _criticalVoltageAlerted = true;
             _lowVoltageAlerted = true;
             broadcastNotification("CRITICAL_BATTERY_LEVEL", "Battery is minder dan 5%! Zet systeem uit en vervang batterij", DeviceNotificationType::Warning);
             MLOG_ERROR("%s: Battery level is below 5%%", toString().c_str());
         }
-        else if (!_lowVoltageAlerted && voltage <= lowAlertVoltage)
+        else if (!_lowVoltageAlerted && voltage > 0 && voltage <= lowAlertVoltage)
         {
             _criticalVoltageAlerted = false;
             _lowVoltageAlerted = true;

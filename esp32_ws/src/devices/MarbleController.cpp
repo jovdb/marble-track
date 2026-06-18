@@ -1361,7 +1361,15 @@ namespace devices
 
         long static nextCriticalMillis = 0;
         long static nextLowMillis = 0;
+        long static nextStatusLogMillis = 0;
+
         auto now = millis();
+
+        if (nextStatusLogMillis < now)
+        {
+            MLOG_INFO("%s: Battery: %.2f%%", toString().c_str(), batteryState.batteryPercent);
+            nextStatusLogMillis = now + 300000; // Log every 5 minutes
+        }
 
         if (batteryState.batteryPercent < 5.0f)
         {

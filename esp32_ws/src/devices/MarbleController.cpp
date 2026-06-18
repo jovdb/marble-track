@@ -883,6 +883,8 @@ namespace devices
         // Auto wheel control logic - similar to AutoMode.cpp
         auto wheelState = _wheel->getState();
 
+        auto static pressedDuringEnter = false;
+
         // Wheel led
         switch (wheelState.state)
         {
@@ -921,9 +923,11 @@ namespace devices
             if (_wheelBtn->onPressed())
             {
                 playWheelError(_wheel->getErrorCode());
+                pressedDuringEnter = true;
             }
             // Check for long press while button is held (8s → init)
-            else if (_wheelBtn->onLastPressedDuration(WHEEL_LONG_PRESS_DURATION_MS))
+            // Still an error here: only whe press was started in
+            else if (pressedDuringEnter && _wheelBtn->onLastPressedDuration(WHEEL_LONG_PRESS_DURATION_MS))
             {
                 MLOG_INFO("%s: Error recovery long press detected in auto mode, starting wheel init", toString().c_str());
                 _wheel->init(-1, wheel_timing::AutoSpeedRatio);
@@ -964,6 +968,12 @@ namespace devices
         default:
             MLOG_WARN("%s: Unknown wheel state", toString().c_str());
             break;
+        }
+
+        // Clear long Press reset
+        if (_wheelBtn->onReleased())
+        {
+            pressedDuringEnter = false;
         }
     }
 

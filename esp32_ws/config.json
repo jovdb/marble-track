@@ -75,6 +75,29 @@
           }
         },
         {
+          "id": "power",
+          "type": "powermonitor",
+          "children": [],
+          "config": {
+            "name": "Power Monitor",
+            "i2cDeviceId": "i2c-1",
+            "i2cAddress": 68,
+            "shuntResistance": 0.1,
+            "maxCurrent": 1
+          }
+        },
+        {
+          "id": "battery",
+          "type": "battery",
+          "children": [],
+          "config": {
+            "name": "Battery",
+            "powerMonitorDeviceId": "power",
+            "minVoltage": 15.3,
+            "maxVoltage": 20.3
+          }
+        },
+        {
           "id": "lift",
           "type": "lift",
           "children": [
@@ -165,9 +188,9 @@
                 "mcpwmChannel": 0,
                 "frequency": 50,
                 "resolutionBits": 10,
-                "minDutyCycle": 9.7,
-                "maxDutyCycle": 4.5,
-                "defaultDurationInMs": 200
+                "minDutyCycle": 10.5,
+                "maxDutyCycle": 4,
+                "defaultDurationInMs": 100
               }
             },
             {
@@ -264,15 +287,15 @@
               "children": [],
               "config": {
                 "pin": {
-                  "pin": 9,
+                  "pin": 0,
                   "expanderId": "pwm-ex-1"
                 },
                 "name": "ServoGate Servo",
                 "mcpwmChannel": -1,
                 "frequency": 50,
                 "resolutionBits": 10,
-                "minDutyCycle": 11,
-                "maxDutyCycle": 4,
+                "minDutyCycle": 12.2,
+                "maxDutyCycle": 5,
                 "defaultDurationInMs": 3000
               }
             }
@@ -356,10 +379,12 @@
             "zeroPointDegree": 55,
             "direction": 1,
             "breakPoints": [
-              35,
+              12,
+              38,
               100.7,
               213.5,
-              255.5,
+              233.5,
+              257,
               338
             ]
           }
@@ -522,8 +547,8 @@
               "children": [],
               "config": {
                 "pin": {
-                  "pin": 45,
-                  "expanderId": ""
+                  "pin": 2,
+                  "expanderId": "ex2"
                 },
                 "name": "Launcher Ball Sensor",
                 "debounceTimeInMs": 50,
@@ -544,8 +569,8 @@
                 "mcpwmChannel": 3,
                 "frequency": 50,
                 "resolutionBits": 10,
-                "minDutyCycle": 9,
-                "maxDutyCycle": 4.7,
+                "minDutyCycle": 8.900001,
+                "maxDutyCycle": 3.8,
                 "defaultDurationInMs": 500
               }
             }

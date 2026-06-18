@@ -193,10 +193,12 @@ namespace devices
         if (_state.isLaunchingStep == 1)
         {
             MLOG_INFO("%s: Launching started!", toString().c_str());
+
             if (moveUp(static_cast<int>(_config.launchTimeMs)))
             {
                 _state.isLaunchingStep = 2;
                 _state.isBallLoaded = _state.isBallWaiting;
+                notifyStateChanged();
             }
             else
             {
@@ -204,6 +206,7 @@ namespace devices
                 _state.isLaunchingStep = 0;
                 _state.state = LauncherStateEnum::ERROR;
                 setError("LAUNCH_FAILED", "Launch failed");
+                notifyStateChanged();
             }
         }
         // Wait at top
@@ -225,6 +228,7 @@ namespace devices
                 _state.isLaunchingStep = 0;
                 _state.state = LauncherStateEnum::ERROR;
                 setError("LAUNCH_FAILED", "Launch failed");
+                notifyStateChanged();
             }
         }
         // Wait until down
@@ -233,6 +237,7 @@ namespace devices
             // End
             MLOG_INFO("%s: Launching ended", toString().c_str());
             _state.isLaunchingStep = 0;
+            notifyStateChanged();
         }
         return true;
     }
@@ -269,6 +274,7 @@ namespace devices
             {
                 _state.isLoadingStep = 2;
                 _state.isBallLoaded = _state.isBallWaiting;
+                notifyStateChanged();
             }
             else
             {
@@ -276,6 +282,7 @@ namespace devices
                 _state.isLoadingStep = 0;
                 _state.state = LauncherStateEnum::ERROR;
                 setError("LOAD_FAILED", "Load failed");
+                notifyStateChanged();
             }
         }
         // Wait at top
@@ -297,6 +304,7 @@ namespace devices
                 _state.isLoadingStep = 0;
                 _state.state = LauncherStateEnum::ERROR;
                 setError("LOAD_FAILED", "Load failed");
+                notifyStateChanged();
             }
         }
         // Wait until down
@@ -305,6 +313,7 @@ namespace devices
             // End
             MLOG_INFO("%s: Loading ended", toString().c_str());
             _state.isLoadingStep = 0;
+            notifyStateChanged();
         }
         return true;
     }

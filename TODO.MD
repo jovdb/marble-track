@@ -33,4 +33,5 @@ The ESP should have an action so the website can update the network credentials.
 
 - Launcher error when a child has an error
 
-- DeviceConfig component: use Accessor<> for device arg
+- Let battery itself poll for notification (also without website)
+  

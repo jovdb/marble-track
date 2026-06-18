@@ -96,10 +96,15 @@ namespace songs
     const int LAUNCH = 27;
     // Maximum van 2 ballen bereikt
     const int LAUNDER_MAX_2_BALLS = 28;
-    // Configuratie error.
+    // Configuratie fout.
     // Ga naar de website om het op te lossen:
     // marble, streepje, track, punt, local
     const int CONFIG_ERROR = 29;
+
+    // Batterij is leeg. Zet het systeem uit en vervang de batterij
+    const int BATTERY_CRITICAL = 30;
+    // Batterij is bijna leeg, vervang de batterij
+    const int BATTERY_LOW = 31;
 }
 
 #endif // MARBLE_TRACK_SONG_CONSTANTS_H

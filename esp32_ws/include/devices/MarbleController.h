@@ -62,12 +62,15 @@ namespace devices
         void loopSplitter();
         void loopManualLauncher(bool autoLaunch = false);
         void loopAutoLauncher();
+        void loopBattery();
+
         void blinkError(Led *ledDevice);
         void blinkBusy(Led *ledDevice);
         void blinkInit(Led *ledDevice);
         void blinkAttention(Led *ledDevice);
         void onWheelStateChange(void *statePtr);
         void onLiftStateChange(void *statePtr);
+
         Button *_manualButton;
         Buzzer *_buzzer;
         Hv20tAudio *_audio;

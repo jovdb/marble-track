@@ -325,6 +325,7 @@ namespace devices
         }
 
         loopSplitter();
+        loopBattery();
     }
 
     void MarbleController::loopManualLift()
@@ -1340,6 +1341,41 @@ namespace devices
 
         // Retry later if the command was rejected (for example while not ready).
         _splitterDelayStart = now;
+    }
+
+    void MarbleController::loopBattery()
+    {
+        if (_battery == nullptr)
+            return;
+
+        auto batteryState = _battery->getState();
+
+        // At startup it is 0 by default, wait until ready
+        if (batteryState.status != "Ready" || batteryState.voltage == 0)
+            return;
+
+        long static nextCriticalMillis = 0;
+        long static nextLowMillis = 0;
+        auto now = millis();
+
+        if (batteryState.batteryPercent < 5.0f)
+        {
+            if (nextCriticalMillis < now)
+            {
+                nextCriticalMillis = now + 180000; // Play every 3 minutes
+                MLOG_WARN("%s: Battery critical (%.2f%%)", toString().c_str(), batteryState.batteryPercent);
+                _audio->play(songs::BATTERY_CRITICAL, devices::Hv20tPlayMode::QueueIfPlaying);
+            }
+        }
+        else if (batteryState.batteryPercent < 15.0f)
+        {
+            if (nextLowMillis < now)
+            {
+                nextLowMillis = now + 600000; // Play every 10 minutes
+                MLOG_WARN("%s: Battery low (%.2f%%)", toString().c_str(), batteryState.batteryPercent);
+                _audio->play(songs::BATTERY_LOW, devices::Hv20tPlayMode::QueueIfPlaying);
+            }
+        }
     }
 
     void MarbleController::blinkError(Led *ledDevice)

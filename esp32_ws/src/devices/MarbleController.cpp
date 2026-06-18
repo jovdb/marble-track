@@ -43,6 +43,25 @@ namespace devices
         _audio = new devices::Hv20tAudio("hv20t");
         addChild(_audio);
 
+        _powerMonitor = new devices::PowerMonitor("power");
+        auto powerConfig = _powerMonitor->getConfig();
+        powerConfig.name = "Power Monitor";
+        powerConfig.i2cDeviceId = "i2c-1";
+        powerConfig.i2cAddress = 68;
+        powerConfig.shuntResistance = 0.1f;
+        powerConfig.maxCurrent = 1;
+        _powerMonitor->setConfig(powerConfig);
+        addChild(_powerMonitor);
+
+        _battery = new devices::Battery("battery");
+        auto batteryConfig = _battery->getConfig();
+        batteryConfig.name = "Battery";
+        batteryConfig.powerMonitorDeviceId = "power";
+        batteryConfig.minVoltage = 15.3f;
+        batteryConfig.maxVoltage = 20.3f;
+        _battery->setConfig(batteryConfig);
+        addChild(_battery);
+
         _lift = new devices::Lift("lift");
         addChild(_lift);
 

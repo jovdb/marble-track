@@ -12,6 +12,8 @@
 #include "devices/Led.h"
 #include "devices/Lift.h"
 #include "devices/Launcher.h"
+#include "devices/PowerMonitor.h"
+#include "devices/Battery.h"
 
 namespace devices
 {
@@ -82,6 +84,8 @@ namespace devices
         Launcher *_launcher;
         Led *_launcherLed;
         Button *_launcherBtn;
+        PowerMonitor *_powerMonitor;
+        Battery *_battery;
 
         // Splitter sensor pulse counter and delay logic
         uint8_t _splitterCounter = 0;
@@ -113,8 +117,8 @@ namespace devices
         static constexpr unsigned long LauncherPostLaunchDelayMs = 500UL;
         static constexpr unsigned long LauncherPostLoadDelayMs = 500UL;
         static constexpr unsigned long LauncherAutoInitDelayMs = 2000UL; ///< Delay before auto init starts
-        static constexpr float LauncherWheelMinAngle = 32.0f;           ///< Min wheel angle for launch (manual mode)
-        static constexpr float LauncherWheelMaxAngle = 58.0f;           ///< Max wheel angle for launch (manual mode)
+        static constexpr float LauncherWheelMinAngle = 32.0f;            ///< Min wheel angle for launch (manual mode)
+        static constexpr float LauncherWheelMaxAngle = 58.0f;            ///< Max wheel angle for launch (manual mode)
 
         // 0 = not idle, >0 = idle start time
         unsigned long _wheelIdleStartTime = 0;

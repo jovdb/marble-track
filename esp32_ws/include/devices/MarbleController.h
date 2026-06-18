@@ -63,6 +63,7 @@ namespace devices
         void loopManualLauncher(bool autoLaunch = false);
         void loopAutoLauncher();
         void loopBattery();
+        void loopConfigError();
 
         void blinkError(Led *ledDevice);
         void blinkBusy(Led *ledDevice);

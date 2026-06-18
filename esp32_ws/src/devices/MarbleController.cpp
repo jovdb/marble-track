@@ -326,6 +326,7 @@ namespace devices
 
         loopSplitter();
         loopBattery();
+        loopConfigError();
     }
 
     void MarbleController::loopManualLift()
@@ -1152,11 +1153,11 @@ namespace devices
             _wheelLed->set(false); // LED off for any other state
         }
 
+        // Wheel button
         switch (wheelState.state)
         {
         case devices::WheelStateEnum::UNKNOWN:
         case devices::WheelStateEnum::IDLE:
-            // Control wheel movement based on button state
             if (_wheelBtn->onPressed())
             {
                 // Button just pressed - start continuous movement until button is released
@@ -1175,9 +1176,10 @@ namespace devices
                 if (_wheelBtn->onLastPressedDuration(WHEEL_SPIN_LONG_PRESS_MS))
                 {
                     // Button released - stop the wheel if it was a short press
-                    MLOG_INFO("%s: Long press released - stopping wheel", toString().c_str());
+                    MLOG_INFO("%s: Press released - stopping wheel", toString().c_str());
                     _wheel->stop();
                 }
+                // Short press
                 else
                 {
                     // next breakpoint on long press release
@@ -1209,7 +1211,10 @@ namespace devices
             break;
         case devices::WheelStateEnum::CALIBRATING:
         case devices::WheelStateEnum::INIT:
-            playErrorSound();
+            if (_wheelBtn->onPressed())
+            {
+                playErrorSound();
+            }
             break;
         default:
             break;
@@ -1350,7 +1355,7 @@ namespace devices
 
         auto batteryState = _battery->getState();
 
-        // At startup it is 0 by default, wait until ready
+        // At startup it is 0 by default, wait until ready and dat is available
         if (batteryState.status != "Ready" || batteryState.voltage == 0)
             return;
 
@@ -1374,6 +1379,28 @@ namespace devices
                 nextLowMillis = now + 600000; // Play every 10 minutes
                 MLOG_WARN("%s: Battery low (%.2f%%)", toString().c_str(), batteryState.batteryPercent);
                 _audio->play(songs::BATTERY_LOW, devices::Hv20tPlayMode::QueueIfPlaying);
+            }
+        }
+    }
+
+    void MarbleController::loopConfigError()
+    {
+        bool static didPlayConfigError = false;
+
+        // Loop over all devices and check if there is a config error
+        // Play error once after boot
+        if (!didPlayConfigError)
+        {
+            for (auto &device : getChildren())
+            {
+                auto errorCode = device->getErrorCode();
+                if (errorCode == "CONFIG_ERROR")
+                {
+                    MLOG_ERROR("%s: Device '%s' has a config error, play sound: %s", toString().c_str(), device->getName().c_str(), device->getErrorMessage().c_str());
+                    _audio->play(songs::CONFIG_ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+                    didPlayConfigError = true;
+                    break;
+                }
             }
         }
     }

@@ -1058,7 +1058,7 @@ namespace devices
                     {
                         if (ballsLaunched >= 2)
                         {
-                            playErrorSound();
+                            _audio->play(songs::LAUNDER_MAX_2_BALLS, devices::Hv20tPlayMode::SkipIfPlaying);
                             MLOG_INFO("%s: Cannot launch - max number of balls are launched", toString().c_str());
                             broadcastNotification("MAX_LAUNCHED", "Maximum 2 balls can be launched per wheel rotation");
                         }

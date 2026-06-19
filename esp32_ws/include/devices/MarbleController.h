@@ -51,7 +51,6 @@ namespace devices
         }
         static constexpr unsigned long WHEEL_LONG_PRESS_DURATION_MS = 8000UL;
         static constexpr unsigned long WHEEL_SPIN_LONG_PRESS_MS = 500UL;              // Threshold for continuous spin vs short-press breakpoint
-        static constexpr unsigned long WHEEL_IDLE_ATTENTION_MS = 3UL * 60UL * 1000UL; // Blink attention after 3 minutes without a button press
         static constexpr int LAUNCHER_WHEEL_BREAKPOINT = 1;                           ///< Wheel breakpoint index that triggers launcher
         void loopManualLift();
         void loopManualSpiral();
@@ -88,6 +87,9 @@ namespace devices
         PowerMonitor *_powerMonitor;
         Battery *_battery;
 
+        // The delay to wait to notify with blinking led and notification
+        const unsigned long _actionNotificationDelayMs = 15000;
+
         // Splitter sensor pulse counter and delay logic
         uint8_t _splitterCounter = 0;
         unsigned long _splitterDelayStart = 0;
@@ -119,8 +121,8 @@ namespace devices
         static constexpr unsigned long LauncherPostLoadDelayMs = 500UL;
         static constexpr unsigned long LauncherAutoInitDelayMs = 2000UL; ///< Delay before auto init starts
         // Todo: make configurable via UI
-        static constexpr float LauncherWheelMinAngle = 35.0f;            ///< Min wheel angle for launch (manual mode)
-        static constexpr float LauncherWheelMaxAngle = 58.0f;            ///< Max wheel angle for launch (manual mode)
+        static constexpr float LauncherWheelMinAngle = 37.5f; ///< Min wheel angle for launch (manual mode)
+        static constexpr float LauncherWheelMaxAngle = 58.0f;   ///< Max wheel angle for launch (manual mode)
 
         // Random delay before next wheel trigger
         unsigned long _randomWheelDelayMs = 0;

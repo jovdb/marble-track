@@ -42,14 +42,15 @@ namespace songs
     X(NOTIFICATION, 21, "")                                                                                                                                                                     \
     X(ERROR, 22, "")                                                                                                                                                                            \
     X(NO_NETWORK, 23, "Geen netwerk")                                                                                                                                                           \
-    X(LIFT_INIT_BUSY, 24, "Lift initialisatie is bezig")                                                                                                                                       \
+    X(LIFT_INIT_BUSY, 24, "Lift initialisatie is bezig")                                                                                                                                        \
     X(LIFT_RESTART, 25, "Lift wordt opnieuw gestart")                                                                                                                                           \
     X(WHEEL_RESTART, 26, "Reuzenwiel wordt opnieuw gestart")                                                                                                                                    \
     X(LAUNCH, 27, "Bal lancering")                                                                                                                                                              \
     X(LAUNDER_MAX_2_BALLS, 28, "Maximum van 2 ballen bereikt")                                                                                                                                  \
     X(CONFIG_ERROR, 29, "Configuratie fout. Ga naar de website om het op te lossen: marble, streepje, track, punt, local")                                                                      \
     X(BATTERY_CRITICAL, 30, "Batterij is leeg. Zet het systeem uit en vervang de batterij")                                                                                                     \
-    X(BATTERY_LOW, 31, "Batterij is bijna leeg, vervang de batterij")
+    X(BATTERY_LOW, 31, "Batterij is bijna leeg, vervang de batterij")                                                                                                                           \
+    X(LAUNCH_NOTIFICATION, 32, "Bal ligt klaar om gelanceerd te worden!")
 
     /**
      * @brief Song ID Enum

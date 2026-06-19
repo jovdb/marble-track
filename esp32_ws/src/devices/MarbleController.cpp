@@ -365,7 +365,7 @@ namespace devices
         case devices::LiftStateEnum::LIFT_DOWN:
         case devices::LiftStateEnum::LIFT_UP:
         {
-            if (liftState.ballWaitingSince > 0 && liftState.ballWaitingSince + 60000 < millis())
+            if (liftState.ballWaitingSince > 0 && liftState.ballWaitingSince + _actionNotificationDelayMs < millis())
             {
                 blinkAttention(_liftLed);
             }
@@ -897,8 +897,9 @@ namespace devices
         const bool wheelInLaunchRange =
             wheelState.currentAngle >= LauncherWheelMinAngle &&
             wheelState.currentAngle <= LauncherWheelMaxAngle;
-
         auto launcherState = _launcher->getState();
+        auto static launchWaitingMillis = 0;
+        auto static shouldShowLaunchAttention = false;
 
         static uint ballsLaunched = 0;
         // Reset number of balls launched
@@ -925,7 +926,14 @@ namespace devices
             if (wheelInLaunchRange && launcherState.isBallLoaded && ballsLaunched < 2)
             {
                 // Can Launch
-                blinkAttention(_launcherLed);
+                if (shouldShowLaunchAttention)
+                {
+                    blinkAttention(_launcherLed);
+                }
+                else
+                {
+                    _launcherLed->set(true);
+                }
             }
             else if (!launcherState.isBallLoaded && launcherState.isBallWaiting)
             {
@@ -944,11 +952,8 @@ namespace devices
         switch (launcherState.state)
         {
         case LauncherStateEnum::UNKNOWN:
-            if (_launcherBtn->onPressed())
-            {
-                playButtonClick();
-                _launcher->init();
-            }
+            // Auto init at start
+            _launcher->init();
             break;
         case LauncherStateEnum::ERROR:
         case LauncherStateEnum::MOVING_UP:
@@ -960,77 +965,100 @@ namespace devices
             }
 
         case LauncherStateEnum::DOWN:
-            if (_launcherBtn->onPressed())
+
+            // Auto load if ball waiting and not loaded yet
+            if (!launcherState.isBallLoaded && launcherState.isBallWaiting)
             {
-                if (wheelInLaunchRange)
+                _launcher->load();
+            }
+            else
+            {
+                if (!autoMode)
                 {
-                    if (launcherState.isBallLoaded)
+                    if (wheelInLaunchRange)
                     {
-                        if (ballsLaunched >= 2)
+                        if (_launcherBtn->onPressed())
                         {
-                            _audio->play(songs::LAUNDER_MAX_2_BALLS, devices::Hv20tPlayMode::SkipIfPlaying);
-                            MLOG_INFO("%s: Cannot launch - max number of balls are launched", toString().c_str());
-                            broadcastNotification("MAX_LAUNCHED", "Maximum 2 balls can be launched per wheel rotation");
+                            if (launcherState.isBallLoaded)
+                            {
+                                if (ballsLaunched >= 2)
+                                {
+                                    _audio->play(songs::LAUNDER_MAX_2_BALLS, devices::Hv20tPlayMode::SkipIfPlaying);
+                                    MLOG_INFO("%s: Cannot launch - max number of balls are launched", toString().c_str());
+                                    broadcastNotification("MAX_LAUNCHED", "Maximum 2 balls can be launched per wheel rotation");
+                                }
+                                else
+                                {
+                                    _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
+                                    if (_launcher->launch())
+                                    {
+                                        lastLaunchTime = millis();
+                                        ballsLaunched += 1;
+
+                                        shouldShowLaunchAttention = false;
+                                        launchWaitingMillis = 0;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                MLOG_INFO("%s: Cannot launch - no ball loaded", toString().c_str());
+                                playErrorSound();
+                            }
                         }
                         else
                         {
-                            _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
-                            if (_launcher->launch())
+                            // Check if launch ready state to start timer
+                            if (launchWaitingMillis == 0 && ballsLaunched < 2 && launcherState.isBallLoaded)
                             {
-                                lastLaunchTime = millis();
-                                ballsLaunched += 1;
+                                launchWaitingMillis = millis();
+                            }
+                            // Notify user ball is ready to launch after a delay
+                            else if (!shouldShowLaunchAttention && launchWaitingMillis > 0 && millis() - launchWaitingMillis >= _actionNotificationDelayMs)
+                            {
+                                // Wait to play notification
+                                _audio->play(songs::LAUNCH_NOTIFICATION, devices::Hv20tPlayMode::QueueIfPlaying);
+                                shouldShowLaunchAttention = true;
                             }
                         }
                     }
                     else
                     {
-                        MLOG_INFO("%s: Cannot launch - no ball loaded", toString().c_str());
-                        playErrorSound();
+                        // Reset some values
+                        shouldShowLaunchAttention = false;
+                        launchWaitingMillis = 0;
+
+                        if (_launcherBtn->onPressed())
+                        {
+                            MLOG_INFO("%s: Cannot launch - landing platform not in range", toString().c_str());
+                            playErrorSound();
+                        }
                     }
+
+                    break;
                 }
                 else
                 {
-                    MLOG_INFO("%s: Cannot launch - landing platform not in range", toString().c_str());
-                    playErrorSound();
-                }
-
-                break;
-            }
-        }
-
-        // Auto Init
-        if (launcherState.state == LauncherStateEnum::UNKNOWN)
-        {
-            _launcher->init();
-        }
-
-        // Auto Load
-        if (launcherState.state == LauncherStateEnum::DOWN && !launcherState.isBallLoaded && launcherState.isBallWaiting)
-        {
-            _launcher->load();
-        }
-
-        // Auto Launch
-        if (autoMode)
-        {
-
-            if (launcherState.state == LauncherStateEnum::DOWN && launcherState.isBallLoaded && ballsLaunched < 2)
-            {
-                // -1: Out range
-                // 0: Start of range
-                // 1: End of range
-                const auto rangeRatio =
-                    wheelInLaunchRange ? (wheelState.currentAngle - LauncherWheelMinAngle) /
-                                             (LauncherWheelMaxAngle - LauncherWheelMinAngle)
-                                       : -1;
-
-                if (rangeRatio >= 0.2 && rangeRatio <= 0.8 && lastLaunchTime + 3000 < millis())
-                {
-                    _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
-                    if (_launcher->launch())
+                    // Auto launch
+                    if (launcherState.isBallLoaded && ballsLaunched < 2)
                     {
-                        ballsLaunched += 1;
-                        lastLaunchTime = millis();
+                        // -1: Out range
+                        // 0: Start of range
+                        // 1: End of range
+                        const auto rangeRatio =
+                            wheelInLaunchRange ? (wheelState.currentAngle - LauncherWheelMinAngle) /
+                                                     (LauncherWheelMaxAngle - LauncherWheelMinAngle)
+                                               : -1;
+
+                        if (rangeRatio >= 0.2 && rangeRatio <= 0.8 && lastLaunchTime + 3000 < millis())
+                        {
+                            _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
+                            if (_launcher->launch())
+                            {
+                                ballsLaunched += 1;
+                                lastLaunchTime = millis();
+                            }
+                        }
                     }
                 }
             }
@@ -1059,8 +1087,8 @@ namespace devices
             break;
         case devices::WheelStateEnum::IDLE:
         {
-            // Blink attention if no button press in the last WHEEL_IDLE_ATTENTION_MS
-            bool isIdle = _lastButtonPressTime > 0 && (millis() - _lastButtonPressTime >= WHEEL_IDLE_ATTENTION_MS);
+            // Blink attention if no button press in the last
+            bool isIdle = _lastButtonPressTime > 0 && (millis() - _lastButtonPressTime >= _actionNotificationDelayMs);
             if (isIdle)
                 blinkAttention(_wheelLed);
             else

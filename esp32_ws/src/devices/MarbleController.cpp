@@ -321,7 +321,7 @@ namespace devices
             loopManualLift();
             loopManualWheel();
             loopManualSpiral();
-            loopManualLauncher();
+            loopLauncher();
         }
 
         loopSplitter();
@@ -890,7 +890,7 @@ namespace devices
 
     void MarbleController::loopAutoLauncher()
     {
-        loopManualLauncher(true);
+        loopLauncher(true);
     }
 
     void MarbleController::loopAutoWheel()
@@ -992,7 +992,7 @@ namespace devices
         }
     }
 
-    void MarbleController::loopManualLauncher(bool autoLaunch)
+    void MarbleController::loopLauncher(bool autoMode)
     {
 
         long static lastLaunchTime = 0;
@@ -1116,7 +1116,7 @@ namespace devices
         }
 
         // Auto Launch
-        if (autoLaunch)
+        if (autoMode)
         {
 
             if (launcherState.state == LauncherStateEnum::DOWN && launcherState.isBallLoaded && ballsLaunched < 2)
@@ -1129,7 +1129,7 @@ namespace devices
                                              (LauncherWheelMaxAngle - LauncherWheelMinAngle)
                                        : -1;
 
-                if (rangeRatio >= 0.15 && rangeRatio <= 0.8 && lastLaunchTime + 3000 < millis())
+                if (rangeRatio >= 0.2 && rangeRatio <= 0.8 && lastLaunchTime + 3000 < millis())
                 {
                     _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
                     if (_launcher->launch())
@@ -1565,6 +1565,7 @@ namespace devices
         }
         else
         {
+            playErrorSound();
             MLOG_ERROR("%s: Unknown Wheel errorCode '%s', cannot play audio", toString().c_str(), errorCode.c_str());
         }
     }

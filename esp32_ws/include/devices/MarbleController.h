@@ -60,7 +60,7 @@ namespace devices
         void loopAutoWheel();
         void loopAutoSpiral();
         void loopSplitter();
-        void loopManualLauncher(bool autoLaunch = false);
+        void loopLauncher(bool autoLaunch = false);
         void loopAutoLauncher();
         void loopBattery();
         void loopConfigError();

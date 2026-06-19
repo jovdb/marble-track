@@ -1068,6 +1068,8 @@ namespace devices
     void MarbleController::loopWheel(bool autoMode = false)
     {
         auto wheelState = _wheel->getState();
+        // 0 = not idle, >0 = idle start time
+        unsigned long static wheelIdleStartTime = 0;
 
         // LED
         switch (wheelState.state)
@@ -1086,28 +1088,27 @@ namespace devices
             blinkBusy(_wheelLed);
             break;
         case devices::WheelStateEnum::IDLE:
-        {
-            // Blink attention if no button press in the last
-            bool isIdle = _lastButtonPressTime > 0 && (millis() - _lastButtonPressTime >= _actionNotificationDelayMs);
-            if (isIdle)
+
+            if (!autoMode && wheelIdleStartTime > 0 && (millis() - wheelIdleStartTime) >= 60000)
+            {
                 blinkAttention(_wheelLed);
+            }
             else
-                _wheelLed->set(true); // LED on when idle
+            {
+                _wheelLed->set(true);
+            }
             break;
-        }
+
         default:
             MLOG_ERROR("%s: Unknown wheel state: %d", toString().c_str(), static_cast<int>(wheelState.state));
             _wheelLed->set(false); // LED off for any other state
         }
 
-        // Wheel button
-
         /** Wheel speed, reduced in auto mode */
         auto modeSpeed = autoMode ? wheel_timing::AutoSpeedRatio : 1.0f;
         auto static pressedDuringError = false;
-        // 0 = not idle, >0 = idle start time
-        unsigned long static wheelIdleStartTime = 0;
 
+        // Wheel button
         switch (wheelState.state)
         {
         case devices::WheelStateEnum::UNKNOWN:
@@ -1123,43 +1124,50 @@ namespace devices
             // In manual mode fallthrough to idle mode
 
         case devices::WheelStateEnum::IDLE:
-            if (_wheelBtn->onPressed())
-            {
-                if (!autoMode)
-                {
 
+            // Remember when idle start:
+            // - Auto mode: trigger next breakpoint at random delay
+            // - Manual Mode:  blink after some time idle
+            if (wheelIdleStartTime == 0)
+            {
+                // First
+                wheelIdleStartTime = millis();
+                if (autoMode)
+                {
+                    _randomWheelDelayMs = 3000 + random(100, 30000);
+                    MLOG_INFO("%s: Next random wheel trigger starts in %.ds", toString().c_str(), _randomWheelDelayMs / 1000);
+                }
+            }
+
+            if (!autoMode)
+            {
+                if (_wheelBtn->onPressed())
+                {
                     // Button just pressed - start continuous movement until button is released
                     MLOG_INFO("%s: Starting manual wheel movement as long button is pressed", toString().c_str());
 
                     playButtonDown();
                     _wheel->move(100000, modeSpeed); // Large positive number for continuous movement
                 }
-                else
+            }
+            else
+            {
+                // When idle, wait for random delay then trigger next breakpoint
+                if (_randomWheelDelayMs > 0 && millis() >= wheelIdleStartTime + _randomWheelDelayMs)
                 {
-
-                    // When idle, wait for random delay then trigger next breakpoint
-                    if (wheelIdleStartTime == 0)
-                    {
-                        // First
-                        wheelIdleStartTime = millis();
-                        _randomWheelDelayMs = 3000 + random(100, 30000);
-                        MLOG_INFO("%s: Next random wheel trigger starts in %.ds", toString().c_str(), _randomWheelDelayMs / 1000);
-                    }
-                    else if (millis() >= wheelIdleStartTime + _randomWheelDelayMs)
-                    {
-                        MLOG_INFO("%s: Goto wheel next breakpoint", toString().c_str());
-                        _wheel->nextBreakPoint(modeSpeed);
-                        wheelIdleStartTime = 0;
-                    }
-                    else if (_wheelBtn->onPressed())
-                    {
-                        // Idle + auto mode, also allow to start
-                        playButtonClick();
-                        _wheel->nextBreakPoint(modeSpeed);
-                    }
+                    MLOG_INFO("%s: Goto wheel next breakpoint", toString().c_str());
+                    _wheel->nextBreakPoint(modeSpeed);
+                    _randomWheelDelayMs = 0;
+                }
+                else if (_wheelBtn->onPressed())
+                {
+                    // Idle + auto mode, also allow to start
+                    playButtonClick();
+                    _wheel->nextBreakPoint(modeSpeed);
                 }
             }
             break;
+
         case devices::WheelStateEnum::MOVING:
             if (!autoMode)
             {
@@ -1223,6 +1231,12 @@ namespace devices
             break;
         default:
             break;
+        }
+
+        // Reset Wheel idle time
+        if (wheelState.state != devices::WheelStateEnum::IDLE)
+        {
+            wheelIdleStartTime = 0;
         }
 
         // Clear long Press reset

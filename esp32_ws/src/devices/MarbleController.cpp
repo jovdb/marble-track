@@ -272,7 +272,6 @@ namespace devices
         _autoNoBallLiftDelayMs = 0;
         _autoLiftMovingDownSlow = false;
         _autoLiftDelayStart = 0;
-        _wheelIdleStartTime = 0;
         _randomWheelDelayMs = 0;
         _lastButtonPressTime = 0;
         _idleSoundPlayed = false;
@@ -312,16 +311,16 @@ namespace devices
         if (isAutoMode)
         {
             loopAutoLift();
-            loopAutoWheel();
+            loopWheel(true);
             loopAutoSpiral();
-            loopAutoLauncher();
+            loopLauncher(true);
         }
         else
         {
             loopManualLift();
-            loopManualWheel();
+            loopWheel(false);
             loopManualSpiral();
-            loopLauncher();
+            loopLauncher(false);
         }
 
         loopSplitter();
@@ -888,110 +887,6 @@ namespace devices
         }
     }
 
-    void MarbleController::loopAutoLauncher()
-    {
-        loopLauncher(true);
-    }
-
-    void MarbleController::loopAutoWheel()
-    {
-        // Auto wheel control logic - similar to AutoMode.cpp
-        auto wheelState = _wheel->getState();
-
-        auto static pressedDuringError = false;
-
-        // Wheel led
-        switch (wheelState.state)
-        {
-        case devices::WheelStateEnum::UNKNOWN:
-        case devices::WheelStateEnum::IDLE:
-            _wheelLed->set(true);
-            break;
-
-        case devices::WheelStateEnum::ERROR:
-            blinkError(_wheelLed);
-            break;
-
-        case devices::WheelStateEnum::CALIBRATING:
-        case devices::WheelStateEnum::INIT:
-        {
-            blinkInit(_wheelLed);
-            break;
-        }
-        case devices::WheelStateEnum::MOVING:
-            blinkBusy(_wheelLed);
-            break;
-
-        default:
-            MLOG_WARN("%s: Unknown wheel state for led", toString().c_str());
-            break;
-        }
-
-        // Trigger wheel logic
-        switch (wheelState.state)
-        {
-        case devices::WheelStateEnum::UNKNOWN:
-            _wheel->init(-1, wheel_timing::AutoSpeedRatio);
-            break;
-
-        case devices::WheelStateEnum::ERROR:
-            if (_wheelBtn->onPressed())
-            {
-                playWheelError(_wheel->getErrorCode());
-                pressedDuringError = true;
-            }
-            // Check for long press while button is held (8s → init)
-            // Still an error here: only whe press was started in
-            else if (pressedDuringError && _wheelBtn->onLastPressedDuration(WHEEL_LONG_PRESS_DURATION_MS))
-            {
-                MLOG_INFO("%s: Error recovery long press detected in auto mode, starting wheel init", toString().c_str());
-                _wheel->init(-1, wheel_timing::AutoSpeedRatio);
-                _audio->play(songs::WHEEL_RESTART, devices::Hv20tPlayMode::StopThenPlay);
-            }
-            break;
-
-        case devices::WheelStateEnum::CALIBRATING:
-        case devices::WheelStateEnum::INIT:
-        case devices::WheelStateEnum::MOVING:
-            if (_wheelBtn->onPressed())
-            {
-                playErrorSound();
-            }
-            break;
-
-        case devices::WheelStateEnum::IDLE:
-            // When idle, wait for random delay then trigger next breakpoint
-            if (_wheelIdleStartTime == 0)
-            {
-                _wheelIdleStartTime = millis();
-                _randomWheelDelayMs = 3000 + random(100, 30000);
-                MLOG_INFO("%s: Next random wheel trigger starts in %.ds", toString().c_str(), _randomWheelDelayMs / 1000);
-            }
-            else if (millis() >= _wheelIdleStartTime + _randomWheelDelayMs)
-            {
-                MLOG_INFO("%s: Triggering wheel next breakpoint", toString().c_str());
-                _wheel->nextBreakPoint(wheel_timing::AutoSpeedRatio);
-                _wheelIdleStartTime = 0;
-            }
-            else if (_wheelBtn->onPressed())
-            {
-                _wheel->nextBreakPoint(wheel_timing::AutoSpeedRatio);
-                playButtonClick();
-            }
-            break;
-
-        default:
-            MLOG_WARN("%s: Unknown wheel state", toString().c_str());
-            break;
-        }
-
-        // Clear long Press reset
-        if (_wheelBtn->onReleased())
-        {
-            pressedDuringError = false;
-        }
-    }
-
     void MarbleController::loopLauncher(bool autoMode)
     {
 
@@ -1142,17 +1037,15 @@ namespace devices
         }
     }
 
-    void MarbleController::loopManualWheel()
+    void MarbleController::loopWheel(bool autoMode = false)
     {
-        // Manual wheel control logic
         auto wheelState = _wheel->getState();
-        auto static pressedDuringError = false;
 
-        // Control wheel LED based on error state and movement
+        // LED
         switch (wheelState.state)
         {
         case devices::WheelStateEnum::UNKNOWN:
-            _wheelLed->set(true); // clickable init will start
+            _wheelLed->set(true); // clickable: init will start
             break;
         case devices::WheelStateEnum::ERROR:
             blinkError(_wheelLed);
@@ -1180,44 +1073,101 @@ namespace devices
         }
 
         // Wheel button
+
+        /** Wheel speed, reduced in auto mode */
+        auto modeSpeed = autoMode ? wheel_timing::AutoSpeedRatio : 1.0f;
+        auto static pressedDuringError = false;
+        // 0 = not idle, >0 = idle start time
+        unsigned long static wheelIdleStartTime = 0;
+
         switch (wheelState.state)
         {
         case devices::WheelStateEnum::UNKNOWN:
+            if (autoMode)
+            {
+                // Auto init after 1 second
+                if (millis() > 1000)
+                {
+                    _wheel->init(-1, modeSpeed);
+                }
+                break;
+            }
+            // In manual mode fallthrough to idle mode
+
         case devices::WheelStateEnum::IDLE:
             if (_wheelBtn->onPressed())
             {
-                // Button just pressed - start continuous movement until button is released
-                MLOG_INFO("%s: Starting manual wheel movement as long button is pressed", toString().c_str());
+                if (!autoMode)
+                {
 
-                playButtonDown();
-                _wheel->move(100000); // Large positive number for continuous movement
+                    // Button just pressed - start continuous movement until button is released
+                    MLOG_INFO("%s: Starting manual wheel movement as long button is pressed", toString().c_str());
+
+                    playButtonDown();
+                    _wheel->move(100000, modeSpeed); // Large positive number for continuous movement
+                }
+                else
+                {
+
+                    // When idle, wait for random delay then trigger next breakpoint
+                    if (wheelIdleStartTime == 0)
+                    {
+                        // First
+                        wheelIdleStartTime = millis();
+                        _randomWheelDelayMs = 3000 + random(100, 30000);
+                        MLOG_INFO("%s: Next random wheel trigger starts in %.ds", toString().c_str(), _randomWheelDelayMs / 1000);
+                    }
+                    else if (millis() >= wheelIdleStartTime + _randomWheelDelayMs)
+                    {
+                        MLOG_INFO("%s: Goto wheel next breakpoint", toString().c_str());
+                        _wheel->nextBreakPoint(modeSpeed);
+                        wheelIdleStartTime = 0;
+                    }
+                    else if (_wheelBtn->onPressed())
+                    {
+                        // Idle + auto mode, also allow to start
+                        playButtonClick();
+                        _wheel->nextBreakPoint(modeSpeed);
+                    }
+                }
             }
             break;
         case devices::WheelStateEnum::MOVING:
-            if (_wheelBtn->onReleased())
+            if (!autoMode)
             {
-                playButtonUp();
+                if (_wheelBtn->onReleased())
+                {
+                    playButtonUp();
 
-                // Longpress?
-                if (_wheelBtn->onLastPressedDuration(WHEEL_SPIN_LONG_PRESS_MS))
-                {
-                    // Button released - stop the wheel if it was a short press
-                    MLOG_INFO("%s: Press released - stopping wheel", toString().c_str());
-                    _wheel->stop();
+                    // Longpress?
+                    if (_wheelBtn->onLastPressedDuration(WHEEL_SPIN_LONG_PRESS_MS))
+                    {
+                        // Button released - stop the wheel if it was a short press
+                        MLOG_INFO("%s: Press released - stopping wheel", toString().c_str());
+                        _wheel->stop();
+                    }
+                    // Short press
+                    else
+                    {
+                        // next breakpoint on long press release
+                        MLOG_INFO("%s: short press released - moving to next breakpoint", toString().c_str());
+                        _wheel->nextBreakPoint(modeSpeed);
+                    }
                 }
-                // Short press
-                else
+                else if (_wheelBtn->onPressed())
                 {
-                    // next breakpoint on long press release
-                    MLOG_INFO("%s: short press released - moving to next breakpoint", toString().c_str());
-                    _wheel->nextBreakPoint();
+                    // Pressed during deceleration
+                    playButtonDown();
+                    _wheel->move(100000, modeSpeed);
                 }
             }
-            else if (_wheelBtn->onPressed())
+            else
             {
-                // Pressed during deceleration
-                playButtonDown();
-                _wheel->move(100000);
+                if (_wheelBtn->onPressed())
+                {
+                    // during movement no press allowed in auto mode
+                    playErrorSound();
+                }
             }
             break;
         case devices::WheelStateEnum::ERROR:

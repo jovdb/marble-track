@@ -52,19 +52,16 @@ namespace devices
         static constexpr unsigned long WHEEL_LONG_PRESS_DURATION_MS = 8000UL;
         static constexpr unsigned long WHEEL_SPIN_LONG_PRESS_MS = 500UL;              // Threshold for continuous spin vs short-press breakpoint
         static constexpr unsigned long WHEEL_IDLE_ATTENTION_MS = 3UL * 60UL * 1000UL; // Blink attention after 3 minutes without a button press
-        static constexpr int LAUNCHER_WHEEL_BREAKPOINT = 1; ///< Wheel breakpoint index that triggers launcher
+        static constexpr int LAUNCHER_WHEEL_BREAKPOINT = 1;                           ///< Wheel breakpoint index that triggers launcher
         void loopManualLift();
-        void loopManualWheel();
         void loopManualSpiral();
         void loopAutoLift();
-        void loopAutoWheel();
         void loopAutoSpiral();
         void loopSplitter();
-        void loopLauncher(bool autoLaunch = false);
-        void loopAutoLauncher();
+        void loopWheel(bool autoMode);
+        void loopLauncher(bool autoMode);
         void loopBattery();
         void loopConfigError();
-
         void blinkError(Led *ledDevice);
         void blinkBusy(Led *ledDevice);
         void blinkInit(Led *ledDevice);
@@ -121,11 +118,10 @@ namespace devices
         static constexpr unsigned long LauncherPostLaunchDelayMs = 500UL;
         static constexpr unsigned long LauncherPostLoadDelayMs = 500UL;
         static constexpr unsigned long LauncherAutoInitDelayMs = 2000UL; ///< Delay before auto init starts
-        static constexpr float LauncherWheelMinAngle = 32.0f;            ///< Min wheel angle for launch (manual mode)
+        // Todo: make configurable via UI
+        static constexpr float LauncherWheelMinAngle = 35.0f;            ///< Min wheel angle for launch (manual mode)
         static constexpr float LauncherWheelMaxAngle = 58.0f;            ///< Max wheel angle for launch (manual mode)
 
-        // 0 = not idle, >0 = idle start time
-        unsigned long _wheelIdleStartTime = 0;
         // Random delay before next wheel trigger
         unsigned long _randomWheelDelayMs = 0;
 

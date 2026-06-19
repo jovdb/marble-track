@@ -332,6 +332,7 @@ namespace devices
     void MarbleController::loopManualLift()
     {
         auto liftState = _lift->getState();
+        auto static pressedDuringError = false;
 
         // LED
         switch (liftState.state)
@@ -408,12 +409,13 @@ namespace devices
             {
                 playLiftError(_lift->getErrorCode());
                 _liftButtonPressStartTime = millis();
+                pressedDuringError = true;
             }
 
             unsigned long pressDuration = _liftButtonPressStartTime > 0 ? millis() - _liftButtonPressStartTime : 0;
 
             // Check for long press while button is held
-            if (_liftBtn->onLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
+            if (pressedDuringError && _liftBtn->onLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
             {
                 MLOG_INFO("%s: Error recovery long press detected, starting lift init", toString().c_str());
                 _lift->init(lift_timing::LiftManualSpeedRatio);
@@ -583,12 +585,19 @@ namespace devices
             break;
         }
         }
+
+        // Clear long Press reset
+        if (_wheelBtn->onReleased())
+        {
+            pressedDuringError = false;
+        }
     }
 
     void MarbleController::loopAutoLift()
     {
         // Auto lift control logic - automatic cycling through lift operations
         auto liftState = _lift->getState();
+        auto static pressedDuringError = false;
 
         if (liftState.state != devices::LiftStateEnum::LIFT_UP || !liftState.isLoaded)
         {
@@ -655,10 +664,11 @@ namespace devices
             {
                 playLiftError(_lift->getErrorCode());
                 _liftButtonPressStartTime = millis();
+                pressedDuringError = true;
             }
 
             // Check for long press while button is held
-            if (_liftBtn->onLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
+            if (pressedDuringError && _liftBtn->onLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
             {
                 MLOG_INFO("%s: Error recovery long press detected in auto mode, starting lift init", toString().c_str());
                 _lift->init(lift_timing::LiftAutoSpeedRatio);
@@ -871,6 +881,11 @@ namespace devices
             break;
         }
         }
+
+        if (_liftBtn->onReleased())
+        {
+            pressedDuringError = false;
+        }
     }
 
     void MarbleController::loopAutoLauncher()
@@ -883,7 +898,7 @@ namespace devices
         // Auto wheel control logic - similar to AutoMode.cpp
         auto wheelState = _wheel->getState();
 
-        auto static pressedDuringEnter = false;
+        auto static pressedDuringError = false;
 
         // Wheel led
         switch (wheelState.state)
@@ -923,11 +938,11 @@ namespace devices
             if (_wheelBtn->onPressed())
             {
                 playWheelError(_wheel->getErrorCode());
-                pressedDuringEnter = true;
+                pressedDuringError = true;
             }
             // Check for long press while button is held (8s → init)
             // Still an error here: only whe press was started in
-            else if (pressedDuringEnter && _wheelBtn->onLastPressedDuration(WHEEL_LONG_PRESS_DURATION_MS))
+            else if (pressedDuringError && _wheelBtn->onLastPressedDuration(WHEEL_LONG_PRESS_DURATION_MS))
             {
                 MLOG_INFO("%s: Error recovery long press detected in auto mode, starting wheel init", toString().c_str());
                 _wheel->init(-1, wheel_timing::AutoSpeedRatio);
@@ -973,7 +988,7 @@ namespace devices
         // Clear long Press reset
         if (_wheelBtn->onReleased())
         {
-            pressedDuringEnter = false;
+            pressedDuringError = false;
         }
     }
 
@@ -1131,6 +1146,7 @@ namespace devices
     {
         // Manual wheel control logic
         auto wheelState = _wheel->getState();
+        auto static pressedDuringError = false;
 
         // Control wheel LED based on error state and movement
         switch (wheelState.state)
@@ -1208,11 +1224,12 @@ namespace devices
             // In error state: play error sound and let the long-press timer run
             if (_wheelBtn->onPressed())
             {
+                pressedDuringError = true;
                 playWheelError(_wheel->getErrorCode());
             }
 
             // Error recovery: 8-second long press starts init
-            else if (_wheelBtn->onLastPressedDuration(WHEEL_LONG_PRESS_DURATION_MS))
+            else if (pressedDuringError && _wheelBtn->onLastPressedDuration(WHEEL_LONG_PRESS_DURATION_MS))
             {
                 MLOG_INFO("%s: Error recovery long press detected, starting wheel init", toString().c_str());
                 _wheel->init();
@@ -1228,6 +1245,12 @@ namespace devices
             break;
         default:
             break;
+        }
+
+        // Clear long Press reset
+        if (_wheelBtn->onReleased())
+        {
+            pressedDuringError = false;
         }
     }
 

@@ -121,7 +121,7 @@ namespace devices
         static constexpr unsigned long LauncherPostLoadDelayMs = 500UL;
         static constexpr unsigned long LauncherAutoInitDelayMs = 2000UL; ///< Delay before auto init starts
         // Todo: make configurable via UI
-        static constexpr float LauncherWheelMinAngle = 37.5f; ///< Min wheel angle for launch (manual mode)
+        static constexpr float LauncherWheelMinAngle = 39.0f; ///< Min wheel angle for launch (manual mode)
         static constexpr float LauncherWheelMaxAngle = 58.0f;   ///< Max wheel angle for launch (manual mode)
 
         // Random delay before next wheel trigger

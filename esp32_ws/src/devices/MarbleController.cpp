@@ -899,6 +899,7 @@ namespace devices
             wheelState.currentAngle <= LauncherWheelMaxAngle;
         auto launcherState = _launcher->getState();
         auto static launchWaitingMillis = 0;
+        auto static lastDownMillis = 0;
         auto static shouldShowLaunchAttention = false;
 
         static uint ballsLaunched = 0;
@@ -923,7 +924,12 @@ namespace devices
             blinkBusy(_launcherLed);
             break;
         case LauncherStateEnum::DOWN:
-            if (wheelInLaunchRange && launcherState.isBallLoaded && ballsLaunched < 2)
+            if (wheelState.state != devices::WheelStateEnum::MOVING && wheelState.state != devices::WheelStateEnum::IDLE)
+            {
+                // No led during initializing
+                _launcherLed->set(false);
+            }
+            else if (wheelInLaunchRange && launcherState.isBallLoaded && ballsLaunched < 2)
             {
                 // Can Launch
                 if (shouldShowLaunchAttention)
@@ -963,8 +969,13 @@ namespace devices
             {
                 playErrorSound();
             }
-
+            break;
         case LauncherStateEnum::DOWN:
+
+            if (lastDownMillis == 0)
+            {
+                lastDownMillis = millis();
+            }
 
             // Auto load if ball waiting and not loaded yet
             if (!launcherState.isBallLoaded && launcherState.isBallWaiting)
@@ -983,7 +994,8 @@ namespace devices
                             {
                                 if (ballsLaunched >= 2)
                                 {
-                                    _audio->play(songs::LAUNDER_MAX_2_BALLS, devices::Hv20tPlayMode::SkipIfPlaying);
+                                    playErrorSound();
+                                    _audio->play(songs::LAUNDER_MAX_2_BALLS, devices::Hv20tPlayMode::QueueIfPlaying);
                                     MLOG_INFO("%s: Cannot launch - max number of balls are launched", toString().c_str());
                                     broadcastNotification("MAX_LAUNCHED", "Maximum 2 balls can be launched per wheel rotation");
                                 }
@@ -1050,7 +1062,8 @@ namespace devices
                                                      (LauncherWheelMaxAngle - LauncherWheelMinAngle)
                                                : -1;
 
-                        if (rangeRatio >= 0.2 && rangeRatio <= 0.8 && lastLaunchTime + 3000 < millis())
+                        auto delay = ballsLaunched == 0 ? 0 : 1000;
+                        if (rangeRatio >= 0.2 && rangeRatio <= 0.8 && millis() - lastDownMillis >= delay)
                         {
                             _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
                             if (_launcher->launch())
@@ -1060,8 +1073,19 @@ namespace devices
                             }
                         }
                     }
+
+                    if (_launcherBtn->onPressed())
+                    {
+                        MLOG_INFO("%s: Cannot launch in auto mode", toString().c_str());
+                        playErrorSound();
+                    }
                 }
             }
+        }
+
+        if (launcherState.state != LauncherStateEnum::DOWN)
+        {
+            lastDownMillis = 0;
         }
     }
 

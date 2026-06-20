@@ -181,6 +181,9 @@ namespace devices
         }
 
         _state.isLaunchingStep = 1;
+
+        launchLoop();
+
         return true;
     }
 
@@ -258,6 +261,9 @@ namespace devices
         }
 
         _state.isLoadingStep = 1;
+
+        loadLoop();
+
         return true;
     }
 

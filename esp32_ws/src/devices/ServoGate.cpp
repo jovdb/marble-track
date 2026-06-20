@@ -94,19 +94,8 @@ namespace devices
         if (_button != nullptr)
         {
             const auto &btnState = _button->getState();
-            if (_button->onPressed())
-            {
-                _holdQueueFillApplied = false;
 
-                // New click: add one to queue
-                if (_state.queueCount < _config.fullQueueCount)
-                {
-                    _state.queueCount++;
-                    // MLOG_INFO("%s: Button clicked, queue=%d", toString().c_str(), _state.queueCount);
-                    notifyStateChanged();
-                }
-            }
-            else if (_button->isPressed() && _button->onLastPressedDuration(servo_gate_timing::HoldToFillQueueMs))
+            if (_button->isPressed() && _button->onLastPressedDuration(servo_gate_timing::HoldToFillQueueMs))
             {
                 if (!_holdQueueFillApplied &&
                     _state.queueCount < _config.fullQueueCount)
@@ -117,8 +106,25 @@ namespace devices
                     notifyStateChanged();
                 }
             }
-            else if (btnState.isPressedChanged)
+            else if (_button->onReleased())
             {
+                // long pressed can indicate multiple balls passed
+                auto pressDuration = btnState.lastReleasedMillis - btnState.lastPressedMillis;
+
+                // 1 ball: 260ms, 2 balls 420ms
+                auto ballsPassed = std::round((pressDuration - 100) / 150.0);
+
+                if (ballsPassed < 1)
+                {
+                    ballsPassed = 1;
+                }
+                if (_state.queueCount + ballsPassed > _config.fullQueueCount)
+                {
+                    ballsPassed = _config.fullQueueCount - _state.queueCount;
+                }
+
+                _state.queueCount += ballsPassed;
+
                 _holdQueueFillApplied = false;
             }
         }

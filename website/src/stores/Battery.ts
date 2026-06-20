@@ -18,7 +18,17 @@ export interface IBatteryConfig extends IDeviceConfig {
 }
 
 export function useBattery(deviceId: string) {
-  return useDevice<IBatteryState, IBatteryConfig>(deviceId);
+  const [state, { execDeviceFn, ...actions }] = useDevice<IBatteryState, IBatteryConfig>(deviceId);
+
+  const refresh = () => execDeviceFn("refresh", {});
+
+  return [
+    state,
+    {
+      refresh,
+      ...actions,
+    },
+  ] as const;
 }
 
 declare global {

@@ -1,28 +1,19 @@
-import { createMemo, onCleanup, onMount } from "solid-js";
+import { createMemo } from "solid-js";
 import { Device } from "./Device";
 import { BatteryIcon } from "../icons/Icons";
 import { useBattery } from "../../stores/Battery";
 import BatteryConfig from "./BatteryConfig";
 import styles from "./Device.module.css";
 
-const POLL_INTERVAL_MS = 60_000; // header-driven polls every 60 s
-
 export function Battery(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
-  const [device, { getDeviceState }] = useBattery(props.id);
+  const [device, { refresh }] = useBattery(props.id);
 
   const state = createMemo(() => device()?.state);
   const pct = createMemo(() => state()?.batteryPercent ?? 0);
   const voltage = createMemo(() => state()?.voltage);
   const status = createMemo(() => state()?.status);
   const batteryLevel = createMemo(() => Math.min(5, Math.max(0, Math.round(pct() / 20))));
-  const requestState = getDeviceState;
-
-  // Poll every 60 s for fresh state
-  onMount(() => {
-    requestState();
-    const id = setInterval(requestState, POLL_INTERVAL_MS);
-    onCleanup(() => clearInterval(id));
-  });
+  const requestState = refresh;
 
   const statusText = createMemo(() => {
     const s = status();

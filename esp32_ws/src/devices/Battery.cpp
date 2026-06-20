@@ -24,12 +24,25 @@ namespace devices
         Device::setup();
         setName(_config.name);
         // Attempt an initial read so state isn't empty after boot
-        updateFromPowerMonitor();
+        refresh();
     }
 
-    bool Battery::updateFromPowerMonitor()
+    void Battery::loop()
+    {
+        Device::loop();
+
+        // Periodically refresh battery status from PowerMonitor
+        unsigned long now = millis();
+        if (now - _state.lastUpdatedMillis > 10000) // Refresh every 10 seconds
+        {
+            refresh();
+        }
+    }
+
+    bool Battery::refresh()
     {
         PowerMonitor *pm = deviceManager.getDeviceByIdAs<PowerMonitor>(_config.powerMonitorDeviceId);
+        _state.lastUpdatedMillis = millis();
 
         if (!pm)
         {
@@ -42,7 +55,9 @@ namespace devices
             {
                 Device::setError("NOT_CONFIGURED", "No PowerMonitor device selected");
             }
+
             _state.status = "Error";
+            notifyStateChanged();
             return false;
         }
 
@@ -53,6 +68,7 @@ namespace devices
         {
             Device::setError("PM_ERROR", "PowerMonitor '" + _config.powerMonitorDeviceId + "' is in error state");
             _state.status = "Error";
+            notifyStateChanged();
             return false;
         }
 
@@ -68,7 +84,9 @@ namespace devices
         _state.batteryPercent = pct;
         _state.status = "Ready";
         Device::clearError();
+        notifyStateChanged();
 
+        // After new values, check for notifications
         auto lowAlertVoltage = _config.minVoltage + (_config.maxVoltage - _config.minVoltage) * .20;
         auto criticalVoltage = _config.minVoltage + (_config.maxVoltage - _config.minVoltage) * .10;
         auto clearAlertVoltage = _config.minVoltage + (_config.maxVoltage - _config.minVoltage) * .30;
@@ -98,7 +116,6 @@ namespace devices
 
     void Battery::addDeviceStateToJson(JsonDocument &doc)
     {
-        updateFromPowerMonitor();
         doc["status"] = _state.status;
         doc["voltage"] = _state.voltage;
         doc["batteryPercent"] = _state.batteryPercent;
@@ -108,9 +125,7 @@ namespace devices
     {
         if (action == "refresh")
         {
-            updateFromPowerMonitor();
-            notifyStateChanged();
-            return true;
+            return refresh();
         }
         return false;
     }

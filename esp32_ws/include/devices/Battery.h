@@ -18,16 +18,17 @@ namespace devices
     struct BatteryConfig
     {
         String name = "Battery";
-        String powerMonitorDeviceId = "";  // ID of the PowerMonitor device to read from
-        float minVoltage = 15.0f;          // Voltage at 0 % (Li-ion 5S safe cutoff)
-        float maxVoltage = 21.0f;          // Voltage at 100 % (Li-ion 5S full charge)
+        String powerMonitorDeviceId = ""; // ID of the PowerMonitor device to read from
+        float minVoltage = 15.0f;         // Voltage at 0 % (Li-ion 5S safe cutoff)
+        float maxVoltage = 21.0f;         // Voltage at 100 % (Li-ion 5S full charge)
     };
 
     struct BatteryState
     {
-        String status = "Error";     // "Ready" | "Error"
-        float voltage = 0.0f;        // Last known bus voltage in V
-        float batteryPercent = 0.0f; // 0–100 %
+        String status = "Error";             // "Ready" | "Error"
+        float voltage = 0.0f;                // Last known bus voltage in V
+        float batteryPercent = 0.0f;         // 0–100 %
+        unsigned long lastUpdatedMillis = 0; // Timestamp of last update
     };
 
     class Battery : public Device,
@@ -41,6 +42,7 @@ namespace devices
         ~Battery() override = default;
 
         void setup() override;
+        void loop() override;
 
         // ControllableMixin implementation
         void addDeviceStateToJson(JsonDocument &doc) override;
@@ -50,13 +52,13 @@ namespace devices
         void jsonToConfig(const JsonDocument &doc) override;
         void configToJson(JsonDocument &doc) override;
 
+        // Looks up the PowerMonitor, triggers a fresh read, updates _state, and broadcasts
+        // returns true when the PowerMonitor is healthy.
+        bool refresh();
+
     private:
         bool _lowVoltageAlerted = false;
         bool _criticalVoltageAlerted = false;
-
-        // Looks up the PowerMonitor, triggers a fresh read, updates _state, and
-        // returns true when the PowerMonitor is healthy.
-        bool updateFromPowerMonitor();
     };
 
 } // namespace devices

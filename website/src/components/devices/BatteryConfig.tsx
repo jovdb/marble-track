@@ -19,6 +19,9 @@ export default function BatteryConfig(props: BatteryConfigProps) {
   );
   const [minVoltage, setMinVoltage] = createSignal(device()?.config?.minVoltage ?? 15.0);
   const [maxVoltage, setMaxVoltage] = createSignal(device()?.config?.maxVoltage ?? 21.0);
+  const [refreshIntervalMs, setRefreshIntervalMs] = createSignal(
+    device()?.config?.refreshIntervalMs ?? 20000
+  );
 
   // All PowerMonitor devices to choose from
   const powerMonitorDevices = createMemo(() =>
@@ -32,6 +35,7 @@ export default function BatteryConfig(props: BatteryConfigProps) {
     if (typeof c.powerMonitorDeviceId === "string") setPowerMonitorDeviceId(c.powerMonitorDeviceId);
     if (typeof c.minVoltage === "number") setMinVoltage(c.minVoltage);
     if (typeof c.maxVoltage === "number") setMaxVoltage(c.maxVoltage);
+    if (typeof c.refreshIntervalMs === "number") setRefreshIntervalMs(c.refreshIntervalMs);
   });
 
   const handleSave = () => {
@@ -40,6 +44,7 @@ export default function BatteryConfig(props: BatteryConfigProps) {
       powerMonitorDeviceId: powerMonitorDeviceId(),
       minVoltage: minVoltage(),
       maxVoltage: maxVoltage(),
+      refreshIntervalMs: refreshIntervalMs(),
     });
   };
 
@@ -102,6 +107,22 @@ export default function BatteryConfig(props: BatteryConfigProps) {
             />
             <span style={{ "margin-left": "0.5rem", "font-size": "0.8rem", color: "#666" }}>
               100% battery reference (Li-ion 5S: 21 V)
+            </span>
+          </DeviceConfigItem>
+        </DeviceConfigRow>
+
+        <DeviceConfigRow>
+          <DeviceConfigItem name="Refresh Interval (ms):">
+            <input
+              type="number"
+              min={100}
+              step={100}
+              value={refreshIntervalMs()}
+              onInput={(e) => setRefreshIntervalMs(Number(e.currentTarget.value))}
+              style={{ "margin-left": "0.5rem", width: "6rem" }}
+            />
+            <span style={{ "margin-left": "0.5rem", "font-size": "0.8rem", color: "#666" }}>
+              How often to read battery voltage from PowerMonitor
             </span>
           </DeviceConfigItem>
         </DeviceConfigRow>

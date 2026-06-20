@@ -20,7 +20,8 @@ namespace devices
         String name = "Battery";
         String powerMonitorDeviceId = ""; // ID of the PowerMonitor device to read from
         float minVoltage = 15.0f;         // Voltage at 0 % (Li-ion 5S safe cutoff)
-        float maxVoltage = 21.0f;         // Voltage at 100 % (Li-ion 5S full charge)
+        float maxVoltage = 20.3f;         // Voltage at 100 % (Li-ion 5S full charge)
+        unsigned long refreshIntervalMs = 20000; // How often to refresh from PowerMonitor
     };
 
     struct BatteryState

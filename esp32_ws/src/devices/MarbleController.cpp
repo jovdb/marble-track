@@ -59,6 +59,7 @@ namespace devices
         batteryConfig.powerMonitorDeviceId = "power";
         batteryConfig.minVoltage = 15.3f;
         batteryConfig.maxVoltage = 20.3f;
+        batteryConfig.refreshIntervalMs = 20000;
         _battery->setConfig(batteryConfig);
         addChild(_battery);
 

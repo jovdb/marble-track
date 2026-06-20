@@ -33,7 +33,7 @@ namespace devices
 
         // Periodically refresh battery status from PowerMonitor
         unsigned long now = millis();
-        if (now - _state.lastUpdatedMillis > 10000) // Refresh every 10 seconds
+        if (now - _state.lastUpdatedMillis > _config.refreshIntervalMs) // Refresh every 10 seconds
         {
             refresh();
         }
@@ -140,6 +140,10 @@ namespace devices
             _config.minVoltage = doc["minVoltage"].as<float>();
         if (doc["maxVoltage"].is<float>())
             _config.maxVoltage = doc["maxVoltage"].as<float>();
+        if (doc["refreshIntervalMs"].is<unsigned long>())
+            _config.refreshIntervalMs = doc["refreshIntervalMs"].as<unsigned long>();
+        else if (doc["refreshIntervalMs"].is<int>())
+            _config.refreshIntervalMs = static_cast<unsigned long>(doc["refreshIntervalMs"].as<int>());
     }
 
     void Battery::configToJson(JsonDocument &doc)

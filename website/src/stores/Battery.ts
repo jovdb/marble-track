@@ -14,6 +14,7 @@ export interface IBatteryConfig extends IDeviceConfig {
   powerMonitorDeviceId?: string;
   minVoltage?: number; // V at 0%
   maxVoltage?: number; // V at 100%
+  refreshIntervalMs?: number; // How often is PowerMonitor refreshed
 }
 
 export function useBattery(deviceId: string) {

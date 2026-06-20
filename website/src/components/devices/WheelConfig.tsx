@@ -122,6 +122,21 @@ export function WheelConfig(props: { device: Accessor<any>; actions: any; onClos
           </DeviceConfigItem>
         </DeviceConfigRow>
         <DeviceConfigRow>
+          <DeviceConfigItem name="Max Steps per Revolution:">
+            <input
+              title="Used for calibration to known when to stop searching for zero switch."
+              type="number"
+              value={maxStepsPerRevolution()}
+              onInput={(e) => {
+                setIsMaxStepsDirty(true);
+                setMaxStepsPerRevolution(e.currentTarget.value);
+              }}
+              style={{ width: "100%", padding: "0.5em", "font-size": "1em" }}
+              min="1"
+            />
+          </DeviceConfigItem>
+        </DeviceConfigRow>
+        <DeviceConfigRow>
           <DeviceConfigItem name="Steps per Revolution:">
             <input
               type="number"
@@ -151,21 +166,7 @@ export function WheelConfig(props: { device: Accessor<any>; actions: any; onClos
             </button>
           </DeviceConfigItem>
         </DeviceConfigRow>
-        <DeviceConfigRow>
-          <DeviceConfigItem name="Max Steps per Revolution:">
-            <input
-              title="Used for calibration to known when to stop searching for zero switch."
-              type="number"
-              value={maxStepsPerRevolution()}
-              onInput={(e) => {
-                setIsMaxStepsDirty(true);
-                setMaxStepsPerRevolution(e.currentTarget.value);
-              }}
-              style={{ width: "100%", padding: "0.5em", "font-size": "1em" }}
-              min="1"
-            />
-          </DeviceConfigItem>
-        </DeviceConfigRow>
+
         <DeviceConfigRow>
           <DeviceConfigItem>
             <WheelGraphic

@@ -215,6 +215,35 @@ namespace devices
     {
         Device::setup();
 
+        if (_battery)
+        {
+            MLOG_DEBUG("%s: Checking battery before startup...", toString().c_str());
+            if (_battery->refresh())
+            {
+                if (_battery->getState().voltage > 0)
+                {
+                    if (_battery->getState().batteryPercent < ShutDownAtPercent)
+                    {
+                        MLOG_WARN("%s: Critical battery level (%.1f%% <= %.1f%%) detected during setup. Initiating shutdown sequence.", toString().c_str(), _battery->getState().batteryPercent, ShutDownAtPercent);
+                        doPowerShutdown = true;
+                        return;
+                    }
+                    else
+                    {
+                        MLOG_DEBUG("%s: Battery level OK (%.1f%% > %.1f%%)", toString().c_str(), _battery->getState().batteryPercent, ShutDownAtPercent);
+                    }
+                }
+                else
+                {
+                    MLOG_WARN("%s: Battery voltage reading failed during setup", toString().c_str());
+                }
+            }
+            else
+            {
+                MLOG_WARN("Battery refresh failed during setup");
+            }
+        }
+
         playStartupSound();
 
         // Initialize idle tracking
@@ -292,39 +321,42 @@ namespace devices
 
     void MarbleController::loop()
     {
-        Device::loop();
 
-        // Shutdown at low battery
+        // Trigger Shutdown at low battery
         auto static shutdownMillis = 0;
-        const float shutDownAtPercent = 3; // Shutdown threshold
         if (_battery)
         {
-            if (shutdownMillis == 0 && _battery->getState().batteryPercent < shutDownAtPercent && _battery->getState().voltage)
+            if (!doPowerShutdown)
             {
+                doPowerShutdown = shutdownMillis == 0 && _battery->getState().voltage > 0 && _battery->getState().batteryPercent < ShutDownAtPercent;
+            }
+
+            if (doPowerShutdown && shutdownMillis == 0)
+            {
+                MLOG_WARN("%s: Critical battery level (%.1f%% <= %.1f%%) detected during loop. Initiating shutdown sequence.", toString().c_str(), _battery->getState().batteryPercent, ShutDownAtPercent);
+
+                // Play songs
                 shutdownMillis = millis();
                 _audio->play(songs::BATTERY_CRITICAL, devices::Hv20tPlayMode::QueueIfPlaying);
                 _audio->play(songs::SHUTDOWN_TEXT, devices::Hv20tPlayMode::QueueIfPlaying);
                 _audio->play(songs::SHUTDOWN, devices::Hv20tPlayMode::QueueIfPlaying);
-                return;
-            }
-            else if (_battery->getState().batteryPercent > shutDownAtPercent + 20 && _battery->getState().voltage)
-            {
-                shutdownMillis = 0;
-            }
-            else if (shutdownMillis > 0 && millis() - shutdownMillis >= 30000UL) // 30s
-            {
-                esp_deep_sleep_start(); // stop until re-powered
-                return;
-            }
-            else if (shutdownMillis > 0 && millis() - shutdownMillis > 10000UL) // 10s
-            {
+
                 _liftLed->blink(50, 1300, 0);
                 _wheelLed->blink(50, 1250, 50);
                 _launcherLed->blink(50, 1200, 100);
                 _spiralLed->blink(50, 1150, 150);
-                return;
+            }
+            else if (shutdownMillis > 0 && millis() - shutdownMillis >= 10000UL)
+            {
+                // Shutdown
+                esp_deep_sleep_start(); // stop until re-powered
             }
         }
+
+        Device::loop();
+
+        if (doPowerShutdown)
+            return;
 
         // Check for idle timeout (5 minutes = 300000 ms)
         if (!isAutoMode && _lastButtonPressTime && (millis() - _lastButtonPressTime) > 300000UL && !_idleSoundPlayed)
@@ -1449,7 +1481,7 @@ namespace devices
 
         if (nextStatusLogMillis < now)
         {
-            MLOG_INFO("%s: Battery: %.2f%%", toString().c_str(), batteryState.batteryPercent);
+            MLOG_INFO("%s: Battery level: %.2f%%", toString().c_str(), batteryState.batteryPercent);
             nextStatusLogMillis = now + 300000; // Log every 5 minutes
         }
 

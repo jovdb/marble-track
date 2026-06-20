@@ -50,8 +50,8 @@ namespace devices
             return _audio;
         }
         static constexpr unsigned long WHEEL_LONG_PRESS_DURATION_MS = 8000UL;
-        static constexpr unsigned long WHEEL_SPIN_LONG_PRESS_MS = 500UL;              // Threshold for continuous spin vs short-press breakpoint
-        static constexpr int LAUNCHER_WHEEL_BREAKPOINT = 1;                           ///< Wheel breakpoint index that triggers launcher
+        static constexpr unsigned long WHEEL_SPIN_LONG_PRESS_MS = 500UL; // Threshold for continuous spin vs short-press breakpoint
+        static constexpr int LAUNCHER_WHEEL_BREAKPOINT = 1;              ///< Wheel breakpoint index that triggers launcher
         void loopManualLift();
         void loopManualSpiral();
         void loopAutoLift();
@@ -122,7 +122,7 @@ namespace devices
         static constexpr unsigned long LauncherAutoInitDelayMs = 2000UL; ///< Delay before auto init starts
         // Todo: make configurable via UI
         static constexpr float LauncherWheelMinAngle = 39.0f; ///< Min wheel angle for launch (manual mode)
-        static constexpr float LauncherWheelMaxAngle = 58.0f;   ///< Max wheel angle for launch (manual mode)
+        static constexpr float LauncherWheelMaxAngle = 58.0f; ///< Max wheel angle for launch (manual mode)
 
         // Random delay before next wheel trigger
         unsigned long _randomWheelDelayMs = 0;
@@ -131,6 +131,10 @@ namespace devices
         unsigned long _lastButtonPressTime = 0;
         bool _idleSoundPlayed = false;
 
+        // Battery
+        static constexpr float ShutDownAtPercent = 3; // Shutdown threshold
+
+        bool doPowerShutdown = false;
         bool isAutoMode = false;
 
     private:

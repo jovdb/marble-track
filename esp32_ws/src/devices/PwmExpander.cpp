@@ -96,8 +96,6 @@ namespace devices
             Device::setError(errorCode, errorMsg);
             _state.state = "Error";
             notifyStateChanged();
-            MLOG_WARN("%s: PCA9685 not found at address 0x%02X on I2C bus '%s' (I2C error: %d)",
-                      toString().c_str(), _config.i2cAddress, _config.i2cDeviceId.c_str(), error);
             return;
         }
 
@@ -181,10 +179,10 @@ namespace devices
 
     void PwmExpander::configToJson(JsonDocument &doc)
     {
-        doc["name"]        = _config.name;
+        doc["name"] = _config.name;
         doc["i2cDeviceId"] = _config.i2cDeviceId;
-        doc["i2cAddress"]  = _config.i2cAddress;
-        doc["frequency"]   = _config.frequency;
+        doc["i2cAddress"] = _config.i2cAddress;
+        doc["frequency"] = _config.frequency;
     }
 
     void PwmExpander::addDeviceStateToJson(JsonDocument &doc)

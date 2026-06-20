@@ -89,7 +89,7 @@ namespace devices
         _state.targetAngle = -1.0f;
         _state.currentAngle = -1.0f;
         _state.onError = false;
-        _state.breakpointChanged = false;
+        _state.onBreakpointChanged = false;
         _state.zeroSensorWasPressed = false;
         _waitingForMoveStart = false;
         _moveHasStarted = false;
@@ -108,9 +108,9 @@ namespace devices
         }
 
         // Reset breakpoint changed flag
-        if (_state.breakpointChanged)
+        if (_state.onBreakpointChanged)
         {
-            _state.breakpointChanged = false;
+            _state.onBreakpointChanged = false;
         }
 
         // Get stepper state (assuming Stepper has isMoving method)
@@ -189,7 +189,7 @@ namespace devices
                 {
                     _state.currentBreakpointIndex = _state.targetBreakpointIndex;
                     _state.targetBreakpointIndex = -1;
-                    _state.breakpointChanged = true;
+                    _state.onBreakpointChanged = true;
                 }
 
                 _state.state = WheelStateEnum::IDLE;

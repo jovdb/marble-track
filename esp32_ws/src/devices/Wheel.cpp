@@ -65,6 +65,13 @@ namespace devices
         Device::setup();
         setName(_config.name);
 
+        if (!(_config.stepsPerRevolution > 0))
+        {
+            MLOG_ERROR("%s: Failed to create pin for expander '%s'", toString().c_str(), _config.pinConfig.expanderId.c_str());
+            setErrorState(WheelErrorCode::ConfigError, "Invalid stepsPerRevolution in config");
+            return;
+        }
+
         MLOG_DEBUG("%s: Setup complete", toString().c_str());
     }
 
@@ -717,6 +724,8 @@ namespace devices
             return "CalibrationZeroNotFound";
         case WheelErrorCode::CalibrationSecondZeroNotFound:
             return "CalibrationSecondZeroNotFound";
+        case WheelErrorCode::ConfigError:
+            return "CONFIG_ERROR";
         case WheelErrorCode::ZeroNotFound:
             return "ZeroNotFound";
         case WheelErrorCode::UnexpectedZeroTrigger:

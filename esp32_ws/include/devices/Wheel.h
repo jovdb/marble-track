@@ -39,6 +39,7 @@ namespace devices
     enum class WheelErrorCode
     {
         None,
+        ConfigError,
         CalibrationZeroNotFound,
         CalibrationSecondZeroNotFound,
         ZeroNotFound,

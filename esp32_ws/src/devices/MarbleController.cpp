@@ -293,6 +293,38 @@ namespace devices
     {
         Device::loop();
 
+        // Shutdown at low battery
+        auto static shutdownMillis = 0;
+        const float shutDownAtPercent = 3; // Shutdown threshold
+        if (_battery)
+        {
+            if (shutdownMillis == 0 && _battery->getState().batteryPercent < shutDownAtPercent && _battery->getState().voltage)
+            {
+                shutdownMillis = millis();
+                _audio->play(songs::BATTERY_CRITICAL, devices::Hv20tPlayMode::QueueIfPlaying);
+                _audio->play(songs::SHUTDOWN_TEXT, devices::Hv20tPlayMode::QueueIfPlaying);
+                _audio->play(songs::SHUTDOWN, devices::Hv20tPlayMode::QueueIfPlaying);
+                return;
+            }
+            else if (_battery->getState().batteryPercent > shutDownAtPercent + 20 && _battery->getState().voltage)
+            {
+                shutdownMillis = 0;
+            }
+            else if (shutdownMillis > 0 && millis() - shutdownMillis >= 30000UL) // 30s
+            {
+                esp_deep_sleep_start(); // stop until re-powered
+                return;
+            }
+            else if (shutdownMillis > 0 && millis() - shutdownMillis > 10000UL) // 10s
+            {
+                _liftLed->blink(50, 1300, 0);
+                _wheelLed->blink(50, 1250, 50);
+                _launcherLed->blink(50, 1200, 100);
+                _spiralLed->blink(50, 1150, 150);
+                return;
+            }
+        }
+
         // Check for idle timeout (5 minutes = 300000 ms)
         if (!isAutoMode && _lastButtonPressTime && (millis() - _lastButtonPressTime) > 300000UL && !_idleSoundPlayed)
         {
@@ -1420,7 +1452,7 @@ namespace devices
             nextStatusLogMillis = now + 300000; // Log every 5 minutes
         }
 
-        if (batteryState.batteryPercent < 5.0f)
+        if (batteryState.batteryPercent < 10.0f)
         {
             if (nextCriticalMillis < now)
             {
@@ -1429,7 +1461,7 @@ namespace devices
                 _audio->play(songs::BATTERY_CRITICAL, devices::Hv20tPlayMode::QueueIfPlaying);
             }
         }
-        else if (batteryState.batteryPercent < 15.0f)
+        else if (batteryState.batteryPercent < 20.0f)
         {
             if (nextLowMillis < now)
             {

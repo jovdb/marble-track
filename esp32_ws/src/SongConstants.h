@@ -50,7 +50,9 @@ namespace songs
     X(CONFIG_ERROR, 29, "Configuratie fout. Ga naar de website om het op te lossen: marble, streepje, track, punt, local")                                                                      \
     X(BATTERY_CRITICAL, 30, "Batterij is leeg. Zet het systeem uit en vervang de batterij")                                                                                                     \
     X(BATTERY_LOW, 31, "Batterij is bijna leeg, vervang de batterij")                                                                                                                           \
-    X(LAUNCH_NOTIFICATION, 32, "Bal ligt klaar om gelanceerd te worden!")
+    X(LAUNCH_NOTIFICATION, 32, "Bal ligt klaar om gelanceerd te worden!")                                                                                                                       \
+    X(SHUTDOWN_TEXT, 33, "Systeem wordt uitgeschakeld")                                                                                                                                         \
+    X(SHUTDOWN, 34, "")
 
     /**
      * @brief Song ID Enum

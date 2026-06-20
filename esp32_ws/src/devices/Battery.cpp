@@ -69,9 +69,9 @@ namespace devices
         _state.status = "Ready";
         Device::clearError();
 
-        auto lowAlertVoltage = _config.minVoltage + (_config.maxVoltage - _config.minVoltage) * .1;
-        auto criticalVoltage = _config.minVoltage + (_config.maxVoltage - _config.minVoltage) * .05;
-        auto clearAlertVoltage = _config.minVoltage + (_config.maxVoltage - _config.minVoltage) * .3;
+        auto lowAlertVoltage = _config.minVoltage + (_config.maxVoltage - _config.minVoltage) * .20;
+        auto criticalVoltage = _config.minVoltage + (_config.maxVoltage - _config.minVoltage) * .10;
+        auto clearAlertVoltage = _config.minVoltage + (_config.maxVoltage - _config.minVoltage) * .30;
 
         if (voltage >= clearAlertVoltage)
         {

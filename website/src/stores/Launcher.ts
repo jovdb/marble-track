@@ -13,6 +13,7 @@ export interface ILauncherConfig extends IDeviceConfig {
   name?: string;
   loadTimeMs?: number;
   launchTimeMs?: number;
+  loadDistance?: number;
 }
 
 export function useLauncher(deviceId: string) {

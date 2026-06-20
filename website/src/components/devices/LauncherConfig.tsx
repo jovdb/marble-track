@@ -13,6 +13,7 @@ export default function LauncherConfig(props: LauncherConfigProps) {
   const [name, setName] = createSignal(device()?.config?.name ?? device()?.id ?? "Launcher");
   const [loadTimeMs, setLoadTimeMs] = createSignal(String(device()?.config?.loadTimeMs ?? 2000));
   const [launchTimeMs, setLaunchTimeMs] = createSignal(String(device()?.config?.launchTimeMs ?? 0));
+  const [loadDistance, setLoadDistance] = createSignal(String(device()?.config?.loadDistance ?? 100));
 
   const toNumber = (value: string, fallback = 0) => {
     const num = Number(value);
@@ -25,6 +26,7 @@ export default function LauncherConfig(props: LauncherConfigProps) {
     if (typeof config.name === "string") setName(config.name);
     if (typeof config.loadTimeMs === "number") setLoadTimeMs(String(config.loadTimeMs));
     if (typeof config.launchTimeMs === "number") setLaunchTimeMs(String(config.launchTimeMs));
+    if (typeof config.loadDistance === "number") setLoadDistance(String(config.loadDistance));
   });
 
   return (
@@ -35,6 +37,7 @@ export default function LauncherConfig(props: LauncherConfigProps) {
           name: name()?.trim() || device()?.id,
           loadTimeMs: toNumber(loadTimeMs(), 2000),
           launchTimeMs: toNumber(launchTimeMs(), 0),
+          loadDistance: toNumber(loadDistance(), 100),
         })
       }
       onClose={props.onClose}
@@ -73,6 +76,20 @@ export default function LauncherConfig(props: LauncherConfigProps) {
               onInput={(e) => setLaunchTimeMs(e.currentTarget.value)}
               style={{ width: "6em", "margin-left": "0.5rem" }}
               title="Duration of fast arm movement used for launching (0 = instant)"
+            />
+          </DeviceConfigItem>
+        </DeviceConfigRow>
+        <DeviceConfigRow>
+          <DeviceConfigItem name="Load distance (%)">
+            <input
+              type="number"
+              value={loadDistance()}
+              min={0}
+              max={100}
+              step={1}
+              onInput={(e) => setLoadDistance(e.currentTarget.value)}
+              style={{ width: "6em", "margin-left": "0.5rem" }}
+              title="Distance for the arm moveUp action (0-100%)"
             />
           </DeviceConfigItem>
         </DeviceConfigRow>

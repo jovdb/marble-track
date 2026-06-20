@@ -36,8 +36,9 @@ namespace devices
     struct LauncherConfig
     {
         String name = "Launcher";
-        uint32_t loadTimeMs = 2000; ///< Duration for slow arm movement (load/init)
-        uint32_t launchTimeMs = 0;  ///< Duration for fast arm movement (launch)
+        long loadTimeMs = 2000; ///< Duration for slow arm movement (load/init)
+        long launchTimeMs = 0;  ///< Duration for fast arm movement (launch)
+        float loadDistance = 0.8;   ///< How far to move the arm for loading (0.0 = no movement, 1.0 = full range)
     };
 
     /**
@@ -114,7 +115,7 @@ namespace devices
 
         bool loadLoop();
         bool launchLoop();
-        bool moveUp(int duration);
+        bool moveUp(float amount, long duration);
         bool moveDown();
     };
 

@@ -148,12 +148,12 @@ namespace devices
         }
     }
 
-    bool Launcher::moveUp(int duration)
+    bool Launcher::moveUp(float amount, long duration)
     {
         if (!_servo)
             return false;
 
-        if (_servo->setValue(1.0f, static_cast<int>(duration)))
+        if (_servo->setValue(amount, static_cast<int>(duration)))
         {
             startTimer(duration);
             _state.state = LauncherStateEnum::MOVING_UP;
@@ -197,7 +197,7 @@ namespace devices
         {
             MLOG_INFO("%s: Launching started!", toString().c_str());
 
-            if (moveUp(static_cast<int>(_config.launchTimeMs)))
+            if (moveUp(1.0f, _config.launchTimeMs))
             {
                 _state.isLaunchingStep = 2;
                 _state.isBallLoaded = _state.isBallWaiting;
@@ -276,7 +276,7 @@ namespace devices
         if (_state.isLoadingStep == 1)
         {
             MLOG_INFO("%s: Loading started!", toString().c_str());
-            if (moveUp(static_cast<int>(_config.loadTimeMs)))
+            if (moveUp(_config.loadDistance, _config.loadTimeMs))
             {
                 _state.isLoadingStep = 2;
                 _state.isBallLoaded = _state.isBallWaiting;
@@ -383,9 +383,13 @@ namespace devices
         else if (config["loadTimeMs"].is<int>())
             _config.loadTimeMs = static_cast<uint32_t>(config["loadTimeMs"].as<int>());
         if (config["launchTimeMs"].is<uint32_t>())
-            _config.launchTimeMs = config["launchTimeMs"].as<uint32_t>();
+            _config.launchTimeMs = config["launchTimeMs"].as<long>();
         else if (config["launchTimeMs"].is<int>())
-            _config.launchTimeMs = static_cast<uint32_t>(config["launchTimeMs"].as<int>());
+            _config.launchTimeMs = static_cast<long>(config["launchTimeMs"].as<int>());
+        if (config["loadDistance"].is<float>())
+            _config.loadDistance = config["loadDistance"].as<float>();
+        else if (config["loadDistance"].is<int>())
+            _config.loadDistance = static_cast<float>(config["loadDistance"].as<int>());
     }
 
     void Launcher::configToJson(JsonDocument &doc)
@@ -393,6 +397,7 @@ namespace devices
         doc["name"] = _config.name;
         doc["loadTimeMs"] = _config.loadTimeMs;
         doc["launchTimeMs"] = _config.launchTimeMs;
+        doc["loadDistance"] = _config.loadDistance;
     }
 
     // ---------------------------------------------------------------------------

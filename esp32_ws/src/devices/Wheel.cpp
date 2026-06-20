@@ -67,7 +67,7 @@ namespace devices
 
         if (!(_config.stepsPerRevolution > 0))
         {
-            MLOG_ERROR("%s: Failed to create pin for expander '%s'", toString().c_str(), _config.pinConfig.expanderId.c_str());
+            MLOG_ERROR("%s: Invalid stepsPerRevolution in config", toString().c_str());
             setErrorState(WheelErrorCode::ConfigError, "Invalid stepsPerRevolution in config");
             return;
         }
@@ -246,8 +246,7 @@ namespace devices
         case WheelStateEnum::INIT:
         {
             // Check for zero sensor trigger
-            bool zeroPressed = _zeroSensor->getState().isPressed;
-            if (zeroPressed && !_state.zeroSensorWasPressed)
+            if (_zeroSensor->onPressed())
             {
                 // Zero sensor triggered while the motor is still moving.
                 // Record the sensor position as the zero reference.
@@ -264,18 +263,11 @@ namespace devices
                 if (!_config.breakPoints.empty() && _config.stepsPerRevolution > 0)
                 {
                     // Compute absolute stepper target for breakPoints[0].
-                    // zeroPointDegree: sensor fires this many degrees past physical zero,
-                    // so subtract that offset so breakpoints are measured from physical zero.
-                    long zeroOffsetSteps = lroundf((_config.zeroPointDegree / 360.0f) * _config.stepsPerRevolution);
                     long stepsToBreakpoint = lroundf((_config.breakPoints[0] / 360.0f) * _config.stepsPerRevolution);
-                    long absoluteTarget = currentPosition - zeroOffsetSteps + stepsToBreakpoint;
-                    // Always move forward; if the target falls behind current position
-                    // (e.g. breakPoints[0] < zeroPointDegree), advance one full revolution.
-                    if (absoluteTarget <= currentPosition)
-                        absoluteTarget += _config.stepsPerRevolution;
+                    long targetPosition = currentPosition + stepsToBreakpoint;
 
                     MLOG_INFO("%s: Init: Zero point reached at %ld, moving to first breakpoint (abs target %ld)...",
-                              toString().c_str(), currentPosition, absoluteTarget);
+                              toString().c_str(), currentPosition, targetPosition);
 
                     _state.currentBreakpointIndex = -1;
                     _state.targetBreakpointIndex = 0;
@@ -287,7 +279,7 @@ namespace devices
                     updateCurrentAngle();
                     notifyStateChanged();
 
-                    _stepper->moveTo(absoluteTarget);
+                    _stepper->moveTo(targetPosition);
                 }
                 else
                 {
@@ -298,14 +290,15 @@ namespace devices
                     notifyStateChanged();
                 }
             }
-            else if ((millis() - _initStartTime > 300) && !_stepper->getState().isMoving)
+
+            // Stop moving during init
+            else if ((millis() - _initStartTime > 20) && !_stepper->getState().isMoving)
             {
                 // Movement completed without finding zero - error
                 setErrorState(WheelErrorCode::CalibrationZeroNotFound, "Init: Zero sensor not found!");
                 updateCurrentAngle();
                 notifyStateChanged();
             }
-            _state.zeroSensorWasPressed = zeroPressed;
 
             break;
         }
@@ -380,6 +373,7 @@ namespace devices
 
     bool Wheel::move(long steps, float speedRatio)
     {
+        // Update State to move (if not INIT or CALIBRATING)
         if (_state.state != WheelStateEnum::CALIBRATING && _state.state != WheelStateEnum::INIT)
         {
             // MLOG_INFO("%s: Moving %ld steps", toString().c_str(), steps);
@@ -441,10 +435,12 @@ namespace devices
         _state.state = WheelStateEnum::INIT;
         _state.currentBreakpointIndex = -1;
         _state.targetBreakpointIndex = -1;
+        _state.lastZeroPosition = 0;
         _initStartTime = millis();
         updateCurrentAngle();
         notifyStateChanged();
 
+        // Start moving to find zero position
         const long maxSteps = (maxStepsPerRevolution > 0) ? maxStepsPerRevolution : _config.maxStepsPerRevolution;
         return move(maxSteps * _config.direction, speedRatio);
     }

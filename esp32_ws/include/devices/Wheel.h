@@ -77,7 +77,6 @@ namespace devices
         float currentAngle = -1.0f;                       // Current angle of the wheel
         bool onError = false;                            // Error flag
         bool onBreakpointChanged = false;                  // Flag for breakpoint index change
-        bool zeroSensorWasPressed = false;               // Previous zero sensor state for edge detection
     };
 
     /**

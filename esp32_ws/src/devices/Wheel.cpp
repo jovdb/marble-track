@@ -90,7 +90,6 @@ namespace devices
         _state.currentAngle = -1.0f;
         _state.onError = false;
         _state.onBreakpointChanged = false;
-        _state.zeroSensorWasPressed = false;
         _waitingForMoveStart = false;
         _moveHasStarted = false;
     }
@@ -199,18 +198,23 @@ namespace devices
             }
 
             // Check zero sensor for position tracking
-            bool zeroPressed = _zeroSensor->getState().isPressed;
-            if (zeroPressed && !_state.zeroSensorWasPressed)
+            if (_zeroSensor->onPressed())
             {
                 // Zero sensor triggered mid-move: record how far we have come since the
                 // last known zero so the post-move block can update the position reference.
                 long currentPosition = _stepper->getState().currentPosition;
+                long correction = currentPosition - _state.lastZeroPosition - _config.stepsPerRevolution;
+                long newTargetPosition = currentPosition - correction;
+
+                MLOG_INFO("%s: Zero sensor triggered at %ld, expected at %ld, correction: %ld, corrected target to: %ld",
+                          toString().c_str(), currentPosition, _state.lastZeroPosition + _config.stepsPerRevolution, correction, newTargetPosition);
+
                 _state.pendingZeroOffset = currentPosition - _state.lastZeroPosition;
 
                 // Real-time drift correction: recompute the absolute target from the
                 // sensor's exact position, mirroring what the INIT state already does.
                 // This corrects the current move, not just the next one.
-                if (_state.targetAngle >= 0.0f && _config.stepsPerRevolution > 0)
+                /*if (_state.targetAngle >= 0.0f && _config.stepsPerRevolution > 0)
                 {
                     long zeroOffsetSteps = lroundf((_config.zeroPointDegree / 360.0f) * _config.stepsPerRevolution);
                     long stepsToTarget = lroundf((_state.targetAngle / 360.0f) * _config.stepsPerRevolution);
@@ -223,7 +227,7 @@ namespace devices
                               toString().c_str(), currentPosition, absoluteTarget, _state.targetAngle);
                     _stepper->moveTo(absoluteTarget);
                     _driftCorrectionApplied = true;
-                }
+                }*/
             }
             else
             {
@@ -239,8 +243,6 @@ namespace devices
                     break;
                 }
             }
-            _state.zeroSensorWasPressed = zeroPressed;
-
             break;
         }
         case WheelStateEnum::INIT:
@@ -252,22 +254,17 @@ namespace devices
                 // Record the sensor position as the zero reference.
                 long currentPosition = _stepper->getState().currentPosition;
                 _state.lastZeroPosition = currentPosition;
+                _stepper->setCurrentPosition(0);
                 updateCurrentAngle();
 
                 // Move to first breakpoint if configured.
-                // Use moveTo() (absolute target) instead of stop() + moveToAngle() (relative).
-                // stop() puts AccelStepper in deceleration mode (_n < 0); an immediate
-                // move() call then causes the speed profile to overshoot by ~22 steps.
-                // moveTo() issues one clean absolute target so AccelStepper decelerates
-                // smoothly from its current speed and stops exactly at the right position.
                 if (!_config.breakPoints.empty() && _config.stepsPerRevolution > 0)
                 {
                     // Compute absolute stepper target for breakPoints[0].
-                    long stepsToBreakpoint = lroundf((_config.breakPoints[0] / 360.0f) * _config.stepsPerRevolution);
-                    long targetPosition = currentPosition + stepsToBreakpoint;
+                    long targetPosition = lroundf((_config.breakPoints[0] / 360.0f) * _config.stepsPerRevolution);
 
-                    MLOG_INFO("%s: Init: Zero point reached at %ld, moving to first breakpoint (abs target %ld)...",
-                              toString().c_str(), currentPosition, targetPosition);
+                    MLOG_INFO("%s: Init: Zero point reached at %ld, moving to first breakpoint %ld (%.1f°)...",
+                              toString().c_str(), currentPosition, targetPosition, _config.breakPoints[0]);
 
                     _state.currentBreakpointIndex = -1;
                     _state.targetBreakpointIndex = 0;
@@ -305,8 +302,7 @@ namespace devices
         case WheelStateEnum::CALIBRATING:
         {
             // Check for zero sensor trigger
-            bool zeroPressed = _zeroSensor->getState().isPressed;
-            if (zeroPressed && !_state.zeroSensorWasPressed)
+            if (_zeroSensor->onPressed())
             {
                 // Rising edge of zero sensor
                 long currentPosition = _stepper->getState().currentPosition;
@@ -342,7 +338,6 @@ namespace devices
                         DeviceNotificationType::Info);
                 }
             }
-            _state.zeroSensorWasPressed = zeroPressed;
 
             if (!_stepper->getState().isMoving)
             {
@@ -411,7 +406,6 @@ namespace devices
         _state.stepsInLastRevolution = 0;
         _state.currentBreakpointIndex = -1;
         _state.targetBreakpointIndex = -1;
-        _state.zeroSensorWasPressed = _zeroSensor->getState().isPressed; // Initialize to current state
         updateCurrentAngle();
         notifyStateChanged();
 

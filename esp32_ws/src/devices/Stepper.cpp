@@ -14,8 +14,10 @@ namespace devices
         FastAccelStepperEngine engine = FastAccelStepperEngine();
         bool engineInitialized = false;
 
-        void initFastAccelStepperEngine() {
-            if (!engineInitialized) {
+        void initFastAccelStepperEngine()
+        {
+            if (!engineInitialized)
+            {
                 engine.init();
                 engineInitialized = true;
             }
@@ -208,17 +210,19 @@ namespace devices
             // Validate float values before passing to AccelStepper
             float maxSpeed = _config.maxSpeed;
             float maxAccel = _config.maxAcceleration;
-            
-            if (isnan(maxSpeed) || isinf(maxSpeed) || maxSpeed <= 0 || maxSpeed > 100000) {
+
+            if (isnan(maxSpeed) || isinf(maxSpeed) || maxSpeed <= 0 || maxSpeed > 100000)
+            {
                 MLOG_WARN("%s: Invalid maxSpeed %.2f, using default 1000", toString().c_str(), maxSpeed);
                 maxSpeed = 1000.0f;
             }
-            
-            if (isnan(maxAccel) || isinf(maxAccel) || maxAccel <= 0 || maxAccel > 100000) {
+
+            if (isnan(maxAccel) || isinf(maxAccel) || maxAccel <= 0 || maxAccel > 100000)
+            {
                 MLOG_WARN("%s: Invalid maxAcceleration %.2f, using default 1000", toString().c_str(), maxAccel);
                 maxAccel = 1000.0f;
             }
-            
+
             _driver->setMaxSpeed(maxSpeed);
             _driver->setAcceleration(maxAccel);
             _driver->setCurrentPosition(0);
@@ -247,16 +251,19 @@ namespace devices
         {
             float maxSpeed = _config.maxSpeed;
             float maxAccel = _config.maxAcceleration;
-            
-            if (isnan(maxSpeed) || isinf(maxSpeed) || maxSpeed <= 0 || maxSpeed > 100000) maxSpeed = 1000.0f;
-            if (isnan(maxAccel) || isinf(maxAccel) || maxAccel <= 0 || maxAccel > 100000) maxAccel = 1000.0f;
-            
+
+            if (isnan(maxSpeed) || isinf(maxSpeed) || maxSpeed <= 0 || maxSpeed > 100000)
+                maxSpeed = 1000.0f;
+            if (isnan(maxAccel) || isinf(maxAccel) || maxAccel <= 0 || maxAccel > 100000)
+                maxAccel = 1000.0f;
+
             _fastDriver->setSpeedInHz((uint32_t)maxSpeed);
             _fastDriver->setAcceleration((uint32_t)maxAccel);
             _fastDriver->setCurrentPosition(0);
 
-            if (_enablePin && _enablePin->isConfigured()) disableStepper();
-            
+            if (_enablePin && _enablePin->isConfigured())
+                disableStepper();
+
             std::vector<String> pins = getPins();
             String pinStr = "";
             if (!pins.empty())
@@ -373,19 +380,20 @@ namespace devices
         prepareForMove(speed, acceleration);
 
         enableStepper();
-        
-        if (_driver) {
+
+        if (_driver)
+        {
             _driver->setMaxSpeed(speed);
             _driver->setAcceleration(acceleration);
             _driver->move(steps);
             _state.targetPosition = _driver->targetPosition();
-            _state.currentPosition = _driver->currentPosition();
-        } else if (_fastDriver) {
+        }
+        else if (_fastDriver)
+        {
             _fastDriver->setSpeedInHz((uint32_t)speed);
             _fastDriver->setAcceleration((uint32_t)acceleration);
             _fastDriver->move(steps);
             _state.targetPosition = _fastDriver->targetPos();
-            _state.currentPosition = _fastDriver->getCurrentPosition();
         }
 
         _state.isMoving = true;
@@ -403,17 +411,18 @@ namespace devices
         prepareForMove(speed, acceleration);
 
         enableStepper();
-        
-        if (_driver) {
+
+        if (_driver)
+        {
             _driver->setMaxSpeed(speed);
             _driver->setAcceleration(acceleration);
             _driver->moveTo(position);
-            _state.currentPosition = _driver->currentPosition();
-        } else if (_fastDriver) {
+        }
+        else if (_fastDriver)
+        {
             _fastDriver->setSpeedInHz((uint32_t)speed);
             _fastDriver->setAcceleration((uint32_t)acceleration);
             _fastDriver->moveTo(position);
-            _state.currentPosition = _fastDriver->getCurrentPosition();
         }
 
         _state.isMoving = true;
@@ -435,10 +444,13 @@ namespace devices
         if (isnan(acceleration) || isinf(acceleration) || acceleration <= 0)
             acceleration = _config.defaultAcceleration;
 
-        if (_driver) {
+        if (_driver)
+        {
             _driver->setAcceleration(acceleration);
             _driver->stop();
-        } else if (_fastDriver) {
+        }
+        else if (_fastDriver)
+        {
             _fastDriver->setAcceleration((uint32_t)acceleration);
             // FastAccelStepper docs: stopMove() does not itself apply new accel settings.
             // Push the updated ramp parameters first so stop decelerates as requested.
@@ -454,9 +466,12 @@ namespace devices
         if (!ensureReady("setCurrentPosition"))
             return false;
 
-        if (_driver) {
+        if (_driver)
+        {
             _driver->setCurrentPosition(position);
-        } else if (_fastDriver) {
+        }
+        else if (_fastDriver)
+        {
             _fastDriver->setCurrentPosition(position);
         }
 
@@ -623,18 +638,18 @@ namespace devices
             }
 
             initFastAccelStepperEngine();
-            #if defined(SUPPORT_SELECT_DRIVER_TYPE)
+#if defined(SUPPORT_SELECT_DRIVER_TYPE)
             _fastDriver = engine.stepperConnectToPin(_config.stepPin.pin, DRIVER_RMT);
             if (!_fastDriver)
             {
                 MLOG_WARN("%s: RMT driver unavailable for step pin %d, trying default FastAccelStepper backend", toString().c_str(), _config.stepPin.pin);
                 broadcastNotification("RmtDriverFallback",
-                    "RMT driver unavailable for step pin " + String(_config.stepPin.pin) + "; falling back to default backend");
+                                      "RMT driver unavailable for step pin " + String(_config.stepPin.pin) + "; falling back to default backend");
                 _fastDriver = engine.stepperConnectToPin(_config.stepPin.pin, DRIVER_DONT_CARE);
             }
-            #else
+#else
             _fastDriver = engine.stepperConnectToPin(_config.stepPin.pin);
-            #endif
+#endif
             if (_fastDriver)
             {
                 if (_dirPin && _config.dirPin.pin >= 0)
@@ -712,58 +727,86 @@ namespace devices
     void Stepper::cleanupPins()
     {
         // Safe deletion with additional checks
-        if (_stepPin) {
-            try {
+        if (_stepPin)
+        {
+            try
+            {
                 delete _stepPin;
-            } catch (...) {
+            }
+            catch (...)
+            {
                 MLOG_ERROR("%s: Exception deleting _stepPin", toString().c_str());
             }
             _stepPin = nullptr;
         }
-        if (_dirPin) {
-            try {
+        if (_dirPin)
+        {
+            try
+            {
                 delete _dirPin;
-            } catch (...) {
+            }
+            catch (...)
+            {
                 MLOG_ERROR("%s: Exception deleting _dirPin", toString().c_str());
             }
             _dirPin = nullptr;
         }
-        if (_pin1) {
-            try {
+        if (_pin1)
+        {
+            try
+            {
                 delete _pin1;
-            } catch (...) {
+            }
+            catch (...)
+            {
                 MLOG_ERROR("%s: Exception deleting _pin1", toString().c_str());
             }
             _pin1 = nullptr;
         }
-        if (_pin2) {
-            try {
+        if (_pin2)
+        {
+            try
+            {
                 delete _pin2;
-            } catch (...) {
+            }
+            catch (...)
+            {
                 MLOG_ERROR("%s: Exception deleting _pin2", toString().c_str());
             }
             _pin2 = nullptr;
         }
-        if (_pin3) {
-            try {
+        if (_pin3)
+        {
+            try
+            {
                 delete _pin3;
-            } catch (...) {
+            }
+            catch (...)
+            {
                 MLOG_ERROR("%s: Exception deleting _pin3", toString().c_str());
             }
             _pin3 = nullptr;
         }
-        if (_pin4) {
-            try {
+        if (_pin4)
+        {
+            try
+            {
                 delete _pin4;
-            } catch (...) {
+            }
+            catch (...)
+            {
                 MLOG_ERROR("%s: Exception deleting _pin4", toString().c_str());
             }
             _pin4 = nullptr;
         }
-        if (_enablePin) {
-            try {
+        if (_enablePin)
+        {
+            try
+            {
                 delete _enablePin;
-            } catch (...) {
+            }
+            catch (...)
+            {
                 MLOG_ERROR("%s: Exception deleting _enablePin", toString().c_str());
             }
             _enablePin = nullptr;
@@ -799,11 +842,11 @@ namespace devices
         return _driver != nullptr || _fastDriver != nullptr;
     }
 
-    bool Stepper::ensureReady(const char *action, bool logWarning) const
+    bool Stepper::ensureReady(const char *action) const
     {
         if (!_driver && !_fastDriver)
         {
-            if (logWarning && action)
+            if (action)
                 MLOG_WARN("%s: Stepper not initialized - cannot %s", toString().c_str(), action);
             return false;
         }

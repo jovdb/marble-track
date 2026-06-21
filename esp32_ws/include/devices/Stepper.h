@@ -139,7 +139,7 @@ namespace devices
         void enableStepper();
         void disableStepper();
         void prepareForMove(float &speed, float &acceleration);
-        bool ensureReady(const char *action = nullptr, bool logWarning = true) const;
+        bool ensureReady(const char *action = nullptr) const;
     };
 
 } // namespace devices

@@ -226,6 +226,8 @@ namespace devices
             _driver->setMaxSpeed(maxSpeed);
             _driver->setAcceleration(maxAccel);
             _driver->setCurrentPosition(0);
+            _state.speed = maxSpeed;
+            _state.acceleration = maxAccel;
 
             if (_enablePin && _enablePin->isConfigured())
             {
@@ -396,6 +398,8 @@ namespace devices
             _state.targetPosition = _fastDriver->targetPos();
         }
 
+        _state.speed = speed;
+        _state.acceleration = acceleration;
         _state.isMoving = true;
 
         MLOG_INFO("%s: Started moving %ld steps at %.0f steps/s, accel %.0f steps/s²", toString().c_str(), steps, speed, acceleration);
@@ -426,6 +430,8 @@ namespace devices
         }
 
         _state.isMoving = true;
+        _state.speed = speed;
+        _state.acceleration = acceleration;
         _state.targetPosition = position;
 
         MLOG_INFO("%s: Started moving to position %ld at %.0f steps/s, accel %.0f steps/s²", toString().c_str(), position, speed, acceleration);
@@ -446,11 +452,42 @@ namespace devices
 
         if (_driver)
         {
+            // Calculate the target position where stepper will stop
+            long currentPos = _driver->currentPosition();
+            float currentSpeed = _driver->speed();
+
+            // distance = (velocity * |velocity|) / (2 * acceleration)
+            // This preserves direction while calculating the stopping distance
+            long stoppingDistance = 0;
+            if (currentSpeed != 0)
+            {
+                stoppingDistance = (long)((currentSpeed * fabs(currentSpeed)) / (2.0f * acceleration));
+            }
+
+            _state.acceleration = acceleration;
+            _state.targetPosition = currentPos + stoppingDistance;
+
             _driver->setAcceleration(acceleration);
             _driver->stop();
         }
         else if (_fastDriver)
         {
+            // Calculate the target position where stepper will stop
+            long currentPos = _fastDriver->getCurrentPosition();
+            // FastAccelStepper stores speed in Hz, need to calculate stopping distance
+            int32_t currentSpeed = _fastDriver->getCurrentSpeedInMilliHz() / 1000.0;
+
+            // distance = (velocity * |velocity|) / (2 * acceleration)
+            // This preserves direction while calculating the stopping distance
+            long stoppingDistance = 0;
+            if (currentSpeed != 0)
+            {
+                stoppingDistance = (long)((currentSpeed * abs(currentSpeed)) / (2.0f * acceleration));
+            }
+
+            _state.acceleration = acceleration;
+            _state.targetPosition = currentPos + stoppingDistance;
+
             _fastDriver->setAcceleration((uint32_t)acceleration);
             // FastAccelStepper docs: stopMove() does not itself apply new accel settings.
             // Push the updated ramp parameters first so stop decelerates as requested.
@@ -486,6 +523,8 @@ namespace devices
     {
         doc["currentPosition"] = _state.currentPosition;
         doc["targetPosition"] = _state.targetPosition;
+        doc["speed"] = _state.speed;
+        doc["acceleration"] = _state.acceleration;
         doc["isMoving"] = _state.isMoving;
     }
 

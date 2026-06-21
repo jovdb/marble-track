@@ -27,22 +27,22 @@ namespace devices
      */
     struct StepperConfig
     {
-        String name = "Stepper";     // Device name
-        String stepperType = "";     // "DRIVER", "HALF4WIRE", "FULL4WIRE"
-        bool usePwm = false;         // Use FastAccelStepper (PWM) instead of AccelStepper
-        float maxSpeed = 1000.0f;    // Maximum speed in steps per second
-        float maxAcceleration = 500.0f; // Acceleration in steps per second per second
-        float defaultSpeed = 500.0f; // Default speed
+        String name = "Stepper";            // Device name
+        String stepperType = "";            // "DRIVER", "HALF4WIRE", "FULL4WIRE"
+        bool usePwm = false;                // Use FastAccelStepper (PWM) instead of AccelStepper
+        float maxSpeed = 1000.0f;           // Maximum speed in steps per second
+        float maxAcceleration = 500.0f;     // Acceleration in steps per second per second
+        float defaultSpeed = 500.0f;        // Default speed
         float defaultAcceleration = 250.0f; // Default acceleration
-        PinConfig stepPin;           // Step pin for DRIVER
-        PinConfig dirPin;            // Direction pin for DRIVER
-        PinConfig pin1;              // Pin 1 for 4-wire
-        PinConfig pin2;              // Pin 2 for 4-wire
-        PinConfig pin3;              // Pin 3 for 4-wire
-        PinConfig pin4;              // Pin 4 for 4-wire
-        PinConfig enablePin;         // Enable pin
-        bool invertEnable = false;   // Invert enable logic
-        bool invertDirection = false; // Invert direction pin for DRIVER
+        PinConfig stepPin;                  // Step pin for DRIVER
+        PinConfig dirPin;                   // Direction pin for DRIVER
+        PinConfig pin1;                     // Pin 1 for 4-wire
+        PinConfig pin2;                     // Pin 2 for 4-wire
+        PinConfig pin3;                     // Pin 3 for 4-wire
+        PinConfig pin4;                     // Pin 4 for 4-wire
+        PinConfig enablePin;                // Enable pin
+        bool invertEnable = false;          // Invert enable logic
+        bool invertDirection = false;       // Invert direction pin for DRIVER
     };
 
     /**
@@ -53,6 +53,8 @@ namespace devices
     {
         long currentPosition = 0;
         long targetPosition = 0;
+        float speed = 500.0;
+        float acceleration = 500.0;
         bool isMoving = false;
     };
 

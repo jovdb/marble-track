@@ -36,6 +36,7 @@ namespace devices
         // "Ready" = bus initialized with valid SDA/SCL pins
         // "Error" = pins missing or invalid
         String state = "Error";
+        std::vector<int> foundAddresses;
     };
 
     /**

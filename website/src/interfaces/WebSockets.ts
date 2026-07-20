@@ -226,6 +226,7 @@ export type IWsReceiveExpanderAddressesMessage =
   | (IWsMessageBase<"expander-addresses"> & _IWsErrorResponse)
   | (IWsMessageBase<"expander-addresses"> & {
       addresses: number[];
+      i2cDeviceId: string;
     });
 
 export type IWsReceiveSystemInfoMessage =

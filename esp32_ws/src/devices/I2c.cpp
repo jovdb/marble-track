@@ -101,10 +101,42 @@ namespace devices
     void I2c::addDeviceStateToJson(JsonDocument &doc)
     {
         doc["state"] = _state.state;
+        JsonArray addresses = doc["foundAddresses"].to<JsonArray>();
+        for (int addr : _state.foundAddresses)
+        {
+            addresses.add(addr);
+        }
     }
 
-    bool I2c::control(const String & /*action*/, JsonObject * /*args*/)
+    bool I2c::control(const String &action, JsonObject * /*args*/)
     {
+        if (action == "scan")
+        {
+            const auto &config = getConfig();
+            if (config.sdaPin < 0 || config.sclPin < 0)
+            {
+                return false;
+            }
+
+            _state.foundAddresses.clear();
+            MLOG_INFO("%s: Starting I2C scan...", toString().c_str());
+
+            for (byte address = 1; address < 127; address++)
+            {
+                Wire.beginTransmission(address);
+                byte error = Wire.endTransmission();
+
+                if (error == 0)
+                {
+                    _state.foundAddresses.push_back(address);
+                    MLOG_INFO("%s: Found device at 0x%02X", toString().c_str(), address);
+                }
+            }
+
+            MLOG_INFO("%s: Scan complete, found %d devices", toString().c_str(), _state.foundAddresses.size());
+            notifyStateChanged();
+            return true;
+        }
         return false;
     }
 

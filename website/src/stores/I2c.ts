@@ -3,8 +3,9 @@ import { useDevice } from "./Devices";
 
 const deviceType = "i2c";
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface II2cState extends IDeviceState {}
+export interface II2cState extends IDeviceState {
+  foundAddresses: number[];
+}
 
 export interface II2cConfig extends IDeviceConfig {
   name: string;
@@ -13,12 +14,15 @@ export interface II2cConfig extends IDeviceConfig {
 }
 
 export function useI2c(deviceId: string) {
-  const [device, { ...actions }] = useDevice<II2cState, II2cConfig>(deviceId);
+  const [device, { execDeviceFn, ...actions }] = useDevice<II2cState, II2cConfig>(deviceId);
+
+  const scan = () => execDeviceFn("scan", undefined);
 
   return [
     device,
     {
       ...actions,
+      scan,
     },
   ] as const;
 }

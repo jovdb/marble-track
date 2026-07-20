@@ -13,7 +13,9 @@ export default function LauncherConfig(props: LauncherConfigProps) {
   const [name, setName] = createSignal(device()?.config?.name ?? device()?.id ?? "Launcher");
   const [loadTimeMs, setLoadTimeMs] = createSignal(String(device()?.config?.loadTimeMs ?? 2000));
   const [launchTimeMs, setLaunchTimeMs] = createSignal(String(device()?.config?.launchTimeMs ?? 0));
-  const [loadDistance, setLoadDistance] = createSignal(String(device()?.config?.loadDistance ?? 100));
+  const [loadDistance, setLoadDistance] = createSignal(
+    String(device()?.config?.loadDistance ?? 100)
+  );
 
   const toNumber = (value: string, fallback = 0) => {
     const num = Number(value);

@@ -5,9 +5,52 @@
 
 #include "devices/I2c.h"
 #include "Logging.h"
+#include <vector>
 
 namespace devices
 {
+
+    // Helper to translate Wire errors to strings
+    static String getWireStatus(byte error)
+    {
+        switch (error)
+        {
+        case 0:
+            return "OK";
+        case 1:
+            return "Data too long";
+        case 2:
+            return "NACK on Address";
+        case 3:
+            return "NACK on Data";
+        case 4:
+            return "Bus Error";
+        case 5:
+            return "Timeout";
+        default:
+            return "Error " + String(error);
+        }
+    }
+
+    // Helper to parse hex string (e.g., "00 FF 12") to bytes
+    static std::vector<uint8_t> parseHexString(const String &hex)
+    {
+        std::vector<uint8_t> bytes;
+        String temp = hex;
+        temp.replace(" ", "");
+        temp.replace("0x", "");
+        temp.replace(",", "");
+
+        for (uint16_t i = 0; i < temp.length(); i += 2)
+        {
+            String part = temp.substring(i, i + 2);
+            if (part.length() > 0)
+            {
+                bytes.push_back((uint8_t)strtol(part.c_str(), NULL, 16));
+            }
+        }
+        return bytes;
+    }
 
     I2c::I2c(const String &id) : Device(id, "i2c")
     {
@@ -106,6 +149,17 @@ namespace devices
         {
             addresses.add(addr);
         }
+
+        if (!_state.lastOp.type.isEmpty())
+        {
+            JsonObject lastOp = doc["lastOp"].to<JsonObject>();
+            lastOp["type"] = _state.lastOp.type;
+            lastOp["address"] = _state.lastOp.address;
+            lastOp["data"] = _state.lastOp.data;
+            lastOp["length"] = _state.lastOp.length;
+            lastOp["status"] = _state.lastOp.status;
+            lastOp["timestamp"] = _state.lastOp.timestamp;
+        }
     }
 
     std::vector<int> I2c::scanBus()
@@ -135,11 +189,61 @@ namespace devices
         return found;
     }
 
-    bool I2c::control(const String &action, JsonObject * /*args*/)
+    bool I2c::control(const String &action, JsonObject *args)
     {
         if (action == "scan")
         {
             _state.foundAddresses = scanBus();
+            notifyStateChanged();
+            return true;
+        }
+
+        if (action == "write" && args)
+        {
+            int addr = (*args)["address"] | 0;
+            String dataStr = (*args)["data"] | "";
+            auto bytes = parseHexString(dataStr);
+
+            Wire.beginTransmission(addr);
+            for (auto b : bytes)
+            {
+                Wire.write(b);
+            }
+            byte err = Wire.endTransmission();
+
+            _state.lastOp.type = "write";
+            _state.lastOp.address = addr;
+            _state.lastOp.data = dataStr;
+            _state.lastOp.length = (int)bytes.size();
+            _state.lastOp.status = getWireStatus(err);
+            _state.lastOp.timestamp = millis();
+
+            notifyStateChanged();
+            return true;
+        }
+
+        if (action == "read" && args)
+        {
+            int addr = (*args)["address"] | 0;
+            int len = (*args)["length"] | 1;
+
+            int received = Wire.requestFrom(addr, len);
+            String result = "";
+            for (int i = 0; i < received; i++)
+            {
+                char buf[5];
+                sprintf(buf, "%02X ", Wire.read());
+                result += buf;
+            }
+            result.trim();
+
+            _state.lastOp.type = "read";
+            _state.lastOp.address = addr;
+            _state.lastOp.data = result;
+            _state.lastOp.length = len;
+            _state.lastOp.status = (received == len ? "OK" : "Partial Read");
+            _state.lastOp.timestamp = millis();
+
             notifyStateChanged();
             return true;
         }

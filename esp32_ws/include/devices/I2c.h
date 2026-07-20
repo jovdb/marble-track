@@ -37,6 +37,17 @@ namespace devices
         // "Error" = pins missing or invalid
         String state = "Error";
         std::vector<int> foundAddresses;
+
+        // Results of the last manual operation
+        struct LastOp
+        {
+            String type;      // "write" or "read"
+            int address = 0;
+            String data;      // Data sent/received (hex)
+            int length = 0;   // Length requested (for read)
+            String status;    // "OK", "NACK", "Timeout", etc.
+            uint32_t timestamp = 0;
+        } lastOp;
     };
 
     /**

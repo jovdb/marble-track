@@ -82,6 +82,7 @@ namespace devices
         _state.state = WheelStateEnum::UNKNOWN;
         Device::clearError();
         _state.stepsInLastRevolution = 0;
+        _state.lastZeroPosition = 0;
         _state.currentBreakpointIndex = -1;
         _state.targetBreakpointIndex = -1;
         _state.targetAngle = -1.0f;
@@ -194,6 +195,8 @@ namespace devices
             {
                 // Zero sensor triggered while the motor is still moving.
                 // Record the sensor position as the zero reference.
+                long currentPosition = _stepper->getState().currentPosition;
+                _state.lastZeroPosition = currentPosition;
                 _stepper->setCurrentPosition(0);
                 updateCurrentAngle();
 
@@ -257,6 +260,7 @@ namespace devices
                     long steps = currentPosition - _state.lastZeroPosition;
                     _state.stepsInLastRevolution = steps;
                     _config.stepsPerRevolution = steps;
+                    _state.lastZeroPosition = currentPosition;
 
                     // Update current angle after calibration
                     updateCurrentAngle();

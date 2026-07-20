@@ -39,6 +39,7 @@ const COMPOSITION_DEVICE_TYPES = [
   "Stepper",
   "Touch",
   "Wheel",
+  "Adxl345",
 ] as const;
 
 const DRAG_AUTOSCROLL_EDGE_PX = 80;

@@ -22,6 +22,7 @@
 #include "devices/Launcher.h"
 #include "devices/PowerMonitor.h"
 #include "devices/Battery.h"
+#include "devices/Adxl345.h"
 #include "devices/mixins/SerializableMixin.h"
 
 static constexpr const char *CONFIG_FILE = "/config.json";
@@ -102,8 +103,10 @@ Device *DeviceManager::createDevice(const String &deviceId, const String &device
     else if (upperType == "BATTERY")
     {
         return new devices::Battery(deviceId);
+    }    else if (upperType == "ADXL345")
+    {
+        return new devices::Adxl345(deviceId);
     }
-
     MLOG_WARN("Unknown device type: %s", upperType.c_str());
     return nullptr;
 }

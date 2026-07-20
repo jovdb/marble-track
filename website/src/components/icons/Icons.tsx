@@ -94,6 +94,25 @@ export const PowerMonitorIcon = (props: IconProps) => (
   </svg>
 );
 
+export const AccelerometerIcon = (props: IconProps) => (
+  <svg
+    width={props.width || 24}
+    height={props.height || 24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class={props.class}
+    style={props.style}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M19 12H5M12 19V5M19 12l-2 2M19 12l-2-2M5 12l2 2M5 12l2-2M12 19l-2-2M12 19l2-2M12 5l-2 2M12 5l2-2" />
+    <circle cx="12" cy="12" r="2" fill="currentColor" />
+  </svg>
+);
+
 export const ServoIcon = (props: IconProps) => (
   <img
     src={servoIcon}

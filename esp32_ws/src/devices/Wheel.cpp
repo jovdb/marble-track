@@ -153,33 +153,24 @@ namespace devices
             // Check zero sensor for position tracking
             if (_zeroSensor->onPressed())
             {
-                // Calculate physical positions using modulo to handle circular wheel
-                long currentPhys = stepperState.currentPosition % _config.stepsPerRevolution;
-                if (currentPhys < 0)
-                    currentPhys += _config.stepsPerRevolution;
 
-                long targetPhys = stepperState.targetPosition % _config.stepsPerRevolution;
-                if (targetPhys < 0)
-                    targetPhys += _config.stepsPerRevolution;
+                // Zero sensor triggered mid-move: record how far we have come since the
+                // last known zero so the update the targetPosition to compensate for the drift.
+                long correction = stepperState.currentPosition - _config.stepsPerRevolution;
 
-                // Calculate remaining steps to target from the new zero position
-                long remaining = targetPhys - currentPhys;
-                if (remaining < 0)
-                    remaining += _config.stepsPerRevolution;
+                if (correction != 0)
+                {
+                    MLOG_INFO("%s: Zero sensor triggered at %ld, expected at %ld, correction: %ld",
+                              toString().c_str(), stepperState.currentPosition, _config.stepsPerRevolution, correction);
 
-                // Update last zero position for future drift detection
-                _state.lastZeroPosition = stepperState.currentPosition;
+                    long newTargetPosition = stepperState.currentPosition - correction - _config.stepsPerRevolution;
 
-                MLOG_INFO("%s: Zero sensor triggered at %ld (phys %ld, %.1f\u00b0), target was %ld (phys %ld, %.1f\u00b0), remaining %ld steps (%.1f\u00b0)",
-                          toString().c_str(),
-                          stepperState.currentPosition,
-                          currentPhys, currentPhys * 360.0f / _config.stepsPerRevolution,
-                          stepperState.targetPosition,
-                          targetPhys, targetPhys * 360.0f / _config.stepsPerRevolution,
-                          remaining, remaining * 360.0f / _config.stepsPerRevolution);
+                    MLOG_INFO("%s: Reset position and update target from %ld to %ld",
+                              toString().c_str(), stepperState.targetPosition, newTargetPosition);
 
-                _stepper->setCurrentPosition(0);
-                _stepper->moveTo(remaining, stepperState.speed, stepperState.acceleration);
+                    _stepper->setCurrentPosition(0);
+                    _stepper->moveTo(newTargetPosition, stepperState.speed, stepperState.acceleration);
+                }
             }
             else
             {

@@ -1208,9 +1208,15 @@ namespace devices
                 {
                     _wheel->init(-1, modeSpeed);
                 }
-                break;
             }
-            // In manual mode fallthrough to idle mode
+            else
+            {
+                if (_wheelBtn->onPressed())
+                {
+                    _wheel->init(-1, modeSpeed);
+                }
+            }
+            break;
 
         case devices::WheelStateEnum::IDLE:
 
@@ -1307,7 +1313,7 @@ namespace devices
             else if (pressedDuringError && _wheelBtn->onLastPressedDuration(WHEEL_LONG_PRESS_DURATION_MS))
             {
                 MLOG_INFO("%s: Error recovery long press detected, starting wheel init", toString().c_str());
-                _wheel->init();
+                _wheel->init(-1, modeSpeed);
                 _audio->play(songs::WHEEL_RESTART, devices::Hv20tPlayMode::StopThenPlay);
             }
             break;

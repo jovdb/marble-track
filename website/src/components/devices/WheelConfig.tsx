@@ -276,8 +276,7 @@ export function WheelConfig(props: { device: Accessor<any>; actions: any; onClos
               disabled={
                 props.device()?.state?.state !== "MOVING" &&
                 (!toNumber(stepsPerRevolution()) ||
-                  toNumber(stepsPerRevolution()) <= 0 ||
-                  props.device()?.state?.lastZeroPosition === 0)
+                  toNumber(stepsPerRevolution()) <= 0)
               }
             >
               {props.device()?.state?.state === "MOVING" ? "Stop" : "Move to"}

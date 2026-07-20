@@ -311,6 +311,9 @@ namespace devices
         cleanupPins();
 
         _state.isMoving = false;
+        _state.targetPosition = -1;
+        _state.speed = -1;
+        _state.acceleration = -1;
         clearError();
     }
 
@@ -327,6 +330,10 @@ namespace devices
 
             if (wasMoving && !isRunning)
             {
+                _state.targetPosition = -1;
+                _state.speed = -1;
+                _state.acceleration = -1;
+
                 disableStepper();
                 MLOG_INFO("%s: Movement completed at position %ld", toString().c_str(), _driver->currentPosition());
                 notifyStateChanged();
@@ -341,6 +348,10 @@ namespace devices
 
             if (wasMoving && !isRunning)
             {
+                _state.targetPosition = -1;
+                _state.speed = -1;
+                _state.acceleration = -1;
+
                 disableStepper();
                 MLOG_INFO("%s: Movement completed at position %ld", toString().c_str(), _fastDriver->getCurrentPosition());
                 notifyStateChanged();
@@ -387,15 +398,15 @@ namespace devices
         {
             _driver->setMaxSpeed(speed);
             _driver->setAcceleration(acceleration);
+            _state.targetPosition = _driver->currentPosition() + steps;
             _driver->move(steps);
-            _state.targetPosition = _driver->targetPosition();
         }
         else if (_fastDriver)
         {
             _fastDriver->setSpeedInHz((uint32_t)speed);
             _fastDriver->setAcceleration((uint32_t)acceleration);
+            _state.targetPosition = _fastDriver->getCurrentPosition() + steps;
             _fastDriver->move(steps);
-            _state.targetPosition = _fastDriver->targetPos();
         }
 
         _state.speed = speed;
@@ -434,7 +445,7 @@ namespace devices
         _state.acceleration = acceleration;
         _state.targetPosition = position;
 
-        MLOG_INFO("%s: Started moving to position %ld at %.0f steps/s, accel %.0f steps/s²", toString().c_str(), position, speed, acceleration);
+        MLOG_INFO("%s: Started moving from %ld to position %ld at %.0f steps/s, accel %.0f steps/s²", toString().c_str(), _state.currentPosition, position, speed, acceleration);
         notifyStateChanged();
         return true;
     }
@@ -494,7 +505,9 @@ namespace devices
             _fastDriver->applySpeedAcceleration();
             _fastDriver->stopMove();
         }
-        // Don't set _state.isMoving = false here, let the loop handle it
+
+        MLOG_INFO("%s: Stop moving with deceleration of %.0f steps/s²", toString().c_str(), acceleration);
+        notifyStateChanged();
         return true;
     }
 

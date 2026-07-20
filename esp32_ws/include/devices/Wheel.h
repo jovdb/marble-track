@@ -67,16 +67,15 @@ namespace devices
      */
     struct WheelState
     {
-        WheelStateEnum state = WheelStateEnum::UNKNOWN;  // Current wheel state
-        long lastZeroPosition = 0;                       // Position at last zero sensor trigger
-        long pendingZeroOffset = 0;                      // Pending zero offset
-        long stepsInLastRevolution = 0;                  // Steps measured in last revolution
-        int currentBreakpointIndex = -1;                 // Current breakpoint index
-        int targetBreakpointIndex = -1;                  // Target breakpoint index
-        float targetAngle = -1.0f;                       // Target angle for current movement
-        float currentAngle = -1.0f;                       // Current angle of the wheel
-        bool onError = false;                            // Error flag
-        bool onBreakpointChanged = false;                  // Flag for breakpoint index change
+        WheelStateEnum state = WheelStateEnum::UNKNOWN; // Current wheel state
+        long lastZeroPosition = 0;                      // Position at last zero sensor trigger
+        long stepsInLastRevolution = 0;                 // Steps measured in last revolution
+        int currentBreakpointIndex = -1;                // Current breakpoint index
+        int targetBreakpointIndex = -1;                 // Target breakpoint index
+        float targetAngle = -1.0f;                      // Target angle for current movement
+        float currentAngle = -1.0f;                     // Current angle of the wheel
+        bool onError = false;                           // Error flag
+        bool onBreakpointChanged = false;               // Flag for breakpoint index change (movr to root of class?)
     };
 
     /**
@@ -194,7 +193,6 @@ namespace devices
         unsigned long _initStartTime = 0; // Start time for init operation
         bool _waitingForMoveStart = false;
         bool _moveHasStarted = false;
-        bool _driftCorrectionApplied = false; // Set when moveTo correction fires mid-move; skips setCurrentPosition rollback
     };
 
 } // namespace devices

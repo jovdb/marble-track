@@ -93,7 +93,6 @@ Emitted by `addStateToJson`. All fields are read-only from the outside; they cha
 | `errorCode`             | `int`    | Numeric error code (`WheelErrorCode` enum cast to int). `0` = none.   |
 | `errorMessage`          | `string` | Human-readable error description.                                      |
 | `lastZeroPosition`      | `long`   | Stepper position (steps) when the zero sensor last fired.              |
-| `pendingZeroOffset`     | `long`   | Zero offset recorded mid-movement, applied when movement ends.         |
 | `currentBreakpointIndex`| `int`    | Index into `breakPoints` array. `-1` if not at a breakpoint.           |
 | `targetBreakpointIndex` | `int`    | Breakpoint the wheel is currently moving toward. `-1` if none.         |
 | `targetAngle`           | `float`  | Angle (degrees) the current movement is heading to. `-1` if none.      |
@@ -213,7 +212,7 @@ next-breakpoint  →  MOVING  →  IDLE  (currentBreakpointIndex incremented)
 ## Implementation notes
 
 - **Always moves forward:** `moveToAngle` computes the shortest forward delta so the wheel never reverses.  
-- **Position tracking during movement:** While `MOVING`, each rising edge of the zero sensor records a `pendingZeroOffset`. The offset is applied to the stepper's zero reference when movement finishes, keeping the absolute position accurate across multiple revolutions.  
+- **Position tracking during movement:** While `MOVING`, each rising edge of the zero sensor.  
 - **Calibration vs init:** `calibrate` *measures* `stepsPerRevolution`; `init` *uses* the existing value to find home. Run calibrate first on a new installation.  
 - **`zeroPointDegree`:** Shifts the logical zero so breakpoints are defined relative to a physical landmark, not the sensor mounting position.  
 - **Registration in DeviceManager:** The `"wheel"` type string is used in `DeviceManager::loadDevicesFromJsonFile()` to construct Wheel instances. Ensure the type string in `config.json` matches.

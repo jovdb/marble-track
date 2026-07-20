@@ -52,9 +52,9 @@ namespace devices
     struct StepperState
     {
         long currentPosition = 0;
-        long targetPosition = 0;
-        float speed = 500.0;
-        float acceleration = 500.0;
+        long targetPosition = -1;
+        float speed = -1;
+        float acceleration = -1;
         bool isMoving = false;
     };
 

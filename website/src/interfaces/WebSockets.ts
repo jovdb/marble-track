@@ -223,8 +223,8 @@ export type IWsReceiveStepsPerRevolutionMessage = IWsMessageBase<"steps-per-revo
 };
 
 export type IWsReceiveExpanderAddressesMessage =
-  | (IWsMessageBase<"expander-addresses"> & _IWsErrorResponse)
-  | (IWsMessageBase<"expander-addresses"> & {
+  | (IWsMessageBase<"i2c-addresses"> & _IWsErrorResponse)
+  | (IWsMessageBase<"i2c-addresses"> & {
       addresses: number[];
       i2cDeviceId: string;
     });
@@ -324,7 +324,7 @@ export type IWsSendSetNetworkConfigMessage = IWsMessageBase<"set-network-config"
 
 export type IWsSendGetNetworkStatusMessage = IWsMessageBase<"network-status">;
 
-export type IWsSendGetExpanderAddressesMessage = IWsMessageBase<"expander-addresses"> & {
+export type IWsSendGetExpanderAddressesMessage = IWsMessageBase<"i2c-addresses"> & {
   i2cDeviceId: string;
 };
 

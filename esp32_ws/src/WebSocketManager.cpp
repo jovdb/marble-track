@@ -92,13 +92,13 @@ String createJsonResponse(bool success, const String &message, const String &dat
     return jsonString;
 }
 
-void WebSocketManager::handleGetExpanderAddresses(JsonDocument &doc)
+void WebSocketManager::handleGetI2CAddresses(JsonDocument &doc)
 {
     if (!hasClients())
         return;
 
     JsonDocument response;
-    response["type"] = "expander-addresses";
+    response["type"] = "i2c-addresses";
 
     // Get i2cDeviceId from request
     const String i2cDeviceId = doc["i2cDeviceId"] | "";
@@ -144,7 +144,8 @@ void WebSocketManager::handleGetExpanderAddresses(JsonDocument &doc)
     // Scan I2C bus for devices (addresses 0x03 to 0x77) using the unified scan method
     std::vector<int> found = i2cDevice->scanBus();
     JsonArray addresses = response["addresses"].to<JsonArray>();
-    for (int addr : found) {
+    for (int addr : found)
+    {
         addresses.add(addr);
     }
     int deviceCount = found.size();
@@ -667,31 +668,51 @@ WebSocketManager::WebSocketManager(DeviceManager *deviceManager, Network *networ
     // and forward to the AsyncWebSocket; all wire-format concerns live in
     // MessageBatcher.
     batcher.reset(new MessageBatcher(
-        [this](const String &payload) { ws.textAll(payload); },
-        [this]() { return ws.availableForWriteAll(); },
+        [this](const String &payload)
+        { ws.textAll(payload); },
+        [this]()
+        { return ws.availableForWriteAll(); },
         kMaxQueuedBatchMessages));
 
     // Build the message-type dispatch table. Each entry maps the wire "type"
     // string to the handler method. Adding a new message type means adding one
     // line here; parseMessage() does not need to change.
-    dispatchTable["restart"]              = [this](JsonDocument &)    { handleRestart(); };
-    dispatchTable["device-fn"]            = [this](JsonDocument &d)   { handleDeviceFunction(d); };
-    dispatchTable["device-state"]         = [this](JsonDocument &d)   { handleDeviceGetState(d); };
-    dispatchTable["devices-all-states"]    = [this](JsonDocument &d)   { handleGetAllDeviceStates(d); };
-    dispatchTable["devices-list"]         = [this](JsonDocument &d)   { handleGetDevices(d); };
-    dispatchTable["system-info"]          = [this](JsonDocument &d)   { handleGetSystemInfo(d); };
-    dispatchTable["set-devices-config"]   = [this](JsonDocument &d)   { handleSetDevicesConfig(d); };
-    dispatchTable["devices-config"]       = [this](JsonDocument &d)   { handleGetDevicesConfig(d); };
-    dispatchTable["device-save-config"]   = [this](JsonDocument &d)   { handleDeviceSaveConfig(d); };
-    dispatchTable["device-read-config"]   = [this](JsonDocument &d)   { handleDeviceReadConfig(d); };
-    dispatchTable["add-device"]           = [this](JsonDocument &d)   { handleAddDevice(d); };
-    dispatchTable["remove-device"]        = [this](JsonDocument &d)   { handleRemoveDevice(d); };
-    dispatchTable["reorder-devices"]      = [this](JsonDocument &d)   { handleReorderDevices(d); };
-    dispatchTable["network-config"]       = [this](JsonDocument &d)   { handleGetNetworkConfig(d); };
-    dispatchTable["set-network-config"]   = [this](JsonDocument &d)   { handleSetNetworkConfig(d); };
-    dispatchTable["networks"]             = [this](JsonDocument &d)   { handleGetNetworks(d); };
-    dispatchTable["network-status"]       = [this](JsonDocument &d)   { handleGetNetworkStatus(d); };
-    dispatchTable["expander-addresses"]   = [this](JsonDocument &d)   { handleGetExpanderAddresses(d); };
+    dispatchTable["restart"] = [this](JsonDocument &)
+    { handleRestart(); };
+    dispatchTable["device-fn"] = [this](JsonDocument &d)
+    { handleDeviceFunction(d); };
+    dispatchTable["device-state"] = [this](JsonDocument &d)
+    { handleDeviceGetState(d); };
+    dispatchTable["devices-all-states"] = [this](JsonDocument &d)
+    { handleGetAllDeviceStates(d); };
+    dispatchTable["devices-list"] = [this](JsonDocument &d)
+    { handleGetDevices(d); };
+    dispatchTable["system-info"] = [this](JsonDocument &d)
+    { handleGetSystemInfo(d); };
+    dispatchTable["set-devices-config"] = [this](JsonDocument &d)
+    { handleSetDevicesConfig(d); };
+    dispatchTable["devices-config"] = [this](JsonDocument &d)
+    { handleGetDevicesConfig(d); };
+    dispatchTable["device-save-config"] = [this](JsonDocument &d)
+    { handleDeviceSaveConfig(d); };
+    dispatchTable["device-read-config"] = [this](JsonDocument &d)
+    { handleDeviceReadConfig(d); };
+    dispatchTable["add-device"] = [this](JsonDocument &d)
+    { handleAddDevice(d); };
+    dispatchTable["remove-device"] = [this](JsonDocument &d)
+    { handleRemoveDevice(d); };
+    dispatchTable["reorder-devices"] = [this](JsonDocument &d)
+    { handleReorderDevices(d); };
+    dispatchTable["network-config"] = [this](JsonDocument &d)
+    { handleGetNetworkConfig(d); };
+    dispatchTable["set-network-config"] = [this](JsonDocument &d)
+    { handleSetNetworkConfig(d); };
+    dispatchTable["networks"] = [this](JsonDocument &d)
+    { handleGetNetworks(d); };
+    dispatchTable["network-status"] = [this](JsonDocument &d)
+    { handleGetNetworkStatus(d); };
+    dispatchTable["i2c-addresses"] = [this](JsonDocument &d)
+    { handleGetI2CAddresses(d); };
 }
 
 void WebSocketManager::setup(AsyncWebServer &server)

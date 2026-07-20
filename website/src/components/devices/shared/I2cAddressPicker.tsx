@@ -28,7 +28,7 @@ export function I2cAddressPicker(props: I2cAddressPickerProps) {
   createEffect(() => {
     const busId = props.i2cDeviceId; // reactive dependency
     const unsubscribe = subscribe((msg) => {
-      if (msg.type === "expander-addresses") {
+      if (msg.type === "i2c-addresses") {
         const expanderMsg = msg as IWsReceiveExpanderAddressesMessage;
         setIsScanning(false);
         if ("error" in expanderMsg) {
@@ -44,7 +44,7 @@ export function I2cAddressPicker(props: I2cAddressPickerProps) {
     if (busId) {
       setIsScanning(true);
       setScanError("");
-      sendMessage({ type: "expander-addresses", i2cDeviceId: busId });
+      sendMessage({ type: "i2c-addresses", i2cDeviceId: busId });
     } else {
       setScanError("Please select an I²C bus first");
     }
@@ -60,7 +60,7 @@ export function I2cAddressPicker(props: I2cAddressPickerProps) {
     }
     setIsScanning(true);
     setScanError("");
-    sendMessage({ type: "expander-addresses", i2cDeviceId: busId });
+    sendMessage({ type: "i2c-addresses", i2cDeviceId: busId });
   };
 
   const addresses = createMemo(() => {

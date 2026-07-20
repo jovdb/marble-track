@@ -92,70 +92,6 @@ String createJsonResponse(bool success, const String &message, const String &dat
     return jsonString;
 }
 
-void WebSocketManager::handleGetI2CAddresses(JsonDocument &doc)
-{
-    if (!hasClients())
-        return;
-
-    JsonDocument response;
-    response["type"] = "i2c-addresses";
-
-    // Get i2cDeviceId from request
-    const String i2cDeviceId = doc["i2cDeviceId"] | "";
-    if (i2cDeviceId.isEmpty())
-    {
-        response["error"] = "No I2C device ID specified";
-        String message;
-        serializeJson(response, message);
-        notifyClients(message);
-        return;
-    }
-
-    // Get I2C device by ID from deviceManager
-    devices::I2c *i2cDevice = nullptr;
-    if (deviceManager)
-    {
-        i2cDevice = deviceManager->getDeviceByIdAs<devices::I2c>(i2cDeviceId);
-    }
-
-    if (!i2cDevice)
-    {
-        response["error"] = "I2C device not found: " + i2cDeviceId;
-        String message;
-        serializeJson(response, message);
-        notifyClients(message);
-        return;
-    }
-
-    // Get I2C pins
-    auto i2cPins = i2cDevice->getPins();
-    if (i2cPins.size() < 2)
-    {
-        response["error"] = "I2C device not properly configured";
-        String message;
-        serializeJson(response, message);
-        notifyClients(message);
-        return;
-    }
-
-    int sdaPin = i2cPins[0].toInt();
-    int sclPin = i2cPins[1].toInt();
-
-    // Scan I2C bus for devices (addresses 0x03 to 0x77) using the unified scan method
-    std::vector<int> found = i2cDevice->scanBus();
-    JsonArray addresses = response["addresses"].to<JsonArray>();
-    for (int addr : found)
-    {
-        addresses.add(addr);
-    }
-    int deviceCount = found.size();
-
-    String message;
-    serializeJson(response, message);
-    MLOG_INFO("Found %d I2C devices on bus '%s' (SDA=%d, SCL=%d)", deviceCount, i2cDeviceId.c_str(), sdaPin, sclPin);
-    notifyClients(message);
-}
-
 void WebSocketManager::handleGetDevices(JsonDocument &doc)
 {
     if (!hasClients())
@@ -711,8 +647,6 @@ WebSocketManager::WebSocketManager(DeviceManager *deviceManager, Network *networ
     { handleGetNetworks(d); };
     dispatchTable["network-status"] = [this](JsonDocument &d)
     { handleGetNetworkStatus(d); };
-    dispatchTable["i2c-addresses"] = [this](JsonDocument &d)
-    { handleGetI2CAddresses(d); };
 }
 
 void WebSocketManager::setup(AsyncWebServer &server)

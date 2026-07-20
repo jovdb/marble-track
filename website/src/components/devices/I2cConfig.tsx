@@ -11,7 +11,7 @@ interface I2cConfigProps {
 }
 
 export default function I2cConfig(props: I2cConfigProps) {
-  const [device, { setDeviceConfig, scan }] = useI2c(props.id);
+  const [device, { setDeviceConfig, scanBus }] = useI2c(props.id);
 
   const [name, setName] = createSignal<string>(device()?.config?.name ?? "I2C");
   const [sdaPin, setSdaPin] = createSignal<PinConfig>(
@@ -85,7 +85,7 @@ export default function I2cConfig(props: I2cConfigProps) {
         </DeviceConfigRow>
       </DeviceConfigTable>
 
-      <I2cScanner foundAddresses={foundAddresses()} onScan={scan} />
+      <I2cScanner foundAddresses={foundAddresses()} onScan={scanBus} />
     </DeviceConfig>
   );
 }

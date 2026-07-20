@@ -6,7 +6,7 @@ import I2cScanner from "./I2cScanner";
 import { createMemo } from "solid-js";
 
 export function I2c(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
-  const [device, { scan }] = useI2c(props.id);
+  const [device, { scanBus }] = useI2c(props.id);
 
   const sdaPin = createMemo(() => (device()?.config?.sdaPin as number) ?? 21);
   const sclPin = createMemo(() => (device()?.config?.sclPin as number) ?? 22);
@@ -33,7 +33,7 @@ export function I2c(props: { id: string; isPopup?: boolean; onClose?: () => void
           <strong>SCL Pin:</strong> {sclPin()}
         </div>
 
-        <I2cScanner foundAddresses={foundAddresses()} onScan={scan} />
+        <I2cScanner foundAddresses={foundAddresses()} onScan={scanBus} />
       </div>
     </Device>
   );

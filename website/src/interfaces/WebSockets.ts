@@ -222,13 +222,6 @@ export type IWsReceiveStepsPerRevolutionMessage = IWsMessageBase<"steps-per-revo
   steps: number;
 };
 
-export type IWsReceiveExpanderAddressesMessage =
-  | (IWsMessageBase<"i2c-addresses"> & _IWsErrorResponse)
-  | (IWsMessageBase<"i2c-addresses"> & {
-      addresses: number[];
-      i2cDeviceId: string;
-    });
-
 export type IWsReceiveSystemInfoMessage =
   | (IWsMessageBase<"system-info"> & _IWsErrorResponse)
   | (IWsMessageBase<"system-info"> & SystemInfo);
@@ -261,7 +254,6 @@ export type IWsReceiveSingleMessage =
   | IWsReceiveGetNetworkStatusMessage
   | IWsReceiveDevicesConfigMessage
   | IWsReceiveStepsPerRevolutionMessage
-  | IWsReceiveExpanderAddressesMessage
   | IWsReceiveSystemInfoMessage
   | IWsReceiveNotificationMessage
   | IWsReceivePongMessage;
@@ -324,10 +316,6 @@ export type IWsSendSetNetworkConfigMessage = IWsMessageBase<"set-network-config"
 
 export type IWsSendGetNetworkStatusMessage = IWsMessageBase<"network-status">;
 
-export type IWsSendGetExpanderAddressesMessage = IWsMessageBase<"i2c-addresses"> & {
-  i2cDeviceId: string;
-};
-
 export type IWsSendGetSystemInfoMessage = IWsMessageBase<"system-info">;
 
 export type IWsSendGetAllDeviceStatesMessage = IWsMessageBase<"devices-all-states">;
@@ -348,7 +336,6 @@ export type IWsSendMessage =
   | IWsSendSetNetworkConfigMessage
   | IWsSendGetNetworksMessage
   | IWsSendGetNetworkStatusMessage
-  | IWsSendGetExpanderAddressesMessage
   | IWsSendGetSystemInfoMessage
   | IWsSendGetAllDeviceStatesMessage
   | IWsSendPingMessage;

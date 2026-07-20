@@ -1,6 +1,5 @@
 import { For, createEffect, createMemo, createSignal } from "solid-js";
-import { useWebSocket2 } from "../../../hooks/useWebSocket";
-import type { IWsReceiveExpanderAddressesMessage } from "../../../interfaces/WebSockets";
+import { useI2c } from "../../../stores/I2c";
 
 interface I2cAddressPickerProps {
   /** The I2C bus device ID to scan. Re-scans automatically when this changes. */
@@ -19,52 +18,45 @@ interface I2cAddressPickerProps {
  * PowerMonitorConfig.
  */
 export function I2cAddressPicker(props: I2cAddressPickerProps) {
-  const [, { sendMessage, subscribe }] = useWebSocket2();
-  const [availableAddresses, setAvailableAddresses] = createSignal<number[]>([]);
+  const [i2cDevice, { scanBus }] = useI2c(() => props.i2cDeviceId);
   const [isScanning, setIsScanning] = createSignal(false);
   const [scanError, setScanError] = createSignal("");
 
-  // Re-subscribe and re-scan whenever the selected I2C bus changes.
+  // Re-scan whenever the selected I2C bus changes.
   createEffect(() => {
-    const busId = props.i2cDeviceId; // reactive dependency
-    const unsubscribe = subscribe((msg) => {
-      if (msg.type === "i2c-addresses") {
-        const expanderMsg = msg as IWsReceiveExpanderAddressesMessage;
-        setIsScanning(false);
-        if ("error" in expanderMsg) {
-          setScanError(expanderMsg.error);
-          setAvailableAddresses([]);
-        } else {
-          setScanError("");
-          setAvailableAddresses(expanderMsg.addresses);
-        }
-      }
-    });
-
+    const busId = props.i2cDeviceId;
     if (busId) {
       setIsScanning(true);
       setScanError("");
-      sendMessage({ type: "i2c-addresses", i2cDeviceId: busId });
+      scanBus();
     } else {
       setScanError("Please select an I²C bus first");
     }
+  });
 
-    return unsubscribe;
+  // Reset scanning status when we get new addresses or an error
+  createEffect(() => {
+    const state = i2cDevice()?.state;
+    const error = i2cDevice()?.stateErrorMessage;
+
+    if (state?.foundAddresses || error) {
+      setIsScanning(false);
+      setScanError(error || "");
+    }
   });
 
   const requestScan = () => {
-    const busId = props.i2cDeviceId;
-    if (!busId) {
+    if (!props.i2cDeviceId) {
       setScanError("Please select an I²C bus first");
       return;
     }
     setIsScanning(true);
     setScanError("");
-    sendMessage({ type: "i2c-addresses", i2cDeviceId: busId });
+    scanBus();
   };
 
   const addresses = createMemo(() => {
-    const scanned = availableAddresses();
+    const scanned = i2cDevice()?.state?.foundAddresses ?? [];
     return scanned.length > 0 ? scanned : (props.defaultAddresses ?? []);
   });
 

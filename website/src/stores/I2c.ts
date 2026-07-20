@@ -13,16 +13,16 @@ export interface II2cConfig extends IDeviceConfig {
   sclPin: number;
 }
 
-export function useI2c(deviceId: string) {
+export function useI2c(deviceId: string | (() => string)) {
   const [device, { execDeviceFn, ...actions }] = useDevice<II2cState, II2cConfig>(deviceId);
 
-  const scan = () => execDeviceFn("scan", undefined);
+  const scanBus = () => execDeviceFn("scan", undefined);
 
   return [
     device,
     {
       ...actions,
-      scan,
+      scanBus,
     },
   ] as const;
 }

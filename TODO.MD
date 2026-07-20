@@ -35,3 +35,4 @@ The ESP should have an action so the website can update the network credentials.
 
 - Let battery itself poll for notification (also without website)
   
+  - No need for maxSteps per revolution, let calibrate do it on time

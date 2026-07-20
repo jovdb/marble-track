@@ -9,6 +9,7 @@ export interface IPowerMonitorState extends IDeviceState {
   current?: number; // A
   watt?: number; // W
   timestamp?: number; // millis() at last reading
+  foundAddresses?: number[];
 }
 
 export interface IPowerMonitorConfig extends IDeviceConfig {
@@ -25,12 +26,14 @@ export function usePowerMonitor(deviceId: string) {
   );
 
   const init = () => execDeviceFn("init", {});
+  const scan = () => execDeviceFn("scan", {});
 
   return [
     device,
     {
       ...actions,
       init,
+      scan,
     },
   ] as const;
 }

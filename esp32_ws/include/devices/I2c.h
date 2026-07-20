@@ -58,6 +58,12 @@ namespace devices
         void teardown() override;
         std::vector<String> getPins() const override;
 
+        /**
+         * @brief Scans the I2C bus for devices
+         * @return A vector of found I2C addresses
+         */
+        std::vector<int> scanBus();
+
         // ControllableMixin implementation
         void addDeviceStateToJson(JsonDocument &doc) override;
         bool control(const String &action, JsonObject *args = nullptr) override;

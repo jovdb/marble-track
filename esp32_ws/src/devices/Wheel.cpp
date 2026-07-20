@@ -150,13 +150,6 @@ namespace devices
                 notifyStateChanged();
             }
 
-            if (millis() % 100 == 0)
-            {
-                MLOG_DEBUG("%s: Moving... current position: %ld, target: %ld, speed: %.1f, accel: %.1f",
-                           toString().c_str(), stepperState.currentPosition, stepperState.targetPosition,
-                           stepperState.speed, stepperState.acceleration);
-            }
-
             // Check zero sensor for position tracking
             if (_zeroSensor->onPressed())
             {

@@ -7,6 +7,7 @@ export type IoExpanderStateEnum = "Ready" | "Init" | "Error";
 
 export interface IIoExpanderState extends IDeviceState {
   state?: IoExpanderStateEnum;
+  foundAddresses: number[];
 }
 
 export interface IIoExpanderConfig extends IDeviceConfig {
@@ -22,12 +23,14 @@ export function useIoExpander(deviceId: string) {
   );
 
   const init = () => execDeviceFn("init", undefined);
+  const scan = () => execDeviceFn("scan", undefined);
 
   return [
     device,
     {
       ...actions,
       init,
+      scan,
     },
   ] as const;
 }

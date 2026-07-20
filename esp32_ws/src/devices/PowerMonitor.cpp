@@ -174,6 +174,12 @@ namespace devices
         doc["current"] = _state.current;
         doc["watt"] = _state.watt;
         doc["timestamp"] = _state.timestamp;
+
+        JsonArray addresses = doc["foundAddresses"].to<JsonArray>();
+        for (int addr : _state.foundAddresses)
+        {
+            addresses.add(addr);
+        }
     }
 
     bool PowerMonitor::control(const String &action, JsonObject *args)
@@ -182,6 +188,22 @@ namespace devices
         {
             init();
             return true;
+        }
+        else if (action == "scan")
+        {
+            devices::I2c *i2cDevice = nullptr;
+            if (!_config.i2cDeviceId.isEmpty())
+            {
+                i2cDevice = deviceManager.getDeviceByIdAs<devices::I2c>(_config.i2cDeviceId);
+            }
+
+            if (i2cDevice)
+            {
+                _state.foundAddresses = i2cDevice->scanBus();
+                notifyStateChanged();
+                return true;
+            }
+            return false;
         }
         return false;
     }

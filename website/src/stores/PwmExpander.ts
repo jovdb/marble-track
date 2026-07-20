@@ -7,6 +7,7 @@ export type PwmExpanderStateEnum = "Ready" | "Init" | "Error";
 
 export interface IPwmExpanderState extends IDeviceState {
   state?: PwmExpanderStateEnum;
+  foundAddresses: number[];
 }
 
 export interface IPwmExpanderConfig extends IDeviceConfig {
@@ -22,12 +23,14 @@ export function usePwmExpander(deviceId: string) {
   );
 
   const init = () => execDeviceFn("init", undefined);
+  const scan = () => execDeviceFn("scan", undefined);
 
   return [
     device,
     {
       ...actions,
       init,
+      scan,
     },
   ] as const;
 }

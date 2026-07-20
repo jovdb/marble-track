@@ -31,7 +31,7 @@ export interface BatteryIconProps extends IconProps {
 
 export const BatteryIcon = (props: BatteryIconProps) => {
   const bars = createMemo(() => Math.min(5, Math.max(0, Math.round(props.level?.() ?? 0))));
-  const color = createMemo(() => (bars() >= 4 ? "#4caf50" : bars() >= 2 ? "#ff9800" : "#f44336"));
+  const color = createMemo(() => (bars() >= 3 ? "#4caf50" : bars() >= 2 ? "#ff9800" : "#f44336"));
   // 5 segments inside the battery body (x: 2.5 to 18.5, width per seg = 3, gap = 0.2)
   const segW = 3.0;
   const segH = 8;

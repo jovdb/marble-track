@@ -252,6 +252,11 @@ namespace devices
     void IoExpander::addDeviceStateToJson(JsonDocument &doc)
     {
         doc["state"] = _state.state;
+        JsonArray addresses = doc["foundAddresses"].to<JsonArray>();
+        for (int addr : _state.foundAddresses)
+        {
+            addresses.add(addr);
+        }
     }
 
     bool IoExpander::control(const String &action, JsonObject * /*args*/)
@@ -263,6 +268,22 @@ namespace devices
             notifyStateChanged();
             init();
             return true;
+        }
+        else if (action == "scan")
+        {
+            devices::I2c *i2cDevice = nullptr;
+            if (!_config.i2cDeviceId.isEmpty())
+            {
+                i2cDevice = deviceManager.getDeviceByIdAs<devices::I2c>(_config.i2cDeviceId);
+            }
+
+            if (i2cDevice)
+            {
+                _state.foundAddresses = i2cDevice->scanBus();
+                notifyStateChanged();
+                return true;
+            }
+            return false;
         }
         return false;
     }

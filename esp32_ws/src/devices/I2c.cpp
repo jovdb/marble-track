@@ -108,32 +108,38 @@ namespace devices
         }
     }
 
+    std::vector<int> I2c::scanBus()
+    {
+        std::vector<int> found;
+        const auto &config = getConfig();
+        if (config.sdaPin < 0 || config.sclPin < 0)
+        {
+            return found;
+        }
+
+        MLOG_INFO("%s: Starting I2C scan...", toString().c_str());
+
+        for (byte address = 1; address < 127; address++)
+        {
+            Wire.beginTransmission(address);
+            byte error = Wire.endTransmission();
+
+            if (error == 0)
+            {
+                found.push_back(address);
+                MLOG_INFO("%s: Found device at 0x%02X", toString().c_str(), address);
+            }
+        }
+
+        MLOG_INFO("%s: Scan complete, found %d devices", toString().c_str(), found.size());
+        return found;
+    }
+
     bool I2c::control(const String &action, JsonObject * /*args*/)
     {
         if (action == "scan")
         {
-            const auto &config = getConfig();
-            if (config.sdaPin < 0 || config.sclPin < 0)
-            {
-                return false;
-            }
-
-            _state.foundAddresses.clear();
-            MLOG_INFO("%s: Starting I2C scan...", toString().c_str());
-
-            for (byte address = 1; address < 127; address++)
-            {
-                Wire.beginTransmission(address);
-                byte error = Wire.endTransmission();
-
-                if (error == 0)
-                {
-                    _state.foundAddresses.push_back(address);
-                    MLOG_INFO("%s: Found device at 0x%02X", toString().c_str(), address);
-                }
-            }
-
-            MLOG_INFO("%s: Scan complete, found %d devices", toString().c_str(), _state.foundAddresses.size());
+            _state.foundAddresses = scanBus();
             notifyStateChanged();
             return true;
         }

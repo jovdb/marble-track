@@ -47,6 +47,7 @@ namespace devices
         // "Init"  = re-probe in progress
         // "Error" = not found or misconfigured
         String state = "Error";
+        std::vector<int> foundAddresses;
     };
 
     /**

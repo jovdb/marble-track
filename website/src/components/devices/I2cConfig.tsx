@@ -1,8 +1,9 @@
-import { createEffect, createSignal } from "solid-js";
+import { createEffect, createSignal, createMemo } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import PinSelect from "../PinSelect";
 import { PinConfig, deserializePinConfig } from "../../interfaces/WebSockets";
 import { useI2c } from "../../stores/I2c";
+import I2cScanner from "./I2cScanner";
 
 interface I2cConfigProps {
   id: string;
@@ -10,7 +11,7 @@ interface I2cConfigProps {
 }
 
 export default function I2cConfig(props: I2cConfigProps) {
-  const [device, { setDeviceConfig }] = useI2c(props.id);
+  const [device, { setDeviceConfig, scan }] = useI2c(props.id);
 
   const [name, setName] = createSignal<string>(device()?.config?.name ?? "I2C");
   const [sdaPin, setSdaPin] = createSignal<PinConfig>(
@@ -19,6 +20,8 @@ export default function I2cConfig(props: I2cConfigProps) {
   const [sclPin, setSclPin] = createSignal<PinConfig>(
     deserializePinConfig(device()?.config?.sclPin ?? 22)
   );
+
+  const foundAddresses = createMemo(() => device()?.state?.foundAddresses ?? []);
 
   createEffect(() => {
     const config = device()?.config;
@@ -81,6 +84,8 @@ export default function I2cConfig(props: I2cConfigProps) {
           </DeviceConfigItem>
         </DeviceConfigRow>
       </DeviceConfigTable>
+
+      <I2cScanner foundAddresses={foundAddresses()} onScan={scan} />
     </DeviceConfig>
   );
 }

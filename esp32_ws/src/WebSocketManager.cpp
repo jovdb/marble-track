@@ -141,25 +141,13 @@ void WebSocketManager::handleGetExpanderAddresses(JsonDocument &doc)
     int sdaPin = i2cPins[0].toInt();
     int sclPin = i2cPins[1].toInt();
 
-    // Wire is already initialized by the I2C device, no need to reinitialize it here
-    // Resetting Wire mid-operation can corrupt the buffer (causes "NULL TX buffer pointer" errors)
-    
-    // Scan I2C bus for devices (addresses 0x03 to 0x77)
+    // Scan I2C bus for devices (addresses 0x03 to 0x77) using the unified scan method
+    std::vector<int> found = i2cDevice->scanBus();
     JsonArray addresses = response["addresses"].to<JsonArray>();
-    int deviceCount = 0;
-
-    for (uint8_t address = 0x03; address <= 0x77; address++)
-    {
-        Wire.beginTransmission(address);
-        uint8_t error = Wire.endTransmission();
-
-        if (error == 0)
-        {
-            // Device found
-            addresses.add(address);
-            deviceCount++;
-        }
+    for (int addr : found) {
+        addresses.add(addr);
     }
+    int deviceCount = found.size();
 
     String message;
     serializeJson(response, message);

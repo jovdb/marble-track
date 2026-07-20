@@ -33,6 +33,7 @@ namespace devices
         float current = 0.0f;     // Current in A
         float watt = 0.0f;        // Power in W
         unsigned long timestamp = 0; // millis() at last reading
+        std::vector<int> foundAddresses;
     };
 
     class PowerMonitor : public Device,

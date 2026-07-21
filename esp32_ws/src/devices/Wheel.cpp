@@ -326,7 +326,9 @@ namespace devices
         if (speedRatio <= 0.0f)
             speedRatio = 1.0f;
         const float speed = _stepper->getConfig().defaultSpeed * speedRatio;
-        return _stepper->move(steps, speed);
+
+        auto currentPosition = _stepper->getState().currentPosition;
+        return _stepper->moveTo(currentPosition + steps, speed);
     }
 
     bool Wheel::calibrate(long maxStepsPerRevolution)

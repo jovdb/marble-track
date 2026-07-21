@@ -160,10 +160,10 @@ namespace devices
 
                 if (correction != 0)
                 {
-                    MLOG_INFO("%s: Zero sensor triggered at %ld, expected at %ld, correction: %ld",
-                              toString().c_str(), stepperState.currentPosition, _config.stepsPerRevolution, correction);
+                    MLOG_INFO("%s: Zero sensor triggered at %ld, expected at %ld, correction: %ld (%.2f°)",
+                              toString().c_str(), stepperState.currentPosition, _config.stepsPerRevolution, correction, (correction * 360.0f / _config.stepsPerRevolution));
 
-                    long newTargetPosition = stepperState.currentPosition - correction - _config.stepsPerRevolution;
+                    long newTargetPosition = stepperState.targetPosition - stepperState.currentPosition + correction;
 
                     MLOG_INFO("%s: Reset position and update target from %ld to %ld",
                               toString().c_str(), stepperState.targetPosition, newTargetPosition);

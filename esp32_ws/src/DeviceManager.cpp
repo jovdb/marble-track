@@ -11,6 +11,7 @@
 #include "devices/Servo.h"
 #include "devices/Stepper.h"
 #include "devices/Wheel.h"
+#include "devices/WheelLoader.h"
 #include "devices/Lift.h"
 #include "devices/MarbleController.h"
 #include "devices/IoExpander.h"
@@ -59,6 +60,10 @@ Device *DeviceManager::createDevice(const String &deviceId, const String &device
     else if (upperType == "WHEEL")
     {
         return new devices::Wheel(deviceId);
+    }
+    else if (upperType == "WHEELLOADER")
+    {
+        return new devices::WheelLoader(deviceId);
     }
     else if (upperType == "LIFT")
     {

@@ -39,6 +39,7 @@ const COMPOSITION_DEVICE_TYPES = [
   "Stepper",
   "Touch",
   "Wheel",
+  "WheelLoader",
   "Adxl345",
 ] as const;
 

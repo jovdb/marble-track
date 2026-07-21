@@ -648,6 +648,7 @@ export const getDeviceIcon = (type: string, deviceId: string, props?: IconProps)
     case "STEPPER":
       return <StepperIcon {...props} />;
     case "WHEEL":
+    case "WHEELLOADER":
       return <WheelIcon {...props} />;
     case "LIFT":
       return <LiftIcon {...props} />;

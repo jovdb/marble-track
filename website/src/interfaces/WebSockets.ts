@@ -16,6 +16,7 @@ export type DeviceType =
   | "stepper"
   | "touch"
   | "wheel"
+  | "wheelloader"
   | "powermonitor"
   | "battery";
 export type NetworkMode = "ap" | "sta" | "apsta";

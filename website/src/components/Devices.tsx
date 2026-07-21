@@ -12,6 +12,7 @@ import { PwmExpander } from "./devices/PwmExpander";
 import { Servo } from "./devices/Servo";
 import { Stepper } from "./devices/Stepper";
 import { Wheel } from "./devices/Wheel";
+import { WheelLoader } from "./devices/WheelLoader";
 import { Lift } from "./devices/Lift";
 import { MarbleController } from "./devices/MarbleController";
 import { Hv20tAudio } from "./devices/Hv20tAudio";
@@ -98,6 +99,8 @@ export function renderDeviceComponent(
       return <PwmExpander id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "wheel":
       return <Wheel id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
+    case "wheelloader":
+      return <WheelLoader id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "servo":
       return <Servo id={device.id} isPopup={options?.isPopup} onClose={options?.onClose} />;
     case "lift":

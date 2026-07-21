@@ -1,9 +1,19 @@
-import { useDevice } from "./Devices";
+import { IDeviceConfig, IDeviceState, useDevice, useDevices } from "./Devices";
 import { useWebSocket2 } from "../hooks/useWebSocket";
 
+export interface IWheelLoaderState extends IDeviceState {
+  state: string;
+}
+
+export interface IWheelLoaderConfig extends IDeviceConfig {
+  name: string;
+  innerCenter: number;
+  outerCenter: number;
+}
+
 export function useWheelLoader(id: string) {
-  const [device] = useDevice(id);
-  const [, { sendMessage }] = useWebSocket2();
+  const [device] = useDevice<IWheelLoaderState, IWheelLoaderConfig>(id);
+  const [, { sendMessage, setDeviceConfig }] = useDevices();
 
   const actions = {
     init: () => {
@@ -37,6 +47,9 @@ export function useWheelLoader(id: string) {
         deviceType: "wheelloader",
         fn: "loadAny",
       });
+    },
+    setDeviceConfig: (deviceId: string, config: IWheelLoaderConfig) => {
+      setDeviceConfig(deviceId, config);
     },
   };
 

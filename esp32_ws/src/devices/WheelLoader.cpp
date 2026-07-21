@@ -57,8 +57,8 @@ namespace devices
             {
                 if (_sequenceStep == 0)
                 {
-                    // Step 1: outer to 0.5
-                    _outerServo->setValue(0.5f);
+                    // Step 1: outer to center
+                    _outerServo->setValue(_config.outerCenter);
                     
                     _actionWaitMs = _outerServo->getConfig().defaultDurationInMs;
                     _actionStartTime = millis();
@@ -81,8 +81,8 @@ namespace devices
                 }
                 else
                 {
-                    // Step 3: inner to 0.5
-                    _innerServo->setValue(0.5f);
+                    // Step 3: inner to center
+                    _innerServo->setValue(_config.innerCenter);
                     
                     // Sequence finished
                     _state.state = WheelLoaderStateEnum::IDLE;
@@ -98,9 +98,9 @@ namespace devices
     {
         MLOG_INFO("%s: init() called", toString().c_str());
 
-        // Move both servos to 50%
-        _innerServo->setValue(0.5f);
-        _outerServo->setValue(0.5f);
+        // Move both servos to center
+        _innerServo->setValue(_config.innerCenter);
+        _outerServo->setValue(_config.outerCenter);
 
         // Calculate max duration
         _actionWaitMs = std::max(_innerServo->getConfig().defaultDurationInMs,
@@ -120,7 +120,7 @@ namespace devices
         _sequenceStep = 0;
 
         // Step 0: inner to 1 + outer to 0
-        _innerServo->setValue(1.0f);
+        //_innerServo->setValue(1.0f);
         _outerServo->setValue(0.0f);
 
         _actionWaitMs = _outerServo->getConfig().defaultDurationInMs + 500;
@@ -137,7 +137,7 @@ namespace devices
         _sequenceStep = 0;
 
         // Step 0: inner to 0 + outer to 1
-        _innerServo->setValue(0.0f);
+        //_innerServo->setValue(0.0f);
         _outerServo->setValue(1.0f);
 
         _actionWaitMs = _outerServo->getConfig().defaultDurationInMs + 500;
@@ -215,10 +215,14 @@ namespace devices
     void WheelLoader::jsonToConfig(const JsonDocument &config)
     {
         _config.name = config["name"] | "Wheel Loader";
+        _config.innerCenter = config["innerCenter"] | 0.5f;
+        _config.outerCenter = config["outerCenter"] | 0.5f;
     }
 
     void WheelLoader::configToJson(JsonDocument &doc)
     {
         doc["name"] = _config.name;
+        doc["innerCenter"] = _config.innerCenter;
+        doc["outerCenter"] = _config.outerCenter;
     }
 } // namespace devices

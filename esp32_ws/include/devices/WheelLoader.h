@@ -38,6 +38,8 @@ namespace devices
     struct WheelLoaderConfig
     {
         String name = "Wheel Loader";
+        float innerCenter = 0.5f;
+        float outerCenter = 0.5f;
     };
 
     /**

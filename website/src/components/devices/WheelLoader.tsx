@@ -1,8 +1,9 @@
 import { Device } from "./Device";
-import { createMemo } from "solid-js";
+import { createMemo, Show } from "solid-js";
 import styles from "./Device.module.css";
 import { useWheelLoader } from "../../stores/WheelLoader";
 import { getDeviceIcon } from "../icons/Icons";
+import WheelLoaderConfig from "./WheelLoaderConfig";
 
 export function WheelLoader(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device, actions] = useWheelLoader(props.id);
@@ -19,6 +20,7 @@ export function WheelLoader(props: { id: string; isPopup?: boolean; onClose?: ()
       icon={icon()}
       isCollapsible={!props.isPopup}
       onClose={props.onClose}
+      configComponent={(onClose) => <WheelLoaderConfig id={props.id} onClose={onClose} />}
     >
       <div class={styles.device__status}>
         {state()?.state || "Unknown"}

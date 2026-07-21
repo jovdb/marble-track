@@ -23,6 +23,9 @@ namespace devices
         uint8_t i2cAddress = 0x53;           // ADXL345 I2C address (usually 0x53 or 0x1D)
         int range = 16;                      // 2, 4, 8, 16 G
         unsigned long refreshIntervalMs = 100; // How often to read from sensor
+        float offsetX = 0.0f;
+        float offsetY = 0.0f;
+        float offsetZ = 0.0f;
     };
 
     struct Adxl345State
@@ -31,6 +34,8 @@ namespace devices
         float x = 0.0f;           // X-axis acceleration in m/s^2
         float y = 0.0f;           // Y-axis acceleration in m/s^2
         float z = 0.0f;           // Z-axis acceleration in m/s^2
+        float roll = 0.0f;        // Roll angle in degrees
+        float pitch = 0.0f;       // Pitch angle in degrees
         unsigned long lastUpdatedMillis = 0; // Timestamp of last reading
     };
 

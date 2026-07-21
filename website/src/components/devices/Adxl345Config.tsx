@@ -1,4 +1,4 @@
-import { For, createEffect, createSignal, createMemo } from "solid-js";
+﻿import { For, createEffect, createSignal, createMemo } from "solid-js";
 import DeviceConfig, { DeviceConfigItem, DeviceConfigRow, DeviceConfigTable } from "./DeviceConfig";
 import { useDevices } from "../../stores/Devices";
 import { useAdxl345 } from "../../stores/Adxl345";
@@ -10,7 +10,7 @@ interface Adxl345ConfigProps {
 }
 
 export default function Adxl345Config(props: Adxl345ConfigProps) {
-  const [device, { setDeviceConfig }] = useAdxl345(props.id);
+  const [device, { setDeviceConfig, calibrate }] = useAdxl345(props.id);
   const [devicesStore] = useDevices();
   const devicesState = () => devicesStore;
 
@@ -21,6 +21,9 @@ export default function Adxl345Config(props: Adxl345ConfigProps) {
   const [refreshIntervalMs, setRefreshIntervalMs] = createSignal(
     device()?.config?.refreshIntervalMs ?? 100
   );
+  const [offsetX, setOffsetX] = createSignal(device()?.config?.offsetX ?? 0);
+  const [offsetY, setOffsetY] = createSignal(device()?.config?.offsetY ?? 0);
+  const [offsetZ, setOffsetZ] = createSignal(device()?.config?.offsetZ ?? 0);
 
   // All I2C devices to choose from
   const i2cDevices = createMemo(() =>
@@ -35,6 +38,9 @@ export default function Adxl345Config(props: Adxl345ConfigProps) {
     if (typeof c.i2cAddress === "number") setI2cAddress(c.i2cAddress);
     if (typeof c.range === "number") setRange(c.range);
     if (typeof c.refreshIntervalMs === "number") setRefreshIntervalMs(c.refreshIntervalMs);
+    if (typeof c.offsetX === "number") setOffsetX(c.offsetX);
+    if (typeof c.offsetY === "number") setOffsetY(c.offsetY);
+    if (typeof c.offsetZ === "number") setOffsetZ(c.offsetZ);
   });
 
   const handleSave = () => {
@@ -44,6 +50,9 @@ export default function Adxl345Config(props: Adxl345ConfigProps) {
       i2cAddress: i2cAddress(),
       range: range(),
       refreshIntervalMs: refreshIntervalMs(),
+      offsetX: offsetX(),
+      offsetY: offsetY(),
+      offsetZ: offsetZ(),
     });
   };
 
@@ -68,7 +77,7 @@ export default function Adxl345Config(props: Adxl345ConfigProps) {
               onChange={(e) => setI2cDeviceId(e.currentTarget.value)}
               style={{ "margin-left": "0.5rem" }}
             >
-              <option value="">Select I2C Bus…</option>
+              <option value="">Select I2C Bus...</option>
               <For each={i2cDevices()}>
                 {(i2c) => (
                   <option value={i2c.id}>
@@ -107,15 +116,52 @@ export default function Adxl345Config(props: Adxl345ConfigProps) {
         </DeviceConfigRow>
 
         <DeviceConfigRow>
-          <DeviceConfigItem name="Interval (ms):">
+          <DeviceConfigItem name="Refresh (ms):">
             <input
               type="number"
-              min={10}
-              step={10}
               value={refreshIntervalMs()}
               onInput={(e) => setRefreshIntervalMs(Number(e.currentTarget.value))}
-              style={{ "margin-left": "0.5rem", width: "6rem" }}
+              style={{ "margin-left": "0.5rem", width: "5rem" }}
             />
+          </DeviceConfigItem>
+        </DeviceConfigRow>
+
+        <DeviceConfigRow>
+          <DeviceConfigItem name="Offsets (X/Y/Z):">
+            <div style={{ display: "flex", gap: "0.2rem", "margin-left": "0.5rem" }}>
+              <input
+                type="number"
+                step="0.01"
+                value={offsetX()}
+                onInput={(e) => setOffsetX(parseFloat(e.currentTarget.value))}
+                style={{ width: "3.5rem" }}
+              />
+              <input
+                type="number"
+                step="0.01"
+                value={offsetY()}
+                onInput={(e) => setOffsetY(parseFloat(e.currentTarget.value))}
+                style={{ width: "3.5rem" }}
+              />
+              <input
+                type="number"
+                step="0.01"
+                value={offsetZ()}
+                onInput={(e) => setOffsetZ(parseFloat(e.currentTarget.value))}
+                style={{ width: "3.5rem" }}
+              />
+            </div>
+          </DeviceConfigItem>
+        </DeviceConfigRow>
+
+        <DeviceConfigRow>
+          <DeviceConfigItem name="Calibration:">
+            <button
+              onClick={() => calibrate()}
+              style={{ "margin-left": "0.5rem", padding: "0.2rem 0.5rem", "font-size": "0.8rem" }}
+            >
+              Calibrate Level
+            </button>
           </DeviceConfigItem>
         </DeviceConfigRow>
       </DeviceConfigTable>

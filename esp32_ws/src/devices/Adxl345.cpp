@@ -8,6 +8,7 @@
 #include <ArduinoJson.h>
 #include "DeviceManager.h"
 #include "devices/I2c.h"
+#include <math.h>
 
 extern DeviceManager deviceManager;
 
@@ -120,13 +121,22 @@ namespace devices
         sensors_event_t event;
         _adxl->getEvent(&event);
 
-        _state.x = event.acceleration.x;
-        _state.y = event.acceleration.y;
-        _state.z = event.acceleration.z;
+        // Apply offsets
+        float rawX = event.acceleration.x;
+        float rawY = event.acceleration.y;
+        float rawZ = event.acceleration.z;
+
+        _state.x = rawX - _config.offsetX;
+        _state.y = rawY - _config.offsetY;
+        _state.z = rawZ - _config.offsetZ;
+
+        // Calculate roll and pitch in degrees
+        // roll = atan2(y, z)
+        // pitch = atan2(-x, sqrt(y*y + z*z))
+        _state.roll = atan2(_state.y, _state.z) * 180.0 / M_PI;
+        _state.pitch = atan2(-_state.x, sqrt(_state.y * _state.y + _state.z * _state.z)) * 180.0 / M_PI;
+
         _state.lastUpdatedMillis = millis();
-        
-        // We don't notifyStateChanged on every read to avoid flooding WebSockets.
-        // The frontend can poll or we can notify at a lower frequency if needed.
     }
 
     void Adxl345::loop()
@@ -139,10 +149,6 @@ namespace devices
             if (now - _state.lastUpdatedMillis > _config.refreshIntervalMs)
             {
                 readSensor();
-                // For high-frequency data like accelerometer, we might want to 
-                // push updates at a slower rate than we read, or only on request.
-                // But for now, let's notify if it's been a while.
-                // notifyStateChanged(); 
             }
         }
     }
@@ -156,6 +162,8 @@ namespace devices
         doc["x"] = _state.x;
         doc["y"] = _state.y;
         doc["z"] = _state.z;
+        doc["roll"] = _state.roll;
+        doc["pitch"] = _state.pitch;
         doc["lastUpdated"] = _state.lastUpdatedMillis;
     }
 
@@ -165,6 +173,26 @@ namespace devices
         {
             readSensor();
             notifyStateChanged();
+            return true;
+        }
+        
+        if (action == "calibrate")
+        {
+            if (!_adxl) return false;
+            
+            sensors_event_t event;
+            _adxl->getEvent(&event);
+            
+            // Assume board is level: X=0, Y=0, Z=9.81
+            _config.offsetX = event.acceleration.x;
+            _config.offsetY = event.acceleration.y;
+            _config.offsetZ = event.acceleration.z - 9.80665f;
+            
+            deviceManager.saveDevicesToJsonFile();
+            readSensor();
+            notifyStateChanged();
+            MLOG_INFO("%s: Calibrated. New offsets: X=%.2f, Y=%.2f, Z=%.2f", 
+                toString().c_str(), _config.offsetX, _config.offsetY, _config.offsetZ);
             return true;
         }
         return false;
@@ -177,6 +205,9 @@ namespace devices
         _config.i2cAddress = doc["i2cAddress"] | 0x53;
         _config.range = doc["range"] | 16;
         _config.refreshIntervalMs = doc["refreshIntervalMs"] | 100;
+        _config.offsetX = doc["offsetX"] | 0.0f;
+        _config.offsetY = doc["offsetY"] | 0.0f;
+        _config.offsetZ = doc["offsetZ"] | 0.0f;
         
         if (isSetup()) {
             init();
@@ -190,6 +221,9 @@ namespace devices
         doc["i2cAddress"] = _config.i2cAddress;
         doc["range"] = _config.range;
         doc["refreshIntervalMs"] = _config.refreshIntervalMs;
+        doc["offsetX"] = _config.offsetX;
+        doc["offsetY"] = _config.offsetY;
+        doc["offsetZ"] = _config.offsetZ;
     }
 
 } // namespace devices

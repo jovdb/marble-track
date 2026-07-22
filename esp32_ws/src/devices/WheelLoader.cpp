@@ -16,20 +16,58 @@ namespace devices
 
     void WheelLoader::applyDefaultConfig()
     {
+        WheelLoaderConfig wheelLoaderConfig;
+        wheelLoaderConfig.name = "Wheel Loader";
+        wheelLoaderConfig.innerCenter = 0.29f;
+        wheelLoaderConfig.outerCenter = 0.55f;
+        this->setConfig(wheelLoaderConfig);
+
         // Internal composition: 2 servos and 2 buttons
         _innerServo = new Servo(getId() + "-inner-servo");
+        ServoConfig innerConfig;
+        innerConfig.name = "Inner";
+        innerConfig.pinConfig = {"", 9};
+        innerConfig.mcpwmChannel = 5;
+        innerConfig.frequency = 50;
+        innerConfig.resolutionBits = 10;
+        innerConfig.minDutyCycle = 4.4f;
+        innerConfig.maxDutyCycle = 7.2f;
+        innerConfig.defaultDurationInMs = 500;
+        _innerServo->setConfig(innerConfig);
         addChild(_innerServo);
 
         _outerServo = new Servo(getId() + "-outer-servo");
+        ServoConfig outerConfig;
+        outerConfig.name = "Outer";
+        outerConfig.pinConfig = {"", 10};
+        outerConfig.mcpwmChannel = 2;
+        outerConfig.frequency = 50;
+        outerConfig.resolutionBits = 10;
+        outerConfig.minDutyCycle = 5.0f;
+        outerConfig.maxDutyCycle = 10.0f;
+        outerConfig.defaultDurationInMs = 1000;
+        _outerServo->setConfig(outerConfig);
         addChild(_outerServo);
 
         _leftButton = new Button(getId() + "-left-button");
+        ButtonConfig leftButtonConfig;
+        leftButtonConfig.name = "Button";
+        leftButtonConfig.pinConfig = {"", -1};
+        leftButtonConfig.debounceTimeInMs = 50;
+        leftButtonConfig.pinMode = PinModeOption::Floating;
+        leftButtonConfig.buttonType = ButtonType::NormalOpen;
+        _leftButton->setConfig(leftButtonConfig);
         addChild(_leftButton);
 
         _rightButton = new Button(getId() + "-right-button");
+        ButtonConfig rightButtonConfig;
+        rightButtonConfig.name = "Button";
+        rightButtonConfig.pinConfig = {"", -1};
+        rightButtonConfig.debounceTimeInMs = 50;
+        rightButtonConfig.pinMode = PinModeOption::Floating;
+        rightButtonConfig.buttonType = ButtonType::NormalOpen;
+        _rightButton->setConfig(rightButtonConfig);
         addChild(_rightButton);
-
-        // Optional: Set default configs for children here if needed
     }
 
     void WheelLoader::setup()
@@ -59,7 +97,7 @@ namespace devices
                 {
                     // Step 1: outer to center
                     _outerServo->setValue(_config.outerCenter);
-                    
+
                     _actionWaitMs = _outerServo->getConfig().defaultDurationInMs;
                     _actionStartTime = millis();
                     _sequenceStep = 1;
@@ -68,9 +106,12 @@ namespace devices
                 else if (_sequenceStep == 1)
                 {
                     // Step 2: inner can go to target (0.0 for Left, 1.0 for Right)
-                    if (_state.state == WheelLoaderStateEnum::LOADING_LEFT) {
+                    if (_state.state == WheelLoaderStateEnum::LOADING_LEFT)
+                    {
                         _innerServo->setValue(0.0f);
-                    } else {
+                    }
+                    else
+                    {
                         _innerServo->setValue(1.0f);
                     }
 
@@ -83,7 +124,7 @@ namespace devices
                 {
                     // Step 3: inner to center
                     _innerServo->setValue(_config.innerCenter);
-                    
+
                     // Sequence finished
                     _state.state = WheelLoaderStateEnum::IDLE;
                     _sequenceStep = 0;

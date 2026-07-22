@@ -608,6 +608,83 @@
             "pinMode": "PullUp",
             "buttonType": "NormalOpen"
           }
+        },
+        {
+          "id": "wheel-loader",
+          "type": "wheelloader",
+          "children": [
+            {
+              "id": "wheel-loader-inner-servo",
+              "type": "servo",
+              "children": [],
+              "config": {
+                "pin": {
+                  "pin": 9,
+                  "expanderId": ""
+                },
+                "name": "Inner",
+                "mcpwmChannel": 5,
+                "frequency": 50,
+                "resolutionBits": 10,
+                "minDutyCycle": 4.4,
+                "maxDutyCycle": 7.2,
+                "defaultDurationInMs": 500
+              }
+            },
+            {
+              "id": "wheel-loader-outer-servo",
+              "type": "servo",
+              "children": [],
+              "config": {
+                "pin": {
+                  "pin": 10,
+                  "expanderId": ""
+                },
+                "name": "Outer",
+                "mcpwmChannel": 2,
+                "frequency": 50,
+                "resolutionBits": 10,
+                "minDutyCycle": 5,
+                "maxDutyCycle": 10,
+                "defaultDurationInMs": 1000
+              }
+            },
+            {
+              "id": "wheel-loader-left-button",
+              "type": "button",
+              "children": [],
+              "config": {
+                "pin": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "name": "Button",
+                "debounceTimeInMs": 50,
+                "pinMode": "Floating",
+                "buttonType": "NormalOpen"
+              }
+            },
+            {
+              "id": "wheel-loader-right-button",
+              "type": "button",
+              "children": [],
+              "config": {
+                "pin": {
+                  "pin": -1,
+                  "expanderId": ""
+                },
+                "name": "Button",
+                "debounceTimeInMs": 50,
+                "pinMode": "Floating",
+                "buttonType": "NormalOpen"
+              }
+            }
+          ],
+          "config": {
+            "name": "Wheel Loader",
+            "innerCenter": 0.29,
+            "outerCenter": 0.52
+          }
         }
       ]
     }

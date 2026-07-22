@@ -9,6 +9,7 @@
 #include "devices/Stepper.h"
 #include "devices/ServoGate.h"
 #include "devices/Launcher.h"
+#include "devices/WheelLoader.h"
 #include "SongConstants.h"
 
 extern DeviceManager deviceManager;
@@ -204,6 +205,9 @@ namespace devices
 
         addChild(_launcher);
 
+        _wheelLoader = new devices::WheelLoader("wheel-loader");
+        addChild(_wheelLoader);
+
         _launcherLed = new devices::Led("launcher-led");
         addChild(_launcherLed);
 
@@ -379,6 +383,7 @@ namespace devices
             loopWheel(true);
             loopAutoSpiral();
             loopLauncher(true);
+            loopWheelLoader(true);
         }
         else
         {
@@ -386,6 +391,7 @@ namespace devices
             loopWheel(false);
             loopManualSpiral();
             loopLauncher(false);
+            loopWheelLoader(false);
         }
 
         loopSplitter();
@@ -394,528 +400,518 @@ namespace devices
     }
 
     void MarbleController::loopManualLift()
+{
+    auto liftState = _lift->getState();
+    auto static pressedDuringError = false;
+
+    // LED
+    switch (liftState.state)
     {
-        auto liftState = _lift->getState();
-        auto static pressedDuringError = false;
-
-        // LED
-        switch (liftState.state)
-        {
-        case devices::LiftStateEnum::ERROR:
-        {
-            blinkError(_liftLed);
-            break;
-        }
-        case devices::LiftStateEnum::INIT:
-        {
-            blinkInit(_liftLed);
-            break;
-        }
-        case devices::LiftStateEnum::LIFT_DOWN_LOADING:
-        case devices::LiftStateEnum::LIFT_UP_UNLOADING:
-        case devices::LiftStateEnum::MOVING_UP:
-            blinkBusy(_liftLed);
-            break;
-        case devices::LiftStateEnum::MOVING_DOWN:
-            if (_autoLiftMovingDownSlow)
-            {
-                _liftLed->set(true);
-            }
-            else
-            {
-                blinkBusy(_liftLed);
-            }
-            break;
-        case devices::LiftStateEnum::UNKNOWN:
-        case devices::LiftStateEnum::LIFT_DOWN:
-        case devices::LiftStateEnum::LIFT_UP:
-        {
-            if (liftState.ballWaitingSince > 0 && liftState.ballWaitingSince + _actionNotificationDelayMs < millis())
-            {
-                blinkAttention(_liftLed);
-            }
-            else
-            {
-                _liftLed->set(true);
-            }
-            break;
-        }
-        }
-
-        // Reset button timing state when not in LIFT_UP
-        if (liftState.state != devices::LiftStateEnum::LIFT_UP)
-        {
-            _isBallStillLoaded = false;
-            // _liftButtonPressStartTime = 0;
-            _isLiftPowerUnloadSongPlaying = false;
-        }
-
-        // Lift Logic
-        switch (liftState.state)
-        {
-        case devices::LiftStateEnum::UNKNOWN:
-        {
-            _liftQueuedPresses = 0;
-            // Init will start at press
-            if (_liftBtn->onPressed())
-            {
-                _lift->init(lift_timing::LiftManualSpeedRatio);
-                playButtonClick();
-            }
-            break;
-        }
-
-        case devices::LiftStateEnum::ERROR:
-        {
-            _liftQueuedPresses = 0;
-
-            if (_liftBtn->onPressed())
-            {
-                playLiftError(_lift->getErrorCode());
-                _liftButtonPressStartTime = millis();
-                pressedDuringError = true;
-            }
-
-            unsigned long pressDuration = _liftButtonPressStartTime > 0 ? millis() - _liftButtonPressStartTime : 0;
-
-            // Check for long press while button is held
-            if (pressedDuringError && _liftBtn->onLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
-            {
-                MLOG_INFO("%s: Error recovery long press detected, starting lift init", toString().c_str());
-                _lift->init(lift_timing::LiftManualSpeedRatio);
-                _audio->play(songs::LIFT_RESTART, devices::Hv20tPlayMode::StopThenPlay);
-                _liftButtonPressStartTime = 0; // Reset to prevent retriggering
-            }
-            break;
-        }
-        case devices::LiftStateEnum::INIT:
-            if (_liftBtn->onPressed())
-            {
-                playErrorSound(devices::Hv20tPlayMode::QueueIfPlaying);
-                _audio->play(songs::LIFT_INIT_BUSY, devices::Hv20tPlayMode::QueueIfPlaying);
-            }
-            break;
-        case devices::LiftStateEnum::LIFT_DOWN_LOADING:
-            if (_liftBtn->onPressed())
-            {
-                if (_liftQueuedPresses < 3)
-                {
-                    _liftQueuedPresses++;
-                    playButtonClick({songs::LIFT_STOP});
-                }
-                else
-                {
-                    playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
-                }
-            }
-            break;
-        case devices::LiftStateEnum::MOVING_UP:
-            if (_liftBtn->onPressed())
-            {
-                if (_liftQueuedPresses < 2)
-                {
-                    _liftQueuedPresses++;
-                    playButtonClick({songs::LIFT_STOP});
-                }
-                else
-                {
-                    playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
-                }
-            }
-            break;
-        case devices::LiftStateEnum::LIFT_UP_UNLOADING:
-            if (_liftBtn->onPressed())
-            {
-                if (_liftQueuedPresses < 1)
-                {
-                    _liftQueuedPresses++;
-                    playButtonClick({songs::LIFT_STOP});
-                }
-                else
-                {
-                    playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
-                }
-            }
-            break;
-        case devices::LiftStateEnum::MOVING_DOWN: // Loading in progress
-            if (_liftBtn->onPressed())
-            {
-                playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
-            }
-            break;
-
-        case devices::LiftStateEnum::LIFT_DOWN:
-        {
-            // Replay queued press: loaded + queued => go up and consume one
-            if (_liftQueuedPresses > 0 || _liftBtn->onPressed())
-            {
-                if (liftState.isLoaded)
-                {
-                    if (_lift->up(lift_timing::LiftManualSpeedRatio))
-                    {
-                        if (!_liftBtn->onPressed())
-                            _liftQueuedPresses--;
-                    }
-                    if (_liftBtn->onPressed())
-                        playButtonClick({songs::LIFT_STOP});
-                }
-                else
-                {
-                    if (_lift->loadBall())
-                    {
-                        if (!_liftBtn->onPressed())
-                            _liftQueuedPresses--;
-                    }
-                    if (_liftBtn->onPressed())
-                        playButtonClick({songs::LIFT_STOP});
-                }
-            }
-            break;
-        }
-        case devices::LiftStateEnum::LIFT_UP:
-        {
-            // Queued
-            if (_liftQueuedPresses > 0 && !_liftBtn->onPressed())
-            {
-                if (liftState.isLoaded)
-                {
-                    if (_lift->unloadBall(1.0f))
-                    {
-                        _liftQueuedPresses--;
-                        _isBallStillLoaded = false;
-                        _liftButtonPressStartTime = 0;
-                    }
-                }
-                else
-                {
-                    // If not loaded but still queued, try going down to load if possible
-                    if (_lift->down(lift_timing::LiftManualSpeedRatio))
-                    {
-                        _liftQueuedPresses = 0;
-                    }
-                }
-            }
-
-            if (_liftBtn->onPressed())
-            {
-                if (liftState.isLoaded)
-                {
-                    // Loaded: start timing for unload duration
-                    _liftButtonPressStartTime = millis();
-                    _isBallStillLoaded = true;
-                    _isLiftPowerUnloadSongPlaying = false;
-                }
-                else
-                {
-                    // Unloaded: move down
-                    _lift->down(lift_timing::LiftManualSpeedRatio);
-                    playButtonClick({songs::LIFT_STOP});
-                }
-            }
-            else if (_isBallStillLoaded && _liftBtn->isPressed())
-            {
-                // Button still pressed - play power unload song from 500ms
-                unsigned long pressDuration = millis() - _liftButtonPressStartTime;
-
-                if (pressDuration >= lift_timing::PowerSongStartDelayMs && !_isLiftPowerUnloadSongPlaying)
-                {
-                    _audio->play(songs::LIFT_POWER_UNLOAD, devices::Hv20tPlayMode::StopThenPlay);
-                    _isLiftPowerUnloadSongPlaying = true;
-                }
-
-                if (pressDuration >= lift_timing::PowerSongDurationMs)
-                {
-                    MLOG_INFO("%s: Long press detected (%.2fs), Power unload", toString().c_str());
-                    // Long press: unload with full speed immediately
-                    _lift->unloadBall(0.2f);
-                    _isBallStillLoaded = false;
-                }
-            }
-            else if (_isBallStillLoaded && _liftBtn->isReleased())
-            {
-                unsigned long pressDuration = millis() - _liftButtonPressStartTime;
-                if (pressDuration < lift_timing::PowerSongDurationMs && _isLiftPowerUnloadSongPlaying)
-                {
-                    _audio->stop();
-                }
-                _isLiftPowerUnloadSongPlaying = false;
-
-                // Normal click unload (default duration)
-                _lift->unloadBall(1.0f);
-                // playClickSound();
-                playButtonClick({songs::LIFT_STOP});
-                _isBallStillLoaded = false;
-            }
-            break;
-        }
-        }
-
-        // Clear long Press reset
-        if (_wheelBtn->onReleased())
-        {
-            pressedDuringError = false;
-        }
+    case devices::LiftStateEnum::ERROR:
+    {
+        blinkError(_liftLed);
+        break;
     }
-
-    void MarbleController::loopAutoLift()
+    case devices::LiftStateEnum::INIT:
     {
-        // Auto lift control logic - automatic cycling through lift operations
-        auto liftState = _lift->getState();
-        auto static pressedDuringError = false;
-
-        if (liftState.state != devices::LiftStateEnum::LIFT_UP || !liftState.isLoaded)
-        {
-            _autoPowerUnloadPending = false;
-            _autoPowerUnloadSongStarted = false;
-            _autoPowerUnloadStartTime = 0;
-            _autoLiftUpLoadedSince = 0;
-        }
-
-        if (liftState.state != devices::LiftStateEnum::LIFT_DOWN || liftState.isLoaded || liftState.ballWaitingSince > 0)
-        {
-            _autoNoBallLiftStartTime = 0;
-            _autoNoBallLiftDelayMs = 0;
-        }
-
-        if (liftState.state != devices::LiftStateEnum::MOVING_DOWN)
-        {
-            _autoLiftMovingDownSlow = false;
-        }
-
-        // LED
-        switch (liftState.state)
-        {
-        case devices::LiftStateEnum::UNKNOWN:
-            _liftLed->set(false);
-            break;
-        case devices::LiftStateEnum::ERROR:
-            blinkError(_liftLed);
-            break;
-        case devices::LiftStateEnum::INIT:
-        case devices::LiftStateEnum::LIFT_DOWN_LOADING:
-        case devices::LiftStateEnum::LIFT_UP_UNLOADING:
-        case devices::LiftStateEnum::MOVING_UP:
-        case devices::LiftStateEnum::LIFT_UP:
-            blinkBusy(_liftLed);
-            break;
-        case devices::LiftStateEnum::MOVING_DOWN:
-            if (_autoLiftMovingDownSlow)
-            {
-                _liftLed->set(true);
-            }
-            else
-            {
-                blinkBusy(_liftLed);
-            }
-            break;
-
-        case devices::LiftStateEnum::LIFT_DOWN:
+        blinkInit(_liftLed);
+        break;
+    }
+    case devices::LiftStateEnum::LIFT_DOWN_LOADING:
+    case devices::LiftStateEnum::LIFT_UP_UNLOADING:
+    case devices::LiftStateEnum::MOVING_UP:
+        blinkBusy(_liftLed);
+        break;
+    case devices::LiftStateEnum::MOVING_DOWN:
+        if (_autoLiftMovingDownSlow)
         {
             _liftLed->set(true);
-            break;
         }
-        }
-
-        // LOGIC
-        switch (liftState.state)
+        else
         {
-        case devices::LiftStateEnum::UNKNOWN:
-            _lift->init(lift_timing::LiftAutoSpeedRatio);
-            break;
+            blinkBusy(_liftLed);
+        }
+        break;
+    case devices::LiftStateEnum::UNKNOWN:
+    case devices::LiftStateEnum::LIFT_DOWN:
+    case devices::LiftStateEnum::LIFT_UP:
+    {
+        if (liftState.ballWaitingSince > 0 && liftState.ballWaitingSince + _actionNotificationDelayMs < millis())
+        {
+            blinkAttention(_liftLed);
+        }
+        else
+        {
+            _liftLed->set(true);
+        }
+        break;
+    }
+    }
 
-        case devices::LiftStateEnum::ERROR:
-            if (_liftBtn->onPressed())
+    // Reset button timing state when not in LIFT_UP
+    if (liftState.state != devices::LiftStateEnum::LIFT_UP)
+    {
+        _isBallStillLoaded = false;
+        // _liftButtonPressStartTime = 0;
+        _isLiftPowerUnloadSongPlaying = false;
+    }
+
+    // Lift Logic
+    switch (liftState.state)
+    {
+    case devices::LiftStateEnum::UNKNOWN:
+    {
+        _liftQueuedPresses = 0;
+        // Init will start at press
+        if (_liftBtn->onPressed())
+        {
+            _lift->init(lift_timing::LiftManualSpeedRatio);
+            playButtonClick();
+        }
+        break;
+    }
+
+    case devices::LiftStateEnum::ERROR:
+    {
+        _liftQueuedPresses = 0;
+
+        if (_liftBtn->onPressed())
+        {
+            playLiftError(_lift->getErrorCode());
+            _liftButtonPressStartTime = millis();
+            pressedDuringError = true;
+        }
+
+        unsigned long pressDuration = _liftButtonPressStartTime > 0 ? millis() - _liftButtonPressStartTime : 0;
+
+        // Check for long press while button is held
+        if (pressedDuringError && _liftBtn->onLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
+        {
+            MLOG_INFO("%s: Error recovery long press detected, starting lift init", toString().c_str());
+            _lift->init(lift_timing::LiftManualSpeedRatio);
+            _audio->play(songs::LIFT_RESTART, devices::Hv20tPlayMode::StopThenPlay);
+            _liftButtonPressStartTime = 0; // Reset to prevent retriggering
+        }
+        break;
+    }
+    case devices::LiftStateEnum::INIT:
+        if (_liftBtn->onPressed())
+        {
+            playErrorSound(devices::Hv20tPlayMode::QueueIfPlaying);
+            _audio->play(songs::LIFT_INIT_BUSY, devices::Hv20tPlayMode::QueueIfPlaying);
+        }
+        break;
+    case devices::LiftStateEnum::LIFT_DOWN_LOADING:
+        if (_liftBtn->onPressed())
+        {
+            if (_liftQueuedPresses < 3)
             {
-                playLiftError(_lift->getErrorCode());
+                _liftQueuedPresses++;
+                playButtonClick({songs::LIFT_STOP});
+            }
+            else
+            {
+                playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
+            }
+        }
+        break;
+    case devices::LiftStateEnum::MOVING_UP:
+        if (_liftBtn->onPressed())
+        {
+            if (_liftQueuedPresses < 2)
+            {
+                _liftQueuedPresses++;
+                playButtonClick({songs::LIFT_STOP});
+            }
+            else
+            {
+                playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
+            }
+        }
+        break;
+    case devices::LiftStateEnum::LIFT_UP_UNLOADING:
+        if (_liftBtn->onPressed())
+        {
+            if (_liftQueuedPresses < 1)
+            {
+                _liftQueuedPresses++;
+                playButtonClick({songs::LIFT_STOP});
+            }
+            else
+            {
+                playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
+            }
+        }
+        break;
+    case devices::LiftStateEnum::MOVING_DOWN: // Loading in progress
+        if (_liftBtn->onPressed())
+        {
+            playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
+        }
+        break;
+
+    case devices::LiftStateEnum::LIFT_DOWN:
+    {
+        // Replay queued press: loaded + queued => go up and consume one
+        if (_liftQueuedPresses > 0 || _liftBtn->onPressed())
+        {
+            if (liftState.isLoaded)
+            {
+                if (_lift->up(lift_timing::LiftManualSpeedRatio))
+                {
+                    if (!_liftBtn->onPressed())
+                        _liftQueuedPresses--;
+                }
+                if (_liftBtn->onPressed())
+                    playButtonClick({songs::LIFT_STOP});
+            }
+            else
+            {
+                if (_lift->loadBall())
+                {
+                    if (!_liftBtn->onPressed())
+                        _liftQueuedPresses--;
+                }
+                if (_liftBtn->onPressed())
+                    playButtonClick({songs::LIFT_STOP});
+            }
+        }
+        break;
+    }
+    case devices::LiftStateEnum::LIFT_UP:
+    {
+        // Queued
+        if (_liftQueuedPresses > 0 && !_liftBtn->onPressed())
+        {
+            if (liftState.isLoaded)
+            {
+                if (_lift->unloadBall(1.0f))
+                {
+                    _liftQueuedPresses--;
+                    _isBallStillLoaded = false;
+                    _liftButtonPressStartTime = 0;
+                }
+            }
+            else
+            {
+                // If not loaded but still queued, try going down to load if possible
+                if (_lift->down(lift_timing::LiftManualSpeedRatio))
+                {
+                    _liftQueuedPresses = 0;
+                }
+            }
+        }
+
+        if (_liftBtn->onPressed())
+        {
+            if (liftState.isLoaded)
+            {
+                // Loaded: start timing for unload duration
                 _liftButtonPressStartTime = millis();
-                pressedDuringError = true;
+                _isBallStillLoaded = true;
+                _isLiftPowerUnloadSongPlaying = false;
             }
-
-            // Check for long press while button is held
-            if (pressedDuringError && _liftBtn->onLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
+            else
             {
-                MLOG_INFO("%s: Error recovery long press detected in auto mode, starting lift init", toString().c_str());
-                _lift->init(lift_timing::LiftAutoSpeedRatio);
-                _audio->play(songs::LIFT_RESTART, devices::Hv20tPlayMode::StopThenPlay);
-                _liftButtonPressStartTime = 0; // Reset to prevent retriggering
+                // Unloaded: move down
+                _lift->down(lift_timing::LiftManualSpeedRatio);
+                playButtonClick({songs::LIFT_STOP});
             }
-            break;
+        }
+        else if (_isBallStillLoaded && _liftBtn->isPressed())
+        {
+            // Button still pressed - play power unload song from 500ms
+            unsigned long pressDuration = millis() - _liftButtonPressStartTime;
 
-        // BUSY states - just blink LED
-        case devices::LiftStateEnum::INIT:
-            if (_liftBtn->onPressed())
+            if (pressDuration >= lift_timing::PowerSongStartDelayMs && !_isLiftPowerUnloadSongPlaying)
             {
-                playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
-                _audio->play(songs::LIFT_INIT_BUSY, devices::Hv20tPlayMode::QueueIfPlaying);
+                _audio->play(songs::LIFT_POWER_UNLOAD, devices::Hv20tPlayMode::StopThenPlay);
+                _isLiftPowerUnloadSongPlaying = true;
             }
-            break;
-        case devices::LiftStateEnum::LIFT_DOWN_LOADING:
-        case devices::LiftStateEnum::LIFT_UP_UNLOADING:
-        case devices::LiftStateEnum::MOVING_UP:
-            if (_liftBtn->onPressed())
-                playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
-            break;
 
-        case devices::LiftStateEnum::MOVING_DOWN:
+            if (pressDuration >= lift_timing::PowerSongDurationMs)
+            {
+                MLOG_INFO("%s: Long press detected (%.2fs), Power unload", toString().c_str());
+                // Long press: unload with full speed immediately
+                _lift->unloadBall(0.2f);
+                _isBallStillLoaded = false;
+            }
+        }
+        else if (_isBallStillLoaded && _liftBtn->isReleased())
+        {
+            unsigned long pressDuration = millis() - _liftButtonPressStartTime;
+            if (pressDuration < lift_timing::PowerSongDurationMs && _isLiftPowerUnloadSongPlaying)
+            {
+                _audio->stop();
+            }
+            _isLiftPowerUnloadSongPlaying = false;
 
-            if (_autoLiftMovingDownSlow && liftState.ballWaitingSince > 0)
+            // Normal click unload (default duration)
+            _lift->unloadBall(1.0f);
+            // playClickSound();
+            playButtonClick({songs::LIFT_STOP});
+            _isBallStillLoaded = false;
+        }
+        break;
+    }
+    }
+
+    // Clear long Press reset
+    if (_wheelBtn->onReleased())
+    {
+        pressedDuringError = false;
+    }
+}
+
+void MarbleController::loopAutoLift()
+{
+    // Auto lift control logic - automatic cycling through lift operations
+    auto liftState = _lift->getState();
+    auto static pressedDuringError = false;
+
+    if (liftState.state != devices::LiftStateEnum::LIFT_UP || !liftState.isLoaded)
+    {
+        _autoPowerUnloadPending = false;
+        _autoPowerUnloadSongStarted = false;
+        _autoPowerUnloadStartTime = 0;
+        _autoLiftUpLoadedSince = 0;
+    }
+
+    if (liftState.state != devices::LiftStateEnum::LIFT_DOWN || liftState.isLoaded || liftState.ballWaitingSince > 0)
+    {
+        _autoNoBallLiftStartTime = 0;
+        _autoNoBallLiftDelayMs = 0;
+    }
+
+    if (liftState.state != devices::LiftStateEnum::MOVING_DOWN)
+    {
+        _autoLiftMovingDownSlow = false;
+    }
+
+    // LED
+    switch (liftState.state)
+    {
+    case devices::LiftStateEnum::UNKNOWN:
+        _liftLed->set(false);
+        break;
+    case devices::LiftStateEnum::ERROR:
+        blinkError(_liftLed);
+        break;
+    case devices::LiftStateEnum::INIT:
+    case devices::LiftStateEnum::LIFT_DOWN_LOADING:
+    case devices::LiftStateEnum::LIFT_UP_UNLOADING:
+    case devices::LiftStateEnum::MOVING_UP:
+    case devices::LiftStateEnum::LIFT_UP:
+        blinkBusy(_liftLed);
+        break;
+    case devices::LiftStateEnum::MOVING_DOWN:
+        if (_autoLiftMovingDownSlow)
+        {
+            _liftLed->set(true);
+        }
+        else
+        {
+            blinkBusy(_liftLed);
+        }
+        break;
+
+    case devices::LiftStateEnum::LIFT_DOWN:
+    {
+        _liftLed->set(true);
+        break;
+    }
+    }
+
+    // LOGIC
+    switch (liftState.state)
+    {
+    case devices::LiftStateEnum::UNKNOWN:
+        _lift->init(lift_timing::LiftAutoSpeedRatio);
+        break;
+
+    case devices::LiftStateEnum::ERROR:
+        if (_liftBtn->onPressed())
+        {
+            playLiftError(_lift->getErrorCode());
+            _liftButtonPressStartTime = millis();
+            pressedDuringError = true;
+        }
+
+        // Check for long press while button is held
+        if (pressedDuringError && _liftBtn->onLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
+        {
+            MLOG_INFO("%s: Error recovery long press detected in auto mode, starting lift init", toString().c_str());
+            _lift->init(lift_timing::LiftAutoSpeedRatio);
+            _audio->play(songs::LIFT_RESTART, devices::Hv20tPlayMode::StopThenPlay);
+            _liftButtonPressStartTime = 0; // Reset to prevent retriggering
+        }
+        break;
+
+    // BUSY states - just blink LED
+    case devices::LiftStateEnum::INIT:
+        if (_liftBtn->onPressed())
+        {
+            playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
+            _audio->play(songs::LIFT_INIT_BUSY, devices::Hv20tPlayMode::QueueIfPlaying);
+        }
+        break;
+    case devices::LiftStateEnum::LIFT_DOWN_LOADING:
+    case devices::LiftStateEnum::LIFT_UP_UNLOADING:
+    case devices::LiftStateEnum::MOVING_UP:
+        if (_liftBtn->onPressed())
+            playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
+        break;
+
+    case devices::LiftStateEnum::MOVING_DOWN:
+
+        if (_autoLiftMovingDownSlow && liftState.ballWaitingSince > 0)
+        {
+            if (_lift->down(lift_timing::AutoDownNormalSpeedRatio * lift_timing::LiftAutoSpeedRatio))
+            {
+                _autoLiftMovingDownSlow = false;
+                MLOG_INFO("%s: Ball waiting detected during auto down, switching to normal speed", toString().c_str());
+            }
+        }
+        else if (_liftBtn->onPressed())
+        {
+            if (_autoLiftMovingDownSlow)
             {
                 if (_lift->down(lift_timing::AutoDownNormalSpeedRatio * lift_timing::LiftAutoSpeedRatio))
                 {
                     _autoLiftMovingDownSlow = false;
-                    MLOG_INFO("%s: Ball waiting detected during auto down, switching to normal speed", toString().c_str());
+                    playButtonClick({songs::LIFT_STOP});
                 }
-            }
-            else if (_liftBtn->onPressed())
-            {
-                if (_autoLiftMovingDownSlow)
-                {
-                    if (_lift->down(lift_timing::AutoDownNormalSpeedRatio * lift_timing::LiftAutoSpeedRatio))
-                    {
-                        _autoLiftMovingDownSlow = false;
-                        playButtonClick({songs::LIFT_STOP});
-                    }
-                }
-                else
-                {
-                    playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
-                }
-            }
-
-            break;
-
-        case devices::LiftStateEnum::LIFT_DOWN:
-        {
-            _isLiftPowerUnloadSongPlaying = false;
-
-            if (liftState.isLoaded)
-            {
-                // Loaded: move up to unload position
-                _lift->up(lift_timing::LiftAutoSpeedRatio);
-                _autoLiftDelayStart = 0; // Reset delay timer
-            }
-            else if (liftState.ballWaitingSince > 0)
-            {
-                _autoNoBallLiftStartTime = 0;
-                _autoNoBallLiftDelayMs = 0;
-
-                // Not loaded: wait 1000ms before starting load
-                if (_autoLiftDelayStart == 0)
-                {
-                    _autoLiftDelayStart = millis();
-                    break;
-                }
-
-                if ((millis() - _autoLiftDelayStart) < _autoLiftDelayMs)
-                {
-                    break;
-                }
-
-                _lift->loadBall();
-                _autoLiftDelayStart = 0;
             }
             else
             {
-                _autoLiftDelayStart = 0;
-
-                if (_liftBtn->onPressed())
-                {
-                    playButtonDown({songs::LIFT_STOP});
-                }
-
-                if (_liftBtn->onReleased())
-                {
-                    playButtonUp({songs::LIFT_STOP});
-                    _autoNoBallLiftStartTime = 0;
-                    _autoNoBallLiftDelayMs = 0;
-                    _lift->loadBall();
-                    break;
-                }
-
-                if (_autoNoBallLiftStartTime == 0)
-                {
-                    _autoNoBallLiftStartTime = millis();
-                    _autoNoBallLiftDelayMs = random(
-                        lift_timing::AutoNoBallRandomMinDelayMs,
-                        lift_timing::AutoNoBallRandomMaxDelayMs + 1UL);
-                    break;
-                }
-
-                if ((millis() - _autoNoBallLiftStartTime) >= _autoNoBallLiftDelayMs)
-                {
-                    MLOG_INFO("%s: Auto lift random start (no ball waiting) after %lus",
-                              toString().c_str(),
-                              _autoNoBallLiftDelayMs / 1000UL);
-
-                    if (_lift->loadBall())
-                    {
-                        _autoNoBallLiftStartTime = 0;
-                        _autoNoBallLiftDelayMs = 0;
-                    }
-                }
+                playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
             }
-            break;
         }
 
-        case devices::LiftStateEnum::LIFT_UP:
-        {
-            if (_liftBtn->onPressed())
-                playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
+        break;
 
-            // Check if we need to wait before next operation
-            if (_autoLiftDelayStart > 0 && (millis() - _autoLiftDelayStart) < _autoLiftDelayMs)
+    case devices::LiftStateEnum::LIFT_DOWN:
+    {
+        _isLiftPowerUnloadSongPlaying = false;
+
+        if (liftState.isLoaded)
+        {
+            // Loaded: move up to unload position
+            _lift->up(lift_timing::LiftAutoSpeedRatio);
+            _autoLiftDelayStart = 0; // Reset delay timer
+        }
+        else if (liftState.ballWaitingSince > 0)
+        {
+            _autoNoBallLiftStartTime = 0;
+            _autoNoBallLiftDelayMs = 0;
+
+            // Not loaded: wait 1000ms before starting load
+            if (_autoLiftDelayStart == 0)
             {
-                // Still waiting, do nothing
+                _autoLiftDelayStart = millis();
                 break;
             }
 
-            if (liftState.isLoaded)
+            if ((millis() - _autoLiftDelayStart) < _autoLiftDelayMs)
             {
-                if (_autoLiftUpLoadedSince == 0)
+                break;
+            }
+
+            _lift->loadBall();
+            _autoLiftDelayStart = 0;
+        }
+        else
+        {
+            _autoLiftDelayStart = 0;
+
+            if (_liftBtn->onPressed())
+            {
+                playButtonDown({songs::LIFT_STOP});
+            }
+
+            if (_liftBtn->onReleased())
+            {
+                playButtonUp({songs::LIFT_STOP});
+                _autoNoBallLiftStartTime = 0;
+                _autoNoBallLiftDelayMs = 0;
+                _lift->loadBall();
+                break;
+            }
+
+            if (_autoNoBallLiftStartTime == 0)
+            {
+                _autoNoBallLiftStartTime = millis();
+                _autoNoBallLiftDelayMs = random(
+                    lift_timing::AutoNoBallRandomMinDelayMs,
+                    lift_timing::AutoNoBallRandomMaxDelayMs + 1UL);
+                break;
+            }
+
+            if ((millis() - _autoNoBallLiftStartTime) >= _autoNoBallLiftDelayMs)
+            {
+                MLOG_INFO("%s: Auto lift random start (no ball waiting) after %lus",
+                          toString().c_str(),
+                          _autoNoBallLiftDelayMs / 1000UL);
+
+                if (_lift->loadBall())
                 {
-                    _autoLiftUpLoadedSince = millis();
-                    _autoPowerUnloadPending = (random(100) < 25);
-                    _autoPowerUnloadSongStarted = false;
-                    _autoPowerUnloadStartTime = 0;
+                    _autoNoBallLiftStartTime = 0;
+                    _autoNoBallLiftDelayMs = 0;
+                }
+            }
+        }
+        break;
+    }
+
+    case devices::LiftStateEnum::LIFT_UP:
+    {
+        if (_liftBtn->onPressed())
+            playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
+
+        // Check if we need to wait before next operation
+        if (_autoLiftDelayStart > 0 && (millis() - _autoLiftDelayStart) < _autoLiftDelayMs)
+        {
+            // Still waiting, do nothing
+            break;
+        }
+
+        if (liftState.isLoaded)
+        {
+            if (_autoLiftUpLoadedSince == 0)
+            {
+                _autoLiftUpLoadedSince = millis();
+                _autoPowerUnloadPending = (random(100) < 25);
+                _autoPowerUnloadSongStarted = false;
+                _autoPowerUnloadStartTime = 0;
+                break;
+            }
+
+            const unsigned long loadedLiftUpElapsed = millis() - _autoLiftUpLoadedSince;
+
+            // Wait until lift-end song is ready (loaded LIFT_UP + 1000ms)
+            if (loadedLiftUpElapsed < lift_timing::AutoPowerSongStartDelayMs)
+            {
+                break;
+            }
+
+            if (_autoPowerUnloadPending)
+            {
+                if (!_autoPowerUnloadSongStarted)
+                {
+                    _audio->play(songs::LIFT_POWER_UNLOAD, devices::Hv20tPlayMode::StopThenPlay);
+                    _autoPowerUnloadSongStarted = true;
+                    _autoPowerUnloadStartTime = millis();
                     break;
                 }
 
-                const unsigned long loadedLiftUpElapsed = millis() - _autoLiftUpLoadedSince;
-
-                // Wait until lift-end song is ready (loaded LIFT_UP + 1000ms)
-                if (loadedLiftUpElapsed < lift_timing::AutoPowerSongStartDelayMs)
+                const unsigned long powerSongElapsed = millis() - _autoPowerUnloadStartTime;
+                if (powerSongElapsed >= lift_timing::PowerSongDurationMs - 500)
                 {
-                    break;
-                }
-
-                if (_autoPowerUnloadPending)
-                {
-                    if (!_autoPowerUnloadSongStarted)
+                    if (_lift->unloadBall(0.2f))
                     {
-                        _audio->play(songs::LIFT_POWER_UNLOAD, devices::Hv20tPlayMode::StopThenPlay);
-                        _autoPowerUnloadSongStarted = true;
-                        _autoPowerUnloadStartTime = millis();
-                        break;
-                    }
-
-                    const unsigned long powerSongElapsed = millis() - _autoPowerUnloadStartTime;
-                    if (powerSongElapsed >= lift_timing::PowerSongDurationMs - 500)
-                    {
-                        if (_lift->unloadBall(0.2f))
-                        {
-                            _autoPowerUnloadPending = false;
-                            _autoPowerUnloadSongStarted = false;
-                            _autoPowerUnloadStartTime = 0;
-                            _autoLiftUpLoadedSince = 0;
-                            _autoLiftDelayStart = 0;
-                        }
-                    }
-                }
-                else
-                {
-                    // Non power unload: also wait 1000ms at loaded LIFT_UP, then unload normally
-                    if (_lift->unloadBall(1.0f))
-                    {
+                        _autoPowerUnloadPending = false;
+                        _autoPowerUnloadSongStarted = false;
+                        _autoPowerUnloadStartTime = 0;
                         _autoLiftUpLoadedSince = 0;
                         _autoLiftDelayStart = 0;
                     }
@@ -923,935 +919,985 @@ namespace devices
             }
             else
             {
-                // Not loaded: move down to loading position
-                if (liftState.ballWaitingSince > 0)
+                // Non power unload: also wait 1000ms at loaded LIFT_UP, then unload normally
+                if (_lift->unloadBall(1.0f))
                 {
-                    _autoLiftMovingDownSlow = false;
-                    _lift->down(lift_timing::AutoDownNormalSpeedRatio * lift_timing::LiftAutoSpeedRatio);
+                    _autoLiftUpLoadedSince = 0;
+                    _autoLiftDelayStart = 0;
                 }
-                else
-                {
-                    if (_lift->down(lift_timing::AutoDownNoBallSpeedRatio * lift_timing::LiftAutoSpeedRatio))
-                    {
-                        _autoLiftMovingDownSlow = true;
-                    }
-                }
-                _autoLiftDelayStart = 0; // Reset delay timer
-                _autoPowerUnloadPending = false;
-                _autoPowerUnloadSongStarted = false;
-                _autoPowerUnloadStartTime = 0;
-                _autoLiftUpLoadedSince = 0;
             }
-            break;
         }
-        }
-
-        if (_liftBtn->onReleased())
+        else
         {
-            pressedDuringError = false;
+            // Not loaded: move down to loading position
+            if (liftState.ballWaitingSince > 0)
+            {
+                _autoLiftMovingDownSlow = false;
+                _lift->down(lift_timing::AutoDownNormalSpeedRatio * lift_timing::LiftAutoSpeedRatio);
+            }
+            else
+            {
+                if (_lift->down(lift_timing::AutoDownNoBallSpeedRatio * lift_timing::LiftAutoSpeedRatio))
+                {
+                    _autoLiftMovingDownSlow = true;
+                }
+            }
+            _autoLiftDelayStart = 0; // Reset delay timer
+            _autoPowerUnloadPending = false;
+            _autoPowerUnloadSongStarted = false;
+            _autoPowerUnloadStartTime = 0;
+            _autoLiftUpLoadedSince = 0;
         }
+        break;
+    }
     }
 
-    void MarbleController::loopLauncher(bool autoMode)
+    if (_liftBtn->onReleased())
     {
+        pressedDuringError = false;
+    }
+}
 
-        long static lastLaunchTime = 0;
+void MarbleController::loopLauncher(bool autoMode)
+{
 
-        // wheel inRange
-        auto wheelState = _wheel->getState();
-        const bool wheelInLaunchRange =
-            wheelState.currentAngle >= LauncherWheelMinAngle &&
-            wheelState.currentAngle <= LauncherWheelMaxAngle;
-        const bool wheelInLoadRange =
-            wheelState.currentAngle >= LauncherWheelLoadMinAngle &&
-            wheelState.currentAngle <= LauncherWheelLoadMaxAngle;
-        auto launcherState = _launcher->getState();
-        auto static launchWaitingMillis = 0;
-        auto static lastDownMillis = 0;
-        auto static shouldShowLaunchAttention = false;
+    long static lastLaunchTime = 0;
 
-        static uint ballsLaunched = 0;
-        // Reset number of balls launched
-        if (!wheelInLaunchRange)
+    // wheel inRange
+    auto wheelState = _wheel->getState();
+    const bool wheelInLaunchRange =
+        wheelState.currentAngle >= LauncherWheelMinAngle &&
+        wheelState.currentAngle <= LauncherWheelMaxAngle;
+    const bool wheelInLoadRange =
+        wheelState.currentAngle >= LauncherWheelLoadMinAngle &&
+        wheelState.currentAngle <= LauncherWheelLoadMaxAngle;
+    auto launcherState = _launcher->getState();
+    auto static launchWaitingMillis = 0;
+    auto static lastDownMillis = 0;
+    auto static shouldShowLaunchAttention = false;
+
+    static uint ballsLaunched = 0;
+    // Reset number of balls launched
+    if (!wheelInLaunchRange)
+    {
+        ballsLaunched = 0;
+    }
+
+    // LED
+    switch (launcherState.state)
+    {
+    case LauncherStateEnum::UNKNOWN:
+        _launcherLed->set(false);
+        break;
+    case LauncherStateEnum::ERROR:
+        blinkError(_launcherLed);
+        break;
+    case LauncherStateEnum::MOVING_UP:
+    case LauncherStateEnum::UP:
+    case LauncherStateEnum::MOVING_DOWN:
+        blinkBusy(_launcherLed);
+        break;
+    case LauncherStateEnum::DOWN:
+        if (wheelState.state != devices::WheelStateEnum::MOVING && wheelState.state != devices::WheelStateEnum::IDLE)
         {
-            ballsLaunched = 0;
-        }
-
-        // LED
-        switch (launcherState.state)
-        {
-        case LauncherStateEnum::UNKNOWN:
+            // No led during initializing
             _launcherLed->set(false);
-            break;
-        case LauncherStateEnum::ERROR:
-            blinkError(_launcherLed);
-            break;
-        case LauncherStateEnum::MOVING_UP:
-        case LauncherStateEnum::UP:
-        case LauncherStateEnum::MOVING_DOWN:
-            blinkBusy(_launcherLed);
-            break;
-        case LauncherStateEnum::DOWN:
-            if (wheelState.state != devices::WheelStateEnum::MOVING && wheelState.state != devices::WheelStateEnum::IDLE)
+        }
+        else if (wheelInLaunchRange && launcherState.isBallLoaded && ballsLaunched < 2)
+        {
+            // Can Launch
+            if (shouldShowLaunchAttention)
             {
-                // No led during initializing
-                _launcherLed->set(false);
+                blinkAttention(_launcherLed);
             }
-            else if (wheelInLaunchRange && launcherState.isBallLoaded && ballsLaunched < 2)
+            else
             {
-                // Can Launch
-                if (shouldShowLaunchAttention)
-                {
-                    blinkAttention(_launcherLed);
-                }
-                else
-                {
-                    _launcherLed->set(true);
-                }
-            }
-            else if (!launcherState.isBallLoaded && launcherState.isBallWaiting)
-            {
-                // Can load
                 _launcherLed->set(true);
             }
-            else
-            {
-                // Can't do anything
-                _launcherLed->set(false);
-            }
-            break;
+        }
+        else if (!launcherState.isBallLoaded && launcherState.isBallWaiting)
+        {
+            // Can load
+            _launcherLed->set(true);
+        }
+        else
+        {
+            // Can't do anything
+            _launcherLed->set(false);
+        }
+        break;
+    }
+
+    // Button logic
+    switch (launcherState.state)
+    {
+    case LauncherStateEnum::UNKNOWN:
+        // Auto init at start
+        _launcher->init();
+        break;
+    case LauncherStateEnum::ERROR:
+    case LauncherStateEnum::MOVING_UP:
+    case LauncherStateEnum::UP:
+    case LauncherStateEnum::MOVING_DOWN:
+        if (_launcherBtn->onPressed())
+        {
+            playErrorSound();
+        }
+        break;
+    case LauncherStateEnum::DOWN:
+
+        if (lastDownMillis == 0)
+        {
+            lastDownMillis = millis();
         }
 
-        // Button logic
-        switch (launcherState.state)
+        // Auto load if ball waiting and not loaded yet
+        if (wheelInLoadRange && !launcherState.isBallLoaded && launcherState.isBallWaiting)
         {
-        case LauncherStateEnum::UNKNOWN:
-            // Auto init at start
-            _launcher->init();
-            break;
-        case LauncherStateEnum::ERROR:
-        case LauncherStateEnum::MOVING_UP:
-        case LauncherStateEnum::UP:
-        case LauncherStateEnum::MOVING_DOWN:
-            if (_launcherBtn->onPressed())
+            _launcher->load();
+        }
+        else
+        {
+            if (!autoMode)
             {
-                playErrorSound();
-            }
-            break;
-        case LauncherStateEnum::DOWN:
-
-            if (lastDownMillis == 0)
-            {
-                lastDownMillis = millis();
-            }
-
-            // Auto load if ball waiting and not loaded yet
-            if (wheelInLoadRange && !launcherState.isBallLoaded && launcherState.isBallWaiting)
-            {
-                _launcher->load();
-            }
-            else
-            {
-                if (!autoMode)
+                if (wheelInLaunchRange)
                 {
-                    if (wheelInLaunchRange)
+                    if (_launcherBtn->onPressed())
                     {
-                        if (_launcherBtn->onPressed())
+                        if (launcherState.isBallLoaded)
                         {
-                            if (launcherState.isBallLoaded)
+                            if (ballsLaunched >= 2)
                             {
-                                if (ballsLaunched >= 2)
-                                {
-                                    playErrorSound();
-                                    _audio->play(songs::LAUNDER_MAX_2_BALLS, devices::Hv20tPlayMode::QueueIfPlaying);
-                                    MLOG_INFO("%s: Cannot launch - max number of balls are launched", toString().c_str());
-                                    broadcastNotification("MAX_LAUNCHED", "Maximum 2 balls can be launched per wheel rotation");
-                                }
-                                else
-                                {
-                                    _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
-                                    if (_launcher->launch())
-                                    {
-                                        lastLaunchTime = millis();
-                                        ballsLaunched += 1;
-
-                                        shouldShowLaunchAttention = false;
-                                        launchWaitingMillis = 0;
-                                    }
-                                }
+                                playErrorSound();
+                                _audio->play(songs::LAUNDER_MAX_2_BALLS, devices::Hv20tPlayMode::QueueIfPlaying);
+                                MLOG_INFO("%s: Cannot launch - max number of balls are launched", toString().c_str());
+                                broadcastNotification("MAX_LAUNCHED", "Maximum 2 balls can be launched per wheel rotation");
                             }
                             else
                             {
-                                MLOG_INFO("%s: Cannot launch - no ball loaded", toString().c_str());
-                                playErrorSound();
+                                _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
+                                if (_launcher->launch())
+                                {
+                                    lastLaunchTime = millis();
+                                    ballsLaunched += 1;
+
+                                    shouldShowLaunchAttention = false;
+                                    launchWaitingMillis = 0;
+                                }
                             }
                         }
                         else
                         {
-                            // Check if launch ready state to start timer
-                            if (launchWaitingMillis == 0 && ballsLaunched < 2 && launcherState.isBallLoaded)
-                            {
-                                launchWaitingMillis = millis();
-                            }
-                            // Notify user ball is ready to launch after a delay
-                            else if (!shouldShowLaunchAttention && launchWaitingMillis > 0 && millis() - launchWaitingMillis >= _actionNotificationDelayMs)
-                            {
-                                // Wait to play notification
-                                _audio->play(songs::LAUNCH_NOTIFICATION, devices::Hv20tPlayMode::QueueIfPlaying);
-                                shouldShowLaunchAttention = true;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // Reset some values
-                        shouldShowLaunchAttention = false;
-                        launchWaitingMillis = 0;
-
-                        if (_launcherBtn->onPressed())
-                        {
-                            MLOG_INFO("%s: Cannot launch - landing platform not in range", toString().c_str());
+                            MLOG_INFO("%s: Cannot launch - no ball loaded", toString().c_str());
                             playErrorSound();
                         }
                     }
-
-                    break;
+                    else
+                    {
+                        // Check if launch ready state to start timer
+                        if (launchWaitingMillis == 0 && ballsLaunched < 2 && launcherState.isBallLoaded)
+                        {
+                            launchWaitingMillis = millis();
+                        }
+                        // Notify user ball is ready to launch after a delay
+                        else if (!shouldShowLaunchAttention && launchWaitingMillis > 0 && millis() - launchWaitingMillis >= _actionNotificationDelayMs)
+                        {
+                            // Wait to play notification
+                            _audio->play(songs::LAUNCH_NOTIFICATION, devices::Hv20tPlayMode::QueueIfPlaying);
+                            shouldShowLaunchAttention = true;
+                        }
+                    }
                 }
                 else
                 {
-                    // Auto launch
-                    if (launcherState.isBallLoaded && ballsLaunched < 2)
-                    {
-                        // -1: Out range
-                        // 0: Start of range
-                        // 1: End of range
-                        const auto rangeRatio =
-                            wheelInLaunchRange ? (wheelState.currentAngle - LauncherWheelMinAngle) /
-                                                     (LauncherWheelMaxAngle - LauncherWheelMinAngle)
-                                               : -1;
-
-                        auto delay = ballsLaunched == 0 ? 0 : 1000;
-                        if (rangeRatio >= 0.2 && rangeRatio <= 0.8 && millis() - lastDownMillis >= delay)
-                        {
-                            _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
-                            if (_launcher->launch())
-                            {
-                                ballsLaunched += 1;
-                                lastLaunchTime = millis();
-                            }
-                        }
-                    }
+                    // Reset some values
+                    shouldShowLaunchAttention = false;
+                    launchWaitingMillis = 0;
 
                     if (_launcherBtn->onPressed())
                     {
-                        MLOG_INFO("%s: Cannot launch in auto mode", toString().c_str());
+                        MLOG_INFO("%s: Cannot launch - landing platform not in range", toString().c_str());
                         playErrorSound();
                     }
                 }
-            }
-        }
 
-        if (launcherState.state != LauncherStateEnum::DOWN)
-        {
-            lastDownMillis = 0;
-        }
-    }
-
-    void MarbleController::loopWheel(bool autoMode = false)
-    {
-        auto wheelState = _wheel->getState();
-        // 0 = not idle, >0 = idle start time
-        unsigned long static wheelIdleStartTime = 0;
-
-        // LED
-        switch (wheelState.state)
-        {
-        case devices::WheelStateEnum::UNKNOWN:
-            _wheelLed->set(true); // clickable: init will start
-            break;
-        case devices::WheelStateEnum::ERROR:
-            blinkError(_wheelLed);
-            break;
-        case devices::WheelStateEnum::CALIBRATING:
-        case devices::WheelStateEnum::INIT:
-            blinkInit(_wheelLed);
-            break;
-        case devices::WheelStateEnum::MOVING:
-            blinkBusy(_wheelLed);
-            break;
-        case devices::WheelStateEnum::IDLE:
-
-            if (!autoMode && wheelIdleStartTime > 0 && (millis() - wheelIdleStartTime) >= 60000)
-            {
-                blinkAttention(_wheelLed);
+                break;
             }
             else
             {
-                _wheelLed->set(true);
-            }
-            break;
-
-        default:
-            MLOG_ERROR("%s: Unknown wheel state: %d", toString().c_str(), static_cast<int>(wheelState.state));
-            _wheelLed->set(false); // LED off for any other state
-        }
-
-        /** Wheel speed, reduced in auto mode */
-        auto modeSpeed = autoMode ? wheel_timing::AutoSpeedRatio : 1.0f;
-        auto static pressedDuringError = false;
-
-        // Wheel button
-        switch (wheelState.state)
-        {
-        case devices::WheelStateEnum::UNKNOWN:
-            if (autoMode)
-            {
-                // Auto init after 1 second
-                if (millis() > 1000)
+                // Auto launch
+                if (launcherState.isBallLoaded && ballsLaunched < 2)
                 {
-                    _wheel->init(-1, modeSpeed);
-                }
-            }
-            else
-            {
-                if (_wheelBtn->onPressed())
-                {
-                    _wheel->init(-1, modeSpeed);
-                }
-            }
-            break;
+                    // -1: Out range
+                    // 0: Start of range
+                    // 1: End of range
+                    const auto rangeRatio =
+                        wheelInLaunchRange ? (wheelState.currentAngle - LauncherWheelMinAngle) /
+                                                 (LauncherWheelMaxAngle - LauncherWheelMinAngle)
+                                           : -1;
 
-        case devices::WheelStateEnum::IDLE:
-
-            // Remember when idle start:
-            // - Auto mode: trigger next breakpoint at random delay
-            // - Manual Mode:  blink after some time idle
-            if (wheelIdleStartTime == 0)
-            {
-                // First
-                wheelIdleStartTime = millis();
-                if (autoMode)
-                {
-                    _randomWheelDelayMs = 3000 + random(100, 30000);
-                    MLOG_INFO("%s: Next random wheel trigger starts in %.ds", toString().c_str(), _randomWheelDelayMs / 1000);
-                }
-            }
-
-            if (!autoMode)
-            {
-                if (_wheelBtn->onPressed())
-                {
-                    // Button just pressed - start continuous movement until button is released
-                    MLOG_INFO("%s: Starting manual wheel movement as long button is pressed", toString().c_str());
-
-                    playButtonDown();
-                    _wheel->move(100000, modeSpeed); // Large positive number for continuous movement
-                }
-            }
-            else
-            {
-                // When idle, wait for random delay then trigger next breakpoint
-                if (_randomWheelDelayMs > 0 && millis() >= wheelIdleStartTime + _randomWheelDelayMs)
-                {
-                    MLOG_INFO("%s: Goto wheel next breakpoint", toString().c_str());
-                    _wheel->nextBreakPoint(modeSpeed);
-                    _randomWheelDelayMs = 0;
-                }
-                else if (_wheelBtn->onPressed())
-                {
-                    // Idle + auto mode, also allow to start
-                    playButtonClick();
-                    _wheel->nextBreakPoint(modeSpeed);
-                }
-            }
-            break;
-
-        case devices::WheelStateEnum::MOVING:
-            if (!autoMode)
-            {
-                if (_wheelBtn->onReleased())
-                {
-                    playButtonUp();
-
-                    // Longpress?
-                    if (_wheelBtn->onLastPressedDuration(WHEEL_SPIN_LONG_PRESS_MS))
+                    auto delay = ballsLaunched == 0 ? 0 : 1000;
+                    if (rangeRatio >= 0.2 && rangeRatio <= 0.8 && millis() - lastDownMillis >= delay)
                     {
-                        // Button released - stop the wheel if it was a short press
-                        MLOG_INFO("%s: Press released - stopping wheel", toString().c_str());
-                        _wheel->stop();
-                    }
-                    // Short press
-                    else
-                    {
-                        // next breakpoint on long press release
-                        MLOG_INFO("%s: short press released - moving to next breakpoint", toString().c_str());
-                        _wheel->nextBreakPoint(modeSpeed);
+                        _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
+                        if (_launcher->launch())
+                        {
+                            ballsLaunched += 1;
+                            lastLaunchTime = millis();
+                        }
                     }
                 }
-                else if (_wheelBtn->onPressed())
+
+                if (_launcherBtn->onPressed())
                 {
-                    // Pressed during deceleration
-                    playButtonDown();
-                    _wheel->move(100000, modeSpeed);
-                }
-            }
-            else
-            {
-                if (_wheelBtn->onPressed())
-                {
-                    // during movement no press allowed in auto mode
+                    MLOG_INFO("%s: Cannot launch in auto mode", toString().c_str());
                     playErrorSound();
                 }
             }
-            break;
-        case devices::WheelStateEnum::ERROR:
-            // In error state: play error sound and let the long-press timer run
-            if (_wheelBtn->onPressed())
-            {
-                pressedDuringError = true;
-                playWheelError(_wheel->getErrorCode());
-            }
+        }
+    }
 
-            // Error recovery: 8-second long press starts init
-            else if (pressedDuringError && _wheelBtn->onLastPressedDuration(WHEEL_LONG_PRESS_DURATION_MS))
+    if (launcherState.state != LauncherStateEnum::DOWN)
+    {
+        lastDownMillis = 0;
+    }
+}
+
+void MarbleController::loopWheelLoader(bool /*autoMode*/)
+{
+    auto loaderState = _wheelLoader->getState();
+    auto wheelState = _wheel->getState();
+
+    // Auto init at start
+    if (loaderState.state == WheelLoaderStateEnum::UNKNOWN)
+    {
+        _wheelLoader->init();
+        return;
+    }
+
+    if (loaderState.state != WheelLoaderStateEnum::IDLE)
+    {
+        return;
+    }
+
+    // Check if wheel angle is in range
+    const bool isInRange1 = wheelState.currentAngle >= WheelLoaderRange1Min && wheelState.currentAngle <= WheelLoaderRange1Max;
+    const bool isInRange2 = wheelState.currentAngle >= WheelLoaderRange2Min && wheelState.currentAngle <= WheelLoaderRange2Max;
+
+    static bool wasInRange1 = false;
+    static bool wasInRange2 = false;
+
+    if (isInRange1 && !wasInRange1)
+    {
+        MLOG_INFO("%s: Wheel at angle %.2f, triggering WheelLoader loadAny (Range 1)", toString().c_str(), wheelState.currentAngle);
+        _wheelLoader->loadAny();
+    }
+    else if (isInRange2 && !wasInRange2)
+    {
+        MLOG_INFO("%s: Wheel at angle %.2f, triggering WheelLoader loadAny (Range 2)", toString().c_str(), wheelState.currentAngle);
+        _wheelLoader->loadAny();
+    }
+
+    wasInRange1 = isInRange1;
+    wasInRange2 = isInRange2;
+}
+
+void MarbleController::loopWheel(bool autoMode = false)
+{
+    auto wheelState = _wheel->getState();
+    // 0 = not idle, >0 = idle start time
+    unsigned long static wheelIdleStartTime = 0;
+
+    // LED
+    switch (wheelState.state)
+    {
+    case devices::WheelStateEnum::UNKNOWN:
+        _wheelLed->set(true); // clickable: init will start
+        break;
+    case devices::WheelStateEnum::ERROR:
+        blinkError(_wheelLed);
+        break;
+    case devices::WheelStateEnum::CALIBRATING:
+    case devices::WheelStateEnum::INIT:
+        blinkInit(_wheelLed);
+        break;
+    case devices::WheelStateEnum::MOVING:
+        blinkBusy(_wheelLed);
+        break;
+    case devices::WheelStateEnum::IDLE:
+
+        if (!autoMode && wheelIdleStartTime > 0 && (millis() - wheelIdleStartTime) >= 60000)
+        {
+            blinkAttention(_wheelLed);
+        }
+        else
+        {
+            _wheelLed->set(true);
+        }
+        break;
+
+    default:
+        MLOG_ERROR("%s: Unknown wheel state: %d", toString().c_str(), static_cast<int>(wheelState.state));
+        _wheelLed->set(false); // LED off for any other state
+    }
+
+    /** Wheel speed, reduced in auto mode */
+    auto modeSpeed = autoMode ? wheel_timing::AutoSpeedRatio : 1.0f;
+    auto static pressedDuringError = false;
+
+    // Wheel button
+    switch (wheelState.state)
+    {
+    case devices::WheelStateEnum::UNKNOWN:
+        if (autoMode)
+        {
+            // Auto init after 1 second 
+            // to prevent physical collision with loader initializing
+            if (millis() > 3000)
             {
-                MLOG_INFO("%s: Error recovery long press detected, starting wheel init", toString().c_str());
                 _wheel->init(-1, modeSpeed);
-                _audio->play(songs::WHEEL_RESTART, devices::Hv20tPlayMode::StopThenPlay);
             }
-            break;
-        case devices::WheelStateEnum::CALIBRATING:
-        case devices::WheelStateEnum::INIT:
+        }
+        else
+        {
             if (_wheelBtn->onPressed())
             {
+                _wheel->init(-1, modeSpeed);
+            }
+        }
+        break;
+
+    case devices::WheelStateEnum::IDLE:
+
+        // Remember when idle start:
+        // - Auto mode: trigger next breakpoint at random delay
+        // - Manual Mode:  blink after some time idle
+        if (wheelIdleStartTime == 0)
+        {
+            // First
+            wheelIdleStartTime = millis();
+            if (autoMode)
+            {
+                _randomWheelDelayMs = 3000 + random(100, 30000);
+                MLOG_INFO("%s: Next random wheel trigger starts in %.ds", toString().c_str(), _randomWheelDelayMs / 1000);
+            }
+        }
+
+        if (!autoMode)
+        {
+            if (_wheelBtn->onPressed())
+            {
+                // Button just pressed - start continuous movement until button is released
+                MLOG_INFO("%s: Starting manual wheel movement as long button is pressed", toString().c_str());
+
+                playButtonDown();
+                _wheel->move(100000, modeSpeed); // Large positive number for continuous movement
+            }
+        }
+        else
+        {
+            // When idle, wait for random delay then trigger next breakpoint
+            if (_randomWheelDelayMs > 0 && millis() >= wheelIdleStartTime + _randomWheelDelayMs)
+            {
+                MLOG_INFO("%s: Goto wheel next breakpoint", toString().c_str());
+                _wheel->nextBreakPoint(modeSpeed);
+                _randomWheelDelayMs = 0;
+            }
+            else if (_wheelBtn->onPressed())
+            {
+                // Idle + auto mode, also allow to start
+                playButtonClick();
+                _wheel->nextBreakPoint(modeSpeed);
+            }
+        }
+        break;
+
+    case devices::WheelStateEnum::MOVING:
+        if (!autoMode)
+        {
+            if (_wheelBtn->onReleased())
+            {
+                playButtonUp();
+
+                // Longpress?
+                if (_wheelBtn->onLastPressedDuration(WHEEL_SPIN_LONG_PRESS_MS))
+                {
+                    // Button released - stop the wheel if it was a short press
+                    MLOG_INFO("%s: Press released - stopping wheel", toString().c_str());
+                    _wheel->stop();
+                }
+                // Short press
+                else
+                {
+                    // next breakpoint on long press release
+                    MLOG_INFO("%s: short press released - moving to next breakpoint", toString().c_str());
+                    _wheel->nextBreakPoint(modeSpeed);
+                }
+            }
+            else if (_wheelBtn->onPressed())
+            {
+                // Pressed during deceleration
+                playButtonDown();
+                _wheel->move(100000, modeSpeed);
+            }
+        }
+        else
+        {
+            if (_wheelBtn->onPressed())
+            {
+                // during movement no press allowed in auto mode
                 playErrorSound();
             }
-            break;
-        default:
-            break;
         }
-
-        // Reset Wheel idle time
-        if (wheelState.state != devices::WheelStateEnum::IDLE)
+        break;
+    case devices::WheelStateEnum::ERROR:
+        // In error state: play error sound and let the long-press timer run
+        if (_wheelBtn->onPressed())
         {
-            wheelIdleStartTime = 0;
-        }
-
-        // Clear long Press reset
-        if (_wheelBtn->onReleased())
-        {
-            pressedDuringError = false;
-        }
-    }
-
-    void MarbleController::loopAutoSpiral()
-    {
-    }
-
-    void MarbleController::loopManualSpiral()
-    {
-        if (_spiralBtn->onPressed())
-        {
-            playClickSound();
-
-            auto spiralLedState = _spiralLed->getState();
-            if (spiralLedState.mode == "BLINKING")
-            {
-                _spiralLed->set(false);
-            }
-            else
-            {
-                // _spiralLed->blink(20, 940);
-            }
-        }
-    }
-
-    void MarbleController::loopSplitter()
-    {
-        if (!_splitterSensor || !_splitter)
-        {
-            return;
-        }
-
-        const unsigned long now = millis();
-        const auto splitterSensorState = _splitterSensor->getState();
-        const bool isPressed = splitterSensorState.isPressed;
-        const bool pressedEdge = isPressed && !_splitterSensorWasPressed;
-        const bool releasedEdge = !isPressed && _splitterSensorWasPressed;
-        _splitterSensorWasPressed = isPressed;
-
-        if (pressedEdge)
-        {
-            _splitterSensorPressStartTime = now;
-            _splitterLongPressApplied = false;
-
-            if (_splitterCounter < 5)
-            {
-                _splitterCounter++;
-            }
-
-            MLOG_INFO("%s: Splitter pulse queued, counter=%u", toString().c_str(), static_cast<unsigned>(_splitterCounter));
-        }
-
-        if (releasedEdge)
-        {
-            _splitterSensorPressStartTime = 0;
-            _splitterLongPressApplied = false;
-        }
-
-        if (isPressed && _splitterSensorPressStartTime > 0 && !_splitterLongPressApplied)
-        {
-            const unsigned long pressDuration = now - _splitterSensorPressStartTime;
-            if (pressDuration > 1000)
-            {
-                if (_splitterCounter < 3)
-                {
-                    _splitterCounter = 3;
-                }
-                _splitterLongPressApplied = true;
-                MLOG_INFO("%s: Splitter long press detected, counter=%u", toString().c_str(), static_cast<unsigned>(_splitterCounter));
-            }
-        }
-
-        auto splitterState = _splitter->getState();
-
-        // Wait for motion to finish before consuming a queued pulse.
-        if (_splitterMovePending)
-        {
-            if (splitterState.state != devices::WheelStateEnum::IDLE)
-            {
-                _splitterMoveSawBusy = true;
-            }
-            else if (_splitterMoveSawBusy)
-            {
-                _splitterMovePending = false;
-                _splitterMoveSawBusy = false;
-
-                if (_splitterCounter > 0)
-                {
-                    _splitterCounter--;
-                }
-
-                MLOG_INFO("%s: Splitter reached idle, remaining queue=%u", toString().c_str(), static_cast<unsigned>(_splitterCounter));
-                _splitterDelayStart = (_splitterCounter > 0) ? now : 0;
-            }
-
-            return;
-        }
-
-        if (_splitterCounter == 0)
-        {
-            _splitterDelayStart = 0;
-            return;
-        }
-
-        if (_splitterDelayStart == 0)
-        {
-            _splitterDelayStart = now;
-            MLOG_INFO("%s: Splitter delay started, queue=%u", toString().c_str(), static_cast<unsigned>(_splitterCounter));
-            return;
-        }
-
-        if ((now - _splitterDelayStart) < 500UL)
-        {
-            return;
-        }
-
-        if (_splitter->nextBreakPoint())
-        {
-            _splitterMovePending = true;
-            splitterState = _splitter->getState();
-            _splitterMoveSawBusy = (splitterState.state != devices::WheelStateEnum::IDLE);
-            _splitterDelayStart = 0;
-            MLOG_INFO("%s: Splitter move started, queue=%u", toString().c_str(), static_cast<unsigned>(_splitterCounter));
-            return;
-        }
-
-        // Retry later if the command was rejected (for example while not ready).
-        _splitterDelayStart = now;
-    }
-
-    void MarbleController::loopBattery()
-    {
-        if (_battery == nullptr)
-            return;
-
-        auto batteryState = _battery->getState();
-
-        // At startup it is 0 by default, wait until ready and dat is available
-        if (batteryState.status != "Ready" || batteryState.voltage == 0)
-            return;
-
-        long static nextCriticalMillis = 0;
-        long static nextLowMillis = 0;
-        long static nextStatusLogMillis = 0;
-
-        auto now = millis();
-
-        if (nextStatusLogMillis < now)
-        {
-            MLOG_INFO("%s: Battery level: %.2f%%", toString().c_str(), batteryState.batteryPercent);
-            nextStatusLogMillis = now + 300000; // Log every 5 minutes
-        }
-
-        if (batteryState.batteryPercent < 10.0f)
-        {
-            if (nextCriticalMillis < now)
-            {
-                nextCriticalMillis = now + 180000; // Play every 3 minutes
-                MLOG_WARN("%s: Battery critical (%.2f%%)", toString().c_str(), batteryState.batteryPercent);
-                _audio->play(songs::BATTERY_CRITICAL, devices::Hv20tPlayMode::QueueIfPlaying);
-            }
-        }
-        else if (batteryState.batteryPercent < 20.0f)
-        {
-            if (nextLowMillis < now)
-            {
-                nextLowMillis = now + 600000; // Play every 10 minutes
-                MLOG_WARN("%s: Battery low (%.2f%%)", toString().c_str(), batteryState.batteryPercent);
-                _audio->play(songs::BATTERY_LOW, devices::Hv20tPlayMode::QueueIfPlaying);
-            }
-        }
-    }
-
-    void MarbleController::loopConfigError()
-    {
-        bool static didPlayConfigError = false;
-
-        // Loop over all devices and check if there is a config error
-        // Play error once after boot
-        if (!didPlayConfigError)
-        {
-            for (auto &device : getChildren())
-            {
-                auto errorCode = device->getErrorCode();
-                if (errorCode == "CONFIG_ERROR")
-                {
-                    MLOG_ERROR("%s: Device '%s' has a config error, play sound: %s", toString().c_str(), device->getName().c_str(), device->getErrorMessage().c_str());
-                    _audio->play(songs::CONFIG_ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
-                    didPlayConfigError = true;
-                    break;
-                }
-            }
-        }
-    }
-
-    void MarbleController::blinkError(Led *ledDevice)
-    {
-        if (!ledDevice)
-        {
-            return;
-        }
-
-        ledDevice->blink(20, 940);
-    }
-
-    void MarbleController::blinkBusy(Led *ledDevice)
-    {
-        if (!ledDevice)
-        {
-            return;
-        }
-
-        ledDevice->blink(480, 480);
-    }
-
-    void MarbleController::blinkInit(Led *ledDevice)
-    {
-        if (!ledDevice)
-        {
-            return;
-        }
-
-        ledDevice->blink(480, 480);
-    }
-
-    void MarbleController::blinkAttention(Led *ledDevice)
-    {
-        if (!ledDevice)
-        {
-            return;
-        }
-
-        ledDevice->blink(360, 120); // Needs attention
-    }
-
-    void MarbleController::playStartupSound()
-    {
-        //_buzzer->tune("Startup:d=4,o=6,b=1000:c,f,b#"); // Play error tune
-        _audio->play(songs::STARTUP_SOUND, devices::Hv20tPlayMode::QueueIfPlaying);
-    }
-
-    void MarbleController::playErrorSound(Hv20tPlayMode mode, std::vector<int> additionalReplaceSongIndexes)
-    {
-
-        // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
-        // _buzzer->tune("Error:d=4,o=6,b=100:a,d"); // Play error tune
-
-        // Create the default replace list with button sounds
-        std::vector<int> replaceSongIndexes = {songs::getButtonDownSound(), songs::getButtonUpSound(), songs::getButtonClickSound(), songs::ERROR};
-
-        // Add any additional indexes
-        replaceSongIndexes.insert(replaceSongIndexes.end(), additionalReplaceSongIndexes.begin(), additionalReplaceSongIndexes.end());
-
-        // Check if any song from the replace list is currently playing
-        auto currentIndex = _audio->getPlayingIndex();
-        bool shouldReplace = false;
-
-        for (int songIndex : replaceSongIndexes)
-        {
-            if (currentIndex == songIndex)
-            {
-                shouldReplace = true;
-                break;
-            }
-        }
-
-        if (shouldReplace)
-        {
-            _audio->play(songs::ERROR, devices::Hv20tPlayMode::StopThenPlay);
-        }
-        else
-        {
-            _audio->play(songs::ERROR, mode);
-        }
-    }
-
-    void MarbleController::playLiftError(const String &errorCode)
-    {
-        if (errorCode == "LIFT_NO_ZERO")
-        {
-            playErrorSound(Hv20tPlayMode::QueueIfPlaying, {songs::LIFT_STOP});
-            _audio->play(songs::LIFT_NO_ZERO, devices::Hv20tPlayMode::QueueIfPlaying);
-        }
-        else if (errorCode == "LIFT_INIT_NO_ZERO")
-        {
-            playErrorSound(Hv20tPlayMode::QueueIfPlaying, {songs::LIFT_STOP});
-            _audio->play(songs::LIFT_INIT_ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
-        }
-    }
-
-    void MarbleController::playWheelError(const String &errorCode)
-    {
-        if (errorCode == "CalibrationZeroNotFound")
-        {
-            _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
-            _audio->play(songs::WHEEL_CALIBRATION_FIRST_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
-        }
-        else if (errorCode == "CalibrationSecondZeroNotFound")
-        {
-            _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
-            _audio->play(songs::WHEEL_CALIBRATION_SECOND_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
-        }
-        else if (errorCode == "ZeroNotFound")
-        {
-            _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
-            _audio->play(songs::WHEEL_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
-        }
-        else if (errorCode == "UnexpectedZeroTrigger")
-        {
-            _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
-            _audio->play(songs::WHEEL_UNEXPECTED_ZERO_TRIGGER, devices::Hv20tPlayMode::QueueIfPlaying);
-        }
-        else
-        {
-            playErrorSound();
-            MLOG_ERROR("%s: Unknown Wheel errorCode '%s', cannot play audio", toString().c_str(), errorCode.c_str());
-        }
-    }
-
-    void MarbleController::playClickSound()
-    {
-        // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
-        _buzzer->tone(640, 50);
-    }
-
-    void MarbleController::playClickOffSound()
-    {
-        // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
-        _buzzer->tone(320, 50);
-    }
-
-    void MarbleController::playButtonDown(std::vector<int> additionalReplaceSongIndexes)
-    {
-        // Create the default replace list with button sounds
-        std::vector<int> replaceSongIndexes = {songs::getButtonDownSound(), songs::getButtonUpSound(), songs::getButtonClickSound()};
-
-        // Add any additional indexes
-        replaceSongIndexes.insert(replaceSongIndexes.end(), additionalReplaceSongIndexes.begin(), additionalReplaceSongIndexes.end());
-
-        // Check if any song from the replace list is currently playing
-        auto currentIndex = _audio->getPlayingIndex();
-        bool shouldReplace = false;
-
-        for (int songIndex : replaceSongIndexes)
-        {
-            if (currentIndex == songIndex)
-            {
-                shouldReplace = true;
-                break;
-            }
-        }
-
-        if (shouldReplace)
-        {
-            _audio->play(songs::getButtonDownSound(), devices::Hv20tPlayMode::StopThenPlay);
-        }
-        else
-        {
-            _audio->play(songs::getButtonDownSound(), devices::Hv20tPlayMode::SkipIfPlaying);
-        }
-    }
-
-    void MarbleController::playButtonUp(std::vector<int> additionalReplaceSongIndexes)
-    {
-        // Create the default replace list with button sounds
-        std::vector<int> replaceSongIndexes = {songs::getButtonDownSound(), songs::getButtonUpSound(), songs::getButtonClickSound()};
-
-        // Add any additional indexes
-        replaceSongIndexes.insert(replaceSongIndexes.end(), additionalReplaceSongIndexes.begin(), additionalReplaceSongIndexes.end());
-
-        // Check if any song from the replace list is currently playing
-        auto currentIndex = _audio->getPlayingIndex();
-        bool shouldReplace = false;
-
-        for (int songIndex : replaceSongIndexes)
-        {
-            if (currentIndex == songIndex)
-            {
-                shouldReplace = true;
-                break;
-            }
-        }
-
-        if (shouldReplace)
-        {
-            _audio->play(songs::getButtonUpSound(), devices::Hv20tPlayMode::StopThenPlay);
-        }
-        else
-        {
-            _audio->play(songs::getButtonUpSound(), devices::Hv20tPlayMode::SkipIfPlaying);
-        }
-    }
-
-    void MarbleController::playButtonClick(std::vector<int> additionalReplaceSongIndexes)
-    {
-        // Create the default replace list with button sounds
-        std::vector<int> replaceSongIndexes = {songs::getButtonDownSound(), songs::getButtonUpSound(), songs::getButtonClickSound()};
-
-        // Add any additional indexes
-        replaceSongIndexes.insert(replaceSongIndexes.end(), additionalReplaceSongIndexes.begin(), additionalReplaceSongIndexes.end());
-
-        // Check if any song from the replace list is currently playing
-        auto currentIndex = _audio->getPlayingIndex();
-        bool shouldReplace = false;
-
-        for (int songIndex : replaceSongIndexes)
-        {
-            if (currentIndex == songIndex)
-            {
-                shouldReplace = true;
-                break;
-            }
-        }
-
-        if (shouldReplace)
-        {
-            _audio->play(songs::getButtonClickSound(), devices::Hv20tPlayMode::StopThenPlay);
-        }
-        else
-        {
-            _audio->play(songs::getButtonClickSound(), devices::Hv20tPlayMode::SkipIfPlaying);
-        }
-    }
-
-    void MarbleController::onWheelStateChange(void *statePtr)
-    {
-        static devices::WheelStateEnum previousWheelState = devices::WheelStateEnum::UNKNOWN;
-
-        auto *wheelState = static_cast<devices::WheelState *>(statePtr);
-        if (!wheelState)
-        {
-            return;
-        }
-
-        // * -> CALIBRATING
-        if (previousWheelState != devices::WheelStateEnum::CALIBRATING &&
-            wheelState->state == devices::WheelStateEnum::CALIBRATING)
-        {
-            _audio->removeFromQueue(songs::WHEEL_CALIBRATION_START);
-            _audio->removeFromQueue(songs::WHEEL_CALIBRATION_END);
-            _audio->play(songs::WHEEL_CALIBRATION_START, devices::Hv20tPlayMode::QueueIfPlaying);
-        }
-
-        // ERROR -> *
-        // If error is gone, remove queued error songs
-        if (previousWheelState == devices::WheelStateEnum::ERROR &&
-            wheelState->state != devices::WheelStateEnum::ERROR)
-        {
-            // Don't play error that are not active anymore
-            _audio->removeFromQueue(songs::WHEEL_ZERO_NOT_FOUND);
-            _audio->removeFromQueue(songs::WHEEL_CALIBRATION_FIRST_ZERO_NOT_FOUND);
-            _audio->removeFromQueue(songs::WHEEL_CALIBRATION_SECOND_ZERO_NOT_FOUND);
-            _audio->removeFromQueue(songs::WHEEL_UNEXPECTED_ZERO_TRIGGER);
-        }
-
-        // * -> ERROR
-        if (previousWheelState != devices::WheelStateEnum::ERROR &&
-            wheelState->state == devices::WheelStateEnum::ERROR)
-        {
+            pressedDuringError = true;
             playWheelError(_wheel->getErrorCode());
         }
 
-        // CALIBRATING -> IDLE
-        if (previousWheelState == devices::WheelStateEnum::CALIBRATING &&
-            wheelState->state == devices::WheelStateEnum::IDLE)
+        // Error recovery: 8-second long press starts init
+        else if (pressedDuringError && _wheelBtn->onLastPressedDuration(WHEEL_LONG_PRESS_DURATION_MS))
         {
-            _audio->play(songs::NOTIFICATION, devices::Hv20tPlayMode::QueueIfPlaying);
-            _audio->play(songs::WHEEL_CALIBRATION_END, devices::Hv20tPlayMode::QueueIfPlaying);
+            MLOG_INFO("%s: Error recovery long press detected, starting wheel init", toString().c_str());
+            _wheel->init(-1, modeSpeed);
+            _audio->play(songs::WHEEL_RESTART, devices::Hv20tPlayMode::StopThenPlay);
         }
-        previousWheelState = wheelState->state;
+        break;
+    case devices::WheelStateEnum::CALIBRATING:
+    case devices::WheelStateEnum::INIT:
+        if (_wheelBtn->onPressed())
+        {
+            playErrorSound();
+        }
+        break;
+    default:
+        break;
     }
 
-    void MarbleController::onLiftStateChange(void *statePtr)
+    // Reset Wheel idle time
+    if (wheelState.state != devices::WheelStateEnum::IDLE)
     {
-        static devices::LiftStateEnum previousLiftState = devices::LiftStateEnum::UNKNOWN;
-
-        auto *liftState = static_cast<devices::LiftState *>(statePtr);
-        if (!liftState)
-        {
-            return;
-        }
-
-        if (previousLiftState != devices::LiftStateEnum::LIFT_UP &&
-            liftState->state == devices::LiftStateEnum::LIFT_UP &&
-            liftState->isLoaded)
-        {
-            _audio->play(songs::LIFT_STOP, devices::Hv20tPlayMode::SkipIfPlaying);
-        }
-
-        if (previousLiftState != devices::LiftStateEnum::LIFT_DOWN &&
-            liftState->state == devices::LiftStateEnum::LIFT_DOWN &&
-            !liftState->isLoaded)
-        {
-            _audio->play(songs::LIFT_STOP, devices::Hv20tPlayMode::QueueIfPlaying);
-        }
-
-        // ERROR -> *
-        // If error is gone, remove queued error songs
-        // if (previousLiftState == devices::LiftStateEnum::ERROR &&
-        //     liftState->state != devices::LiftStateEnum::ERROR)
-        // {
-        // }
-
-        // * -> ERROR
-        if (previousLiftState != devices::LiftStateEnum::ERROR &&
-            liftState->state == devices::LiftStateEnum::ERROR)
-        {
-            playLiftError(_lift->getErrorCode());
-        }
-
-        previousLiftState = liftState->state;
+        wheelIdleStartTime = 0;
     }
+
+    // Clear long Press reset
+    if (_wheelBtn->onReleased())
+    {
+        pressedDuringError = false;
+    }
+}
+
+void MarbleController::loopAutoSpiral()
+{
+}
+
+void MarbleController::loopManualSpiral()
+{
+    if (_spiralBtn->onPressed())
+    {
+        playClickSound();
+
+        auto spiralLedState = _spiralLed->getState();
+        if (spiralLedState.mode == "BLINKING")
+        {
+            _spiralLed->set(false);
+        }
+        else
+        {
+            // _spiralLed->blink(20, 940);
+        }
+    }
+}
+
+void MarbleController::loopSplitter()
+{
+    if (!_splitterSensor || !_splitter)
+    {
+        return;
+    }
+
+    const unsigned long now = millis();
+    const auto splitterSensorState = _splitterSensor->getState();
+    const bool isPressed = splitterSensorState.isPressed;
+    const bool pressedEdge = isPressed && !_splitterSensorWasPressed;
+    const bool releasedEdge = !isPressed && _splitterSensorWasPressed;
+    _splitterSensorWasPressed = isPressed;
+
+    if (pressedEdge)
+    {
+        _splitterSensorPressStartTime = now;
+        _splitterLongPressApplied = false;
+
+        if (_splitterCounter < 5)
+        {
+            _splitterCounter++;
+        }
+
+        MLOG_INFO("%s: Splitter pulse queued, counter=%u", toString().c_str(), static_cast<unsigned>(_splitterCounter));
+    }
+
+    if (releasedEdge)
+    {
+        _splitterSensorPressStartTime = 0;
+        _splitterLongPressApplied = false;
+    }
+
+    if (isPressed && _splitterSensorPressStartTime > 0 && !_splitterLongPressApplied)
+    {
+        const unsigned long pressDuration = now - _splitterSensorPressStartTime;
+        if (pressDuration > 1000)
+        {
+            if (_splitterCounter < 3)
+            {
+                _splitterCounter = 3;
+            }
+            _splitterLongPressApplied = true;
+            MLOG_INFO("%s: Splitter long press detected, counter=%u", toString().c_str(), static_cast<unsigned>(_splitterCounter));
+        }
+    }
+
+    auto splitterState = _splitter->getState();
+
+    // Wait for motion to finish before consuming a queued pulse.
+    if (_splitterMovePending)
+    {
+        if (splitterState.state != devices::WheelStateEnum::IDLE)
+        {
+            _splitterMoveSawBusy = true;
+        }
+        else if (_splitterMoveSawBusy)
+        {
+            _splitterMovePending = false;
+            _splitterMoveSawBusy = false;
+
+            if (_splitterCounter > 0)
+            {
+                _splitterCounter--;
+            }
+
+            MLOG_INFO("%s: Splitter reached idle, remaining queue=%u", toString().c_str(), static_cast<unsigned>(_splitterCounter));
+            _splitterDelayStart = (_splitterCounter > 0) ? now : 0;
+        }
+
+        return;
+    }
+
+    if (_splitterCounter == 0)
+    {
+        _splitterDelayStart = 0;
+        return;
+    }
+
+    if (_splitterDelayStart == 0)
+    {
+        _splitterDelayStart = now;
+        MLOG_INFO("%s: Splitter delay started, queue=%u", toString().c_str(), static_cast<unsigned>(_splitterCounter));
+        return;
+    }
+
+    if ((now - _splitterDelayStart) < 500UL)
+    {
+        return;
+    }
+
+    if (_splitter->nextBreakPoint())
+    {
+        _splitterMovePending = true;
+        splitterState = _splitter->getState();
+        _splitterMoveSawBusy = (splitterState.state != devices::WheelStateEnum::IDLE);
+        _splitterDelayStart = 0;
+        MLOG_INFO("%s: Splitter move started, queue=%u", toString().c_str(), static_cast<unsigned>(_splitterCounter));
+        return;
+    }
+
+    // Retry later if the command was rejected (for example while not ready).
+    _splitterDelayStart = now;
+}
+
+void MarbleController::loopBattery()
+{
+    if (_battery == nullptr)
+        return;
+
+    auto batteryState = _battery->getState();
+
+    // At startup it is 0 by default, wait until ready and dat is available
+    if (batteryState.status != "Ready" || batteryState.voltage == 0)
+        return;
+
+    long static nextCriticalMillis = 0;
+    long static nextLowMillis = 0;
+    long static nextStatusLogMillis = 0;
+
+    auto now = millis();
+
+    if (nextStatusLogMillis < now)
+    {
+        MLOG_INFO("%s: Battery level: %.2f%%", toString().c_str(), batteryState.batteryPercent);
+        nextStatusLogMillis = now + 300000; // Log every 5 minutes
+    }
+
+    if (batteryState.batteryPercent < 10.0f)
+    {
+        if (nextCriticalMillis < now)
+        {
+            nextCriticalMillis = now + 180000; // Play every 3 minutes
+            MLOG_WARN("%s: Battery critical (%.2f%%)", toString().c_str(), batteryState.batteryPercent);
+            _audio->play(songs::BATTERY_CRITICAL, devices::Hv20tPlayMode::QueueIfPlaying);
+        }
+    }
+    else if (batteryState.batteryPercent < 20.0f)
+    {
+        if (nextLowMillis < now)
+        {
+            nextLowMillis = now + 600000; // Play every 10 minutes
+            MLOG_WARN("%s: Battery low (%.2f%%)", toString().c_str(), batteryState.batteryPercent);
+            _audio->play(songs::BATTERY_LOW, devices::Hv20tPlayMode::QueueIfPlaying);
+        }
+    }
+}
+
+void MarbleController::loopConfigError()
+{
+    bool static didPlayConfigError = false;
+
+    // Loop over all devices and check if there is a config error
+    // Play error once after boot
+    if (!didPlayConfigError)
+    {
+        for (auto &device : getChildren())
+        {
+            auto errorCode = device->getErrorCode();
+            if (errorCode == "CONFIG_ERROR")
+            {
+                MLOG_ERROR("%s: Device '%s' has a config error, play sound: %s", toString().c_str(), device->getName().c_str(), device->getErrorMessage().c_str());
+                _audio->play(songs::CONFIG_ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+                didPlayConfigError = true;
+                break;
+            }
+        }
+    }
+}
+
+void MarbleController::blinkError(Led *ledDevice)
+{
+    if (!ledDevice)
+    {
+        return;
+    }
+
+    ledDevice->blink(20, 940);
+}
+
+void MarbleController::blinkBusy(Led *ledDevice)
+{
+    if (!ledDevice)
+    {
+        return;
+    }
+
+    ledDevice->blink(480, 480);
+}
+
+void MarbleController::blinkInit(Led *ledDevice)
+{
+    if (!ledDevice)
+    {
+        return;
+    }
+
+    ledDevice->blink(480, 480);
+}
+
+void MarbleController::blinkAttention(Led *ledDevice)
+{
+    if (!ledDevice)
+    {
+        return;
+    }
+
+    ledDevice->blink(360, 120); // Needs attention
+}
+
+void MarbleController::playStartupSound()
+{
+    //_buzzer->tune("Startup:d=4,o=6,b=1000:c,f,b#"); // Play error tune
+    _audio->play(songs::STARTUP_SOUND, devices::Hv20tPlayMode::QueueIfPlaying);
+}
+
+void MarbleController::playErrorSound(Hv20tPlayMode mode, std::vector<int> additionalReplaceSongIndexes)
+{
+
+    // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
+    // _buzzer->tune("Error:d=4,o=6,b=100:a,d"); // Play error tune
+
+    // Create the default replace list with button sounds
+    std::vector<int> replaceSongIndexes = {songs::getButtonDownSound(), songs::getButtonUpSound(), songs::getButtonClickSound(), songs::ERROR};
+
+    // Add any additional indexes
+    replaceSongIndexes.insert(replaceSongIndexes.end(), additionalReplaceSongIndexes.begin(), additionalReplaceSongIndexes.end());
+
+    // Check if any song from the replace list is currently playing
+    auto currentIndex = _audio->getPlayingIndex();
+    bool shouldReplace = false;
+
+    for (int songIndex : replaceSongIndexes)
+    {
+        if (currentIndex == songIndex)
+        {
+            shouldReplace = true;
+            break;
+        }
+    }
+
+    if (shouldReplace)
+    {
+        _audio->play(songs::ERROR, devices::Hv20tPlayMode::StopThenPlay);
+    }
+    else
+    {
+        _audio->play(songs::ERROR, mode);
+    }
+}
+
+void MarbleController::playLiftError(const String &errorCode)
+{
+    if (errorCode == "LIFT_NO_ZERO")
+    {
+        playErrorSound(Hv20tPlayMode::QueueIfPlaying, {songs::LIFT_STOP});
+        _audio->play(songs::LIFT_NO_ZERO, devices::Hv20tPlayMode::QueueIfPlaying);
+    }
+    else if (errorCode == "LIFT_INIT_NO_ZERO")
+    {
+        playErrorSound(Hv20tPlayMode::QueueIfPlaying, {songs::LIFT_STOP});
+        _audio->play(songs::LIFT_INIT_ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+    }
+}
+
+void MarbleController::playWheelError(const String &errorCode)
+{
+    if (errorCode == "CalibrationZeroNotFound")
+    {
+        _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+        _audio->play(songs::WHEEL_CALIBRATION_FIRST_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
+    }
+    else if (errorCode == "CalibrationSecondZeroNotFound")
+    {
+        _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+        _audio->play(songs::WHEEL_CALIBRATION_SECOND_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
+    }
+    else if (errorCode == "ZeroNotFound")
+    {
+        _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+        _audio->play(songs::WHEEL_ZERO_NOT_FOUND, devices::Hv20tPlayMode::QueueIfPlaying);
+    }
+    else if (errorCode == "UnexpectedZeroTrigger")
+    {
+        _audio->play(songs::ERROR, devices::Hv20tPlayMode::QueueIfPlaying);
+        _audio->play(songs::WHEEL_UNEXPECTED_ZERO_TRIGGER, devices::Hv20tPlayMode::QueueIfPlaying);
+    }
+    else
+    {
+        playErrorSound();
+        MLOG_ERROR("%s: Unknown Wheel errorCode '%s', cannot play audio", toString().c_str(), errorCode.c_str());
+    }
+}
+
+void MarbleController::playClickSound()
+{
+    // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
+    _buzzer->tone(640, 50);
+}
+
+void MarbleController::playClickOffSound()
+{
+    // _buzzer->tone(100, 800); // Play a 100ms tone at 800Hz
+    _buzzer->tone(320, 50);
+}
+
+void MarbleController::playButtonDown(std::vector<int> additionalReplaceSongIndexes)
+{
+    // Create the default replace list with button sounds
+    std::vector<int> replaceSongIndexes = {songs::getButtonDownSound(), songs::getButtonUpSound(), songs::getButtonClickSound()};
+
+    // Add any additional indexes
+    replaceSongIndexes.insert(replaceSongIndexes.end(), additionalReplaceSongIndexes.begin(), additionalReplaceSongIndexes.end());
+
+    // Check if any song from the replace list is currently playing
+    auto currentIndex = _audio->getPlayingIndex();
+    bool shouldReplace = false;
+
+    for (int songIndex : replaceSongIndexes)
+    {
+        if (currentIndex == songIndex)
+        {
+            shouldReplace = true;
+            break;
+        }
+    }
+
+    if (shouldReplace)
+    {
+        _audio->play(songs::getButtonDownSound(), devices::Hv20tPlayMode::StopThenPlay);
+    }
+    else
+    {
+        _audio->play(songs::getButtonDownSound(), devices::Hv20tPlayMode::SkipIfPlaying);
+    }
+}
+
+void MarbleController::playButtonUp(std::vector<int> additionalReplaceSongIndexes)
+{
+    // Create the default replace list with button sounds
+    std::vector<int> replaceSongIndexes = {songs::getButtonDownSound(), songs::getButtonUpSound(), songs::getButtonClickSound()};
+
+    // Add any additional indexes
+    replaceSongIndexes.insert(replaceSongIndexes.end(), additionalReplaceSongIndexes.begin(), additionalReplaceSongIndexes.end());
+
+    // Check if any song from the replace list is currently playing
+    auto currentIndex = _audio->getPlayingIndex();
+    bool shouldReplace = false;
+
+    for (int songIndex : replaceSongIndexes)
+    {
+        if (currentIndex == songIndex)
+        {
+            shouldReplace = true;
+            break;
+        }
+    }
+
+    if (shouldReplace)
+    {
+        _audio->play(songs::getButtonUpSound(), devices::Hv20tPlayMode::StopThenPlay);
+    }
+    else
+    {
+        _audio->play(songs::getButtonUpSound(), devices::Hv20tPlayMode::SkipIfPlaying);
+    }
+}
+
+void MarbleController::playButtonClick(std::vector<int> additionalReplaceSongIndexes)
+{
+    // Create the default replace list with button sounds
+    std::vector<int> replaceSongIndexes = {songs::getButtonDownSound(), songs::getButtonUpSound(), songs::getButtonClickSound()};
+
+    // Add any additional indexes
+    replaceSongIndexes.insert(replaceSongIndexes.end(), additionalReplaceSongIndexes.begin(), additionalReplaceSongIndexes.end());
+
+    // Check if any song from the replace list is currently playing
+    auto currentIndex = _audio->getPlayingIndex();
+    bool shouldReplace = false;
+
+    for (int songIndex : replaceSongIndexes)
+    {
+        if (currentIndex == songIndex)
+        {
+            shouldReplace = true;
+            break;
+        }
+    }
+
+    if (shouldReplace)
+    {
+        _audio->play(songs::getButtonClickSound(), devices::Hv20tPlayMode::StopThenPlay);
+    }
+    else
+    {
+        _audio->play(songs::getButtonClickSound(), devices::Hv20tPlayMode::SkipIfPlaying);
+    }
+}
+
+void MarbleController::onWheelStateChange(void *statePtr)
+{
+    static devices::WheelStateEnum previousWheelState = devices::WheelStateEnum::UNKNOWN;
+
+    auto *wheelState = static_cast<devices::WheelState *>(statePtr);
+    if (!wheelState)
+    {
+        return;
+    }
+
+    // * -> CALIBRATING
+    if (previousWheelState != devices::WheelStateEnum::CALIBRATING &&
+        wheelState->state == devices::WheelStateEnum::CALIBRATING)
+    {
+        _audio->removeFromQueue(songs::WHEEL_CALIBRATION_START);
+        _audio->removeFromQueue(songs::WHEEL_CALIBRATION_END);
+        _audio->play(songs::WHEEL_CALIBRATION_START, devices::Hv20tPlayMode::QueueIfPlaying);
+    }
+
+    // ERROR -> *
+    // If error is gone, remove queued error songs
+    if (previousWheelState == devices::WheelStateEnum::ERROR &&
+        wheelState->state != devices::WheelStateEnum::ERROR)
+    {
+        // Don't play error that are not active anymore
+        _audio->removeFromQueue(songs::WHEEL_ZERO_NOT_FOUND);
+        _audio->removeFromQueue(songs::WHEEL_CALIBRATION_FIRST_ZERO_NOT_FOUND);
+        _audio->removeFromQueue(songs::WHEEL_CALIBRATION_SECOND_ZERO_NOT_FOUND);
+        _audio->removeFromQueue(songs::WHEEL_UNEXPECTED_ZERO_TRIGGER);
+    }
+
+    // * -> ERROR
+    if (previousWheelState != devices::WheelStateEnum::ERROR &&
+        wheelState->state == devices::WheelStateEnum::ERROR)
+    {
+        playWheelError(_wheel->getErrorCode());
+    }
+
+    // CALIBRATING -> IDLE
+    if (previousWheelState == devices::WheelStateEnum::CALIBRATING &&
+        wheelState->state == devices::WheelStateEnum::IDLE)
+    {
+        _audio->play(songs::NOTIFICATION, devices::Hv20tPlayMode::QueueIfPlaying);
+        _audio->play(songs::WHEEL_CALIBRATION_END, devices::Hv20tPlayMode::QueueIfPlaying);
+    }
+    previousWheelState = wheelState->state;
+}
+
+void MarbleController::onLiftStateChange(void *statePtr)
+{
+    static devices::LiftStateEnum previousLiftState = devices::LiftStateEnum::UNKNOWN;
+
+    auto *liftState = static_cast<devices::LiftState *>(statePtr);
+    if (!liftState)
+    {
+        return;
+    }
+
+    if (previousLiftState != devices::LiftStateEnum::LIFT_UP &&
+        liftState->state == devices::LiftStateEnum::LIFT_UP &&
+        liftState->isLoaded)
+    {
+        _audio->play(songs::LIFT_STOP, devices::Hv20tPlayMode::SkipIfPlaying);
+    }
+
+    if (previousLiftState != devices::LiftStateEnum::LIFT_DOWN &&
+        liftState->state == devices::LiftStateEnum::LIFT_DOWN &&
+        !liftState->isLoaded)
+    {
+        _audio->play(songs::LIFT_STOP, devices::Hv20tPlayMode::QueueIfPlaying);
+    }
+
+    // ERROR -> *
+    // If error is gone, remove queued error songs
+    // if (previousLiftState == devices::LiftStateEnum::ERROR &&
+    //     liftState->state != devices::LiftStateEnum::ERROR)
+    // {
+    // }
+
+    // * -> ERROR
+    if (previousLiftState != devices::LiftStateEnum::ERROR &&
+        liftState->state == devices::LiftStateEnum::ERROR)
+    {
+        playLiftError(_lift->getErrorCode());
+    }
+
+    previousLiftState = liftState->state;
+}
 
 } // namespace devices

@@ -12,6 +12,7 @@
 #include "devices/Led.h"
 #include "devices/Lift.h"
 #include "devices/Launcher.h"
+#include "devices/WheelLoader.h"
 #include "devices/PowerMonitor.h"
 #include "devices/Battery.h"
 
@@ -59,6 +60,7 @@ namespace devices
         void loopSplitter();
         void loopWheel(bool autoMode);
         void loopLauncher(bool autoMode);
+        void loopWheelLoader(bool autoMode);
         void loopBattery();
         void loopConfigError();
         void blinkError(Led *ledDevice);
@@ -82,6 +84,7 @@ namespace devices
         Button *_spiralBtn;
         Button *_splitterSensor;
         Launcher *_launcher;
+        WheelLoader *_wheelLoader;
         Led *_launcherLed;
         Button *_launcherBtn;
         PowerMonitor *_powerMonitor;
@@ -121,10 +124,18 @@ namespace devices
         static constexpr unsigned long LauncherPostLoadDelayMs = 500UL;
         static constexpr unsigned long LauncherAutoInitDelayMs = 2000UL; ///< Delay before auto init starts
         // Todo: make configurable via UI
-        static constexpr float LauncherWheelMinAngle = 340.0f;     ///< Min wheel angle for launch (manual mode)
-        static constexpr float LauncherWheelMaxAngle = 355.0f;     ///< Max wheel angle for launch (manual mode)
+        static constexpr float LauncherWheelMinAngle = 340.0f; ///< Min wheel angle for launch (manual mode)
+        static constexpr float LauncherWheelMaxAngle = 355.0f; ///< Max wheel angle for launch (manual mode)
+
+        // Prevent physical collisions with wheel
         static constexpr float LauncherWheelLoadMinAngle = 200.0f; ///< Min wheel angle for launch (manual mode)
         static constexpr float LauncherWheelLoadMaxAngle = 355.0f; ///< Max wheel angle for launch (manual mode)
+
+        // WheelLoader load ranges
+        static constexpr float WheelLoaderRange1Min = 81.0f - 25.0f;
+        static constexpr float WheelLoaderRange1Max = 81.0f;
+        static constexpr float WheelLoaderRange2Min = 316.0f - 25.0f;
+        static constexpr float WheelLoaderRange2Max = 316.0f;
 
         // Random delay before next wheel trigger
         unsigned long _randomWheelDelayMs = 0;

@@ -962,6 +962,9 @@ namespace devices
         const bool wheelInLaunchRange =
             wheelState.currentAngle >= LauncherWheelMinAngle &&
             wheelState.currentAngle <= LauncherWheelMaxAngle;
+        const bool wheelInLoadRange =
+            wheelState.currentAngle >= LauncherWheelLoadMinAngle &&
+            wheelState.currentAngle <= LauncherWheelLoadMaxAngle;
         auto launcherState = _launcher->getState();
         auto static launchWaitingMillis = 0;
         auto static lastDownMillis = 0;
@@ -1043,7 +1046,7 @@ namespace devices
             }
 
             // Auto load if ball waiting and not loaded yet
-            if (!launcherState.isBallLoaded && launcherState.isBallWaiting)
+            if (wheelInLoadRange && !launcherState.isBallLoaded && launcherState.isBallWaiting)
             {
                 _launcher->load();
             }

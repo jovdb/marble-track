@@ -316,6 +316,12 @@ namespace devices
         // Wait until down
         else if (_state.isLoadingStep == 4 && _state.state == LauncherStateEnum::DOWN)
         {
+            startTimer(1000);
+            _state.isLoadingStep = 5;
+        }
+        // Wait until ball rolled to it position
+        else if (_state.isLoadingStep == 5 && isTimerExpired())
+        {
             // End
             MLOG_INFO("%s: Loading ended", toString().c_str());
             _state.isLoadingStep = 0;

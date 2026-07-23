@@ -3,6 +3,8 @@ import { useWebSocket2 } from "../hooks/useWebSocket";
 
 export interface IWheelLoaderState extends IDeviceState {
   state: string;
+  leftBallAvailable: boolean;
+  rightBallAvailable: boolean;
 }
 
 export interface IWheelLoaderConfig extends IDeviceConfig {

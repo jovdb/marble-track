@@ -23,7 +23,10 @@ export function WheelLoader(props: { id: string; isPopup?: boolean; onClose?: ()
       configComponent={(onClose) => <WheelLoaderConfig id={props.id} onClose={onClose} />}
     >
       <div class={styles.device__status}>
-        {state()?.state || "Unknown"}
+        <span class={styles["device__status-text"]}>{state()?.state || "Unknown"}</span>
+        <span class={styles["device__status-text"]}>
+          L:{state()?.leftBallAvailable ? "Yes" : "No"} R:{state()?.rightBallAvailable ? "Yes" : "No"}
+        </span>
       </div>
       <div class={styles.device__controls}>
         <button class={styles.device__button} onClick={() => actions.init()}>

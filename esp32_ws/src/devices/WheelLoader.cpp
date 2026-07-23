@@ -23,7 +23,7 @@ namespace devices
         this->setConfig(wheelLoaderConfig);
 
         // Internal composition: 2 servos and 2 buttons
-        _innerServo = new Servo(getId() + "-inner-servo");
+        _innerServo = new Servo(getId() + "-in");
         ServoConfig innerConfig;
         innerConfig.name = "Inner";
         innerConfig.pinConfig = {"", 9};
@@ -36,7 +36,7 @@ namespace devices
         _innerServo->setConfig(innerConfig);
         addChild(_innerServo);
 
-        _outerServo = new Servo(getId() + "-outer-servo");
+        _outerServo = new Servo(getId() + "-out");
         ServoConfig outerConfig;
         outerConfig.name = "Outer";
         outerConfig.pinConfig = {"", 10};
@@ -49,7 +49,7 @@ namespace devices
         _outerServo->setConfig(outerConfig);
         addChild(_outerServo);
 
-        _leftButton = new Button(getId() + "-left-button");
+        _leftButton = new Button(getId() + "-lbtn");
         ButtonConfig leftButtonConfig;
         leftButtonConfig.name = "Button";
         leftButtonConfig.pinConfig = {"", -1};
@@ -59,7 +59,7 @@ namespace devices
         _leftButton->setConfig(leftButtonConfig);
         addChild(_leftButton);
 
-        _rightButton = new Button(getId() + "-right-button");
+        _rightButton = new Button(getId() + "-rbtn");
         ButtonConfig rightButtonConfig;
         rightButtonConfig.name = "Button";
         rightButtonConfig.pinConfig = {"", -1};
@@ -74,12 +74,34 @@ namespace devices
     {
         Device::setup();
         setName(_config.name);
-        MLOG_DEBUG("%s: Setup complete", toString().c_str());
+
+        // Initialize availability based on current button state
+        _state.leftBallAvailable = _leftButton->isPressed();
+        _state.rightBallAvailable = _rightButton->isPressed();
+
+        MLOG_DEBUG("%s: Setup complete. Left: %s, Right: %s", toString().c_str(),
+                   _state.leftBallAvailable ? "Yes" : "No",
+                   _state.rightBallAvailable ? "Yes" : "No");
     }
 
     void WheelLoader::loop()
     {
         Device::loop();
+
+        _state.leftBallAvailable = _leftButton->isPressed();
+        _state.rightBallAvailable = _rightButton->isPressed();
+
+        // Check for new balls
+        if (_leftButton->onPressed())
+        {
+            MLOG_INFO("%s: Left ball available", toString().c_str());
+            notifyStateChanged();
+        }
+        if (_rightButton->onPressed())
+        {
+            MLOG_INFO("%s: Right ball available", toString().c_str());
+            notifyStateChanged();
+        }
 
         if (_state.state != WheelLoaderStateEnum::IDLE && (millis() - _actionStartTime >= _actionWaitMs))
         {
@@ -133,11 +155,28 @@ namespace devices
                 }
             }
         }
+
+        // Disable servos when IDLE and they are done moving to reduce heating/power
+        if (_state.state == WheelLoaderStateEnum::IDLE)
+        {
+            if (_innerServo->getState().state == ServoStateEnum::READY)
+            {
+                _innerServo->disable();
+            }
+            if (_outerServo->getState().state == ServoStateEnum::READY)
+            {
+                _outerServo->disable();
+            }
+        }
     }
 
     bool WheelLoader::init()
     {
         MLOG_INFO("%s: init() called", toString().c_str());
+
+        // Sync presence flags
+        _state.leftBallAvailable = _leftButton->isPressed();
+        _state.rightBallAvailable = _rightButton->isPressed();
 
         // Move both servos to center
         _innerServo->setValue(_config.innerCenter);
@@ -160,8 +199,7 @@ namespace devices
         _state.state = WheelLoaderStateEnum::LOADING_LEFT;
         _sequenceStep = 0;
 
-        // Step 0: inner to 1 + outer to 0
-        //_innerServo->setValue(1.0f);
+        // Step 0: outer to 0
         _outerServo->setValue(0.0f);
 
         _actionWaitMs = _outerServo->getConfig().defaultDurationInMs + 500;
@@ -177,8 +215,7 @@ namespace devices
         _state.state = WheelLoaderStateEnum::LOADING_RIGHT;
         _sequenceStep = 0;
 
-        // Step 0: inner to 0 + outer to 1
-        //_innerServo->setValue(0.0f);
+        // Step 0: outer to 1
         _outerServo->setValue(1.0f);
 
         _actionWaitMs = _outerServo->getConfig().defaultDurationInMs + 500;
@@ -191,8 +228,26 @@ namespace devices
     bool WheelLoader::loadAny()
     {
         MLOG_INFO("%s: loadAny() called", toString().c_str());
-        // Simple logic: if left button is pressed, load left. Else load right.
-        if (_leftButton->isPressed())
+
+        if (!_state.leftBallAvailable && !_state.rightBallAvailable)
+        {
+            MLOG_INFO("%s: No balls available to load", toString().c_str());
+            return false;
+        }
+
+        if (_state.leftBallAvailable && _state.rightBallAvailable)
+        {
+            // Both available, pick random
+            if (random(2) == 0)
+            {
+                return loadLeft();
+            }
+            else
+            {
+                return loadRight();
+            }
+        }
+        else if (_state.leftBallAvailable)
         {
             return loadLeft();
         }
@@ -227,6 +282,9 @@ namespace devices
 
     void WheelLoader::addDeviceStateToJson(JsonDocument &doc)
     {
+        doc["leftBallAvailable"] = _state.leftBallAvailable;
+        doc["rightBallAvailable"] = _state.rightBallAvailable;
+
         switch (_state.state)
         {
         case WheelLoaderStateEnum::IDLE:

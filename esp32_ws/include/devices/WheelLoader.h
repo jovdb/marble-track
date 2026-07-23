@@ -49,6 +49,8 @@ namespace devices
     struct WheelLoaderState
     {
         WheelLoaderStateEnum state = WheelLoaderStateEnum::UNKNOWN;
+        bool leftBallAvailable = false;
+        bool rightBallAvailable = false;
     };
 
     /**

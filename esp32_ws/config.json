@@ -614,7 +614,7 @@
           "type": "wheelloader",
           "children": [
             {
-              "id": "wheel-loader-inner-servo",
+              "id": "wheel-loader-in",
               "type": "servo",
               "children": [],
               "config": {
@@ -632,7 +632,7 @@
               }
             },
             {
-              "id": "wheel-loader-outer-servo",
+              "id": "wheel-loader-out",
               "type": "servo",
               "children": [],
               "config": {
@@ -650,7 +650,7 @@
               }
             },
             {
-              "id": "wheel-loader-left-button",
+              "id": "wheel-loader-lbtn",
               "type": "button",
               "children": [],
               "config": {
@@ -665,7 +665,7 @@
               }
             },
             {
-              "id": "wheel-loader-right-button",
+              "id": "wheel-loader-rbtn",
               "type": "button",
               "children": [],
               "config": {

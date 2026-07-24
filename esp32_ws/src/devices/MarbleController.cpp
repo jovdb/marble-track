@@ -975,12 +975,17 @@ namespace devices
         auto static launchWaitingMillis = 0;
         auto static lastDownMillis = 0;
         auto static shouldShowLaunchAttention = false;
+        static bool firstManualLaunchDone = false;
 
         static uint ballsLaunched = 0;
         // Reset number of balls launched
         if (!wheelInLaunchRange)
         {
             ballsLaunched = 0;
+            if (!autoMode)
+            {
+                firstManualLaunchDone = false;
+            }
         }
 
         // LED
@@ -1062,6 +1067,20 @@ namespace devices
                 {
                     if (wheelInLaunchRange)
                     {
+                        // Auto-launch the first ball in manual mode to clear any pre-existing ball
+                        if (!firstManualLaunchDone && launcherState.isBallLoaded && ballsLaunched == 0)
+                        {
+                            MLOG_INFO("%s: First manual launch triggered automatically to clear potential pre-existing ball", toString().c_str());
+                            if (_launcher->launch())
+                            {
+                                firstManualLaunchDone = true;
+                                lastLaunchTime = millis();
+                                ballsLaunched += 1;
+                                shouldShowLaunchAttention = false;
+                                launchWaitingMillis = 0;
+                            }
+                        }
+
                         if (_launcherBtn->onPressed())
                         {
                             if (launcherState.isBallLoaded)

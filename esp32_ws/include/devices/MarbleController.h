@@ -132,9 +132,9 @@ namespace devices
         static constexpr float LauncherWheelLoadMaxAngle = 355.0f; ///< Max wheel angle for launch (manual mode)
 
         // WheelLoader load ranges
-        static constexpr float WheelLoaderRange1Min = 81.0f - 20.0f;
+        static constexpr float WheelLoaderRange1Min = 81.0f - 22.0f;
         static constexpr float WheelLoaderRange1Max = 81.0f;
-        static constexpr float WheelLoaderRange2Min = 316.0f - 20.0f;
+        static constexpr float WheelLoaderRange2Min = 316.0f - 22.0f;
         static constexpr float WheelLoaderRange2Max = 316.0f;
 
         // Random delay before next wheel trigger

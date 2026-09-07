@@ -70,9 +70,9 @@ namespace devices
                        toString().c_str(), _config.i2cAddress, _config.i2cDeviceId.c_str());
             Device::setError("NO_ACK", "INA226 at 0x" + String(_config.i2cAddress, HEX) + " not responding — is it connected?");
             _state.status = "Error";
-            notifyStateChanged();
             delete _ina226;
             _ina226 = nullptr;
+            notifyStateChanged();
             return;
         }
 
@@ -163,8 +163,6 @@ namespace devices
 
     void PowerMonitor::addDeviceStateToJson(JsonDocument &doc)
     {
-        if (_state.status == "Error" && _ina226)
-            init();
         // Always do a fresh read so the website gets up-to-date values on every request
         if (_state.status == "Ready" && _ina226)
             readMeasurements();

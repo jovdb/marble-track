@@ -221,7 +221,6 @@ namespace devices
 
         if (_battery)
         {
-            MLOG_DEBUG("%s: Checking battery before startup...", toString().c_str());
             if (_battery->refresh())
             {
                 if (_battery->getState().voltage > 0)
@@ -485,7 +484,7 @@ namespace devices
             unsigned long pressDuration = _liftButtonPressStartTime > 0 ? millis() - _liftButtonPressStartTime : 0;
 
             // Check for long press while button is held
-            if (pressedDuringError && _liftBtn->onLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
+            if (pressedDuringError && _liftBtn->onPressedDuration(lift_timing::ErrorLongPressDurationMs))
             {
                 MLOG_INFO("%s: Error recovery long press detected, starting lift init", toString().c_str());
                 _lift->init(lift_timing::LiftManualSpeedRatio);
@@ -502,86 +501,128 @@ namespace devices
             }
             break;
         case devices::LiftStateEnum::LIFT_DOWN_LOADING:
-            if (_liftBtn->onPressed())
-            {
-                if (_liftQueuedPresses < 3)
-                {
-                    _liftQueuedPresses++;
-                    playButtonClick({songs::LIFT_STOP});
-                }
-                else
-                {
-                    playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
-                }
-            }
-            break;
         case devices::LiftStateEnum::MOVING_UP:
-            if (_liftBtn->onPressed())
-            {
-                if (_liftQueuedPresses < 2)
-                {
-                    _liftQueuedPresses++;
-                    playButtonClick({songs::LIFT_STOP});
-                }
-                else
-                {
-                    playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
-                }
-            }
-            break;
         case devices::LiftStateEnum::LIFT_UP_UNLOADING:
-            if (_liftBtn->onPressed())
-            {
-                if (_liftQueuedPresses < 1)
-                {
-                    _liftQueuedPresses++;
-                    playButtonClick({songs::LIFT_STOP});
-                }
-                else
-                {
-                    playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
-                }
-            }
-            break;
         case devices::LiftStateEnum::MOVING_DOWN: // Loading in progress
             if (_liftBtn->onPressed())
             {
-                playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
+                _liftQueuedPresses += 2;
+                playButtonClick({songs::LIFT_STOP});
             }
             break;
 
         case devices::LiftStateEnum::LIFT_DOWN:
         {
-            // Replay queued press: loaded + queued => go up and consume one
-            if (_liftQueuedPresses > 0 || _liftBtn->onPressed())
+            if (_liftBtn->onPressedDuration(5000)) {
+                // TODO: process all balls
+            }
+
+            if (_liftBtn->onPressed())
             {
+                playButtonClick({songs::LIFT_STOP});
                 if (liftState.isLoaded)
                 {
-                    if (_lift->up(lift_timing::LiftManualSpeedRatio))
-                    {
-                        if (!_liftBtn->onPressed())
-                            _liftQueuedPresses--;
-                    }
-                    if (_liftBtn->onPressed())
-                        playButtonClick({songs::LIFT_STOP});
+                    _liftQueuedPresses += 1;
                 }
                 else
                 {
-                    if (_lift->loadBall())
+                    _liftQueuedPresses += 2;
+                }
+            }
+
+            if (_liftQueuedPresses > 0)
+            {
+                if (!liftState.isLoaded)
+                {
+                    // Stop queued if no balls are available
+                    if (!_liftBtn->onPressed() && !_lift->isBallWaiting())
                     {
-                        if (!_liftBtn->onPressed())
-                            _liftQueuedPresses--;
+                        // Queued but no balls are waiting
                     }
-                    if (_liftBtn->onPressed())
-                        playButtonClick({songs::LIFT_STOP});
+                    else if (_lift->loadBall())
+                    {
+                        _liftQueuedPresses--;
+                    }
+                }
+                // Clear queue, in there is not ball, force on a new click
+                else
+                {
+                    if (_lift->up(lift_timing::LiftManualSpeedRatio))
+                    {
+                        _liftQueuedPresses--;
+                    }
                 }
             }
             break;
         }
         case devices::LiftStateEnum::LIFT_UP:
         {
-            // Queued
-            if (_liftQueuedPresses > 0 && !_liftBtn->onPressed())
+
+            // Short Press
+            if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::PowerSongStartDelayMs))
+            {
+                _liftQueuedPresses += 2;
+                playButtonClick({songs::LIFT_STOP});
+            }
+
+            if (_liftQueuedPresses > 0)
+            {
+                if (liftState.isLoaded)
+                {
+                    if (_lift->unloadBall(1.0f))
+                    {
+                        _liftQueuedPresses--;
+                        _isBallStillLoaded = false;
+                    }
+                }
+                else
+                {
+                    // If not loaded but still queued, try going down to load if possible
+                    if (_lift->down(lift_timing::LiftManualSpeedRatio))
+                    {
+                        _liftQueuedPresses--;
+                    }
+                }
+                return;
+            }
+
+            // semi long Press, start sound
+            if (_liftBtn->onPressedDuration(lift_timing::PowerSongStartDelayMs))
+            {
+                _audio->play(songs::LIFT_POWER_UNLOAD, devices::Hv20tPlayMode::StopThenPlay);
+            }
+
+            // Cancelled long press
+            else if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::PowerSongDurationMs))
+            {
+                _audio->stop();
+            }
+
+            // Long Press
+            if (_liftBtn->onPressedDuration(lift_timing::PowerSongDurationMs))
+            {
+                MLOG_INFO("%s: Long press detected (%.2fs), Power unload", toString().c_str());
+                // Long press: unload with full speed immediately
+                _lift->unloadBall(0.2f);
+                // _isBallStillLoaded = false;
+                _liftQueuedPresses += 1;
+            }
+
+            /*
+            if (_liftBtn->onPressed())
+            {
+                if (liftState.isLoaded)
+                {
+                    _liftQueuedPresses += 1;
+                }
+                else
+                {
+                    _liftQueuedPresses += 2;
+                }
+            }
+
+            // Queued of short press
+            if (_liftQueuedPresses > 0)
             {
                 if (liftState.isLoaded)
                 {
@@ -597,12 +638,12 @@ namespace devices
                     // If not loaded but still queued, try going down to load if possible
                     if (_lift->down(lift_timing::LiftManualSpeedRatio))
                     {
-                        _liftQueuedPresses = 0;
+                        _liftQueuedPresses--;
                     }
                 }
             }
 
-            if (_liftBtn->onPressed())
+            else if (_liftBtn->onPressed())
             {
                 if (liftState.isLoaded)
                 {
@@ -652,6 +693,7 @@ namespace devices
                 playButtonClick({songs::LIFT_STOP});
                 _isBallStillLoaded = false;
             }
+            */
             break;
         }
         }
@@ -738,7 +780,7 @@ namespace devices
             }
 
             // Check for long press while button is held
-            if (pressedDuringError && _liftBtn->onLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
+            if (pressedDuringError && _liftBtn->onPressedDuration(lift_timing::ErrorLongPressDurationMs))
             {
                 MLOG_INFO("%s: Error recovery long press detected in auto mode, starting lift init", toString().c_str());
                 _lift->init(lift_timing::LiftAutoSpeedRatio);
@@ -1329,7 +1371,7 @@ namespace devices
                 else if (_wheelBtn->onPressed())
                 {
                     // Idle + auto mode, also allow to start
-                    playButtonClick();
+                    playButtonClick({songs::LIFT_STOP});
                     _wheel->nextBreakPoint(modeSpeed);
                 }
             }
@@ -1343,7 +1385,7 @@ namespace devices
                     playButtonUp();
 
                     // Longpress?
-                    if (_wheelBtn->onLastPressedDuration(WHEEL_SPIN_LONG_PRESS_MS))
+                    if (_wheelBtn->onPressedDuration(WHEEL_SPIN_LONG_PRESS_MS))
                     {
                         // Button released - stop the wheel if it was a short press
                         MLOG_INFO("%s: Press released - stopping wheel", toString().c_str());
@@ -1382,7 +1424,7 @@ namespace devices
             }
 
             // Error recovery: 8-second long press starts init
-            else if (pressedDuringError && _wheelBtn->onLastPressedDuration(WHEEL_LONG_PRESS_DURATION_MS))
+            else if (pressedDuringError && _wheelBtn->onPressedDuration(WHEEL_LONG_PRESS_DURATION_MS))
             {
                 MLOG_INFO("%s: Error recovery long press detected, starting wheel init", toString().c_str());
                 _wheel->init(-1, modeSpeed);

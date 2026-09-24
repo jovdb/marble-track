@@ -782,7 +782,7 @@ namespace devices
             // Move slowly down to find limit switch
             _state.initStep = 4;
             long steps = (_config.minSteps - _config.maxSteps) * _config.downFactor;
-            moveStepper(steps, 0.3f * _initSpeedRatio);
+            moveStepper(steps, 0.2f);
             nextInitStepTime = millis() + 100;
             break;
         }

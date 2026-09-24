@@ -504,6 +504,12 @@ namespace devices
             // Push the updated ramp parameters first so stop decelerates as requested.
             _fastDriver->applySpeedAcceleration();
             _fastDriver->stopMove();
+
+            MLOG_DEBUG("%s: Calculated stopping distance: %ld", toString().c_str(), stoppingDistance);
+            if (stoppingDistance < 2) {
+                MLOG_INFO("%s: Stopping distance is very small (%ld), forcing stop", toString().c_str(), stoppingDistance);
+                _fastDriver->forceStop();
+            }
         }
 
         MLOG_INFO("%s: Stop moving with deceleration of %.0f steps/s²", toString().c_str(), acceleration);

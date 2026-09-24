@@ -223,6 +223,10 @@ namespace devices
             if (!_stepper->getState().isMoving && (millis() > _stepperStartTime + 10) && !_limitSwitch->getState().isPressed)
             {
                 setError(LiftErrorCode::LIFT_NO_ZERO, "limit switch not triggered when moving down");
+
+                MLOG_DEBUG("%s: Moving up to make it easier to remove a possible ball", toString().c_str());
+                _stepper->move(_config.maxSteps / 25, 0.1f);
+
                 return;
             }
 
@@ -791,6 +795,10 @@ namespace devices
             if (!_stepper->getState().isMoving && _limitSwitch && !_limitSwitch->getState().isPressed)
             {
                 setError(LiftErrorCode::LIFT_INIT_NO_ZERO, "Initialization failed: limit switch not triggered");
+
+                MLOG_DEBUG("%s: Moving up to make it easier to remove a possible ball", toString().c_str());
+                _stepper->move(_config.maxSteps / 25, 0.1f);
+
                 return;
             }
 
@@ -863,6 +871,10 @@ namespace devices
             if (!_stepper->getState().isMoving && _limitSwitch && !_limitSwitch->getState().isPressed)
             {
                 setError(LiftErrorCode::LIFT_INIT_NO_ZERO, "Initialization failed: limit switch not triggered");
+
+                MLOG_DEBUG("%s: Moving up to make it easier to remove a possible ball", toString().c_str());
+                _stepper->move(_config.maxSteps / 25, 0.1f);
+
                 return;
             }
 

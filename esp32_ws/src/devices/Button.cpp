@@ -105,6 +105,8 @@ namespace devices
         }
 
         _lastDebounceTime = 0;
+        _lastTickTime = 0;
+        _prevTickTime = 0;
         _lastIsButtonPressed = false;
         _isSimulated = false;
         _simulatedIsPressed = false;
@@ -125,16 +127,18 @@ namespace devices
 
         // Reset state change flag for next loop
         _state.isPressedChanged = false;
+        _prevTickTime = _lastTickTime;
+        _lastTickTime = millis();
 
         bool isButtonPressed = readIsButtonPressed();
 
         if (isButtonPressed != _lastIsButtonPressed)
         {
-            _lastDebounceTime = millis();
+            _lastDebounceTime = _lastTickTime;
             _lastIsButtonPressed = isButtonPressed;
         }
 
-        if ((millis() - _lastDebounceTime) > _config.debounceTimeInMs)
+        if ((_lastTickTime - _lastDebounceTime) > _config.debounceTimeInMs)
         {
             if (isButtonPressed != _state.isPressed)
             {
@@ -142,11 +146,11 @@ namespace devices
                 _state.isPressedChanged = true;
                 if (isButtonPressed)
                 {
-                    _state.lastPressedMillis = millis();
+                    _state.lastPressedMillis = _lastTickTime;
                 }
                 else
                 {
-                    _state.lastReleasedMillis = millis();
+                    _state.lastReleasedMillis = _lastTickTime;
                 }
                 MLOG_INFO("%s: New button data read: %s", toString().c_str(), _state.input ? "HIGH" : "LOW");
                 notifyStateChanged();
@@ -185,14 +189,29 @@ namespace devices
         return !_state.isPressed && _state.isPressedChanged;
     }
 
-    bool Button::onLastPressedDuration(unsigned long duration) const
+    bool Button::isLastPressedDuration(unsigned long duration, unsigned long time) const
     {
-        return (_state.lastPressedMillis > 0) && (millis() - _state.lastPressedMillis >= duration);
+        if (_state.lastPressedMillis <= 0)
+            return false;
+
+        // In the past?
+        if (_state.lastPressedMillis > 0 && _state.lastReleasedMillis > _state.lastPressedMillis)
+        {
+            time = _state.lastReleasedMillis;
+        }
+
+        if (time <= 0)
+            time = _lastTickTime;
+
+        // Still pressing
+        return time - _state.lastPressedMillis >= duration;
     }
 
-    bool Button::onLastReleasedDuration(unsigned long duration) const
+    bool Button::onPressedDuration(unsigned long duration) const
     {
-        return (_state.lastReleasedMillis > 0) && (millis() - _state.lastReleasedMillis >= duration);
+        return _state.isPressed &&
+               !isLastPressedDuration(duration, _prevTickTime) &&
+               isLastPressedDuration(duration, _lastTickTime);
     }
 
     void Button::addDeviceStateToJson(JsonDocument &doc)

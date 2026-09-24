@@ -111,10 +111,9 @@ namespace devices
         bool onReleased() const;
 
         /** true when the last press was at least the specified duration ago */
-        bool onLastPressedDuration(unsigned long duration) const;
-
-        /** true when the last release was at least the specified duration ago */
-        bool onLastReleasedDuration(unsigned long duration) const;
+        bool isLastPressedDuration(unsigned long duration, unsigned long time = 0) const;
+        /* True when pressed for at least the specified duration */
+        bool onPressedDuration(unsigned long duration) const;
 
         // ControllableMixin implementation
         void addDeviceStateToJson(JsonDocument &doc) override;
@@ -135,6 +134,9 @@ namespace devices
         // Debounce state
         unsigned long _lastDebounceTime = 0;
         bool _lastIsButtonPressed = false;
+        unsigned long _lastTickTime = 0;
+        // To detect duration triggers
+        unsigned long _prevTickTime = 0;
 
         // Simulation support
         bool _isSimulated = false;

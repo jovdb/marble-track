@@ -95,7 +95,7 @@ namespace devices
         {
             const auto &btnState = _button->getState();
 
-            if (_button->isPressed() && _button->onLastPressedDuration(servo_gate_timing::HoldToFillQueueMs))
+            if (_button->isPressed() && _button->isLastPressedDuration(servo_gate_timing::HoldToFillQueueMs))
             {
                 if (!_holdQueueFillApplied &&
                     _state.queueCount < _config.fullQueueCount)

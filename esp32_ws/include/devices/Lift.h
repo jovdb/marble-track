@@ -58,7 +58,7 @@ namespace devices
         String name = "Lift";      // Device name
         long minSteps = 0;         // Minimum steps (bottom position)
         long maxSteps = 1000;      // Maximum steps (top position)
-        float downFactor = 1.015f; // Extra movement factor when going down
+        float downFactor = 1.01f; // Extra movement factor when going down
     };
 
     /**

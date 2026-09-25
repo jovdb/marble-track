@@ -105,6 +105,7 @@ namespace devices
         // Button timing for unload duration control
         bool _isLiftPowerUnloadSongPlaying = false;
         uint8_t _liftQueuedPresses = 0;
+        bool _isLiftPressedDuringError = false;
 
         // Auto lift timing control
         unsigned long _autoLiftDelayStart = 0;
@@ -134,6 +135,8 @@ namespace devices
         static constexpr float WheelLoaderRange1Max = 81.0f;
         static constexpr float WheelLoaderRange2Min = 316.0f - 22.0f;
         static constexpr float WheelLoaderRange2Max = 316.0f;
+
+        bool _isWheelPressedDuringError = false;
 
         // Random delay before next wheel trigger
         unsigned long _randomWheelDelayMs = 0;

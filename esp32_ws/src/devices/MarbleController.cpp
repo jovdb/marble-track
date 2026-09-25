@@ -19,12 +19,13 @@ namespace devices
 
     namespace lift_timing
     {
-        static constexpr unsigned long PowerSongDurationMs = 5200UL;
+        static constexpr unsigned long PowerSongDurationMs = 5600UL;
         static constexpr unsigned long PowerSongStartDelayMs = 500UL;
         static constexpr unsigned long AutoPowerSongStartDelayMs = 1000UL;
         static constexpr unsigned long AutoNoBallRandomMinDelayMs = 120000UL;
         static constexpr unsigned long AutoNoBallRandomMaxDelayMs = 300000UL;
-        static constexpr unsigned long ErrorLongPressDurationMs = 5000UL; // 5 seconds for error recovery
+        static constexpr unsigned long ErrorLongPressDurationMs = 5000UL;    // 5 seconds for error recovery
+        static constexpr unsigned long LongPressAutoModeDurationMs = 3000UL; // 5 seconds for error recovery
         static constexpr float AutoDownNoBallSpeedRatio = 0.2f;
         static constexpr float AutoDownNormalSpeedRatio = 1.0f;
         static constexpr float LiftAutoSpeedRatio = 0.25f;
@@ -510,14 +511,36 @@ namespace devices
 
         case devices::LiftStateEnum::LIFT_DOWN:
         {
-            if (_liftBtn->onPressedDuration(5000))
-            {
-                // TODO: process all balls
-            }
+            bool isShortPress = false;
 
+            // Down
             if (_liftBtn->onPressed())
             {
-                playButtonClick({songs::LIFT_STOP});
+                playButtonDown({songs::LIFT_STOP});
+            }
+
+            // Long Press
+            if (_liftBtn->onPressedDuration(lift_timing::LongPressAutoModeDurationMs))
+            {
+                if (_lift->isBallWaiting())
+                {
+                    // TODO, play sound
+                    MLOG_INFO("%s: Starting lift auto mode", toString().c_str());
+                    _audio->play(songs::LIFT_AUTO_MODE_START, devices::Hv20tPlayMode::StopThenPlay);
+                    _isLiftTempAutoMode = true;
+                    _liftQueuedPresses = 255;
+                }
+                else
+                {
+                    playErrorSound(devices::Hv20tPlayMode::StopThenPlay);
+                }
+            }
+
+            // Short Press
+            else if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::LongPressAutoModeDurationMs))
+            {
+                isShortPress = true;
+                playButtonUp({songs::LIFT_STOP});
                 if (liftState.isLoaded)
                 {
                     _liftQueuedPresses += 1;
@@ -533,13 +556,31 @@ namespace devices
                 if (!liftState.isLoaded)
                 {
                     // Stop queued if no balls are available
-                    if (!_liftBtn->onPressed() && !_lift->isBallWaiting())
+                    // Allow force on click
+                    if (_lift->isBallWaiting() || isShortPress)
                     {
-                        // Queued but no balls are waiting
+                        if (_lift->loadBall())
+                        {
+                            _liftQueuedPresses--;
+                        }
                     }
-                    else if (_lift->loadBall())
+                    else
                     {
-                        _liftQueuedPresses--;
+                        // If not Auto mode, wait for ball
+                        // If in Auto mode, stop Automode
+                        if (_isLiftTempAutoMode)
+                        {
+                            _liftQueuedPresses = 0;
+                            _isLiftTempAutoMode = false;
+                            if (_audio->getPlayingIndex() == songs::LIFT_STOP)
+                            {
+                                _audio->play(songs::LIFT_AUTO_MODE_END, devices::Hv20tPlayMode::StopThenPlay); // Play after bell
+                            }
+                            else
+                            {
+                                _audio->play(songs::LIFT_AUTO_MODE_END, devices::Hv20tPlayMode::QueueIfPlaying); // Play after bell
+                            }
+                        }
                     }
                 }
                 // Clear queue, in there is not ball, force on a new click
@@ -555,12 +596,17 @@ namespace devices
         }
         case devices::LiftStateEnum::LIFT_UP:
         {
+            // Down
+            if (_liftBtn->onPressed())
+            {
+                playButtonDown({songs::LIFT_STOP});
+            }
 
             // Short Press
             if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::PowerSongStartDelayMs))
             {
                 _liftQueuedPresses += 2;
-                playButtonClick({songs::LIFT_STOP});
+                playButtonUp({songs::LIFT_STOP});
             }
 
             if (_liftQueuedPresses > 0)
@@ -593,6 +639,7 @@ namespace devices
             else if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::PowerSongDurationMs))
             {
                 _audio->stop();
+                playButtonUp({songs::LIFT_STOP, songs::LIFT_POWER_UNLOAD});
             }
 
             // Long Press

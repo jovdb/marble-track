@@ -106,6 +106,7 @@ namespace devices
         bool _isLiftPowerUnloadSongPlaying = false;
         uint8_t _liftQueuedPresses = 0;
         bool _isLiftPressedDuringError = false;
+        bool _isLiftTempAutoMode = false;
 
         // Auto lift timing control
         unsigned long _autoLiftDelayStart = 0;

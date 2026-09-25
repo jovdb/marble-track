@@ -103,8 +103,6 @@ namespace devices
         bool _splitterMoveSawBusy = false;
 
         // Button timing for unload duration control
-        unsigned long _liftButtonPressStartTime = 0;
-        bool _isBallStillLoaded = false;
         bool _isLiftPowerUnloadSongPlaying = false;
         uint8_t _liftQueuedPresses = 0;
 

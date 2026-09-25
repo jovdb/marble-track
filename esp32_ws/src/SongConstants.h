@@ -5,6 +5,9 @@
 
 // Voice sound are created here:
 // https://luvvoice.com/ (Dutch/Belgium  Dena)
+// Remark:
+// Try to use WAV files instead of MP3,
+// these are uncompressed and played without a smaller delay
 
 // Idea's for themes
 // -----------------
@@ -52,7 +55,9 @@ namespace songs
     X(BATTERY_LOW, 31, "Batterij is bijna leeg, vervang de batterij")                                                                                                                           \
     X(LAUNCH_NOTIFICATION, 32, "Bal ligt klaar om gelanceerd te worden!")                                                                                                                       \
     X(SHUTDOWN_TEXT, 33, "Systeem wordt uitgeschakeld")                                                                                                                                         \
-    X(SHUTDOWN, 34, "")
+    X(SHUTDOWN, 34, "")                                                                                                                                                                         \
+    X(LIFT_AUTO_MODE_START, 35, "Automatische liftmodus gestart")                                                                                                                               \
+    X(LIFT_AUTO_MODE_END, 36, "Automatische liftmodus beëindigd")                                                                                                                               \
 
     /**
      * @brief Song ID Enum

@@ -67,6 +67,7 @@ namespace devices
         void blinkBusy(Led *ledDevice);
         void blinkInit(Led *ledDevice);
         void blinkAttention(Led *ledDevice);
+        void blinkLiftQueued();
         void onWheelStateChange(void *statePtr);
         void onLiftStateChange(void *statePtr);
 

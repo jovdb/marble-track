@@ -416,27 +416,30 @@ namespace devices
         }
         case devices::LiftStateEnum::LIFT_DOWN_LOADING:
         case devices::LiftStateEnum::LIFT_UP_UNLOADING:
-        case devices::LiftStateEnum::MOVING_UP:
-            blinkBusy(_liftLed);
-            break;
         case devices::LiftStateEnum::MOVING_DOWN:
+        case devices::LiftStateEnum::MOVING_UP:
             if (_autoLiftMovingDownSlow)
             {
                 _liftLed->set(true);
             }
             else
             {
-                blinkBusy(_liftLed);
+                blinkLiftQueued();
             }
+
             break;
         case devices::LiftStateEnum::UNKNOWN:
         case devices::LiftStateEnum::LIFT_DOWN:
         case devices::LiftStateEnum::LIFT_UP:
         {
-            if (liftState.ballWaitingSince > 0 && liftState.ballWaitingSince + _actionNotificationDelayMs < millis())
+            if (_liftQueuedPresses > 0)
             {
-                blinkAttention(_liftLed);
+                blinkLiftQueued();
             }
+            // else if (liftState.ballWaitingSince > 0 && liftState.ballWaitingSince + _actionNotificationDelayMs < millis())
+            // {
+            //     blinkAttention(_liftLed);
+            // }
             else
             {
                 _liftLed->set(true);
@@ -1632,6 +1635,49 @@ namespace devices
         }
 
         ledDevice->blink(360, 120); // Needs attention
+    }
+
+    void MarbleController::blinkLiftQueued()
+    {
+        if (!_liftLed)
+            return;
+
+        std::vector<int> pattern;
+
+        int offset = 0;
+        switch (_lift->getState().state)
+        {
+        case devices::LiftStateEnum::UNKNOWN:
+        case devices::LiftStateEnum::ERROR:
+        case devices::LiftStateEnum::INIT:
+        {
+            break;
+        }
+        case devices::LiftStateEnum::LIFT_DOWN:
+            _liftQueuedPresses = 0;
+            break;
+            
+        case devices::LiftStateEnum::LIFT_DOWN_LOADING:
+        case devices::LiftStateEnum::MOVING_UP:
+        case devices::LiftStateEnum::LIFT_UP:
+        case devices::LiftStateEnum::LIFT_UP_UNLOADING:
+        case devices::LiftStateEnum::MOVING_DOWN:
+            break;
+
+            break;
+        }
+
+        auto queued = ((_liftQueuedPresses + offset) / 4); // floor
+        // if (queued > 10)
+        //     queued = 10;
+
+        for (auto i = 0; i < queued; i++)
+        {
+            pattern.push_back(240);                               // On
+            pattern.push_back(i == queued - 1 ? 240 + 480 : 240); // Off
+        }
+
+        _liftLed->pattern(pattern);
     }
 
     void MarbleController::playStartupSound()

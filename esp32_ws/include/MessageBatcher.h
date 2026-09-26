@@ -2,6 +2,8 @@
 
 #include <Arduino.h>
 #include <functional>
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
 #include <vector>
 
 /**
@@ -30,7 +32,8 @@ public:
         : _sendFn(std::move(sendFn)),
           _canWriteFn(std::move(canWriteFn)),
           _maxQueueSize(maxQueueSize),
-          _batchingActive(false)
+          _batchingActive(false),
+          _mutex(xSemaphoreCreateMutex())
     {
     }
 
@@ -49,7 +52,15 @@ public:
      */
     void endBatch();
 
-    bool isBatching() const { return _batchingActive; }
+    bool isBatching() const
+    {
+        if (!_mutex || xSemaphoreTake(_mutex, portMAX_DELAY) != pdTRUE)
+            return false;
+
+        const bool batchingActive = _batchingActive;
+        xSemaphoreGive(_mutex);
+        return batchingActive;
+    }
 
 private:
     SendFn _sendFn;
@@ -57,4 +68,5 @@ private:
     size_t _maxQueueSize;
     bool _batchingActive;
     std::vector<String> _queue;
+    SemaphoreHandle_t _mutex;
 };

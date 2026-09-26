@@ -108,6 +108,8 @@ namespace devices
         uint8_t _liftQueuedPresses = 0;
         bool _isLiftPressedDuringError = false;
         bool _isLiftTempAutoMode = false;
+        unsigned long _playedLiftBallWaitingSoundAt = 0;
+        unsigned long _liftEmptyTime = 0;
 
         // Auto lift timing control
         unsigned long _autoLiftDelayStart = 0;

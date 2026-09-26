@@ -617,6 +617,29 @@ namespace devices
                     }
                 }
             }
+            else
+            {
+                if (_liftEmptyTime == 0)
+                    _liftEmptyTime = millis();
+
+                if (liftState.ballWaitingSince > 0 && _liftEmptyTime > 0)
+                {
+                    static auto _liftBallWaitingNotificationFirst = 60000;
+                    static auto _liftBallWaitingNotificationRecurring = 60000;
+
+                    auto mostRecent = std::max(liftState.ballWaitingSince, _liftEmptyTime);
+                    if (
+                        (mostRecent + _liftBallWaitingNotificationFirst) < millis())
+                    {
+                        // New or again
+                        if (!_playedLiftBallWaitingSoundAt || ((_playedLiftBallWaitingSoundAt + _liftBallWaitingNotificationRecurring) < millis()))
+                        {
+                            _audio->play(songs::LIFT_BALL_WAITING, devices::Hv20tPlayMode::QueueIfPlaying);
+                            _playedLiftBallWaitingSoundAt = millis();
+                        }
+                    }
+                }
+            }
             break;
         }
 
@@ -2012,7 +2035,14 @@ namespace devices
         if (previousLiftState != devices::LiftStateEnum::LIFT_DOWN_EMPTY &&
             liftState->state == devices::LiftStateEnum::LIFT_DOWN_EMPTY)
         {
+            _liftEmptyTime = millis();
             _audio->play(songs::LIFT_STOP, devices::Hv20tPlayMode::QueueIfPlaying);
+        }
+
+        if (previousLiftState == devices::LiftStateEnum::LIFT_DOWN_EMPTY &&
+            liftState->state != devices::LiftStateEnum::LIFT_DOWN_EMPTY)
+        {
+            _playedLiftBallWaitingSoundAt = 0;
         }
 
         // ERROR -> *

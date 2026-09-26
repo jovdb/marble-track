@@ -429,8 +429,10 @@ namespace devices
 
             break;
         case devices::LiftStateEnum::UNKNOWN:
-        case devices::LiftStateEnum::LIFT_DOWN:
-        case devices::LiftStateEnum::LIFT_UP:
+        case devices::LiftStateEnum::LIFT_DOWN_EMPTY:
+        case devices::LiftStateEnum::LIFT_DOWN_LOADED:
+        case devices::LiftStateEnum::LIFT_UP_EMPTY:
+        case devices::LiftStateEnum::LIFT_UP_LOADED:
         {
             if (_liftQueuedPresses > 0)
             {
@@ -449,7 +451,8 @@ namespace devices
         }
 
         // Reset button timing state when not in LIFT_UP
-        if (liftState.state != devices::LiftStateEnum::LIFT_UP)
+        if (liftState.state != devices::LiftStateEnum::LIFT_UP_EMPTY &&
+            liftState.state != devices::LiftStateEnum::LIFT_UP_LOADED)
         {
             _isLiftPowerUnloadSongPlaying = false;
         }
@@ -512,7 +515,8 @@ namespace devices
             }
             break;
 
-        case devices::LiftStateEnum::LIFT_DOWN:
+        case devices::LiftStateEnum::LIFT_DOWN_EMPTY:
+        case devices::LiftStateEnum::LIFT_DOWN_LOADED:
         {
             bool isShortPress = false;
 
@@ -544,7 +548,7 @@ namespace devices
             {
                 isShortPress = true;
                 playButtonUp({songs::LIFT_STOP});
-                if (liftState.isLoaded)
+                if (liftState.state == devices::LiftStateEnum::LIFT_DOWN_LOADED)
                 {
                     _liftQueuedPresses += 1;
                 }
@@ -556,7 +560,7 @@ namespace devices
 
             if (_liftQueuedPresses > 0)
             {
-                if (!liftState.isLoaded)
+                if (liftState.state == devices::LiftStateEnum::LIFT_DOWN_EMPTY)
                 {
                     // Stop queued if no balls are available
                     // Allow force on click
@@ -597,7 +601,8 @@ namespace devices
             }
             break;
         }
-        case devices::LiftStateEnum::LIFT_UP:
+        case devices::LiftStateEnum::LIFT_UP_EMPTY:
+        case devices::LiftStateEnum::LIFT_UP_LOADED:
         {
             // Down
             if (_liftBtn->onPressed())
@@ -614,7 +619,7 @@ namespace devices
 
             if (_liftQueuedPresses > 0)
             {
-                if (liftState.isLoaded)
+                if (liftState.state == devices::LiftStateEnum::LIFT_UP_LOADED)
                 {
                     if (_lift->unloadBall(1.0f))
                     {
@@ -663,7 +668,7 @@ namespace devices
         // Auto lift control logic - automatic cycling through lift operations
         auto liftState = _lift->getState();
 
-        if (liftState.state != devices::LiftStateEnum::LIFT_UP || !liftState.isLoaded)
+        if (liftState.state != devices::LiftStateEnum::LIFT_UP_LOADED)
         {
             _autoPowerUnloadPending = false;
             _autoPowerUnloadSongStarted = false;
@@ -671,7 +676,7 @@ namespace devices
             _autoLiftUpLoadedSince = 0;
         }
 
-        if (liftState.state != devices::LiftStateEnum::LIFT_DOWN || liftState.isLoaded || liftState.ballWaitingSince > 0)
+        if (liftState.state != devices::LiftStateEnum::LIFT_DOWN_EMPTY || liftState.ballWaitingSince > 0)
         {
             _autoNoBallLiftStartTime = 0;
             _autoNoBallLiftDelayMs = 0;
@@ -695,7 +700,8 @@ namespace devices
         case devices::LiftStateEnum::LIFT_DOWN_LOADING:
         case devices::LiftStateEnum::LIFT_UP_UNLOADING:
         case devices::LiftStateEnum::MOVING_UP:
-        case devices::LiftStateEnum::LIFT_UP:
+        case devices::LiftStateEnum::LIFT_UP_EMPTY:
+        case devices::LiftStateEnum::LIFT_UP_LOADED:
             blinkBusy(_liftLed);
             break;
         case devices::LiftStateEnum::MOVING_DOWN:
@@ -709,7 +715,8 @@ namespace devices
             }
             break;
 
-        case devices::LiftStateEnum::LIFT_DOWN:
+        case devices::LiftStateEnum::LIFT_DOWN_EMPTY:
+        case devices::LiftStateEnum::LIFT_DOWN_LOADED:
         {
             _liftLed->set(true);
             break;
@@ -789,11 +796,12 @@ namespace devices
 
             break;
 
-        case devices::LiftStateEnum::LIFT_DOWN:
+        case devices::LiftStateEnum::LIFT_DOWN_EMPTY:
+        case devices::LiftStateEnum::LIFT_DOWN_LOADED:
         {
             _isLiftPowerUnloadSongPlaying = false;
 
-            if (liftState.isLoaded)
+            if (liftState.state == devices::LiftStateEnum::LIFT_DOWN_LOADED)
             {
                 // Loaded: move up to unload position
                 _lift->up(lift_timing::LiftAutoSpeedRatio);
@@ -862,7 +870,8 @@ namespace devices
             break;
         }
 
-        case devices::LiftStateEnum::LIFT_UP:
+        case devices::LiftStateEnum::LIFT_UP_EMPTY:
+        case devices::LiftStateEnum::LIFT_UP_LOADED:
         {
             if (_liftBtn->onPressed())
                 playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
@@ -874,7 +883,7 @@ namespace devices
                 break;
             }
 
-            if (liftState.isLoaded)
+            if (liftState.state == devices::LiftStateEnum::LIFT_UP_LOADED)
             {
                 if (_autoLiftUpLoadedSince == 0)
                 {
@@ -1653,13 +1662,15 @@ namespace devices
         {
             break;
         }
-        case devices::LiftStateEnum::LIFT_DOWN:
+        case devices::LiftStateEnum::LIFT_DOWN_EMPTY:
+        case devices::LiftStateEnum::LIFT_DOWN_LOADED:
             _liftQueuedPresses = 0;
             break;
             
         case devices::LiftStateEnum::LIFT_DOWN_LOADING:
         case devices::LiftStateEnum::MOVING_UP:
-        case devices::LiftStateEnum::LIFT_UP:
+        case devices::LiftStateEnum::LIFT_UP_EMPTY:
+        case devices::LiftStateEnum::LIFT_UP_LOADED:
         case devices::LiftStateEnum::LIFT_UP_UNLOADING:
         case devices::LiftStateEnum::MOVING_DOWN:
             break;
@@ -1929,16 +1940,14 @@ namespace devices
             return;
         }
 
-        if (previousLiftState != devices::LiftStateEnum::LIFT_UP &&
-            liftState->state == devices::LiftStateEnum::LIFT_UP &&
-            liftState->isLoaded)
+        if (previousLiftState != devices::LiftStateEnum::LIFT_UP_LOADED &&
+            liftState->state == devices::LiftStateEnum::LIFT_UP_LOADED)
         {
             _audio->play(songs::LIFT_STOP, devices::Hv20tPlayMode::SkipIfPlaying);
         }
 
-        if (previousLiftState != devices::LiftStateEnum::LIFT_DOWN &&
-            liftState->state == devices::LiftStateEnum::LIFT_DOWN &&
-            !liftState->isLoaded)
+        if (previousLiftState != devices::LiftStateEnum::LIFT_DOWN_EMPTY &&
+            liftState->state == devices::LiftStateEnum::LIFT_DOWN_EMPTY)
         {
             _audio->play(songs::LIFT_STOP, devices::Hv20tPlayMode::QueueIfPlaying);
         }

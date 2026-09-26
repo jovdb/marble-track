@@ -8,15 +8,16 @@ export interface ILiftState extends IDeviceState {
     | "Error"
     | "Init"
     | "LiftDownLoading"
-    | "LiftDown"
+    | "LiftDownEmpty"
+    | "LiftDownLoaded"
     | "LiftUpUnloading"
-    | "LiftUp"
+    | "LiftUpEmpty"
+    | "LiftUpLoaded"
     | "MovingUp"
     | "MovingDown";
   currentPosition?: number;
   ballWaitingSince?: number;
   stepsPerSecond?: number; // Effective speed during movement (steps/s), absent when not moving
-  isLoaded: boolean;
   initStep: number;
   onErrorChange: boolean;
   errorMessage?: string;

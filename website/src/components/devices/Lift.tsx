@@ -50,18 +50,26 @@ export function Lift(props: { id: string; isPopup?: boolean; onClose?: () => voi
 
   const isInError = createMemo(() => state()?.state === "Error");
 
-  const canLoad = createMemo(() => state()?.state === "LiftDown" && !state()?.isLoaded);
+  const canLoad = createMemo(() => state()?.state === "LiftDownEmpty");
 
-  const canUnload = createMemo(() => state()?.state === "LiftUp");
+  const canUnload = createMemo(() => state()?.state === "LiftUpLoaded");
 
   const canUp = createMemo(() => {
     const currentState = state()?.state;
-    return currentState === "LiftDown" || currentState === "MovingDown";
+    return (
+      currentState === "LiftDownEmpty" ||
+      currentState === "LiftDownLoaded" ||
+      currentState === "MovingDown"
+    );
   });
 
   const canDown = createMemo(() => {
     const currentState = state()?.state;
-    return currentState === "LiftUp" || currentState === "MovingUp";
+    return (
+      currentState === "LiftUpEmpty" ||
+      currentState === "LiftUpLoaded" ||
+      currentState === "MovingUp"
+    );
   });
 
   const canLoadOrUnload = createMemo(() => canLoad() || canUnload());
@@ -80,12 +88,18 @@ export function Lift(props: { id: string; isPopup?: boolean; onClose?: () => voi
     }
   };
 
-  const isLiftUp = createMemo(() => state()?.state === "LiftUp" || state()?.state === "MovingUp");
+  const isLiftUp = createMemo(
+    () =>
+      state()?.state === "LiftUpEmpty" ||
+      state()?.state === "LiftUpLoaded" ||
+      state()?.state === "MovingUp"
+  );
 
   // 0 = bottom, 1 = top. CSS transition animates between these when moving.
   const positionPercent = createMemo(() => {
     switch (state()?.state) {
-      case "LiftUp":
+      case "LiftUpEmpty":
+      case "LiftUpLoaded":
       case "LiftUpUnloading":
       case "MovingUp":
         return 1;
@@ -113,9 +127,7 @@ export function Lift(props: { id: string; isPopup?: boolean; onClose?: () => voi
           cx={75}
           cy={10}
           r={8}
-          fill={
-            state()?.state === "LiftUpUnloading" && state()?.isLoaded ? "#4444ff" : "transparent"
-          }
+          fill={state()?.state === "LiftUpUnloading" ? "#4444ff" : "transparent"}
         />
         <circle
           cx={75}
@@ -141,7 +153,9 @@ export function Lift(props: { id: string; isPopup?: boolean; onClose?: () => voi
             cy={0}
             r={8}
             fill={
-              state()?.isLoaded && state()?.state !== "LiftUpUnloading" ? "#4444ff" : "transparent"
+              state()?.state === "LiftDownLoaded" || state()?.state === "LiftUpLoaded"
+                ? "#4444ff"
+                : "transparent"
             }
           />
           <path d="M -10 0 A 10 10 0 0 0 10 0" fill="transparent" stroke="black" stroke-width={2} />

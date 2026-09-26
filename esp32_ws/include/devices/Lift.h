@@ -27,10 +27,12 @@ namespace devices
         UNKNOWN,
         ERROR,
         INIT,
-        LIFT_DOWN_LOADING,
-        LIFT_DOWN,
-        LIFT_UP_UNLOADING,
-        LIFT_UP,
+            LIFT_DOWN_LOADING,
+            LIFT_DOWN_EMPTY,
+            LIFT_DOWN_LOADED,
+            LIFT_UP_UNLOADING,
+            LIFT_UP_EMPTY,
+            LIFT_UP_LOADED,
         MOVING_UP,
         MOVING_DOWN
     };
@@ -69,10 +71,9 @@ namespace devices
     {
         LiftStateEnum state = LiftStateEnum::UNKNOWN;  // Current lift state
         unsigned long ballWaitingSince = 0;            // Timestamp when ball started waiting (0 = not waiting)
-        bool isLoaded = false;                         // Whether lift has a ball loaded
         int initStep = 0;                              // Current initialization step
         bool onErrorChange = false;                    // Error flag
-        float stepsPerSecond = 0.0f;                  // Effective speed during movement (0 when not moving)
+            float stepsPerSecond = 0.0f;                   // Effective speed during movement (0 when not moving)
     };
 
     /**
@@ -138,12 +139,6 @@ namespace devices
         bool isBallWaiting() const;
 
         /**
-         * @brief Check if the lift has a ball loaded
-         * @return true if loaded
-         */
-        bool isLoaded() const;
-
-        /**
          * @brief Check if the lift is initialized
          * @return true if initialized (not in INIT or UNKNOWN state)
          */
@@ -170,6 +165,7 @@ namespace devices
         uint32_t _unloadDurationMs = 0;      // Active unload open/close duration
         unsigned long _stepperStartTime = 0; // Stepper start time (0 when stopped)
         unsigned long _loadEndTime = 0;      // Load operation close end time
+            bool _movingLoaded = false;          // Ball state preserved while moving
 
     private:
         /**

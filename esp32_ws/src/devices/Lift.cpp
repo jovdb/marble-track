@@ -127,7 +127,7 @@ namespace devices
         _state.state = LiftStateEnum::UNKNOWN;
         _state.onErrorChange = false;
         _state.ballWaitingSince = 0;
-        _state.isLoaded = false;
+        _movingLoaded = false;
         _state.initStep = 0;
         _state.stepsPerSecond = 0.0f;
         _initSpeedRatio = 1.0f;
@@ -197,7 +197,8 @@ namespace devices
                 loadBallEnd();
             }
             break;
-        case LiftStateEnum::LIFT_DOWN:
+        case LiftStateEnum::LIFT_DOWN_EMPTY:
+        case LiftStateEnum::LIFT_DOWN_LOADED:
             break;
         case LiftStateEnum::LIFT_UP_UNLOADING:
             // Wait 2 seconds after starting unload, then end the unloading process
@@ -206,13 +207,14 @@ namespace devices
                 unloadBallEnd(1.0f);
             }
             break;
-        case LiftStateEnum::LIFT_UP:
+        case LiftStateEnum::LIFT_UP_EMPTY:
+        case LiftStateEnum::LIFT_UP_LOADED:
             break;
         case LiftStateEnum::MOVING_UP:
             if (!_stepper->getState().isMoving && (millis() > _stepperStartTime + 10))
             {
                 MLOG_INFO("%s: Top reached", toString().c_str());
-                _state.state = LiftStateEnum::LIFT_UP;
+                _state.state = _movingLoaded ? LiftStateEnum::LIFT_UP_LOADED : LiftStateEnum::LIFT_UP_EMPTY;
                 _stepperStartTime = 0;
                 notifyStateChanged();
             }
@@ -240,7 +242,7 @@ namespace devices
             _stepper->setCurrentPosition(0);
             _stepper->stop(IMMEDIATE_DECELERATION);
             _stepperStartTime = 0;
-            _state.state = LiftStateEnum::LIFT_DOWN;
+            _state.state = _movingLoaded ? LiftStateEnum::LIFT_DOWN_LOADED : LiftStateEnum::LIFT_DOWN_EMPTY;
             notifyStateChanged();
             break;
         default:
@@ -258,12 +260,14 @@ namespace devices
         case LiftStateEnum::INIT:
         case LiftStateEnum::ERROR:
         case LiftStateEnum::LIFT_DOWN_LOADING:
-        case LiftStateEnum::LIFT_UP:
+        case LiftStateEnum::LIFT_UP_EMPTY:
+        case LiftStateEnum::LIFT_UP_LOADED:
         case LiftStateEnum::LIFT_UP_UNLOADING:
             MLOG_WARN("%s: Cannot move up, state is %s", toString().c_str(), stateToString(_state.state).c_str());
             break;
 
-        case LiftStateEnum::LIFT_DOWN:
+        case LiftStateEnum::LIFT_DOWN_EMPTY:
+        case LiftStateEnum::LIFT_DOWN_LOADED:
         case LiftStateEnum::MOVING_DOWN:
         case LiftStateEnum::MOVING_UP: // for changed speed
         {
@@ -278,6 +282,8 @@ namespace devices
             }
 
             MLOG_INFO("%s: Moving up to %ld steps", toString().c_str(), _config.maxSteps);
+            _movingLoaded = _state.state == LiftStateEnum::LIFT_DOWN_LOADED ||
+                            (_state.state == LiftStateEnum::MOVING_DOWN && _movingLoaded);
             _state.state = LiftStateEnum::MOVING_UP;
             isSuccess = moveStepperTo(_config.maxSteps, speedRatio);
             notifyStateChanged();
@@ -299,14 +305,16 @@ namespace devices
         case LiftStateEnum::UNKNOWN:
         case LiftStateEnum::INIT:
         case LiftStateEnum::ERROR:
-        case LiftStateEnum::LIFT_DOWN:
+        case LiftStateEnum::LIFT_DOWN_EMPTY:
+        case LiftStateEnum::LIFT_DOWN_LOADED:
         case LiftStateEnum::LIFT_DOWN_LOADING:
         case LiftStateEnum::LIFT_UP_UNLOADING:
             MLOG_WARN("%s: Cannot move down, state is %s", toString().c_str(), stateToString(_state.state).c_str());
             isSuccess = false;
             break;
 
-        case LiftStateEnum::LIFT_UP:
+        case LiftStateEnum::LIFT_UP_EMPTY:
+        case LiftStateEnum::LIFT_UP_LOADED:
         case LiftStateEnum::MOVING_DOWN: // for changed speed
         case LiftStateEnum::MOVING_UP:
         {
@@ -323,6 +331,8 @@ namespace devices
                 break;
             }
 
+            _movingLoaded = _state.state == LiftStateEnum::LIFT_UP_LOADED ||
+                            (_state.state == LiftStateEnum::MOVING_UP && _movingLoaded);
             _state.state = LiftStateEnum::MOVING_DOWN;
 
             if (wasMovingDown)
@@ -373,15 +383,17 @@ namespace devices
         case LiftStateEnum::ERROR:
         case LiftStateEnum::MOVING_UP:
         case LiftStateEnum::LIFT_DOWN_LOADING:
-        case LiftStateEnum::LIFT_UP:
+        case LiftStateEnum::LIFT_UP_EMPTY:
+        case LiftStateEnum::LIFT_UP_LOADED:
         case LiftStateEnum::LIFT_UP_UNLOADING:
         case LiftStateEnum::MOVING_DOWN:
             MLOG_WARN("%s: Cannot load ball, state is %s", toString().c_str(), stateToString(_state.state).c_str());
             return false;
 
-        case LiftStateEnum::LIFT_DOWN:
+        case LiftStateEnum::LIFT_DOWN_EMPTY:
+        case LiftStateEnum::LIFT_DOWN_LOADED:
         {
-            if (_state.isLoaded)
+            if (_state.state == LiftStateEnum::LIFT_DOWN_LOADED)
             {
                 MLOG_WARN("%s: Cannot load ball, already loaded", toString().c_str());
                 return false;
@@ -406,11 +418,13 @@ namespace devices
         case LiftStateEnum::LIFT_DOWN_LOADING:
         case LiftStateEnum::LIFT_UP_UNLOADING:
         case LiftStateEnum::MOVING_DOWN:
-        case LiftStateEnum::LIFT_DOWN:
+        case LiftStateEnum::LIFT_DOWN_EMPTY:
+        case LiftStateEnum::LIFT_DOWN_LOADED:
             MLOG_WARN("%s: Cannot unload ball, state is %s", toString().c_str(), stateToString(_state.state).c_str());
             return false;
 
-        case LiftStateEnum::LIFT_UP:
+        case LiftStateEnum::LIFT_UP_EMPTY:
+        case LiftStateEnum::LIFT_UP_LOADED:
         {
             bool result = unloadBallStart(durationRatio);
             return result;
@@ -426,11 +440,6 @@ namespace devices
         return _state.ballWaitingSince > 0;
     }
 
-    bool Lift::isLoaded() const
-    {
-        return _state.isLoaded;
-    }
-
     bool Lift::isInitialized() const
     {
         return _state.state != LiftStateEnum::INIT && _state.state != LiftStateEnum::UNKNOWN;
@@ -440,7 +449,6 @@ namespace devices
     {
         doc["state"] = stateToString(_state.state);
         doc["ballWaitingSince"] = _state.ballWaitingSince;
-        doc["isLoaded"] = _state.isLoaded;
         if (_state.state == LiftStateEnum::MOVING_UP || _state.state == LiftStateEnum::MOVING_DOWN)
         {
             // Include speed so the website can calculate animation duration
@@ -538,12 +546,16 @@ namespace devices
             return "Init";
         case LiftStateEnum::LIFT_DOWN_LOADING:
             return "LiftDownLoading";
-        case LiftStateEnum::LIFT_DOWN:
-            return "LiftDown";
+        case LiftStateEnum::LIFT_DOWN_EMPTY:
+            return "LiftDownEmpty";
+        case LiftStateEnum::LIFT_DOWN_LOADED:
+            return "LiftDownLoaded";
         case LiftStateEnum::LIFT_UP_UNLOADING:
             return "LiftUpUnloading";
-        case LiftStateEnum::LIFT_UP:
-            return "LiftUp";
+        case LiftStateEnum::LIFT_UP_EMPTY:
+            return "LiftUpEmpty";
+        case LiftStateEnum::LIFT_UP_LOADED:
+            return "LiftUpLoaded";
         case LiftStateEnum::MOVING_UP:
             return "MovingUp";
         case LiftStateEnum::MOVING_DOWN:
@@ -582,7 +594,6 @@ namespace devices
         _state.state = LiftStateEnum::LIFT_DOWN_LOADING;
         _loadStartTime = millis();
         _loadEndTime = 0;
-        _state.isLoaded = true;
         notifyStateChanged();
 
         // Set loader to 100 (fully open) - simplified control
@@ -607,7 +618,7 @@ namespace devices
             return true;
         }
 
-        _state.state = LiftStateEnum::LIFT_DOWN;
+        _state.state = LiftStateEnum::LIFT_DOWN_LOADED;
         _loadStartTime = 0;
         _loadEndTime = 0;
         notifyStateChanged();
@@ -658,8 +669,7 @@ namespace devices
         // Turn off PWM to save power and reduce heat - simplified control
         _unloader->disable();
 
-        _state.state = LiftStateEnum::LIFT_UP;
-        _state.isLoaded = false;
+        _state.state = LiftStateEnum::LIFT_UP_EMPTY;
         _unloadStartTime = 0;
         _unloadEndTime = 0;
         _unloadDurationMs = 0;
@@ -900,7 +910,7 @@ namespace devices
 
             // Init complete
             MLOG_INFO("%s: Initialization complete", toString().c_str());
-            _state.state = LiftStateEnum::LIFT_DOWN;
+            _state.state = LiftStateEnum::LIFT_DOWN_EMPTY;
             _state.initStep = 0;
             notifyStateChanged();
             break;

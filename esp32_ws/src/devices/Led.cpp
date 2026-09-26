@@ -20,17 +20,51 @@ namespace devices
         return duration;
     }
 
-    static unsigned long nextPatternBoundary(unsigned long now, unsigned long duration, bool allowCurrentBoundary)
+    static bool patternIsOnAt(const std::vector<unsigned long> &pattern, unsigned long offset, unsigned long &phaseRemaining)
     {
-        const unsigned long phase = now % duration;
-        if (phase == 0 && allowCurrentBoundary)
-            return now;
-        return now + (duration - phase);
+        unsigned long phaseEnd = 0;
+        for (size_t index = 0; index < pattern.size(); index++)
+        {
+            phaseEnd += pattern[index];
+            if (offset < phaseEnd)
+            {
+                phaseRemaining = phaseEnd - offset;
+                return index % 2 == 0;
+            }
+        }
+
+        phaseRemaining = 0;
+        return false;
     }
 
     static bool reached(unsigned long now, unsigned long target)
     {
         return static_cast<long>(now - target) >= 0;
+    }
+
+    static bool prefixesMatch(const std::vector<unsigned long> &currentPattern,
+                              const std::vector<unsigned long> &newPattern,
+                              unsigned long elapsed)
+    {
+        const unsigned long newDuration = patternDuration(newPattern);
+        unsigned long cursor = 0;
+
+        while (cursor < elapsed)
+        {
+            unsigned long currentPhaseRemaining = 0;
+            const bool currentIsOn = patternIsOnAt(currentPattern, cursor, currentPhaseRemaining);
+
+            unsigned long newPhaseRemaining = 0;
+            const bool newIsOn = patternIsOnAt(newPattern, cursor % newDuration, newPhaseRemaining);
+            const unsigned long segmentDuration = min(currentPhaseRemaining, elapsed - cursor);
+
+            if (currentIsOn != newIsOn || newPhaseRemaining < segmentDuration)
+                return false;
+
+            cursor += segmentDuration;
+        }
+
+        return true;
     }
 
     Led::Led(const String &id)
@@ -125,6 +159,7 @@ namespace devices
         _state.blinkDelay = 0;
         _state.pattern.clear();
         clearPendingPattern();
+        _patternStartedAt = 0;
         _isPrevBlinkingOn = -1;
         clearError();
     }
@@ -151,6 +186,7 @@ namespace devices
 
         _state.pattern.clear();
         clearPendingPattern();
+        _patternStartedAt = 0;
 
         // Skip if already OK
         if (_state.mode == (value ? "ON" : "OFF"))
@@ -209,7 +245,7 @@ namespace devices
         _hasPendingPattern = false;
     }
 
-    bool Led::pattern(const std::vector<int> &timings, bool synced)
+    bool Led::pattern(const std::vector<int> &timings)
     {
         if (_pin == nullptr || !_pin->isConfigured() || timings.size() < 2 || timings.size() > 32 || timings.size() % 2 != 0)
         {
@@ -231,34 +267,35 @@ namespace devices
             totalDuration += static_cast<unsigned long>(timing);
         }
 
+        const unsigned long now = millis();
+
         if (_state.mode != "PATTERN" || _state.pattern.empty())
         {
             clearPendingPattern();
             _state.mode = "PATTERN";
-            _state.pattern = synced ? std::vector<unsigned long>() : validatedPattern;
+            _state.pattern = validatedPattern;
+            _patternStartedAt = now;
             _isPrevBlinkingOn = -1;
-
-            if (synced)
-            {
-                _pendingPattern = validatedPattern;
-                _pendingPatternStartAt = nextPatternBoundary(millis(), totalDuration, true);
-                _hasPendingPattern = true;
-            }
-            MLOG_INFO("%s: Pattern configured with %u phases, total duration=%lums%s", toString().c_str(), static_cast<unsigned>(timings.size()), totalDuration, synced ? ", synchronized" : "");
+            MLOG_INFO("%s: Pattern configured with %u phases, total duration=%lums", toString().c_str(), static_cast<unsigned>(timings.size()), totalDuration);
             notifyStateChanged();
             return true;
         }
 
-        const unsigned long now = millis();
         const unsigned long currentDuration = patternDuration(_state.pattern);
-        const unsigned long currentBoundary = nextPatternBoundary(now, currentDuration, false);
-        unsigned long startAt = currentBoundary;
+        const unsigned long elapsed = (now - _patternStartedAt) % currentDuration;
 
-        if (synced)
-            startAt = nextPatternBoundary(currentBoundary, totalDuration, true);
+        if (prefixesMatch(_state.pattern, validatedPattern, elapsed))
+        {
+            _state.pattern = validatedPattern;
+            _patternStartedAt = now - elapsed;
+            clearPendingPattern();
+            _isPrevBlinkingOn = -1;
+            notifyStateChanged();
+            return true;
+        }
 
         _pendingPattern = validatedPattern;
-        _pendingPatternStartAt = startAt;
+        _pendingPatternStartAt = now + (currentDuration - elapsed);
         _hasPendingPattern = true;
         return true;
     }
@@ -280,16 +317,10 @@ namespace devices
             if (_hasPendingPattern && reached(now, _pendingPatternStartAt))
             {
                 _state.pattern = _pendingPattern;
+                _patternStartedAt = _pendingPatternStartAt;
                 clearPendingPattern();
                 _isPrevBlinkingOn = -1;
                 notifyStateChanged();
-            }
-
-            if (_hasPendingPattern && _state.pattern.empty())
-            {
-                _pin->write(LOW);
-                _isPrevBlinkingOn = 0;
-                return;
             }
 
             unsigned long totalDuration = patternDuration(_state.pattern);
@@ -297,19 +328,9 @@ namespace devices
             if (totalDuration == 0)
                 return;
 
-            unsigned long value = millis() % totalDuration;
-            bool shouldBeOn = false;
-            unsigned long phaseEnd = 0;
-
-            for (size_t index = 0; index < _state.pattern.size(); index++)
-            {
-                phaseEnd += _state.pattern[index];
-                if (value < phaseEnd)
-                {
-                    shouldBeOn = index % 2 == 0;
-                    break;
-                }
-            }
+            const unsigned long value = (now - _patternStartedAt) % totalDuration;
+            unsigned long phaseRemaining = 0;
+            const bool shouldBeOn = patternIsOnAt(_state.pattern, value, phaseRemaining);
 
             if ((shouldBeOn && _isPrevBlinkingOn != 1) || (!shouldBeOn && _isPrevBlinkingOn != 0))
             {
@@ -350,6 +371,10 @@ namespace devices
             JsonArray patternArray = doc["pattern"].to<JsonArray>();
             for (unsigned long duration : _state.pattern)
                 patternArray.add(duration);
+
+            const unsigned long totalDuration = patternDuration(_state.pattern);
+            if (totalDuration > 0)
+                doc["patternElapsed"] = (millis() - _patternStartedAt) % totalDuration;
         }
     }
 
@@ -396,8 +421,7 @@ namespace devices
                     return false;
                 timings.push_back(value.as<int>());
             }
-            bool synced = (*args)["synced"].is<bool>() && (*args)["synced"].as<bool>();
-            return pattern(timings, synced);
+            return pattern(timings);
         }
         else
         {

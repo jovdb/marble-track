@@ -93,8 +93,9 @@ export function LedStateIcon(props: { deviceId: string } & IconProps) {
         return;
       }
 
+      const patternStartedAt = Date.now() - (Number(state.patternElapsed) || 0);
       const updatePattern = () => {
-        let phase = Date.now() % totalDuration;
+        let phase = (Date.now() - patternStartedAt) % totalDuration;
         for (let index = 0; index < pattern.length; index += 1) {
           if (phase < pattern[index]) {
             setIsOn(index % 2 === 0);

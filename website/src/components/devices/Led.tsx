@@ -14,6 +14,7 @@ export function Led(props: { id: string; isPopup?: boolean; onClose?: () => void
   const isMode = (value: string) => mode() === value;
   const pattern = createMemo(() => device()?.state?.pattern ?? []);
   const patternDuration = createMemo(() => pattern().reduce((total, value) => total + value, 0));
+  const patternElapsed = createMemo(() => device()?.state?.patternElapsed ?? 0);
   const [patternPhase, setPatternPhase] = createSignal(0);
 
   createEffect(() => {
@@ -22,7 +23,9 @@ export function Led(props: { id: string; isPopup?: boolean; onClose?: () => void
       return;
     }
 
-    const updatePatternPhase = () => setPatternPhase(Date.now() % patternDuration());
+    const patternStartedAt = Date.now() - patternElapsed();
+    const updatePatternPhase = () =>
+      setPatternPhase((Date.now() - patternStartedAt) % patternDuration());
     const intervalId = setInterval(updatePatternPhase, 30);
     updatePatternPhase();
     onCleanup(() => clearInterval(intervalId));

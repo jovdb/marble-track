@@ -64,7 +64,7 @@ namespace devices
 
         bool set(bool value);
         bool blink(unsigned long onTime = 500, unsigned long offTime = 500, unsigned long delay = 0);
-        bool pattern(const std::vector<int> &timings, bool synced = false);
+        bool pattern(const std::vector<int> &timings);
 
         // ControllableMixin implementation
         void addDeviceStateToJson(JsonDocument &doc) override;
@@ -81,6 +81,7 @@ namespace devices
         int _isPrevBlinkingOn; // -1: UnSet, 0: OFF: 1: ON
         std::vector<unsigned long> _pendingPattern;
         unsigned long _pendingPatternStartAt = 0;
+        unsigned long _patternStartedAt = 0;
         bool _hasPendingPattern = false;
     };
 

@@ -13,6 +13,7 @@
 #include "devices/mixins/SerializableMixin.h"
 #include "pins/IPin.h"
 #include "pins/Pins.h"
+#include <vector>
 
 namespace devices
 {
@@ -42,6 +43,7 @@ namespace devices
         unsigned long blinkOnTime = 500;
         unsigned long blinkOffTime = 500;
         unsigned long blinkDelay = 0; // Delay before starting blink cycle
+        std::vector<unsigned long> pattern;
     };
 
     /**
@@ -62,6 +64,7 @@ namespace devices
 
         bool set(bool value);
         bool blink(unsigned long onTime = 500, unsigned long offTime = 500, unsigned long delay = 0);
+        bool pattern(const std::vector<int> &timings, bool synced = false);
 
         // ControllableMixin implementation
         void addDeviceStateToJson(JsonDocument &doc) override;
@@ -72,8 +75,13 @@ namespace devices
         void configToJson(JsonDocument &doc) override;
 
     private:
+        void clearPendingPattern();
+
         pins::IPin* _pin;  // Pin abstraction for LED output
         int _isPrevBlinkingOn; // -1: UnSet, 0: OFF: 1: ON
+        std::vector<unsigned long> _pendingPattern;
+        unsigned long _pendingPatternStartAt = 0;
+        bool _hasPendingPattern = false;
     };
 
 } // namespace devices

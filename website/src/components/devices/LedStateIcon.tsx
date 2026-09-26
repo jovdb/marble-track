@@ -84,6 +84,29 @@ export function LedStateIcon(props: { deviceId: string } & IconProps) {
       updateBlink();
 
       onCleanup(() => clearInterval(intervalId));
+    } else if (state.mode === "PATTERN") {
+      const pattern = (state.pattern ?? []).map(Number).filter((duration) => duration > 0);
+      const totalDuration = pattern.reduce((total, duration) => total + duration, 0);
+
+      if (pattern.length === 0 || totalDuration === 0) {
+        setIsOn(false);
+        return;
+      }
+
+      const updatePattern = () => {
+        let phase = Date.now() % totalDuration;
+        for (let index = 0; index < pattern.length; index += 1) {
+          if (phase < pattern[index]) {
+            setIsOn(index % 2 === 0);
+            return;
+          }
+          phase -= pattern[index];
+        }
+      };
+
+      const intervalId = setInterval(updatePattern, 30);
+      updatePattern();
+      onCleanup(() => clearInterval(intervalId));
     }
   });
 

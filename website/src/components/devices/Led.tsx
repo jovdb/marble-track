@@ -1,4 +1,4 @@
-import { createMemo } from "solid-js";
+import { For, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import { Device } from "./Device";
 import styles from "./Device.module.css";
 import LedConfig from "./LedConfig";
@@ -12,6 +12,21 @@ export function Led(props: { id: string; isPopup?: boolean; onClose?: () => void
   const mode = createMemo(() => device()?.state?.mode ?? "");
   // Status visualization removed; use DeviceJsonState below
   const isMode = (value: string) => mode() === value;
+  const pattern = createMemo(() => device()?.state?.pattern ?? []);
+  const patternDuration = createMemo(() => pattern().reduce((total, value) => total + value, 0));
+  const [patternPhase, setPatternPhase] = createSignal(0);
+
+  createEffect(() => {
+    if (mode() !== "PATTERN" || patternDuration() <= 0) {
+      setPatternPhase(0);
+      return;
+    }
+
+    const updatePatternPhase = () => setPatternPhase(Date.now() % patternDuration());
+    const intervalId = setInterval(updatePatternPhase, 30);
+    updatePatternPhase();
+    onCleanup(() => clearInterval(intervalId));
+  });
 
   const handleTurnOn = () => actions.setLed(true);
   const handleTurnOff = () => actions.setLed(false);
@@ -38,6 +53,43 @@ export function Led(props: { id: string; isPopup?: boolean; onClose?: () => void
           }}
         >
           <LedStateIcon deviceId={props.id} width={64} height={64} />
+          {mode() === "PATTERN" && pattern().length > 0 && patternDuration() > 0 && (
+            <div
+              style={{
+                position: "relative",
+                display: "flex",
+                width: "180px",
+                height: "8px",
+                "margin-left": "12px",
+                "border-radius": "4px",
+                overflow: "hidden",
+              }}
+            >
+              <For each={pattern()}>
+                {(duration, index) => (
+                  <div
+                    style={{
+                      width: `${(duration / patternDuration()) * 100}%`,
+                      background:
+                        index() % 2 === 0
+                          ? "var(--color-accent, #e0b84f)"
+                          : "var(--color-surface-muted, #62666d)",
+                    }}
+                  />
+                )}
+              </For>
+              <div
+                style={{
+                  position: "absolute",
+                  top: "-2px",
+                  left: `${(patternPhase() / patternDuration()) * 100}%`,
+                  width: "2px",
+                  height: "12px",
+                  background: "currentcolor",
+                }}
+              />
+            </div>
+          )}
         </div>
       )}
       isCollapsible={!props.isPopup}

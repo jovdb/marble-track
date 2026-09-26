@@ -6,10 +6,32 @@
 #include "devices/Led.h"
 #include "Logging.h"
 #include <ArduinoJson.h>
+#include <limits>
 
 namespace devices
 {
     static bool _isPrevBlinkingOn = false;
+
+    static unsigned long patternDuration(const std::vector<unsigned long> &pattern)
+    {
+        unsigned long duration = 0;
+        for (unsigned long phase : pattern)
+            duration += phase;
+        return duration;
+    }
+
+    static unsigned long nextPatternBoundary(unsigned long now, unsigned long duration, bool allowCurrentBoundary)
+    {
+        const unsigned long phase = now % duration;
+        if (phase == 0 && allowCurrentBoundary)
+            return now;
+        return now + (duration - phase);
+    }
+
+    static bool reached(unsigned long now, unsigned long target)
+    {
+        return static_cast<long>(now - target) >= 0;
+    }
 
     Led::Led(const String &id)
         : Device(id, "led"), _pin(nullptr), _isPrevBlinkingOn(-1)
@@ -101,6 +123,8 @@ namespace devices
         _state.blinkOnTime = 500;
         _state.blinkOffTime = 500;
         _state.blinkDelay = 0;
+        _state.pattern.clear();
+        clearPendingPattern();
         _isPrevBlinkingOn = -1;
         clearError();
     }
@@ -124,6 +148,9 @@ namespace devices
             //           MLOG_WARN("%s: Set: Pin not configured", toString().c_str());
             return false;
         }
+
+        _state.pattern.clear();
+        clearPendingPattern();
 
         // Skip if already OK
         if (_state.mode == (value ? "ON" : "OFF"))
@@ -162,6 +189,8 @@ namespace devices
         _state.blinkOnTime = onTime;
         _state.blinkOffTime = offTime;
         _state.blinkDelay = delay;
+        _state.pattern.clear();
+        clearPendingPattern();
 
         // Pin set by loop()
         MLOG_INFO("%s: Blinking with delay=%lums, on=%lums, off=%lums (total cycle: %lums)",
@@ -173,13 +202,120 @@ namespace devices
         return true;
     }
 
+    void Led::clearPendingPattern()
+    {
+        _pendingPattern.clear();
+        _pendingPatternStartAt = 0;
+        _hasPendingPattern = false;
+    }
+
+    bool Led::pattern(const std::vector<int> &timings, bool synced)
+    {
+        if (_pin == nullptr || !_pin->isConfigured() || timings.size() < 2 || timings.size() > 32 || timings.size() % 2 != 0)
+        {
+            return false;
+        }
+
+        unsigned long totalDuration = 0;
+        std::vector<unsigned long> validatedPattern;
+        validatedPattern.reserve(timings.size());
+
+        for (int timing : timings)
+        {
+            if (timing <= 0 || totalDuration > std::numeric_limits<unsigned long>::max() - static_cast<unsigned long>(timing))
+            {
+                return false;
+            }
+
+            validatedPattern.push_back(static_cast<unsigned long>(timing));
+            totalDuration += static_cast<unsigned long>(timing);
+        }
+
+        if (_state.mode != "PATTERN" || _state.pattern.empty())
+        {
+            clearPendingPattern();
+            _state.mode = "PATTERN";
+            _state.pattern = synced ? std::vector<unsigned long>() : validatedPattern;
+            _isPrevBlinkingOn = -1;
+
+            if (synced)
+            {
+                _pendingPattern = validatedPattern;
+                _pendingPatternStartAt = nextPatternBoundary(millis(), totalDuration, true);
+                _hasPendingPattern = true;
+            }
+            MLOG_INFO("%s: Pattern configured with %u phases, total duration=%lums%s", toString().c_str(), static_cast<unsigned>(timings.size()), totalDuration, synced ? ", synchronized" : "");
+            notifyStateChanged();
+            return true;
+        }
+
+        const unsigned long now = millis();
+        const unsigned long currentDuration = patternDuration(_state.pattern);
+        const unsigned long currentBoundary = nextPatternBoundary(now, currentDuration, false);
+        unsigned long startAt = currentBoundary;
+
+        if (synced)
+            startAt = nextPatternBoundary(currentBoundary, totalDuration, true);
+
+        _pendingPattern = validatedPattern;
+        _pendingPatternStartAt = startAt;
+        _hasPendingPattern = true;
+        return true;
+    }
+
     void Led::loop()
     {
         Device::loop();
 
-        if (_pin == nullptr || !_pin->isConfigured() || _state.mode != "BLINKING")
+        if (_pin == nullptr || !_pin->isConfigured() || (_state.mode != "BLINKING" && _state.mode != "PATTERN"))
         {
             _isPrevBlinkingOn = -1;
+            return;
+        }
+
+        if (_state.mode == "PATTERN")
+        {
+            const unsigned long now = millis();
+
+            if (_hasPendingPattern && reached(now, _pendingPatternStartAt))
+            {
+                _state.pattern = _pendingPattern;
+                clearPendingPattern();
+                _isPrevBlinkingOn = -1;
+                notifyStateChanged();
+            }
+
+            if (_hasPendingPattern && _state.pattern.empty())
+            {
+                _pin->write(LOW);
+                _isPrevBlinkingOn = 0;
+                return;
+            }
+
+            unsigned long totalDuration = patternDuration(_state.pattern);
+
+            if (totalDuration == 0)
+                return;
+
+            unsigned long value = millis() % totalDuration;
+            bool shouldBeOn = false;
+            unsigned long phaseEnd = 0;
+
+            for (size_t index = 0; index < _state.pattern.size(); index++)
+            {
+                phaseEnd += _state.pattern[index];
+                if (value < phaseEnd)
+                {
+                    shouldBeOn = index % 2 == 0;
+                    break;
+                }
+            }
+
+            if ((shouldBeOn && _isPrevBlinkingOn != 1) || (!shouldBeOn && _isPrevBlinkingOn != 0))
+            {
+                _isPrevBlinkingOn = shouldBeOn ? 1 : 0;
+                _pin->write(shouldBeOn ? HIGH : LOW);
+            }
             return;
         }
 
@@ -209,6 +345,12 @@ namespace devices
         doc["blinkOnTime"] = _state.blinkOnTime;
         doc["blinkOffTime"] = _state.blinkOffTime;
         doc["blinkDelay"] = _state.blinkDelay;
+        if (_state.mode == "PATTERN")
+        {
+            JsonArray patternArray = doc["pattern"].to<JsonArray>();
+            for (unsigned long duration : _state.pattern)
+                patternArray.add(duration);
+        }
     }
 
     bool Led::control(const String &action, JsonObject *args)
@@ -240,6 +382,22 @@ namespace devices
             }
 
             return blink(onTime, offTime, delay);
+        }
+        else if (action == "pattern")
+        {
+            if (!args || !(*args)["pattern"].is<JsonArrayConst>())
+                return false;
+
+            JsonArrayConst patternArray = (*args)["pattern"].as<JsonArrayConst>();
+            std::vector<int> timings;
+            for (JsonVariantConst value : patternArray)
+            {
+                if (!value.is<int>())
+                    return false;
+                timings.push_back(value.as<int>());
+            }
+            bool synced = (*args)["synced"].is<bool>() && (*args)["synced"].as<bool>();
+            return pattern(timings, synced);
         }
         else
         {

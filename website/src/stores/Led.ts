@@ -4,10 +4,11 @@ import { useDevice } from "./Devices";
 const deviceType = "led";
 
 interface ILedState extends IDeviceState {
-  mode: "ON" | "OFF" | "BLINKING";
+  mode: "ON" | "OFF" | "BLINKING" | "PATTERN";
   blinkOnTime: number;
   blinkOffTime: number;
   blinkDelay: number;
+  pattern?: number[];
 }
 
 export const LED_INITIAL_STATES = ["OFF", "ON", "BLINKING"] as const;
@@ -32,12 +33,17 @@ export function useLed(deviceId: string) {
     execDeviceFn("blink", { onTime, offTime });
   }
 
+  function pattern(_deviceId: string, timings: number[], synced = false) {
+    execDeviceFn("pattern", { pattern: timings, synced });
+  }
+
   return [
     device,
     {
       ...actions,
       setLed: (value: Parameters<typeof setLed>[1]) => setLed(deviceId, value),
       blink: (onTime?: number, offTime?: number) => blink(deviceId, onTime, offTime),
+      pattern: (timings: number[], synced?: boolean) => pattern(deviceId, timings, synced),
     },
   ] as const;
 }

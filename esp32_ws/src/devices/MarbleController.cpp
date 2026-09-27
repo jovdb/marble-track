@@ -493,7 +493,7 @@ namespace devices
         {
             static auto _liftBallWaitingNotificationFirst = 60000;
             static auto _liftBallWaitingNotificationRecurring = 120000;
-            static auto _liftBallWaitingNotificationDuration = 3000;
+            static auto _liftBallWaitingNotificationDuration = 960 * 5;
 
             if (_liftBallReadyWaitingTime)
             {
@@ -1359,12 +1359,12 @@ namespace devices
 
             if (isInRange1 && !wasInRange1)
             {
-                MLOG_INFO("%s: Wheel at angle %.2f, triggering WheelLoader loadAny (Range 1)", toString().c_str(), wheelState.currentAngle);
+                MLOG_INFO("%s: Wheel at angle %.2f, loading Wheel", toString().c_str(), wheelState.currentAngle);
                 _wheelLoader->loadAny();
             }
             else if (isInRange2 && !wasInRange2)
             {
-                MLOG_INFO("%s: Wheel at angle %.2f, triggering WheelLoader loadAny (Range 2)", toString().c_str(), wheelState.currentAngle);
+                MLOG_INFO("%s: Wheel at angle %.2f, loading wheel", toString().c_str(), wheelState.currentAngle);
                 _wheelLoader->loadAny();
             }
 

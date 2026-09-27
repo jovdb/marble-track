@@ -404,7 +404,15 @@ namespace devices
         }
         case devices::LiftStateEnum::INIT:
         {
-            blinkInit(_liftLed);
+            // Queued
+            if (_liftQueuedPresses > 0)
+            {
+                blinkLiftQueued();
+            }
+            else
+            {
+                blinkInit(_liftLed);
+            }
             break;
         }
         case devices::LiftStateEnum::LIFT_DOWN_LOADING:
@@ -419,9 +427,14 @@ namespace devices
             {
                 blinkBusy(_liftLed);
             }
-            else
+            // Queued
+            else if (_liftQueuedPresses > 0)
             {
                 blinkLiftQueued();
+            }
+            else
+            {
+                _liftLed->set(false);
             }
 
             break;
@@ -586,10 +599,11 @@ namespace devices
             break;
         }
         case devices::LiftStateEnum::INIT:
-            if (_liftBtn->onPressed())
+            if (_liftBtn->onPressed() && _liftQueuedPresses < 240)
             {
-                playErrorSound(devices::Hv20tPlayMode::QueueIfPlaying);
-                _audio->play(songs::LIFT_INIT_BUSY, devices::Hv20tPlayMode::QueueIfPlaying);
+                // if only up, go back down, else whole cycle
+                _liftQueuedPresses += 4;
+                playButtonClick({songs::LIFT_STOP});
             }
             break;
 

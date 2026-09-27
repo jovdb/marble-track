@@ -207,6 +207,7 @@ namespace devices
         return time - _state.lastPressedMillis >= duration;
     }
 
+    /** true when the button has been pressed for at least the specified duration */
     bool Button::onPressedDuration(unsigned long duration) const
     {
         return _state.isPressed &&

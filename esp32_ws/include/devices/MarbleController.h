@@ -96,12 +96,6 @@ namespace devices
 
         // Splitter sensor pulse counter and delay logic
         uint8_t _splitterCounter = 0;
-        unsigned long _splitterDelayStart = 0;
-        unsigned long _splitterSensorPressStartTime = 0;
-        bool _splitterSensorWasPressed = false;
-        bool _splitterLongPressApplied = false;
-        bool _splitterMovePending = false;
-        bool _splitterMoveSawBusy = false;
 
         // Button timing for unload duration control
         bool _isLiftPowerUnloadSongPlaying = false;

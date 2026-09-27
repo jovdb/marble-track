@@ -427,7 +427,6 @@ namespace devices
             break;
         case devices::LiftStateEnum::LIFT_DOWN_LOADED:
         case devices::LiftStateEnum::LIFT_UP_EMPTY:
-        case devices::LiftStateEnum::LIFT_UP_LOADED:
         {
             if (_isLiftTempAutoMode)
             {
@@ -443,22 +442,65 @@ namespace devices
             }
             break;
         }
+        case devices::LiftStateEnum::LIFT_UP_LOADED:
+        {
+            static auto _liftBallWaitingNotificationFirst = 60000;
+            static auto _liftBallWaitingNotificationRecurring = 120000;
+            static auto _liftBallWaitingNotificationDuration = 3000;
+
+            if (_liftBallReadyWaitingTime)
+            {
+                if (!_liftBtn->isPressed())
+                {
+
+                    if (
+                        (_liftBallReadyWaitingTime + _liftBallWaitingNotificationFirst) < millis())
+                    {
+                        // New or again
+                        if (!_playedLiftBallWaitingSoundAt || ((_playedLiftBallWaitingSoundAt + _liftBallWaitingNotificationRecurring) < millis()))
+                        {
+                            _audio->play(songs::LIFT_BALL_WAITING, devices::Hv20tPlayMode::QueueIfPlaying);
+                            _playedLiftBallWaitingSoundAt = millis();
+                        }
+                    }
+                }
+            }
+
+            // Attention
+            if (_playedLiftBallWaitingSoundAt && _playedLiftBallWaitingSoundAt <= millis() && _playedLiftBallWaitingSoundAt + _liftBallWaitingNotificationDuration > millis())
+            {
+                blinkAttention(_liftLed);
+            }
+            // Lift Auto Mode
+            else if (_isLiftTempAutoMode)
+            {
+                blinkBusy(_liftLed);
+            }
+            // Queued
+            else if (_liftQueuedPresses > 0)
+            {
+                blinkLiftQueued();
+            }
+            else
+            {
+                // USer can press
+                _liftLed->set(true);
+            }
+
+            break;
+        }
         case devices::LiftStateEnum::LIFT_DOWN_EMPTY:
         {
             static auto _liftBallWaitingNotificationFirst = 60000;
             static auto _liftBallWaitingNotificationRecurring = 120000;
             static auto _liftBallWaitingNotificationDuration = 3000;
 
-            if (_liftEmptyTime == 0)
-            {
-                _liftEmptyTime = millis();
-            }
-            else
+            if (_liftBallReadyWaitingTime)
             {
                 if (liftState.ballWaitingSince > 0)
                 {
 
-                    auto mostRecent = std::max(liftState.ballWaitingSince, _liftEmptyTime);
+                    auto mostRecent = std::max(liftState.ballWaitingSince, _liftBallReadyWaitingTime);
                     if (
                         (mostRecent + _liftBallWaitingNotificationFirst) < millis())
                     {
@@ -2030,13 +2072,14 @@ namespace devices
         if (previousLiftState != devices::LiftStateEnum::LIFT_UP_LOADED &&
             liftState->state == devices::LiftStateEnum::LIFT_UP_LOADED)
         {
+            _liftBallReadyWaitingTime = millis();
             _audio->play(songs::LIFT_STOP, devices::Hv20tPlayMode::SkipIfPlaying);
         }
 
         if (previousLiftState != devices::LiftStateEnum::LIFT_DOWN_EMPTY &&
             liftState->state == devices::LiftStateEnum::LIFT_DOWN_EMPTY)
         {
-            _liftEmptyTime = millis();
+            _liftBallReadyWaitingTime = millis();
             _audio->play(songs::LIFT_STOP, devices::Hv20tPlayMode::QueueIfPlaying);
         }
 

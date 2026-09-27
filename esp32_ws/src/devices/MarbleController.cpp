@@ -1142,7 +1142,6 @@ namespace devices
                  : (wheelState.currentAngle >= LauncherWheelLoadMinAngle ||
                     (wheelState.currentAngle <= LauncherWheelLoadMaxAngle - 360)));
 
-        MLOG_DEBUG("wheelInLaunchRange: %d, wheelState.currentAngle: %f", wheelInLaunchRange, wheelState.currentAngle);
         auto launcherState = _launcher->getState();
         auto static launcherLastDownMillis = 0;
 

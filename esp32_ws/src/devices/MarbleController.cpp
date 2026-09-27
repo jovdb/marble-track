@@ -1125,6 +1125,7 @@ namespace devices
 
         // wheel inRange
         auto wheelState = _wheel->getState();
+        static bool lastLaunchTime = 0;
 
         const bool wheelInLaunchRange =
             (wheelState.state == devices::WheelStateEnum::IDLE || wheelState.state == devices::WheelStateEnum::MOVING) &&
@@ -1238,6 +1239,7 @@ namespace devices
                                     _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
                                     if (_launcher->launch())
                                     {
+                                        lastLaunchTime = millis();
                                         isBallLaunched = true;
                                     }
                                 }
@@ -1246,6 +1248,22 @@ namespace devices
                             {
                                 MLOG_INFO("%s: Cannot launch, no ball", toString().c_str());
                                 playErrorSound();
+                            }
+                        }
+                        else
+                        {
+                            // Auto launch first possible launch
+                            if (!lastLaunchTime)
+                            {
+                                // Is in middle of range?
+                                // Use 2.0f and 360.0f to ensure floating-point division and types match
+                                auto launchAngle = std::fmod((LauncherWheelMaxAngle + LauncherWheelMinAngle) / 2.0f, 360.0f);
+                                if (wheelState.currentAngle >= launchAngle)
+                                {
+                                    _launcher->launch();
+                                    lastLaunchTime = millis();
+                                    isBallLaunched = true;
+                                }
                             }
                         }
                     }
@@ -1279,6 +1297,7 @@ namespace devices
                             _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
                             if (_launcher->launch())
                             {
+                                lastLaunchTime = millis();
                                 isBallLaunched = true;
                             }
                         }

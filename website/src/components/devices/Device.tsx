@@ -11,7 +11,7 @@ interface DeviceProps {
   icon?: JSX.Element;
   children?: JSX.Element | JSX.Element[];
   configComponent?: (onClose: () => void) => JSX.Element;
-  stateComponent?: (state: unknown) => JSX.Element;
+  stateComponent?: JSX.Element;
   isCollapsible?: boolean;
   onClose?: () => void;
 }
@@ -258,9 +258,7 @@ export function Device(props: DeviceProps) {
               </div>
             </Show>
 
-            <Show when={props.stateComponent !== undefined}>
-              {props.stateComponent?.({ state: device()?.state })}
-            </Show>
+            <Show when={props.stateComponent !== undefined}>{props.stateComponent}</Show>
             {props.children}
           </Show>
 

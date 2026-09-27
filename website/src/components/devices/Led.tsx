@@ -51,7 +51,7 @@ export function Led(props: { id: string; isPopup?: boolean; onClose?: () => void
       id={props.id}
       configComponent={(onClose) => <LedConfig id={props.id} onClose={onClose} />}
       icon={icon()}
-      stateComponent={() => (
+      stateComponent={
         <div
           style={{
             "padding-bottom": "24px",
@@ -100,7 +100,7 @@ export function Led(props: { id: string; isPopup?: boolean; onClose?: () => void
             </div>
           )}
         </div>
-      )}
+      }
       isCollapsible={!props.isPopup}
       onClose={props.onClose}
     >

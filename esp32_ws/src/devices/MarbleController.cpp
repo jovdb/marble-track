@@ -1580,6 +1580,12 @@ namespace devices
                 _splitter->init(); // TODO: Add delay?
                 splitterErrorRetryCount++;
             }
+            else
+            {
+                MLOG_ERROR("%s: Splitter failed to reinitialize after 3 attempts", toString().c_str());
+                playErrorSound();
+                _audio->play(songs::SPLITTER_ERROR);
+            }
             break;
 
         case devices::WheelStateEnum::IDLE:

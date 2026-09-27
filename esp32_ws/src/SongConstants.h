@@ -59,6 +59,7 @@ namespace songs
     X(LIFT_AUTO_MODE_START, 35, "Automatische liftmodus gestart")                                                                                                                               \
     X(LIFT_AUTO_MODE_END, 36, "Automatische liftmodus beëindigd")                                                                                                                               \
     X(LIFT_BALL_WAITING, 37, "Ball can be loaded in the lift")                                                                                                                                  \
+    X(SPLITTER_ERROR, 38, "Splitter fout, herstart het systeem")
 
     /**
      * @brief Song ID Enum

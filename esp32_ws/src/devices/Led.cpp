@@ -267,6 +267,11 @@ namespace devices
             totalDuration += static_cast<unsigned long>(timing);
         }
 
+        if (_state.mode == "PATTERN" && _state.pattern == validatedPattern)
+        {
+            return true;
+        }
+
         const unsigned long now = millis();
 
         if (_state.mode != "PATTERN" || _state.pattern.empty())

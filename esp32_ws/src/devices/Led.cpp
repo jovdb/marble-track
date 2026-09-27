@@ -294,9 +294,11 @@ namespace devices
             return true;
         }
 
-        _pendingPattern = validatedPattern;
-        _pendingPatternStartAt = now + (currentDuration - elapsed);
-        _hasPendingPattern = true;
+        _state.pattern = validatedPattern;
+        _patternStartedAt = now;
+        clearPendingPattern();
+        _isPrevBlinkingOn = -1;
+        notifyStateChanged();
         return true;
     }
 

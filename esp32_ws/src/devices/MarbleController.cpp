@@ -437,7 +437,6 @@ namespace devices
             }
 
             break;
-        case devices::LiftStateEnum::LIFT_DOWN_EMPTY:
         case devices::LiftStateEnum::LIFT_DOWN_LOADED:
         case devices::LiftStateEnum::LIFT_UP_EMPTY:
         case devices::LiftStateEnum::LIFT_UP_LOADED:
@@ -450,18 +449,65 @@ namespace devices
             {
                 blinkLiftQueued();
             }
-            // else if (liftState.ballWaitingSince > 0 && liftState.ballWaitingSince + _actionNotificationDelayMs < millis())
-            // {
-            //     blinkAttention(_liftLed);
-            // }
             else
             {
                 _liftLed->set(true);
             }
             break;
         }
-        }
+        case devices::LiftStateEnum::LIFT_DOWN_EMPTY:
+        {
+            static auto _liftBallWaitingNotificationFirst = 60000;
+            static auto _liftBallWaitingNotificationRecurring = 120000;
+            static auto _liftBallWaitingNotificationDuration = 3000;
 
+            if (_liftEmptyTime == 0)
+            {
+                _liftEmptyTime = millis();
+            }
+            else
+            {
+                if (liftState.ballWaitingSince > 0)
+                {
+
+                    auto mostRecent = std::max(liftState.ballWaitingSince, _liftEmptyTime);
+                    if (
+                        (mostRecent + _liftBallWaitingNotificationFirst) < millis())
+                    {
+                        // New or again
+                        if (!_playedLiftBallWaitingSoundAt || ((_playedLiftBallWaitingSoundAt + _liftBallWaitingNotificationRecurring) < millis()))
+                        {
+                            _audio->play(songs::LIFT_BALL_WAITING, devices::Hv20tPlayMode::QueueIfPlaying);
+                            _playedLiftBallWaitingSoundAt = millis();
+                        }
+                    }
+                }
+            }
+
+            // Attention
+            if (_playedLiftBallWaitingSoundAt && _playedLiftBallWaitingSoundAt <= millis() && _playedLiftBallWaitingSoundAt + _liftBallWaitingNotificationDuration > millis())
+            {
+                blinkAttention(_liftLed);
+            }
+            // Lift Auto Mode
+            else if (_isLiftTempAutoMode)
+            {
+                blinkBusy(_liftLed);
+            }
+            // Queued
+            else if (_liftQueuedPresses > 0)
+            {
+                blinkLiftQueued();
+            }
+            else
+            {
+                // USer can press
+                _liftLed->set(true);
+            }
+
+            break;
+        }
+        }
         // Reset button timing state when not in LIFT_UP
         if (liftState.state != devices::LiftStateEnum::LIFT_UP_EMPTY &&
             liftState.state != devices::LiftStateEnum::LIFT_UP_LOADED)
@@ -613,29 +659,6 @@ namespace devices
                         else
                         {
                             _audio->play(songs::LIFT_AUTO_MODE_END, devices::Hv20tPlayMode::QueueIfPlaying); // Play after bell
-                        }
-                    }
-                }
-            }
-            else
-            {
-                if (_liftEmptyTime == 0)
-                    _liftEmptyTime = millis();
-
-                if (liftState.ballWaitingSince > 0 && _liftEmptyTime > 0)
-                {
-                    static auto _liftBallWaitingNotificationFirst = 60000;
-                    static auto _liftBallWaitingNotificationRecurring = 60000;
-
-                    auto mostRecent = std::max(liftState.ballWaitingSince, _liftEmptyTime);
-                    if (
-                        (mostRecent + _liftBallWaitingNotificationFirst) < millis())
-                    {
-                        // New or again
-                        if (!_playedLiftBallWaitingSoundAt || ((_playedLiftBallWaitingSoundAt + _liftBallWaitingNotificationRecurring) < millis()))
-                        {
-                            _audio->play(songs::LIFT_BALL_WAITING, devices::Hv20tPlayMode::QueueIfPlaying);
-                            _playedLiftBallWaitingSoundAt = millis();
                         }
                     }
                 }

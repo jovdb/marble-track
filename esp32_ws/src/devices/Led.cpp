@@ -373,10 +373,6 @@ namespace devices
             JsonArray patternArray = doc["pattern"].to<JsonArray>();
             for (unsigned long duration : _state.pattern)
                 patternArray.add(duration);
-
-            const unsigned long totalDuration = patternDuration(_state.pattern);
-            if (totalDuration > 0)
-                doc["patternElapsed"] = (millis() - _patternStartedAt) % totalDuration;
         }
     }
 

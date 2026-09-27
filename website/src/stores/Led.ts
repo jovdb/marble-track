@@ -9,7 +9,6 @@ interface ILedState extends IDeviceState {
   blinkOffTime: number;
   blinkDelay: number;
   pattern?: number[];
-  patternElapsed?: number;
 }
 
 export const LED_INITIAL_STATES = ["OFF", "ON", "BLINKING"] as const;

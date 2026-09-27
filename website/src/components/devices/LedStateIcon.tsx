@@ -1,4 +1,4 @@
-import { createSignal, createEffect, createMemo, onCleanup, untrack } from "solid-js";
+import { Accessor, createSignal, createEffect, createMemo, onCleanup, untrack } from "solid-js";
 import { useLed } from "../../stores/Led";
 import { IconProps } from "../icons/Icons";
 
@@ -49,7 +49,9 @@ function LightbulbOnIcon(props: IconProps) {
   );
 }
 
-export function LedStateIcon(props: { deviceId: string } & IconProps) {
+export function LedStateIcon(
+  props: { deviceId: string; patternPhase?: Accessor<number> } & IconProps
+) {
   const [device] = useLed(props.deviceId);
   const [isOn, setIsOn] = createSignal(false);
   const mode = createMemo(() => device()?.state?.mode ?? "");
@@ -107,21 +109,15 @@ export function LedStateIcon(props: { deviceId: string } & IconProps) {
         return;
       }
 
-      const patternStartedAt = Date.now() - (Number(state.patternElapsed) || 0);
-      const updatePattern = () => {
-        let phase = (Date.now() - patternStartedAt) % totalDuration;
-        for (let index = 0; index < pattern.length; index += 1) {
-          if (phase < pattern[index]) {
-            setIsOn(index % 2 === 0);
-            return;
-          }
-          phase -= pattern[index];
+      const phase = props.patternPhase ? props.patternPhase() % totalDuration : 0;
+      let remainingPhase = phase;
+      for (let index = 0; index < pattern.length; index += 1) {
+        if (remainingPhase < pattern[index]) {
+          setIsOn(index % 2 === 0);
+          return;
         }
-      };
-
-      const intervalId = setInterval(updatePattern, 30);
-      updatePattern();
-      onCleanup(() => clearInterval(intervalId));
+        remainingPhase -= pattern[index];
+      }
     }
   });
 

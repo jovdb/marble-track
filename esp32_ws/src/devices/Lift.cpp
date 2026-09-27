@@ -324,9 +324,18 @@ namespace devices
             long currentPos = getCurrentPosition();
             if (currentPos <= _config.minSteps)
             {
+                const bool wasLoaded = _state.state == LiftStateEnum::LIFT_UP_LOADED ||
+                                       (_state.state == LiftStateEnum::MOVING_UP && _movingLoaded);
+                _stepper->stop(IMMEDIATE_DECELERATION);
+                _stepper->setCurrentPosition(_config.minSteps);
+                _movingLoaded = wasLoaded;
+                _state.state = wasLoaded ? LiftStateEnum::LIFT_DOWN_LOADED : LiftStateEnum::LIFT_DOWN_EMPTY;
+                _state.stepsPerSecond = 0.0f;
+                _stepperStartTime = 0;
                 MLOG_WARN("%s: Cannot move down - already at min position (current: %ld, min: %ld)", toString().c_str(), currentPos, _config.minSteps);
                 broadcastNotification("LiftAtMinPosition",
                                       "Lift already at minimum position (" + String(currentPos) + " steps)");
+                notifyStateChanged();
                 isSuccess = false;
                 break;
             }

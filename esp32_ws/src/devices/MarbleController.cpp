@@ -601,11 +601,18 @@ namespace devices
             // Down
             if (_liftBtn->onPressed())
             {
-                playButtonDown({songs::LIFT_STOP});
+                if (_liftQueuedPresses)
+                {
+                    playButtonClick({songs::LIFT_STOP});
+                }
+                else
+                {
+                    playButtonDown({songs::LIFT_STOP});
+                }
             }
 
             // Long Press
-            if (_liftBtn->onPressedDuration(lift_timing::LongPressAutoModeDurationMs))
+            if (_liftBtn->onPressedDuration(lift_timing::LongPressAutoModeDurationMs) && !_liftQueuedPresses)
             {
                 if (_lift->isBallWaiting())
                 {
@@ -628,7 +635,8 @@ namespace devices
             else if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::LongPressAutoModeDurationMs) && _liftQueuedPresses < 240)
             {
                 isShortPress = true;
-                playButtonUp({songs::LIFT_STOP});
+                if (!_liftQueuedPresses)
+                    playButtonUp({songs::LIFT_STOP});
                 _liftQueuedPresses += _liftQueuedPresses == 0 ? 2 : 4; // to top
             }
 
@@ -692,12 +700,17 @@ namespace devices
             // Down
             if (_liftBtn->onPressed())
             {
-                playButtonDown({songs::LIFT_STOP});
+                if (_liftQueuedPresses)
+                    playButtonClick({songs::LIFT_STOP});
+                else
+                    playButtonDown({songs::LIFT_STOP});
             }
 
             // Short Press
             if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::PowerSongStartDelayMs) && _liftQueuedPresses < 240)
             {
+                if (!_liftQueuedPresses)
+                    playButtonUp({songs::LIFT_STOP});
                 if (_liftQueuedPresses == 0)
                 {
                     _liftQueuedPresses += 2; // top bottom
@@ -707,7 +720,6 @@ namespace devices
                 {
                     _liftQueuedPresses += 4; // whole cycle
                 }
-                playButtonUp({songs::LIFT_STOP});
             }
 
             if (_liftQueuedPresses > 0)

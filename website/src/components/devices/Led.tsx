@@ -6,6 +6,8 @@ import { getDeviceIcon } from "../icons/Icons";
 import { useLed } from "../../stores/Led";
 import { LedStateIcon } from "./LedStateIcon";
 
+const DEFAULT_PATTERN = "200, 200, 200, 600";
+
 function getPatternDuration(pattern: number[]) {
   return pattern.reduce((total, duration) => total + duration, 0);
 }
@@ -40,6 +42,21 @@ function patternsOverlap(currentPattern: number[], newPattern: number[], elapsed
   return true;
 }
 
+function parsePattern(value: string) {
+  const parts = value.split(",").map((part) => part.trim());
+  if (
+    parts.length < 2 ||
+    parts.length > 32 ||
+    parts.length % 2 !== 0 ||
+    parts.some((part) => !part)
+  ) {
+    return [];
+  }
+
+  const timings = parts.map(Number);
+  return timings.every((timing) => Number.isInteger(timing) && timing > 0) ? timings : [];
+}
+
 export function Led(props: { id: string; isPopup?: boolean; onClose?: () => void }) {
   const [device, actions] = useLed(props.id);
 
@@ -49,6 +66,7 @@ export function Led(props: { id: string; isPopup?: boolean; onClose?: () => void
   const pattern = createMemo(() => device()?.state?.pattern ?? []);
   const patternKey = createMemo(() => pattern().join(","));
   const patternDuration = createMemo(() => pattern().reduce((total, value) => total + value, 0));
+  const [patternInput, setPatternInput] = createSignal(DEFAULT_PATTERN);
   const [patternPhase, setPatternPhase] = createSignal(0);
   let activePattern: number[] = [];
   let patternStartedAt = 0;
@@ -87,9 +105,25 @@ export function Led(props: { id: string; isPopup?: boolean; onClose?: () => void
     onCleanup(() => clearInterval(intervalId));
   });
 
+  createEffect(() => {
+    const currentMode = mode();
+    const currentPattern = pattern();
+    if (currentMode === "PATTERN" && currentPattern.length > 0) {
+      setPatternInput(currentPattern.join(", "));
+    } else if (currentMode !== "PATTERN") {
+      setPatternInput(DEFAULT_PATTERN);
+    }
+  });
+
   const handleTurnOn = () => actions.setLed(true);
   const handleTurnOff = () => actions.setLed(false);
   const handleBlink = () => actions.blink();
+  const handlePattern = () => {
+    const timings = parsePattern(patternInput());
+    if (timings.length > 0) {
+      actions.pattern(timings);
+    }
+  };
 
   const icon = createMemo(() => {
     const type = device()?.type;
@@ -106,20 +140,34 @@ export function Led(props: { id: string; isPopup?: boolean; onClose?: () => void
           style={{
             "padding-bottom": "24px",
             display: "flex",
+            "flex-direction": "column",
             "justify-content": "center",
             "align-items": "center",
-            height: "64px",
           }}
         >
           <LedStateIcon deviceId={props.id} patternPhase={patternPhase} width={64} height={64} />
+
+          {isMode("PATTERN") && (
+            <label class={styles.device__label}>
+              Pattern:
+              <br />
+              <input
+                class={styles.device__input}
+                type="text"
+                value={patternInput()}
+                onInput={(event) => setPatternInput(event.currentTarget.value)}
+                aria-label="LED pattern timings"
+                style={{ width: "240px" }}
+              />
+            </label>
+          )}
           {mode() === "PATTERN" && pattern().length > 0 && patternDuration() > 0 && (
             <div
               style={{
                 position: "relative",
                 display: "flex",
-                width: "180px",
+                width: "240px",
                 height: "8px",
-                "margin-left": "12px",
                 "border-radius": "4px",
                 overflow: "hidden",
               }}
@@ -184,6 +232,16 @@ export function Led(props: { id: string; isPopup?: boolean; onClose?: () => void
           onClick={handleBlink}
         >
           Blink
+        </button>
+        <button
+          classList={{
+            [styles.device__button]: true,
+            [styles["device__button--secondary"]]: isMode("PATTERN"),
+          }}
+          disabled={!mode() || parsePattern(patternInput()).length === 0}
+          onClick={handlePattern}
+        >
+          Pattern
         </button>
       </div>
     </Device>

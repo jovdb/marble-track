@@ -1,4 +1,4 @@
-import { createSignal, createEffect, onCleanup } from "solid-js";
+import { createSignal, createEffect, createMemo, onCleanup, untrack } from "solid-js";
 import { useLed } from "../../stores/Led";
 import { IconProps } from "../icons/Icons";
 
@@ -52,16 +52,30 @@ function LightbulbOnIcon(props: IconProps) {
 export function LedStateIcon(props: { deviceId: string } & IconProps) {
   const [device] = useLed(props.deviceId);
   const [isOn, setIsOn] = createSignal(false);
+  const mode = createMemo(() => device()?.state?.mode ?? "");
+  const blinkKey = createMemo(() => {
+    const state = device()?.state;
+    return `${state?.blinkOnTime ?? 0},${state?.blinkOffTime ?? 0},${state?.blinkDelay ?? 0}`;
+  });
+  const patternKey = createMemo(() =>
+    (device()?.state?.pattern ?? [])
+      .map(Number)
+      .filter((duration) => duration > 0)
+      .join(",")
+  );
 
   createEffect(() => {
-    const state = device()?.state;
+    const currentMode = mode();
+    blinkKey();
+    patternKey();
+    const state = untrack(() => device()?.state);
     if (!state) return;
 
-    if (state.mode === "ON") {
+    if (currentMode === "ON") {
       setIsOn(true);
-    } else if (state.mode === "OFF") {
+    } else if (currentMode === "OFF") {
       setIsOn(false);
-    } else if (state.mode === "BLINKING") {
+    } else if (currentMode === "BLINKING") {
       const onTime = Number(state.blinkOnTime) || 500;
       const offTime = Number(state.blinkOffTime) || 500;
       const delay = Number(state.blinkDelay) || 0;
@@ -84,7 +98,7 @@ export function LedStateIcon(props: { deviceId: string } & IconProps) {
       updateBlink();
 
       onCleanup(() => clearInterval(intervalId));
-    } else if (state.mode === "PATTERN") {
+    } else if (currentMode === "PATTERN") {
       const pattern = (state.pattern ?? []).map(Number).filter((duration) => duration > 0);
       const totalDuration = pattern.reduce((total, duration) => total + duration, 0);
 

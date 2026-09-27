@@ -1,4 +1,4 @@
-import { For, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
+import { For, createEffect, createMemo, createSignal, onCleanup, untrack } from "solid-js";
 import { Device } from "./Device";
 import styles from "./Device.module.css";
 import LedConfig from "./LedConfig";
@@ -13,19 +13,25 @@ export function Led(props: { id: string; isPopup?: boolean; onClose?: () => void
   // Status visualization removed; use DeviceJsonState below
   const isMode = (value: string) => mode() === value;
   const pattern = createMemo(() => device()?.state?.pattern ?? []);
+  const patternKey = createMemo(() => pattern().join(","));
   const patternDuration = createMemo(() => pattern().reduce((total, value) => total + value, 0));
   const patternElapsed = createMemo(() => device()?.state?.patternElapsed ?? 0);
   const [patternPhase, setPatternPhase] = createSignal(0);
 
   createEffect(() => {
-    if (mode() !== "PATTERN" || patternDuration() <= 0) {
+    const currentMode = mode();
+    patternKey();
+    const currentPattern = untrack(pattern);
+    const currentDuration = currentPattern.reduce((total, value) => total + value, 0);
+
+    if (currentMode !== "PATTERN" || currentDuration <= 0) {
       setPatternPhase(0);
       return;
     }
 
-    const patternStartedAt = Date.now() - patternElapsed();
+    const patternStartedAt = Date.now() - untrack(patternElapsed);
     const updatePatternPhase = () =>
-      setPatternPhase((Date.now() - patternStartedAt) % patternDuration());
+      setPatternPhase((Date.now() - patternStartedAt) % currentDuration);
     const intervalId = setInterval(updatePatternPhase, 30);
     updatePatternPhase();
     onCleanup(() => clearInterval(intervalId));

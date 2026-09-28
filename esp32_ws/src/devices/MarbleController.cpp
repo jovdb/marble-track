@@ -17,6 +17,30 @@ extern DeviceManager deviceManager;
 namespace devices
 {
 
+    void blinkBusy(Led *ledDevice)
+    {
+        if (!ledDevice)
+            ledDevice->blink(480, 480);
+    }
+
+    void blinkError(Led *ledDevice)
+    {
+        if (ledDevice)
+            ledDevice->blink(20, 940);
+    }
+
+    void blinkInit(Led *ledDevice)
+    {
+        if (ledDevice)
+            ledDevice->blink(720, 240);
+    }
+
+    void blinkAttention(Led *ledDevice)
+    {
+        if (ledDevice)
+            ledDevice->blink(360, 120); // Needs attention
+    }
+
     namespace lift_timing
     {
         static constexpr unsigned long PowerSongDurationMs = 5600UL;
@@ -1715,46 +1739,6 @@ namespace devices
                 }
             }
         }
-    }
-
-    void MarbleController::blinkError(Led *ledDevice)
-    {
-        if (!ledDevice)
-        {
-            return;
-        }
-
-        ledDevice->blink(20, 940);
-    }
-
-    void MarbleController::blinkBusy(Led *ledDevice)
-    {
-        if (!ledDevice)
-        {
-            return;
-        }
-
-        ledDevice->blink(480, 480);
-    }
-
-    void MarbleController::blinkInit(Led *ledDevice)
-    {
-        if (!ledDevice)
-        {
-            return;
-        }
-
-        ledDevice->blink(720, 240);
-    }
-
-    void MarbleController::blinkAttention(Led *ledDevice)
-    {
-        if (!ledDevice)
-        {
-            return;
-        }
-
-        ledDevice->blink(360, 120); // Needs attention
     }
 
     void MarbleController::blinkLiftQueued()

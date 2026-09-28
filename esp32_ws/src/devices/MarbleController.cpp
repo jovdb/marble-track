@@ -41,6 +41,21 @@ namespace devices
             ledDevice->blink(360, 120); // Needs attention
     }
 
+    void blinkCount(Led *ledDevice, int count)
+    {
+        if (ledDevice)
+        {
+            std::vector<int> pattern;
+            for (auto i = 0; i < count; i++)
+            {
+                pattern.push_back(240);                        // On
+                pattern.push_back(i == count - 1 ? 880 : 240); // Off
+            }
+
+            ledDevice->pattern(pattern);
+        }
+    }
+
     namespace lift_timing
     {
         static constexpr unsigned long PowerSongDurationMs = 5600UL;
@@ -1783,14 +1798,7 @@ namespace devices
         // if (queued > 10)
         //     queued = 10;
 
-        std::vector<int> pattern;
-        for (auto i = 0; i < queued; i++)
-        {
-            pattern.push_back(240);                         // On
-            pattern.push_back(i == queued - 1 ? 880 : 240); // Off
-        }
-
-        _liftLed->pattern(pattern);
+        blinkCount(_liftLed, queued);
     }
 
     void MarbleController::playStartupSound()

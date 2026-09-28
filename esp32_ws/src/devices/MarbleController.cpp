@@ -642,7 +642,8 @@ namespace devices
             {
                 // if only up, go back down, else whole cycle
                 _liftQueueCount += 4;
-                playButtonClick({songs::LIFT_STOP});
+                auto count = getLiftQueue();
+                playButtonCountClick(count, {songs::LIFT_STOP});
             }
             break;
 
@@ -653,7 +654,8 @@ namespace devices
             {
                 // if only up, go back down, else whole cycle
                 _liftQueueCount += _liftQueueCount == 1 ? 6 : 4;
-                playButtonClick({songs::LIFT_STOP});
+                auto count = getLiftQueue();
+                playButtonCountClick(count, {songs::LIFT_STOP});
             }
             break;
         }
@@ -663,7 +665,8 @@ namespace devices
             {
                 // if only up, go back down, else whole cycle
                 _liftQueueCount += _liftQueueCount == 0 ? 6 : 4;
-                playButtonClick({songs::LIFT_STOP});
+                auto count = getLiftQueue();
+                playButtonCountClick(count, {songs::LIFT_STOP});
             }
             break;
         }
@@ -673,7 +676,8 @@ namespace devices
             if (_liftBtn->onPressed() && _liftQueueCount < 240)
             {
                 _liftQueueCount += 4; // whole cycle
-                playButtonClick({songs::LIFT_STOP});
+                auto count = getLiftQueue();
+                playButtonCountClick(count, {songs::LIFT_STOP});
             }
             break;
 
@@ -686,7 +690,8 @@ namespace devices
             {
                 if (_liftQueueCount)
                 {
-                    playButtonClick({songs::LIFT_STOP});
+                    auto count = getLiftQueue();
+                    playButtonCountClick(count, {songs::LIFT_STOP});
                 }
                 else
                 {
@@ -763,7 +768,8 @@ namespace devices
             {
                 // if only up, go back down, else whole cycle
                 _liftQueueCount += _liftQueueCount == 2 ? 6 : 4;
-                playButtonClick({songs::LIFT_STOP});
+                auto count = getLiftQueue();
+                playButtonCountClick(count, {songs::LIFT_STOP});
             }
 
             // Auto start next action
@@ -784,7 +790,10 @@ namespace devices
             if (_liftBtn->onPressed())
             {
                 if (_liftQueueCount)
-                    playButtonClick({songs::LIFT_STOP});
+                {
+                    auto count = getLiftQueue();
+                    playButtonCountClick(count, {songs::LIFT_STOP});
+                }
                 else
                     playButtonDown({songs::LIFT_STOP});
             }
@@ -844,7 +853,8 @@ namespace devices
             if (_liftBtn->onPressed() && _liftQueueCount < 240)
             {
                 _liftQueueCount += 4; // whole cycle
-                playButtonClick({songs::LIFT_STOP});
+                auto count = getLiftQueue();
+                playButtonCountClick(count, {songs::LIFT_STOP});
             }
 
             // Auto start next action
@@ -1801,11 +1811,8 @@ namespace devices
         }
     }
 
-    void MarbleController::blinkLiftCount()
+    int MarbleController::getLiftQueue()
     {
-        if (!_liftLed)
-            return;
-
         int offset = 0;
         switch (_lift->getState().state)
         {
@@ -1833,11 +1840,17 @@ namespace devices
         }
 
         // +3 to have 1 is queue > 0
+        return (_liftQueueCount + offset) / 4 + 1; // floor
+    }
+
+    void MarbleController::blinkLiftCount()
+    {
+        if (!_liftLed)
+            return;
+
         int queued = 1;
         if (_liftQueueCount > 0)
-        {
-            queued = (_liftQueueCount + offset) / 4 + 1; // floor
-        }
+            queued = getLiftQueue();
 
         // if (queued > 10)
         //     queued = 10;
@@ -1859,6 +1872,21 @@ namespace devices
         _audio->play(songs::STARTUP_SOUND, devices::Hv20tPlayMode::QueueIfPlaying);
     }
 
+    bool MarbleController::isPlayingOneOfThese(const std::vector<int> &replaceSongIndexes) const
+    {
+        auto currentIndex = _audio->getPlayingIndex();
+
+        for (int songIndex : replaceSongIndexes)
+        {
+            if (currentIndex == songIndex)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     void MarbleController::playErrorSound(Hv20tPlayMode mode, std::vector<int> additionalReplaceSongIndexes)
     {
 
@@ -1866,23 +1894,13 @@ namespace devices
         // _buzzer->tune("Error:d=4,o=6,b=100:a,d"); // Play error tune
 
         // Create the default replace list with button sounds
-        std::vector<int> replaceSongIndexes = {songs::getButtonDownSound(), songs::getButtonUpSound(), songs::getButtonClickSound(), songs::ERROR};
+        std::vector<int> replaceSongIndexes = songs::getButtonSounds();
+        replaceSongIndexes.push_back(songs::ERROR);
 
         // Add any additional indexes
         replaceSongIndexes.insert(replaceSongIndexes.end(), additionalReplaceSongIndexes.begin(), additionalReplaceSongIndexes.end());
 
-        // Check if any song from the replace list is currently playing
-        auto currentIndex = _audio->getPlayingIndex();
-        bool shouldReplace = false;
-
-        for (int songIndex : replaceSongIndexes)
-        {
-            if (currentIndex == songIndex)
-            {
-                shouldReplace = true;
-                break;
-            }
-        }
+        bool shouldReplace = isPlayingOneOfThese(replaceSongIndexes);
 
         if (shouldReplace)
         {
@@ -1952,23 +1970,12 @@ namespace devices
     void MarbleController::playButtonDown(std::vector<int> additionalReplaceSongIndexes)
     {
         // Create the default replace list with button sounds
-        std::vector<int> replaceSongIndexes = {songs::getButtonDownSound(), songs::getButtonUpSound(), songs::getButtonClickSound()};
+        std::vector<int> replaceSongIndexes = songs::getButtonSounds();
 
         // Add any additional indexes
         replaceSongIndexes.insert(replaceSongIndexes.end(), additionalReplaceSongIndexes.begin(), additionalReplaceSongIndexes.end());
 
-        // Check if any song from the replace list is currently playing
-        auto currentIndex = _audio->getPlayingIndex();
-        bool shouldReplace = false;
-
-        for (int songIndex : replaceSongIndexes)
-        {
-            if (currentIndex == songIndex)
-            {
-                shouldReplace = true;
-                break;
-            }
-        }
+        bool shouldReplace = isPlayingOneOfThese(replaceSongIndexes);
 
         if (shouldReplace)
         {
@@ -1983,23 +1990,12 @@ namespace devices
     void MarbleController::playButtonUp(std::vector<int> additionalReplaceSongIndexes)
     {
         // Create the default replace list with button sounds
-        std::vector<int> replaceSongIndexes = {songs::getButtonDownSound(), songs::getButtonUpSound(), songs::getButtonClickSound()};
+        std::vector<int> replaceSongIndexes = songs::getButtonSounds();
 
         // Add any additional indexes
         replaceSongIndexes.insert(replaceSongIndexes.end(), additionalReplaceSongIndexes.begin(), additionalReplaceSongIndexes.end());
 
-        // Check if any song from the replace list is currently playing
-        auto currentIndex = _audio->getPlayingIndex();
-        bool shouldReplace = false;
-
-        for (int songIndex : replaceSongIndexes)
-        {
-            if (currentIndex == songIndex)
-            {
-                shouldReplace = true;
-                break;
-            }
-        }
+        bool shouldReplace = isPlayingOneOfThese(replaceSongIndexes);
 
         if (shouldReplace)
         {
@@ -2014,32 +2010,29 @@ namespace devices
     void MarbleController::playButtonClick(std::vector<int> additionalReplaceSongIndexes)
     {
         // Create the default replace list with button sounds
-        std::vector<int> replaceSongIndexes = {songs::getButtonDownSound(), songs::getButtonUpSound(), songs::getButtonClickSound()};
+        std::vector<int> replaceSongIndexes = songs::getButtonSounds();
 
         // Add any additional indexes
         replaceSongIndexes.insert(replaceSongIndexes.end(), additionalReplaceSongIndexes.begin(), additionalReplaceSongIndexes.end());
 
-        // Check if any song from the replace list is currently playing
-        auto currentIndex = _audio->getPlayingIndex();
-        bool shouldReplace = false;
+        bool shouldReplace = isPlayingOneOfThese(replaceSongIndexes);
 
-        for (int songIndex : replaceSongIndexes)
-        {
-            if (currentIndex == songIndex)
-            {
-                shouldReplace = true;
-                break;
-            }
-        }
+        auto mode = shouldReplace ? devices::Hv20tPlayMode::StopThenPlay : devices::Hv20tPlayMode::SkipIfPlaying;
+        _audio->play(songs::getButtonClickSound(), mode);
+    }
 
-        if (shouldReplace)
-        {
-            _audio->play(songs::getButtonClickSound(), devices::Hv20tPlayMode::StopThenPlay);
-        }
-        else
-        {
-            _audio->play(songs::getButtonClickSound(), devices::Hv20tPlayMode::SkipIfPlaying);
-        }
+    void MarbleController::playButtonCountClick(int count, std::vector<int> additionalReplaceSongIndexes)
+    {
+        // Create the default replace list with button sounds
+        std::vector<int> replaceSongIndexes = songs::getButtonSounds();
+
+        // Add any additional indexes
+        replaceSongIndexes.insert(replaceSongIndexes.end(), additionalReplaceSongIndexes.begin(), additionalReplaceSongIndexes.end());
+
+        bool shouldReplace = isPlayingOneOfThese(replaceSongIndexes);
+
+        auto mode = shouldReplace ? devices::Hv20tPlayMode::StopThenPlay : devices::Hv20tPlayMode::SkipIfPlaying;
+        _audio->play(songs::getButtonClickSound(count), mode);
     }
 
     void MarbleController::onWheelStateChange(void *statePtr)

@@ -2,6 +2,7 @@
 #define MARBLE_TRACK_SONG_CONSTANTS_H
 
 #include <cstdint>
+#include <vector>
 
 // Voice sound are created here:
 // https://luvvoice.com/ (Dutch/Belgium  Dena)
@@ -59,7 +60,14 @@ namespace songs
     X(LIFT_AUTO_MODE_START, 35, "Automatische liftmodus gestart")                                                                                                                               \
     X(LIFT_AUTO_MODE_END, 36, "Automatische liftmodus beëindigd")                                                                                                                               \
     X(LIFT_BALL_WAITING, 37, "Ball can be loaded in the lift")                                                                                                                                  \
-    X(SPLITTER_ERROR, 38, "Splitter fout, herstart het systeem")
+    X(SPLITTER_ERROR, 38, "Splitter fout, herstart het systeem")                                                                                                                                \
+    X(BUTTON_CLICK_2, 39, "")                                                                                                                                                                   \
+    X(BUTTON_CLICK_3, 40, "")                                                                                                                                                                   \
+    X(BUTTON_CLICK_4, 41, "")                                                                                                                                                                   \
+    X(BUTTON_CLICK_5, 42, "")                                                                                                                                                                   \
+    X(BUTTON_CLICK_6, 43, "")                                                                                                                                                                   \
+    X(BUTTON_CLICK_7, 44, "")                                                                                                                                                                   \
+    X(BUTTON_CLICK_8, 45, "")
 
     /**
      * @brief Song ID Enum
@@ -106,8 +114,23 @@ namespace songs
     }
 
     // Button sound functions (theme-aware in future)
-    inline int getButtonClickSound()
+    inline int getButtonClickSound(int count = 0)
     {
+        if (count == 2)
+            return BUTTON_CLICK_2;
+        if (count == 3)
+            return BUTTON_CLICK_3;
+        if (count == 4)
+            return BUTTON_CLICK_4;
+        if (count == 5)
+            return BUTTON_CLICK_5;
+        if (count == 6)
+            return BUTTON_CLICK_6;
+        if (count == 7)
+            return BUTTON_CLICK_7;
+        if (count >= 8)
+            return BUTTON_CLICK_8;
+
         return BUTTON_CLICK;
     }
 
@@ -119,6 +142,21 @@ namespace songs
     inline int getButtonUpSound()
     {
         return BUTTON_UP;
+    }
+
+    inline std::vector<int> getButtonSounds()
+    {
+        return {
+            BUTTON_DOWN,
+            BUTTON_UP,
+            BUTTON_CLICK,
+            BUTTON_CLICK_2,
+            BUTTON_CLICK_3,
+            BUTTON_CLICK_4,
+            BUTTON_CLICK_5,
+            BUTTON_CLICK_6,
+            BUTTON_CLICK_7,
+            BUTTON_CLICK_8};
     }
 }
 

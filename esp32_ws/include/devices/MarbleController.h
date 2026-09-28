@@ -41,6 +41,9 @@ namespace devices
         void playButtonDown(std::vector<int> additionalReplaceSongIndexes = {});
         void playButtonUp(std::vector<int> additionalReplaceSongIndexes = {});
         void playButtonClick(std::vector<int> additionalReplaceSongIndexes = {});
+        void playButtonCountClick(int count, std::vector<int> additionalReplaceSongIndexes = {});
+
+        int getLiftQueue();
 
         /**
          * @brief Get the audio device
@@ -149,6 +152,8 @@ namespace devices
         bool isAutoMode = false;
 
     private:
+        bool isPlayingOneOfThese(const std::vector<int> &replaceSongIndexes) const;
+
         /**
          * @brief Play lift-specific error sounds based on error code
          * @param liftState Pointer to the lift state containing error information

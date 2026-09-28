@@ -278,7 +278,7 @@ namespace devices
         _lastButtonPressTime = millis();
         _idleSoundPlayed = false;
 
-        _liftQueuedPresses = 0;
+        _liftQueueCount = 0;
         _autoPowerUnloadPending = false;
         _autoPowerUnloadSongStarted = false;
         _autoPowerUnloadStartTime = 0;
@@ -288,7 +288,7 @@ namespace devices
         _autoLiftMovingDownSlow = false;
 
         // Initialize splitter sensor variables
-        _splitterCounter = 0;
+        _splitterQueueCount = 0;
         _autoLiftMovingDownSlow = false;
 
         // Set auto mode based on manual button state during setup
@@ -313,7 +313,7 @@ namespace devices
         Device::teardown();
 
         _isLiftPowerUnloadSongPlaying = false;
-        _liftQueuedPresses = 0;
+        _liftQueueCount = 0;
         _autoPowerUnloadPending = false;
         _autoPowerUnloadSongStarted = false;
         _autoPowerUnloadStartTime = 0;
@@ -330,7 +330,7 @@ namespace devices
         // Reset launcher timing
 
         // Reset splitter sensor variables
-        _splitterCounter = 0;
+        _splitterQueueCount = 0;
     }
 
     void MarbleController::loop()
@@ -429,7 +429,7 @@ namespace devices
         case devices::LiftStateEnum::INIT:
         {
             // Queued
-            if (_liftQueuedPresses > 0)
+            if (_liftQueueCount > 0)
             {
                 blinkLiftQueued();
             }
@@ -452,7 +452,7 @@ namespace devices
                 blinkBusy(_liftLed);
             }
             // Queued
-            else if (_liftQueuedPresses > 0)
+            else if (_liftQueueCount > 0)
             {
                 blinkLiftQueued();
             }
@@ -469,7 +469,7 @@ namespace devices
             {
                 blinkBusy(_liftLed);
             }
-            else if (_liftQueuedPresses > 0)
+            else if (_liftQueueCount > 0)
             {
                 blinkLiftQueued();
             }
@@ -514,7 +514,7 @@ namespace devices
                 blinkBusy(_liftLed);
             }
             // Queued
-            else if (_liftQueuedPresses > 0)
+            else if (_liftQueueCount > 0)
             {
                 blinkLiftQueued();
             }
@@ -562,7 +562,7 @@ namespace devices
                 blinkBusy(_liftLed);
             }
             // Queued
-            else if (_liftQueuedPresses > 0)
+            else if (_liftQueueCount > 0)
             {
                 blinkLiftQueued();
             }
@@ -587,7 +587,7 @@ namespace devices
         {
         case devices::LiftStateEnum::UNKNOWN:
         {
-            _liftQueuedPresses = 0;
+            _liftQueueCount = 0;
             // Init will start at press
             if (_liftBtn->onPressed())
             {
@@ -599,7 +599,7 @@ namespace devices
 
         case devices::LiftStateEnum::ERROR:
         {
-            _liftQueuedPresses = 0;
+            _liftQueueCount = 0;
 
             // Pressed
             if (_liftBtn->onPressed())
@@ -623,10 +623,10 @@ namespace devices
             break;
         }
         case devices::LiftStateEnum::INIT:
-            if (_liftBtn->onPressed() && _liftQueuedPresses < 240)
+            if (_liftBtn->onPressed() && _liftQueueCount < 240)
             {
                 // if only up, go back down, else whole cycle
-                _liftQueuedPresses += 4;
+                _liftQueueCount += 4;
                 playButtonClick({songs::LIFT_STOP});
             }
             break;
@@ -634,20 +634,20 @@ namespace devices
         // During actions
         case devices::LiftStateEnum::LIFT_DOWN_LOADING:
         {
-            if (_liftBtn->onPressed() && _liftQueuedPresses < 240)
+            if (_liftBtn->onPressed() && _liftQueueCount < 240)
             {
                 // if only up, go back down, else whole cycle
-                _liftQueuedPresses += _liftQueuedPresses == 1 ? 6 : 4;
+                _liftQueueCount += _liftQueueCount == 1 ? 6 : 4;
                 playButtonClick({songs::LIFT_STOP});
             }
             break;
         }
         case devices::LiftStateEnum::MOVING_UP:
         {
-            if (_liftBtn->onPressed() && _liftQueuedPresses < 240)
+            if (_liftBtn->onPressed() && _liftQueueCount < 240)
             {
                 // if only up, go back down, else whole cycle
-                _liftQueuedPresses += _liftQueuedPresses == 0 ? 6 : 4;
+                _liftQueueCount += _liftQueueCount == 0 ? 6 : 4;
                 playButtonClick({songs::LIFT_STOP});
             }
             break;
@@ -655,9 +655,9 @@ namespace devices
 
         case devices::LiftStateEnum::LIFT_UP_UNLOADING:
         case devices::LiftStateEnum::MOVING_DOWN: // Loading in progress
-            if (_liftBtn->onPressed() && _liftQueuedPresses < 240)
+            if (_liftBtn->onPressed() && _liftQueueCount < 240)
             {
-                _liftQueuedPresses += 4; // whole cycle
+                _liftQueueCount += 4; // whole cycle
                 playButtonClick({songs::LIFT_STOP});
             }
             break;
@@ -669,7 +669,7 @@ namespace devices
             // Down
             if (_liftBtn->onPressed())
             {
-                if (_liftQueuedPresses)
+                if (_liftQueueCount)
                 {
                     playButtonClick({songs::LIFT_STOP});
                 }
@@ -680,7 +680,7 @@ namespace devices
             }
 
             // Long Press
-            if (_liftBtn->onPressedDuration(lift_timing::LongPressAutoModeDurationMs) && !_liftQueuedPresses)
+            if (_liftBtn->onPressedDuration(lift_timing::LongPressAutoModeDurationMs) && !_liftQueueCount)
             {
                 if (_lift->isBallWaiting())
                 {
@@ -690,8 +690,8 @@ namespace devices
                     _isLiftTempAutoMode = true;
 
                     // calc max cycles to prevent overflow
-                    auto cycles = (255 - _liftQueuedPresses) / 4;
-                    _liftQueuedPresses += 4 * cycles; // max 60 cycles
+                    auto cycles = (255 - _liftQueueCount) / 4;
+                    _liftQueueCount += 4 * cycles; // max 60 cycles
                 }
                 else
                 {
@@ -700,16 +700,16 @@ namespace devices
             }
 
             // Short Press
-            else if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::LongPressAutoModeDurationMs) && _liftQueuedPresses < 240)
+            else if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::LongPressAutoModeDurationMs) && _liftQueueCount < 240)
             {
                 isShortPress = true;
-                if (!_liftQueuedPresses)
+                if (!_liftQueueCount)
                     playButtonUp({songs::LIFT_STOP});
-                _liftQueuedPresses += _liftQueuedPresses == 0 ? 2 : 4; // to top
+                _liftQueueCount += _liftQueueCount == 0 ? 2 : 4; // to top
             }
 
             // Auto start next action
-            if (_liftQueuedPresses > 0)
+            if (_liftQueueCount > 0)
             {
 
                 // Actions in queue or a manuel press
@@ -717,7 +717,7 @@ namespace devices
                 {
                     if (_lift->loadBall())
                     {
-                        _liftQueuedPresses--;
+                        _liftQueueCount--;
                     }
                 }
                 else
@@ -726,7 +726,7 @@ namespace devices
                     // If in Auto mode, stop Automode
                     if (_isLiftTempAutoMode)
                     {
-                        _liftQueuedPresses = 0;
+                        _liftQueueCount = 0;
                         _isLiftTempAutoMode = false;
                         if (_audio->getPlayingIndex() == songs::LIFT_STOP)
                         {
@@ -744,19 +744,19 @@ namespace devices
 
         case devices::LiftStateEnum::LIFT_DOWN_LOADED:
         {
-            if (_liftBtn->onPressed() && _liftQueuedPresses < 240)
+            if (_liftBtn->onPressed() && _liftQueueCount < 240)
             {
                 // if only up, go back down, else whole cycle
-                _liftQueuedPresses += _liftQueuedPresses == 2 ? 6 : 4;
+                _liftQueueCount += _liftQueueCount == 2 ? 6 : 4;
                 playButtonClick({songs::LIFT_STOP});
             }
 
             // Auto start next action
-            if (_liftQueuedPresses > 0)
+            if (_liftQueueCount > 0)
             {
                 if (_lift->up(lift_timing::LiftManualSpeedRatio))
                 {
-                    _liftQueuedPresses--;
+                    _liftQueueCount--;
                 }
             }
 
@@ -768,33 +768,33 @@ namespace devices
             // Down
             if (_liftBtn->onPressed())
             {
-                if (_liftQueuedPresses)
+                if (_liftQueueCount)
                     playButtonClick({songs::LIFT_STOP});
                 else
                     playButtonDown({songs::LIFT_STOP});
             }
 
             // Short Press
-            if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::PowerSongStartDelayMs) && _liftQueuedPresses < 240)
+            if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::PowerSongStartDelayMs) && _liftQueueCount < 240)
             {
-                if (!_liftQueuedPresses)
+                if (!_liftQueueCount)
                     playButtonUp({songs::LIFT_STOP});
-                if (_liftQueuedPresses == 0)
+                if (_liftQueueCount == 0)
                 {
-                    _liftQueuedPresses += 2; // top bottom
+                    _liftQueueCount += 2; // top bottom
                 }
 
                 else
                 {
-                    _liftQueuedPresses += 4; // whole cycle
+                    _liftQueueCount += 4; // whole cycle
                 }
             }
 
-            if (_liftQueuedPresses > 0)
+            if (_liftQueueCount > 0)
             {
                 if (_lift->unloadBall(1.0f))
                 {
-                    _liftQueuedPresses--;
+                    _liftQueueCount--;
                 }
 
                 return;
@@ -814,31 +814,31 @@ namespace devices
             }
 
             // Long Press
-            if (_liftBtn->onPressedDuration(lift_timing::PowerSongDurationMs) && _liftQueuedPresses < 240)
+            if (_liftBtn->onPressedDuration(lift_timing::PowerSongDurationMs) && _liftQueueCount < 240)
             {
                 MLOG_INFO("%s: Long press detected (%.2fs), Power unload", toString().c_str());
                 // Long press: unload with full speed immediately
                 _lift->unloadBall(0.2f);
-                _liftQueuedPresses += 1; // unload +  bottom
+                _liftQueueCount += 1; // unload +  bottom
             }
             break;
         }
 
         case devices::LiftStateEnum::LIFT_UP_EMPTY:
         {
-            if (_liftBtn->onPressed() && _liftQueuedPresses < 240)
+            if (_liftBtn->onPressed() && _liftQueueCount < 240)
             {
-                _liftQueuedPresses += 4; // whole cycle
+                _liftQueueCount += 4; // whole cycle
                 playButtonClick({songs::LIFT_STOP});
             }
 
             // Auto start next action
-            if (_liftQueuedPresses > 0)
+            if (_liftQueueCount > 0)
             {
                 // If not loaded but still queued, try going down to load if possible
                 if (_lift->down(lift_timing::LiftManualSpeedRatio))
                 {
-                    _liftQueuedPresses--;
+                    _liftQueueCount--;
                 }
             }
             break;
@@ -1171,6 +1171,7 @@ namespace devices
         auto static launcherLastDownMillis = 0;
 
         static bool isBallLaunched = false;
+
         // Reset
         if (!wheelInLaunchRange)
         {
@@ -1607,7 +1608,7 @@ namespace devices
         // onPressed: queue
         if (_splitterSensor->onPressed())
         {
-            _splitterCounter++;
+            _splitterQueueCount++;
             lastCountTime = millis();
             nextSplitterRunTime = lastCountTime + 500;
         }
@@ -1646,11 +1647,11 @@ namespace devices
             splitterErrorRetryCount = 0;
 
             // Process queue
-            if (_splitterCounter > 0)
+            if (_splitterQueueCount > 0)
             {
                 if (!nextSplitterRunTime || (nextSplitterRunTime < millis()))
                 {
-                    _splitterCounter--;
+                    _splitterQueueCount--;
                     _splitter->nextBreakPoint();
                     nextSplitterRunTime = 0;
                 }
@@ -1663,7 +1664,7 @@ namespace devices
                 {
                     if (lastCountTime + 10000 < millis())
                     {
-                        _splitterCounter++;
+                        _splitterQueueCount++;
                         lastCountTime = millis();
                     }
                 }
@@ -1774,9 +1775,9 @@ namespace devices
 
         // +3 to have 1 is queue > 0
         int queued = 1;
-        if (_liftQueuedPresses > 0)
+        if (_liftQueueCount > 0)
         {
-            queued = (_liftQueuedPresses + offset) / 4 + 1; // floor
+            queued = (_liftQueueCount + offset) / 4 + 1; // floor
         }
 
         // if (queued > 10)

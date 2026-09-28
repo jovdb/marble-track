@@ -63,10 +63,6 @@ namespace devices
         void loopWheelLoader(bool autoMode);
         void loopBattery();
         void loopConfigError();
-        void blinkError(Led *ledDevice);
-        void blinkBusy(Led *ledDevice);
-        void blinkInit(Led *ledDevice);
-        void blinkAttention(Led *ledDevice);
         void blinkLiftQueued();
         void onWheelStateChange(void *statePtr);
         void onLiftStateChange(void *statePtr);
@@ -95,11 +91,11 @@ namespace devices
         const unsigned long _actionNotificationDelayMs = 15000;
 
         // Splitter sensor pulse counter and delay logic
-        uint8_t _splitterCounter = 0;
+        uint8_t _splitterQueueCount = 0;
 
         // Button timing for unload duration control
         bool _isLiftPowerUnloadSongPlaying = false;
-        uint8_t _liftQueuedPresses = 0;
+        uint8_t _liftQueueCount = 0;
         bool _isLiftPressedDuringError = false;
         bool _isLiftTempAutoMode = false;
         unsigned long _playedLiftBallWaitingSoundAt = 0;
@@ -128,8 +124,10 @@ namespace devices
         static constexpr float LauncherWheelLoadMinAngle = 180.0f; ///< Min wheel angle for launch (manual mode)
         static constexpr float LauncherWheelLoadMaxAngle = 400.0f; ///< Max wheel angle for launch (manual mode)
 
+        uint8_t _launcherQueueCount = 0;
+
         // WheelLoader load ranges
-        static constexpr float WheelLoaderRange1Max = 40.0f;
+        static constexpr float WheelLoaderRange1Max = 45.0f;
         static constexpr float WheelLoaderRange1Min = WheelLoaderRange1Max - 10.0f;
         static constexpr float WheelLoaderRange2Max = 275.0f;
         static constexpr float WheelLoaderRange2Min = WheelLoaderRange2Max - 10.0f;

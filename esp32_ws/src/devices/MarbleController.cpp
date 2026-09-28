@@ -446,7 +446,7 @@ namespace devices
             // Queued
             if (_liftQueueCount > 0)
             {
-                blinkLiftQueued();
+                blinkLiftCount();
             }
             else
             {
@@ -469,7 +469,7 @@ namespace devices
             // Queued
             else if (_liftQueueCount > 0)
             {
-                blinkLiftQueued();
+                blinkLiftCount();
             }
             else
             {
@@ -486,7 +486,7 @@ namespace devices
             }
             else if (_liftQueueCount > 0)
             {
-                blinkLiftQueued();
+                blinkLiftCount();
             }
             else
             {
@@ -531,7 +531,7 @@ namespace devices
             // Queued
             else if (_liftQueueCount > 0)
             {
-                blinkLiftQueued();
+                blinkLiftCount();
             }
             else
             {
@@ -579,7 +579,7 @@ namespace devices
             // Queued
             else if (_liftQueueCount > 0)
             {
-                blinkLiftQueued();
+                blinkLiftCount();
             }
             else
             {
@@ -1164,7 +1164,7 @@ namespace devices
 
         // wheel inRange
         auto wheelState = _wheel->getState();
-        static bool lastLaunchTime = 0;
+        static bool didInitLaunch = false;
 
         const bool wheelInLaunchRange =
             (wheelState.state == devices::WheelStateEnum::IDLE || wheelState.state == devices::WheelStateEnum::MOVING) &&
@@ -1205,23 +1205,37 @@ namespace devices
         case LauncherStateEnum::MOVING_UP:
         case LauncherStateEnum::UP:
         case LauncherStateEnum::MOVING_DOWN:
-            blinkBusy(_launcherLed);
-            break;
-        case LauncherStateEnum::DOWN:
-            if (wheelState.state != devices::WheelStateEnum::MOVING && wheelState.state != devices::WheelStateEnum::IDLE)
+            if (_launcherQueueCount)
             {
-                // No led during wheel initializing, error, ...
-                _launcherLed->set(false);
-            }
-            else if (wheelInLaunchRange && launcherState.isBallLoaded && !isBallLaunched)
-            {
-                // Can Launch
-                _launcherLed->set(true);
+                blinkLauncherCount();
             }
             else
             {
-                // Can't do anything
-                _launcherLed->set(false);
+                blinkBusy(_launcherLed);
+            }
+            break;
+        case LauncherStateEnum::DOWN:
+            if (_launcherQueueCount)
+            {
+                blinkLauncherCount();
+            }
+            else
+            {
+                if (wheelState.state != devices::WheelStateEnum::MOVING && wheelState.state != devices::WheelStateEnum::IDLE)
+                {
+                    // No led during wheel initializing, error, ...
+                    _launcherLed->set(false);
+                }
+                else if (wheelInLaunchRange && launcherState.isBallLoaded && !isBallLaunched)
+                {
+                    // Can Launch
+                    _launcherLed->set(true);
+                }
+                else
+                {
+                    // Can't do anything
+                    _launcherLed->set(false);
+                }
             }
             break;
         }
@@ -1235,13 +1249,20 @@ namespace devices
                 _launcher->init();
             break;
         case LauncherStateEnum::ERROR:
+            if (_launcherBtn->onPressed())
+            {
+                MLOG_INFO("%s: Cannot perform action, launcher is busy or in error state", toString().c_str());
+                playErrorSound();
+            }
+            break;
         case LauncherStateEnum::MOVING_UP:
         case LauncherStateEnum::UP:
         case LauncherStateEnum::MOVING_DOWN:
             if (_launcherBtn->onPressed())
             {
-                MLOG_INFO("%s: Cannot perform action, launcher is busy or in error state", toString().c_str());
-                playErrorSound();
+                _launcherQueueCount++;
+                MLOG_INFO("%s: Increased launch queue to: %ul", toString().c_str(), _launcherQueueCount);
+                playButtonClick();
             }
             break;
         case LauncherStateEnum::DOWN:
@@ -1263,64 +1284,87 @@ namespace devices
             {
                 if (!autoMode)
                 {
-                    if (wheelInLaunchRange)
+                    if (_launcherBtn->onPressed())
                     {
-                        if (_launcherBtn->onPressed())
+                        if (wheelInLaunchRange)
                         {
                             if (launcherState.isBallLoaded)
                             {
                                 if (isBallLaunched)
                                 {
+                                    MLOG_INFO("%s: Already launched, don't queue", toString().c_str(), _launcherQueueCount);
                                     playErrorSound();
-                                    MLOG_INFO("%s: Ball already launched", toString().c_str());
                                 }
                                 else
                                 {
-                                    _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
-                                    if (_launcher->launch())
-                                    {
-                                        lastLaunchTime = millis();
-                                        isBallLaunched = true;
-                                    }
+                                    MLOG_INFO("%s: Launch triggered", toString().c_str());
+                                    _launcherQueueCount++;
                                 }
                             }
                             else
                             {
-                                MLOG_INFO("%s: Cannot launch, no ball", toString().c_str());
-                                playErrorSound();
+                                _launcherQueueCount++;
+                                MLOG_INFO("%s: No ball, launch queued: %ul", toString().c_str(), _launcherQueueCount);
+                                playButtonClick();
                             }
                         }
                         else
                         {
-                            // Auto launch first possible launch
-                            if (!lastLaunchTime)
+                            _launcherQueueCount++;
+                            MLOG_INFO("%s: Increased launch queue to: %ul", toString().c_str(), _launcherQueueCount);
+                            playButtonClick();
+                        }
+                    }
+                    else
+                    {
+                        // Auto launch first possible launch
+                        if (!didInitLaunch)
+                        {
+                            // Wait until arm down
+                            if (wheelInLaunchRange && !isBallLaunched && launcherState.isBallLoaded && launcherState.state == devices::LauncherStateEnum::DOWN)
                             {
                                 // Is in middle of range?
                                 // Use 2.0f and 360.0f to ensure floating-point division and types match
                                 auto launchAngle = std::fmod((LauncherWheelMaxAngle + LauncherWheelMinAngle) / 2.0f, 360.0f);
                                 if (wheelState.currentAngle >= launchAngle)
                                 {
-                                    _launcher->launch();
-                                    lastLaunchTime = millis();
+                                    MLOG_INFO("%s: First launch triggered", toString().c_str());
+                                    if (_launcher->launch())
+                                    {
+                                        _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
+                                        isBallLaunched = true;
+                                        if (_launcherQueueCount > 0)
+                                        {
+                                            didInitLaunch = true;
+                                            _launcherQueueCount--;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // Process queue
+                            if (_launcherQueueCount &&
+                                wheelInLaunchRange &&
+                                launcherState.isBallLoaded &&
+                                !isBallLaunched &&
+                                launcherState.isLoadingStep == 0) // Loaded complete delay ended
+                            {
+                                if (_launcher->launch())
+                                {
+                                    _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
                                     isBallLaunched = true;
+                                    _launcherQueueCount--;
                                 }
                             }
                         }
                     }
-                    else
-                    {
-                        if (_launcherBtn->onPressed())
-                        {
-                            MLOG_INFO("%s: Cannot launch, landing platform is not in range", toString().c_str());
-                            playErrorSound();
-                        }
-                    }
-
-                    break;
                 }
                 else
                 {
-                    // Auto launch
+
+                    // Auto mode: launch
                     if (launcherState.isBallLoaded && !isBallLaunched)
                     {
                         // -1: Out range
@@ -1337,7 +1381,6 @@ namespace devices
                             _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
                             if (_launcher->launch())
                             {
-                                lastLaunchTime = millis();
                                 isBallLaunched = true;
                             }
                         }
@@ -1349,6 +1392,7 @@ namespace devices
                         playErrorSound();
                     }
                 }
+                break;
             }
         }
 
@@ -1757,7 +1801,7 @@ namespace devices
         }
     }
 
-    void MarbleController::blinkLiftQueued()
+    void MarbleController::blinkLiftCount()
     {
         if (!_liftLed)
             return;
@@ -1799,6 +1843,14 @@ namespace devices
         //     queued = 10;
 
         blinkCount(_liftLed, queued);
+    }
+
+    void MarbleController::blinkLauncherCount()
+    {
+        if (!_launcherLed)
+            return;
+
+        blinkCount(_launcherLed, _launcherQueueCount);
     }
 
     void MarbleController::playStartupSound()

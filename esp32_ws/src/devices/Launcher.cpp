@@ -316,7 +316,7 @@ namespace devices
         // Wait until down
         else if (_state.isLoadingStep == 4 && _state.state == LauncherStateEnum::DOWN)
         {
-            startTimer(1000);
+            startTimer(1200);
             _state.isLoadingStep = 5;
         }
         // Wait until ball rolled to it position

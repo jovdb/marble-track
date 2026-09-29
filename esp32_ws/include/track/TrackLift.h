@@ -6,9 +6,9 @@
 
 namespace devices
 {
-    struct TrackLiftState
+    struct TrackLift
     {
-        TrackLiftState();
+        TrackLift();
 
         static constexpr unsigned long POWER_SONG_DURATION_MS = 5600UL;
         static constexpr unsigned long POWER_SONG_START_DELAY_MS = 500UL;
@@ -42,6 +42,7 @@ namespace devices
         bool isAutoMovingDownSlow;                 // Lift is moving down slowly
         LiftStateEnum previousState;
     };
+
 }
 
 #endif // TRACKLIFT_H

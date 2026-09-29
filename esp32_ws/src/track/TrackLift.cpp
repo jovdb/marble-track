@@ -2,7 +2,7 @@
 
 namespace devices
 {
-    TrackLiftState::TrackLiftState()
+    TrackLift::TrackLift()
         : queueCount(0),
           isPressedDuringError(false),
           isTempAutoMode(false),

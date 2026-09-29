@@ -124,7 +124,7 @@ namespace devices
         Lift *_lift;
         Led *_liftLed;
         Button *_liftBtn;
-        TrackLiftState _trackLiftState;
+        TrackLift _trackLift;
 
         // Wheel
         Wheel *_wheel;

@@ -336,7 +336,7 @@ namespace devices
         _trackLiftState.autoNoBallDelayMs = 0;
         _trackLiftState.isAutoMovingDownSlow = false;
         _trackLiftState.autoDelayStartTime = 0;
-        _randomWheelDelayMs = 0;
+        _trackWheelState.randomDelayMs = 0;
         _lastButtonPressTime = 0;
         _idleSoundPlayed = false;
         isAutoMode = false;
@@ -1206,7 +1206,7 @@ namespace devices
         case LauncherStateEnum::MOVING_UP:
         case LauncherStateEnum::UP:
         case LauncherStateEnum::MOVING_DOWN:
-            if (_launcherQueueCount)
+            if (_trackLauncherState.queueCount)
             {
                 blinkLauncherCount();
             }
@@ -1216,7 +1216,7 @@ namespace devices
             }
             break;
         case LauncherStateEnum::DOWN:
-            if (_launcherQueueCount)
+            if (_trackLauncherState.queueCount)
             {
                 blinkLauncherCount();
             }
@@ -1261,9 +1261,9 @@ namespace devices
         case LauncherStateEnum::MOVING_DOWN:
             if (_launcherBtn->onPressed())
             {
-                _launcherQueueCount++;
-                MLOG_INFO("%s: Increased launch queue to: %ul", toString().c_str(), _launcherQueueCount);
-                playButtonCountClick(_launcherQueueCount);
+                _trackLauncherState.queueCount++;
+                MLOG_INFO("%s: Increased launch queue to: %ul", toString().c_str(), _trackLauncherState.queueCount);
+                playButtonCountClick(_trackLauncherState.queueCount);
             }
             break;
         case LauncherStateEnum::DOWN:
@@ -1293,27 +1293,27 @@ namespace devices
                             {
                                 if (isBallLaunched)
                                 {
-                                    MLOG_INFO("%s: Already launched, don't queue", toString().c_str(), _launcherQueueCount);
+                                    MLOG_INFO("%s: Already launched, don't queue", toString().c_str(), _trackLauncherState.queueCount);
                                     playErrorSound();
                                 }
                                 else
                                 {
                                     MLOG_INFO("%s: Launch triggered", toString().c_str());
-                                    _launcherQueueCount++;
+                                    _trackLauncherState.queueCount++;
                                 }
                             }
                             else
                             {
-                                _launcherQueueCount++;
-                                MLOG_INFO("%s: No ball, launch queued: %ul", toString().c_str(), _launcherQueueCount);
-                                playButtonCountClick(_launcherQueueCount);
+                                _trackLauncherState.queueCount++;
+                                MLOG_INFO("%s: No ball, launch queued: %ul", toString().c_str(), _trackLauncherState.queueCount);
+                                playButtonCountClick(_trackLauncherState.queueCount);
                             }
                         }
                         else
                         {
-                            _launcherQueueCount++;
-                            MLOG_INFO("%s: Increased launch queue to: %ul", toString().c_str(), _launcherQueueCount);
-                            playButtonCountClick(_launcherQueueCount);
+                            _trackLauncherState.queueCount++;
+                            MLOG_INFO("%s: Increased launch queue to: %ul", toString().c_str(), _trackLauncherState.queueCount);
+                            playButtonCountClick(_trackLauncherState.queueCount);
                         }
                     }
                     else
@@ -1334,10 +1334,10 @@ namespace devices
                                     {
                                         _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
                                         isBallLaunched = true;
-                                        if (_launcherQueueCount > 0)
+                                        if (_trackLauncherState.queueCount > 0)
                                         {
                                             didInitLaunch = true;
-                                            _launcherQueueCount--;
+                                            _trackLauncherState.queueCount--;
                                         }
                                     }
                                 }
@@ -1346,7 +1346,7 @@ namespace devices
                         else
                         {
                             // Process queue
-                            if (_launcherQueueCount &&
+                            if (_trackLauncherState.queueCount &&
                                 wheelInLaunchRange &&
                                 launcherState.isBallLoaded &&
                                 !isBallLaunched &&
@@ -1356,7 +1356,7 @@ namespace devices
                                 {
                                     _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
                                     isBallLaunched = true;
-                                    _launcherQueueCount--;
+                                    _trackLauncherState.queueCount--;
                                 }
                             }
                         }
@@ -1521,8 +1521,8 @@ namespace devices
                 wheelIdleStartTime = millis();
                 if (autoMode)
                 {
-                    _randomWheelDelayMs = 3000 + random(100, 30000);
-                    MLOG_INFO("%s: Next random wheel trigger starts in %.ds", toString().c_str(), _randomWheelDelayMs / 1000);
+                    _trackWheelState.randomDelayMs = 3000 + random(100, 30000);
+                    MLOG_INFO("%s: Next random wheel trigger starts in %.ds", toString().c_str(), _trackWheelState.randomDelayMs / 1000);
                 }
             }
 
@@ -1540,11 +1540,11 @@ namespace devices
             else
             {
                 // When idle, wait for random delay then trigger next breakpoint
-                if (_randomWheelDelayMs > 0 && millis() >= wheelIdleStartTime + _randomWheelDelayMs)
+                if (_trackWheelState.randomDelayMs > 0 && millis() >= wheelIdleStartTime + _trackWheelState.randomDelayMs)
                 {
                     MLOG_INFO("%s: Goto wheel next breakpoint", toString().c_str());
                     _wheel->nextBreakPoint(modeSpeed);
-                    _randomWheelDelayMs = 0;
+                    _trackWheelState.randomDelayMs = 0;
                 }
                 else if (_wheelBtn->onPressed())
                 {
@@ -1597,17 +1597,17 @@ namespace devices
             // Pressed
             if (_wheelBtn->onPressed())
             {
-                _isWheelPressedDuringError = true;
+                _trackWheelState.pressedDuringError = true;
             }
 
             // Short Press
-            if (_isWheelPressedDuringError && _wheelBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
+            if (_trackWheelState.pressedDuringError && _wheelBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
             {
                 playWheelError(_wheel->getErrorCode());
             }
 
             // Check for long press while button is held
-            if (_isWheelPressedDuringError && _wheelBtn->onPressedDuration(lift_timing::ErrorLongPressDurationMs))
+            if (_trackWheelState.pressedDuringError && _wheelBtn->onPressedDuration(lift_timing::ErrorLongPressDurationMs))
             {
                 MLOG_INFO("%s: Error recovery long press detected, starting wheel init", toString().c_str());
                 _wheel->init(-1, modeSpeed);
@@ -1854,7 +1854,7 @@ namespace devices
         if (!_launcherLed)
             return;
 
-        blinkCount(_launcherLed, _launcherQueueCount);
+        blinkCount(_launcherLed, _trackLauncherState.queueCount);
     }
 
     void MarbleController::playStartupSound()
@@ -2056,7 +2056,7 @@ namespace devices
             _audio->removeFromQueue(songs::WHEEL_CALIBRATION_SECOND_ZERO_NOT_FOUND);
             _audio->removeFromQueue(songs::WHEEL_UNEXPECTED_ZERO_TRIGGER);
 
-            _isWheelPressedDuringError = false;
+            _trackWheelState.pressedDuringError = false;
         }
 
         // * -> ERROR

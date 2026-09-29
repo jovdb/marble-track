@@ -37,6 +37,16 @@ namespace devices
         bool isAutoMovingDownSlow = false;            // Lift is moving down slowly
     };
 
+    struct TrackLauncherState
+    {
+        uint8_t queueCount = 0; // Queued launcher actions
+    };
+
+    struct TrackWheelState
+    {
+        bool pressedDuringError = false; // Wheel button pressed while in error
+        unsigned long randomDelayMs = 0; // Delay before the next automatic wheel move
+    };
     class MarbleController : public Device
     {
     public:
@@ -97,6 +107,7 @@ namespace devices
         Button *_liftBtn;
         TrackLiftState _trackLiftState;
         Wheel *_wheel;
+        TrackWheelState _trackWheelState;
         Wheel *_splitter;
         Led *_wheelLed;
         Button *_wheelBtn;
@@ -128,18 +139,13 @@ namespace devices
         static constexpr float LauncherWheelLoadMinAngle = 180.0f; ///< Min wheel angle for launch (manual mode)
         static constexpr float LauncherWheelLoadMaxAngle = 400.0f; ///< Max wheel angle for launch (manual mode)
 
-        uint8_t _launcherQueueCount = 0;
+        TrackLauncherState _trackLauncherState;
 
         // WheelLoader load ranges
         static constexpr float WheelLoaderRange1Max = 48.0f;
         static constexpr float WheelLoaderRange1Min = WheelLoaderRange1Max - 10.0f;
         static constexpr float WheelLoaderRange2Max = 280.0f;
         static constexpr float WheelLoaderRange2Min = WheelLoaderRange2Max - 10.0f;
-
-        bool _isWheelPressedDuringError = false;
-
-        // Random delay before next wheel trigger
-        unsigned long _randomWheelDelayMs = 0;
 
         // Idle sound tracking
         unsigned long _lastButtonPressTime = 0;

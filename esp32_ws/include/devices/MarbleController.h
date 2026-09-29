@@ -19,6 +19,25 @@
 namespace devices
 {
 
+    struct TrackLiftState
+    {
+        bool powerUnloadSongPlaying = false;
+        uint8_t queueCount = 0;
+        bool pressedDuringError = false;
+        bool tempAutoMode = false;
+        unsigned long playedBallWaitingSoundAt = 0;
+        unsigned long ballReadyWaitingTime = 0;
+        unsigned long autoDelayStart = 0;
+        unsigned long autoDelayMs = 1000;
+        bool autoPowerUnloadPending = false;
+        bool autoPowerUnloadSongStarted = false;
+        unsigned long autoPowerUnloadStartTime = 0;
+        unsigned long autoUpLoadedSince = 0;
+        unsigned long autoNoBallStartTime = 0;
+        unsigned long autoNoBallDelayMs = 0;
+        bool autoMovingDownSlow = false;
+    };
+
     class MarbleController : public Device
     {
     public:
@@ -75,10 +94,11 @@ namespace devices
         Buzzer *_buzzer;
         Hv20tAudio *_audio;
         Lift *_lift;
-        Wheel *_wheel;
-        Wheel *_splitter;
         Led *_liftLed;
         Button *_liftBtn;
+        TrackLiftState _trackLiftState;
+        Wheel *_wheel;
+        Wheel *_splitter;
         Led *_wheelLed;
         Button *_wheelBtn;
         Led *_spiralLed;
@@ -96,25 +116,6 @@ namespace devices
 
         // Splitter sensor pulse counter and delay logic
         uint8_t _splitterQueueCount = 0;
-
-        // Button timing for unload duration control
-        bool _isLiftPowerUnloadSongPlaying = false;
-        uint8_t _liftQueueCount = 0;
-        bool _isLiftPressedDuringError = false;
-        bool _isLiftTempAutoMode = false;
-        unsigned long _playedLiftBallWaitingSoundAt = 0;
-        unsigned long _liftBallReadyWaitingTime = 0;
-
-        // Auto lift timing control
-        unsigned long _autoLiftDelayStart = 0;
-        unsigned long _autoLiftDelayMs = 1000; // 1 second delay between auto operations
-        bool _autoPowerUnloadPending = false;
-        bool _autoPowerUnloadSongStarted = false;
-        unsigned long _autoPowerUnloadStartTime = 0;
-        unsigned long _autoLiftUpLoadedSince = 0;
-        unsigned long _autoNoBallLiftStartTime = 0;
-        unsigned long _autoNoBallLiftDelayMs = 0;
-        bool _autoLiftMovingDownSlow = false;
 
         // Launcher
         static constexpr unsigned long LauncherPostLaunchDelayMs = 500UL;

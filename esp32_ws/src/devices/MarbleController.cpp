@@ -293,18 +293,18 @@ namespace devices
         _lastButtonPressTime = millis();
         _idleSoundPlayed = false;
 
-        _liftQueueCount = 0;
-        _autoPowerUnloadPending = false;
-        _autoPowerUnloadSongStarted = false;
-        _autoPowerUnloadStartTime = 0;
-        _autoLiftUpLoadedSince = 0;
-        _autoNoBallLiftStartTime = 0;
-        _autoNoBallLiftDelayMs = 0;
-        _autoLiftMovingDownSlow = false;
+        _trackLiftState.queueCount = 0;
+        _trackLiftState.autoPowerUnloadPending = false;
+        _trackLiftState.autoPowerUnloadSongStarted = false;
+        _trackLiftState.autoPowerUnloadStartTime = 0;
+        _trackLiftState.autoUpLoadedSince = 0;
+        _trackLiftState.autoNoBallStartTime = 0;
+        _trackLiftState.autoNoBallDelayMs = 0;
+        _trackLiftState.autoMovingDownSlow = false;
 
         // Initialize splitter sensor variables
         _splitterQueueCount = 0;
-        _autoLiftMovingDownSlow = false;
+        _trackLiftState.autoMovingDownSlow = false;
 
         // Set auto mode based on manual button state during setup
         isAutoMode = !_manualButton->isPressed();
@@ -327,16 +327,16 @@ namespace devices
     {
         Device::teardown();
 
-        _isLiftPowerUnloadSongPlaying = false;
-        _liftQueueCount = 0;
-        _autoPowerUnloadPending = false;
-        _autoPowerUnloadSongStarted = false;
-        _autoPowerUnloadStartTime = 0;
-        _autoLiftUpLoadedSince = 0;
-        _autoNoBallLiftStartTime = 0;
-        _autoNoBallLiftDelayMs = 0;
-        _autoLiftMovingDownSlow = false;
-        _autoLiftDelayStart = 0;
+        _trackLiftState.powerUnloadSongPlaying = false;
+        _trackLiftState.queueCount = 0;
+        _trackLiftState.autoPowerUnloadPending = false;
+        _trackLiftState.autoPowerUnloadSongStarted = false;
+        _trackLiftState.autoPowerUnloadStartTime = 0;
+        _trackLiftState.autoUpLoadedSince = 0;
+        _trackLiftState.autoNoBallStartTime = 0;
+        _trackLiftState.autoNoBallDelayMs = 0;
+        _trackLiftState.autoMovingDownSlow = false;
+        _trackLiftState.autoDelayStart = 0;
         _randomWheelDelayMs = 0;
         _lastButtonPressTime = 0;
         _idleSoundPlayed = false;
@@ -444,7 +444,7 @@ namespace devices
         case devices::LiftStateEnum::INIT:
         {
             // Queued
-            if (_liftQueueCount > 0)
+            if (_trackLiftState.queueCount > 0)
             {
                 blinkLiftCount();
             }
@@ -458,16 +458,16 @@ namespace devices
         case devices::LiftStateEnum::LIFT_UP_UNLOADING:
         case devices::LiftStateEnum::MOVING_DOWN:
         case devices::LiftStateEnum::MOVING_UP:
-            if (_autoLiftMovingDownSlow)
+            if (_trackLiftState.autoMovingDownSlow)
             {
                 _liftLed->set(true);
             }
-            else if (_isLiftTempAutoMode)
+            else if (_trackLiftState.tempAutoMode)
             {
                 blinkBusy(_liftLed);
             }
             // Queued
-            else if (_liftQueueCount > 0)
+            else if (_trackLiftState.queueCount > 0)
             {
                 blinkLiftCount();
             }
@@ -480,11 +480,11 @@ namespace devices
         case devices::LiftStateEnum::LIFT_DOWN_LOADED:
         case devices::LiftStateEnum::LIFT_UP_EMPTY:
         {
-            if (_isLiftTempAutoMode)
+            if (_trackLiftState.tempAutoMode)
             {
                 blinkBusy(_liftLed);
             }
-            else if (_liftQueueCount > 0)
+            else if (_trackLiftState.queueCount > 0)
             {
                 blinkLiftCount();
             }
@@ -496,40 +496,40 @@ namespace devices
         }
         case devices::LiftStateEnum::LIFT_UP_LOADED:
         {
-            static auto _liftBallWaitingNotificationFirst = 60000;
-            static auto _liftBallWaitingNotificationRecurring = 120000;
-            static auto _liftBallWaitingNotificationDuration = 3000;
+            static auto liftBallWaitingNotificationFirst = 60000;
+            static auto liftBallWaitingNotificationRecurring = 120000;
+            static auto liftBallWaitingNotificationDuration = 3000;
 
-            if (_liftBallReadyWaitingTime)
+            if (_trackLiftState.ballReadyWaitingTime)
             {
                 if (!_liftBtn->isPressed())
                 {
 
                     if (
-                        (_liftBallReadyWaitingTime + _liftBallWaitingNotificationFirst) < millis())
+                        (_trackLiftState.ballReadyWaitingTime + liftBallWaitingNotificationFirst) < millis())
                     {
                         // New or again
-                        if (!_playedLiftBallWaitingSoundAt || ((_playedLiftBallWaitingSoundAt + _liftBallWaitingNotificationRecurring) < millis()))
+                        if (!_trackLiftState.playedBallWaitingSoundAt || ((_trackLiftState.playedBallWaitingSoundAt + liftBallWaitingNotificationRecurring) < millis()))
                         {
                             _audio->play(songs::LIFT_BALL_WAITING, devices::Hv20tPlayMode::QueueIfPlaying);
-                            _playedLiftBallWaitingSoundAt = millis();
+                            _trackLiftState.playedBallWaitingSoundAt = millis();
                         }
                     }
                 }
             }
 
             // Attention
-            if (_playedLiftBallWaitingSoundAt && _playedLiftBallWaitingSoundAt <= millis() && _playedLiftBallWaitingSoundAt + _liftBallWaitingNotificationDuration > millis())
+            if (_trackLiftState.playedBallWaitingSoundAt && _trackLiftState.playedBallWaitingSoundAt <= millis() && _trackLiftState.playedBallWaitingSoundAt + liftBallWaitingNotificationDuration > millis())
             {
                 blinkAttention(_liftLed);
             }
             // Lift Auto Mode
-            else if (_isLiftTempAutoMode)
+            else if (_trackLiftState.tempAutoMode)
             {
                 blinkBusy(_liftLed);
             }
             // Queued
-            else if (_liftQueueCount > 0)
+            else if (_trackLiftState.queueCount > 0)
             {
                 blinkLiftCount();
             }
@@ -543,41 +543,41 @@ namespace devices
         }
         case devices::LiftStateEnum::LIFT_DOWN_EMPTY:
         {
-            static auto _liftBallWaitingNotificationFirst = 60000;
-            static auto _liftBallWaitingNotificationRecurring = 120000;
-            static auto _liftBallWaitingNotificationDuration = 960 * 5;
+            static auto liftBallWaitingNotificationFirst = 60000;
+            static auto liftBallWaitingNotificationRecurring = 120000;
+            static auto liftBallWaitingNotificationDuration = 960 * 5;
 
-            if (_liftBallReadyWaitingTime)
+            if (_trackLiftState.ballReadyWaitingTime)
             {
                 if (liftState.ballWaitingSince > 0)
                 {
 
-                    auto mostRecent = std::max(liftState.ballWaitingSince, _liftBallReadyWaitingTime);
+                    auto mostRecent = std::max(liftState.ballWaitingSince, _trackLiftState.ballReadyWaitingTime);
                     if (
-                        (mostRecent + _liftBallWaitingNotificationFirst) < millis())
+                        (mostRecent + liftBallWaitingNotificationFirst) < millis())
                     {
                         // New or again
-                        if (!_playedLiftBallWaitingSoundAt || ((_playedLiftBallWaitingSoundAt + _liftBallWaitingNotificationRecurring) < millis()))
+                        if (!_trackLiftState.playedBallWaitingSoundAt || ((_trackLiftState.playedBallWaitingSoundAt + liftBallWaitingNotificationRecurring) < millis()))
                         {
                             _audio->play(songs::LIFT_BALL_WAITING, devices::Hv20tPlayMode::QueueIfPlaying);
-                            _playedLiftBallWaitingSoundAt = millis();
+                            _trackLiftState.playedBallWaitingSoundAt = millis();
                         }
                     }
                 }
             }
 
             // Attention
-            if (_playedLiftBallWaitingSoundAt && _playedLiftBallWaitingSoundAt <= millis() && _playedLiftBallWaitingSoundAt + _liftBallWaitingNotificationDuration > millis())
+            if (_trackLiftState.playedBallWaitingSoundAt && _trackLiftState.playedBallWaitingSoundAt <= millis() && _trackLiftState.playedBallWaitingSoundAt + liftBallWaitingNotificationDuration > millis())
             {
                 blinkAttention(_liftLed);
             }
             // Lift Auto Mode
-            else if (_isLiftTempAutoMode)
+            else if (_trackLiftState.tempAutoMode)
             {
                 blinkBusy(_liftLed);
             }
             // Queued
-            else if (_liftQueueCount > 0)
+            else if (_trackLiftState.queueCount > 0)
             {
                 blinkLiftCount();
             }
@@ -594,7 +594,7 @@ namespace devices
         if (liftState.state != devices::LiftStateEnum::LIFT_UP_EMPTY &&
             liftState.state != devices::LiftStateEnum::LIFT_UP_LOADED)
         {
-            _isLiftPowerUnloadSongPlaying = false;
+            _trackLiftState.powerUnloadSongPlaying = false;
         }
 
         // Lift Logic
@@ -602,7 +602,7 @@ namespace devices
         {
         case devices::LiftStateEnum::UNKNOWN:
         {
-            _liftQueueCount = 0;
+            _trackLiftState.queueCount = 0;
             // Init will start at press
             if (_liftBtn->onPressed())
             {
@@ -614,22 +614,22 @@ namespace devices
 
         case devices::LiftStateEnum::ERROR:
         {
-            _liftQueueCount = 0;
+            _trackLiftState.queueCount = 0;
 
             // Pressed
             if (_liftBtn->onPressed())
             {
-                _isLiftPressedDuringError = true;
+                _trackLiftState.pressedDuringError = true;
             }
 
             // Short Press
-            if (_isLiftPressedDuringError && _liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
+            if (_trackLiftState.pressedDuringError && _liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
             {
                 playLiftError(_lift->getErrorCode());
             }
 
             // Check for long press while button is held
-            if (_isLiftPressedDuringError && _liftBtn->onPressedDuration(lift_timing::ErrorLongPressDurationMs))
+            if (_trackLiftState.pressedDuringError && _liftBtn->onPressedDuration(lift_timing::ErrorLongPressDurationMs))
             {
                 MLOG_INFO("%s: Error recovery long press detected in auto mode, starting lift init", toString().c_str());
                 _lift->init(lift_timing::LiftAutoSpeedRatio);
@@ -638,10 +638,10 @@ namespace devices
             break;
         }
         case devices::LiftStateEnum::INIT:
-            if (_liftBtn->onPressed() && _liftQueueCount < 240)
+            if (_liftBtn->onPressed() && _trackLiftState.queueCount < 240)
             {
                 // if only up, go back down, else whole cycle
-                _liftQueueCount += 4;
+                _trackLiftState.queueCount += 4;
                 auto count = getLiftQueue();
                 playButtonCountClick(count, {songs::LIFT_STOP});
             }
@@ -650,10 +650,10 @@ namespace devices
         // During actions
         case devices::LiftStateEnum::LIFT_DOWN_LOADING:
         {
-            if (_liftBtn->onPressed() && _liftQueueCount < 240)
+            if (_liftBtn->onPressed() && _trackLiftState.queueCount < 240)
             {
                 // if only up, go back down, else whole cycle
-                _liftQueueCount += _liftQueueCount == 1 ? 6 : 4;
+                _trackLiftState.queueCount += _trackLiftState.queueCount == 1 ? 6 : 4;
                 auto count = getLiftQueue();
                 playButtonCountClick(count, {songs::LIFT_STOP});
             }
@@ -661,10 +661,10 @@ namespace devices
         }
         case devices::LiftStateEnum::MOVING_UP:
         {
-            if (_liftBtn->onPressed() && _liftQueueCount < 240)
+            if (_liftBtn->onPressed() && _trackLiftState.queueCount < 240)
             {
                 // if only up, go back down, else whole cycle
-                _liftQueueCount += _liftQueueCount == 0 ? 6 : 4;
+                _trackLiftState.queueCount += _trackLiftState.queueCount == 0 ? 6 : 4;
                 auto count = getLiftQueue();
                 playButtonCountClick(count, {songs::LIFT_STOP});
             }
@@ -673,9 +673,9 @@ namespace devices
 
         case devices::LiftStateEnum::LIFT_UP_UNLOADING:
         case devices::LiftStateEnum::MOVING_DOWN: // Loading in progress
-            if (_liftBtn->onPressed() && _liftQueueCount < 240)
+            if (_liftBtn->onPressed() && _trackLiftState.queueCount < 240)
             {
-                _liftQueueCount += 4; // whole cycle
+                _trackLiftState.queueCount += 4; // whole cycle
                 auto count = getLiftQueue();
                 playButtonCountClick(count, {songs::LIFT_STOP});
             }
@@ -688,7 +688,7 @@ namespace devices
             // Down
             if (_liftBtn->onPressed())
             {
-                if (_liftQueueCount)
+                if (_trackLiftState.queueCount)
                 {
                     auto count = getLiftQueue();
                     playButtonCountClick(count, {songs::LIFT_STOP});
@@ -700,18 +700,18 @@ namespace devices
             }
 
             // Long Press
-            if (_liftBtn->onPressedDuration(lift_timing::LongPressAutoModeDurationMs) && !_liftQueueCount)
+            if (_liftBtn->onPressedDuration(lift_timing::LongPressAutoModeDurationMs) && !_trackLiftState.queueCount)
             {
                 if (_lift->isBallWaiting())
                 {
                     // TODO, play sound
                     MLOG_INFO("%s: Starting lift auto mode", toString().c_str());
                     _audio->play(songs::LIFT_AUTO_MODE_START, devices::Hv20tPlayMode::StopThenPlay);
-                    _isLiftTempAutoMode = true;
+                    _trackLiftState.tempAutoMode = true;
 
                     // calc max cycles to prevent overflow
-                    auto cycles = (255 - _liftQueueCount) / 4;
-                    _liftQueueCount += 4 * cycles; // max 60 cycles
+                    auto cycles = (255 - _trackLiftState.queueCount) / 4;
+                    _trackLiftState.queueCount += 4 * cycles; // max 60 cycles
                 }
                 else
                 {
@@ -720,16 +720,16 @@ namespace devices
             }
 
             // Short Press
-            else if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::LongPressAutoModeDurationMs) && _liftQueueCount < 240)
+            else if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::LongPressAutoModeDurationMs) && _trackLiftState.queueCount < 240)
             {
                 isShortPress = true;
-                if (!_liftQueueCount)
+                if (!_trackLiftState.queueCount)
                     playButtonUp({songs::LIFT_STOP});
-                _liftQueueCount += _liftQueueCount == 0 ? 2 : 4; // to top
+                _trackLiftState.queueCount += _trackLiftState.queueCount == 0 ? 2 : 4; // to top
             }
 
             // Auto start next action
-            if (_liftQueueCount > 0)
+            if (_trackLiftState.queueCount > 0)
             {
 
                 // Actions in queue or a manuel press
@@ -737,17 +737,17 @@ namespace devices
                 {
                     if (_lift->loadBall())
                     {
-                        _liftQueueCount--;
+                        _trackLiftState.queueCount--;
                     }
                 }
                 else
                 {
                     // If not Auto mode, wait for ball
                     // If in Auto mode, stop Automode
-                    if (_isLiftTempAutoMode)
+                    if (_trackLiftState.tempAutoMode)
                     {
-                        _liftQueueCount = 0;
-                        _isLiftTempAutoMode = false;
+                        _trackLiftState.queueCount = 0;
+                        _trackLiftState.tempAutoMode = false;
                         if (_audio->getPlayingIndex() == songs::LIFT_STOP)
                         {
                             _audio->play(songs::LIFT_AUTO_MODE_END, devices::Hv20tPlayMode::StopThenPlay); // Play after bell
@@ -764,20 +764,20 @@ namespace devices
 
         case devices::LiftStateEnum::LIFT_DOWN_LOADED:
         {
-            if (_liftBtn->onPressed() && _liftQueueCount < 240)
+            if (_liftBtn->onPressed() && _trackLiftState.queueCount < 240)
             {
                 // if only up, go back down, else whole cycle
-                _liftQueueCount += _liftQueueCount == 2 ? 6 : 4;
+                _trackLiftState.queueCount += _trackLiftState.queueCount == 2 ? 6 : 4;
                 auto count = getLiftQueue();
                 playButtonCountClick(count, {songs::LIFT_STOP});
             }
 
             // Auto start next action
-            if (_liftQueueCount > 0)
+            if (_trackLiftState.queueCount > 0)
             {
                 if (_lift->up(lift_timing::LiftManualSpeedRatio))
                 {
-                    _liftQueueCount--;
+                    _trackLiftState.queueCount--;
                 }
             }
 
@@ -789,7 +789,7 @@ namespace devices
             // Down
             if (_liftBtn->onPressed())
             {
-                if (_liftQueueCount)
+                if (_trackLiftState.queueCount)
                 {
                     auto count = getLiftQueue();
                     playButtonCountClick(count, {songs::LIFT_STOP});
@@ -799,26 +799,26 @@ namespace devices
             }
 
             // Short Press
-            if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::PowerSongStartDelayMs) && _liftQueueCount < 240)
+            if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::PowerSongStartDelayMs) && _trackLiftState.queueCount < 240)
             {
-                if (!_liftQueueCount)
+                if (!_trackLiftState.queueCount)
                     playButtonUp({songs::LIFT_STOP});
-                if (_liftQueueCount == 0)
+                if (_trackLiftState.queueCount == 0)
                 {
-                    _liftQueueCount += 2; // top bottom
+                    _trackLiftState.queueCount += 2; // top bottom
                 }
 
                 else
                 {
-                    _liftQueueCount += 4; // whole cycle
+                    _trackLiftState.queueCount += 4; // whole cycle
                 }
             }
 
-            if (_liftQueueCount > 0)
+            if (_trackLiftState.queueCount > 0)
             {
                 if (_lift->unloadBall(1.0f))
                 {
-                    _liftQueueCount--;
+                    _trackLiftState.queueCount--;
                 }
 
                 return;
@@ -838,32 +838,32 @@ namespace devices
             }
 
             // Long Press
-            if (_liftBtn->onPressedDuration(lift_timing::PowerSongDurationMs) && _liftQueueCount < 240)
+            if (_liftBtn->onPressedDuration(lift_timing::PowerSongDurationMs) && _trackLiftState.queueCount < 240)
             {
                 MLOG_INFO("%s: Long press detected (%.2fs), Power unload", toString().c_str());
                 // Long press: unload with full speed immediately
                 _lift->unloadBall(0.2f);
-                _liftQueueCount += 1; // unload +  bottom
+                _trackLiftState.queueCount += 1; // unload +  bottom
             }
             break;
         }
 
         case devices::LiftStateEnum::LIFT_UP_EMPTY:
         {
-            if (_liftBtn->onPressed() && _liftQueueCount < 240)
+            if (_liftBtn->onPressed() && _trackLiftState.queueCount < 240)
             {
-                _liftQueueCount += 4; // whole cycle
+                _trackLiftState.queueCount += 4; // whole cycle
                 auto count = getLiftQueue();
                 playButtonCountClick(count, {songs::LIFT_STOP});
             }
 
             // Auto start next action
-            if (_liftQueueCount > 0)
+            if (_trackLiftState.queueCount > 0)
             {
                 // If not loaded but still queued, try going down to load if possible
                 if (_lift->down(lift_timing::LiftManualSpeedRatio))
                 {
-                    _liftQueueCount--;
+                    _trackLiftState.queueCount--;
                 }
             }
             break;
@@ -878,21 +878,21 @@ namespace devices
 
         if (liftState.state != devices::LiftStateEnum::LIFT_UP_LOADED)
         {
-            _autoPowerUnloadPending = false;
-            _autoPowerUnloadSongStarted = false;
-            _autoPowerUnloadStartTime = 0;
-            _autoLiftUpLoadedSince = 0;
+            _trackLiftState.autoPowerUnloadPending = false;
+            _trackLiftState.autoPowerUnloadSongStarted = false;
+            _trackLiftState.autoPowerUnloadStartTime = 0;
+            _trackLiftState.autoUpLoadedSince = 0;
         }
 
         if (liftState.state != devices::LiftStateEnum::LIFT_DOWN_EMPTY || liftState.ballWaitingSince > 0)
         {
-            _autoNoBallLiftStartTime = 0;
-            _autoNoBallLiftDelayMs = 0;
+            _trackLiftState.autoNoBallStartTime = 0;
+            _trackLiftState.autoNoBallDelayMs = 0;
         }
 
         if (liftState.state != devices::LiftStateEnum::MOVING_DOWN)
         {
-            _autoLiftMovingDownSlow = false;
+            _trackLiftState.autoMovingDownSlow = false;
         }
 
         // LED
@@ -913,7 +913,7 @@ namespace devices
             blinkBusy(_liftLed);
             break;
         case devices::LiftStateEnum::MOVING_DOWN:
-            if (_autoLiftMovingDownSlow)
+            if (_trackLiftState.autoMovingDownSlow)
             {
                 _liftLed->set(true);
             }
@@ -943,17 +943,17 @@ namespace devices
             // Pressed
             if (_liftBtn->onPressed())
             {
-                _isLiftPressedDuringError = true;
+                _trackLiftState.pressedDuringError = true;
             }
 
             // Short Press
-            if (_isLiftPressedDuringError && _liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
+            if (_trackLiftState.pressedDuringError && _liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
             {
                 playLiftError(_lift->getErrorCode());
             }
 
             // Check for long press while button is held
-            if (_isLiftPressedDuringError && _liftBtn->onPressedDuration(lift_timing::ErrorLongPressDurationMs))
+            if (_trackLiftState.pressedDuringError && _liftBtn->onPressedDuration(lift_timing::ErrorLongPressDurationMs))
             {
                 MLOG_INFO("%s: Error recovery long press detected in auto mode, starting lift init", toString().c_str());
                 _lift->init(lift_timing::LiftAutoSpeedRatio);
@@ -978,21 +978,21 @@ namespace devices
 
         case devices::LiftStateEnum::MOVING_DOWN:
 
-            if (_autoLiftMovingDownSlow && liftState.ballWaitingSince > 0)
+            if (_trackLiftState.autoMovingDownSlow && liftState.ballWaitingSince > 0)
             {
                 if (_lift->down(lift_timing::AutoDownNormalSpeedRatio * lift_timing::LiftAutoSpeedRatio))
                 {
-                    _autoLiftMovingDownSlow = false;
+                    _trackLiftState.autoMovingDownSlow = false;
                     MLOG_INFO("%s: Ball waiting detected during auto down, switching to normal speed", toString().c_str());
                 }
             }
             else if (_liftBtn->onPressed())
             {
-                if (_autoLiftMovingDownSlow)
+                if (_trackLiftState.autoMovingDownSlow)
                 {
                     if (_lift->down(lift_timing::AutoDownNormalSpeedRatio * lift_timing::LiftAutoSpeedRatio))
                     {
-                        _autoLiftMovingDownSlow = false;
+                        _trackLiftState.autoMovingDownSlow = false;
                         playButtonClick({songs::LIFT_STOP});
                     }
                 }
@@ -1007,37 +1007,37 @@ namespace devices
         case devices::LiftStateEnum::LIFT_DOWN_EMPTY:
         case devices::LiftStateEnum::LIFT_DOWN_LOADED:
         {
-            _isLiftPowerUnloadSongPlaying = false;
+            _trackLiftState.powerUnloadSongPlaying = false;
 
             if (liftState.state == devices::LiftStateEnum::LIFT_DOWN_LOADED)
             {
                 // Loaded: move up to unload position
                 _lift->up(lift_timing::LiftAutoSpeedRatio);
-                _autoLiftDelayStart = 0; // Reset delay timer
+                _trackLiftState.autoDelayStart = 0; // Reset delay timer
             }
             else if (liftState.ballWaitingSince > 0)
             {
-                _autoNoBallLiftStartTime = 0;
-                _autoNoBallLiftDelayMs = 0;
+                _trackLiftState.autoNoBallStartTime = 0;
+                _trackLiftState.autoNoBallDelayMs = 0;
 
                 // Not loaded: wait 1000ms before starting load
-                if (_autoLiftDelayStart == 0)
+                if (_trackLiftState.autoDelayStart == 0)
                 {
-                    _autoLiftDelayStart = millis();
+                    _trackLiftState.autoDelayStart = millis();
                     break;
                 }
 
-                if ((millis() - _autoLiftDelayStart) < _autoLiftDelayMs)
+                if ((millis() - _trackLiftState.autoDelayStart) < _trackLiftState.autoDelayMs)
                 {
                     break;
                 }
 
                 _lift->loadBall();
-                _autoLiftDelayStart = 0;
+                _trackLiftState.autoDelayStart = 0;
             }
             else
             {
-                _autoLiftDelayStart = 0;
+                _trackLiftState.autoDelayStart = 0;
 
                 if (_liftBtn->onPressed())
                 {
@@ -1047,31 +1047,31 @@ namespace devices
                 if (_liftBtn->onReleased())
                 {
                     playButtonUp({songs::LIFT_STOP});
-                    _autoNoBallLiftStartTime = 0;
-                    _autoNoBallLiftDelayMs = 0;
+                    _trackLiftState.autoNoBallStartTime = 0;
+                    _trackLiftState.autoNoBallDelayMs = 0;
                     _lift->loadBall();
                     break;
                 }
 
-                if (_autoNoBallLiftStartTime == 0)
+                if (_trackLiftState.autoNoBallStartTime == 0)
                 {
-                    _autoNoBallLiftStartTime = millis();
-                    _autoNoBallLiftDelayMs = random(
+                    _trackLiftState.autoNoBallStartTime = millis();
+                    _trackLiftState.autoNoBallDelayMs = random(
                         lift_timing::AutoNoBallRandomMinDelayMs,
                         lift_timing::AutoNoBallRandomMaxDelayMs + 1UL);
                     break;
                 }
 
-                if ((millis() - _autoNoBallLiftStartTime) >= _autoNoBallLiftDelayMs)
+                if ((millis() - _trackLiftState.autoNoBallStartTime) >= _trackLiftState.autoNoBallDelayMs)
                 {
                     MLOG_INFO("%s: Auto lift random start (no ball waiting) after %lus",
                               toString().c_str(),
-                              _autoNoBallLiftDelayMs / 1000UL);
+                              _trackLiftState.autoNoBallDelayMs / 1000UL);
 
                     if (_lift->loadBall())
                     {
-                        _autoNoBallLiftStartTime = 0;
-                        _autoNoBallLiftDelayMs = 0;
+                        _trackLiftState.autoNoBallStartTime = 0;
+                        _trackLiftState.autoNoBallDelayMs = 0;
                     }
                 }
             }
@@ -1085,7 +1085,7 @@ namespace devices
                 playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
 
             // Check if we need to wait before next operation
-            if (_autoLiftDelayStart > 0 && (millis() - _autoLiftDelayStart) < _autoLiftDelayMs)
+            if (_trackLiftState.autoDelayStart > 0 && (millis() - _trackLiftState.autoDelayStart) < _trackLiftState.autoDelayMs)
             {
                 // Still waiting, do nothing
                 break;
@@ -1093,16 +1093,16 @@ namespace devices
 
             if (liftState.state == devices::LiftStateEnum::LIFT_UP_LOADED)
             {
-                if (_autoLiftUpLoadedSince == 0)
+                if (_trackLiftState.autoUpLoadedSince == 0)
                 {
-                    _autoLiftUpLoadedSince = millis();
-                    _autoPowerUnloadPending = (random(100) < 25);
-                    _autoPowerUnloadSongStarted = false;
-                    _autoPowerUnloadStartTime = 0;
+                    _trackLiftState.autoUpLoadedSince = millis();
+                    _trackLiftState.autoPowerUnloadPending = (random(100) < 25);
+                    _trackLiftState.autoPowerUnloadSongStarted = false;
+                    _trackLiftState.autoPowerUnloadStartTime = 0;
                     break;
                 }
 
-                const unsigned long loadedLiftUpElapsed = millis() - _autoLiftUpLoadedSince;
+                const unsigned long loadedLiftUpElapsed = millis() - _trackLiftState.autoUpLoadedSince;
 
                 // Wait until lift-end song is ready (loaded LIFT_UP + 1000ms)
                 if (loadedLiftUpElapsed < lift_timing::AutoPowerSongStartDelayMs)
@@ -1110,26 +1110,26 @@ namespace devices
                     break;
                 }
 
-                if (_autoPowerUnloadPending)
+                if (_trackLiftState.autoPowerUnloadPending)
                 {
-                    if (!_autoPowerUnloadSongStarted)
+                    if (!_trackLiftState.autoPowerUnloadSongStarted)
                     {
                         _audio->play(songs::LIFT_POWER_UNLOAD, devices::Hv20tPlayMode::StopThenPlay);
-                        _autoPowerUnloadSongStarted = true;
-                        _autoPowerUnloadStartTime = millis();
+                        _trackLiftState.autoPowerUnloadSongStarted = true;
+                        _trackLiftState.autoPowerUnloadStartTime = millis();
                         break;
                     }
 
-                    const unsigned long powerSongElapsed = millis() - _autoPowerUnloadStartTime;
+                    const unsigned long powerSongElapsed = millis() - _trackLiftState.autoPowerUnloadStartTime;
                     if (powerSongElapsed >= lift_timing::PowerSongDurationMs - 500)
                     {
                         if (_lift->unloadBall(0.2f))
                         {
-                            _autoPowerUnloadPending = false;
-                            _autoPowerUnloadSongStarted = false;
-                            _autoPowerUnloadStartTime = 0;
-                            _autoLiftUpLoadedSince = 0;
-                            _autoLiftDelayStart = 0;
+                            _trackLiftState.autoPowerUnloadPending = false;
+                            _trackLiftState.autoPowerUnloadSongStarted = false;
+                            _trackLiftState.autoPowerUnloadStartTime = 0;
+                            _trackLiftState.autoUpLoadedSince = 0;
+                            _trackLiftState.autoDelayStart = 0;
                         }
                     }
                 }
@@ -1138,8 +1138,8 @@ namespace devices
                     // Non power unload: also wait 1000ms at loaded LIFT_UP, then unload normally
                     if (_lift->unloadBall(1.0f))
                     {
-                        _autoLiftUpLoadedSince = 0;
-                        _autoLiftDelayStart = 0;
+                        _trackLiftState.autoUpLoadedSince = 0;
+                        _trackLiftState.autoDelayStart = 0;
                     }
                 }
             }
@@ -1148,21 +1148,21 @@ namespace devices
                 // Not loaded: move down to loading position
                 if (liftState.ballWaitingSince > 0)
                 {
-                    _autoLiftMovingDownSlow = false;
+                    _trackLiftState.autoMovingDownSlow = false;
                     _lift->down(lift_timing::AutoDownNormalSpeedRatio * lift_timing::LiftAutoSpeedRatio);
                 }
                 else
                 {
                     if (_lift->down(lift_timing::AutoDownNoBallSpeedRatio * lift_timing::LiftAutoSpeedRatio))
                     {
-                        _autoLiftMovingDownSlow = true;
+                        _trackLiftState.autoMovingDownSlow = true;
                     }
                 }
-                _autoLiftDelayStart = 0; // Reset delay timer
-                _autoPowerUnloadPending = false;
-                _autoPowerUnloadSongStarted = false;
-                _autoPowerUnloadStartTime = 0;
-                _autoLiftUpLoadedSince = 0;
+                _trackLiftState.autoDelayStart = 0; // Reset delay timer
+                _trackLiftState.autoPowerUnloadPending = false;
+                _trackLiftState.autoPowerUnloadSongStarted = false;
+                _trackLiftState.autoPowerUnloadStartTime = 0;
+                _trackLiftState.autoUpLoadedSince = 0;
             }
             break;
         }
@@ -1840,7 +1840,7 @@ namespace devices
         }
 
         // +3 to have 1 is queue > 0
-        return (_liftQueueCount + offset) / 4 + 1; // floor
+        return (_trackLiftState.queueCount + offset) / 4 + 1; // floor
     }
 
     void MarbleController::blinkLiftCount()
@@ -1849,7 +1849,7 @@ namespace devices
             return;
 
         int queued = 1;
-        if (_liftQueueCount > 0)
+        if (_trackLiftState.queueCount > 0)
             queued = getLiftQueue();
 
         // if (queued > 10)
@@ -2098,28 +2098,28 @@ namespace devices
         if (previousLiftState != devices::LiftStateEnum::LIFT_UP_LOADED &&
             liftState->state == devices::LiftStateEnum::LIFT_UP_LOADED)
         {
-            _liftBallReadyWaitingTime = millis();
+            _trackLiftState.ballReadyWaitingTime = millis();
             _audio->play(songs::LIFT_STOP, devices::Hv20tPlayMode::SkipIfPlaying);
         }
 
         if (previousLiftState != devices::LiftStateEnum::LIFT_DOWN_EMPTY &&
             liftState->state == devices::LiftStateEnum::LIFT_DOWN_EMPTY)
         {
-            _liftBallReadyWaitingTime = millis();
+            _trackLiftState.ballReadyWaitingTime = millis();
             _audio->play(songs::LIFT_STOP, devices::Hv20tPlayMode::QueueIfPlaying);
         }
 
         if (previousLiftState == devices::LiftStateEnum::LIFT_DOWN_EMPTY &&
             liftState->state != devices::LiftStateEnum::LIFT_DOWN_EMPTY)
         {
-            _playedLiftBallWaitingSoundAt = 0;
+            _trackLiftState.playedBallWaitingSoundAt = 0;
         }
 
         // ERROR -> *
         if (previousLiftState == devices::LiftStateEnum::ERROR &&
             liftState->state != devices::LiftStateEnum::ERROR)
         {
-            _isLiftPressedDuringError = false;
+            _trackLiftState.pressedDuringError = false;
             _audio->removeFromQueue(songs::LIFT_NO_ZERO);
         }
 

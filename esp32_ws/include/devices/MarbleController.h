@@ -18,6 +18,7 @@
 #include "devices/Battery.h"
 #include "track/TrackAudio.h"
 #include "track/TrackLift.h"
+#include "track/TrackLeds.h"
 
 namespace devices
 {
@@ -105,8 +106,6 @@ namespace devices
         void loopWheelLoader(bool autoMode);
         void loopBattery();
         void loopConfigError();
-        int blinkLoopAll();
-        void blinkLauncherCount();
         void onWheelStateChange(void *statePtr);
 
         Button *_manualButton;
@@ -120,6 +119,7 @@ namespace devices
         // Lift
         Led *_liftLed;
         Button *_liftBtn;
+        std::unique_ptr<TrackLeds> _trackLeds;
         std::unique_ptr<TrackLift> _trackLift;
 
         // Wheel

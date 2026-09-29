@@ -16,46 +16,6 @@ extern DeviceManager deviceManager;
 
 namespace devices
 {
-
-    void blinkBusy(Led *ledDevice)
-    {
-        if (!ledDevice)
-            ledDevice->blink(480, 480);
-    }
-
-    void blinkError(Led *ledDevice)
-    {
-        if (ledDevice)
-            ledDevice->blink(20, 940);
-    }
-
-    void blinkInit(Led *ledDevice)
-    {
-        if (ledDevice)
-            ledDevice->blink(720, 240);
-    }
-
-    void blinkAttention(Led *ledDevice)
-    {
-        if (ledDevice)
-            ledDevice->blink(360, 120); // Needs attention
-    }
-
-    void blinkCount(Led *ledDevice, int count)
-    {
-        if (ledDevice)
-        {
-            std::vector<int> pattern;
-            for (auto i = 0; i < count; i++)
-            {
-                pattern.push_back(240);                        // On
-                pattern.push_back(i == count - 1 ? 880 : 240); // Off
-            }
-
-            ledDevice->pattern(pattern);
-        }
-    }
-
     MarbleController::MarbleController(const String &id) : Device(id, "marblecontroller")
     {
         _buzzer = new devices::Buzzer("buzzer");
@@ -94,12 +54,6 @@ namespace devices
 
         _liftBtn = new devices::Button("lift-btn");
         addChild(_liftBtn);
-
-        _trackLift = std::make_unique<TrackLift>(
-            *lift, *_liftBtn, *_liftLed, *_audio, *_trackAudio);
-
-        lift->onStateChange([this](void *statePtr)
-                            { _trackLift->onStateChange(statePtr, now); });
 
         _manualButton = new devices::Button("manual-btn");
         addChild(_manualButton);
@@ -237,6 +191,13 @@ namespace devices
 
         _launcherBtn = new devices::Button("launcher-btn");
         addChild(_launcherBtn);
+
+        _trackLeds = std::make_unique<TrackLeds>(*_liftLed, *_wheelLed, *_launcherLed, *_spiralLed);
+        _trackLift = std::make_unique<TrackLift>(
+            *lift, *_liftBtn, *_liftLed, *_audio, *_trackAudio, *_trackLeds);
+
+        lift->onStateChange([this](void *statePtr)
+                            { _trackLift->onStateChange(statePtr, now); });
     }
 
     void MarbleController::setup()
@@ -338,7 +299,7 @@ namespace devices
                 _audio->play(songs::SHUTDOWN_TEXT, devices::Hv20tPlayMode::QueueIfPlaying);
                 _audio->play(songs::SHUTDOWN, devices::Hv20tPlayMode::QueueIfPlaying);
 
-                blinkLoopAll();
+                _trackLeds->blinkLoopAll();
             }
             else if (_trackBatteryState.shutdownStartTimeMs > 0 && now - _trackBatteryState.shutdownStartTimeMs >= 10000UL)
             {
@@ -424,24 +385,24 @@ namespace devices
             _launcherLed->set(false);
             break;
         case LauncherStateEnum::ERROR:
-            blinkError(_launcherLed);
+            _trackLeds->blinkError(_launcherLed);
             break;
         case LauncherStateEnum::MOVING_UP:
         case LauncherStateEnum::UP:
         case LauncherStateEnum::MOVING_DOWN:
             if (_trackLauncherState.queueCount)
             {
-                blinkLauncherCount();
+                _trackLeds->blinkCount(_launcherLed, _trackLauncherState.queueCount);
             }
             else
             {
-                blinkBusy(_launcherLed);
+                _trackLeds->blinkBusy(_launcherLed);
             }
             break;
         case LauncherStateEnum::DOWN:
             if (_trackLauncherState.queueCount)
             {
-                blinkLauncherCount();
+                _trackLeds->blinkCount(_launcherLed, _trackLauncherState.queueCount);
             }
             else
             {
@@ -677,20 +638,20 @@ namespace devices
             _wheelLed->set(true); // clickable: init will start
             break;
         case devices::WheelStateEnum::ERROR:
-            blinkError(_wheelLed);
+            _trackLeds->blinkError(_wheelLed);
             break;
         case devices::WheelStateEnum::CALIBRATING:
         case devices::WheelStateEnum::INIT:
-            blinkInit(_wheelLed);
+            _trackLeds->blinkInit(_wheelLed);
             break;
         case devices::WheelStateEnum::MOVING:
-            blinkBusy(_wheelLed);
+            _trackLeds->blinkBusy(_wheelLed);
             break;
         case devices::WheelStateEnum::IDLE:
 
             if (!autoMode && _trackWheelState.idleStartTimeMs > 0 && (now - _trackWheelState.idleStartTimeMs) >= 60000)
             {
-                blinkAttention(_wheelLed);
+                _trackLeds->blinkAttention(_wheelLed);
             }
             else
             {
@@ -1008,23 +969,6 @@ namespace devices
                 }
             }
         }
-    }
-
-    void MarbleController::blinkLauncherCount()
-    {
-        if (!_launcherLed)
-            return;
-
-        blinkCount(_launcherLed, _trackLauncherState.queueCount);
-    }
-
-    int MarbleController::blinkLoopAll()
-    {
-        _liftLed->blink(50, 1300, 0);
-        _wheelLed->blink(50, 1250, 50);
-        _launcherLed->blink(50, 1200, 100);
-        _spiralLed->blink(50, 1150, 150);
-        return 1350;
     }
 
     void MarbleController::playStartupSound()

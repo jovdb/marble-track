@@ -6,17 +6,8 @@
 
 namespace devices
 {
-    void blinkBusy(Led *ledDevice);
-    void blinkError(Led *ledDevice);
-    void blinkInit(Led *ledDevice);
-    void blinkAttention(Led *ledDevice);
-    void blinkCount(Led *ledDevice, int count);
-}
-
-namespace devices
-{
     TrackLift::TrackLift(Lift &lift, Button &liftButton, Led &liftLed, Hv20tAudio &audio,
-                         TrackAudio &trackAudio)
+                         TrackAudio &trackAudio, TrackLeds &trackLeds)
         : queueCount(0),
           isPressedDuringError(false),
           isTempAutoMode(false),
@@ -36,7 +27,8 @@ namespace devices
           _liftBtn(&liftButton),
           _liftLed(&liftLed),
           _audio(&audio),
-          _trackAudio(trackAudio)
+          _trackAudio(trackAudio),
+          _trackLeds(trackLeds)
     {
     }
 
@@ -95,7 +87,7 @@ namespace devices
         }
         case devices::LiftStateEnum::ERROR:
         {
-            blinkError(_liftLed);
+            _trackLeds.blinkError(_liftLed);
             break;
         }
         case devices::LiftStateEnum::INIT:
@@ -106,7 +98,7 @@ namespace devices
             }
             else
             {
-                blinkInit(_liftLed);
+                _trackLeds.blinkInit(_liftLed);
             }
             break;
         }
@@ -120,7 +112,7 @@ namespace devices
             }
             else if (isTempAutoMode)
             {
-                blinkBusy(_liftLed);
+                _trackLeds.blinkBusy(_liftLed);
             }
             else if (queueCount > 0)
             {
@@ -136,7 +128,7 @@ namespace devices
         {
             if (isTempAutoMode)
             {
-                blinkBusy(_liftLed);
+                _trackLeds.blinkBusy(_liftLed);
             }
             else if (queueCount > 0)
             {
@@ -162,11 +154,11 @@ namespace devices
             if (playedBallWaitingSoundTime && playedBallWaitingSoundTime <= now &&
                 playedBallWaitingSoundTime + TrackLift::LIFT_UP_LOADED_NOTIFICATION_DURATION_MS > now)
             {
-                blinkAttention(_liftLed);
+                _trackLeds.blinkAttention(_liftLed);
             }
             else if (isTempAutoMode)
             {
-                blinkBusy(_liftLed);
+                _trackLeds.blinkBusy(_liftLed);
             }
             else if (queueCount > 0)
             {
@@ -195,11 +187,11 @@ namespace devices
             if (playedBallWaitingSoundTime && playedBallWaitingSoundTime <= now &&
                 playedBallWaitingSoundTime + TrackLift::LIFT_DOWN_EMPTY_NOTIFICATION_DURATION_MS > now)
             {
-                blinkAttention(_liftLed);
+                _trackLeds.blinkAttention(_liftLed);
             }
             else if (isTempAutoMode)
             {
-                blinkBusy(_liftLed);
+                _trackLeds.blinkBusy(_liftLed);
             }
             else if (queueCount > 0)
             {
@@ -524,7 +516,7 @@ namespace devices
             _liftLed->set(false);
             break;
         case devices::LiftStateEnum::ERROR:
-            blinkError(_liftLed);
+            _trackLeds.blinkError(_liftLed);
             break;
         case devices::LiftStateEnum::INIT:
         case devices::LiftStateEnum::LIFT_DOWN_LOADING:
@@ -532,7 +524,7 @@ namespace devices
         case devices::LiftStateEnum::MOVING_UP:
         case devices::LiftStateEnum::LIFT_UP_EMPTY:
         case devices::LiftStateEnum::LIFT_UP_LOADED:
-            blinkBusy(_liftLed);
+            _trackLeds.blinkBusy(_liftLed);
             break;
         case devices::LiftStateEnum::MOVING_DOWN:
             if (isAutoMovingDownSlow)
@@ -541,7 +533,7 @@ namespace devices
             }
             else
             {
-                blinkBusy(_liftLed);
+                _trackLeds.blinkBusy(_liftLed);
             }
             break;
 
@@ -823,7 +815,7 @@ namespace devices
     void TrackLift::blinkQueueCount()
     {
         int queued = queueCount > 0 ? getQueue() : 1;
-        blinkCount(_liftLed, queued);
+        _trackLeds.blinkCount(_liftLed, queued);
     }
 
     void TrackLift::onStateChange(void *statePtr, unsigned long now)

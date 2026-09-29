@@ -8,13 +8,14 @@
 #include "devices/Led.h"
 #include "devices/Lift.h"
 #include "track/TrackAudio.h"
+#include "track/TrackLeds.h"
 
 namespace devices
 {
     struct TrackLift
     {
         TrackLift(Lift &lift, Button &liftButton, Led &liftLed, Hv20tAudio &audio,
-                  TrackAudio &trackAudio);
+                  TrackAudio &trackAudio, TrackLeds &trackLeds);
 
         void setup();
         void teardown();
@@ -61,6 +62,7 @@ namespace devices
         Led *_liftLed;
         Hv20tAudio *_audio;
         TrackAudio &_trackAudio;
+        TrackLeds &_trackLeds;
 
         int getQueue() const;
         void loopLed(const LiftState &liftState, unsigned long now);

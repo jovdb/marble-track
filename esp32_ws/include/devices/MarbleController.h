@@ -32,6 +32,10 @@ namespace devices
         static constexpr float AUTO_DOWN_NORMAL_SPEED_RATIO = 1.0f;
         static constexpr float LIFT_AUTO_SPEED_RATIO = 0.25f;
         static constexpr float LIFT_MANUAL_SPEED_RATIO = 1.0f;
+        static constexpr unsigned long BALL_WAITING_NOTIFICATION_FIRST_DELAY_MS = 60000UL;
+        static constexpr unsigned long BALL_WAITING_NOTIFICATION_RECURRING_DELAY_MS = 120000UL;
+        static constexpr unsigned long LIFT_UP_LOADED_NOTIFICATION_DURATION_MS = 3000UL;
+        static constexpr unsigned long LIFT_DOWN_EMPTY_NOTIFICATION_DURATION_MS = 960UL * 5UL;
 
         uint8_t queueCount = 0;                       // Queued manual lift actions (normally a multiple of 4)
         bool isPressedDuringError = false;            // Lift button pressed (only down) while in error
@@ -47,25 +51,52 @@ namespace devices
         unsigned long autoNoBallStartTime = 0;        // Start of the no-ball delay
         unsigned long autoNoBallDelayMs = 0;          // Random no-ball delay
         bool isAutoMovingDownSlow = false;            // Lift is moving down slowly
+        LiftStateEnum previousState = LiftStateEnum::UNKNOWN;
     };
 
     struct TrackLauncherState
     {
         uint8_t queueCount = 0; // Queued launcher actions
+        bool didInitLaunch = false;
+        unsigned long lastDownTimeMs = 0;
+        bool isBallLaunched = false;
     };
 
     struct TrackWheelState
     {
         static constexpr unsigned long WHEEL_SPIN_LONG_PRESS_MS = 500UL; // Threshold for continuous spin vs short-press breakpoint
+        static constexpr unsigned long WHEEL_LONG_PRESS_DURATION_MS = 8000UL;
+        static constexpr int LAUNCHER_WHEEL_BREAKPOINT = 1;
+        static constexpr float AUTO_SPEED_RATIO = 0.6f;
 
         bool isPressedDuringError = false; // Wheel button pressed (only down) while in error
         unsigned long randomDelayMs = 0;   // Delay before the next automatic wheel move
+        unsigned long idleStartTimeMs = 0;
+        WheelStateEnum previousState = WheelStateEnum::UNKNOWN;
+    };
+
+    struct TrackWheelLoaderState
+    {
+        bool prevIsInRange1 = false; // To detect edge
+        bool prevIsInRange2 = false; // To detect edge
     };
 
     struct TrackSplitterState
     {
         uint8_t queueCount = 0; // Queued splitter sensor pulses
+        uint8_t errorRetryCount = 0;
+        unsigned long lastCountTimeMs = 0;
+        unsigned long nextRunTimeMs = 0;
     };
+
+    struct TrackBatteryState
+    {
+        unsigned long shutdownStartTimeMs = 0;
+        unsigned long nextCriticalNotificationTimeMs = 0;
+        unsigned long nextLowNotificationTimeMs = 0;
+        unsigned long nextStatusLogTimeMs = 0;
+    };
+
     class MarbleController : public Device
     {
     public:
@@ -120,6 +151,7 @@ namespace devices
         Hv20tAudio *_audio;
         PowerMonitor *_powerMonitor;
         Battery *_battery;
+        TrackBatteryState _trackBatteryState;
 
         // Lift
         Lift *_lift;
@@ -132,6 +164,7 @@ namespace devices
         Led *_wheelLed;
         Button *_wheelBtn;
         TrackWheelState _trackWheelState;
+        TrackWheelLoaderState _trackWheelLoaderState;
 
         // Splitter
         Wheel *_splitter;

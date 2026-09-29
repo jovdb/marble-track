@@ -131,9 +131,9 @@ namespace devices
         uint8_t _launcherQueueCount = 0;
 
         // WheelLoader load ranges
-        static constexpr float WheelLoaderRange1Max = 45.0f;
+        static constexpr float WheelLoaderRange1Max = 48.0f;
         static constexpr float WheelLoaderRange1Min = WheelLoaderRange1Max - 10.0f;
-        static constexpr float WheelLoaderRange2Max = 275.0f;
+        static constexpr float WheelLoaderRange2Max = 280.0f;
         static constexpr float WheelLoaderRange2Min = WheelLoaderRange2Max - 10.0f;
 
         bool _isWheelPressedDuringError = false;

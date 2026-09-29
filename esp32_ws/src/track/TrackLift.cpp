@@ -37,7 +37,7 @@ namespace devices
         if (!_unsubscribeLiftStateChange)
         {
             _unsubscribeLiftStateChange = _lift->onStateChange([this](void *statePtr)
-                                                                 { onStateChange(statePtr, millis()); });
+                                                               { onStateChange(statePtr, millis()); });
         }
         resetState();
     }
@@ -220,6 +220,8 @@ namespace devices
     {
         auto liftState = _lift->getState();
         loopLed(liftState, now);
+        if (loopTempAutoMode(now))
+            return;
 
         // Lift Logic
         switch (liftState.state)
@@ -318,28 +320,8 @@ namespace devices
                 }
             }
 
-            // Long Press
-            if (_liftBtn->onPressedDuration(TrackLift::LONG_PRESS_AUTO_MODE_DURATION_MS) && !queueCount)
-            {
-                if (_lift->isBallWaiting())
-                {
-                    // TODO, play sound
-                    MLOG_INFO("%s: Starting lift auto mode", toString().c_str());
-                    _audio->play(songs::LIFT_AUTO_MODE_START, devices::Hv20tPlayMode::StopThenPlay);
-                    isTempAutoMode = true;
-
-                    // calc max cycles to prevent overflow
-                    auto cycles = (255 - queueCount) / 4;
-                    queueCount += 4 * cycles; // max 60 cycles
-                }
-                else
-                {
-                    _trackAudio.playErrorSound(devices::Hv20tPlayMode::StopThenPlay);
-                }
-            }
-
             // Short Press
-            else if (_liftBtn->onShortClick(TrackLift::LONG_PRESS_AUTO_MODE_DURATION_MS) && queueCount < 240)
+            if (_liftBtn->onShortClick(TrackLift::LONG_PRESS_AUTO_MODE_DURATION_MS) && queueCount < 240)
             {
                 isShortPress = true;
                 if (!queueCount)
@@ -485,6 +467,62 @@ namespace devices
             break;
         }
         }
+    }
+
+    bool TrackLift::loopTempAutoMode(unsigned long now)
+    {
+        static auto shouldCheckTempAutoModePress = false;
+        auto liftState = _lift->getState();
+        auto result = false;
+
+        switch (liftState.state)
+        {
+        case devices::LiftStateEnum::ERROR:
+            shouldCheckTempAutoModePress = false;
+            break;
+        case devices::LiftStateEnum::UNKNOWN:
+        case devices::LiftStateEnum::INIT:
+        case devices::LiftStateEnum::LIFT_DOWN_LOADING:
+        case devices::LiftStateEnum::MOVING_UP:
+        case devices::LiftStateEnum::LIFT_UP_UNLOADING:
+        case devices::LiftStateEnum::MOVING_DOWN: // Loading in progress
+        case devices::LiftStateEnum::LIFT_DOWN_EMPTY:
+        case devices::LiftStateEnum::LIFT_DOWN_LOADED:
+        case devices::LiftStateEnum::LIFT_UP_LOADED:
+        case devices::LiftStateEnum::LIFT_UP_EMPTY:
+            // Start must be from a valid state
+            if (_liftBtn->onPressed())
+                shouldCheckTempAutoModePress = true;
+
+            if (shouldCheckTempAutoModePress && _liftBtn->onPressedDuration(TrackLift::LONG_PRESS_AUTO_MODE_DURATION_MS))
+            {
+                if (_lift->isBallWaiting())
+                {
+                    MLOG_INFO("%s: Starting lift auto mode", toString().c_str());
+
+                    _audio->play(songs::LIFT_AUTO_MODE_START, devices::Hv20tPlayMode::StopThenPlay);
+                    isTempAutoMode = true;
+
+                    // calc max cycles to prevent overflow
+                    auto cycles = (255 - queueCount) / 4;
+                    queueCount += 4 * cycles; // max 60 cycles
+
+                    result = true;
+                }
+                else
+                {
+                    MLOG_DEBUG("%s: Cannot start lift auto mode, no ball waiting", toString().c_str());
+                    _trackAudio.playErrorSound();
+                }
+            }
+
+            break;
+        }
+
+        if (_liftBtn->onReleased())
+            shouldCheckTempAutoModePress = false;
+
+        return result;
     }
 
     void TrackLift::loopAutoMode(unsigned long now)

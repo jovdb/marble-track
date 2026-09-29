@@ -21,21 +21,20 @@ namespace devices
 
     struct TrackLiftState
     {
-        bool powerUnloadSongPlaying = false;
-        uint8_t queueCount = 0;
-        bool pressedDuringError = false;
-        bool tempAutoMode = false;
-        unsigned long playedBallWaitingSoundAt = 0;
-        unsigned long ballReadyWaitingTime = 0;
-        unsigned long autoDelayStart = 0;
-        unsigned long autoDelayMs = 1000;
-        bool autoPowerUnloadPending = false;
-        bool autoPowerUnloadSongStarted = false;
-        unsigned long autoPowerUnloadStartTime = 0;
-        unsigned long autoUpLoadedSince = 0;
-        unsigned long autoNoBallStartTime = 0;
-        unsigned long autoNoBallDelayMs = 0;
-        bool autoMovingDownSlow = false;
+        uint8_t queueCount = 0;                       // Queued manual lift actions (normally a multiple of 4)
+        bool isPressedDuringError = false;            // Lift button pressed (only down) while in error
+        bool isTempAutoMode = false;                  // Temporary automatic lift mode
+        unsigned long playedBallWaitingSoundTime = 0; // Last ball-waiting sound time
+        unsigned long ballReadyWaitingTime = 0;       // Time the ball became ready
+        unsigned long autoDelayStartTime = 0;         // Start of the automatic delay
+        unsigned long autoDelayMs = 1000;             // Delay between automatic operations
+        bool isAutoPowerUnloadPending = false;        // Power unload is pending
+        bool isAutoPowerUnloadSongStarted = false;    // Power unload sound started
+        unsigned long autoPowerUnloadStartTime = 0;   // Power unload sound start time
+        unsigned long autoUpLoadedTime = 0;           // Time lift reached the top loaded
+        unsigned long autoNoBallStartTime = 0;        // Start of the no-ball delay
+        unsigned long autoNoBallDelayMs = 0;          // Random no-ball delay
+        bool isAutoMovingDownSlow = false;            // Lift is moving down slowly
     };
 
     class MarbleController : public Device

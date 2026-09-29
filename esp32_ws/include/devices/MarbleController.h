@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <functional>
+#include <memory>
 #include <vector>
 #include "Device.h"
 #include "devices/Button.h"
@@ -15,6 +16,7 @@
 #include "devices/WheelLoader.h"
 #include "devices/PowerMonitor.h"
 #include "devices/Battery.h"
+#include "track/TrackAudio.h"
 #include "track/TrackLift.h"
 
 namespace devices
@@ -87,8 +89,6 @@ namespace devices
         void playButtonClick(std::vector<int> additionalReplaceSongIndexes = {});
         void playButtonCountClick(int count, std::vector<int> additionalReplaceSongIndexes = {});
 
-        int getLiftQueue();
-
         /**
          * @brief Get the audio device
          * @return Pointer to the audio device
@@ -97,9 +97,7 @@ namespace devices
         {
             return _audio;
         }
-        void loopManualLift();
         void loopManualSpiral();
-        void loopAutoLift();
         void loopAutoSpiral();
         void loopSplitter();
         void loopWheel(bool autoMode);
@@ -108,23 +106,21 @@ namespace devices
         void loopBattery();
         void loopConfigError();
         int blinkLoopAll();
-        void blinkLiftCount();
         void blinkLauncherCount();
         void onWheelStateChange(void *statePtr);
-        void onLiftStateChange(void *statePtr);
 
         Button *_manualButton;
         Buzzer *_buzzer;
         Hv20tAudio *_audio;
+        std::unique_ptr<TrackAudio> _trackAudio;
         PowerMonitor *_powerMonitor;
         Battery *_battery;
         TrackBatteryState _trackBatteryState;
 
         // Lift
-        Lift *_lift;
         Led *_liftLed;
         Button *_liftBtn;
-        TrackLift _trackLift;
+        std::unique_ptr<TrackLift> _trackLift;
 
         // Wheel
         Wheel *_wheel;
@@ -184,14 +180,6 @@ namespace devices
         bool isAutoMode = false;
 
     private:
-        bool isPlayingOneOfThese(const std::vector<int> &replaceSongIndexes) const;
-
-        /**
-         * @brief Play lift-specific error sounds based on error code
-         * @param liftState Pointer to the lift state containing error information
-         */
-        void playLiftError(const String &errorCode);
-
         /**
          * @brief Play wheel-specific error sounds based on error code
          * @param wheelState Pointer to the wheel state containing error information

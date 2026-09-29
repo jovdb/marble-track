@@ -2,13 +2,25 @@
 #define TRACKLIFT_H
 
 #include <Arduino.h>
+#include <vector>
+#include "devices/Button.h"
+#include "devices/Hv20tAudio.h"
+#include "devices/Led.h"
 #include "devices/Lift.h"
+#include "track/TrackAudio.h"
 
 namespace devices
 {
     struct TrackLift
     {
-        TrackLift();
+        TrackLift(Lift &lift, Button &liftButton, Led &liftLed, Hv20tAudio &audio,
+                  TrackAudio &trackAudio);
+
+        void setup();
+        void teardown();
+        void loopManualMode(unsigned long now);
+        void loopAutoMode(unsigned long now);
+        void onStateChange(void *statePtr, unsigned long now);
 
         static constexpr unsigned long POWER_SONG_DURATION_MS = 5600UL;
         static constexpr unsigned long POWER_SONG_START_DELAY_MS = 500UL;
@@ -26,7 +38,8 @@ namespace devices
         static constexpr unsigned long LIFT_UP_LOADED_NOTIFICATION_DURATION_MS = 3000UL;
         static constexpr unsigned long LIFT_DOWN_EMPTY_NOTIFICATION_DURATION_MS = 960UL * 5UL;
 
-        uint8_t queueCount;                      // Queued manual lift actions (normally a multiple of 4)
+    private:
+        uint8_t queueCount;                       // Queued manual lift actions (normally a multiple of 4)
         bool isPressedDuringError;                // Lift button pressed (only down) while in error
         bool isTempAutoMode;                      // Temporary automatic lift mode
         unsigned long playedBallWaitingSoundTime; // Last ball-waiting sound time
@@ -34,13 +47,31 @@ namespace devices
         unsigned long autoDelayStartTime;         // Start of the automatic delay
         unsigned long autoDelayMs;                // Delay between automatic operations
         bool isAutoPowerUnloadPending;            // Power unload is pending
-        bool isAutoPowerUnloadSongStarted;         // Power unload sound started
-        unsigned long autoPowerUnloadStartTime;    // Power unload sound start time
-        unsigned long autoUpLoadedTime;            // Time lift reached the top loaded
-        unsigned long autoNoBallStartTime;         // Start of the no-ball delay
-        unsigned long autoNoBallDelayMs;           // Random no-ball delay
-        bool isAutoMovingDownSlow;                 // Lift is moving down slowly
+        bool isAutoPowerUnloadSongStarted;        // Power unload sound started
+        unsigned long autoPowerUnloadStartTime;   // Power unload sound start time
+        unsigned long autoUpLoadedTime;           // Time lift reached the top loaded
+        unsigned long autoNoBallStartTime;        // Start of the no-ball delay
+        unsigned long autoNoBallDelayMs;          // Random no-ball delay
+        bool isAutoMovingDownSlow;                // Lift is moving down slowly
         LiftStateEnum previousState;
+
+    private:
+        Lift *_lift;
+        Button *_liftBtn;
+        Led *_liftLed;
+        Hv20tAudio *_audio;
+        TrackAudio &_trackAudio;
+
+        int getQueue() const;
+        void blinkQueueCount();
+        void resetState();
+        void playButtonDown(std::vector<int> additionalReplaceSongIndexes = {});
+        void playButtonUp(std::vector<int> additionalReplaceSongIndexes = {});
+        void playButtonClick(std::vector<int> additionalReplaceSongIndexes = {});
+        void playButtonCountClick(int count, std::vector<int> additionalReplaceSongIndexes = {});
+        void playErrorSound(Hv20tPlayMode mode = Hv20tPlayMode::SkipIfPlaying, std::vector<int> additionalReplaceSongIndexes = {});
+        void playLiftError(const String &errorCode);
+        String toString() const;
     };
 
 }

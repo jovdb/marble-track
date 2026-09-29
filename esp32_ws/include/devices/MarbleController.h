@@ -44,8 +44,13 @@ namespace devices
 
     struct TrackWheelState
     {
-        bool pressedDuringError = false; // Wheel button pressed while in error
+        bool isPressedDuringError = false; // Wheel button pressed (only down) while in error
         unsigned long randomDelayMs = 0; // Delay before the next automatic wheel move
+    };
+
+    struct TrackSplitterState
+    {
+        uint8_t queueCount = 0; // Queued splitter sensor pulses
     };
     class MarbleController : public Device
     {
@@ -102,30 +107,41 @@ namespace devices
         Button *_manualButton;
         Buzzer *_buzzer;
         Hv20tAudio *_audio;
+        PowerMonitor *_powerMonitor;
+        Battery *_battery;
+
+        // Lift
         Lift *_lift;
         Led *_liftLed;
         Button *_liftBtn;
         TrackLiftState _trackLiftState;
+
+        // Wheel
         Wheel *_wheel;
-        TrackWheelState _trackWheelState;
-        Wheel *_splitter;
         Led *_wheelLed;
         Button *_wheelBtn;
+        TrackWheelState _trackWheelState;
+
+        // Splitter
+        Wheel *_splitter;
+        TrackSplitterState _trackSplitterState;
+
+        // Spiral
         Led *_spiralLed;
         Button *_spiralBtn;
         Button *_splitterSensor;
+
+        // Launcher
         Launcher *_launcher;
-        WheelLoader *_wheelLoader;
         Led *_launcherLed;
         Button *_launcherBtn;
-        PowerMonitor *_powerMonitor;
-        Battery *_battery;
+        TrackLauncherState _trackLauncherState;
+
+        // Wheel Loader
+        WheelLoader *_wheelLoader;
 
         // The delay to wait to notify with blinking led and notification
         const unsigned long _actionNotificationDelayMs = 15000;
-
-        // Splitter sensor pulse counter and delay logic
-        uint8_t _splitterQueueCount = 0;
 
         // Launcher
         static constexpr unsigned long LauncherPostLaunchDelayMs = 500UL;
@@ -138,8 +154,6 @@ namespace devices
         // Prevent physical collisions with wheel
         static constexpr float LauncherWheelLoadMinAngle = 180.0f; ///< Min wheel angle for launch (manual mode)
         static constexpr float LauncherWheelLoadMaxAngle = 400.0f; ///< Max wheel angle for launch (manual mode)
-
-        TrackLauncherState _trackLauncherState;
 
         // WheelLoader load ranges
         static constexpr float WheelLoaderRange1Max = 48.0f;

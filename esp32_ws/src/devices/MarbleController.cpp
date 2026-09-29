@@ -303,7 +303,7 @@ namespace devices
         _trackLiftState.isAutoMovingDownSlow = false;
 
         // Initialize splitter sensor variables
-        _splitterQueueCount = 0;
+        _trackSplitterState.queueCount = 0;
         _trackLiftState.isAutoMovingDownSlow = false;
 
         // Set auto mode based on manual button state during setup
@@ -344,7 +344,7 @@ namespace devices
         // Reset launcher timing
 
         // Reset splitter sensor variables
-        _splitterQueueCount = 0;
+        _trackSplitterState.queueCount = 0;
     }
 
     void MarbleController::loop()
@@ -1597,17 +1597,17 @@ namespace devices
             // Pressed
             if (_wheelBtn->onPressed())
             {
-                _trackWheelState.pressedDuringError = true;
+                _trackWheelState.isPressedDuringError = true;
             }
 
             // Short Press
-            if (_trackWheelState.pressedDuringError && _wheelBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
+            if (_trackWheelState.isPressedDuringError && _wheelBtn->onReleased() && !_liftBtn->isLastPressedDuration(TrackLiftState::ErrorLongPressDurationMs))
             {
                 playWheelError(_wheel->getErrorCode());
             }
 
             // Check for long press while button is held
-            if (_trackWheelState.pressedDuringError && _wheelBtn->onPressedDuration(lift_timing::ErrorLongPressDurationMs))
+            if (_trackWheelState.isPressedDuringError && _wheelBtn->onPressedDuration(TrackLiftState::ErrorLongPressDurationMs))
             {
                 MLOG_INFO("%s: Error recovery long press detected, starting wheel init", toString().c_str());
                 _wheel->init(-1, modeSpeed);
@@ -1668,7 +1668,7 @@ namespace devices
         // onPressed: queue
         if (_splitterSensor->onPressed())
         {
-            _splitterQueueCount++;
+            _trackSplitterState.queueCount++;
             lastCountTime = millis();
             nextSplitterRunTime = lastCountTime + 500;
         }
@@ -1707,11 +1707,11 @@ namespace devices
             splitterErrorRetryCount = 0;
 
             // Process queue
-            if (_splitterQueueCount > 0)
+            if (_trackSplitterState.queueCount > 0)
             {
                 if (!nextSplitterRunTime || (nextSplitterRunTime < millis()))
                 {
-                    _splitterQueueCount--;
+                    _trackSplitterState.queueCount--;
                     _splitter->nextBreakPoint();
                     nextSplitterRunTime = 0;
                 }
@@ -1724,7 +1724,7 @@ namespace devices
                 {
                     if (lastCountTime + 10000 < millis())
                     {
-                        _splitterQueueCount++;
+                        _trackSplitterState.queueCount++;
                         lastCountTime = millis();
                     }
                 }
@@ -2056,7 +2056,7 @@ namespace devices
             _audio->removeFromQueue(songs::WHEEL_CALIBRATION_SECOND_ZERO_NOT_FOUND);
             _audio->removeFromQueue(songs::WHEEL_UNEXPECTED_ZERO_TRIGGER);
 
-            _trackWheelState.pressedDuringError = false;
+            _trackWheelState.isPressedDuringError = false;
         }
 
         // * -> ERROR

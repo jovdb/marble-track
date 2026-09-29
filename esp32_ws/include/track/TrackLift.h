@@ -63,13 +63,9 @@ namespace devices
         TrackAudio &_trackAudio;
 
         int getQueue() const;
+        void loopLed(const LiftState &liftState, unsigned long now);
         void blinkQueueCount();
         void resetState();
-        void playButtonDown(std::vector<int> additionalReplaceSongIndexes = {});
-        void playButtonUp(std::vector<int> additionalReplaceSongIndexes = {});
-        void playButtonClick(std::vector<int> additionalReplaceSongIndexes = {});
-        void playButtonCountClick(int count, std::vector<int> additionalReplaceSongIndexes = {});
-        void playErrorSound(Hv20tPlayMode mode = Hv20tPlayMode::SkipIfPlaying, std::vector<int> additionalReplaceSongIndexes = {});
         void playLiftError(const String &errorCode);
         String toString() const;
     };

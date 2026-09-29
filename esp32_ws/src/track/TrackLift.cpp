@@ -69,31 +69,6 @@ namespace devices
         previousState = LiftStateEnum::UNKNOWN;
     }
 
-    void TrackLift::playButtonDown(std::vector<int> additionalReplaceSongIndexes)
-    {
-        _trackAudio.playButtonDown(std::move(additionalReplaceSongIndexes));
-    }
-
-    void TrackLift::playButtonUp(std::vector<int> additionalReplaceSongIndexes)
-    {
-        _trackAudio.playButtonUp(std::move(additionalReplaceSongIndexes));
-    }
-
-    void TrackLift::playButtonClick(std::vector<int> additionalReplaceSongIndexes)
-    {
-        _trackAudio.playButtonClick(std::move(additionalReplaceSongIndexes));
-    }
-
-    void TrackLift::playButtonCountClick(int count, std::vector<int> additionalReplaceSongIndexes)
-    {
-        _trackAudio.playButtonCountClick(count, std::move(additionalReplaceSongIndexes));
-    }
-
-    void TrackLift::playErrorSound(Hv20tPlayMode mode, std::vector<int> additionalReplaceSongIndexes)
-    {
-        _trackAudio.playErrorSound(mode, std::move(additionalReplaceSongIndexes));
-    }
-
     void TrackLift::playLiftError(const String &errorCode)
     {
         if (errorCode == "LIFT_NO_ZERO")
@@ -108,11 +83,9 @@ namespace devices
         }
     }
     String TrackLift::toString() const { return "TrackLift"; }
-    void TrackLift::loopManualMode(unsigned long now)
-    {
-        auto liftState = _lift->getState();
 
-        // LED
+    void TrackLift::loopLed(const LiftState &liftState, unsigned long now)
+    {
         switch (liftState.state)
         {
         case devices::LiftStateEnum::UNKNOWN:
@@ -127,7 +100,6 @@ namespace devices
         }
         case devices::LiftStateEnum::INIT:
         {
-            // Queued
             if (queueCount > 0)
             {
                 blinkQueueCount();
@@ -150,7 +122,6 @@ namespace devices
             {
                 blinkBusy(_liftLed);
             }
-            // Queued
             else if (queueCount > 0)
             {
                 blinkQueueCount();
@@ -159,7 +130,6 @@ namespace devices
             {
                 _liftLed->set(false);
             }
-
             break;
         case devices::LiftStateEnum::LIFT_DOWN_LOADED:
         case devices::LiftStateEnum::LIFT_UP_EMPTY:
@@ -180,92 +150,74 @@ namespace devices
         }
         case devices::LiftStateEnum::LIFT_UP_LOADED:
         {
-            if (ballReadyWaitingTime)
+            if (ballReadyWaitingTime && !_liftBtn->isPressed() &&
+                (ballReadyWaitingTime + TrackLift::BALL_WAITING_NOTIFICATION_FIRST_DELAY_MS) < now &&
+                (!playedBallWaitingSoundTime ||
+                 (playedBallWaitingSoundTime + TrackLift::BALL_WAITING_NOTIFICATION_RECURRING_DELAY_MS) < now))
             {
-                if (!_liftBtn->isPressed())
-                {
-
-                    if (
-                        (ballReadyWaitingTime + TrackLift::BALL_WAITING_NOTIFICATION_FIRST_DELAY_MS) < now)
-                    {
-                        // New or again
-                        if (!playedBallWaitingSoundTime || ((playedBallWaitingSoundTime + TrackLift::BALL_WAITING_NOTIFICATION_RECURRING_DELAY_MS) < now))
-                        {
-                            _audio->play(songs::LIFT_BALL_WAITING, devices::Hv20tPlayMode::QueueIfPlaying);
-                            playedBallWaitingSoundTime = now;
-                        }
-                    }
-                }
+                _audio->play(songs::LIFT_BALL_WAITING, devices::Hv20tPlayMode::QueueIfPlaying);
+                playedBallWaitingSoundTime = now;
             }
 
-            // Attention
-            if (playedBallWaitingSoundTime && playedBallWaitingSoundTime <= now && playedBallWaitingSoundTime + TrackLift::LIFT_UP_LOADED_NOTIFICATION_DURATION_MS > now)
+            if (playedBallWaitingSoundTime && playedBallWaitingSoundTime <= now &&
+                playedBallWaitingSoundTime + TrackLift::LIFT_UP_LOADED_NOTIFICATION_DURATION_MS > now)
             {
                 blinkAttention(_liftLed);
             }
-            // Lift Auto Mode
             else if (isTempAutoMode)
             {
                 blinkBusy(_liftLed);
             }
-            // Queued
             else if (queueCount > 0)
             {
                 blinkQueueCount();
             }
             else
             {
-                // USer can press
                 _liftLed->set(true);
             }
-
             break;
         }
         case devices::LiftStateEnum::LIFT_DOWN_EMPTY:
         {
-            if (ballReadyWaitingTime)
+            if (ballReadyWaitingTime && liftState.ballWaitingSince > 0)
             {
-                if (liftState.ballWaitingSince > 0)
+                auto mostRecent = std::max(liftState.ballWaitingSince, ballReadyWaitingTime);
+                if ((mostRecent + TrackLift::BALL_WAITING_NOTIFICATION_FIRST_DELAY_MS) < now &&
+                    (!playedBallWaitingSoundTime ||
+                     (playedBallWaitingSoundTime + TrackLift::BALL_WAITING_NOTIFICATION_RECURRING_DELAY_MS) < now))
                 {
-
-                    auto mostRecent = std::max(liftState.ballWaitingSince, ballReadyWaitingTime);
-                    if (
-                        (mostRecent + TrackLift::BALL_WAITING_NOTIFICATION_FIRST_DELAY_MS) < now)
-                    {
-                        // New or again
-                        if (!playedBallWaitingSoundTime || ((playedBallWaitingSoundTime + TrackLift::BALL_WAITING_NOTIFICATION_RECURRING_DELAY_MS) < now))
-                        {
-                            _audio->play(songs::LIFT_BALL_WAITING, devices::Hv20tPlayMode::QueueIfPlaying);
-                            playedBallWaitingSoundTime = now;
-                        }
-                    }
+                    _audio->play(songs::LIFT_BALL_WAITING, devices::Hv20tPlayMode::QueueIfPlaying);
+                    playedBallWaitingSoundTime = now;
                 }
             }
 
-            // Attention
-            if (playedBallWaitingSoundTime && playedBallWaitingSoundTime <= now && playedBallWaitingSoundTime + TrackLift::LIFT_DOWN_EMPTY_NOTIFICATION_DURATION_MS > now)
+            if (playedBallWaitingSoundTime && playedBallWaitingSoundTime <= now &&
+                playedBallWaitingSoundTime + TrackLift::LIFT_DOWN_EMPTY_NOTIFICATION_DURATION_MS > now)
             {
                 blinkAttention(_liftLed);
             }
-            // Lift Auto Mode
             else if (isTempAutoMode)
             {
                 blinkBusy(_liftLed);
             }
-            // Queued
             else if (queueCount > 0)
             {
                 blinkQueueCount();
             }
             else
             {
-                // USer can press
                 _liftLed->set(true);
             }
-
             break;
         }
         }
+    }
+
+    void TrackLift::loopManualMode(unsigned long now)
+    {
+        auto liftState = _lift->getState();
+        loopLed(liftState, now);
 
         // Lift Logic
         switch (liftState.state)
@@ -277,7 +229,7 @@ namespace devices
             if (_liftBtn->onPressed())
             {
                 _lift->init(TrackLift::LIFT_MANUAL_SPEED_RATIO);
-                playButtonClick();
+                _trackAudio.playButtonClick();
             }
             break;
         }
@@ -313,7 +265,7 @@ namespace devices
                 // if only up, go back down, else whole cycle
                 queueCount += 4;
                 auto count = getQueue();
-                playButtonCountClick(count, {songs::LIFT_STOP});
+                _trackAudio.playButtonCountClick(count, {songs::LIFT_STOP});
             }
             break;
 
@@ -325,7 +277,7 @@ namespace devices
                 // if only up, go back down, else whole cycle
                 queueCount += queueCount == 1 ? 6 : 4;
                 auto count = getQueue();
-                playButtonCountClick(count, {songs::LIFT_STOP});
+                _trackAudio.playButtonCountClick(count, {songs::LIFT_STOP});
             }
             break;
         }
@@ -336,7 +288,7 @@ namespace devices
                 // if only up, go back down, else whole cycle
                 queueCount += queueCount == 0 ? 6 : 4;
                 auto count = getQueue();
-                playButtonCountClick(count, {songs::LIFT_STOP});
+                _trackAudio.playButtonCountClick(count, {songs::LIFT_STOP});
             }
             break;
         }
@@ -347,7 +299,7 @@ namespace devices
             {
                 queueCount += 4; // whole cycle
                 auto count = getQueue();
-                playButtonCountClick(count, {songs::LIFT_STOP});
+                _trackAudio.playButtonCountClick(count, {songs::LIFT_STOP});
             }
             break;
 
@@ -361,11 +313,11 @@ namespace devices
                 if (queueCount)
                 {
                     auto count = getQueue();
-                    playButtonCountClick(count, {songs::LIFT_STOP});
+                    _trackAudio.playButtonCountClick(count, {songs::LIFT_STOP});
                 }
                 else
                 {
-                    playButtonDown({songs::LIFT_STOP});
+                    _trackAudio.playButtonDown({songs::LIFT_STOP});
                 }
             }
 
@@ -385,7 +337,7 @@ namespace devices
                 }
                 else
                 {
-                    playErrorSound(devices::Hv20tPlayMode::StopThenPlay);
+                    _trackAudio.playErrorSound(devices::Hv20tPlayMode::StopThenPlay);
                 }
             }
 
@@ -394,7 +346,7 @@ namespace devices
             {
                 isShortPress = true;
                 if (!queueCount)
-                    playButtonUp({songs::LIFT_STOP});
+                    _trackAudio.playButtonUp({songs::LIFT_STOP});
                 queueCount += queueCount == 0 ? 2 : 4; // to top
             }
 
@@ -439,7 +391,7 @@ namespace devices
                 // if only up, go back down, else whole cycle
                 queueCount += queueCount == 2 ? 6 : 4;
                 auto count = getQueue();
-                playButtonCountClick(count, {songs::LIFT_STOP});
+                _trackAudio.playButtonCountClick(count, {songs::LIFT_STOP});
             }
 
             // Auto start next action
@@ -462,17 +414,17 @@ namespace devices
                 if (queueCount)
                 {
                     auto count = getQueue();
-                    playButtonCountClick(count, {songs::LIFT_STOP});
+                    _trackAudio.playButtonCountClick(count, {songs::LIFT_STOP});
                 }
                 else
-                    playButtonDown({songs::LIFT_STOP});
+                    _trackAudio.playButtonDown({songs::LIFT_STOP});
             }
 
             // Short Press
             if (_liftBtn->onShortClick(TrackLift::POWER_SONG_START_DELAY_MS) && queueCount < 240)
             {
                 if (!queueCount)
-                    playButtonUp({songs::LIFT_STOP});
+                    _trackAudio.playButtonUp({songs::LIFT_STOP});
                 if (queueCount == 0)
                 {
                     queueCount += 2; // top bottom
@@ -504,7 +456,7 @@ namespace devices
             else if (_liftBtn->onShortClick(TrackLift::POWER_SONG_DURATION_MS))
             {
                 _audio->stop();
-                playButtonUp({songs::LIFT_STOP, songs::LIFT_POWER_UNLOAD});
+                _trackAudio.playButtonUp({songs::LIFT_STOP, songs::LIFT_POWER_UNLOAD});
             }
 
             // Long Press
@@ -524,7 +476,7 @@ namespace devices
             {
                 queueCount += 4; // whole cycle
                 auto count = getQueue();
-                playButtonCountClick(count, {songs::LIFT_STOP});
+                _trackAudio.playButtonCountClick(count, {songs::LIFT_STOP});
             }
 
             // Auto start next action
@@ -635,7 +587,7 @@ namespace devices
         case devices::LiftStateEnum::INIT:
             if (_liftBtn->onPressed())
             {
-                playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
+                _trackAudio.playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
                 _audio->play(songs::LIFT_INIT_BUSY, devices::Hv20tPlayMode::QueueIfPlaying);
             }
             break;
@@ -643,7 +595,7 @@ namespace devices
         case devices::LiftStateEnum::LIFT_UP_UNLOADING:
         case devices::LiftStateEnum::MOVING_UP:
             if (_liftBtn->onPressed())
-                playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
+                _trackAudio.playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
             break;
 
         case devices::LiftStateEnum::MOVING_DOWN:
@@ -663,12 +615,12 @@ namespace devices
                     if (_lift->down(TrackLift::AUTO_DOWN_NORMAL_SPEED_RATIO * TrackLift::LIFT_AUTO_SPEED_RATIO))
                     {
                         isAutoMovingDownSlow = false;
-                        playButtonClick({songs::LIFT_STOP});
+                        _trackAudio.playButtonClick({songs::LIFT_STOP});
                     }
                 }
                 else
                 {
-                    playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
+                    _trackAudio.playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
                 }
             }
 
@@ -709,12 +661,12 @@ namespace devices
 
                 if (_liftBtn->onPressed())
                 {
-                    playButtonDown({songs::LIFT_STOP});
+                    _trackAudio.playButtonDown({songs::LIFT_STOP});
                 }
 
                 if (_liftBtn->onReleased())
                 {
-                    playButtonUp({songs::LIFT_STOP});
+                    _trackAudio.playButtonUp({songs::LIFT_STOP});
                     autoNoBallStartTime = 0;
                     autoNoBallDelayMs = 0;
                     _lift->loadBall();
@@ -750,7 +702,7 @@ namespace devices
         case devices::LiftStateEnum::LIFT_UP_LOADED:
         {
             if (_liftBtn->onPressed())
-                playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
+                _trackAudio.playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
 
             // Check if we need to wait before next operation
             if (autoDelayStartTime > 0 && (now - autoDelayStartTime) < autoDelayMs)

@@ -586,7 +586,7 @@ namespace devices
             }
 
             // Short Press
-            if (_trackLiftState.isPressedDuringError && _liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(TrackLiftState::ERROR_LONG_PRESS_DURATION_MS))
+            if (_trackLiftState.isPressedDuringError && _liftBtn->onShortClick(TrackLiftState::ERROR_LONG_PRESS_DURATION_MS))
             {
                 playLiftError(_lift->getErrorCode());
             }
@@ -683,7 +683,7 @@ namespace devices
             }
 
             // Short Press
-            else if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(TrackLiftState::LONG_PRESS_AUTO_MODE_DURATION_MS) && _trackLiftState.queueCount < 240)
+            else if (_liftBtn->onShortClick(TrackLiftState::LONG_PRESS_AUTO_MODE_DURATION_MS) && _trackLiftState.queueCount < 240)
             {
                 isShortPress = true;
                 if (!_trackLiftState.queueCount)
@@ -762,7 +762,7 @@ namespace devices
             }
 
             // Short Press
-            if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(TrackLiftState::POWER_SONG_START_DELAY_MS) && _trackLiftState.queueCount < 240)
+            if (_liftBtn->onShortClick(TrackLiftState::POWER_SONG_START_DELAY_MS) && _trackLiftState.queueCount < 240)
             {
                 if (!_trackLiftState.queueCount)
                     playButtonUp({songs::LIFT_STOP});
@@ -794,7 +794,7 @@ namespace devices
             }
 
             // Cancelled long press
-            else if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(TrackLiftState::POWER_SONG_DURATION_MS))
+            else if (_liftBtn->onShortClick(TrackLiftState::POWER_SONG_DURATION_MS))
             {
                 _audio->stop();
                 playButtonUp({songs::LIFT_STOP, songs::LIFT_POWER_UNLOAD});
@@ -910,7 +910,7 @@ namespace devices
             }
 
             // Short Press
-            if (_trackLiftState.isPressedDuringError && _liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(TrackLiftState::ERROR_LONG_PRESS_DURATION_MS))
+            if (_trackLiftState.isPressedDuringError && _liftBtn->onShortClick(TrackLiftState::ERROR_LONG_PRESS_DURATION_MS))
             {
                 playLiftError(_lift->getErrorCode());
             }
@@ -1560,7 +1560,7 @@ namespace devices
             }
 
             // Short Press
-            if (_trackWheelState.isPressedDuringError && _wheelBtn->onReleased() && !_liftBtn->isLastPressedDuration(TrackLiftState::ERROR_LONG_PRESS_DURATION_MS))
+            if (_trackWheelState.isPressedDuringError && _wheelBtn->onShortClick(TrackLiftState::ERROR_LONG_PRESS_DURATION_MS))
             {
                 playWheelError(_wheel->getErrorCode());
             }

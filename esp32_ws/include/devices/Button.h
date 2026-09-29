@@ -115,6 +115,9 @@ namespace devices
         /* True when pressed for at least the specified duration */
         bool onPressedDuration(unsigned long duration) const;
 
+        /** On short Click */
+        bool onShortClick(unsigned long maxDuration = 500UL) const;
+
         // ControllableMixin implementation
         void addDeviceStateToJson(JsonDocument &doc) override;
         bool control(const String &action, JsonObject *args = nullptr) override;

@@ -208,11 +208,18 @@ namespace devices
     }
 
     /** true when the button has been pressed for at least the specified duration */
-    bool Button::onPressedDuration(unsigned long duration) const
+    bool Button::onPressedDuration(unsigned long minDuration) const
     {
         return _state.isPressed &&
-               !isLastPressedDuration(duration, _prevTickTime) &&
-               isLastPressedDuration(duration, _lastTickTime);
+               !isLastPressedDuration(minDuration, _prevTickTime) &&
+               isLastPressedDuration(minDuration, _lastTickTime);
+    }
+
+    /* true is button is released within the maxDuration time range */
+    bool Button::onShortClick(unsigned long maxDuration) const
+    {
+        return onReleased() &&
+               !isLastPressedDuration(maxDuration, _lastTickTime);
     }
 
     void Button::addDeviceStateToJson(JsonDocument &doc)

@@ -195,9 +195,6 @@ namespace devices
         _trackLeds = std::make_unique<TrackLeds>(*_liftLed, *_wheelLed, *_launcherLed, *_spiralLed);
         _trackLift = std::make_unique<TrackLift>(
             *lift, *_liftBtn, *_liftLed, *_audio, *_trackAudio, *_trackLeds);
-
-        lift->onStateChange([this](void *statePtr)
-                            { _trackLift->onStateChange(statePtr, now); });
     }
 
     void MarbleController::setup()
@@ -263,9 +260,8 @@ namespace devices
 
     void MarbleController::teardown()
     {
-        Device::teardown();
-
         _trackLift->teardown();
+        Device::teardown();
         _trackWheelState.randomDelayMs = 0;
         _lastButtonPressTime = 0;
         _idleSoundPlayed = false;

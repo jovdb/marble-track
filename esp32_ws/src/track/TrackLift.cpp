@@ -34,11 +34,21 @@ namespace devices
 
     void TrackLift::setup()
     {
+        if (!_unsubscribeLiftStateChange)
+        {
+            _unsubscribeLiftStateChange = _lift->onStateChange([this](void *statePtr)
+                                                                 { onStateChange(statePtr, millis()); });
+        }
         resetState();
     }
 
     void TrackLift::teardown()
     {
+        if (_unsubscribeLiftStateChange)
+        {
+            _unsubscribeLiftStateChange();
+            _unsubscribeLiftStateChange = {};
+        }
         resetState();
     }
 

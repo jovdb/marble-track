@@ -2,6 +2,7 @@
 #define TRACKLIFT_H
 
 #include <Arduino.h>
+#include <functional>
 #include <vector>
 #include "devices/Button.h"
 #include "devices/Hv20tAudio.h"
@@ -21,7 +22,6 @@ namespace devices
         void teardown();
         void loopManualMode(unsigned long now);
         void loopAutoMode(unsigned long now);
-        void onStateChange(void *statePtr, unsigned long now);
 
         static constexpr unsigned long POWER_SONG_DURATION_MS = 5600UL;
         static constexpr unsigned long POWER_SONG_START_DELAY_MS = 500UL;
@@ -63,8 +63,10 @@ namespace devices
         Hv20tAudio *_audio;
         TrackAudio &_trackAudio;
         TrackLeds &_trackLeds;
+        std::function<void()> _unsubscribeLiftStateChange;
 
         int getQueue() const;
+        void onStateChange(void *statePtr, unsigned long now);
         void loopLed(const LiftState &liftState, unsigned long now);
         void blinkQueueCount();
         void resetState();

@@ -327,7 +327,6 @@ namespace devices
     {
         Device::teardown();
 
-        _trackLiftState.powerUnloadSongPlaying = false;
         _trackLiftState.queueCount = 0;
         _trackLiftState.autoPowerUnloadPending = false;
         _trackLiftState.autoPowerUnloadSongStarted = false;
@@ -589,12 +588,6 @@ namespace devices
 
             break;
         }
-        }
-        // Reset button timing state when not in LIFT_UP
-        if (liftState.state != devices::LiftStateEnum::LIFT_UP_EMPTY &&
-            liftState.state != devices::LiftStateEnum::LIFT_UP_LOADED)
-        {
-            _trackLiftState.powerUnloadSongPlaying = false;
         }
 
         // Lift Logic
@@ -1007,8 +1000,6 @@ namespace devices
         case devices::LiftStateEnum::LIFT_DOWN_EMPTY:
         case devices::LiftStateEnum::LIFT_DOWN_LOADED:
         {
-            _trackLiftState.powerUnloadSongPlaying = false;
-
             if (liftState.state == devices::LiftStateEnum::LIFT_DOWN_LOADED)
             {
                 // Loaded: move up to unload position
@@ -1273,7 +1264,7 @@ namespace devices
                 _launcherQueueCount++;
                 MLOG_INFO("%s: Increased launch queue to: %ul", toString().c_str(), _launcherQueueCount);
                 playButtonCountClick(_launcherQueueCount);
-                        }
+            }
             break;
         case LauncherStateEnum::DOWN:
 

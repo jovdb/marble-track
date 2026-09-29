@@ -56,21 +56,6 @@ namespace devices
         }
     }
 
-    namespace lift_timing
-    {
-        static constexpr unsigned long PowerSongDurationMs = 5600UL;
-        static constexpr unsigned long PowerSongStartDelayMs = 500UL;
-        static constexpr unsigned long AutoPowerSongStartDelayMs = 1000UL;
-        static constexpr unsigned long AutoNoBallRandomMinDelayMs = 120000UL;
-        static constexpr unsigned long AutoNoBallRandomMaxDelayMs = 300000UL;
-        static constexpr unsigned long ErrorLongPressDurationMs = 5000UL;    // 5 seconds for error recovery
-        static constexpr unsigned long LongPressAutoModeDurationMs = 3000UL; // 5 seconds for error recovery
-        static constexpr float AutoDownNoBallSpeedRatio = 0.2f;
-        static constexpr float AutoDownNormalSpeedRatio = 1.0f;
-        static constexpr float LiftAutoSpeedRatio = 0.25f;
-        static constexpr float LiftManualSpeedRatio = 1.0f;
-    }
-
     namespace wheel_timing
     {
         static constexpr float AutoSpeedRatio = 0.6f;
@@ -599,7 +584,7 @@ namespace devices
             // Init will start at press
             if (_liftBtn->onPressed())
             {
-                _lift->init(lift_timing::LiftManualSpeedRatio);
+                _lift->init(TrackLiftState::LIFT_MANUAL_SPEED_RATIO);
                 playButtonClick();
             }
             break;
@@ -616,16 +601,16 @@ namespace devices
             }
 
             // Short Press
-            if (_trackLiftState.isPressedDuringError && _liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
+            if (_trackLiftState.isPressedDuringError && _liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(TrackLiftState::ERROR_LONG_PRESS_DURATION_MS))
             {
                 playLiftError(_lift->getErrorCode());
             }
 
             // Check for long press while button is held
-            if (_trackLiftState.isPressedDuringError && _liftBtn->onPressedDuration(lift_timing::ErrorLongPressDurationMs))
+            if (_trackLiftState.isPressedDuringError && _liftBtn->onPressedDuration(TrackLiftState::ERROR_LONG_PRESS_DURATION_MS))
             {
                 MLOG_INFO("%s: Error recovery long press detected in auto mode, starting lift init", toString().c_str());
-                _lift->init(lift_timing::LiftAutoSpeedRatio);
+                _lift->init(TrackLiftState::LIFT_AUTO_SPEED_RATIO);
                 _audio->play(songs::LIFT_RESTART, devices::Hv20tPlayMode::StopThenPlay);
             }
             break;
@@ -693,7 +678,7 @@ namespace devices
             }
 
             // Long Press
-            if (_liftBtn->onPressedDuration(lift_timing::LongPressAutoModeDurationMs) && !_trackLiftState.queueCount)
+            if (_liftBtn->onPressedDuration(TrackLiftState::LONG_PRESS_AUTO_MODE_DURATION_MS) && !_trackLiftState.queueCount)
             {
                 if (_lift->isBallWaiting())
                 {
@@ -713,7 +698,7 @@ namespace devices
             }
 
             // Short Press
-            else if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::LongPressAutoModeDurationMs) && _trackLiftState.queueCount < 240)
+            else if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(TrackLiftState::LONG_PRESS_AUTO_MODE_DURATION_MS) && _trackLiftState.queueCount < 240)
             {
                 isShortPress = true;
                 if (!_trackLiftState.queueCount)
@@ -768,7 +753,7 @@ namespace devices
             // Auto start next action
             if (_trackLiftState.queueCount > 0)
             {
-                if (_lift->up(lift_timing::LiftManualSpeedRatio))
+                if (_lift->up(TrackLiftState::LIFT_MANUAL_SPEED_RATIO))
                 {
                     _trackLiftState.queueCount--;
                 }
@@ -792,7 +777,7 @@ namespace devices
             }
 
             // Short Press
-            if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::PowerSongStartDelayMs) && _trackLiftState.queueCount < 240)
+            if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(TrackLiftState::POWER_SONG_START_DELAY_MS) && _trackLiftState.queueCount < 240)
             {
                 if (!_trackLiftState.queueCount)
                     playButtonUp({songs::LIFT_STOP});
@@ -818,20 +803,20 @@ namespace devices
             }
 
             // semi long Press, start sound
-            if (_liftBtn->onPressedDuration(lift_timing::PowerSongStartDelayMs))
+            if (_liftBtn->onPressedDuration(TrackLiftState::POWER_SONG_START_DELAY_MS))
             {
                 _audio->play(songs::LIFT_POWER_UNLOAD, devices::Hv20tPlayMode::StopThenPlay);
             }
 
             // Cancelled long press
-            else if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::PowerSongDurationMs))
+            else if (_liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(TrackLiftState::POWER_SONG_DURATION_MS))
             {
                 _audio->stop();
                 playButtonUp({songs::LIFT_STOP, songs::LIFT_POWER_UNLOAD});
             }
 
             // Long Press
-            if (_liftBtn->onPressedDuration(lift_timing::PowerSongDurationMs) && _trackLiftState.queueCount < 240)
+            if (_liftBtn->onPressedDuration(TrackLiftState::POWER_SONG_DURATION_MS) && _trackLiftState.queueCount < 240)
             {
                 MLOG_INFO("%s: Long press detected (%.2fs), Power unload", toString().c_str());
                 // Long press: unload with full speed immediately
@@ -854,7 +839,7 @@ namespace devices
             if (_trackLiftState.queueCount > 0)
             {
                 // If not loaded but still queued, try going down to load if possible
-                if (_lift->down(lift_timing::LiftManualSpeedRatio))
+                if (_lift->down(TrackLiftState::LIFT_MANUAL_SPEED_RATIO))
                 {
                     _trackLiftState.queueCount--;
                 }
@@ -928,7 +913,7 @@ namespace devices
         switch (liftState.state)
         {
         case devices::LiftStateEnum::UNKNOWN:
-            _lift->init(lift_timing::LiftAutoSpeedRatio);
+            _lift->init(TrackLiftState::LIFT_AUTO_SPEED_RATIO);
             break;
 
         case devices::LiftStateEnum::ERROR:
@@ -940,16 +925,16 @@ namespace devices
             }
 
             // Short Press
-            if (_trackLiftState.isPressedDuringError && _liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(lift_timing::ErrorLongPressDurationMs))
+            if (_trackLiftState.isPressedDuringError && _liftBtn->onReleased() && !_liftBtn->isLastPressedDuration(TrackLiftState::ERROR_LONG_PRESS_DURATION_MS))
             {
                 playLiftError(_lift->getErrorCode());
             }
 
             // Check for long press while button is held
-            if (_trackLiftState.isPressedDuringError && _liftBtn->onPressedDuration(lift_timing::ErrorLongPressDurationMs))
+            if (_trackLiftState.isPressedDuringError && _liftBtn->onPressedDuration(TrackLiftState::ERROR_LONG_PRESS_DURATION_MS))
             {
                 MLOG_INFO("%s: Error recovery long press detected in auto mode, starting lift init", toString().c_str());
-                _lift->init(lift_timing::LiftAutoSpeedRatio);
+                _lift->init(TrackLiftState::LIFT_AUTO_SPEED_RATIO);
                 _audio->play(songs::LIFT_RESTART, devices::Hv20tPlayMode::StopThenPlay);
             }
             break;
@@ -973,7 +958,7 @@ namespace devices
 
             if (_trackLiftState.isAutoMovingDownSlow && liftState.ballWaitingSince > 0)
             {
-                if (_lift->down(lift_timing::AutoDownNormalSpeedRatio * lift_timing::LiftAutoSpeedRatio))
+                if (_lift->down(TrackLiftState::AUTO_DOWN_NORMAL_SPEED_RATIO * TrackLiftState::LIFT_AUTO_SPEED_RATIO))
                 {
                     _trackLiftState.isAutoMovingDownSlow = false;
                     MLOG_INFO("%s: Ball waiting detected during auto down, switching to normal speed", toString().c_str());
@@ -983,7 +968,7 @@ namespace devices
             {
                 if (_trackLiftState.isAutoMovingDownSlow)
                 {
-                    if (_lift->down(lift_timing::AutoDownNormalSpeedRatio * lift_timing::LiftAutoSpeedRatio))
+                    if (_lift->down(TrackLiftState::AUTO_DOWN_NORMAL_SPEED_RATIO * TrackLiftState::LIFT_AUTO_SPEED_RATIO))
                     {
                         _trackLiftState.isAutoMovingDownSlow = false;
                         playButtonClick({songs::LIFT_STOP});
@@ -1003,7 +988,7 @@ namespace devices
             if (liftState.state == devices::LiftStateEnum::LIFT_DOWN_LOADED)
             {
                 // Loaded: move up to unload position
-                _lift->up(lift_timing::LiftAutoSpeedRatio);
+                _lift->up(TrackLiftState::LIFT_AUTO_SPEED_RATIO);
                 _trackLiftState.autoDelayStartTime = 0; // Reset delay timer
             }
             else if (liftState.ballWaitingSince > 0)
@@ -1048,8 +1033,8 @@ namespace devices
                 {
                     _trackLiftState.autoNoBallStartTime = millis();
                     _trackLiftState.autoNoBallDelayMs = random(
-                        lift_timing::AutoNoBallRandomMinDelayMs,
-                        lift_timing::AutoNoBallRandomMaxDelayMs + 1UL);
+                        TrackLiftState::AUTO_NO_BALL_RANDOM_MIN_DELAY_MS,
+                        TrackLiftState::AUTO_NO_BALL_RANDOM_MAX_DELAY_MS + 1UL);
                     break;
                 }
 
@@ -1096,7 +1081,7 @@ namespace devices
                 const unsigned long loadedLiftUpElapsed = millis() - _trackLiftState.autoUpLoadedTime;
 
                 // Wait until lift-end song is ready (loaded LIFT_UP + 1000ms)
-                if (loadedLiftUpElapsed < lift_timing::AutoPowerSongStartDelayMs)
+                if (loadedLiftUpElapsed < TrackLiftState::AUTO_POWER_SONG_START_DELAY_MS)
                 {
                     break;
                 }
@@ -1112,7 +1097,7 @@ namespace devices
                     }
 
                     const unsigned long powerSongElapsed = millis() - _trackLiftState.autoPowerUnloadStartTime;
-                    if (powerSongElapsed >= lift_timing::PowerSongDurationMs - 500)
+                    if (powerSongElapsed >= TrackLiftState::POWER_SONG_DURATION_MS - 500)
                     {
                         if (_lift->unloadBall(0.2f))
                         {
@@ -1140,11 +1125,11 @@ namespace devices
                 if (liftState.ballWaitingSince > 0)
                 {
                     _trackLiftState.isAutoMovingDownSlow = false;
-                    _lift->down(lift_timing::AutoDownNormalSpeedRatio * lift_timing::LiftAutoSpeedRatio);
+                    _lift->down(TrackLiftState::AUTO_DOWN_NORMAL_SPEED_RATIO * TrackLiftState::LIFT_AUTO_SPEED_RATIO);
                 }
                 else
                 {
-                    if (_lift->down(lift_timing::AutoDownNoBallSpeedRatio * lift_timing::LiftAutoSpeedRatio))
+                    if (_lift->down(TrackLiftState::AUTO_DOWN_NO_BALL_SPEED_RATIO * TrackLiftState::LIFT_AUTO_SPEED_RATIO))
                     {
                         _trackLiftState.isAutoMovingDownSlow = true;
                     }
@@ -1601,13 +1586,13 @@ namespace devices
             }
 
             // Short Press
-            if (_trackWheelState.isPressedDuringError && _wheelBtn->onReleased() && !_liftBtn->isLastPressedDuration(TrackLiftState::ErrorLongPressDurationMs))
+            if (_trackWheelState.isPressedDuringError && _wheelBtn->onReleased() && !_liftBtn->isLastPressedDuration(TrackLiftState::ERROR_LONG_PRESS_DURATION_MS))
             {
                 playWheelError(_wheel->getErrorCode());
             }
 
             // Check for long press while button is held
-            if (_trackWheelState.isPressedDuringError && _wheelBtn->onPressedDuration(TrackLiftState::ErrorLongPressDurationMs))
+            if (_trackWheelState.isPressedDuringError && _wheelBtn->onPressedDuration(TrackLiftState::ERROR_LONG_PRESS_DURATION_MS))
             {
                 MLOG_INFO("%s: Error recovery long press detected, starting wheel init", toString().c_str());
                 _wheel->init(-1, modeSpeed);

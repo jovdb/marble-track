@@ -21,6 +21,18 @@ namespace devices
 
     struct TrackLiftState
     {
+        static constexpr unsigned long POWER_SONG_DURATION_MS = 5600UL;
+        static constexpr unsigned long POWER_SONG_START_DELAY_MS = 500UL;
+        static constexpr unsigned long AUTO_POWER_SONG_START_DELAY_MS = 1000UL;
+        static constexpr unsigned long AUTO_NO_BALL_RANDOM_MIN_DELAY_MS = 120000UL;
+        static constexpr unsigned long AUTO_NO_BALL_RANDOM_MAX_DELAY_MS = 300000UL;
+        static constexpr unsigned long ERROR_LONG_PRESS_DURATION_MS = 5000UL;
+        static constexpr unsigned long LONG_PRESS_AUTO_MODE_DURATION_MS = 3000UL;
+        static constexpr float AUTO_DOWN_NO_BALL_SPEED_RATIO = 0.2f;
+        static constexpr float AUTO_DOWN_NORMAL_SPEED_RATIO = 1.0f;
+        static constexpr float LIFT_AUTO_SPEED_RATIO = 0.25f;
+        static constexpr float LIFT_MANUAL_SPEED_RATIO = 1.0f;
+
         uint8_t queueCount = 0;                       // Queued manual lift actions (normally a multiple of 4)
         bool isPressedDuringError = false;            // Lift button pressed (only down) while in error
         bool isTempAutoMode = false;                  // Temporary automatic lift mode

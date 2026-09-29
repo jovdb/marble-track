@@ -350,10 +350,7 @@ namespace devices
                 _audio->play(songs::SHUTDOWN_TEXT, devices::Hv20tPlayMode::QueueIfPlaying);
                 _audio->play(songs::SHUTDOWN, devices::Hv20tPlayMode::QueueIfPlaying);
 
-                _liftLed->blink(50, 1300, 0);
-                _wheelLed->blink(50, 1250, 50);
-                _launcherLed->blink(50, 1200, 100);
-                _spiralLed->blink(50, 1150, 150);
+                blinkLoopAll();
             }
             else if (_trackBatteryState.shutdownStartTimeMs > 0 && now - _trackBatteryState.shutdownStartTimeMs >= 10000UL)
             {
@@ -1807,6 +1804,15 @@ namespace devices
             return;
 
         blinkCount(_launcherLed, _trackLauncherState.queueCount);
+    }
+
+    int MarbleController::blinkLoopAll()
+    {
+        _liftLed->blink(50, 1300, 0);
+        _wheelLed->blink(50, 1250, 50);
+        _launcherLed->blink(50, 1200, 100);
+        _spiralLed->blink(50, 1150, 150);
+        return 1350;
     }
 
     void MarbleController::playStartupSound()

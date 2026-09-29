@@ -141,6 +141,7 @@ namespace devices
         void loopWheelLoader(bool autoMode);
         void loopBattery();
         void loopConfigError();
+        int blinkLoopAll();
         void blinkLiftCount();
         void blinkLauncherCount();
         void onWheelStateChange(void *statePtr);

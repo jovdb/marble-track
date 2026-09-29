@@ -206,6 +206,7 @@ namespace devices
         static constexpr float WheelLoaderRange2Min = WheelLoaderRange2Max - 10.0f;
 
         // Idle sound tracking
+        unsigned long now = 0;
         unsigned long _lastButtonPressTime = 0;
         bool _idleSoundPlayed = false;
 

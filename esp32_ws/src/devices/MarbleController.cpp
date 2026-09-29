@@ -270,7 +270,8 @@ namespace devices
         playStartupSound();
 
         // Initialize idle tracking
-        _lastButtonPressTime = millis();
+        now = millis();
+        _lastButtonPressTime = now;
         _idleSoundPlayed = false;
 
         _trackLiftState.queueCount = 0;
@@ -329,6 +330,7 @@ namespace devices
 
     void MarbleController::loop()
     {
+        now = millis();
 
         // Trigger Shutdown at low battery
         if (_battery)
@@ -343,7 +345,7 @@ namespace devices
                 MLOG_WARN("%s: Critical battery level (%.1f%% <= %.1f%%) detected during loop. Initiating shutdown sequence.", toString().c_str(), _battery->getState().batteryPercent, ShutDownAtPercent);
 
                 // Play songs
-                _trackBatteryState.shutdownStartTimeMs = millis();
+                _trackBatteryState.shutdownStartTimeMs = now;
                 _audio->play(songs::BATTERY_CRITICAL, devices::Hv20tPlayMode::QueueIfPlaying);
                 _audio->play(songs::SHUTDOWN_TEXT, devices::Hv20tPlayMode::QueueIfPlaying);
                 _audio->play(songs::SHUTDOWN, devices::Hv20tPlayMode::QueueIfPlaying);
@@ -353,7 +355,7 @@ namespace devices
                 _launcherLed->blink(50, 1200, 100);
                 _spiralLed->blink(50, 1150, 150);
             }
-            else if (_trackBatteryState.shutdownStartTimeMs > 0 && millis() - _trackBatteryState.shutdownStartTimeMs >= 10000UL)
+            else if (_trackBatteryState.shutdownStartTimeMs > 0 && now - _trackBatteryState.shutdownStartTimeMs >= 10000UL)
             {
                 // Shutdown
                 esp_deep_sleep_start(); // stop until re-powered
@@ -366,7 +368,7 @@ namespace devices
             return;
 
         // Check for idle timeout (5 minutes = 300000 ms)
-        if (!isAutoMode && _lastButtonPressTime && (millis() - _lastButtonPressTime) > 300000UL && !_idleSoundPlayed)
+        if (!isAutoMode && _lastButtonPressTime && (now - _lastButtonPressTime) > 300000UL && !_idleSoundPlayed)
         {
             _audio->play(songs::NOTIFICATION, devices::Hv20tPlayMode::QueueIfPlaying);
             _audio->play(songs::IDLE, devices::Hv20tPlayMode::QueueIfPlaying);
@@ -376,7 +378,7 @@ namespace devices
         // Idle tracking: Any button pressed?
         if (_liftBtn->onPressed() || _wheelBtn->onPressed() || _launcherBtn->onPressed() || _spiralBtn->onPressed())
         {
-            _lastButtonPressTime = millis();
+            _lastButtonPressTime = now;
             _idleSoundPlayed = false;
         }
 
@@ -480,20 +482,20 @@ namespace devices
                 {
 
                     if (
-                        (_trackLiftState.ballReadyWaitingTime + TrackLiftState::BALL_WAITING_NOTIFICATION_FIRST_DELAY_MS) < millis())
+                        (_trackLiftState.ballReadyWaitingTime + TrackLiftState::BALL_WAITING_NOTIFICATION_FIRST_DELAY_MS) < now)
                     {
                         // New or again
-                        if (!_trackLiftState.playedBallWaitingSoundTime || ((_trackLiftState.playedBallWaitingSoundTime + TrackLiftState::BALL_WAITING_NOTIFICATION_RECURRING_DELAY_MS) < millis()))
+                        if (!_trackLiftState.playedBallWaitingSoundTime || ((_trackLiftState.playedBallWaitingSoundTime + TrackLiftState::BALL_WAITING_NOTIFICATION_RECURRING_DELAY_MS) < now))
                         {
                             _audio->play(songs::LIFT_BALL_WAITING, devices::Hv20tPlayMode::QueueIfPlaying);
-                            _trackLiftState.playedBallWaitingSoundTime = millis();
+                            _trackLiftState.playedBallWaitingSoundTime = now;
                         }
                     }
                 }
             }
 
             // Attention
-            if (_trackLiftState.playedBallWaitingSoundTime && _trackLiftState.playedBallWaitingSoundTime <= millis() && _trackLiftState.playedBallWaitingSoundTime + TrackLiftState::LIFT_UP_LOADED_NOTIFICATION_DURATION_MS > millis())
+            if (_trackLiftState.playedBallWaitingSoundTime && _trackLiftState.playedBallWaitingSoundTime <= now && _trackLiftState.playedBallWaitingSoundTime + TrackLiftState::LIFT_UP_LOADED_NOTIFICATION_DURATION_MS > now)
             {
                 blinkAttention(_liftLed);
             }
@@ -524,20 +526,20 @@ namespace devices
 
                     auto mostRecent = std::max(liftState.ballWaitingSince, _trackLiftState.ballReadyWaitingTime);
                     if (
-                        (mostRecent + TrackLiftState::BALL_WAITING_NOTIFICATION_FIRST_DELAY_MS) < millis())
+                        (mostRecent + TrackLiftState::BALL_WAITING_NOTIFICATION_FIRST_DELAY_MS) < now)
                     {
                         // New or again
-                        if (!_trackLiftState.playedBallWaitingSoundTime || ((_trackLiftState.playedBallWaitingSoundTime + TrackLiftState::BALL_WAITING_NOTIFICATION_RECURRING_DELAY_MS) < millis()))
+                        if (!_trackLiftState.playedBallWaitingSoundTime || ((_trackLiftState.playedBallWaitingSoundTime + TrackLiftState::BALL_WAITING_NOTIFICATION_RECURRING_DELAY_MS) < now))
                         {
                             _audio->play(songs::LIFT_BALL_WAITING, devices::Hv20tPlayMode::QueueIfPlaying);
-                            _trackLiftState.playedBallWaitingSoundTime = millis();
+                            _trackLiftState.playedBallWaitingSoundTime = now;
                         }
                     }
                 }
             }
 
             // Attention
-            if (_trackLiftState.playedBallWaitingSoundTime && _trackLiftState.playedBallWaitingSoundTime <= millis() && _trackLiftState.playedBallWaitingSoundTime + TrackLiftState::LIFT_DOWN_EMPTY_NOTIFICATION_DURATION_MS > millis())
+            if (_trackLiftState.playedBallWaitingSoundTime && _trackLiftState.playedBallWaitingSoundTime <= now && _trackLiftState.playedBallWaitingSoundTime + TrackLiftState::LIFT_DOWN_EMPTY_NOTIFICATION_DURATION_MS > now)
             {
                 blinkAttention(_liftLed);
             }
@@ -985,11 +987,11 @@ namespace devices
                 // Not loaded: wait 1000ms before starting load
                 if (_trackLiftState.autoDelayStartTime == 0)
                 {
-                    _trackLiftState.autoDelayStartTime = millis();
+                    _trackLiftState.autoDelayStartTime = now;
                     break;
                 }
 
-                if ((millis() - _trackLiftState.autoDelayStartTime) < _trackLiftState.autoDelayMs)
+                if ((now - _trackLiftState.autoDelayStartTime) < _trackLiftState.autoDelayMs)
                 {
                     break;
                 }
@@ -1017,14 +1019,14 @@ namespace devices
 
                 if (_trackLiftState.autoNoBallStartTime == 0)
                 {
-                    _trackLiftState.autoNoBallStartTime = millis();
+                    _trackLiftState.autoNoBallStartTime = now;
                     _trackLiftState.autoNoBallDelayMs = random(
                         TrackLiftState::AUTO_NO_BALL_RANDOM_MIN_DELAY_MS,
                         TrackLiftState::AUTO_NO_BALL_RANDOM_MAX_DELAY_MS + 1UL);
                     break;
                 }
 
-                if ((millis() - _trackLiftState.autoNoBallStartTime) >= _trackLiftState.autoNoBallDelayMs)
+                if ((now - _trackLiftState.autoNoBallStartTime) >= _trackLiftState.autoNoBallDelayMs)
                 {
                     MLOG_INFO("%s: Auto lift random start (no ball waiting) after %lus",
                               toString().c_str(),
@@ -1047,7 +1049,7 @@ namespace devices
                 playErrorSound(devices::Hv20tPlayMode::SkipIfPlaying, {songs::LIFT_STOP});
 
             // Check if we need to wait before next operation
-            if (_trackLiftState.autoDelayStartTime > 0 && (millis() - _trackLiftState.autoDelayStartTime) < _trackLiftState.autoDelayMs)
+            if (_trackLiftState.autoDelayStartTime > 0 && (now - _trackLiftState.autoDelayStartTime) < _trackLiftState.autoDelayMs)
             {
                 // Still waiting, do nothing
                 break;
@@ -1057,14 +1059,14 @@ namespace devices
             {
                 if (_trackLiftState.autoUpLoadedTime == 0)
                 {
-                    _trackLiftState.autoUpLoadedTime = millis();
+                    _trackLiftState.autoUpLoadedTime = now;
                     _trackLiftState.isAutoPowerUnloadPending = (random(100) < 25);
                     _trackLiftState.isAutoPowerUnloadSongStarted = false;
                     _trackLiftState.autoPowerUnloadStartTime = 0;
                     break;
                 }
 
-                const unsigned long loadedLiftUpElapsed = millis() - _trackLiftState.autoUpLoadedTime;
+                const unsigned long loadedLiftUpElapsed = now - _trackLiftState.autoUpLoadedTime;
 
                 // Wait until lift-end song is ready (loaded LIFT_UP + 1000ms)
                 if (loadedLiftUpElapsed < TrackLiftState::AUTO_POWER_SONG_START_DELAY_MS)
@@ -1078,11 +1080,11 @@ namespace devices
                     {
                         _audio->play(songs::LIFT_POWER_UNLOAD, devices::Hv20tPlayMode::StopThenPlay);
                         _trackLiftState.isAutoPowerUnloadSongStarted = true;
-                        _trackLiftState.autoPowerUnloadStartTime = millis();
+                        _trackLiftState.autoPowerUnloadStartTime = now;
                         break;
                     }
 
-                    const unsigned long powerSongElapsed = millis() - _trackLiftState.autoPowerUnloadStartTime;
+                    const unsigned long powerSongElapsed = now - _trackLiftState.autoPowerUnloadStartTime;
                     if (powerSongElapsed >= TrackLiftState::POWER_SONG_DURATION_MS - 500)
                     {
                         if (_lift->unloadBall(0.2f))
@@ -1211,7 +1213,7 @@ namespace devices
         {
         case LauncherStateEnum::UNKNOWN:
             // Auto init at start (delay to not all start at the same time)
-            if (millis() > 7000)
+            if (now > 7000)
                 _launcher->init();
             break;
         case LauncherStateEnum::ERROR:
@@ -1235,7 +1237,7 @@ namespace devices
 
             if (_trackLauncherState.lastDownTimeMs == 0)
             {
-                _trackLauncherState.lastDownTimeMs = millis();
+                _trackLauncherState.lastDownTimeMs = now;
             }
 
             // Auto load ball if ball is waiting and not loaded yet ( and we know wheel position)
@@ -1342,7 +1344,7 @@ namespace devices
                                                : -1;
 
                         auto delay = !_trackLauncherState.isBallLaunched ? 0 : 1000;
-                        if (rangeRatio >= 0.2 && rangeRatio <= 0.8 && millis() - _trackLauncherState.lastDownTimeMs >= delay)
+                        if (rangeRatio >= 0.2 && rangeRatio <= 0.8 && now - _trackLauncherState.lastDownTimeMs >= delay)
                         {
                             _audio->play(songs::LAUNCH, devices::Hv20tPlayMode::SkipIfPlaying);
                             if (_launcher->launch())
@@ -1430,7 +1432,7 @@ namespace devices
             break;
         case devices::WheelStateEnum::IDLE:
 
-            if (!autoMode && _trackWheelState.idleStartTimeMs > 0 && (millis() - _trackWheelState.idleStartTimeMs) >= 60000)
+            if (!autoMode && _trackWheelState.idleStartTimeMs > 0 && (now - _trackWheelState.idleStartTimeMs) >= 60000)
             {
                 blinkAttention(_wheelLed);
             }
@@ -1456,7 +1458,7 @@ namespace devices
             {
                 // Auto init after 1 second
                 // to prevent physical collision with loader initializing
-                if (millis() > 3000)
+                if (now > 3000)
                 {
                     _wheel->init(-1, modeSpeed);
                 }
@@ -1478,7 +1480,7 @@ namespace devices
             if (_trackWheelState.idleStartTimeMs == 0)
             {
                 // First
-                _trackWheelState.idleStartTimeMs = millis();
+                _trackWheelState.idleStartTimeMs = now;
                 if (autoMode)
                 {
                     _trackWheelState.randomDelayMs = 3000 + random(100, 30000);
@@ -1500,7 +1502,7 @@ namespace devices
             else
             {
                 // When idle, wait for random delay then trigger next breakpoint
-                if (_trackWheelState.randomDelayMs > 0 && millis() >= _trackWheelState.idleStartTimeMs + _trackWheelState.randomDelayMs)
+                if (_trackWheelState.randomDelayMs > 0 && now >= _trackWheelState.idleStartTimeMs + _trackWheelState.randomDelayMs)
                 {
                     MLOG_INFO("%s: Goto wheel next breakpoint", toString().c_str());
                     _wheel->nextBreakPoint(modeSpeed);
@@ -1625,7 +1627,7 @@ namespace devices
         if (_splitterSensor->onPressed())
         {
             _trackSplitterState.queueCount++;
-            _trackSplitterState.lastCountTimeMs = millis();
+            _trackSplitterState.lastCountTimeMs = now;
             _trackSplitterState.nextRunTimeMs = _trackSplitterState.lastCountTimeMs + 500;
         }
         if (_splitterSensor->onReleased())
@@ -1636,7 +1638,7 @@ namespace devices
         switch (_splitter->getState().state)
         {
         case devices::WheelStateEnum::UNKNOWN:
-            if (millis() > 4000)
+            if (now > 4000)
             {
                 _splitter->init();
             }
@@ -1665,7 +1667,7 @@ namespace devices
             // Process queue
             if (_trackSplitterState.queueCount > 0)
             {
-                if (!_trackSplitterState.nextRunTimeMs || (_trackSplitterState.nextRunTimeMs < millis()))
+                if (!_trackSplitterState.nextRunTimeMs || (_trackSplitterState.nextRunTimeMs < now))
                 {
                     _trackSplitterState.queueCount--;
                     _splitter->nextBreakPoint();
@@ -1678,10 +1680,10 @@ namespace devices
                 // Queue empty and still pressed: interval every 10s
                 if (_splitterSensor->isPressed())
                 {
-                    if (_trackSplitterState.lastCountTimeMs + 10000 < millis())
+                    if (_trackSplitterState.lastCountTimeMs + 10000 < now)
                     {
                         _trackSplitterState.queueCount++;
-                        _trackSplitterState.lastCountTimeMs = millis();
+                        _trackSplitterState.lastCountTimeMs = now;
                     }
                 }
             }
@@ -1703,8 +1705,6 @@ namespace devices
         // At startup it is 0 by default, wait until ready and dat is available
         if (batteryState.status != "Ready" || batteryState.voltage == 0)
             return;
-
-        auto now = millis();
 
         if (_trackBatteryState.nextStatusLogTimeMs < now)
         {
@@ -2037,14 +2037,14 @@ namespace devices
         if (_trackLiftState.previousState != devices::LiftStateEnum::LIFT_UP_LOADED &&
             liftState->state == devices::LiftStateEnum::LIFT_UP_LOADED)
         {
-            _trackLiftState.ballReadyWaitingTime = millis();
+            _trackLiftState.ballReadyWaitingTime = now;
             _audio->play(songs::LIFT_STOP, devices::Hv20tPlayMode::SkipIfPlaying);
         }
 
         if (_trackLiftState.previousState != devices::LiftStateEnum::LIFT_DOWN_EMPTY &&
             liftState->state == devices::LiftStateEnum::LIFT_DOWN_EMPTY)
         {
-            _trackLiftState.ballReadyWaitingTime = millis();
+            _trackLiftState.ballReadyWaitingTime = now;
             _audio->play(songs::LIFT_STOP, devices::Hv20tPlayMode::QueueIfPlaying);
         }
 

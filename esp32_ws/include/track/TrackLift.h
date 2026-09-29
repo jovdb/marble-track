@@ -66,6 +66,7 @@ namespace devices
         std::function<void()> _unsubscribeLiftStateChange;
 
         int getQueue() const;
+        void playButtonCountClick();
         void onStateChange(void *statePtr, unsigned long now);
         void loopLed(const LiftState &liftState, unsigned long now);
         void blinkQueueCount();

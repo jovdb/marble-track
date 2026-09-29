@@ -266,8 +266,7 @@ namespace devices
             {
                 // if only up, go back down, else whole cycle
                 queueCount += 4;
-                auto count = getQueue();
-                _trackAudio.playButtonCountClick(count, {songs::LIFT_STOP});
+                playButtonCountClick();
             }
             break;
 
@@ -278,8 +277,7 @@ namespace devices
             {
                 // if only up, go back down, else whole cycle
                 queueCount += queueCount == 1 ? 6 : 4;
-                auto count = getQueue();
-                _trackAudio.playButtonCountClick(count, {songs::LIFT_STOP});
+                playButtonCountClick();
             }
             break;
         }
@@ -289,8 +287,7 @@ namespace devices
             {
                 // if only up, go back down, else whole cycle
                 queueCount += queueCount == 0 ? 6 : 4;
-                auto count = getQueue();
-                _trackAudio.playButtonCountClick(count, {songs::LIFT_STOP});
+                playButtonCountClick();
             }
             break;
         }
@@ -300,8 +297,7 @@ namespace devices
             if (_liftBtn->onPressed() && queueCount < 240)
             {
                 queueCount += 4; // whole cycle
-                auto count = getQueue();
-                _trackAudio.playButtonCountClick(count, {songs::LIFT_STOP});
+                playButtonCountClick();
             }
             break;
 
@@ -314,8 +310,7 @@ namespace devices
             {
                 if (queueCount)
                 {
-                    auto count = getQueue();
-                    _trackAudio.playButtonCountClick(count, {songs::LIFT_STOP});
+                    playButtonCountClick();
                 }
                 else
                 {
@@ -392,8 +387,7 @@ namespace devices
             {
                 // if only up, go back down, else whole cycle
                 queueCount += queueCount == 2 ? 6 : 4;
-                auto count = getQueue();
-                _trackAudio.playButtonCountClick(count, {songs::LIFT_STOP});
+                playButtonCountClick();
             }
 
             // Auto start next action
@@ -415,8 +409,7 @@ namespace devices
             {
                 if (queueCount)
                 {
-                    auto count = getQueue();
-                    _trackAudio.playButtonCountClick(count, {songs::LIFT_STOP});
+                    playButtonCountClick();
                 }
                 else
                     _trackAudio.playButtonDown({songs::LIFT_STOP});
@@ -477,8 +470,7 @@ namespace devices
             if (_liftBtn->onPressed() && queueCount < 240)
             {
                 queueCount += 4; // whole cycle
-                auto count = getQueue();
-                _trackAudio.playButtonCountClick(count, {songs::LIFT_STOP});
+                playButtonCountClick();
             }
 
             // Auto start next action
@@ -820,6 +812,12 @@ namespace devices
         }
 
         return (queueCount + offset) / 4 + 1;
+    }
+
+    void TrackLift::playButtonCountClick()
+    {
+        auto count = getQueue();
+        _trackAudio.playButtonCountClick(count, {songs::LIFT_STOP});
     }
 
     void TrackLift::blinkQueueCount()

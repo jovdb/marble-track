@@ -1272,8 +1272,8 @@ namespace devices
             {
                 _launcherQueueCount++;
                 MLOG_INFO("%s: Increased launch queue to: %ul", toString().c_str(), _launcherQueueCount);
-                playButtonClick();
-            }
+                playButtonCountClick(_launcherQueueCount);
+                        }
             break;
         case LauncherStateEnum::DOWN:
 
@@ -1315,14 +1315,14 @@ namespace devices
                             {
                                 _launcherQueueCount++;
                                 MLOG_INFO("%s: No ball, launch queued: %ul", toString().c_str(), _launcherQueueCount);
-                                playButtonClick();
+                                playButtonCountClick(_launcherQueueCount);
                             }
                         }
                         else
                         {
                             _launcherQueueCount++;
                             MLOG_INFO("%s: Increased launch queue to: %ul", toString().c_str(), _launcherQueueCount);
-                            playButtonClick();
+                            playButtonCountClick(_launcherQueueCount);
                         }
                     }
                     else

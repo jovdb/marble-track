@@ -1548,7 +1548,7 @@ namespace devices
                     playButtonUp();
 
                     // Longpress?
-                    if (_wheelBtn->onPressedDuration(WHEEL_SPIN_LONG_PRESS_MS))
+                    if (_wheelBtn->onPressedDuration(TrackWheelState::WHEEL_SPIN_LONG_PRESS_MS))
                     {
                         // Button released - stop the wheel if it was a short press
                         MLOG_INFO("%s: Press released - stopping wheel", toString().c_str());

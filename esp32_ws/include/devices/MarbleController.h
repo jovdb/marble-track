@@ -56,8 +56,10 @@ namespace devices
 
     struct TrackWheelState
     {
+        static constexpr unsigned long WHEEL_SPIN_LONG_PRESS_MS = 500UL; // Threshold for continuous spin vs short-press breakpoint
+
         bool isPressedDuringError = false; // Wheel button pressed (only down) while in error
-        unsigned long randomDelayMs = 0; // Delay before the next automatic wheel move
+        unsigned long randomDelayMs = 0;   // Delay before the next automatic wheel move
     };
 
     struct TrackSplitterState
@@ -98,9 +100,6 @@ namespace devices
         {
             return _audio;
         }
-        static constexpr unsigned long WHEEL_LONG_PRESS_DURATION_MS = 8000UL;
-        static constexpr unsigned long WHEEL_SPIN_LONG_PRESS_MS = 500UL; // Threshold for continuous spin vs short-press breakpoint
-        static constexpr int LAUNCHER_WHEEL_BREAKPOINT = 1;              ///< Wheel breakpoint index that triggers launcher
         void loopManualLift();
         void loopManualSpiral();
         void loopAutoLift();

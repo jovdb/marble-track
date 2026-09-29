@@ -15,44 +15,10 @@
 #include "devices/WheelLoader.h"
 #include "devices/PowerMonitor.h"
 #include "devices/Battery.h"
+#include "track/TrackLift.h"
 
 namespace devices
 {
-
-    struct TrackLiftState
-    {
-        static constexpr unsigned long POWER_SONG_DURATION_MS = 5600UL;
-        static constexpr unsigned long POWER_SONG_START_DELAY_MS = 500UL;
-        static constexpr unsigned long AUTO_POWER_SONG_START_DELAY_MS = 1000UL;
-        static constexpr unsigned long AUTO_NO_BALL_RANDOM_MIN_DELAY_MS = 120000UL;
-        static constexpr unsigned long AUTO_NO_BALL_RANDOM_MAX_DELAY_MS = 300000UL;
-        static constexpr unsigned long ERROR_LONG_PRESS_DURATION_MS = 5000UL;
-        static constexpr unsigned long LONG_PRESS_AUTO_MODE_DURATION_MS = 3000UL;
-        static constexpr float AUTO_DOWN_NO_BALL_SPEED_RATIO = 0.2f;
-        static constexpr float AUTO_DOWN_NORMAL_SPEED_RATIO = 1.0f;
-        static constexpr float LIFT_AUTO_SPEED_RATIO = 0.25f;
-        static constexpr float LIFT_MANUAL_SPEED_RATIO = 1.0f;
-        static constexpr unsigned long BALL_WAITING_NOTIFICATION_FIRST_DELAY_MS = 60000UL;
-        static constexpr unsigned long BALL_WAITING_NOTIFICATION_RECURRING_DELAY_MS = 120000UL;
-        static constexpr unsigned long LIFT_UP_LOADED_NOTIFICATION_DURATION_MS = 3000UL;
-        static constexpr unsigned long LIFT_DOWN_EMPTY_NOTIFICATION_DURATION_MS = 960UL * 5UL;
-
-        uint8_t queueCount = 0;                       // Queued manual lift actions (normally a multiple of 4)
-        bool isPressedDuringError = false;            // Lift button pressed (only down) while in error
-        bool isTempAutoMode = false;                  // Temporary automatic lift mode
-        unsigned long playedBallWaitingSoundTime = 0; // Last ball-waiting sound time
-        unsigned long ballReadyWaitingTime = 0;       // Time the ball became ready
-        unsigned long autoDelayStartTime = 0;         // Start of the automatic delay
-        unsigned long autoDelayMs = 1000;             // Delay between automatic operations
-        bool isAutoPowerUnloadPending = false;        // Power unload is pending
-        bool isAutoPowerUnloadSongStarted = false;    // Power unload sound started
-        unsigned long autoPowerUnloadStartTime = 0;   // Power unload sound start time
-        unsigned long autoUpLoadedTime = 0;           // Time lift reached the top loaded
-        unsigned long autoNoBallStartTime = 0;        // Start of the no-ball delay
-        unsigned long autoNoBallDelayMs = 0;          // Random no-ball delay
-        bool isAutoMovingDownSlow = false;            // Lift is moving down slowly
-        LiftStateEnum previousState = LiftStateEnum::UNKNOWN;
-    };
 
     struct TrackLauncherState
     {

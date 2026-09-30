@@ -130,7 +130,8 @@ namespace devices
             }
             else
             {
-                _liftLed->set(false);
+                // Example: queueCount is reset
+                _trackLeds.blinkBusy(_liftLed);
             }
             break;
         case devices::LiftStateEnum::LIFT_DOWN_LOADED:
@@ -146,7 +147,8 @@ namespace devices
             }
             else
             {
-                _liftLed->set(true);
+                // Example: queueCount is reset
+                _trackLeds.blinkBusy(_liftLed);
             }
             break;
         }
@@ -291,7 +293,7 @@ namespace devices
         auto result = false;
 
         auto canPowerUnload = liftState.state == devices::LiftStateEnum::LIFT_UP_LOADED && queueCount == 0;
-        auto canTempAutoMode = !canPowerUnload && _lift->isBallWaiting();
+        auto canTempAutoMode = !canPowerUnload && _lift->isBallWaiting() && queueCount == 0;
 
         // Only allow click from a valid state
         if (liftState.state == devices::LiftStateEnum::ERROR)
@@ -344,7 +346,6 @@ namespace devices
         // If on Top, a long press is for power unload
         auto canPowerUnload = liftState.state == devices::LiftStateEnum::LIFT_UP_LOADED && queueCount == 0;
 
-        MLOG_DEBUG("Can power unload: %d", canPowerUnload);
         // Only allow click from a valid state
         if (liftState.state == devices::LiftStateEnum::ERROR)
             shouldCheckPowerUnload = false;
@@ -400,7 +401,7 @@ namespace devices
         if (shouldCheckQueuePress && queueCount < 240)
         {
             auto canPowerUnload = liftState.state == devices::LiftStateEnum::LIFT_UP_LOADED && queueCount == 0;
-            auto canTempAutoMode = !canPowerUnload && _lift->isBallWaiting();
+            auto canTempAutoMode = !canPowerUnload && _lift->isBallWaiting() && queueCount == 0;
 
             // How long to wait for a click
             auto pressDuration = 0UL;
@@ -408,6 +409,7 @@ namespace devices
                 pressDuration = TrackLift::LONG_PRESS_AUTO_MODE_DURATION_MS;
             else if (canPowerUnload)
                 pressDuration = TrackLift::START_POWER_SONG_AFTER_MS;
+
             if (pressDuration ? _liftBtn->onShortClick(pressDuration)
                               : _liftBtn->onPressed())
             {
@@ -462,6 +464,38 @@ namespace devices
                     queueCount += queueIncrement;
                     result = true;
                 }
+            }
+
+            // Clear queue
+            if (queueCount && _liftBtn->onPressedDuration(4000))
+            {
+                switch (liftState.state)
+                {
+                case devices::LiftStateEnum::UNKNOWN:
+                case devices::LiftStateEnum::INIT:
+                case devices::LiftStateEnum::LIFT_DOWN_EMPTY:
+                    // First click should go up
+                    queueCount = 0;
+                    break;
+                case devices::LiftStateEnum::LIFT_DOWN_LOADING:
+                case devices::LiftStateEnum::LIFT_DOWN_LOADED:
+                    queueCount = 3;
+                    break;
+                case devices::LiftStateEnum::MOVING_UP:
+                case devices::LiftStateEnum::LIFT_UP_LOADED:
+                    queueCount = 2;
+                    break;
+                case devices::LiftStateEnum::LIFT_UP_UNLOADING:
+                case devices::LiftStateEnum::LIFT_UP_EMPTY:
+                    queueCount = 1;
+                    break;
+                case devices::LiftStateEnum::MOVING_DOWN:
+                default:
+                    queueCount = 0;
+                    break;
+                }
+
+                _audio && _audio->play(songs::CLEAR_QUEUE);
             }
         }
 

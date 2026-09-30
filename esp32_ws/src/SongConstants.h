@@ -67,7 +67,8 @@ namespace songs
     X(BUTTON_CLICK_5, 42, "")                                                                                                                                                                   \
     X(BUTTON_CLICK_6, 43, "")                                                                                                                                                                   \
     X(BUTTON_CLICK_7, 44, "")                                                                                                                                                                   \
-    X(BUTTON_CLICK_8, 45, "")
+    X(BUTTON_CLICK_8, 45, "")                                                                                                                                                                   \
+    X(CLEAR_QUEUE, 46, "Clear the queue")
 
     /**
      * @brief Song ID Enum

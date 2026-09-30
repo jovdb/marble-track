@@ -73,8 +73,7 @@ namespace devices
         void blinkQueueCount();
         void resetState();
         void playLiftError(const String &errorCode);
-        bool loopShortPressQueue(unsigned long now);
-        bool loopLongPress(unsigned long now);
+        bool loopTempAutoMode(unsigned long now);
         String toString() const;
     };
 

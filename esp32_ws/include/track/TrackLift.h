@@ -23,8 +23,8 @@ namespace devices
         void loopManualMode(unsigned long now);
         void loopAutoMode(unsigned long now);
 
-        static constexpr unsigned long POWER_SONG_DURATION_MS = 5600UL;
-        static constexpr unsigned long POWER_SONG_START_DELAY_MS = 500UL;
+        static constexpr unsigned long START_POWER_UNLOAD_AFTER_MS = 5100UL;
+        static constexpr unsigned long START_POWER_SONG_AFTER_MS = 500UL;
         static constexpr unsigned long AUTO_POWER_SONG_START_DELAY_MS = 1000UL;
         static constexpr unsigned long AUTO_NO_BALL_RANDOM_MIN_DELAY_MS = 120000UL;
         static constexpr unsigned long AUTO_NO_BALL_RANDOM_MAX_DELAY_MS = 300000UL;

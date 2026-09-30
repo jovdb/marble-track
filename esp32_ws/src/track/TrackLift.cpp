@@ -221,7 +221,7 @@ namespace devices
         auto liftState = _lift->getState();
         loopLed(liftState, now);
 
-                // Lift Logic
+        // Lift Logic
         switch (liftState.state)
         {
         case devices::LiftStateEnum::UNKNOWN:
@@ -321,7 +321,7 @@ namespace devices
             }
             else
             {
-                MLOG_DEBUG("%s: Cannot start lift auto mode, no ball waiting", toString().c_str());
+                MLOG_WARN("%s: Cannot start lift auto mode, no ball waiting", toString().c_str());
                 _trackAudio.playErrorSound();
             }
         }
@@ -344,34 +344,36 @@ namespace devices
         // If on Top, a long press is for power unload
         auto canPowerUnload = liftState.state == devices::LiftStateEnum::LIFT_UP_LOADED && queueCount == 0;
 
+        MLOG_DEBUG("Can power unload: %d", canPowerUnload);
         // Only allow click from a valid state
         if (liftState.state == devices::LiftStateEnum::ERROR)
-        {
             shouldCheckPowerUnload = false;
-        }
-        else if (canPowerUnload && shouldCheckPowerUnload)
+        else if (_liftBtn->onPressed())
+            shouldCheckPowerUnload = true;
+
+        if (canPowerUnload && shouldCheckPowerUnload)
         {
 
             // Semi long Press, start power up sound
-            if (_liftBtn->onPressedDuration(TrackLift::POWER_SONG_START_DELAY_MS))
+            if (_liftBtn->onPressedDuration(TrackLift::START_POWER_SONG_AFTER_MS))
             {
                 _audio->play(songs::LIFT_POWER_UNLOAD, devices::Hv20tPlayMode::StopThenPlay);
             }
 
             // Cancelled long press
-            else if (_liftBtn->onShortClick(TrackLift::POWER_SONG_DURATION_MS))
+            else if (_liftBtn->onShortClick(TrackLift::START_POWER_UNLOAD_AFTER_MS))
             {
                 _audio->stop();
                 // _trackAudio.playButtonUp({songs::LIFT_STOP, songs::LIFT_POWER_UNLOAD});
             }
 
             // Long Press
-            if (_liftBtn->onPressedDuration(TrackLift::POWER_SONG_DURATION_MS) && queueCount < 240)
+            else if (_liftBtn->onPressedDuration(TrackLift::START_POWER_UNLOAD_AFTER_MS))
             {
                 MLOG_INFO("%s: Long press detected (%.2fs), Power unload", toString().c_str());
                 // Long press: unload with full speed immediately
                 _lift->unloadBall(0.2f);
-                queueCount += 1; // unload +  bottom
+                queueCount += 1; // + goto bottom
             }
         }
 
@@ -385,19 +387,18 @@ namespace devices
 
     bool TrackLift::loopQueue(unsigned long now)
     {
-        static auto shouldCheckShortPress = false;
+        static auto shouldCheckQueuePress = false;
         auto liftState = _lift->getState();
         auto result = false;
 
         // Only allow click from a valid state
         if (liftState.state == devices::LiftStateEnum::ERROR)
-            shouldCheckShortPress = false;
+            shouldCheckQueuePress = false;
         else if (_liftBtn->onPressed())
-            shouldCheckShortPress = true;
+            shouldCheckQueuePress = true;
 
-        if (queueCount < 240)
+        if (shouldCheckQueuePress && queueCount < 240)
         {
-
             auto canPowerUnload = liftState.state == devices::LiftStateEnum::LIFT_UP_LOADED && queueCount == 0;
             auto canTempAutoMode = !canPowerUnload && _lift->isBallWaiting();
 
@@ -406,19 +407,22 @@ namespace devices
             if (canTempAutoMode)
                 pressDuration = TrackLift::LONG_PRESS_AUTO_MODE_DURATION_MS;
             else if (canPowerUnload)
-                pressDuration = TrackLift::POWER_SONG_DURATION_MS;
-
-            if (pressDuration ? _liftBtn->onPressedDuration(pressDuration)
+                pressDuration = TrackLift::START_POWER_SONG_AFTER_MS;
+            if (pressDuration ? _liftBtn->onShortClick(pressDuration)
                               : _liftBtn->onPressed())
             {
+
                 uint queueIncrement = 0;
                 switch (liftState.state)
                 {
                 case devices::LiftStateEnum::ERROR:
                     break;
                 case devices::LiftStateEnum::UNKNOWN:
+                    // Not ideal, ball can be removed when ready
+                    queueIncrement = _lift && _lift->isBallWaiting() ? 2 : 0; // move to top
                 case devices::LiftStateEnum::INIT:
-                    queueIncrement = 4;
+                    // 2: if already set be UNKNOWN
+                    queueIncrement = queueCount == 2 ? 6 : 4;
                     break;
                 case devices::LiftStateEnum::LIFT_DOWN_EMPTY:
                     // First click should go up
@@ -438,7 +442,7 @@ namespace devices
                     break;
                 case devices::LiftStateEnum::LIFT_UP_LOADED:
                     // if only up loaded, go back down, else whole cycle
-                    queueIncrement = queueCount ? 2 : 4;
+                    queueIncrement = queueCount ? 4 : 2;
                     break;
                 case devices::LiftStateEnum::LIFT_UP_UNLOADING:
                 case devices::LiftStateEnum::MOVING_DOWN:
@@ -450,7 +454,6 @@ namespace devices
                 // Down: Play sound
                 if (queueIncrement)
                 {
-
                     if (queueCount)
                         playButtonCountClick();
                     else
@@ -463,7 +466,7 @@ namespace devices
         }
 
         if (_liftBtn->onReleased())
-            shouldCheckShortPress = false;
+            shouldCheckQueuePress = false;
 
         return result;
     }
@@ -716,7 +719,7 @@ namespace devices
                     }
 
                     const unsigned long powerSongElapsed = now - autoPowerUnloadStartTime;
-                    if (powerSongElapsed >= TrackLift::POWER_SONG_DURATION_MS - 500)
+                    if (powerSongElapsed >= TrackLift::START_POWER_UNLOAD_AFTER_MS - 500)
                     {
                         if (_lift->unloadBall(0.2f))
                         {

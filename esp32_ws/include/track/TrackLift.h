@@ -67,16 +67,16 @@ namespace devices
 
         int getQueue() const;
         void playButtonCountClick();
-        void loopQueue(const LiftState &liftState);
+        void loopProcessQueue(const LiftState &liftState);
         void onStateChange(void *statePtr, unsigned long now);
         void loopLed(const LiftState &liftState, unsigned long now);
         void blinkQueueCount();
         void resetState();
         void playLiftError(const String &errorCode);
-        bool loopLongPress(unsigned long now);
         bool loopTempAutoMode(unsigned long now);
         bool loopPowerUnload(unsigned long now);
-        bool loopShortPressQueue(unsigned long now);
+        bool loopQueue(unsigned long now);
+        void loopProcessQueue();
         String toString() const;
     };
 
